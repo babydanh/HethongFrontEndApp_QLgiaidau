@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ----------------------------------------------------------------------------------
+    // HỆ THỐNG BẢO MẬT PHÂN QUYỀN ZERO-BACKEND (ROLE-BASED ACCESS CONTROL)
+    // ----------------------------------------------------------------------------------
+    
+    // 1. BẢNG TOKENS: LƯU MÃ TRUY CẬP (CODE CHÍNH LÀ DOCUMENT ID)
+    // - KHÔNG AI được phép list (query) danh sách tokens. Ngăn chặn hacker lấy trộm mã.
+    // - CHỈ AI BIẾT CHÍNH XÁC MÃ TOKEN mới có thể get() để đọc thông tin.
+    match /tokens/{tokenCode} {
+      allow list: if false; 
+      allow get: if true;
+      
+      // Chỉ cho phép tạo mới nếu mã Token chưa tồn tại
+      allow create: if request.auth != null && !exists(/databases/$(database)/documents/tokens/$(tokenCode));
+      
+      // Chỉ Admin của giải đấu đó mới được phép update/vô hiệu hóa token
+      allow update, delete: if request.auth != null 
+        && get(/databases/$(database)/documents/tournaments/$(resource.data.tournamentId)/authorized_users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // 2. BẢNG TOURNAMENTS
+    match /tournaments/{tournamentId} {
+      
+      // Cho phép mọi user đọc thông tin giải đấu public.
+      allow read: if true;
+      
+      // Cho phép tạo mới giải đấu
+      allow create: if request.auth != null && !exists(/databases/$(database)/documents/tournaments/$(tournamentId));
+      
+      // CHỈ cho phép UPDATE/DELETE nếu UID của người dùng nằm trong danh sách `authorized_users` 
+      // của giải đấu này và có role là 'admin'.
+      allow update, delete: if request.auth != null 
+        && get(/databases/$(database)/documents/tournaments/$(tournamentId)/authorized_users/$(request.auth.uid)).data.role == 'admin';
+      
+      // 3. DANH SÁCH THIẾT BỊ ĐƯỢC ỦY QUYỀN (AUTHORIZED USERS)
+      match /authorized_users/{uid} {
+        // Chỉ cho phép user tự ghi tên mình vào danh sách này NẾU họ cung cấp đúng mã Token hợp lệ.
+        // Bắt buộc request payload phải gửi lên `tokenCode` và `role`.
+        allow create, update: if request.auth != null 
+          && request.auth.uid == uid
+          && request.resource.data.tokenCode != null
+          // Kiểm tra xem TokenCode họ cung cấp có trỏ đúng về Tournament này không:
+          && get(/databases/$(database)/documents/tokens/$(request.resource.data.tokenCode)).data.tournamentId == tournamentId
+          // Kiểm tra xem Role họ tự xưng có khớp với Role của Token thật không:
+          && get(/databases/$(database)/documents/tokens/$(request.resource.data.tokenCode)).data.role == request.resource.data.role;
+          
+        allow read: if request.auth != null;
+      }
+      
+      // 4. BẢNG ĐỘI BÓNG (TEAMS)
+      match /teams/{teamId} {
+        allow read: if true;
+        // Chỉ admin mới được quyền thêm/sửa đội
+        allow write: if request.auth != null 
+          && get(/databases/$(database)/documents/tournaments/$(tournamentId)/authorized_users/$(request.auth.uid)).data.role == 'admin';
+      }
+      
+      // 5. BẢNG TRẬN ĐẤU (MATCHES)
+      match /matches/{matchId} {
+        allow read: if true;
+        // Cả admin và trọng tài (referee) đều được phép sửa điểm
+        allow write: if request.auth != null 
+          && get(/databases/$(database)/documents/tournaments/$(tournamentId)/authorized_users/$(request.auth.uid)).data.role in ['admin', 'referee'];
+      }
+      
+      // 6. BẢNG XẾP HẠNG (STANDINGS)
+      match /standings/{standingId} {
+        allow read: if true;
+        // Cả admin và trọng tài đều có thể cập nhật BXH sau trận đấu
+        allow write: if request.auth != null 
+          && get(/databases/$(database)/documents/tournaments/$(tournamentId)/authorized_users/$(request.auth.uid)).data.role in ['admin', 'referee'];
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+name: app_quanly_giaidau
+description: "Ứng dụng Quản lý Giải đấu Thể thao"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # Firebase
+  firebase_core: ^4.9.0
+  cloud_firestore: ^6.4.1
+  firebase_auth: ^6.5.1
+
+  # State Management
+  flutter_riverpod: ^3.3.1
+
+  # Navigation
+  go_router: ^17.2.3
+
+  # UI
+  google_fonts: ^8.1.0
+  flutter_animate: ^4.5.2
+  shimmer: ^3.0.0
+
+  # Import/Export
+  excel: ^4.0.6
+  csv: ^8.0.0
+  file_picker: ^12.0.0-beta.5
+  pdf: ^3.11.1
+  printing: ^5.13.2
+
+  # QR Code
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^7.2.0
+
+  # Utils
+  uuid: ^4.5.1
+  intl: ^0.20.2
+  share_plus: ^13.1.0
+  wakelock_plus: ^1.2.10
+  shared_preferences: ^2.3.4
+  flutter_dotenv: ^6.0.1
+  firebase_database: ^12.4.1
+  path_provider: ^2.1.5
+  graphview: ^1.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - .env
+    - assets/icons/
+    - assets/images/
