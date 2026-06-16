@@ -220,7 +220,177 @@ Các API quản lý giải đấu di động.
 
 ---
 
-## 4. Quản lý Hồ sơ Người dùng (User Profile)
+### 3.3 Lấy sơ đồ nhánh đấu (Get Tournament Bracket)
+Dùng để vẽ sơ đồ thi đấu (Single/Double Elimination, Round Robin) trực tiếp trên giao diện của App.
+
+- **URL:** `/api/v1/tournaments/:id/bracket`
+- **Method:** `GET`
+- **Headers:**
+  ```http
+  Content-Type: application/json
+  ```
+- **Response Body (200 OK):**
+  ```json
+  {
+    "id": "2b3c4d5e-6f7g-8h9i-0j1k-2l3m4n5o6p7q",
+    "name": "Giải đấu Mùa Hè 2026",
+    "bracketType": "SINGLE_ELIMINATION",
+    "rounds": [
+      {
+        "roundNumber": 1,
+        "name": "Vòng 1/8",
+        "matches": [
+          {
+            "id": "a1b2c3d4-e5f6-7g8h-9i0j-1k2l3m4n5o6p",
+            "team1": {
+              "id": "t1-uuid",
+              "name": "Chiến binh Rồng"
+            },
+            "team2": {
+              "id": "t2-uuid",
+              "name": "Hổ Cánh Cụt"
+            },
+            "score1": 2,
+            "score2": 1,
+            "status": "COMPLETED",
+            "nextMatchId": "next-match-uuid",
+            "startTime": "2026-07-01T09:00:00.000Z"
+          }
+        ]
+      }
+    ]
+  }
+  ```
+
+---
+
+### 3.4 Lấy danh sách Vận động viên tham gia (Get Participants)
+- **URL:** `/api/v1/tournaments/:id/participants`
+- **Method:** `GET`
+- **Headers:**
+  ```http
+  Content-Type: application/json
+  ```
+- **Response Body (200 OK):**
+  ```json
+  [
+    {
+      "id": "p1-uuid",
+      "teamName": "Chiến binh Rồng",
+      "status": "APPROVED",
+      "rosters": [
+        {
+          "userId": "76d54fe1-bb38-48aa-b754-55cc89aa1456",
+          "fullName": "Nguyễn Văn A"
+        }
+      ]
+    }
+  ]
+  ```
+
+---
+
+## 4. Quản lý Trận đấu & Nhập điểm (Matches & Refereeing)
+
+Dành cho người chơi xem lịch thi đấu và Trọng tài cập nhật kết quả/tỷ số trận đấu.
+
+### 4.1 Lấy danh sách trận đấu (Get Matches List)
+- **URL:** `/api/v1/matches`
+- **Method:** `GET`
+- **Headers:**
+  ```http
+  Content-Type: application/json
+  ```
+- **Query Parameters:**
+  - `tournamentId` (optional): Lọc theo giải đấu cụ thể
+  - `status` (optional): Lọc theo `PENDING`, `ONGOING`, `COMPLETED`
+  - `refereeId` (optional): Lọc theo trọng tài được phân công
+- **Response Body (200 OK):**
+  ```json
+  {
+    "data": [
+      {
+        "id": "a1b2c3d4-e5f6-7g8h-9i0j-1k2l3m4n5o6p",
+        "tournamentId": "2b3c4d5e-6f7g-8h9i-0j1k-2l3m4n5o6p7q",
+        "team1Id": "t1-uuid",
+        "team2Id": "t2-uuid",
+        "score1": 0,
+        "score2": 0,
+        "status": "PENDING",
+        "court": "Sân số 1 - Nhà thi đấu Bách Khoa",
+        "startTime": "2026-07-01T09:00:00.000Z"
+      }
+    ]
+  }
+  ```
+
+---
+
+### 4.2 Cập nhật trạng thái trận đấu (Update Match Status)
+Dành cho Ban tổ chức / Trọng tài bắt đầu trận đấu (`ONGOING`) hoặc kết thúc trận đấu.
+- **URL:** `/api/v1/matches/:id/status`
+- **Method:** `PATCH`
+- **Headers:**
+  ```http
+  Authorization: Bearer <your_access_token>
+  Content-Type: application/json
+  ```
+- **Request Body (UpdateMatchStatusDto):**
+  ```json
+  {
+    "status": "ONGOING"
+  }
+  ```
+- **Response Body (200 OK):**
+  ```json
+  {
+    "id": "a1b2c3d4-e5f6-7g8h-9i0j-1k2l3m4n5o6p",
+    "status": "ONGOING"
+  }
+  ```
+
+---
+
+### 4.3 Cập nhật tỷ số & Kết quả Trận đấu (Update Match Score - Trọng tài nhập điểm)
+Trọng tài nhập điểm số trực tiếp từ App di động.
+- **URL:** `/api/v1/matches/:id/score`
+- **Method:** `PATCH`
+- **Headers:**
+  ```http
+  Authorization: Bearer <your_access_token>
+  Content-Type: application/json
+  ```
+- **Request Body (UpdateMatchScoreDto):**
+  ```json
+  {
+    "score1": 21,
+    "score2": 19,
+    "isCompleted": true,
+    "winnerId": "t1-uuid",
+    "setDetails": [
+      {
+        "setNumber": 1,
+        "score1": 21,
+        "score2": 19
+      }
+    ]
+  }
+  ```
+- **Response Body (200 OK):**
+  - Cập nhật tỷ số trận đấu thành công và tự động đẩy đội thắng lên vòng tiếp theo trong Bracket (nếu là giải đấu Single/Double Elimination).
+  ```json
+  {
+    "id": "a1b2c3d4-e5f6-7g8h-9i0j-1k2l3m4n5o6p",
+    "score1": 21,
+    "score2": 19,
+    "status": "COMPLETED",
+    "winnerId": "t1-uuid"
+  }
+  ```
+
+---
+
+## 5. Quản lý Hồ sơ Người dùng (User Profile)
 
 ### 4.1 Xem thông tin cá nhân (Get My Profile)
 - **URL:** `/api/v1/users/profile`
