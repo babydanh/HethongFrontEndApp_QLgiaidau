@@ -95,14 +95,14 @@ abstract class IScoreService { /* Scoring logic */ }
 - Sử dụng **Riverpod Provider** để inject dependencies.
 
 ```dart
-// ❌ SAI — Phụ thuộc trực tiếp vào Firebase
-final repo = FirebaseTournamentRepository(FirebaseFirestore.instance);
+// ❌ SAI — Phụ thuộc trực tiếp vào HTTP Client / REST API
+final repo = ApiTournamentRepository(Dio());
 
 // ✅ ĐÚNG — Phụ thuộc vào Interface, inject qua Riverpod
 final tournamentRepositoryProvider = Provider<ITournamentRepository>((ref) {
-  return FirebaseTournamentRepository(ref.watch(firestoreProvider));
-  // Khi đổi database, chỉ cần đổi dòng này:
-  // return SupabaseTournamentRepository(ref.watch(supabaseProvider));
+  return ApiTournamentRepository(ref.watch(dioProvider));
+  // Khi đổi mock data hoặc nguồn khác, chỉ cần đổi dòng này:
+  // return MockTournamentRepository();
 });
 ```
 
@@ -122,8 +122,8 @@ Khi viết code hoặc đề xuất giải pháp, luôn tuân thủ stack sau:
   - ⚠️ **BẮT BUỘC dùng `Notifier` / `AsyncNotifier`** (API mới).
   - ❌ **KHÔNG dùng `StateNotifier` / `StateNotifierProvider`** (deprecated).
 - **Routing:** `go_router` ^17.2.3 (Quản lý route phân quyền: Admin, Referee, Viewer).
-- **Database/Backend:** Firebase Firestore (Realtime database).
-- **Authentication:** Firebase Anonymous Auth (Kết hợp Token-based từ Firestore, KHÔNG dùng email/password hay Google Login).
+- **Database/Backend:** PostgreSQL (thông qua Custom NestJS Backend API).
+- **Authentication:** JWT Authentication (Access Token / Refresh Token) tích hợp Google Sign-in và Local Email/Password Auth.
 
 ### 3.1 Cấu trúc thư mục chuẩn
 
@@ -134,14 +134,14 @@ lib/
 ├── core/                             # Shared utilities
 │   ├── config/                       # AppTheme, AppConstants
 │   ├── router/                       # GoRouter + Guards
-│   ├── utils/                        # TokenGenerator, Helpers
-│   └── services/                     # Logger, ErrorHandler
+│   ├── utils/                        # Helpers
+│   └── services/                     # Logger, ErrorHandler, DioClient
 ├── domain/                           # Interfaces (Contracts)
 │   └── repositories/                 # Abstract classes
 ├── data/                             # Implementations
 │   ├── models/                       # Data models (toJson/fromJson)
 │   └── repositories/
-│       └── firebase/                 # Firebase implementations
+│       └── api/                      # REST API client implementations (Dio/Retrofit)
 ├── providers/                        # Riverpod Notifiers & Providers
 └── features/                         # Feature modules (UI)
     ├── auth/
