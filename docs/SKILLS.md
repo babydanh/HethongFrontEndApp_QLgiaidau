@@ -2,10 +2,13 @@
 
 *(Tài liệu này dùng để thiết lập bộ kỹ năng, quy tắc chuẩn xác và nguyên tắc thiết kế cho AI trong quá trình phát triển dự án)*
 
-> **⚠️ BẮT BUỘC:** Trước khi viết BẤT KỲ dòng code nào, AI PHẢI đọc các file tài liệu tương ứng trong thư mục `docs/` để hiểu rõ ngữ cảnh:
+> **⚠️ BẮT BUỘC:** Trước khi viết BẤT KỲ dòng code nào hoặc tiến hành nghiên cứu, AI PHẢI:
+> 1. Kiểm tra và truy vấn đồ thị kiến thức dự án qua thư mục `graphify-out/` (sử dụng `/graphify query` hoặc đọc `graphify-out/GRAPH_REPORT.md` ở root workspace nếu tồn tại) đầu tiên để hiểu rõ toàn bộ mối liên kết cấu trúc của codebase.
+> 2. Đọc các file tài liệu tương ứng trong thư mục `docs/` để nắm vững ngữ cảnh:
 >
 > | Khi làm việc liên quan đến... | Đọc file |
 > |---|---|
+> | Mối quan hệ code, cấu trúc GraphRAG | **Đồ thị Graphify (`graphify-out/GRAPH_REPORT.md`)** |
 > | Kiến trúc, cấu trúc thư mục, layers | [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) |
 > | Yêu cầu chức năng, luồng hoạt động | [`docs/SPEC.md`](../docs/SPEC.md) |
 > | Cấu trúc database, models, queries | [`docs/DATABASE_SCHEMA.md`](../docs/DATABASE_SCHEMA.md) |
@@ -13,6 +16,8 @@
 > | Tổng quan dự án, đối tượng sử dụng | [`docs/PROJECT_OVERVIEW.md`](../docs/PROJECT_OVERVIEW.md) |
 > | Cách dùng thư viện, code mẫu kỹ thuật | [`docs/Tech.md`](../docs/Tech.md) |
 > | Quy tắc code, nguyên tắc thiết kế (file này) | [`docs/SKILLS.md`](../docs/SKILLS.md) |
+>
+> 3. Tự động chạy cập nhật đồ thị kiến thức dự án (`/graphify --update`) ngay sau khi hoàn thành bất kỳ chỉnh sửa nào để cập nhật dữ liệu mới nhất.
 
 ---
 
