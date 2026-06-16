@@ -1,88 +1,89 @@
-# 🏆 APP QUẢN LÝ GIẢI ĐẤU — PROJECT OVERVIEW (PLATFORM EDITION)
+# 🏆 APP QUẢN LÝ GIẢI ĐẤU — PROJECT OVERVIEW (MOBILE EDITION)
 
-## 1. Tầm Nhìn Dự Án (Vision)
-
-Ứng dụng **Quản lý Giải đấu** đang trong quá trình chuyển mình mạnh mẽ từ một công cụ bốc thăm đơn giản (dựa trên Firebase và Token vô danh) thành một **Nền tảng Thể thao Chuyên nghiệp (Sports Platform)**, lấy cảm hứng từ mô hình thành công của `baseline.vn`.
-
-Dự án hướng tới việc xây dựng một hệ sinh thái toàn diện trên di động dành cho cộng đồng chơi thể thao phong trào và bán chuyên (Cầu lông, Pickleball, Tennis), nơi người chơi không chỉ tham gia giải đấu mà còn xây dựng hồ sơ thể thao cá nhân, tham gia câu lạc bộ, và đua top trên bảng xếp hạng ELO.
-
-### 🌟 Điểm Nổi Bật Của Nền Tảng Mới
-
-- 🔐 **Hệ thống Tài khoản Chuẩn mực:** Đăng nhập bằng số điện thoại/email, quản lý hồ sơ VĐV (Profile).
-- 📈 **Hệ thống Điểm ELO:** Đánh giá trình độ VĐV dựa trên kết quả thi đấu thực tế, giúp phân hạng giải đấu công bằng.
-- 🤝 **Cộng đồng (Communities/Clubs):** Không gian cho các câu lạc bộ hoạt động, tạo giải đấu nội bộ, giao lưu và thách đấu (Cáp kèo).
-- 💳 **Thanh toán & Phí nền tảng:** Quản lý lệ phí tham gia và tự động trích xuất phí nền tảng chuyên nghiệp.
-- ☁️ **Kiến trúc Backend Vững chắc:** Chuyển đổi hoàn toàn sang Custom Backend API (NestJS + PostgreSQL) để đảm bảo tính toàn vẹn dữ liệu, thay thế cho Firebase cũ.
+Tài liệu này đặc tả chi tiết thiết kế, kiến trúc và phạm vi tính năng của ứng dụng di động Flutter sau khi tái cấu trúc. Toàn bộ hệ thống được chuyển từ hạ tầng Firebase cũ sang kết nối trực tiếp với **Custom Backend API (NestJS + PostgreSQL)**, đồng bộ ngôn ngữ thiết kế hiện đại, mượt mà lấy cảm hứng từ `baseline.vn` và giao diện Web Frontend của dự án.
 
 ---
 
-## 2. Di Sản Cốt Lõi: Bộ Khung Không Thể Thay Thế (The Core Engine)
+## 1. Tầm Nhìn Dự Án & Định Hướng Giao Diện (Vision & UI Design)
 
-Mặc dù toàn bộ hạ tầng dữ liệu và luồng xác thực được đập đi xây lại, nhưng **giá trị cốt lõi của ứng dụng — bộ não tổ chức giải đấu — sẽ được giữ nguyên và nâng cấp**. Đây là bộ khung đã được xây dựng rất vững chắc và là "trái tim" của ứng dụng:
-
-1.  **Hệ thống Tạo Giải Đấu (Tournament Creation Flow):**
-    - Luồng Wizard thiết lập giải đấu đa dạng, chi tiết từ thể thức (Đơn, Đôi, Đôi nam nữ) đến cấu hình luật chơi (Số set, điểm chạm, cách biệt 2 điểm).
-    - Cấu trúc "Giải đấu mẹ - Giải đấu con (Parent - Divisions)" cho phép tổ chức sự kiện quy mô lớn với nhiều nội dung thi đấu.
-2.  **Thuật Toán Bốc Thăm & Xếp Lịch (Draw & Scheduling Engine):**
-    - Logic bốc thăm tự động dựa trên Hạt giống (Seed) và trình độ ELO.
-    - Khả năng xử lý các trường hợp BYE (miễn đấu) hoàn hảo.
-3.  **Giao Diện Sơ Đồ Thi Đấu (Bracket UI):**
-    - Khung giao diện vẽ cây thư mục (Bracket tree) tương tác trực quan cho các thể thức Loại trực tiếp (Single/Double Elimination) và Vòng tròn (Round Robin).
-    - Đây là phần phức tạp nhất ở Frontend và sẽ được giữ lại nguyên bản, chỉ thay đổi nguồn cấp dữ liệu từ Firebase sang JSON API.
+* **Thiết kế Đồng bộ:** Loại bỏ giao diện phong cách cũ. UI/UX mới hướng tới sự tối giản, sang trọng với tone màu tối chủ đạo (Deep Dark Mode kết hợp Neon Blue/Violet accents), font chữ hiện đại (Inter/Outfit), bo góc mượt mà, hiệu ứng Glassmorphism và các micro-animations chuyển tab nhẹ nhàng.
+* **Tối ưu trải nghiệm Vận động viên & Trọng tài:** App di động đóng vai trò là công cụ tương tác thực địa tốc độ cao. Các luồng cấu hình giải đấu cồng kềnh được giản lược để tối ưu hiệu năng và dung lượng app.
 
 ---
 
-## 3. Chân Dung Người Dùng (Target Audience)
+## 2. Phân Tích & Giữ Lại Di Sản Cốt Lõi (Core Mobile Engine)
 
-| Vai trò                         | Phân hệ (Module)            | Mô tả & Trải nghiệm                                                                                         |
-| ------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| **Ban Tổ Chức (Organizer)**     | `organizer/`                | Tạo giải, quản lý đăng ký, thu phí, chốt danh sách, bấm nút bốc thăm, điều hành trận đấu, cập nhật điểm số. |
-| **Trọng Tài (Referee)**         | `referee/`                  | Quét mã QR trận đấu được phân công, nhập điểm Live, xác nhận kết quả (App chuyên dụng cho trọng tài sân).   |
-| **Vận Động Viên (Player)**      | `tournaments/` & `profile/` | Tìm giải, đăng ký cá nhân/đội, xem lịch đấu của mình, theo dõi điểm ELO cá nhân, tham gia Câu lạc bộ.       |
-| **Chủ Câu Lạc Bộ (Club Admin)** | `communities/`              | Quản lý thành viên CLB, tạo giải đấu nội bộ miễn phí, quản lý quỹ và bảng xếp hạng nội bộ.                  |
+Chúng ta giữ lại và nâng cấp những tính năng nghiệp vụ cốt lõi quan trọng nhất của ứng dụng:
 
----
+### 2.1. Bộ giải mã và Giao diện Sơ đồ thi đấu (Bracket Viewer UI)
+* **Khung hiển thị đồ họa (Bracket Tree):** Giữ lại phần vẽ sơ đồ hình cây (Single/Double Elimination) và sơ đồ bảng đấu (Round Robin).
+* **Luồng dữ liệu mới:** Thay thế bộ lắng nghe Firestore Streams cũ sang cơ chế gọi REST API thông thường `/api/v1/tournaments/:id/bracket` để lấy full bracket JSON, sau đó parse sang model của Flutter để vẽ giao diện.
 
-## 4. Kiến Trúc Công Nghệ Mới (Tech Stack Transition)
-
-| Thành phần             | Phiên bản cũ (Legacy)        | Phiên bản Nền tảng (Hiện tại & Tương lai)                        |
-| ---------------------- | ---------------------------- | ---------------------------------------------------------------- |
-| **Frontend Framework** | Flutter (Dart)               | **Flutter (Dart)** - Áp dụng Clean Architecture chặt chẽ.        |
-| **Backend & Database** | Firebase (Firestore NoSQL)   | **NestJS API + PostgreSQL (Relational DB)**.                     |
-| **Xác thực (Auth)**    | Firebase Anonymous Token     | **JWT Authentication** (Access/Refresh Tokens), tích hợp OAuth2. |
-| **State Management**   | Riverpod + Firestore Streams | **Riverpod + REST API Polling / WebSockets**.                    |
-| **Lưu trữ ảnh**        | Firebase Storage             | **Cloudinary** (Upload qua Backend).                             |
-| **Bracket Engine**     | Custom Graphview             | **Giữ nguyên (Cập nhật Parser để đọc JSON từ Backend)**.         |
+### 2.2. Giao diện Trọng tài nhập điểm trực tiếp (Referee Live Scoring UI)
+* Giao diện độc quyền dành cho Trọng tài sân để cập nhật tỉ số theo thời gian thực (Live score).
+* Trọng tài chọn trận đấu được phân công -> Chọn bắt đầu trận (`ONGOING`) -> Nhập điểm số của từng set (Set 1, Set 2, Set 3) -> Hệ thống tự tính toán thắng/thua, cập nhật trạng thái `COMPLETED` và gửi DTO kết quả lên Backend thông qua API `/api/v1/matches/:id/score`.
 
 ---
 
-## 5. Bản Đồ Tính Năng Tổng Thể (Feature Map)
+## 3. Các Phân Hệ Tính Năng Bị Loại Bỏ (Removed Features)
+
+Để tinh gọn ứng dụng di động, các chức năng sau **không còn xuất hiện** trên App (quản lý hoàn toàn trên Web):
+1. 🚫 **Khởi tạo giải đấu (Create Tournament Wizard):** BTC sẽ tạo giải đấu, cấu hình lệ phí, thiết lập sơ đồ và sinh mã mời 100% trên Web Frontend. Mobile chỉ dùng để xem giải đấu và đăng ký tham gia.
+2. 🚫 **Mạng xã hội / Bảng tin Story (Social Feed):** Loại bỏ hoàn toàn hệ thống đăng bài viết, story chia sẻ để giữ ứng dụng tập trung vào tính năng thể thao thuần túy.
+
+---
+
+## 4. Đặc Tả Chi Tiết 5 Tab Điều Hướng (Bottom Navigation Bar Spec)
+
+Thanh điều hướng dưới cùng (Bottom Navigation Bar) được thiết kế đặc biệt gồm **5 Tabs** đối xứng qua tâm:
 
 ```text
-📦 FLUTTER SPORTS PLATFORM
- ┣ 📂 [1] Xác thực & Hồ sơ (Auth & Profile)
- ┃ ┣ 📜 Đăng nhập / Đăng ký (Phone/Email)
- ┃ ┣ 📜 Hồ sơ VĐV (Chỉ số ELO, Lịch sử đấu, Danh hiệu)
- ┃ ┗ 📜 Quản lý Đội/Nhóm cố định
- ┣ 📂 [2] Khám Phá & Đăng Ký (Discovery)
- ┃ ┣ 📜 Bảng tin Giải đấu sắp diễn ra (Lọc theo Tỉnh, Bộ môn)
- ┃ ┣ 📜 Thanh toán Lệ phí đăng ký (Integration cổng thanh toán)
- ┃ ┗ 📜 Tìm kiếm đồng đội đánh đôi
- ┣ 📂 [3] Quản Trị Giải Đấu (Tournament Operation) - CORE ENGINE
- ┃ ┣ 📜 Khởi tạo giải đấu (Parent - Divisions)
- ┃ ┣ 📜 Quản lý danh sách VĐV, Chốt sổ & Bốc thăm (Bracket)
- ┃ ┣ 📜 Nhập điểm trực tiếp (Live Scoring) & Livestream links
- ┃ ┗ 📜 Xử lý walkover, bỏ cuộc, phạt thẻ
- ┗ 📂 [4] Cộng Đồng & Bảng Xếp Hạng (Communities & Rankings)
-   ┣ 📜 Tìm & Gia nhập Câu Lạc Bộ
-   ┣ 📜 Bảng xếp hạng ELO chung (Global Ranking)
-   ┗ 📜 Bảng xếp hạng ELO nội bộ CLB
+  [ Tab 1 ]       [ Tab 2 ]       [ Tab 3 (Avatar) ]       [ Tab 4 ]       [ Tab 5 ]
+ Khám Phá       Lịch Thi Đấu        Hồ Sơ Cá Nhân        Bảng Xếp Hạng     Thông Báo
 ```
+
+### Tab 1: Khám Phá Giải Đấu (Explore)
+* **Giao diện:** Gồm Header chào hỏi kèm thanh tìm kiếm nhanh giải đấu. Banner trượt giới thiệu các giải đấu nổi bật nhất (Featured).
+* **Danh sách:** Danh sách các chuỗi giải đấu (Tournament Chains) phân chia theo môn thể thao (Cầu lông, Pickleball, Tennis) và trạng thái giải đấu (`REGISTRATION_OPEN` - Đang mở đăng ký, `IN_PROGRESS` - Đang tranh tài).
+* **Hỗ trợ:** Xem thông tin giải đấu mẹ (Parent Tournament) và các giải đấu con (Divisions) được phân hạng theo trình độ hoặc thể thức đấu đơn/đôi.
+
+### Tab 2: Trận Đấu Của Tôi / Lịch Trọng Tài (My Matches & Schedule)
+* **Giao diện:** Thiết kế dạng lịch trình (Timeline/Calendar).
+* **Dành cho Người chơi:** Hiển thị danh sách các trận đấu mà người chơi sắp tham gia, kết quả các trận đã đấu kèm thông tin sân thi đấu và giờ đấu dự kiến.
+* **Dành cho Trọng tài:** Hiển thị danh sách các trận đấu được phân công bắt chính. Tích hợp nút **"Nhập Điểm"** mở ra màn hình nhập điểm set đấu trực quan.
+
+### Tab 3: Hồ Sơ Cá Nhân (Profile - Tab Trung Tâm Cực Đẹp) 🌟
+* **Điểm nhấn thiết kế:** Thay vì hiển thị icon vector thông thường như các tab khác, Tab 3 sử dụng **Ảnh Đại Diện (Avatar) của chính User dạng hình tròn**, có đường viền Gradient phát sáng chuyển màu động (Neon Cyan-Magenta) để làm nổi bật tâm điểm của ứng dụng.
+* **Trang cá nhân chi tiết:**
+  - **Thông tin cơ bản:** Ảnh đại diện chất lượng cao, Họ tên, ID thành viên, Danh hiệu nổi bật.
+  - **Chỉ số ELO:** Hiển thị điểm ELO hiện tại (ví dụ: 1245 ELO), huy hiệu hạng (Gold, Silver, Bronze) và biểu đồ lịch sử tăng giảm điểm ELO sau mỗi trận đấu.
+  - **Thống kê thi đấu:** Tỉ lệ thắng (Win rate %), chuỗi thắng hiện tại (Streak), tổng số trận đã thi đấu.
+  - **Lịch sử giải đấu:** Danh sách các giải đấu đã tham gia và thành tích đạt được.
+
+### Tab 4: Bảng Xếp Hạng ELO (Rankings)
+* **Giao diện:** Bảng danh sách xếp thứ tự (Leaderboard) chuyên nghiệp.
+* **Bộ lọc:** Lọc theo Môn thể thao (Pickleball, Cầu lông), lọc theo vùng miền (Toàn quốc, Tỉnh/Thành phố) hoặc bảng xếp hạng ELO nội bộ câu lạc bộ.
+* **Chi tiết:** Hiển thị thứ hạng, Avatar, Tên VĐV, Điểm ELO và chỉ số tăng/giảm thứ hạng gần đây.
+
+### Tab 5: Trung Tâm Thông Báo (Notifications)
+* **Giao diện:** Danh sách thông báo đẩy sắp xếp theo thời gian thực.
+* **Nội dung:** 
+  - Lịch thi đấu mới được sắp xếp hoặc có thay đổi giờ/sân đấu.
+  - Kết quả phê duyệt đơn đăng ký tham gia giải đấu (Duyệt/Từ chối).
+  - Lời mời tham gia nhóm/đăng ký thi đấu đôi (Double) từ người chơi khác.
 
 ---
 
-## 6. Lời Kết
+## 5. Kiến Trúc Chuyển Đổi Kỹ Thuật (Firebase NoSQL -> PostgreSQL)
 
-Hành trình nâng cấp này không nhằm đập bỏ những gì đã làm tốt, mà là **đặt một bộ máy tuyệt vời (bốc thăm, quản lý trận đấu) lên một bệ phóng mạnh mẽ và mở rộng hơn (Backend xịn, có user, có cộng đồng)**.
+```mermaid
+graph TD
+    A[Flutter App] -->|HTTPS REST Request| B(NestJS Gateway/API v1)
+    B -->|Drizzle ORM| C[(PostgreSQL Database)]
+    B -.->|Google OAuth Service| D[Google Mobile Client SDK]
+    A -->|JSON Bracket Parser| E[Bracket Render UI]
+    A -->|JWT Authorization Header| B
+```
 
-Ứng dụng Flutter sẽ đóng vai trò là "mặt tiền" linh hoạt, tốc độ cao, đồng bộ dữ liệu thời gian thực với hệ thống Web, mang lại trải nghiệm chuyên nghiệp nhất cho nền thể thao phong trào tại Việt Nam.
+* **Authentication:** Chuyển từ Firebase Anonymous sang **JWT Authentication (Access Token trong Memory, Refresh Token trong Secure Storage)**. Mọi Request lên Backend đều đính kèm Header `Authorization: Bearer <token>`.
+* **Data Refreshing:** Thay thế cho việc lắng nghe Stream Firestore liên tục gây tốn pin/băng thông, App Flutter thực hiện gọi API qua Service Repository và cập nhật trạng thái bằng **Riverpod State Management** (kết hợp REST API Polling cho Live Score hoặc WebSockets cho các sự kiện quan trọng).
