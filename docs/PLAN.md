@@ -245,4 +245,12 @@ Hoàn thiện trải nghiệm real-time cho Viewer, xuất kết quả, và poli
 
 ✅ Milestone 4 (End Phase 4):
    "Khán giả mở app, nhập token viewer, thấy điểm cập nhật real-time"
-```
+
+---
+
+## 📈 Tích hợp Thiết kế ELO Cặp đôi Lâu dài (Doubles ELO History)
+- [ ] Thiết lập bảng `pair_ranks` để lưu ELO cho các cặp đôi (định danh bởi `user1Id` và `user2Id`).
+- [ ] Khởi tạo ELO cặp đôi bằng trung bình cộng ELO cá nhân đánh đôi khi cặp đôi đăng ký giải đấu lần đầu.
+- [ ] Tính toán, cập nhật và lưu giữ ELO cặp đôi độc lập sau mỗi trận đấu của giải đấu có tính ELO.
+- [ ] Đảm bảo ELO cặp đôi được tái sử dụng nếu 2 VĐV tái hợp ở các giải đấu sau.
+
