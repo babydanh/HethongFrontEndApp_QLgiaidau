@@ -5,13 +5,13 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/features/home/screens/home_screen.dart';
 import 'package:app_quanly_giaidau/features/home/screens/qr_scanner_screen.dart';
 import 'package:app_quanly_giaidau/features/auth/screens/splash_screen.dart';
+import 'package:app_quanly_giaidau/features/auth/screens/login_register_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/create_tournament_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/add_team_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart';
-import 'package:app_quanly_giaidau/features/live/screens/live_match_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
@@ -25,24 +25,26 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuth = auth.status == AuthStatus.authenticated;
       final currentPath = state.matchedLocation;
 
-      // Splash screen — luôn cho phép
-      if (currentPath == '/') return null;
+      // Splash screen & Login screen — luôn cho phép
+      if (currentPath == '/' || currentPath == '/login') return null;
 
-      // Chưa auth thì mặc định về /home (ngoại trừ splash)
-      if (!isAuth && currentPath != '/home' && currentPath != '/scan-qr' && !currentPath.startsWith('/admin/create')) {
+      // Chưa auth nhưng cố truy cập referee hoặc admin
+      if (!isAuth && (currentPath.startsWith('/referee') || currentPath.startsWith('/admin'))) {
+        return '/login';
+      }
+
+      // Chưa auth thì mặc định về /home
+      if (!isAuth && currentPath != '/home' && currentPath != '/scan-qr') {
         return '/home';
       }
 
-      // Đã auth và đang ở /home -> không ép chuyển trang trừ khi user click, vì home cũng là danh sách.
-      // Tuy nhiên, logic cũ là ép vào role. Ở đây ta giữ nguyên việc truy cập /home.
+      // Đã auth và ở /login -> về /home
+      if (isAuth && currentPath == '/login') {
+        return '/home';
+      }
       
       // Kiểm tra quyền truy cập route
       if (isAuth) {
-        // Nếu người dùng đang vào tạo giải đấu thì luôn cho phép, không bị kẹt bởi session cũ
-        if (currentPath == '/admin/create') {
-          return null;
-        }
-
         if (currentPath.startsWith('/admin') && auth.role != UserRole.admin) {
           return auth.role == UserRole.referee ? '/referee' : '/viewer';
         }
@@ -58,6 +60,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/',
         builder: (context, state) => const SplashScreen(),
+      ),
+
+      // ─── Login/Register ───
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginRegisterScreen(),
       ),
 
       // ─── Home ───

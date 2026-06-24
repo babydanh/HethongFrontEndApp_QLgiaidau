@@ -4,11 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:app_quanly_giaidau/data/models/match_event_model.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
-import 'package:app_quanly_giaidau/core/services/excel_export_service.dart';
 import 'package:flutter/services.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/penalty_input_dialog.dart';
 class LiveScoreScreen extends ConsumerStatefulWidget {
@@ -561,7 +559,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
                     Text('Đội chiến thắng:', style: TextStyle(color: context.colors.textPrimary, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: selectedWinnerId,
+                      initialValue: selectedWinnerId,
                       dropdownColor: context.colors.bgCard,
                       items: [
                         DropdownMenuItem(value: match.team1Id, child: Text(match.team1Name, style: TextStyle(color: context.colors.textPrimary))),

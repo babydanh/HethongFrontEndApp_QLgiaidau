@@ -520,14 +520,14 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     final graph = BracketGraphService.buildSingleEliminationGraph(matches);
 
     final builder = BuchheimWalkerConfiguration()
-      ..siblingSeparation = (60)
-      ..levelSeparation = (150)
-      ..subtreeSeparation = (120)
+      ..siblingSeparation = (100)
+      ..levelSeparation = (250)
+      ..subtreeSeparation = (180)
       ..orientation = (BuchheimWalkerConfiguration.ORIENTATION_RIGHT_LEFT);
 
     return GraphView(
       graph: graph,
-      algorithm: SeparatedBuchheimWalkerAlgorithm(builder, TreeEdgeRenderer(builder), 1000),
+      algorithm: SeparatedBuchheimWalkerAlgorithm(builder, TreeEdgeRenderer(builder), 2200),
       paint: Paint()
         ..color = AppTheme.primary.withValues(alpha: 0.6) // Làm nét nối mềm mại hơn
         ..strokeWidth = 3 // Cho nét nối dày hơn một xíu

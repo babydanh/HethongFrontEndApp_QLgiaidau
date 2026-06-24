@@ -1,3 +1,6 @@
+import 'package:app_quanly_giaidau/core/services/dio_client.dart';
+import 'package:app_quanly_giaidau/core/services/token_manager.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
@@ -6,31 +9,38 @@ import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dar
 import 'package:app_quanly_giaidau/domain/repositories/team_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/local_session_repository.dart';
-import 'package:app_quanly_giaidau/data/repositories/firebase/firebase_tournament_repository.dart';
-import 'package:app_quanly_giaidau/data/repositories/firebase/firebase_team_repository.dart';
-import 'package:app_quanly_giaidau/data/repositories/firebase/firebase_match_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/local/shared_prefs_local_session_repository.dart';
-import 'package:app_quanly_giaidau/providers/auth_provider.dart';
-import 'package:app_quanly_giaidau/providers/saved_tournaments_provider.dart';
-import 'package:app_quanly_giaidau/core/services/presence_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) async {
   return await SharedPreferences.getInstance();
 });
 
+// ─── Core Network Providers ───
+
+final tokenManagerProvider = Provider<TokenManager>((ref) {
+  return TokenManager();
+});
+
+final dioClientProvider = Provider<DioClient>((ref) {
+  return DioClient(tokenManager: ref.watch(tokenManagerProvider));
+});
+
 // ─── Repository Providers ───
 
 final tournamentRepositoryProvider = Provider<ITournamentRepository>((ref) {
-  return FirebaseTournamentRepository(ref.watch(firestoreProvider));
+  return ApiTournamentRepository(ref.watch(dioClientProvider));
 });
 
 final teamRepositoryProvider = Provider<ITeamRepository>((ref) {
-  return FirebaseTeamRepository(ref.watch(firestoreProvider));
+  return ApiTeamRepository(ref.watch(dioClientProvider));
 });
 
 final matchRepositoryProvider = Provider<IMatchRepository>((ref) {
-  return FirebaseMatchRepository(ref.watch(firestoreProvider));
+  return ApiMatchRepository(ref.watch(dioClientProvider));
 });
 
 final localSessionRepositoryProvider = Provider<ILocalSessionRepository>((ref) {
@@ -39,21 +49,16 @@ final localSessionRepositoryProvider = Provider<ILocalSessionRepository>((ref) {
 
 // ─── Tournament Providers ───
 
-/// Stream tất cả giải đấu (Admin)
+/// Stream tất cả giải đấu
 final tournamentsProvider = StreamProvider<List<Tournament>>((ref) {
-  // Bắt buộc watch authProvider để stream được gọi lại sau khi signInAnonymously thành công
-  ref.watch(authProvider);
   return ref.watch(tournamentRepositoryProvider).watchAll();
 });
 
 /// Danh sách "Những giải đấu của bạn"
 final myTournamentsProvider = Provider<AsyncValue<List<Tournament>>>((ref) {
   final allTournamentsAsync = ref.watch(tournamentsProvider);
-  final savedTournamentsAsync = ref.watch(savedTournamentsProvider);
-  final auth = ref.watch(firebaseAuthProvider);
-  final uid = auth.currentUser?.uid;
 
-  if (allTournamentsAsync is AsyncLoading || savedTournamentsAsync is AsyncLoading) {
+  if (allTournamentsAsync is AsyncLoading) {
     return const AsyncValue.loading();
   }
   
@@ -62,14 +67,7 @@ final myTournamentsProvider = Provider<AsyncValue<List<Tournament>>>((ref) {
   }
 
   final allTournaments = allTournamentsAsync.value ?? [];
-  final savedTournaments = savedTournamentsAsync.value ?? [];
-  final savedIds = savedTournaments.map((e) => e.id).toSet();
-
-  final myTournaments = allTournaments.where((t) {
-    return (uid != null && t.creatorId == uid) || savedIds.contains(t.id);
-  }).toList();
-
-  return AsyncValue.data(myTournaments);
+  return AsyncValue.data(allTournaments);
 });
 
 /// Stream 1 giải đấu theo ID
@@ -79,7 +77,8 @@ final tournamentProvider =
 });
 
 final presenceCountProvider = StreamProvider.family<int, ({String tournamentId, String role})>((ref, params) {
-  return ref.watch(presenceServiceProvider).watchOnlineCount(params.tournamentId, params.role);
+  // Thay thế presence realtime của Firestore
+  return Stream.value(1);
 });
 
 // ─── Team Providers ───

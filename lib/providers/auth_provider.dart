@@ -1,15 +1,13 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
 
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
-import 'package:app_quanly_giaidau/core/services/presence_service.dart';
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/domain/repositories/token_repository.dart';
-import 'package:app_quanly_giaidau/data/repositories/firebase/firebase_token_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_token_repository.dart';
+import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/saved_tournaments_provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 // ─── Enums ───
 
@@ -74,17 +72,9 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   ITokenRepository get _tokenRepository => ref.read(tokenRepositoryProvider);
-  FirebaseAuth get _auth => ref.read(firebaseAuthProvider);
-  PresenceService get _presence => ref.read(presenceServiceProvider);
 
   /// Khởi tạo: Kiểm tra token đã lưu
   Future<void> init() async {
-    // Luôn đảm bảo người dùng có một tài khoản ẩn danh để có quyền đọc Firestore public
-    if (_auth.currentUser == null) {
-      _log.debug('Khởi tạo: Gọi signInAnonymously()');
-      await _auth.signInAnonymously();
-    }
-
     final prefs = await SharedPreferences.getInstance();
     final savedToken = prefs.getString(_tokenKey);
 
@@ -95,21 +85,11 @@ class AuthNotifier extends Notifier<AuthState> {
 
   /// Xác thực token
   Future<bool> validateToken(String tokenCode) async {
-    _log.info('Bắt đầu xác thực token: ${tokenCode.substring(0, 3)}***');
+    _log.info('Bắt đầu xác thực token: ${tokenCode.substring(0, 3)}*** via NestJS API');
     state = state.copyWith(status: AuthStatus.validating);
 
     try {
-      // Đăng nhập anonymous nếu chưa
-      if (_auth.currentUser == null) {
-        _log.debug('Gọi signInAnonymously()');
-        await _auth.signInAnonymously();
-        _log.success('signInAnonymously() thành công');
-      } else {
-        _log.debug('Đã đăng nhập anonymous');
-      }
-
-      _log.debug('Đang truy vấn token từ Firestore...');
-      // Query token từ Firestore
+      _log.debug('Đang truy vấn token từ API...');
       final token = await _tokenRepository.validateToken(tokenCode);
       _log.debug('Truy vấn token hoàn tất. Kết quả: ${token?.id}');
 
@@ -144,25 +124,6 @@ class AuthNotifier extends Notifier<AuthState> {
       // Ghi nhớ giải đấu này vào session danh sách giải đấu của bạn
       await ref.read(savedTournamentsProvider.notifier).saveTournament(token.tournamentId, tokenCode, role.name);
 
-      // Lưu device vào authorized_users
-      final user = _auth.currentUser;
-      if (user != null) {
-        try {
-          await ref.read(firestoreProvider)
-              .collection(AppConstants.collectionTournaments)
-              .doc(token.tournamentId)
-              .collection('authorized_users')
-              .doc(user.uid)
-              .set({
-            'role': role.name,
-            'tokenCode': tokenCode.toUpperCase().trim(),
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-        } catch (e) {
-          _log.warning('Không thể ghi authorized_users (có thể do quyền Firestore hoặc offline): $e');
-        }
-      }
-
       _log.success(
         'Xác thực thành công. Role: ${role.name}, Tournament: ${token.tournamentId}',
       );
@@ -175,7 +136,6 @@ class AuthNotifier extends Notifier<AuthState> {
       );
 
       _startTokenListener(tokenCode);
-      _presence.goOnline(tournamentId: token.tournamentId, role: role.name);
       return true;
     } catch (e, stack) {
       _log.error('Lỗi xác thực token', e, stack);
@@ -199,25 +159,6 @@ class AuthNotifier extends Notifier<AuthState> {
     // Lưu vào danh sách các giải đấu của mình
     await ref.read(savedTournamentsProvider.notifier).saveTournament(tournamentId, tokenCode, role.name);
 
-    // Lưu device vào authorized_users
-    final user = _auth.currentUser;
-    if (user != null) {
-      try {
-        await ref.read(firestoreProvider)
-            .collection(AppConstants.collectionTournaments)
-            .doc(tournamentId)
-            .collection('authorized_users')
-            .doc(user.uid)
-            .set({
-          'role': role.name,
-          'tokenCode': tokenCode.toUpperCase().trim(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      } catch (e) {
-        _log.warning('Không thể ghi authorized_users (có thể offline): $e');
-      }
-    }
-
     state = AuthState(
       status: AuthStatus.authenticated,
       role: role,
@@ -226,10 +167,141 @@ class AuthNotifier extends Notifier<AuthState> {
     );
 
     _startTokenListener(tokenCode);
-    _presence.goOnline(tournamentId: tournamentId, role: role.name);
+  }
+
+  /// Phân tích thông báo lỗi từ NestJS (có thể là String hoặc List)
+  String _parseNestJsError(dynamic responseData, String fallback) {
+    if (responseData == null) return fallback;
+    final rawMessage = responseData['message'];
+    String msg;
+    if (rawMessage is List && rawMessage.isNotEmpty) {
+      msg = rawMessage.first.toString();
+    } else if (rawMessage is String) {
+      msg = rawMessage;
+    } else {
+      return fallback;
+    }
+    // Map một số thông báo tiếng Anh sang tiếng Việt
+    const viMap = {
+      'Email already exists': 'Email này đã được đăng ký. Vui lòng dùng email khác hoặc đăng nhập.',
+      'email should not be empty': 'Vui lòng nhập địa chỉ email.',
+      'email must be an email': 'Địa chỉ email không hợp lệ.',
+      'password must be longer than or equal to 6 characters': 'Mật khẩu phải có ít nhất 6 ký tự.',
+      'password should not be empty': 'Vui lòng nhập mật khẩu.',
+      'fullName should not be empty': 'Vui lòng nhập họ và tên.',
+      'Invalid credentials': 'Email hoặc mật khẩu không đúng.',
+      'Tài khoản này được đăng ký qua Google. Vui lòng đăng nhập bằng Google.': 'Tài khoản này đã đăng ký qua Google. Vui lòng đăng nhập bằng Google.',
+    };
+    return viMap[msg] ?? msg;
+  }
+
+  /// Đăng nhập bằng Email & Mật khẩu
+  Future<bool> loginWithEmailPassword(String email, String password) async {
+    _log.info('Đăng nhập bằng email: $email via NestJS Mobile API');
+    state = state.copyWith(status: AuthStatus.validating);
+
+    try {
+      final response = await ref.read(dioClientProvider).dio.post(
+        '/auth/mobile/login',
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        // NestJS trả về { statusCode, message, data: { accessToken, refreshToken, user } }
+        final innerData = data['data'] as Map<String, dynamic>? ?? data as Map<String, dynamic>;
+        final accessToken = innerData['accessToken'] as String?;
+        final refreshToken = innerData['refreshToken'] as String?;
+        
+        if (accessToken != null && refreshToken != null) {
+          await ref.read(tokenManagerProvider).saveTokens(
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+          );
+
+          // Lấy roles từ user data
+          final userMap = innerData['user'] as Map<String, dynamic>?;
+          final userRolesList = userMap?['roles'] as List<dynamic>? ?? [];
+          UserRole role = UserRole.viewer;
+          if (userRolesList.contains('ADMIN') || userRolesList.contains('admin')) {
+            role = UserRole.admin;
+          } else if (userRolesList.contains('REFEREE') || userRolesList.contains('referee')) {
+            role = UserRole.referee;
+          }
+          // PLAYER, USER, hoặc bất kỳ role khác → viewer (mặc định)
+
+          state = AuthState(
+            status: AuthStatus.authenticated,
+            role: role,
+            tokenCode: 'SESSION',
+          );
+          return true;
+        }
+      }
+      
+      state = const AuthState(
+        status: AuthStatus.invalid,
+        errorMessage: 'Không tìm thấy thông tin xác thực trong phản hồi',
+      );
+      return false;
+    } catch (e, stack) {
+      _log.error('Lỗi đăng nhập', e, stack);
+      String errMsg = 'Lỗi kết nối đến máy chủ';
+      if (e is DioException) {
+        errMsg = _parseNestJsError(e.response?.data, e.message ?? errMsg);
+      }
+      state = AuthState(
+        status: AuthStatus.invalid,
+        errorMessage: errMsg,
+      );
+      return false;
+    }
+  }
+
+  /// Đăng ký tài khoản mới bằng Email & Mật khẩu
+  Future<bool> registerWithEmailPassword(String email, String password, String fullName) async {
+    _log.info('Đăng ký bằng email: $email via NestJS Mobile API');
+    state = state.copyWith(status: AuthStatus.validating);
+
+    try {
+      final response = await ref.read(dioClientProvider).dio.post(
+        '/auth/mobile/register',
+        data: {
+          'email': email,
+          'password': password,
+          'fullName': fullName,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Tự động đăng nhập sau khi đăng ký thành công
+        return await loginWithEmailPassword(email, password);
+      }
+      
+      state = const AuthState(
+        status: AuthStatus.invalid,
+        errorMessage: 'Đăng ký không thành công. Vui lòng thử lại.',
+      );
+      return false;
+    } catch (e, stack) {
+      _log.error('Lỗi đăng ký', e, stack);
+      String errMsg = 'Lỗi kết nối đến máy chủ';
+      if (e is DioException) {
+        errMsg = _parseNestJsError(e.response?.data, e.message ?? errMsg);
+      }
+      state = AuthState(
+        status: AuthStatus.invalid,
+        errorMessage: errMsg,
+      );
+      return false;
+    }
   }
 
   void _startTokenListener(String tokenCode) {
+    if (tokenCode == 'SESSION') return; // Không cần listen token của email session
     _tokenSubscription?.cancel();
     _tokenSubscription = _tokenRepository.watchToken(tokenCode).listen((token) {
       if (token == null && state.isAuthenticated) {
@@ -245,27 +317,19 @@ class AuthNotifier extends Notifier<AuthState> {
 
   /// Đăng xuất
   Future<void> signOut({String? reason}) async {
-    await _presence.goOffline();
     _tokenSubscription?.cancel();
     _tokenSubscription = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
+    await ref.read(tokenManagerProvider).clearTokens();
     state = AuthState(status: AuthStatus.unauthenticated, errorMessage: reason);
   }
 }
 
-// ─── Providers ───
-
-final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
-  return FirebaseAuth.instance;
-});
-
-final firestoreProvider = Provider<FirebaseFirestore>((ref) {
-  return FirebaseFirestore.instance;
-});
+// ─── Token Repository Provider kết nối tới API ───
 
 final tokenRepositoryProvider = Provider<ITokenRepository>((ref) {
-  return FirebaseTokenRepository(ref.watch(firestoreProvider));
+  return ApiTokenRepository(ref.watch(dioClientProvider));
 });
 
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(

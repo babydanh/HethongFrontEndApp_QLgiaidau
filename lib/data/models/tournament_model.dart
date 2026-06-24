@@ -40,18 +40,27 @@ class Tournament {
   });
 
   factory Tournament.fromJson(Map<String, dynamic> json, String id) {
+    String? parsedCategory;
+    if (json['category'] != null) {
+      if (json['category'] is Map) {
+        parsedCategory = json['category']['name']?.toString() ?? json['category']['id']?.toString();
+      } else {
+        parsedCategory = json['category'].toString();
+      }
+    }
+
     return Tournament(
       id: id,
       name: json['name'] ?? '',
       sport: json['sport'] ?? '',
       format: json['format'] ?? '',
-      category: json['category'],
+      category: parsedCategory,
       bracketType: json['bracketType'] ?? '',
       status: json['status'] ?? 'draft',
-      adminToken: json['adminToken'] ?? '',
-      refereeToken: json['refereeToken'] ?? '',
-      viewerToken: json['viewerToken'] ?? '',
-      creatorId: json['creatorId'] ?? '',
+      adminToken: json['adminToken'] ?? json['inviteCode'] ?? '',
+      refereeToken: json['refereeToken'] ?? json['inviteCode'] ?? '',
+      viewerToken: json['viewerToken'] ?? json['inviteCode'] ?? '',
+      creatorId: json['creatorId'] ?? json['createdBy'] ?? '',
       maxTeams: json['maxTeams'] ?? 16,
       maxPlayersPerTeam: json['maxPlayersPerTeam'],
       description: json['description'] ?? '',

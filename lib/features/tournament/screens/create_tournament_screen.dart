@@ -99,11 +99,6 @@ class _CreateTournamentScreenState
       final id = const Uuid().v4();
       final now = DateTime.now();
 
-      final auth = ref.read(firebaseAuthProvider);
-      if (auth.currentUser == null) {
-        await auth.signInAnonymously();
-      }
-
       final isRoundRobin = _selectedBracket == AppConstants.bracketRoundRobin;
       final defaultMaxTeams = isRoundRobin ? 16 : 16; // Mặc định là 16 đội
       final maxTeamsVal = int.tryParse(_maxTeamsController.text.trim()) ?? defaultMaxTeams;
@@ -120,7 +115,7 @@ class _CreateTournamentScreenState
         adminToken: tokens[AppConstants.roleAdmin]!,
         refereeToken: tokens[AppConstants.roleReferee]!,
         viewerToken: tokens[AppConstants.roleViewer]!,
-        creatorId: auth.currentUser?.uid ?? '',
+        creatorId: 'admin-mobile-id',
         maxTeams: maxTeamsVal,
         description: _descController.text.trim(),
         roundCount: roundCountVal,
@@ -128,24 +123,15 @@ class _CreateTournamentScreenState
         updatedAt: now,
       );
 
-      _log.info('Đang lưu Tournament lên Firestore...');
-      await ref.read(tournamentRepositoryProvider).create(tournament);
+      _log.info('Đang lưu Tournament thông qua API...');
+      final createdTournament = await ref.read(tournamentRepositoryProvider).create(tournament);
       _log.success('Lưu Tournament thành công!');
-
-      _log.info('Đang lưu Tokens lên Firestore...');
-      await ref.read(tokenRepositoryProvider).createTokensForTournament(
-            tournamentId: id,
-            adminToken: tokens[AppConstants.roleAdmin]!,
-            refereeToken: tokens[AppConstants.roleReferee]!,
-            viewerToken: tokens[AppConstants.roleViewer]!,
-          );
-      _log.success('Lưu Tokens thành công!');
 
       _log.info('Tự động đăng nhập nội bộ...');
       await ref.read(authProvider.notifier).loginLocally(
-        tokenCode: tokens[AppConstants.roleAdmin]!,
+        tokenCode: createdTournament.adminToken,
         role: UserRole.admin,
-        tournamentId: id,
+        tournamentId: createdTournament.id,
       );
       _log.success('Đăng nhập nội bộ thành công!');
 

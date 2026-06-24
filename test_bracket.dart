@@ -1,5 +1,5 @@
 import 'package:app_quanly_giaidau/core/utils/bracket_generator.dart';
-import 'package:app_quanly_giaidau/data/models/team.dart';
+import 'package:app_quanly_giaidau/data/models/team_model.dart';
 
 void main() {
   final teams = List.generate(10, (i) => Team(

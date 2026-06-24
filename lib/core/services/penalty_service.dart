@@ -1,5 +1,4 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
-import 'package:app_quanly_giaidau/core/strategy/penalty_strategy.dart';
 
 class PenaltyService {
   /// Xử lý logic phạt, trả về số điểm thay đổi cho ĐỘI ĐỐI PHƯƠNG

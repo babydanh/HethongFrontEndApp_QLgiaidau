@@ -8,7 +8,6 @@ class MatchNodeCard extends StatelessWidget {
   final bool isReadOnly;
   final String tournamentId;
   final double width;
-  final double height;
 
   const MatchNodeCard({
     super.key,
@@ -17,13 +16,13 @@ class MatchNodeCard extends StatelessWidget {
     required this.isReadOnly,
     required this.tournamentId,
     this.width = 260.0,
-    this.height = 100.0,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: width,
+      constraints: const BoxConstraints(minWidth: 260),
       child: MatchCardDetail(
         match: match,
         isReferee: isReferee,

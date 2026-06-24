@@ -55,6 +55,7 @@ class MatchCardDetail extends StatelessWidget {
               : null,
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Live indicator
             if (isLive)

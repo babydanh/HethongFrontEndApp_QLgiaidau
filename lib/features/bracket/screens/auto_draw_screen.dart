@@ -172,8 +172,8 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                 if (m.bracketPosition.bracket == 'losers') return false;
                 
                 // Ẩn các trận rác sau khi bốc thăm (không phải cả 2 đều là TBD/BYE)
-                final isTbdOrBye1 = m.team1Id == 'TBD' || m.team1Id == 'BYE';
-                final isTbdOrBye2 = m.team2Id == 'TBD' || m.team2Id == 'BYE';
+                final isTbdOrBye1 = m.team1Id.isEmpty || m.team1Id == 'BYE' || m.team1Name == 'TBD' || m.team1Name == 'BYE';
+                final isTbdOrBye2 = m.team2Id.isEmpty || m.team2Id == 'BYE' || m.team2Name == 'TBD' || m.team2Name == 'BYE';
                 
                 // Nếu đang bốc thủ công và chưa bốc xong, VẪN hiển thị TBD để người dùng biết vị trí trống
                 if (_isManualDrawMode && _unrevealedTeamIds.isNotEmpty) return true;

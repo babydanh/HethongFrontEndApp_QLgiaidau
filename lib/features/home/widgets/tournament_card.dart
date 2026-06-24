@@ -42,10 +42,7 @@ class TournamentCard extends ConsumerWidget {
     final statusColor = StatusHelper.getStatusColor(tournament.status, context);
     final ledIndicator = StatusIndicator(status: tournament.status);
 
-    final fbAuth = ref.watch(firebaseAuthProvider);
-    final isCreator =
-        tournament.creatorId.isNotEmpty &&
-        fbAuth.currentUser?.uid == tournament.creatorId;
+    final isCreator = tournament.creatorId == 'admin-mobile-id';
 
     return GestureDetector(
       onTap: () async {
