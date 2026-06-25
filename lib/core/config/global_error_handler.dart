@@ -12,7 +12,6 @@ class GlobalErrorHandler {
       // Các lỗi khác (như click button sinh lỗi) thì in ra console/crashlytics.
       
       // Nếu có dùng Crashlytics:
-      // FirebaseCrashlytics.instance.recordFlutterFatalError(details);
     };
 
     // 2. Xử lý các lỗi Asynchronous từ Dart (Future, Stream...)
@@ -20,7 +19,6 @@ class GlobalErrorHandler {
       debugPrint('🚨 Đã xảy ra lỗi Dart (Async): $error\n$stack');
       
       // Nếu có dùng Crashlytics:
-      // FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       
       return true; // Trả về true để báo hệ thống rằng lỗi đã được xử lý (tránh crash app nếu có thể)
     };

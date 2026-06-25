@@ -118,7 +118,7 @@ class AppConstants {
   static const int pointsForDraw = 1;
   static const int pointsForLoss = 0;
 
-  // ─── Firestore Collections ───
+  // ─── Collection Names ───
   static const String collectionTournaments = 'tournaments';
   static const String collectionTeams = 'teams';
   static const String collectionMatches = 'matches';
