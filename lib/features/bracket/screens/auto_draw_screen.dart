@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
-import 'package:app_quanly_giaidau/providers/app_providers.dart';
+import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/draw_service.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
 
 class AutoDrawScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -81,16 +82,10 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
   Future<void> _saveMatches(List<MatchModel> matches) async {
     setState(() => _isDrawing = true);
     try {
-      final repo = ref.read(matchRepositoryProvider);
-      
-      // Batch write
-      await repo.createBatch(widget.tournamentId, matches);
-
-      // Đổi trạng thái giải đấu sang in_progress
-      await ref.read(tournamentRepositoryProvider).update(widget.tournamentId, {
-        'status': 'in_progress',
-        'updatedAt': DateTime.now(),
-      });
+      await ref.read(publishTournamentDrawUseCaseProvider).call(
+            widget.tournamentId,
+            matches,
+          );
 
       if (mounted) {
         setState(() {
@@ -115,11 +110,9 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
   Future<void> _clearDraw() async {
     setState(() => _isDrawing = true);
     try {
-      await ref.read(matchRepositoryProvider).deleteAll(widget.tournamentId);
-      await ref.read(tournamentRepositoryProvider).update(widget.tournamentId, {
-        'status': 'registration_open',
-        'updatedAt': DateTime.now(),
-      });
+      await ref.read(resetTournamentDrawUseCaseProvider).call(
+            widget.tournamentId,
+          );
       if (mounted) {
         setState(() {
           _isDrawing = false;

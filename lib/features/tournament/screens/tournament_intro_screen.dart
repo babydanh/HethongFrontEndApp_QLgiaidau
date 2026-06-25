@@ -6,7 +6,6 @@ import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
-import 'package:app_quanly_giaidau/core/services/presence_service.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 
 class TournamentIntroScreen extends ConsumerStatefulWidget {
@@ -19,23 +18,6 @@ class TournamentIntroScreen extends ConsumerStatefulWidget {
 }
 
 class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Báo cáo online vào trang giới thiệu
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(presenceServiceProvider).goOnline(
-            tournamentId: widget.tournamentId,
-            role: 'intro',
-          );
-    });
-  }
-
-  @override
-  void dispose() {
-    // Không dùng ref.read trong dispose, thay vào đó gọi offline nếu cần hoặc rely vào onDisconnect
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +54,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             onPressed: () {
-              ref.read(presenceServiceProvider).goOffline();
               ref.read(authProvider.notifier).signOut();
               context.go('/home');
             },
@@ -111,7 +92,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen> {
                 ),
               ),
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (error, stackTrace) => const SizedBox.shrink(),
             ),
           ],
           flexibleSpace: FlexibleSpaceBar(
@@ -194,7 +175,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
                     onPressed: () {
-                      ref.read(presenceServiceProvider).goOffline();
                       context.go(NavigationHelper.getInitialRoute(role));
                     },
                     icon: const Icon(Icons.login_rounded, size: 24),

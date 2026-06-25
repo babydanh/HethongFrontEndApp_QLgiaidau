@@ -6,8 +6,8 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/admin_edit_score_dialog.dart';
-import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_event_model.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/match_settings_dialog.dart';
@@ -562,15 +562,12 @@ class _ScoreInputScreenState extends ConsumerState<ScoreInputScreen> {
         final winnerName = winnerId == match.team1Id
             ? match.team1Name
             : match.team2Name;
-        await ref
-            .read(matchRepositoryProvider)
-            .advanceWinner(
-              widget.tournamentId,
-              match.nextMatchId,
-              winnerId: winnerId,
-              winnerName: winnerName,
-              isTeam1: match.matchNumber.isOdd,
-            );
+        await controller.advanceWinner(
+          nextMatchId: match.nextMatchId,
+          winnerId: winnerId,
+          winnerName: winnerName,
+          isTeam1: match.matchNumber.isOdd,
+        );
       }
 
       if (mounted) {

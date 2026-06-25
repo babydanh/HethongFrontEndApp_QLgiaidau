@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:google_sign_in/google_sign_in.dart' as gsis;
 
 class LoginRegisterScreen extends ConsumerStatefulWidget {
   const LoginRegisterScreen({super.key});
@@ -67,6 +68,55 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       setState(() {
         _isLoading = false;
         _errorMessage = auth.errorMessage ?? (_isRegisterMode ? 'Đăng ký thất bại' : 'Đăng nhập thất bại');
+      });
+    }
+  }
+
+  Future<void> _submitGoogle() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final googleSignIn = gsis.GoogleSignIn(
+        clientId: '361413428219-ukdsu3nlv3bkkggv9pmtssrf82h8d539.apps.googleusercontent.com',
+      );
+      
+      // Thử đăng nhập im lặng trước (phù hợp cho Web nếu đã đăng nhập trước đó)
+      // Nếu thất bại hoặc trả về null, thực hiện luồng signIn() đầy đủ
+      final googleUser = await googleSignIn.signInSilently() ??
+                         await googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        throw Exception('Người dùng hủy đăng nhập Google');
+      }
+      
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+
+      if (idToken == null) {
+        throw Exception('Không nhận được ID Token từ Google');
+      }
+
+      bool success = await ref.read(authProvider.notifier).loginWithGoogle(idToken);
+
+      if (!mounted) return;
+
+      if (success) {
+        context.go('/home');
+      } else {
+        final auth = ref.read(authProvider);
+        setState(() {
+          _isLoading = false;
+          _errorMessage = auth.errorMessage ?? 'Đăng nhập Google thất bại';
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Lỗi Google Sign-In: ${e.toString()}';
       });
     }
   }
@@ -264,6 +314,46 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                         color: Colors.white,
                                       ),
                                     ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(child: Divider(color: context.colors.border.withValues(alpha: 0.5))),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                'Hoặc',
+                                style: TextStyle(
+                                  color: context.colors.textSecondary.withValues(alpha: 0.6),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Expanded(child: Divider(color: context.colors.border.withValues(alpha: 0.5))),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: _isLoading ? null : _submitGoogle,
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(52),
+                            side: BorderSide(color: context.colors.border),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: Image.network(
+                            'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png',
+                            height: 20,
+                            errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata, size: 24),
+                          ),
+                          label: Text(
+                            _isRegisterMode ? 'Đăng ký bằng Google' : 'Đăng nhập bằng Google',
+                            style: TextStyle(
+                              color: context.colors.textPrimary,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),

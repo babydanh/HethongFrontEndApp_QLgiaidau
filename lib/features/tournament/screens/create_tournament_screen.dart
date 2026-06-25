@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:uuid/uuid.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
-import 'package:app_quanly_giaidau/core/utils/token_generator.dart';
-import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
-import 'package:app_quanly_giaidau/providers/app_providers.dart';
+import 'package:app_quanly_giaidau/domain/usecases/tournament/create_tournament_use_case.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_info_form.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_settings_form.dart';
@@ -95,36 +93,25 @@ class _CreateTournamentScreenState
 
     try {
       _log.info('Bắt đầu tạo giải đấu');
-      final tokens = TokenGenerator.generateAll();
-      final id = const Uuid().v4();
-      final now = DateTime.now();
-
       final isRoundRobin = _selectedBracket == AppConstants.bracketRoundRobin;
-      final defaultMaxTeams = isRoundRobin ? 16 : 16; // Mặc định là 16 đội
+      final defaultMaxTeams = isRoundRobin ? 16 : 16;
       final maxTeamsVal = int.tryParse(_maxTeamsController.text.trim()) ?? defaultMaxTeams;
       final roundCountVal = isRoundRobin ? (int.tryParse(_roundCountController.text.trim()) ?? 1) : 1;
 
-      final tournament = Tournament(
-        id: id,
-        name: _nameController.text.trim(),
-        sport: _selectedSport,
-        format: _selectedFormat,
-        category: _selectedCategory,
-        bracketType: _selectedBracket,
-        status: AppConstants.statusDraft,
-        adminToken: tokens[AppConstants.roleAdmin]!,
-        refereeToken: tokens[AppConstants.roleReferee]!,
-        viewerToken: tokens[AppConstants.roleViewer]!,
-        creatorId: 'admin-mobile-id',
-        maxTeams: maxTeamsVal,
-        description: _descController.text.trim(),
-        roundCount: roundCountVal,
-        createdAt: now,
-        updatedAt: now,
-      );
-
       _log.info('Đang lưu Tournament thông qua API...');
-      final createdTournament = await ref.read(tournamentRepositoryProvider).create(tournament);
+      final createdTournament =
+          await ref.read(createTournamentUseCaseProvider).call(
+                CreateTournamentParams(
+                  name: _nameController.text.trim(),
+                  sport: _selectedSport,
+                  format: _selectedFormat,
+                  category: _selectedCategory,
+                  bracketType: _selectedBracket,
+                  description: _descController.text.trim(),
+                  maxTeams: maxTeamsVal,
+                  roundCount: roundCountVal,
+                ),
+              );
       _log.success('Lưu Tournament thành công!');
 
       _log.info('Tự động đăng nhập nội bộ...');
@@ -143,7 +130,7 @@ class _CreateTournamentScreenState
           ),
         );
         _log.info('Chuyển hướng sang màn hình Admin...');
-        context.go('/admin/tournament/$id');
+        context.go('/admin/tournament/${createdTournament.id}');
       }
     } catch (e, stack) {
       _log.error('Lỗi tạo giải đấu', e, stack);
