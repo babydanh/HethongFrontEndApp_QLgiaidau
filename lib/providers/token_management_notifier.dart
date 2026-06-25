@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/data/models/token_model.dart';
-import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
 class TokenManagementNotifier extends AsyncNotifier<List<TokenModel>> {
   static const _log = AppLogger('TokenManagementNotifier');

@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_event_model.dart';
-import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/data/models/penalty_model.dart';
 import 'package:app_quanly_giaidau/core/services/penalty_service.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
 
 typedef MatchControlParams = ({String tournamentId, String matchId});
 
@@ -176,6 +177,21 @@ class MatchController {
       loserId: loserId,
       finalScore1: m.score1,
       finalScore2: m.score2,
+    );
+  }
+
+  Future<void> advanceWinner({
+    required String nextMatchId,
+    required String winnerId,
+    required String winnerName,
+    required bool isTeam1,
+  }) async {
+    await ref.read(matchRepositoryProvider).advanceWinner(
+      tournamentId,
+      nextMatchId,
+      winnerId: winnerId,
+      winnerName: winnerName,
+      isTeam1: isTeam1,
     );
   }
 

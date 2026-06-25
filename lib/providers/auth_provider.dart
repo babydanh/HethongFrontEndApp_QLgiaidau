@@ -1,12 +1,9 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dio/dio.dart';
 
+import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
-import 'package:app_quanly_giaidau/domain/repositories/token_repository.dart';
-import 'package:app_quanly_giaidau/data/repositories/api/api_token_repository.dart';
-import 'package:app_quanly_giaidau/providers/app_providers.dart';
+import 'package:app_quanly_giaidau/domain/entities/auth_session.dart';
 import 'package:app_quanly_giaidau/providers/saved_tournaments_provider.dart';
 
 // ─── Enums ───
@@ -59,7 +56,6 @@ class AuthState {
 
 class AuthNotifier extends Notifier<AuthState> {
   static const _log = AppLogger('AuthNotifier');
-  static const _tokenKey = 'saved_token';
 
   StreamSubscription? _tokenSubscription;
 
@@ -71,12 +67,9 @@ class AuthNotifier extends Notifier<AuthState> {
     return const AuthState();
   }
 
-  ITokenRepository get _tokenRepository => ref.read(tokenRepositoryProvider);
-
   /// Khởi tạo: Kiểm tra token đã lưu
   Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedToken = prefs.getString(_tokenKey);
+    final savedToken = await ref.read(restoreSavedInviteTokenUseCaseProvider).call();
 
     if (savedToken != null && savedToken.isNotEmpty) {
       await validateToken(savedToken);
@@ -90,7 +83,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
     try {
       _log.debug('Đang truy vấn token từ API...');
-      final token = await _tokenRepository.validateToken(tokenCode);
+      final token = await ref.read(validateInviteTokenUseCaseProvider).call(tokenCode);
       _log.debug('Truy vấn token hoàn tất. Kết quả: ${token?.id}');
 
       if (token == null) {
@@ -117,9 +110,7 @@ class AuthNotifier extends Notifier<AuthState> {
         return false;
       }
 
-      // Lưu token vào local
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_tokenKey, tokenCode);
+      await ref.read(saveInviteTokenUseCaseProvider).call(tokenCode);
       
       // Ghi nhớ giải đấu này vào session danh sách giải đấu của bạn
       await ref.read(savedTournamentsProvider.notifier).saveTournament(token.tournamentId, tokenCode, role.name);
@@ -153,8 +144,7 @@ class AuthNotifier extends Notifier<AuthState> {
     required UserRole role,
     required String tournamentId,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, tokenCode);
+    await ref.read(saveInviteTokenUseCaseProvider).call(tokenCode);
     
     // Lưu vào danh sách các giải đấu của mình
     await ref.read(savedTournamentsProvider.notifier).saveTournament(tournamentId, tokenCode, role.name);
@@ -169,93 +159,52 @@ class AuthNotifier extends Notifier<AuthState> {
     _startTokenListener(tokenCode);
   }
 
-  /// Phân tích thông báo lỗi từ NestJS (có thể là String hoặc List)
-  String _parseNestJsError(dynamic responseData, String fallback) {
-    if (responseData == null) return fallback;
-    final rawMessage = responseData['message'];
-    String msg;
-    if (rawMessage is List && rawMessage.isNotEmpty) {
-      msg = rawMessage.first.toString();
-    } else if (rawMessage is String) {
-      msg = rawMessage;
-    } else {
-      return fallback;
-    }
-    // Map một số thông báo tiếng Anh sang tiếng Việt
-    const viMap = {
-      'Email already exists': 'Email này đã được đăng ký. Vui lòng dùng email khác hoặc đăng nhập.',
-      'email should not be empty': 'Vui lòng nhập địa chỉ email.',
-      'email must be an email': 'Địa chỉ email không hợp lệ.',
-      'password must be longer than or equal to 6 characters': 'Mật khẩu phải có ít nhất 6 ký tự.',
-      'password should not be empty': 'Vui lòng nhập mật khẩu.',
-      'fullName should not be empty': 'Vui lòng nhập họ và tên.',
-      'Invalid credentials': 'Email hoặc mật khẩu không đúng.',
-      'Tài khoản này được đăng ký qua Google. Vui lòng đăng nhập bằng Google.': 'Tài khoản này đã đăng ký qua Google. Vui lòng đăng nhập bằng Google.',
-    };
-    return viMap[msg] ?? msg;
-  }
-
   /// Đăng nhập bằng Email & Mật khẩu
   Future<bool> loginWithEmailPassword(String email, String password) async {
     _log.info('Đăng nhập bằng email: $email via NestJS Mobile API');
     state = state.copyWith(status: AuthStatus.validating);
 
     try {
-      final response = await ref.read(dioClientProvider).dio.post(
-        '/auth/mobile/login',
-        data: {
-          'email': email,
-          'password': password,
-        },
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data;
-        // NestJS trả về { statusCode, message, data: { accessToken, refreshToken, user } }
-        final innerData = data['data'] as Map<String, dynamic>? ?? data as Map<String, dynamic>;
-        final accessToken = innerData['accessToken'] as String?;
-        final refreshToken = innerData['refreshToken'] as String?;
-        
-        if (accessToken != null && refreshToken != null) {
-          await ref.read(tokenManagerProvider).saveTokens(
-            accessToken: accessToken,
-            refreshToken: refreshToken,
+      final session = await ref.read(loginWithEmailUseCaseProvider).call(
+            email: email,
+            password: password,
           );
-
-          // Lấy roles từ user data
-          final userMap = innerData['user'] as Map<String, dynamic>?;
-          final userRolesList = userMap?['roles'] as List<dynamic>? ?? [];
-          UserRole role = UserRole.viewer;
-          if (userRolesList.contains('ADMIN') || userRolesList.contains('admin')) {
-            role = UserRole.admin;
-          } else if (userRolesList.contains('REFEREE') || userRolesList.contains('referee')) {
-            role = UserRole.referee;
-          }
-          // PLAYER, USER, hoặc bất kỳ role khác → viewer (mặc định)
-
-          state = AuthState(
-            status: AuthStatus.authenticated,
-            role: role,
-            tokenCode: 'SESSION',
-          );
-          return true;
-        }
-      }
-      
-      state = const AuthState(
-        status: AuthStatus.invalid,
-        errorMessage: 'Không tìm thấy thông tin xác thực trong phản hồi',
+      state = AuthState(
+        status: AuthStatus.authenticated,
+        role: _mapSessionRole(session),
+        tokenCode: 'SESSION',
       );
-      return false;
+      return true;
     } catch (e, stack) {
       _log.error('Lỗi đăng nhập', e, stack);
-      String errMsg = 'Lỗi kết nối đến máy chủ';
-      if (e is DioException) {
-        errMsg = _parseNestJsError(e.response?.data, e.message ?? errMsg);
-      }
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: errMsg,
+        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+      );
+      return false;
+    }
+  }
+
+  /// Đăng nhập bằng Google
+  Future<bool> loginWithGoogle(String idToken) async {
+    _log.info('Đăng nhập bằng Google via NestJS Mobile API');
+    state = state.copyWith(status: AuthStatus.validating);
+
+    try {
+      final session = await ref.read(loginWithGoogleUseCaseProvider).call(
+            idToken: idToken,
+          );
+      state = AuthState(
+        status: AuthStatus.authenticated,
+        role: _mapSessionRole(session),
+        tokenCode: 'SESSION',
+      );
+      return true;
+    } catch (e, stack) {
+      _log.error('Lỗi đăng nhập Google', e, stack);
+      state = AuthState(
+        status: AuthStatus.invalid,
+        errorMessage: e.toString().replaceFirst('Exception: ', ''),
       );
       return false;
     }
@@ -267,43 +216,42 @@ class AuthNotifier extends Notifier<AuthState> {
     state = state.copyWith(status: AuthStatus.validating);
 
     try {
-      final response = await ref.read(dioClientProvider).dio.post(
-        '/auth/mobile/register',
-        data: {
-          'email': email,
-          'password': password,
-          'fullName': fullName,
-        },
+      final session = await ref.read(registerWithEmailUseCaseProvider).call(
+            email: email,
+            password: password,
+            fullName: fullName,
+          );
+      state = AuthState(
+        status: AuthStatus.authenticated,
+        role: _mapSessionRole(session),
+        tokenCode: 'SESSION',
       );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        // Tự động đăng nhập sau khi đăng ký thành công
-        return await loginWithEmailPassword(email, password);
-      }
-      
-      state = const AuthState(
-        status: AuthStatus.invalid,
-        errorMessage: 'Đăng ký không thành công. Vui lòng thử lại.',
-      );
-      return false;
+      return true;
     } catch (e, stack) {
       _log.error('Lỗi đăng ký', e, stack);
-      String errMsg = 'Lỗi kết nối đến máy chủ';
-      if (e is DioException) {
-        errMsg = _parseNestJsError(e.response?.data, e.message ?? errMsg);
-      }
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: errMsg,
+        errorMessage: e.toString().replaceFirst('Exception: ', ''),
       );
       return false;
     }
   }
 
+  UserRole _mapSessionRole(AuthSession session) {
+    if (session.roles.contains('ADMIN') || session.roles.contains('admin')) {
+      return UserRole.admin;
+    }
+    if (session.roles.contains('REFEREE') ||
+        session.roles.contains('referee')) {
+      return UserRole.referee;
+    }
+    return UserRole.viewer;
+  }
+
   void _startTokenListener(String tokenCode) {
     if (tokenCode == 'SESSION') return; // Không cần listen token của email session
     _tokenSubscription?.cancel();
-    _tokenSubscription = _tokenRepository.watchToken(tokenCode).listen((token) {
+    _tokenSubscription = ref.read(tokenRepositoryProvider).watchToken(tokenCode).listen((token) {
       if (token == null && state.isAuthenticated) {
         _log.warning(
           'Token $tokenCode đã bị vô hiệu hóa hoặc xóa. Tiến hành đăng xuất tự động.',
@@ -319,18 +267,10 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> signOut({String? reason}) async {
     _tokenSubscription?.cancel();
     _tokenSubscription = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await ref.read(tokenManagerProvider).clearTokens();
+    await ref.read(clearSessionUseCaseProvider).call();
     state = AuthState(status: AuthStatus.unauthenticated, errorMessage: reason);
   }
 }
-
-// ─── Token Repository Provider kết nối tới API ───
-
-final tokenRepositoryProvider = Provider<ITokenRepository>((ref) {
-  return ApiTokenRepository(ref.watch(dioClientProvider));
-});
 
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(
   AuthNotifier.new,

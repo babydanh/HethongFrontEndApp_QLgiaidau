@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:app_quanly_giaidau/providers/app_providers.dart';
+import 'package:app_quanly_giaidau/core/di/di.dart';
 
 class ThemeNotifier extends Notifier<ThemeMode> {
   static const _themeKey = 'app_theme_mode';

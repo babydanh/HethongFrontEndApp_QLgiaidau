@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:app_quanly_giaidau/data/models/saved_tournament_model.dart';
-import 'package:app_quanly_giaidau/providers/app_providers.dart';
+import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/domain/entities/saved_tournament.dart';
 
 class SavedTournamentsNotifier extends AsyncNotifier<List<SavedTournament>> {
 
