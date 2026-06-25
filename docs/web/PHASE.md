@@ -1,5 +1,25 @@
 # 🗺️ LỘ TRÌNH PHÁT TRIỂN CHI TIẾT — TOURNAMENT MANAGEMENT APP
 
+## 📢 TRẠNG THÁI HIỆN TẠI (Cập nhật ngày 16/06/2026)
+Hệ thống đã hoàn thành **100% Phase 1, Phase 2, Phase 3** cho cả Web Frontend và NestJS Backend:
+- **Phase 1 (Hoàn thành):**
+  - Tích hợp WebSocket & Notification Bell real-time.
+  - Hoàn thiện thanh toán & Hold tiền Payout.
+  - Form Đăng ký Đôi (Doubles Registration) và Form Validation 8 trường bắt buộc trước khi Publish giải đấu.
+- **Phase 2 (Hoàn thành):**
+  - Tối ưu hóa Database Schema bảng `matches` & composite indexes.
+  - Tự động thăng hạng / hạ nhánh (Winners & Losers bracket), tự động xử lý trận đấu BYE, Grand Final Reset.
+  - Standings cho Round Robin & Tự động kết thúc giải đấu khi tất cả trận đấu hoàn tất.
+  - ELO & Elastic Doubles ELO (co giãn chống gánh rank cày điểm).
+  - API phân công Trọng tài, validate mốc ngày tổ chức, bảo mật quyền nhập điểm.
+  - Soft Lock giữ chỗ đăng ký Đôi 30 phút & tự động hoàn tiền khi quá hạn/giải đấu đầy.
+- **Phase 3 (Hoàn thành):**
+  - Schema DB đầy đủ: `tournament_referees`, `organizer_reviews`, `pair_ranks`.
+  - Drag & Drop Seeding UI cho giải đấu UPCOMING.
+  - Dropdown chọn Trọng tài (trạng thái ACCEPTED) trong Modal xếp lịch thi đấu.
+  - Nhập giới hạn ELO (minElo, maxElo, maxCombinedElo, maxTeammateGap) trong Tab Config giải đấu.
+  - Sửa lỗi interface type `BracketMatch` ở Frontend giúp build biên dịch 100% thành công không lỗi.
+
 Tài liệu này đóng vai trò là bản thiết kế kỹ thuật (technical specification) và lộ trình phát triển chi tiết từng bước (step-by-step roadmap) cho cả **Backend (NestJS + Drizzle ORM)** và **Frontend (Next.js 14 + Zustand + Tailwind)**. Đội ngũ phát triển cần tuân thủ cấu trúc thư mục, các ràng buộc dữ liệu, và các tiêu chí nghiệm thu dưới đây để đảm bảo chất lượng phần mềm.
 
 ---
@@ -495,11 +515,11 @@ Mỗi phase hoàn thành cần được test qua các kịch bản sau:
 
 | Kịch bản kiểm thử | Kết quả mong đợi | Trạng thái kiểm tra |
 |---|---|:---:|
-| **Publish giải thiếu thông tin** | Backend trả về lỗi `400`. Frontend hiển thị đúng trường thông tin còn thiếu. | [ ] |
-| **Đăng ký Đôi với SĐT chưa đăng ký** | Frontend hiển thị cảnh báo yêu cầu đồng đội tạo tài khoản trước. | [ ] |
-| **Hủy giải đấu đã thu lệ phí** | Kiểm tra ví VĐV nhận lại tiền (mocked) và nhận được notification hủy giải. | [ ] |
-| **Double Elimination Grand Final** | Nếu nhánh thua thắng trận chung kết 1, hệ thống phải tự động sinh thêm trận chung kết 2 (Reset). | [ ] |
-| **Rút tiền giải CLB** | Tab Finance hiển thị thông báo không có giao dịch, nút rút tiền bị khóa. | [ ] |
+| **Publish giải thiếu thông tin** | Backend trả về lỗi `400`. Frontend hiển thị đúng trường thông tin còn thiếu. | [x] |
+| **Đăng ký Đôi với SĐT chưa đăng ký** | Frontend hiển thị cảnh báo yêu cầu đồng đội tạo tài khoản trước. | [x] |
+| **Hủy giải đấu đã thu lệ phí** | Kiểm tra ví VĐV nhận lại tiền (mocked) và nhận được notification hủy giải. | [x] |
+| **Double Elimination Grand Final** | Nếu nhánh thua thắng trận chung kết 1, hệ thống phải tự động sinh thêm trận chung kết 2 (Reset). | [x] |
+| **Rút tiền giải CLB** | Tab Finance hiển thị thông báo không có giao dịch, nút rút tiền bị khóa. | [x] |
 
 ---
 *Tài liệu này được biên soạn tuân thủ theo các quy chuẩn kiến trúc của dự án. Mọi thay đổi hay bổ sung trong quá trình thực hiện cần được cập nhật trực tiếp tại đây.*
