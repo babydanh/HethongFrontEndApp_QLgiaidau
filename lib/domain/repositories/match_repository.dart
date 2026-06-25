@@ -1,6 +1,6 @@
-import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:app_quanly_giaidau/data/models/match_event_model.dart';
-import 'package:app_quanly_giaidau/data/models/penalty_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/domain/entities/match_event.dart';
+import 'package:app_quanly_giaidau/domain/entities/penalty.dart';
 
 abstract class IMatchRepository {
   Future<MatchModel> create(String tournamentId, MatchModel match);

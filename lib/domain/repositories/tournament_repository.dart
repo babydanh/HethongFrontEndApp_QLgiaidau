@@ -1,4 +1,4 @@
-import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 
 abstract class ITournamentRepository {
   Future<Tournament> create(Tournament tournament);

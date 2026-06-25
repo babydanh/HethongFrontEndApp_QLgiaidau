@@ -1,4 +1,4 @@
-import 'package:app_quanly_giaidau/data/models/team_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/team.dart';
 
 abstract class ITeamRepository {
   Future<Team> create(String tournamentId, Team team);

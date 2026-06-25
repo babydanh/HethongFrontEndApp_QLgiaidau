@@ -1,4 +1,4 @@
-import 'package:app_quanly_giaidau/data/models/saved_tournament_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/saved_tournament.dart';
 
 abstract class ILocalSessionRepository {
   Future<List<SavedTournament>> getSavedTournaments();

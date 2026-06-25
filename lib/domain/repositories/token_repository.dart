@@ -1,4 +1,4 @@
-import 'package:app_quanly_giaidau/data/models/token_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/token.dart';
 
 abstract class ITokenRepository {
   Future<TokenModel> createToken({
