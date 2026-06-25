@@ -78,7 +78,7 @@ class ApiTokenRepository implements ITokenRepository {
 
   @override
   Stream<TokenModel?> watchToken(String code) {
-    // Thay thế stream realtime của Firestore bằng việc giả định token hoạt động.
+    // Mobile app currently polls token state through the backend flow.
     // Nếu token bị hủy hoặc thay đổi, interceptor 401 của Dio sẽ bắt và xử lý logout.
     return Stream.value(TokenModel(
       id: code,

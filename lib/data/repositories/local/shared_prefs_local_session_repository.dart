@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
-import 'package:app_quanly_giaidau/data/models/saved_tournament_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/saved_tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/local_session_repository.dart';
 
 class SharedPrefsLocalSessionRepository implements ILocalSessionRepository {

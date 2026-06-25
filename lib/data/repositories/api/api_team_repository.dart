@@ -57,7 +57,7 @@ class ApiTeamRepository implements ITeamRepository {
       if (response.statusCode == 200) {
         final List<dynamic> list = response.data['data'] ?? response.data ?? [];
         return list.map((json) {
-          // Xử lý mapping format API NestJS khác với Firestore Team model
+          // Xử lý mapping format API NestJS khác với Team model cũ của app
           final String id = json['id'] ?? '';
           final String teamName = json['teamName'] ?? '';
           final List<dynamic> rosters = json['rosters'] ?? [];
