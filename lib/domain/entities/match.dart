@@ -77,6 +77,10 @@ class MatchModel {
   final String? refereeName;
   final List<Penalty> penalties;
   final String? tournamentName;
+  // Sport-specific fields — từ BE JSONB
+  final Map<String, dynamic>? sportRules;
+  final Map<String, dynamic>? scoreDetails;
+  final int? setsToWin;
 
   const MatchModel({
     required this.id,
@@ -107,6 +111,9 @@ class MatchModel {
     this.refereeName,
     this.penalties = const [],
     this.tournamentName,
+    this.sportRules,
+    this.scoreDetails,
+    this.setsToWin,
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json, String id) {
@@ -152,6 +159,12 @@ class MatchModel {
               .toList() ??
           [],
       tournamentName: json['tournamentName'] ?? json['tournament']?['name'],
+      // Sport-specific: từ tournament sportRules hoặc matchConfig
+      sportRules: json['tournament'] is Map
+          ? (json['tournament'] as Map)['sportRules'] as Map<String, dynamic>?
+          : json['sportRules'] as Map<String, dynamic>?,
+      scoreDetails: json['scoreDetails'] as Map<String, dynamic>?,
+      setsToWin: json['setsToWin'] as int?,
     );
   }
 
@@ -216,6 +229,9 @@ class MatchModel {
     String? refereeName,
     List<Penalty>? penalties,
     String? tournamentName,
+    Map<String, dynamic>? sportRules,
+    Map<String, dynamic>? scoreDetails,
+    int? setsToWin,
   }) {
     return MatchModel(
       id: id ?? this.id,
@@ -246,6 +262,9 @@ class MatchModel {
       refereeName: refereeName ?? this.refereeName,
       penalties: penalties ?? this.penalties,
       tournamentName: tournamentName ?? this.tournamentName,
+      sportRules: sportRules ?? this.sportRules,
+      scoreDetails: scoreDetails ?? this.scoreDetails,
+      setsToWin: setsToWin ?? this.setsToWin,
     );
   }
 
