@@ -15,7 +15,15 @@ import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart
 import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
+import 'package:app_quanly_giaidau/features/notification/screens/notification_screen.dart';
+import 'package:app_quanly_giaidau/features/community/screens/club_detail_screen.dart';
+import 'package:app_quanly_giaidau/features/community/screens/create_club_screen.dart';
+import 'package:app_quanly_giaidau/features/community/screens/create_club_tournament_screen.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
+import 'package:app_quanly_giaidau/features/profile/screens/profile_screen.dart';
+import 'package:app_quanly_giaidau/features/profile/screens/edit_profile_screen.dart';
+import 'package:app_quanly_giaidau/features/profile/screens/change_password_screen.dart';
+import 'package:app_quanly_giaidau/features/profile/screens/settings_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -33,8 +41,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/login';
       }
 
-      // Chưa auth thì mặc định về /home
-      if (!isAuth && currentPath != '/home' && currentPath != '/scan-qr') {
+      // Chưa auth thì mặc định về /home (cho phép truy cập /scan-qr, /profile, /intro, /club, /tournament)
+      if (!isAuth &&
+          currentPath != '/home' &&
+          currentPath != '/scan-qr' &&
+          !currentPath.startsWith('/profile') &&
+          !currentPath.startsWith('/intro') &&
+          !currentPath.startsWith('/club') &&
+          !currentPath.startsWith('/tournament')) {
         return '/home';
       }
 
@@ -200,6 +214,69 @@ final routerProvider = Provider<GoRouter>((ref) {
           final tournamentId = ref.read(authProvider).tournamentId ?? '';
           return BracketViewScreen(tournamentId: tournamentId);
         },
+      ),
+
+      // ─── Notifications ───
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationScreen(),
+      ),
+
+      // ─── Create Club ───
+      GoRoute(
+        path: '/club-create',
+        builder: (context, state) => const CreateClubScreen(),
+      ),
+
+      // ─── Club Detail ───
+      GoRoute(
+        path: '/club/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return ClubDetailScreen(clubId: id);
+        },
+        routes: [
+          GoRoute(
+            path: 'create-tournament',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return CreateClubTournamentScreen(clubId: id);
+            },
+          ),
+        ],
+      ),
+
+      // ─── Public Tournament Bracket ───
+      GoRoute(
+        path: '/tournament/:id/bracket',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          final auth = ref.read(authProvider);
+          return BracketViewScreen(
+            tournamentId: id,
+            isReferee: auth.role == UserRole.referee && auth.tournamentId == id,
+          );
+        },
+      ),
+
+      // ─── Profile & Subroutes ───
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+        routes: [
+          GoRoute(
+            path: 'edit',
+            builder: (context, state) => const EditProfileScreen(),
+          ),
+          GoRoute(
+            path: 'change-password',
+            builder: (context, state) => const ChangePasswordScreen(),
+          ),
+          GoRoute(
+            path: 'settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
+        ],
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

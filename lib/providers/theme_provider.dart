@@ -9,13 +9,13 @@ class ThemeNotifier extends Notifier<ThemeMode> {
   @override
   ThemeMode build() {
     final prefs = ref.watch(sharedPreferencesProvider).value;
-    if (prefs == null) return ThemeMode.dark; // Default
+    if (prefs == null) return ThemeMode.light; // Default to Light Mode
     
     final savedTheme = prefs.getString(_themeKey);
     return switch (savedTheme) {
       'light' => ThemeMode.light,
       'dark' => ThemeMode.dark,
-      _ => ThemeMode.dark, // Default is dark to match SKILLS.md
+      _ => ThemeMode.light, // Default to Light Mode
     };
   }
 

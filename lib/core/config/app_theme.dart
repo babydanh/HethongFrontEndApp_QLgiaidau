@@ -132,13 +132,13 @@ class AppTheme {
 
   // ─── Extensions ───
   static const AppColorsExtension _darkColors = AppColorsExtension(
-    bgDark: Color(0xFF0B0F19),
-    bgCard: Color(0xFF151C2C),
-    bgSurface: Color(0xFF1F293D),
-    bgElevated: Color(0xFF2E3B55),
+    bgDark: Color(0xFF000000),
+    bgCard: Color(0xFF0D0D0D),
+    bgSurface: Color(0xFF1A1A1A),
+    bgElevated: Color(0xFF262626),
     textPrimary: Color(0xFFF8FAFC),
     textSecondary: Color(0xFF94A3B8),
-    textMuted: Color(0xFF475569),
+    textMuted: Color(0xFF64748B),
     border: Color(0xFF1F293D),
     borderLight: Color(0xFF151C2C),
     success: Color(0xFF22C55E),
