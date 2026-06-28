@@ -58,7 +58,14 @@ class SportFilterChips extends StatelessWidget {
             if (icon is IconData)
               Icon(icon, size: 14, color: isSelected ? AppTheme.primary : context.colors.textSecondary)
             else if (icon is String)
-              Text(icon, style: const TextStyle(fontSize: 14)),
+              icon.endsWith('.png') || icon.contains('/')
+                  ? Image.asset(
+                      icon,
+                      width: 14,
+                      height: 14,
+                      color: isSelected ? AppTheme.primary : context.colors.textSecondary,
+                    )
+                  : Text(icon, style: const TextStyle(fontSize: 14)),
             const SizedBox(width: 6),
             Text(
               label,

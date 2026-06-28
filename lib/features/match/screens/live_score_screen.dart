@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/penalty_input_dialog.dart';
+import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 class LiveScoreScreen extends ConsumerStatefulWidget {
   final String tournamentId;
   final String matchId;
@@ -196,6 +197,43 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
   @override
   Widget build(BuildContext context) {
     final matchAsync = ref.watch(singleMatchProvider((tournamentId: widget.tournamentId, matchId: widget.matchId)));
+
+    // Sport-specific score routing
+    final matchValue = matchAsync.asData?.value;
+    if (matchValue != null) {
+      final sportRules = matchValue.sportRules;
+      if (sportRules != null && sportRules.isNotEmpty) {
+        final kind = SportRuleKind.fromString(sportRules['kind']?.toString());
+        if (kind == SportRuleKind.tennis) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.pushReplacement(
+              '/match/${widget.tournamentId}/${widget.matchId}/tennis',
+            );
+          });
+          return const SizedBox.shrink();
+        }
+        if (kind == SportRuleKind.pickleball &&
+            (sportRules['scoringModel']?.toString() == 'PICKLEBALL_SIDE_OUT' ||
+             sportRules['kind']?.toString() == 'PICKLEBALL_SIDE_OUT')) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.pushReplacement(
+              '/match/${widget.tournamentId}/${widget.matchId}/pickleball-sideout',
+            );
+          });
+          return const SizedBox.shrink();
+        }
+      }
+      // Fallback: check tournament from API
+      final tournamentName = matchValue.tournamentName ?? '';
+      if (tournamentName.toLowerCase().contains('tennis')) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          context.pushReplacement(
+            '/match/${widget.tournamentId}/${widget.matchId}/tennis',
+          );
+        });
+        return const SizedBox.shrink();
+      }
+    }
     ref.watch(matchControllerProvider((tournamentId: widget.tournamentId, matchId: widget.matchId)));
     final authRole = ref.watch(authProvider).role;
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
