@@ -13,25 +13,24 @@ import 'package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dar
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_node_card.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
+import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
 
+// ── Bracket-tree walker (graphview-backed, used only by _buildBracketTree) ──
 class SeparatedBuchheimWalkerAlgorithm implements Algorithm {
   final BuchheimWalkerAlgorithm _inner;
   final double separation;
-  
+
   @override
   EdgeRenderer? get renderer => _inner.renderer;
-  
   @override
-  set renderer(EdgeRenderer? value) {
-    _inner.renderer = value;
-  }
+  set renderer(EdgeRenderer? value) { _inner.renderer = value; }
 
   SeparatedBuchheimWalkerAlgorithm(BuchheimWalkerConfiguration config, TreeEdgeRenderer renderer, this.separation)
       : _inner = BuchheimWalkerAlgorithm(config, renderer);
 
   @override
   void init(Graph? graph) => _inner.init(graph);
-
   @override
   void setDimensions(double width, double height) => _inner.setDimensions(width, height);
 
@@ -39,36 +38,24 @@ class SeparatedBuchheimWalkerAlgorithm implements Algorithm {
   Size run(Graph? graph, double shiftX, double shiftY) {
     final size = _inner.run(graph, shiftX, shiftY);
     if (graph != null && graph.nodes.isNotEmpty) {
-      // Dịch chuyển bracket dựa theo phân nhánh
       for (var node in graph.nodes) {
         final match = node.key?.value as MatchModel?;
         if (match != null) {
-          if (match.bracketPosition.bracket == 'losers') {
-            node.y += separation;
-          } else if (match.bracketPosition.bracket == 'final' || match.bracketPosition.bracket == 'grand_final' || match.bracketPosition.bracket == 'grand_final_reset') {
-            node.y += separation / 2;
-          }
+          if (match.bracketPosition.bracket == 'losers') { node.y += separation; }
+          else if (['final', 'grand_final', 'grand_final_reset'].contains(match.bracketPosition.bracket)) { node.y += separation / 2; }
         }
       }
-
-      // Tính toán min X và min Y để dịch chuyển toàn bộ đồ thị về tọa độ dương
-      double minX = double.infinity;
-      double minY = double.infinity;
-      double maxX = -double.infinity;
-      double maxY = -double.infinity;
-
+      double minX = double.infinity, minY = double.infinity;
+      double maxX = -double.infinity, maxY = -double.infinity;
       for (var node in graph.nodes) {
         if (node.x < minX) minX = node.x;
         if (node.y < minY) minY = node.y;
       }
-
       for (var node in graph.nodes) {
-        node.x -= minX;
-        node.y -= minY;
+        node.x -= minX; node.y -= minY;
         if (node.x + node.width > maxX) maxX = node.x + node.width;
         if (node.y + node.height > maxY) maxY = node.y + node.height;
       }
-
       return Size(maxX, maxY);
     }
     return size;
@@ -96,6 +83,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
   final TransformationController _transformationController =
       TransformationController(Matrix4.identity()..scale(0.6)..translate(50.0, 50.0));
   late TabController _tabController;
+  String _matchFilter = 'all';
 
   @override
   void initState() {
@@ -148,7 +136,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
         title: Text(
           tournament?.name != null && tournament!.name.isNotEmpty
               ? tournament.name
-              : 'Sơ đồ thi đấu',
+              : 'Bảng thi đấu',
         ),
         actions: (!widget.isEmbedded && auth.role != UserRole.admin)
             ? [
@@ -240,11 +228,11 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
               ],
             );
           } else {
-            return _buildBracketViewer(
+            return _buildKnockoutMatchTable(
               matches,
-              isRoundRobin,
-              isDoubleElimination,
+              bracketType,
               auth.role == UserRole.viewer,
+              auth.role == UserRole.admin || widget.isReferee,
             );
           }
         },
@@ -253,6 +241,414 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
         ),
         error: (e, _) => Center(child: Text('Lỗi: $e')),
       ),
+    );
+  }
+
+  Widget _buildKnockoutMatchTable(
+    List<MatchModel> matches,
+    String bracketType,
+    bool isReadOnly,
+    bool isReferee,
+  ) {
+    final colors = context.colors;
+
+    final filteredMatches = matches.where((m) {
+      if (_matchFilter == 'live') return m.isLive;
+      if (_matchFilter == 'scheduled') return m.isScheduled;
+      if (_matchFilter == 'completed') return m.isCompleted;
+      return true;
+    }).toList();
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.primary.withValues(alpha: 0.15),
+                  colors.bgCard,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Sơ đồ nhánh đấu Knockout',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Xem trực quan phân nhánh đấu & sơ đồ thắng/thua.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => BracketDiagramScreen(
+                          matches: matches,
+                          tournamentId: widget.tournamentId,
+                          bracketType: bracketType,
+                          isReferee: widget.isReferee,
+                          isReadOnly: isReadOnly,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.account_tree_rounded, size: 18),
+                  label: const Text(
+                    'Xem sơ đồ',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _filterChip('all', 'Tất cả (${matches.length})'),
+                const SizedBox(width: 8),
+                _filterChip('live', 'Đang Live (${matches.where((m) => m.isLive).length})'),
+                const SizedBox(width: 8),
+                _filterChip('scheduled', 'Sắp diễn ra (${matches.where((m) => m.isScheduled).length})'),
+                const SizedBox(width: 8),
+                _filterChip('completed', 'Đã kết thúc (${matches.where((m) => m.isCompleted).length})'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Text(
+                'DANH SÁCH TRẬN ĐẤU',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: colors.textMuted,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: filteredMatches.isEmpty
+                ? Center(
+                    child: Text(
+                      'Không có trận đấu nào',
+                      style: TextStyle(color: colors.textSecondary),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: filteredMatches.length,
+                    itemBuilder: (context, index) {
+                      return _buildMatchTableRow(filteredMatches[index], isReadOnly);
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _filterChip(String value, String label) {
+    final colors = context.colors;
+    final isSelected = _matchFilter == value;
+    return ChoiceChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : colors.textSecondary,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontSize: 12,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (selected) {
+        if (selected) {
+          setState(() {
+            _matchFilter = value;
+          });
+        }
+      },
+      selectedColor: AppTheme.primary,
+      backgroundColor: colors.bgCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(100),
+        side: BorderSide(color: isSelected ? Colors.transparent : colors.border),
+      ),
+      showCheckmark: false,
+    );
+  }
+
+  Widget _buildMatchTableRow(MatchModel match, bool isReadOnly) {
+    final colors = context.colors;
+    String roundName = _getRoundName(match.round, 4);
+
+    String timeStr = 'Chưa xếp lịch';
+    if (match.scheduledTime != null) {
+      timeStr = DateFormat('HH:mm - dd/MM').format(match.scheduledTime!.toLocal());
+    }
+
+    Color statusColor = colors.textMuted;
+    String statusLabel = 'Chưa đấu';
+    if (match.isLive) {
+      statusColor = colors.error;
+      statusLabel = 'ĐANG LIVE';
+    } else if (match.isCompleted) {
+      statusColor = colors.success;
+      statusLabel = 'ĐÃ XONG';
+    } else {
+      statusColor = AppTheme.primary;
+      statusLabel = 'SẮP ĐẤU';
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          // Referees/admins go directly to live scoring screen for live/scheduled matches
+          if (widget.isReferee && (match.isLive || match.isScheduled)) {
+            context.push('/referee/match/${match.id}');
+            return;
+          }
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: colors.bgCard,
+              contentPadding: EdgeInsets.zero,
+              content: SizedBox(
+                width: 320,
+                child: MatchCardDetail(
+                  match: match,
+                  isReferee: widget.isReferee,
+                  isReadOnly: isReadOnly,
+                  tournamentId: widget.tournamentId,
+                ),
+              ),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      roundName,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      timeStr,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: colors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 5,
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            match.team1Name,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: match.isCompleted && match.winnerId == match.team1Id
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: match.isCompleted && match.winnerId == match.team1Id
+                                  ? colors.textPrimary
+                                  : colors.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (match.sets.isNotEmpty) ...[
+                          _buildSetsDisplay(match.sets, true),
+                          const SizedBox(width: 8),
+                        ],
+                        Text(
+                          '${match.score1}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: match.isLive ? colors.error : colors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            match.team2Name,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: match.isCompleted && match.winnerId == match.team2Id
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: match.isCompleted && match.winnerId == match.team2Id
+                                  ? colors.textPrimary
+                                  : colors.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (match.sets.isNotEmpty) ...[
+                          _buildSetsDisplay(match.sets, false),
+                          const SizedBox(width: 8),
+                        ],
+                        Text(
+                          '${match.score2}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: match.isLive ? colors.error : colors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+               const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (match.isLive) ...[
+                          Container(
+                            width: 5,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: statusColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          statusLabel,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (widget.isReferee && (match.isLive || match.isScheduled)) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Tính điểm →',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: match.isLive ? colors.error : AppTheme.primary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSetsDisplay(List<SetScore> sets, bool isTeam1) {
+    final colors = context.colors;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: sets.map((set) {
+        final score = isTeam1 ? set.score1 : set.score2;
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 1.5),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+          decoration: BoxDecoration(
+            color: colors.bgSurface,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: colors.border),
+          ),
+          child: Text(
+            '$score',
+            style: TextStyle(
+              fontSize: 9,
+              color: colors.textSecondary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
