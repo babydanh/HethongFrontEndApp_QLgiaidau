@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/theme_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -23,18 +24,18 @@ class ProfileScreen extends ConsumerWidget {
     final profileAsync = ref.watch(userProfileProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.colors.bgDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+          icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
           onPressed: () => context.go('/home'),
         ),
-        title: const Text(
+        title: Text(
           'Hồ sơ',
           style: TextStyle(
-            color: Color(0xFF0F172A),
+            color: context.colors.textPrimary,
             fontWeight: FontWeight.w900,
             fontSize: 20,
           ),
@@ -43,11 +44,11 @@ class ProfileScreen extends ConsumerWidget {
         actions: [
           TextButton.icon(
             onPressed: () => context.go('/profile/edit'),
-            icon: const Icon(Icons.edit_rounded, size: 18, color: Color(0xFF2979FF)),
+            icon: const Icon(Icons.edit_rounded, size: 18, color: AppTheme.primary),
             label: const Text(
               'Sửa',
               style: TextStyle(
-                color: Color(0xFF2979FF),
+                color: AppTheme.primary,
                 fontWeight: FontWeight.w700,
                 fontSize: 14,
               ),
@@ -66,18 +67,18 @@ class ProfileScreen extends ConsumerWidget {
 
   Widget _buildLoginPrompt(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.colors.bgDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+          icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
           onPressed: () => context.go('/home'),
         ),
-        title: const Text(
+        title: Text(
           'Hồ sơ',
           style: TextStyle(
-            color: Color(0xFF0F172A),
+            color: context.colors.textPrimary,
             fontWeight: FontWeight.w900,
             fontSize: 20,
           ),
@@ -94,21 +95,21 @@ class ProfileScreen extends ConsumerWidget {
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2979FF).withValues(alpha: 0.08),
+                  color: AppTheme.primary.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.person_rounded, size: 48, color: Color(0xFF2979FF)),
+                child: const Icon(Icons.person_rounded, size: 48, color: AppTheme.primary),
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Xin chào!',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: context.colors.textPrimary),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Đăng nhập để xem hồ sơ, theo dõi giải đấu và kết nối với cộng đồng thể thao.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.4),
+                style: TextStyle(fontSize: 14, color: context.colors.textSecondary, height: 1.4),
               ),
               const SizedBox(height: 32),
               SizedBox(
@@ -127,8 +128,8 @@ class ProfileScreen extends ConsumerWidget {
               TextButton(
                 onPressed: () => context.go('/login'),
                 child: const Text(
-                  'Chưa có tài khoản? Đăng ký',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF2979FF), fontWeight: FontWeight.w600),
+                  'Chưa có tài khoản? Đăng ký ngay',
+                  style: TextStyle(fontSize: 13, color: AppTheme.primary, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -145,7 +146,6 @@ class ProfileScreen extends ConsumerWidget {
         children: [
           const SizedBox(height: 8),
           _buildAvatarSection(context, profile),
-          const SizedBox(height: 20),
           const SizedBox(height: 24),
           _buildSectionTitle(context, 'Thông tin cá nhân'),
           const SizedBox(height: 12),
@@ -171,14 +171,14 @@ class ProfileScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off_rounded, size: 48, color: Color(0xFFB0BEC5)),
+            Icon(Icons.cloud_off_rounded, size: 48, color: context.colors.textMuted),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Không thể tải thông tin',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
             ),
             const SizedBox(height: 8),
-            Text(message, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
+            Text(message, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
           ],
         ),
       ),
@@ -196,13 +196,13 @@ class ProfileScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF2979FF), Color(0xFF448AFF)],
+                  colors: [AppTheme.primary, AppTheme.primaryLight],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF2979FF).withOpacity( 0.3),
+                    color: AppTheme.primary.withValues(alpha: 0.3),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),
@@ -212,16 +212,16 @@ class ProfileScreen extends ConsumerWidget {
                 child: Container(
                   width: 82,
                   height: 82,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color(0xFFF1F5F9),
+                    color: context.colors.bgSurface,
                   ),
                   child: profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(41),
                           child: Image.network(profile.avatarUrl!, fit: BoxFit.cover),
                         )
-                      : const Icon(Icons.person_rounded, size: 46, color: Color(0xFF2979FF)),
+                      : const Icon(Icons.person_rounded, size: 46, color: AppTheme.primary),
                 ),
               ),
             ),
@@ -233,8 +233,8 @@ class ProfileScreen extends ConsumerWidget {
                 height: 28,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF2979FF),
-                  border: Border.all(color: Colors.white, width: 2.5),
+                  color: AppTheme.primary,
+                  border: Border.all(color: context.colors.bgDark, width: 2.5),
                 ),
                 child: const Icon(Icons.camera_alt_rounded, size: 14, color: Colors.white),
               ),
@@ -244,32 +244,34 @@ class ProfileScreen extends ConsumerWidget {
         const SizedBox(height: 14),
         Text(
           profile.fullName ?? 'Người dùng',
-          style: const TextStyle(
-            fontSize: 22, fontWeight: FontWeight.w900,
-            color: Color(0xFF0F172A), letterSpacing: -0.3,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: context.colors.textPrimary,
+            letterSpacing: -0.3,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           profile.email ?? '',
-          style: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: 14, color: context.colors.textSecondary, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
-            color: const Color(0xFF2979FF).withOpacity( 0.1),
+            color: AppTheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFF2979FF).withOpacity( 0.25)),
+            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.sports_esports_rounded, size: 14, color: Color(0xFF2979FF)),
+              const Icon(Icons.sports_esports_rounded, size: 14, color: AppTheme.primary),
               const SizedBox(width: 6),
               Text(
                 profile.role ?? 'Player',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF2979FF)),
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.primary),
               ),
             ],
           ),
@@ -284,13 +286,19 @@ class ProfileScreen extends ConsumerWidget {
       child: Row(
         children: [
           Container(
-            width: 3, height: 18,
-            decoration: BoxDecoration(color: const Color(0xFF2979FF), borderRadius: BorderRadius.circular(2)),
+            width: 3,
+            height: 18,
+            decoration: BoxDecoration(color: AppTheme.primary, borderRadius: BorderRadius.circular(2)),
           ),
           const SizedBox(width: 10),
           Text(
             title,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF94A3B8), letterSpacing: 0.3),
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: context.colors.textSecondary,
+              letterSpacing: 0.3,
+            ),
           ),
         ],
       ),
@@ -309,11 +317,12 @@ class ProfileScreen extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.bgCard,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.colors.border),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF2979FF).withOpacity( 0.06), blurRadius: 16, offset: const Offset(0, 4)),
-          BoxShadow(color: Colors.black.withOpacity( 0.02), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(color: AppTheme.primary.withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
       child: Column(
@@ -327,29 +336,34 @@ class ProfileScreen extends ConsumerWidget {
                 child: Row(
                   children: [
                     Container(
-                      width: 36, height: 36,
-                      decoration: BoxDecoration(color: const Color(0xFF2979FF).withOpacity( 0.08), borderRadius: BorderRadius.circular(10)),
-                      child: Icon(icon, size: 18, color: const Color(0xFF2979FF)),
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icon, size: 18, color: AppTheme.primary),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF94A3B8))),
+                          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: context.colors.textSecondary)),
                           const SizedBox(height: 3),
-                          Text(value ?? '', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF0F172A))),
+                          Text(value ?? '', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.colors.textPrimary)),
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFFCBD5E1)),
+                    Icon(Icons.chevron_right_rounded, size: 20, color: context.colors.textMuted),
                   ],
                 ),
               ),
-              if (!isLast) Padding(
-                padding: const EdgeInsets.only(left: 66),
-                child: Divider(height: 1, color: const Color(0xFFF1F5F9)),
-              ),
+              if (!isLast)
+                Padding(
+                  padding: const EdgeInsets.only(left: 66),
+                  child: Divider(height: 1, color: context.colors.borderLight),
+                ),
             ],
           );
         }),
@@ -369,11 +383,12 @@ class ProfileScreen extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.bgCard,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.colors.border),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF2979FF).withOpacity( 0.06), blurRadius: 16, offset: const Offset(0, 4)),
-          BoxShadow(color: Colors.black.withOpacity( 0.02), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(color: AppTheme.primary.withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
       child: Column(
@@ -390,20 +405,28 @@ class ProfileScreen extends ConsumerWidget {
                   child: Row(
                     children: [
                       Container(
-                        width: 36, height: 36,
-                        decoration: BoxDecoration(color: const Color(0xFF2979FF).withOpacity( 0.08), borderRadius: BorderRadius.circular(10)),
-                        child: Icon(item.icon, size: 18, color: const Color(0xFF2979FF)),
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(item.icon, size: 18, color: AppTheme.primary),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
-                        child: Text(item.label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF0F172A))),
+                        child: Text(
+                          item.label,
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
+                        ),
                       ),
-                      const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFFCBD5E1)),
+                      Icon(Icons.chevron_right_rounded, size: 20, color: context.colors.textMuted),
                     ],
                   ),
                 ),
               ),
-              if (!isLast) Divider(height: 1, color: const Color(0xFFF1F5F9), indent: 66),
+              if (!isLast)
+                Divider(height: 1, color: context.colors.borderLight, indent: 66),
             ],
           );
         }),
@@ -415,59 +438,74 @@ class ProfileScreen extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.bgCard,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.colors.border),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF2979FF).withOpacity( 0.06), blurRadius: 16, offset: const Offset(0, 4)),
-          BoxShadow(color: Colors.black.withOpacity( 0.02), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(color: AppTheme.primary.withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
       child: Column(
         children: [
           InkWell(
-            onTap: () {},
+            onTap: () => context.push('/notifications'),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
               child: Row(
                 children: [
                   Container(
-                    width: 36, height: 36,
-                    decoration: BoxDecoration(color: const Color(0xFF2979FF).withOpacity( 0.08), borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.notifications_outlined, size: 18, color: Color(0xFF2979FF)),
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.notifications_outlined, size: 18, color: AppTheme.primary),
                   ),
-                  SizedBox(width: 14),
+                  const SizedBox(width: 14),
                   Expanded(
-                    child: Text('Thông báo', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF0F172A))),
+                    child: Text(
+                      'Thông báo',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
+                    ),
                   ),
-                  Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFFCBD5E1)),
+                  Icon(Icons.chevron_right_rounded, size: 20, color: context.colors.textMuted),
                 ],
               ),
             ),
           ),
-          Divider(height: 1, color: const Color(0xFFF1F5F9), indent: 66),
+          Divider(height: 1, color: context.colors.borderLight, indent: 66),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
                 Container(
-                  width: 36, height: 36,
-                  decoration: BoxDecoration(color: const Color(0xFF2979FF).withOpacity( 0.08), borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.dark_mode_rounded, size: 18, color: Color(0xFF2979FF)),
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.dark_mode_rounded, size: 18, color: AppTheme.primary),
                 ),
                 const SizedBox(width: 14),
-                const Expanded(
-                  child: Text('Chế độ tối', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF0F172A))),
+                Expanded(
+                  child: Text(
+                    'Chế độ tối',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
+                  ),
                 ),
                 Switch(
                   value: isDark,
-                  activeThumbColor: const Color(0xFF2979FF),
+                  activeThumbColor: AppTheme.primary,
                   onChanged: (val) => ref.read(themeProvider.notifier).toggleTheme(),
                 ),
               ],
             ),
           ),
-          Divider(height: 1, color: const Color(0xFFF1F5F9), indent: 66),
+          Divider(height: 1, color: context.colors.borderLight, indent: 66),
           InkWell(
             onTap: () async {
               await ref.read(authProvider.notifier).signOut();
@@ -475,12 +513,15 @@ class ProfileScreen extends ConsumerWidget {
             },
             borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
               child: Row(
                 children: [
-                  Icon(Icons.logout_rounded, size: 20, color: Color(0xFFEF4444)),
-                  SizedBox(width: 14),
-                  Text('Đăng xuất', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFFEF4444))),
+                  const Icon(Icons.logout_rounded, size: 20, color: AppTheme.adminColor),
+                  const SizedBox(width: 14),
+                  const Text(
+                    'Đăng xuất',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.adminColor),
+                  ),
                 ],
               ),
             ),
@@ -497,24 +538,24 @@ class ProfileShimmerLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: const Color(0xFFE2E8F0),
-      highlightColor: const Color(0xFFF8FAFC),
+      baseColor: context.colors.border,
+      highlightColor: context.colors.bgSurface,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             const SizedBox(height: 20),
-            Container(width: 88, height: 88, decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFE2E8F0))),
+            Container(width: 88, height: 88, decoration: BoxDecoration(shape: BoxShape.circle, color: context.colors.border)),
             const SizedBox(height: 16),
-            Container(width: 160, height: 20, decoration: BoxDecoration(color: Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(8))),
+            Container(width: 160, height: 20, decoration: BoxDecoration(color: context.colors.border, borderRadius: BorderRadius.circular(8))),
             const SizedBox(height: 8),
-            Container(width: 180, height: 14, decoration: BoxDecoration(color: Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(8))),
+            Container(width: 180, height: 14, decoration: BoxDecoration(color: context.colors.border, borderRadius: BorderRadius.circular(8))),
             const SizedBox(height: 24),
-            Container(height: 120, decoration: BoxDecoration(color: Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(20))),
+            Container(height: 120, decoration: BoxDecoration(color: context.colors.border, borderRadius: BorderRadius.circular(20))),
             const SizedBox(height: 24),
-            Container(width: 120, height: 14, decoration: BoxDecoration(color: Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(8))),
+            Container(width: 120, height: 14, decoration: BoxDecoration(color: context.colors.border, borderRadius: BorderRadius.circular(8))),
             const SizedBox(height: 12),
-            Container(height: 200, decoration: BoxDecoration(color: Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(20))),
+            Container(height: 200, decoration: BoxDecoration(color: context.colors.border, borderRadius: BorderRadius.circular(20))),
           ],
         ),
       ),

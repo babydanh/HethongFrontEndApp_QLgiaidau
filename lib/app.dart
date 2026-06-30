@@ -1,8 +1,18 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/router/app_router.dart';
 import 'package:app_quanly_giaidau/providers/theme_provider.dart';
+
+class MyCustomScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+      };
+}
 
 class TournamentApp extends ConsumerWidget {
   const TournamentApp({super.key});
@@ -19,6 +29,7 @@ class TournamentApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
       routerConfig: router,
+      scrollBehavior: MyCustomScrollBehavior(),
     );
   }
 }

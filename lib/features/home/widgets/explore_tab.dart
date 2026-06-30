@@ -821,7 +821,7 @@ class _TournamentCard extends StatelessWidget {
     final bracketLabel = AppConstants.bracketTypeNames[tournament.bracketType] ?? tournament.bracketType;
 
     return GestureDetector(
-      onTap: () => context.go('/intro/${tournament.id}'),
+      onTap: () => context.push('/intro/${tournament.id}'),
       child: Container(
         width: 200,
         decoration: BoxDecoration(
@@ -988,7 +988,7 @@ class _LiveTournamentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.go('/intro/${tournament.id}'),
+      onTap: () => context.push('/intro/${tournament.id}'),
       child: Container(
         width: 220,
         padding: const EdgeInsets.all(14),

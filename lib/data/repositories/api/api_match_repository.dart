@@ -22,26 +22,31 @@ class ApiMatchRepository implements IMatchRepository {
   }
 
   @override
-  Stream<List<MatchModel>> watchByTournament(String tournamentId) {
-    return Stream.periodic(const Duration(seconds: 10))
+  Stream<List<MatchModel>> watchByTournament(String tournamentId) async* {
+    yield await getAllByTournament(tournamentId);
+    yield* Stream.periodic(const Duration(seconds: 10))
         .asyncMap((_) => getAllByTournament(tournamentId));
   }
 
   @override
-  Stream<List<MatchModel>> watchLive(String tournamentId) {
-    return Stream.periodic(const Duration(seconds: 8))
+  Stream<List<MatchModel>> watchLive(String tournamentId) async* {
+    final list = await getAllByTournament(tournamentId);
+    yield list.where((m) => m.status == 'live' || m.status == 'ONGOING').toList();
+    yield* Stream.periodic(const Duration(seconds: 8))
         .asyncMap((_) async {
-          final list = await getAllByTournament(tournamentId);
-          return list.where((m) => m.status == 'live' || m.status == 'ONGOING').toList();
+          final currentList = await getAllByTournament(tournamentId);
+          return currentList.where((m) => m.status == 'live' || m.status == 'ONGOING').toList();
         });
   }
 
   @override
-  Stream<MatchModel?> watchMatch(String tournamentId, String matchId) {
-    return Stream.periodic(const Duration(seconds: 5))
+  Stream<MatchModel?> watchMatch(String tournamentId, String matchId) async* {
+    final list = await getAllByTournament(tournamentId);
+    yield list.where((m) => m.id == matchId).firstOrNull;
+    yield* Stream.periodic(const Duration(seconds: 5))
         .asyncMap((_) async {
-          final list = await getAllByTournament(tournamentId);
-          return list.where((m) => m.id == matchId).firstOrNull;
+          final currentList = await getAllByTournament(tournamentId);
+          return currentList.where((m) => m.id == matchId).firstOrNull;
         });
   }
 
@@ -168,8 +173,8 @@ class ApiMatchRepository implements IMatchRepository {
         final List<dynamic> list = response.data['data'] ?? response.data ?? [];
         return list.map((json) {
           final String id = json['id'] ?? '';
-          final team1Name = json['team1']?['name'] ?? json['team1Name'] ?? '';
-          final team2Name = json['team2']?['name'] ?? json['team2Name'] ?? '';
+          final team1Name = json['participant1']?['teamName'] ?? json['team1Name'] ?? 'TBD';
+          final team2Name = json['participant2']?['teamName'] ?? json['team2Name'] ?? 'TBD';
           
           return MatchModel(
             id: id,
@@ -187,6 +192,11 @@ class ApiMatchRepository implements IMatchRepository {
             winnerId: json['winnerId'] ?? '',
             court: json['court'] ?? '',
             updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
+            // Sport rules từ tournament setting
+            sportRules: json['tournament'] is Map
+                ? (json['tournament'] as Map)['sportRules'] as Map<String, dynamic>?
+                : null,
+            setsToWin: json['setsToWin'] as int?,
           );
         }).toList();
       }
@@ -200,5 +210,51 @@ class ApiMatchRepository implements IMatchRepository {
   @override
   Future<void> deleteAll(String tournamentId) async {
     throw UnimplementedError('Mobile app cannot delete matches.');
+  }
+
+  @override
+  Future<List<MatchModel>> getMatches({String? status, bool? publicOnly}) async {
+    _log.debug('Fetching matches globally with status: $status, publicOnly: $publicOnly');
+    try {
+      final queryParams = <String, dynamic>{};
+      if (status != null) queryParams['status'] = status;
+      if (publicOnly != null) queryParams['publicOnly'] = publicOnly;
+      final response = await _dioClient.dio.get('/matches', queryParameters: queryParams);
+      if (response.statusCode == 200) {
+        final List<dynamic> list = response.data['data'] ?? response.data ?? [];
+        return list.map((json) {
+          final String id = json['id'] ?? '';
+          final team1Name = json['participant1']?['teamName'] ?? json['team1Name'] ?? 'TBD';
+          final team2Name = json['participant2']?['teamName'] ?? json['team2Name'] ?? 'TBD';
+          
+          return MatchModel(
+            id: id,
+            round: json['roundNumber'] ?? 1,
+            matchNumber: json['matchNumber'] ?? 1,
+            team1Id: json['team1Id'] ?? '',
+            team1Name: team1Name,
+            team2Id: json['team2Id'] ?? '',
+            team2Name: team2Name,
+            score1: json['score1'] ?? 0,
+            score2: json['score2'] ?? 0,
+            status: json['status'] == 'ONGOING' ? 'live' : (json['status'] == 'COMPLETED' ? 'completed' : 'scheduled'),
+            bracketPosition: const BracketPosition(round: 1, position: 0),
+            nextMatchId: json['nextMatchId'] ?? '',
+            winnerId: json['winnerId'] ?? '',
+            court: json['court'] ?? '',
+            updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
+            // Sport rules từ tournament setting
+            sportRules: json['tournament'] is Map
+                ? (json['tournament'] as Map)['sportRules'] as Map<String, dynamic>?
+                : null,
+            setsToWin: json['setsToWin'] as int?,
+          );
+        }).toList();
+      }
+      return [];
+    } catch (e, stack) {
+      _log.error('Error fetching global matches from API', e, stack);
+      return [];
+    }
   }
 }

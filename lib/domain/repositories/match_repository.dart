@@ -70,4 +70,5 @@ abstract class IMatchRepository {
 
   Future<List<MatchModel>> getAllByTournament(String tournamentId);
   Future<void> deleteAll(String tournamentId);
+  Future<List<MatchModel>> getMatches({String? status, bool? publicOnly});
 }

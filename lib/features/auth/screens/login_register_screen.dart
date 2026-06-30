@@ -1,11 +1,14 @@
+import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
-import 'package:google_sign_in/google_sign_in.dart' as gsis;
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:app_quanly_giaidau/features/auth/widgets/gsi_button_web.dart' as gsi;
 
 class LoginRegisterScreen extends ConsumerStatefulWidget {
   const LoginRegisterScreen({super.key});
@@ -19,11 +22,66 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _fullNameController = TextEditingController();
-
   bool _isRegisterMode = false;
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
+
+  static bool _gsiInitialized = false;
+
+  Future<void> _initGoogleSignIn() async {
+    if (_gsiInitialized) return;
+    try {
+      await GoogleSignIn.instance.initialize(
+        clientId: "581793214855-tgne1210qdpstpksou74q1c8uvdo3kso.apps.googleusercontent.com",
+      );
+      _gsiInitialized = true;
+    } catch (e) {
+      debugPrint("Google Sign-In Init Error: $e");
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    GoogleSignIn.instance.authenticationEvents.listen((event) async {
+      if (event is GoogleSignInAuthenticationEventSignIn) {
+        final account = event.user;
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+        });
+        try {
+          final googleAuth = await account.authentication;
+          final idToken = googleAuth.idToken;
+          if (idToken == null) {
+            throw Exception("Không nhận được ID Token từ Google");
+          }
+          final success = await ref.read(authProvider.notifier).loginWithGoogle(idToken);
+          if (!mounted) return;
+          if (success) {
+            context.go("/home");
+          } else {
+            final auth = ref.read(authProvider);
+            setState(() {
+              _isLoading = false;
+              _errorMessage = auth.errorMessage ?? "Đăng nhập Google thất bại";
+            });
+          }
+        } catch (e) {
+          if (!mounted) return;
+          setState(() {
+            _isLoading = false;
+            _errorMessage = "Lỗi Google Sign-In: ${e.toString()}";
+          });
+        }
+      }
+    });
+
+    if (kIsWeb) {
+      _initGoogleSignIn();
+    }
+  }
 
   @override
   void dispose() {
@@ -35,39 +93,39 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final email = _emailController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
     final password = _passwordController.text;
     final fullName = _fullNameController.text.trim();
 
     bool success = false;
     if (_isRegisterMode) {
       success = await ref.read(authProvider.notifier).registerWithEmailPassword(
-        email,
-        password,
-        fullName,
-      );
+            email,
+            password,
+            fullName,
+          );
     } else {
       success = await ref.read(authProvider.notifier).loginWithEmailPassword(
-        email,
-        password,
-      );
+            email,
+            password,
+          );
     }
 
     if (!mounted) return;
 
     if (success) {
-      context.go('/home');
+      context.go("/home");
     } else {
       final auth = ref.read(authProvider);
       setState(() {
         _isLoading = false;
-        _errorMessage = auth.errorMessage ?? (_isRegisterMode ? 'Đăng ký thất bại' : 'Đăng nhập thất bại');
+        _errorMessage = auth.errorMessage ??
+            (_isRegisterMode ? "Đăng ký thất bại" : "Đăng nhập thất bại");
       });
     }
   }
@@ -77,196 +135,248 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       _isLoading = true;
       _errorMessage = null;
     });
-
     try {
-      final googleSignIn = gsis.GoogleSignIn(
-        clientId: '361413428219-ukdsu3nlv3bkkggv9pmtssrf82h8d539.apps.googleusercontent.com',
-      );
-      
-      // Thử đăng nhập im lặng trước (phù hợp cho Web nếu đã đăng nhập trước đó)
-      // Nếu thất bại hoặc trả về null, thực hiện luồng signIn() đầy đủ
-      final googleUser = await googleSignIn.signInSilently() ??
-                         await googleSignIn.signIn();
-      
-      if (googleUser == null) {
-        throw Exception('Người dùng hủy đăng nhập Google');
+      final googleSignIn = GoogleSignIn.instance;
+      await _initGoogleSignIn();
+      GoogleSignInAccount? googleUser;
+      final lightweightAuth = googleSignIn.attemptLightweightAuthentication();
+      if (lightweightAuth != null) {
+        googleUser = await lightweightAuth;
       }
-      
+      googleUser ??= await googleSignIn.authenticate();
+      if (googleUser == null) {
+        throw Exception("Đăng nhập bị hủy hoặc thất bại");
+      }
       final googleAuth = await googleUser.authentication;
       final idToken = googleAuth.idToken;
-
       if (idToken == null) {
-        throw Exception('Không nhận được ID Token từ Google');
+        throw Exception("Không nhận được ID Token từ Google");
       }
-
       bool success = await ref.read(authProvider.notifier).loginWithGoogle(idToken);
-
       if (!mounted) return;
-
       if (success) {
-        context.go('/home');
+        context.go("/home");
       } else {
         final auth = ref.read(authProvider);
         setState(() {
           _isLoading = false;
-          _errorMessage = auth.errorMessage ?? 'Đăng nhập Google thất bại';
+          _errorMessage = auth.errorMessage ?? "Đăng nhập Google thất bại";
         });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Lỗi Google Sign-In: ${e.toString()}';
+        _errorMessage = "Lỗi Google Sign-In: ${e.toString()}";
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryBgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+    final textPrimaryColor = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
+    final textSecondaryColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final ctaBgColor = AppTheme.primary;
+    final ctaTextColor = Colors.white;
+
     return Scaffold(
-      backgroundColor: context.colors.bgDark,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo Container
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      gradient: context.primaryGradient,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primary.withValues(alpha: 0.3),
-                          blurRadius: 15,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.emoji_events_rounded,
-                      size: 48,
-                      color: Colors.white,
-                    ),
-                  ).animate().scale(delay: 100.ms, duration: 400.ms, curve: Curves.easeOutBack),
-                  const SizedBox(height: 24),
-
-                  // Header Text
-                  Text(
-                    _isRegisterMode ? 'Đăng Ký Tài Khoản' : 'Chào Mừng Trở Lại',
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900,
-                      color: context.colors.textPrimary,
-                      letterSpacing: -0.5,
-                    ),
-                  ).animate().fadeIn(delay: 200.ms),
-                  const SizedBox(height: 8),
-                  Text(
-                    _isRegisterMode
-                        ? 'Tạo tài khoản để theo dõi và quản lý giải đấu'
-                        : 'Đăng nhập vào tài khoản của bạn để tiếp tục',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: context.colors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ).animate().fadeIn(delay: 250.ms),
-                  const SizedBox(height: 32),
-
-                  // Error Alert Box
-                  if (_errorMessage != null) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: context.colors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: context.colors.error.withValues(alpha: 0.3)),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.error_outline_rounded, color: context.colors.error, size: 20),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _errorMessage!,
-                              style: TextStyle(color: context.colors.error, fontSize: 13, fontWeight: FontWeight.w600),
+      backgroundColor: primaryBgColor,
+      body: Stack(
+        children: [
+          // Background Radial Glow
+          Positioned(
+            top: -screenSize.height * 0.2,
+            right: -screenSize.width * 0.3,
+            child: Container(
+              width: screenSize.width * 1.0,
+              height: screenSize.width * 1.0,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF2979FF).withOpacity(isDark ? 0.12 : 0.4),
+                    const Color(0xFF2979FF).withOpacity(0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // VNSPORT Logo (Animated Hero)
+                    ClipRect(
+                      child: SizedBox(
+                        height: 110,
+                        width: 340,
+                        child: Hero(
+                          tag: "vnsport_logo",
+                          child: Transform.translate(
+                            offset: const Offset(-30, 0), // Bù đắp khoảng trống thừa ở lề trái của file ảnh
+                            child: Transform.scale(
+                              scale: 1.5, // Phóng to logo lên 1.5 lần để bỏ qua viền trắng thừa trong asset
+                              alignment: Alignment.centerLeft,
+                              child: Image.asset(
+                                "assets/images/vndc_sport.png",
+                                fit: BoxFit.contain,
+                                color: isDark ? Colors.white : AppTheme.primary,
+                              ),
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ).animate().shake(duration: 400.ms),
-                    const SizedBox(height: 20),
-                  ],
+                    ).animate().fadeIn(duration: 300.ms),
+                    const SizedBox(height: 10),
 
-                  // Form Fields Card
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: context.colors.bgCard,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: context.colors.border.withValues(alpha: 0.5)),
+                    // Title
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Text(
+                        _isRegisterMode
+                            ? "Đăng ký\nthành viên"
+                            : "Đăng nhập\ntài khoản",
+                        key: ValueKey<bool>(_isRegisterMode),
+                        style: TextStyle(
+                          fontSize: 34.0,
+                          fontWeight: FontWeight.w900,
+                          color: textPrimaryColor,
+                          height: 1.2,
+                          letterSpacing: -1.2,
+                        ),
+                      ),
                     ),
-                    child: Column(
+                    const SizedBox(height: 8),
+
+                    // Subtitle
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Text(
+                        _isRegisterMode
+                            ? "Gia nhập cộng đồng thể thao VNSPORT."
+                            : "Truy cập để quản lý các giải đấu của bạn.",
+                        key: ValueKey<bool>(_isRegisterMode),
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          color: textSecondaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Error Alert Box
+                    if (_errorMessage != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: context.colors.error.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: context.colors.error.withOpacity(0.2),
+                            width: 1.0,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline_rounded,
+                              color: context.colors.error,
+                              size: 18.0,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: TextStyle(
+                                  color: context.colors.error,
+                                  fontSize: 13.0,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ).animate().shake(duration: 400.ms),
+
+                    // Form Fields Column
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (_isRegisterMode) ...[
-                          AppTextFormField(
-                            controller: _fullNameController,
-                            label: 'Họ và tên',
-                            hint: 'Nhập họ và tên của bạn',
-                            prefixIcon: Icons.person_outline,
-                            validator: (val) {
-                              if (val == null || val.trim().isEmpty) {
-                                return 'Vui lòng nhập họ và tên';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-
-                        AppTextFormField(
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeInOut,
+                          child: _isRegisterMode
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildTextInput(
+                                      controller: _fullNameController,
+                                      label: "Họ và tên",
+                                      hint: "Nhập đầy đủ họ tên",
+                                      icon: Icons.person_outline,
+                                      validator: (val) {
+                                        if (_isRegisterMode &&
+                                            (val == null || val.trim().isEmpty)) {
+                                          return "Vui lòng nhập họ và tên";
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 16),
+                                  ],
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                        _buildTextInput(
                           controller: _emailController,
-                          label: 'Địa chỉ Email',
-                          hint: 'example@domain.com',
+                          label: "Địa chỉ Email",
+                          hint: "yourname@example.com",
+                          icon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
-                          prefixIcon: Icons.email_outlined,
                           validator: (val) {
                             if (val == null || val.trim().isEmpty) {
-                              return 'Vui lòng nhập email';
+                              return "Vui lòng nhập email";
                             }
-                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(val.trim())) {
-                              return 'Định dạng email không hợp lệ';
+                            if (!RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")
+                                .hasMatch(val.trim())) {
+                              return "Định dạng email không hợp lệ";
                             }
                             return null;
                           },
                         ),
                         const SizedBox(height: 16),
-
-                        AppTextFormField(
+                        _buildTextInput(
                           controller: _passwordController,
-                          label: 'Mật khẩu',
-                          hint: '••••••••',
+                          label: "Mật khẩu",
+                          hint: "Nhập mật khẩu của bạn",
+                          icon: Icons.lock_outline,
                           obscureText: _obscurePassword,
-                          prefixIcon: Icons.lock_outline,
-                          suffixIcon: _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                          onSuffixIconPressed: () {
-                            setState(() => _obscurePassword = !_obscurePassword);
-                          },
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: isDark ? Colors.white70 : Colors.black54,
+                              size: 18.0,
+                            ),
+                            onPressed: () =>
+                                setState(() => _obscurePassword = !_obscurePassword),
+                          ),
                           validator: (val) {
                             if (val == null || val.isEmpty) {
-                              return 'Vui lòng nhập mật khẩu';
+                              return "Vui lòng nhập mật khẩu";
                             }
                             if (val.length < 6) {
-                              return 'Mật khẩu phải từ 6 ký tự trở lên';
+                              return "Mật khẩu phải từ 6 ký tự trở lên";
                             }
                             return null;
                           },
@@ -275,138 +385,233 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
 
                         // Action Button
                         SizedBox(
-                          height: 52,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              gradient: context.primaryGradient,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.primary.withValues(alpha: 0.3),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _submit,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                          height: 54,
+                          child: TextButton(
+                            onPressed: _isLoading ? null : _submit,
+                            style: TextButton.styleFrom(
+                              backgroundColor: ctaBgColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.0),
                               ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2.5,
-                                      ),
-                                    )
-                                  : Text(
-                                      _isRegisterMode ? 'Đăng Ký Ngay' : 'Đăng Nhập',
-                                      style: const TextStyle(
-                                        fontSize: 16,
+                            ),
+                            child: _isLoading
+                                ? SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: ctaTextColor,
+                                      strokeWidth: 2.5,
+                                    ),
+                                  )
+                                : AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 200),
+                                    child: Text(
+                                      _isRegisterMode ? "Đăng ký" : "Đăng nhập",
+                                      key: ValueKey<bool>(_isRegisterMode),
+                                      style: TextStyle(
+                                        fontSize: 16.0,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                        color: ctaTextColor,
+                                        letterSpacing: 0.2,
                                       ),
                                     ),
-                            ),
+                                  ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 24),
+
+                        // OR Divider
                         Row(
                           children: [
-                            Expanded(child: Divider(color: context.colors.border.withValues(alpha: 0.5))),
+                            Expanded(child: Divider(color: isDark ? Colors.white24 : Colors.black12)),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               child: Text(
-                                'Hoặc',
+                                "hoặc tiếp tục với",
                                 style: TextStyle(
-                                  color: context.colors.textSecondary.withValues(alpha: 0.6),
-                                  fontSize: 12,
+                                  color: isDark ? Colors.white38 : Colors.black38,
+                                  fontSize: 12.0,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
-                            Expanded(child: Divider(color: context.colors.border.withValues(alpha: 0.5))),
+                            Expanded(child: Divider(color: isDark ? Colors.white24 : Colors.black12)),
                           ],
                         ),
-                        const SizedBox(height: 16),
-                        OutlinedButton.icon(
-                          onPressed: _isLoading ? null : _submitGoogle,
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(52),
-                            side: BorderSide(color: context.colors.border),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        const SizedBox(height: 24),
+
+                        // Google Button
+                        if (kIsWeb)
+                          SizedBox(
+                            height: 52,
+                            width: double.infinity,
+                            child: gsi.buildGoogleSignInButton(),
+                          )
+                        else
+                          OutlinedButton.icon(
+                            onPressed: _isLoading ? null : _submitGoogle,
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(52),
+                              side: BorderSide(
+                                color: isDark ? Colors.white24 : Colors.black12,
+                                width: 1.2,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              backgroundColor: Colors.transparent,
+                            ),
+                            icon: Image.network(
+                              "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png",
+                              height: 18.0,
+                              errorBuilder: (_, __, ___) => const Icon(
+                                Icons.g_mobiledata,
+                                size: 24,
+                              ),
+                            ),
+                            label: Text(
+                              "Google",
+                              style: TextStyle(
+                                color: textPrimaryColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15.0,
+                              ),
                             ),
                           ),
-                          icon: Image.network(
-                            'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png',
-                            height: 20,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata, size: 24),
-                          ),
-                          label: Text(
-                            _isRegisterMode ? 'Đăng ký bằng Google' : 'Đăng nhập bằng Google',
-                            style: TextStyle(
-                              color: context.colors.textPrimary,
-                              fontWeight: FontWeight.w600,
+                      ],
+                    ).animate().fadeIn(delay: 250.ms, duration: 400.ms),
+                    const SizedBox(height: 24),
+
+                    // Toggle Link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _isRegisterMode ? "Đã có tài khoản?" : "Chưa có tài khoản?",
+                          style: TextStyle(color: textSecondaryColor, fontSize: 14.0),
+                        ),
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isRegisterMode = !_isRegisterMode;
+                              _errorMessage = null;
+                            });
+                          },
+                          child: Text(
+                            _isRegisterMode ? "Đăng nhập ngay" : "Đăng ký ngay",
+                            style: const TextStyle(
+                              color: Color(0xFF2979FF),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14.0,
                             ),
                           ),
                         ),
                       ],
-                    ),
-                  ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
-                  const SizedBox(height: 24),
+                    ).animate().fadeIn(delay: 350.ms),
+                    const SizedBox(height: 16),
 
-                  // Toggle Button
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _isRegisterMode ? 'Đã có tài khoản?' : 'Chưa có tài khoản?',
-                        style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _isRegisterMode = !_isRegisterMode;
-                            _errorMessage = null;
-                          });
-                        },
+                    // Skip Button
+                    Center(
+                      child: GestureDetector(
+                        onTap: () => context.go("/home"),
                         child: Text(
-                          _isRegisterMode ? 'Đăng nhập' : 'Đăng ký ngay',
-                          style: const TextStyle(
-                            color: AppTheme.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                          "Khám phá không cần đăng nhập",
+                          style: TextStyle(
+                            color: textSecondaryColor.withOpacity(0.7),
+                            fontSize: 13.0,
+                            decoration: TextDecoration.underline,
                           ),
                         ),
                       ),
-                    ],
-                  ).animate().fadeIn(delay: 350.ms),
-
-                  // Skip to explore link
-                  TextButton(
-                    onPressed: () => context.go('/home'),
-                    child: Text(
-                      'Khám phá không cần đăng nhập',
-                      style: TextStyle(
-                        color: context.colors.textMuted,
-                        fontSize: 12,
-                        decoration: TextDecoration.underline,
-                      ),
                     ),
-                  ).animate().fadeIn(delay: 400.ms),
-                ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextInput({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    FormFieldValidator<String>? validator,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textPrimaryColor = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.bold,
+              color: textPrimaryColor.withOpacity(0.85),
+              letterSpacing: 0.1,
+            ),
+          ),
+        ),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          obscureText: obscureText,
+          validator: validator,
+          style: TextStyle(color: textPrimaryColor, fontSize: 15.0),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: isDark ? Colors.white38 : Colors.black38,
+              fontSize: 14.5,
+            ),
+            filled: true,
+            fillColor: isDark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.015),
+            prefixIcon: Icon(
+              icon,
+              color: isDark ? Colors.white54 : Colors.black54,
+              size: 18.0,
+            ),
+            suffixIcon: suffixIcon,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: const BorderSide(color: Color(0xFF2979FF), width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: BorderSide(
+                color: context.colors.error.withOpacity(0.4),
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: BorderSide(
+                color: context.colors.error,
+                width: 1.5,
               ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

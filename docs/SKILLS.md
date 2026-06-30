@@ -18,6 +18,11 @@
 > | Quy tắc code, nguyên tắc thiết kế (file này) | [`docs/SKILLS.md`](../docs/SKILLS.md) |
 >
 > 3. Tự động chạy cập nhật đồ thị kiến thức dự án (`/graphify --update`) ngay sau khi hoàn thành bất kỳ chỉnh sửa nào để cập nhật dữ liệu mới nhất.
+>
+> ⚠️ **QUY ĐỊNH CẤM KỴ - TUYỆT ĐỐI KHÔNG SỬ DỤNG:**
+> - **CẤM** sử dụng lệnh `git checkout` hoặc `git clean` hoặc `git pull --force` để ghi đè working tree của User dưới mọi hình thức.
+> - **CẤM** xóa bỏ bất kỳ file code/giao diện nào của User chưa được commit mà không có sự đồng ý hoặc chỉ dẫn trực tiếp.
+> - Mọi thao tác khôi phục hoặc chuyển đổi code bắt buộc phải được xác nhận trước và sử dụng các bản lưu an toàn (`git stash` hoặc nhánh backup riêng biệt).
 
 ---
 

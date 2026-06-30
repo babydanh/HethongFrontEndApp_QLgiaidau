@@ -11,8 +11,6 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
 
 class LiveTournamentWithMatchesCard extends ConsumerStatefulWidget {
   final Tournament tournament;
@@ -288,7 +286,7 @@ class _LiveTournamentWithMatchesCardState extends ConsumerState<LiveTournamentWi
               border: Border(top: BorderSide(color: Colors.grey.shade100)),
             ),
             child: InkWell(
-              onTap: () => context.go('/intro/${widget.tournament.id}'),
+              onTap: () => context.push('/intro/${widget.tournament.id}'),
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(16),
                 bottomRight: Radius.circular(16),
@@ -475,7 +473,7 @@ class _LiveTournamentWithMatchesCardState extends ConsumerState<LiveTournamentWi
                   const SizedBox(width: 8),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => context.go('/intro/${widget.tournament.id}'),
+                      onPressed: () => context.push('/intro/${widget.tournament.id}'),
                       icon: const Icon(Icons.play_arrow_rounded, size: 16, color: Colors.white),
                       label: const Text(
                         'Live',
@@ -492,7 +490,7 @@ class _LiveTournamentWithMatchesCardState extends ConsumerState<LiveTournamentWi
                 ] else ...[
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => context.go('/intro/${widget.tournament.id}'),
+                      onPressed: () => context.push('/intro/${widget.tournament.id}'),
                       icon: Icon(Icons.analytics_outlined, size: 14, color: Colors.blue.shade700),
                       label: Text(
                         'Chi tiết trận đấu',

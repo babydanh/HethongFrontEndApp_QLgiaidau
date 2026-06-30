@@ -58,19 +58,40 @@ class AuthNotifier extends Notifier<AuthState> {
   static const _log = AppLogger('AuthNotifier');
 
   StreamSubscription? _tokenSubscription;
+  bool _initialized = false;
 
   @override
   AuthState build() {
     ref.onDispose(() {
       _tokenSubscription?.cancel();
     });
+    if (!_initialized && ref.exists(tokenManagerProvider)) {
+      _initialized = true;
+      Future.microtask(() => init());
+    }
     return const AuthState();
   }
 
-  /// Khởi tạo: Kiểm tra token đã lưu
+  /// Khởi tạo: Kiểm tra JWT token hoặc token đã lưu
   Future<void> init() async {
-    final savedToken = await ref.read(restoreSavedInviteTokenUseCaseProvider).call();
+    final tokenManager = ref.read(tokenManagerProvider);
+    final hasJwt = await tokenManager.hasValidToken();
+    if (hasJwt) {
+      final roleStr = await tokenManager.getRole();
+      final restoredRole = UserRole.values.firstWhere(
+        (r) => r.name == roleStr,
+        orElse: () => UserRole.viewer,
+      );
+      _log.success("Khôi phục phiên đăng nhập từ JWT token. Role: ${restoredRole.name}");
+      state = AuthState(
+        status: AuthStatus.authenticated,
+        role: restoredRole,
+        tokenCode: "SESSION",
+      );
+      return;
+    }
 
+    final savedToken = await ref.read(restoreSavedInviteTokenUseCaseProvider).call();
     if (savedToken != null && savedToken.isNotEmpty) {
       await validateToken(savedToken);
     }
@@ -159,6 +180,20 @@ class AuthNotifier extends Notifier<AuthState> {
     _startTokenListener(tokenCode);
   }
 
+  Future<void> _saveJwtSession(AuthSession session, UserRole role) async {
+    try {
+      final tokenManager = ref.read(tokenManagerProvider);
+      await tokenManager.saveTokens(
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+        role: role.name,
+      );
+      _log.success("JWT session saved to secure storage");
+    } catch (e, stack) {
+      _log.error("Failed to save JWT session", e, stack);
+    }
+  }
+
   /// Đăng nhập bằng Email & Mật khẩu
   Future<bool> loginWithEmailPassword(String email, String password) async {
     _log.info('Đăng nhập bằng email: $email via NestJS Mobile API');
@@ -169,9 +204,11 @@ class AuthNotifier extends Notifier<AuthState> {
             email: email,
             password: password,
           );
+      final role = _mapSessionRole(session);
+      await _saveJwtSession(session, role);
       state = AuthState(
         status: AuthStatus.authenticated,
-        role: _mapSessionRole(session),
+        role: role,
         tokenCode: 'SESSION',
       );
       return true;
@@ -194,9 +231,11 @@ class AuthNotifier extends Notifier<AuthState> {
       final session = await ref.read(loginWithGoogleUseCaseProvider).call(
             idToken: idToken,
           );
+      final role = _mapSessionRole(session);
+      await _saveJwtSession(session, role);
       state = AuthState(
         status: AuthStatus.authenticated,
-        role: _mapSessionRole(session),
+        role: role,
         tokenCode: 'SESSION',
       );
       return true;
@@ -221,9 +260,11 @@ class AuthNotifier extends Notifier<AuthState> {
             password: password,
             fullName: fullName,
           );
+      final role = _mapSessionRole(session);
+      await _saveJwtSession(session, role);
       state = AuthState(
         status: AuthStatus.authenticated,
-        role: _mapSessionRole(session),
+        role: role,
         tokenCode: 'SESSION',
       );
       return true;
