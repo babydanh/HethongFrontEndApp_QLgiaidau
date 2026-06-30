@@ -1,0 +1,211 @@
+
+<style>
+  .wrap { display:flex; justify-content:center; padding:1.5rem 0; background:var(--surface-0); }
+  .phone { width:320px; background:#f0f4ff; border-radius:36px; border:2px solid #c8d4f0; overflow:hidden; font-family:var(--font-sans); }
+  .hero { position:relative; background:#0d2f8a; }
+  .hero-bg { position:absolute; top:0; left:0; width:100%; height:100%; z-index:0; }
+  .hero-content { position:relative; z-index:3; padding:22px 18px 0; }
+  .top-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .brand { color:#fff; font-size:17px; font-weight:500; letter-spacing:1.5px; }
+  .notif { width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; position:relative; }
+  .notif-dot { position:absolute; top:-1px; right:-1px; background:#f84f4f; color:#fff; font-size:9px; border-radius:50%; width:15px; height:15px; display:flex; align-items:center; justify-content:center; border:1.5px solid #0d2f8a; }
+  .hero-sub { color:rgba(255,255,255,0.65); font-size:12px; margin-bottom:3px; }
+  .hero-title { color:#fff; font-size:20px; font-weight:500; line-height:1.3; margin-bottom:14px; }
+  .login-pill { display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.35); color:#fff; border-radius:24px; padding:8px 16px; font-size:12px; margin-bottom:24px; }
+  .wave-wrap { position:relative; z-index:3; display:block; margin-top:-2px; }
+  .search-wrap { padding:0 16px; margin-top:-20px; position:relative; z-index:4; margin-bottom:4px; }
+  .search-box { background:#fff; border-radius:16px; border:1px solid #dce6f5; padding:10px 14px; display:flex; align-items:center; gap:10px; box-shadow:0 3px 14px rgba(13,47,138,0.13); }
+  .search-ph { flex:1; font-size:13px; color:#aab4c8; }
+  .chips { display:flex; gap:7px; padding:12px 16px 2px; overflow-x:auto; }
+  .chips::-webkit-scrollbar { display:none; }
+  .chip { display:flex; align-items:center; gap:4px; padding:6px 13px; border-radius:20px; font-size:12px; white-space:nowrap; border:1.5px solid #dce6f5; color:#5a6a8a; background:#fff; }
+  .chip.on { background:#1a56db; color:#fff; border-color:#1a56db; }
+  .shead { display:flex; justify-content:space-between; align-items:center; padding:14px 16px 6px; }
+  .stitle { font-size:13px; font-weight:500; color:var(--text-primary); }
+  .smore { font-size:12px; color:#1a56db; }
+  .tcard { margin:0 16px 9px; background:#fff; border-radius:14px; border:1px solid #dce6f5; padding:12px; display:flex; align-items:center; gap:11px; }
+  .ticon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+  .tname { font-size:13px; font-weight:500; color:var(--text-primary); }
+  .tmeta { font-size:11px; color:#8898b0; margin-top:2px; }
+  .badge { font-size:10px; padding:3px 9px; border-radius:9px; font-weight:500; white-space:nowrap; }
+  .b-open { background:#e6f4ea; color:#1e7e34; }
+  .b-soon { background:#fff3cd; color:#856404; }
+  .b-full { background:#fde8e8; color:#b91c1c; }
+  .stats { display:flex; gap:7px; padding:8px 16px 10px; }
+  .scard { flex:1; background:#fff; border-radius:12px; border:1px solid #dce6f5; padding:10px 8px; text-align:center; }
+  .snum { font-size:18px; font-weight:500; color:#1a56db; }
+  .slbl { font-size:10px; color:#8898b0; margin-top:1px; }
+  .bnav { background:#fff; border-top:1px solid #e8eef8; display:flex; align-items:center; justify-content:space-around; padding:10px 0 14px; }
+  .ni { display:flex; flex-direction:column; align-items:center; gap:2px; color:#8898b0; font-size:10px; }
+  .ni.on { color:#1a56db; }
+  .fab { width:46px; height:46px; background:#1a56db; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; margin-top:-16px; box-shadow:0 4px 14px rgba(26,86,219,0.38); }
+</style>
+
+<h2 class="sr-only">VNSPORT header với cây vợt, trái cầu ẩn dưới sóng uốn lượn</h2>
+
+<div class="wrap">
+  <div class="phone">
+
+    <!-- HERO BLOCK: tất cả dùng SVG duy nhất để tránh lỗi z-index -->
+    <div class="hero">
+
+      <!-- SVG nền + vợt + cầu + sóng, tất cả trong 1 khối -->
+      <svg class="hero-bg" viewBox="0 0 320 230" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;">
+        <defs>
+          <linearGradient id="hg2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1a56db"/>
+            <stop offset="50%" stop-color="#0e3faa"/>
+            <stop offset="100%" stop-color="#071f6b"/>
+          </linearGradient>
+        </defs>
+        <!-- Nền gradient -->
+        <rect width="320" height="230" fill="url(#hg2)"/>
+        <!-- Vòng trang trí mờ -->
+        <circle cx="272" cy="30" r="72" fill="rgba(255,255,255,0.05)"/>
+        <circle cx="28" cy="175" r="52" fill="rgba(255,255,255,0.04)"/>
+
+        <!-- CÂY VỢT - góc phải, nghiêng, ẩn dưới sóng -->
+        <g transform="translate(210,60) rotate(-28)" opacity="0.22">
+          <ellipse cx="40" cy="52" rx="36" ry="44" fill="none" stroke="#7eb8ff" stroke-width="5"/>
+          <ellipse cx="40" cy="52" rx="28" ry="35" fill="none" stroke="#7eb8ff" stroke-width="2.5"/>
+          <line x1="8" y1="36" x2="72" y2="36" stroke="#7eb8ff" stroke-width="1.2" opacity="0.65"/>
+          <line x1="6" y1="46" x2="74" y2="46" stroke="#7eb8ff" stroke-width="1.2" opacity="0.65"/>
+          <line x1="5" y1="52" x2="75" y2="52" stroke="#7eb8ff" stroke-width="1.2" opacity="0.65"/>
+          <line x1="6" y1="62" x2="74" y2="62" stroke="#7eb8ff" stroke-width="1.2" opacity="0.65"/>
+          <line x1="8" y1="72" x2="72" y2="72" stroke="#7eb8ff" stroke-width="1.2" opacity="0.65"/>
+          <line x1="22" y1="10" x2="22" y2="94" stroke="#7eb8ff" stroke-width="1.2" opacity="0.65"/>
+          <line x1="32" y1="8" x2="32" y2="96" stroke="#7eb8ff" stroke-width="1.2" opacity="0.65"/>
+          <line x1="40" y1="8" x2="40" y2="96" stroke="#7eb8ff" stroke-width="1.2" opacity="0.65"/>
+          <line x1="48" y1="8" x2="48" y2="96" stroke="#7eb8ff" stroke-width="1.2" opacity="0.65"/>
+          <line x1="58" y1="10" x2="58" y2="94" stroke="#7eb8ff" stroke-width="1.2" opacity="0.65"/>
+          <path d="M32 94 Q34 108 35 118 L45 118 Q46 108 48 94" fill="none" stroke="#7eb8ff" stroke-width="4" stroke-linecap="round"/>
+          <rect x="33" y="117" width="14" height="50" rx="6" fill="none" stroke="#7eb8ff" stroke-width="4"/>
+          <line x1="33" y1="128" x2="47" y2="128" stroke="#7eb8ff" stroke-width="1.5" opacity="0.5"/>
+          <line x1="33" y1="138" x2="47" y2="138" stroke="#7eb8ff" stroke-width="1.5" opacity="0.5"/>
+          <line x1="33" y1="148" x2="47" y2="148" stroke="#7eb8ff" stroke-width="1.5" opacity="0.5"/>
+          <rect x="31" y="164" width="18" height="5" rx="2.5" fill="none" stroke="#7eb8ff" stroke-width="3"/>
+        </g>
+
+        <!-- TRÁI CẦU LÔNG - góc trái dưới, ẩn dưới sóng -->
+        <g transform="translate(12,130) rotate(12)" opacity="0.22">
+          <ellipse cx="34" cy="68" rx="12" ry="9" fill="none" stroke="#a0cfff" stroke-width="3"/>
+          <ellipse cx="34" cy="68" rx="7" ry="5" fill="none" stroke="#a0cfff" stroke-width="1.5" opacity="0.6"/>
+          <ellipse cx="34" cy="30" rx="28" ry="12" fill="none" stroke="#a0cfff" stroke-width="2.5"/>
+          <ellipse cx="34" cy="40" rx="21" ry="9" fill="none" stroke="#a0cfff" stroke-width="1.8" opacity="0.7"/>
+          <line x1="34" y1="60" x2="6" y2="28" stroke="#a0cfff" stroke-width="1.3" opacity="0.6"/>
+          <line x1="34" y1="60" x2="14" y2="24" stroke="#a0cfff" stroke-width="1.3" opacity="0.6"/>
+          <line x1="34" y1="60" x2="24" y2="20" stroke="#a0cfff" stroke-width="1.3" opacity="0.6"/>
+          <line x1="34" y1="60" x2="34" y2="18" stroke="#a0cfff" stroke-width="1.3" opacity="0.6"/>
+          <line x1="34" y1="60" x2="44" y2="20" stroke="#a0cfff" stroke-width="1.3" opacity="0.6"/>
+          <line x1="34" y1="60" x2="54" y2="24" stroke="#a0cfff" stroke-width="1.3" opacity="0.6"/>
+          <line x1="34" y1="60" x2="62" y2="28" stroke="#a0cfff" stroke-width="1.3" opacity="0.6"/>
+        </g>
+      </svg>
+
+      <!-- Text content z-index cao -->
+      <div class="hero-content">
+        <div class="top-nav">
+          <span class="brand">⚡ VNSPORT</span>
+          <div class="notif">
+            <i class="ti ti-bell" style="color:#fff;font-size:17px;" aria-hidden="true"></i>
+            <span class="notif-dot">3</span>
+          </div>
+        </div>
+        <div class="hero-sub">Chào mừng trở lại 👋</div>
+        <div class="hero-title">Tìm & quản lý<br>giải đấu thể thao</div>
+        <div class="login-pill">
+          <i class="ti ti-trophy" style="font-size:13px;" aria-hidden="true"></i>
+          Đăng nhập xem ELO & thống kê
+        </div>
+      </div>
+
+      <!-- SÓNG uốn lượn - SVG riêng, z-index cao nhất trong hero -->
+      <svg class="wave-wrap" viewBox="0 0 320 62" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="display:block;width:100%;height:62px;position:relative;z-index:3;">
+        <!-- Lớp sóng 1: màu gradient xanh đậm, cong mềm -->
+        <path d="M0 8 C40 8, 80 48, 130 42 C175 36, 210 12, 260 18 C285 21, 305 32, 320 28 L320 0 L0 0 Z" fill="#0e3faa"/>
+        <!-- Lớp sóng 2: trung gian -->
+        <path d="M0 22 C30 52, 85 62, 145 54 C195 47, 240 28, 290 36 C305 39, 314 44, 320 42 L320 62 L0 62 Z" fill="#e8eef8"/>
+        <!-- Lớp sóng 3: nền app -->
+        <path d="M0 36 C50 60, 110 65, 175 58 C225 52, 270 40, 320 50 L320 62 L0 62 Z" fill="#f0f4ff"/>
+      </svg>
+    </div>
+
+    <!-- Search nổi đè lên sóng -->
+    <div class="search-wrap">
+      <div class="search-box">
+        <i class="ti ti-search" style="color:#1a56db;font-size:17px;" aria-hidden="true"></i>
+        <div class="search-ph">Tìm kiếm giải đấu...</div>
+        <i class="ti ti-adjustments-horizontal" style="color:#1a56db;font-size:17px;" aria-hidden="true"></i>
+      </div>
+    </div>
+
+    <div class="chips">
+      <div class="chip"><i class="ti ti-layout-grid" style="font-size:13px;" aria-hidden="true"></i>Tất cả</div>
+      <div class="chip on"><i class="ti ti-ball-tennis" style="font-size:13px;" aria-hidden="true"></i>Tennis</div>
+      <div class="chip"><i class="ti ti-feather" style="font-size:13px;" aria-hidden="true"></i>Cầu lông</div>
+      <div class="chip"><i class="ti ti-circle" style="font-size:13px;" aria-hidden="true"></i>Bóng bàn</div>
+      <div class="chip"><i class="ti ti-hexagon" style="font-size:13px;" aria-hidden="true"></i>Pickleball</div>
+    </div>
+
+    <div class="stats">
+      <div class="scard"><div class="snum">128</div><div class="slbl">Giải đấu</div></div>
+      <div class="scard"><div class="snum">4.2K</div><div class="slbl">VĐV</div></div>
+      <div class="scard"><div class="snum">32</div><div class="slbl">Đang mở</div></div>
+    </div>
+
+    <div class="shead">
+      <span class="stitle">Giải đang mở đăng ký</span>
+      <span class="smore">Xem tất cả →</span>
+    </div>
+
+    <div class="tcard">
+      <div class="ticon" style="background:#e6f0ff;">🎾</div>
+      <div style="flex:1;">
+        <div class="tname">VN Open Tennis 2025</div>
+        <div class="tmeta">📍 TP.HCM · 15/07 – 20/07</div>
+      </div>
+      <span class="badge b-open">Mở ĐK</span>
+    </div>
+
+    <div class="tcard">
+      <div class="ticon" style="background:#fff7e6;">🏸</div>
+      <div style="flex:1;">
+        <div class="tname">Cầu lông Hà Nội Cup</div>
+        <div class="tmeta">📍 Hà Nội · 22/07 – 24/07</div>
+      </div>
+      <span class="badge b-soon">Sắp mở</span>
+    </div>
+
+    <div class="tcard">
+      <div class="ticon" style="background:#fdeaea;">🏓</div>
+      <div style="flex:1;">
+        <div class="tname">Bóng bàn Miền Nam</div>
+        <div class="tmeta">📍 Cần Thơ · 10/07 – 12/07</div>
+      </div>
+      <span class="badge b-full">Hết chỗ</span>
+    </div>
+
+    <div class="bnav">
+      <div class="ni on">
+        <i class="ti ti-compass" style="font-size:21px;" aria-hidden="true"></i>
+        Khám phá
+      </div>
+      <div class="ni">
+        <i class="ti ti-trophy" style="font-size:21px;" aria-hidden="true"></i>
+        Giải đấu
+      </div>
+      <div class="ni">
+        <div class="fab"><i class="ti ti-plus" style="font-size:21px;" aria-hidden="true"></i></div>
+      </div>
+      <div class="ni">
+        <i class="ti ti-chart-bar" style="font-size:21px;" aria-hidden="true"></i>
+        Thống kê
+      </div>
+      <div class="ni">
+        <i class="ti ti-settings" style="font-size:21px;" aria-hidden="true"></i>
+        Cài đặt
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,20 @@
+{
+  "@@locale": "en",
+  "navExplore": "Explore",
+  "navTournaments": "Tournaments",
+  "navRankings": "Rankings",
+  "navSettings": "Settings",
+  "loginTitle": "Account Login",
+  "registerTitle": "Member Registration",
+  "emailLabel": "Email Address",
+  "passwordLabel": "Password",
+  "fullNameLabel": "Full Name",
+  "loginButton": "Sign In",
+  "registerButton": "Sign Up",
+  "orContinueWith": "or continue with",
+  "noAccount": "Don't have an account?",
+  "hasAccount": "Already have an account?",
+  "registerNow": "Sign up now",
+  "loginNow": "Sign in",
+  "exploreWithoutLogin": "Explore without logging in"
+}

@@ -76,6 +76,7 @@ class MatchModel {
   final DateTime updatedAt;
   final String? refereeName;
   final List<Penalty> penalties;
+  final String? tournamentName;
 
   const MatchModel({
     required this.id,
@@ -105,6 +106,7 @@ class MatchModel {
     required this.updatedAt,
     this.refereeName,
     this.penalties = const [],
+    this.tournamentName,
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json, String id) {
@@ -149,6 +151,7 @@ class MatchModel {
               ?.map((p) => Penalty.fromJson(p as Map<String, dynamic>))
               .toList() ??
           [],
+      tournamentName: json['tournamentName'] ?? json['tournament']?['name'],
     );
   }
 
@@ -180,6 +183,7 @@ class MatchModel {
       'updatedAt': updatedAt.toIso8601String(),
       if (refereeName != null) 'refereeName': refereeName,
       'penalties': penalties.map((p) => p.toJson()).toList(),
+      if (tournamentName != null) 'tournamentName': tournamentName,
     };
   }
 
@@ -211,6 +215,7 @@ class MatchModel {
     DateTime? updatedAt,
     String? refereeName,
     List<Penalty>? penalties,
+    String? tournamentName,
   }) {
     return MatchModel(
       id: id ?? this.id,
@@ -240,6 +245,7 @@ class MatchModel {
       updatedAt: updatedAt ?? this.updatedAt,
       refereeName: refereeName ?? this.refereeName,
       penalties: penalties ?? this.penalties,
+      tournamentName: tournamentName ?? this.tournamentName,
     );
   }
 
