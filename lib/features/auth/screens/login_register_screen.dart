@@ -226,9 +226,9 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                         child: Hero(
                           tag: "vnsport_logo",
                           child: Transform.translate(
-                            offset: const Offset(-58, 0), // Bù đắp khoảng trống thừa ở lề trái của file ảnh để sát lề trái
+                            offset: const Offset(-8, 0), // Bù đắp nhẹ khoảng trống lề để thẳng hàng với form
                             child: Transform.scale(
-                              scale: 1.85, // Phóng to logo lên để bỏ qua viền trắng thừa trong asset và sát lề trái
+                              scale: 1.3, // Tỉ lệ vừa phải giúp căn lề hoàn hảo
                               alignment: Alignment.centerLeft,
                               child: Image.asset(
                                 "assets/images/vndc_sport.png",
