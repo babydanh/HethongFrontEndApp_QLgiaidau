@@ -220,17 +220,21 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                   children: [
                     // VNSPORT Logo (Animated Hero)
                     SizedBox(
-                      height: 160,
-                      width: 320,
+                      height: 60,
+                      width: 220,
                       child: Hero(
                         tag: "vnsport_logo",
                         child: Transform.translate(
-                          offset: const Offset(-45, 0), // Phóng to và chỉnh lùi tương ứng để thẳng hàng với form
-                          child: Image.asset(
-                            "assets/images/vndc_sport.png",
-                            fit: BoxFit.contain,
-                            alignment: Alignment.centerLeft, // Đẩy sát nội dung ảnh về lề trái của Box
-                            color: isDark ? Colors.white : AppTheme.primary,
+                          offset: const Offset(-30, 0), // Dịch nhẹ trái để căn thẳng hàng Đăng Nhập, tránh bị cắt chữ V
+                          child: Transform.scale(
+                            scale: 2.1, // Phóng to logo thực tế bên trong để lấp khoảng trống trên dưới
+                            alignment: Alignment.centerLeft,
+                            child: Image.asset(
+                              "assets/images/vndc_sport.png",
+                              fit: BoxFit.contain,
+                              alignment: Alignment.centerLeft,
+                              color: isDark ? Colors.white : AppTheme.primary,
+                            ),
                           ),
                         ),
                       ),
