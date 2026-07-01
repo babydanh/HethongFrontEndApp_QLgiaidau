@@ -172,3 +172,71 @@ class UserProfile {
     return null;
   }
 }
+
+/// Hồ sơ công khai của người dùng (GET /users/:id/public).
+class UserPublicProfile {
+  final String id;
+  final String fullName;
+  final String? avatarUrl;
+  final String? coverUrl;
+  final String? gender;
+  final String? bio;
+  final bool isVerified;
+  final List<UserPublicRank> ranks;
+
+  const UserPublicProfile({
+    required this.id,
+    required this.fullName,
+    this.avatarUrl,
+    this.coverUrl,
+    this.gender,
+    this.bio,
+    this.isVerified = false,
+    this.ranks = const [],
+  });
+
+  factory UserPublicProfile.fromJson(Map<String, dynamic> json) {
+    return UserPublicProfile(
+      id: json['id'] as String? ?? '',
+      fullName: json['fullName'] as String? ?? '',
+      avatarUrl: json['avatarUrl'] as String?,
+      coverUrl: json['coverUrl'] as String?,
+      gender: json['gender'] as String?,
+      bio: json['bio'] as String?,
+      isVerified: json['isVerified'] == true,
+      ranks: (json['ranks'] as List<dynamic>?)
+              ?.map((e) => UserPublicRank.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+class UserPublicRank {
+  final String categoryId;
+  final String categoryName;
+  final int eloPoints;
+  final String? tierName;
+  final int matchesPlayed;
+  final int matchesWon;
+
+  const UserPublicRank({
+    required this.categoryId,
+    required this.categoryName,
+    this.eloPoints = 0,
+    this.tierName,
+    this.matchesPlayed = 0,
+    this.matchesWon = 0,
+  });
+
+  factory UserPublicRank.fromJson(Map<String, dynamic> json) {
+    return UserPublicRank(
+      categoryId: json['categoryId'] as String? ?? '',
+      categoryName: json['categoryName'] as String? ?? '',
+      eloPoints: ((json['eloPoints'] ?? 0) as num).toInt(),
+      tierName: json['tierName'] as String?,
+      matchesPlayed: ((json['matchesPlayed'] ?? 0) as num).toInt(),
+      matchesWon: ((json['matchesWon'] ?? 0) as num).toInt(),
+    );
+  }
+}
