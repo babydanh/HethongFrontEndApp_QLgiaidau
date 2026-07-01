@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/router/app_router.dart';
+import 'package:app_quanly_giaidau/core/widgets/socket_observer.dart';
 import 'package:app_quanly_giaidau/providers/theme_provider.dart';
 
 class MyCustomScrollBehavior extends MaterialScrollBehavior {
@@ -22,14 +23,16 @@ class TournamentApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeProvider);
 
-    return MaterialApp.router(
-      title: 'Quản Lý Giải Đấu',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: themeMode,
-      routerConfig: router,
-      scrollBehavior: MyCustomScrollBehavior(),
+    return SocketObserver(
+      child: MaterialApp.router(
+        title: 'Quản Lý Giải Đấu',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeMode,
+        routerConfig: router,
+        scrollBehavior: MyCustomScrollBehavior(),
+      ),
     );
   }
 }

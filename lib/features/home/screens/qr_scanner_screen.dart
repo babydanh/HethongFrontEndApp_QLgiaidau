@@ -5,6 +5,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
+
 class QrScannerScreen extends ConsumerStatefulWidget {
   const QrScannerScreen({super.key});
 
@@ -52,6 +54,8 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     if (!mounted) return;
 
     if (success) {
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(userRankingsProvider);
       final auth = ref.read(authProvider);
       final route = switch (auth.role) {
         UserRole.admin => '/admin/tournament/${auth.tournamentId}',

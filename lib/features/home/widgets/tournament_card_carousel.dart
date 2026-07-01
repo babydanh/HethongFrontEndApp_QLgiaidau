@@ -136,10 +136,12 @@ class TournamentCardCarousel extends StatelessWidget {
                       ),
                       child: tournament.bannerUrl == null || tournament.bannerUrl!.isEmpty
                           ? Center(
-                              child: Icon(
-                                Icons.sports_tennis_rounded,
-                                size: 36,
-                                color: colors.textMuted.withValues(alpha: 0.3),
+                              child: Image.asset(
+                                "assets/images/vndc_sport.png",
+                                width: 120,
+                                fit: BoxFit.contain,
+                                color: Colors.white.withValues(alpha: 0.85),
+                                colorBlendMode: BlendMode.srcIn,
                               ),
                             )
                           : null,

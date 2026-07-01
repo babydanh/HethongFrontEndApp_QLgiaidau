@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
+import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/domain/repositories/ranking_repository.dart';
 
@@ -28,15 +29,55 @@ class ApiRankingRepository implements IRankingRepository {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> dataList = response.data['data'] ?? [];
-        return dataList
+        final raw = response.data;
+        final List<dynamic> dataList = raw is Map<String, dynamic>
+            ? (raw['data'] as List<dynamic>? ?? [])
+            : (raw as List<dynamic>? ?? []);
+        final rankings = dataList
             .map((json) => PlayerRanking.fromJson(json as Map<String, dynamic>))
             .toList();
+        // Backend trả theo offset phân trang và sắp xếp desc(eloPoints),
+        // nên vị trí hạng = offset + index + 1.
+        final offset = ((page ?? 1) - 1) * (limit ?? 50);
+        final enriched = <PlayerRanking>[];
+        for (var i = 0; i < rankings.length; i++) {
+          enriched.add(rankings[i].copyWith(rank: offset + i + 1));
+        }
+        return enriched;
       }
 
       throw Exception('Không thể tải bảng xếp hạng');
     } catch (e, stack) {
       _log.error('Lỗi tải bảng xếp hạng', e, stack);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<EloTier>> getEloTiers(String categoryId) async {
+    _log.info('Tải danh sách bậc ELO: categoryId=$categoryId');
+    try {
+      final response = await _dioClient.dio.get(
+        '/categories/$categoryId/elo-tiers',
+      );
+
+      if (response.statusCode == 200) {
+        final raw = response.data;
+        // Endpoint có thể trả mảng trực tiếp hoặc bọc trong { data: [...] }
+        final List<dynamic> list = raw is Map<String, dynamic>
+            ? (raw['data'] as List<dynamic>? ?? [])
+            : (raw as List<dynamic>? ?? []);
+        final tiers = list
+            .map((json) => EloTier.fromJson(json as Map<String, dynamic>))
+            .toList();
+        // Sắp xếp tăng dần theo minElo để hiển thị legend đúng thứ tự.
+        tiers.sort((a, b) => a.minElo.compareTo(b.minElo));
+        return tiers;
+      }
+
+      throw Exception('Không thể tải danh sách bậc ELO');
+    } catch (e, stack) {
+      _log.error('Lỗi tải danh sách bậc ELO', e, stack);
       rethrow;
     }
   }

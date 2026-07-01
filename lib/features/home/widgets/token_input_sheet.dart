@@ -7,6 +7,8 @@ import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
+
 class TokenInputSheet extends ConsumerStatefulWidget {
   const TokenInputSheet({super.key});
 
@@ -42,6 +44,8 @@ class _TokenInputSheetState extends ConsumerState<TokenInputSheet> {
     if (!mounted) return;
 
     if (success) {
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(userRankingsProvider);
       final auth = ref.read(authProvider);
       final route = NavigationHelper.getTournamentRoute(auth.role, auth.tournamentId!);
       Navigator.pop(context); // Close bottom sheet

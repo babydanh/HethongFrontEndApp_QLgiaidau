@@ -12,16 +12,7 @@ final userProfileProvider = FutureProvider<UserProfile>((ref) async {
   }
 
   final repo = ref.read(userRepositoryProvider);
-  try {
-    return await repo.getProfile();
-  } catch (e) {
-    // Invite token auth không có JWT → API /users/profile trả về 401
-    // Trả về profile rỗng thay vì crash
-    return UserProfile(
-      id: '',
-      fullName: 'Người dùng',
-    );
-  }
+  return await repo.getProfile();
 });
 
 /// Gọi GET /api/v1/rankings/user/:userId

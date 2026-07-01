@@ -6,6 +6,112 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/notification_provider.dart';
 
+class BottomNavClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final w = size.width;
+    final h = size.height;
+    final centerX = w / 2;
+    const double radius = 34.0;
+
+    path.moveTo(0, 24);
+    path.quadraticBezierTo(0, 0, 24, 0);
+    path.lineTo(centerX - radius - 12, 0);
+    path.cubicTo(
+      centerX - radius + 2, 0,
+      centerX - radius + 2, radius + 2,
+      centerX, radius + 2,
+    );
+    path.cubicTo(
+      centerX + radius - 2, radius + 2,
+      centerX + radius - 2, 0,
+      centerX + radius + 12, 0,
+    );
+    path.lineTo(w - 24, 0);
+    path.quadraticBezierTo(w, 0, w, 24);
+    path.lineTo(w, h);
+    path.lineTo(0, h);
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class BottomNavCurvePainter extends CustomPainter {
+  final Color backgroundColor;
+  final Color borderColor;
+
+  BottomNavCurvePainter({
+    required this.backgroundColor,
+    required this.borderColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = backgroundColor
+      ..style = PaintingStyle.fill;
+
+    final strokePaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    final path = Path();
+    final w = size.width;
+    final h = size.height;
+    final centerX = w / 2;
+    const double radius = 34.0;
+
+    path.moveTo(0, 24);
+    path.quadraticBezierTo(0, 0, 24, 0);
+    path.lineTo(centerX - radius - 12, 0);
+    path.cubicTo(
+      centerX - radius + 2, 0,
+      centerX - radius + 2, radius + 2,
+      centerX, radius + 2,
+    );
+    path.cubicTo(
+      centerX + radius - 2, radius + 2,
+      centerX + radius - 2, 0,
+      centerX + radius + 12, 0,
+    );
+    path.lineTo(w - 24, 0);
+    path.quadraticBezierTo(w, 0, w, 24);
+    path.lineTo(w, h);
+    path.lineTo(0, h);
+    path.close();
+
+    canvas.drawPath(path, paint);
+
+    final borderPath = Path()
+      ..moveTo(0, 24)
+      ..quadraticBezierTo(0, 0, 24, 0)
+      ..lineTo(centerX - radius - 12, 0)
+      ..cubicTo(
+        centerX - radius + 2, 0,
+        centerX - radius + 2, radius + 2,
+        centerX, radius + 2,
+      )
+      ..cubicTo(
+        centerX + radius - 2, radius + 2,
+        centerX + radius - 2, 0,
+        centerX + radius + 12, 0,
+      )
+      ..lineTo(w - 24, 0)
+      ..quadraticBezierTo(w, 0, w, 24);
+
+    canvas.drawPath(borderPath, strokePaint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
 class FloatingBottomNav extends ConsumerWidget {
   final int currentIndex;
   final ValueChanged<int> onTabSelected;
@@ -27,7 +133,6 @@ class FloatingBottomNav extends ConsumerWidget {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     const double navBarHeight = 66.0;
     final screenWidth = MediaQuery.of(context).size.width;
-    final itemWidth = (screenWidth - 60) / 5;
 
     const activeColor = Color(0xFF2979FF);
     final inactiveColor = isDark ? Colors.white.withValues(alpha: 0.4) : const Color(0xFF94A3B8);
@@ -38,28 +143,30 @@ class FloatingBottomNav extends ConsumerWidget {
       clipBehavior: Clip.none,
       alignment: Alignment.bottomCenter,
       children: [
-        // ─── Main bar ───
-        ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        // ─── Main curved bar with blur and border ───
+        ClipPath(
+          clipper: BottomNavClipper(),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-            child: Container(
-              width: screenWidth,
-              height: navBarHeight + bottomPadding,
-              decoration: BoxDecoration(
-                color: bgColor,
-                border: Border(top: BorderSide(color: borderSide)),
+            child: CustomPaint(
+              painter: BottomNavCurvePainter(
+                backgroundColor: bgColor,
+                borderColor: borderSide,
               ),
-              padding: EdgeInsets.only(bottom: bottomPadding + 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildNavItem(0, Icons.explore_outlined, Icons.explore_rounded, "Khám phá", activeColor, inactiveColor),
-                  _buildNavItem(1, Icons.emoji_events_outlined, Icons.emoji_events_rounded, "Giải đấu", activeColor, inactiveColor),
-                  const SizedBox(width: 52),
-                  _buildNavItem(3, Icons.people_outline_rounded, Icons.people_rounded, "CLB", activeColor, inactiveColor),
-                  _buildNavItem(4, Icons.leaderboard_outlined, Icons.leaderboard_rounded, "Xếp hạng", activeColor, inactiveColor),
-                ],
+              child: Container(
+                width: screenWidth,
+                height: navBarHeight + bottomPadding,
+                padding: EdgeInsets.only(bottom: bottomPadding + 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildNavItem(0, Icons.explore_outlined, Icons.explore_rounded, "Khám phá", activeColor, inactiveColor),
+                    _buildNavItem(1, Icons.emoji_events_outlined, Icons.emoji_events_rounded, "Giải đấu", activeColor, inactiveColor),
+                    const SizedBox(width: 52),
+                    _buildNavItem(3, Icons.people_outline_rounded, Icons.people_rounded, "CLB", activeColor, inactiveColor),
+                    _buildNavItem(4, Icons.leaderboard_outlined, Icons.leaderboard_rounded, "Xếp hạng", activeColor, inactiveColor),
+                  ],
+                ),
               ),
             ),
           ),
@@ -67,7 +174,7 @@ class FloatingBottomNav extends ConsumerWidget {
 
         // ─── Profile Avatar (center) ───
         Positioned(
-          top: -bottomPadding - 28,
+          top: -bottomPadding - 24,
           left: 0,
           right: 0,
           child: GestureDetector(
@@ -78,32 +185,37 @@ class FloatingBottomNav extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: currentIndex == 2
-                        ? const LinearGradient(colors: [Color(0xFF2979FF), Color(0xFF4D88FF)])
-                        : null,
-                    color: currentIndex == 2 ? null : (isDark ? const Color(0xFF1A1A1A) : Colors.white),
-                    border: Border.all(
-                      color: currentIndex == 2
-                          ? const Color(0xFF2979FF)
-                          : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0)),
-                      width: currentIndex == 2 ? 0 : 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
+                AnimatedScale(
+                  duration: const Duration(milliseconds: 300),
+                  scale: currentIndex == 2 ? 1.15 : 1.0,
+                  curve: Curves.easeOutBack,
+                  child: Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: currentIndex == 2
+                          ? const LinearGradient(colors: [Color(0xFF2979FF), Color(0xFF4D88FF)])
+                          : null,
+                      color: currentIndex == 2 ? null : (isDark ? const Color(0xFF1A1A1A) : Colors.white),
+                      border: Border.all(
                         color: currentIndex == 2
-                            ? const Color(0xFF2979FF).withValues(alpha: 0.35)
-                            : Colors.black.withValues(alpha: 0.06),
-                        blurRadius: currentIndex == 2 ? 12 : 6,
-                        offset: const Offset(0, 3),
+                            ? const Color(0xFF2979FF)
+                            : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0)),
+                        width: currentIndex == 2 ? 0 : 1.5,
                       ),
-                    ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: currentIndex == 2
+                              ? const Color(0xFF2979FF).withValues(alpha: 0.35)
+                              : Colors.black.withValues(alpha: 0.06),
+                          blurRadius: currentIndex == 2 ? 12 : 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: _buildAvatarContent(isLoggedIn, avatarUrl, currentIndex == 2),
                   ),
-                  child: _buildAvatarContent(isLoggedIn, avatarUrl, currentIndex == 2),
                 ),
                 const SizedBox(height: 4),
                 AnimatedContainer(

@@ -85,7 +85,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ─── Home ───
       GoRoute(
         path: '/home',
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) {
+          final tabStr = state.uri.queryParameters['tab'];
+          final initialTab = int.tryParse(tabStr ?? '') ?? 0;
+          return HomeScreen(initialTab: initialTab);
+        },
       ),
 
       // ─── QR Scanner ───

@@ -16,38 +16,56 @@ class StatusSegment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: items.map((item) {
-          final isActive = selected == item.key;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () => onChanged(item.key),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isActive ? AppTheme.primary : context.colors.bgCard,
-                  borderRadius: BorderRadius.circular(100),
-                  border: Border.all(
-                    color: isActive ? AppTheme.primary : context.colors.border,
+      child: Container(
+        height: 38,
+        padding: const EdgeInsets.all(2.5),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.black26 : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        child: Row(
+          children: items.map((item) {
+            final isActive = selected == item.key;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => onChanged(item.key),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: isActive 
+                        ? (isDark ? Colors.white10 : Colors.white) 
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8.0),
+                    boxShadow: isActive && !isDark
+                        ? [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1.5),
+                            )
+                          ]
+                        : null,
                   ),
-                ),
-                child: Text(
-                  item.label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isActive ? Colors.white : context.colors.textSecondary,
+                  child: Text(
+                    item.label,
+                    style: TextStyle(
+                      fontSize: 12.0,
+                      fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                      color: isActive 
+                          ? AppTheme.primary 
+                          : (isDark ? Colors.white70 : Colors.grey.shade600),
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }

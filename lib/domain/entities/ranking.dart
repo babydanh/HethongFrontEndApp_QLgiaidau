@@ -24,17 +24,23 @@ class PlayerRanking {
   });
 
   factory PlayerRanking.fromJson(Map<String, dynamic> json) {
+    // Backend PUBLIC scope trả về:
+    //   { id, userId, categoryId, eloPoints, matchesPlayed, matchesWon,
+    //     winStreak, updatedAt, tier: { id, name }, user: { id, fullName, avatarUrl } }
+    final user = json['user'] as Map<String, dynamic>?;
+    final tier = json['tier'] as Map<String, dynamic>?;
     return PlayerRanking(
-      id: json['id'] ?? '',
-      userId: json['userId'] ?? '',
-      fullName: json['fullName'] ?? json['playerName'] ?? '',
-      avatarUrl: json['avatarUrl'],
-      eloPoints: json['eloPoints'] ?? 0,
-      tierName: json['tierName'] ?? json['tier']?['name'] ?? '',
-      rank: json['rank'] ?? 0,
-      matchesPlayed: json['matchesPlayed'] ?? json['totalMatches'] ?? 0,
-      matchesWon: json['matchesWon'] ?? json['wins'] ?? 0,
-      categoryId: json['categoryId'] ?? json['category']?['id'],
+      id: json['id'] as String? ?? '',
+      userId: user?['id'] as String? ?? json['userId'] as String? ?? '',
+      fullName:
+          user?['fullName'] as String? ?? json['fullName'] as String? ?? json['playerName'] as String? ?? '',
+      avatarUrl: user?['avatarUrl'] as String? ?? json['avatarUrl'] as String?,
+      eloPoints: ((json['eloPoints'] ?? json['elo_points'] ?? 0) as num).toInt(),
+      tierName: tier?['name'] as String? ?? json['tierName'] as String? ?? '',
+      rank: ((json['rank'] ?? 0) as num).toInt(),
+      matchesPlayed: ((json['matchesPlayed'] ?? json['totalMatches'] ?? 0) as num).toInt(),
+      matchesWon: ((json['matchesWon'] ?? json['wins'] ?? 0) as num).toInt(),
+      categoryId: json['categoryId'] as String? ?? json['category']?['id'] as String?,
     );
   }
 

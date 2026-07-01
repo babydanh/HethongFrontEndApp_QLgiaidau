@@ -154,10 +154,12 @@ class TournamentCardWithBanner extends StatelessWidget {
                     ),
                     child: !hasBanner
                         ? Center(
-                            child: Icon(
-                              Icons.emoji_events,
-                              size: 48,
-                              color: Colors.white.withValues(alpha: 0.5),
+                            child: Image.asset(
+                              "assets/images/vndc_sport.png",
+                              width: 140,
+                              fit: BoxFit.contain,
+                              color: Colors.white.withValues(alpha: 0.8),
+                              colorBlendMode: BlendMode.srcIn,
                             ),
                           )
                         : null,
