@@ -219,22 +219,20 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // VNSPORT Logo (Animated Hero)
-                    ClipRect(
-                      child: SizedBox(
-                        height: 90,
-                        width: 220,
-                        child: Hero(
-                          tag: "vnsport_logo",
-                          child: Transform.translate(
-                            offset: const Offset(-24, 0),
-                            child: Transform.scale(
-                              scale: 1.85, // Giữ tỷ lệ lớn đẹp đẽ ban đầu
-                              alignment: Alignment.centerLeft,
-                              child: Image.asset(
-                                "assets/images/vndc_sport.png",
-                                fit: BoxFit.contain,
-                                color: isDark ? Colors.white : AppTheme.primary,
-                              ),
+                    SizedBox(
+                      height: 90,
+                      width: 320,
+                      child: Hero(
+                        tag: "vnsport_logo",
+                        child: Transform.translate(
+                          offset: const Offset(-24, 0),
+                          child: Transform.scale(
+                            scale: 1.85, // Giữ tỷ lệ lớn đẹp đẽ ban đầu
+                            alignment: Alignment.centerLeft,
+                            child: Image.asset(
+                              "assets/images/vndc_sport.png",
+                              fit: BoxFit.contain,
+                              color: isDark ? Colors.white : AppTheme.primary,
                             ),
                           ),
                         ),
