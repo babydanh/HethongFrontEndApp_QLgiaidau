@@ -113,7 +113,8 @@ class _WavePainter extends CustomPainter {
 //  HOME SCREEN — Full Redesign
 // ═══════════════════════════════════════════════════════
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  final int initialTab;
+  const HomeScreen({super.key, this.initialTab = 0});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -141,6 +142,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialTab;
     _scrollController.addListener(_onScroll);
     _carouselController = PageController(viewportFraction: 1.0);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -336,8 +338,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     if (live.isNotEmpty || upcoming.isNotEmpty) ...[
                       SliverToBoxAdapter(
                         child: _buildSectionTitle(
-                          icon: Icons.emoji_events_rounded,
-                          color: const Color(0xFFF59E0B),
                           title: 'Giải đấu nổi bật',
                           actionLabel: 'Xem tất cả',
                           onAction: () => _switchTab(1),
@@ -483,15 +483,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           left: 0.0,
           right: 0.0,
           height: currentHeaderHeight,
+          child: CustomPaint(
+            size: Size(screenSize.width, currentHeaderHeight),
+            painter: VnsportHeaderPainter(
+              isLoggedIn: ref.watch(authProvider).isAuthenticated,
+            ),
+          ),
+        ),
+        Positioned(
+          top: 0.0,
+          left: 0.0,
+          right: 0.0,
+          height: _headerScrollProgress == 1.0 ? (safeAreaTop + 60.0) : currentHeaderHeight,
           child: GestureDetector(
             onTap: _expandHeader,
             behavior: HitTestBehavior.translucent,
-            child: CustomPaint(
-              size: Size(screenSize.width, currentHeaderHeight),
-              painter: VnsportHeaderPainter(
-                isLoggedIn: ref.watch(authProvider).isAuthenticated,
-              ),
-            ),
+            child: const SizedBox.expand(),
           ),
         ),
         AnimatedPositioned(
@@ -625,31 +632,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildLoginPillHeader() {
-    return GestureDetector(
-      onTap: () => context.go("/login"),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.18),
-          borderRadius: BorderRadius.circular(24.0),
-          border: Border.all(color: Colors.white.withOpacity(0.35)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Chào mừng đến với Tìm và quản lý giải đấu thể thao",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+            fontSize: 18.0,
+            letterSpacing: -0.3,
+          ),
         ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.login_rounded, color: Colors.white, size: 16),
-            SizedBox(width: 8),
-            Text(
-              "Đăng nhập để xem ELO & thống kê",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => context.go("/login"),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.18),
+              borderRadius: BorderRadius.circular(20.0),
+              border: Border.all(color: Colors.white.withOpacity(0.35)),
             ),
-          ],
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.login_rounded, color: Colors.white, size: 14),
+                SizedBox(width: 6),
+                Text(
+                  "Đăng nhập để xem ELO & thống kê",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -683,6 +705,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Text(
                   fullName,
                   style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -691,36 +715,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.15)),
+                    color: Colors.white.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.white.withOpacity(0.2)),
                   ),
                   child: Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.diamond_outlined, color: Colors.amber, size: 20),
-                      ),
-                      const SizedBox(width: 12),
+                      const Icon(Icons.stars_rounded, color: Colors.amber, size: 24),
+                      const SizedBox(width: 10),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("$elo ELO", style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
-                          const SizedBox(height: 2),
-                          const Text("Xếp hạng Quốc gia", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                          Text(
+                            "$elo ELO",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          const Text(
+                            "Xếp hạng Quốc gia",
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ],
                       ),
                       const Spacer(),
                       _buildStatTableRow("Trận", "$totalMatches", Colors.white),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 18),
                       _buildStatTableRow("Thắng", "$wins", Colors.white),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 18),
                       _buildStatTableRow("Rate", "${winRate.toStringAsFixed(0)}%", const Color(0xFF4ADE80)),
                     ],
                   ),
@@ -841,8 +872,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildSectionTitle({
-    required IconData icon,
-    required Color color,
+    IconData? icon,
+    Color? color,
     required String title,
     String? badge,
     String? actionLabel,
@@ -853,16 +884,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            width: 34.0,
-            height: 34.0,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(10.0),
+          if (icon != null && color != null) ...[
+            Container(
+              width: 34.0,
+              height: 34.0,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              child: Icon(icon, color: color, size: 19.0),
             ),
-            child: Icon(icon, color: color, size: 19.0),
-          ),
-          const SizedBox(width: 10),
+            const SizedBox(width: 10),
+          ],
           Text(
             title,
             style: TextStyle(
@@ -1045,21 +1078,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
           actions: [
-            GestureDetector(
-              onTap: _showTokenSheet,
-              child: Container(
-                margin: const EdgeInsets.only(right: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2979FF),
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: const Text(
-                  "Nhập mã",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13.0,
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Center(
+                child: InkWell(
+                  onTap: _showTokenSheet,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.key_rounded, size: 14, color: AppTheme.primary),
+                        const SizedBox(width: 4),
+                        Text(
+                          "Nhập mã",
+                          style: TextStyle(
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12.0,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1070,21 +1116,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                 child: Container(
-                  height: 38.0,
+                  height: 42.0,
                   decoration: BoxDecoration(
                     color: context.colors.bgSurface,
-                    borderRadius: BorderRadius.circular(100.0),
-                    border: Border.all(color: context.colors.border),
+                    borderRadius: BorderRadius.circular(12.0),
+                    border: Border.all(color: context.colors.border, width: 1.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 6.0,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: TextField(
                     controller: _searchController,
                     onChanged: (v) => setState(() => _searchQuery = v),
-                    style: TextStyle(fontSize: 13.0, color: context.colors.textPrimary),
+                    style: TextStyle(fontSize: 13.5, color: context.colors.textPrimary),
+                    textAlignVertical: TextAlignVertical.center,
                     decoration: InputDecoration(
-                      hintText: "Tìm tên giải đấu...",
-                      hintStyle: TextStyle(fontSize: 13.0, color: context.colors.textMuted),
+                      hintText: "Tìm kiếm giải đấu...",
+                      hintStyle: TextStyle(fontSize: 13.5, color: context.colors.textMuted),
                       prefixIcon: Icon(Icons.search, size: 18.0, color: context.colors.textMuted),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
@@ -1096,6 +1150,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             )
                           : null,
                       border: InputBorder.none,
+                      isCollapsed: true,
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -1314,46 +1369,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
           actions: [
-            GestureDetector(
-              onTap: () => context.push('/club-create'),
-              child: Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.add_rounded, size: 14, color: AppTheme.primary),
-                      const SizedBox(width: 4),
-                      Text(
-                        "Tạo CLB",
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppTheme.primary),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            // Tạo CLB đã chuyển sang tab Profile
+            const SizedBox(width: 16),
           ],
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             child: Container(
-              height: 40.0,
+              height: 42.0,
               decoration: BoxDecoration(
-                color: context.colors.bgCard,
-                borderRadius: BorderRadius.circular(14.0),
-                border: Border.all(color: context.colors.border),
+                color: context.colors.bgSurface,
+                borderRadius: BorderRadius.circular(12.0),
+                border: Border.all(color: context.colors.border, width: 1.0),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 8,
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 6.0,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -1361,10 +1393,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: TextField(
                 controller: _searchController,
                 onChanged: (v) => setState(() => _searchQuery = v),
-                style: TextStyle(fontSize: 13.0, color: context.colors.textPrimary),
+                style: TextStyle(fontSize: 13.5, color: context.colors.textPrimary),
+                textAlignVertical: TextAlignVertical.center,
                 decoration: InputDecoration(
-                  hintText: "Tìm câu lạc bộ...",
-                  hintStyle: TextStyle(fontSize: 13.0, color: context.colors.textMuted),
+                  hintText: "Tìm kiếm câu lạc bộ...",
+                  hintStyle: TextStyle(fontSize: 13.5, color: context.colors.textMuted),
                   prefixIcon: Icon(Icons.search, size: 18.0, color: context.colors.textMuted),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
@@ -1374,9 +1407,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             setState(() => _searchQuery = "");
                           },
                         )
-                      : Icon(Icons.tune_rounded, size: 16.0, color: context.colors.textMuted),
+                      : null,
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                  isCollapsed: true,
+                  contentPadding: EdgeInsets.zero,
                 ),
               ),
             ),
