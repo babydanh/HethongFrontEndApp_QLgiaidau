@@ -220,12 +220,12 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                   children: [
                     // VNSPORT Logo (Animated Hero)
                     SizedBox(
-                      height: 125,
-                      width: 260,
+                      height: 160,
+                      width: 320,
                       child: Hero(
                         tag: "vnsport_logo",
                         child: Transform.translate(
-                          offset: const Offset(-52, 0), // Dịch chuyển chính xác để chữ V thẳng hàng với chữ Đ ở dưới
+                          offset: const Offset(-45, 0), // Phóng to và chỉnh lùi tương ứng để thẳng hàng với form
                           child: Image.asset(
                             "assets/images/vndc_sport.png",
                             fit: BoxFit.contain,
