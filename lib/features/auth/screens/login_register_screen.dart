@@ -225,7 +225,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                       child: Hero(
                         tag: "vnsport_logo",
                         child: Transform.translate(
-                          offset: const Offset(-30, 0), // Dịch nhẹ trái để căn thẳng hàng Đăng Nhập, tránh bị cắt chữ V
+                          offset: const Offset(-22, 0), // Dịch phải thêm một chút để không bị cắt chữ V và thẳng hàng form
                           child: Transform.scale(
                             scale: 2.1, // Phóng to logo thực tế bên trong để lấp khoảng trống trên dưới
                             alignment: Alignment.centerLeft,
