@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:app_quanly_giaidau/features/auth/widgets/gsi_button_web.dart' as gsi;
@@ -119,6 +120,8 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
     if (!mounted) return;
 
     if (success) {
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(userRankingsProvider);
       context.go("/home");
     } else {
       final auth = ref.read(authProvider);
@@ -155,6 +158,8 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       bool success = await ref.read(authProvider.notifier).loginWithGoogle(idToken);
       if (!mounted) return;
       if (success) {
+        ref.invalidate(userProfileProvider);
+        ref.invalidate(userRankingsProvider);
         context.go("/home");
       } else {
         final auth = ref.read(authProvider);
@@ -216,14 +221,14 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                     // VNSPORT Logo (Animated Hero)
                     ClipRect(
                       child: SizedBox(
-                        height: 110,
-                        width: 340,
+                        height: 90,
+                        width: 220,
                         child: Hero(
                           tag: "vnsport_logo",
                           child: Transform.translate(
-                            offset: const Offset(-30, 0), // Bù đắp khoảng trống thừa ở lề trái của file ảnh
+                            offset: const Offset(-58, 0), // Bù đắp khoảng trống thừa ở lề trái của file ảnh để sát lề trái
                             child: Transform.scale(
-                              scale: 1.5, // Phóng to logo lên 1.5 lần để bỏ qua viền trắng thừa trong asset
+                              scale: 1.85, // Phóng to logo lên để bỏ qua viền trắng thừa trong asset và sát lề trái
                               alignment: Alignment.centerLeft,
                               child: Image.asset(
                                 "assets/images/vndc_sport.png",
