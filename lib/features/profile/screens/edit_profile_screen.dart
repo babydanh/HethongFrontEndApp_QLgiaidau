@@ -222,23 +222,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (pickedFile == null) return;
 
       setState(() => _isLoading = true);
-      final path = pickedFile.path;
+      final bytes = await pickedFile.readAsBytes();
+      final fileName = pickedFile.name;
 
-      if (path.isNotEmpty) {
-        final repo = ref.read(userRepositoryProvider);
-        await repo.uploadAvatar(path);
-        
-        ref.invalidate(userProfileProvider);
-        
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tải ảnh đại diện thành công'),
-            backgroundColor: Color(0xFF10B981),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+      final repo = ref.read(userRepositoryProvider);
+      await repo.uploadAvatar(bytes, fileName);
+      
+      ref.invalidate(userProfileProvider);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tải ảnh đại diện thành công'),
+          backgroundColor: Color(0xFF10B981),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -404,12 +403,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         const SizedBox(height: 6),
                         AppTextFormField(
                           controller: _phoneController,
-                          hint: 'Nhập số điện thoại',
+                          hint: '0987654321',
                           keyboardType: TextInputType.phone,
                           prefixIcon: Icons.phone_outlined,
                           validator: (val) {
                             if (val == null || val.trim().isEmpty) {
                               return 'Vui lòng nhập số điện thoại';
+                            }
+                            final phone = val.trim().replaceAll(RegExp(r'[\s\-\.]'), '');
+                            if (!RegExp(r'^(?:\+84|0)[3|5|7|8|9]\d{8}$').hasMatch(phone)) {
+                              return 'Số điện thoại không hợp lệ (ví dụ: 0987654321)';
                             }
                             return null;
                           },

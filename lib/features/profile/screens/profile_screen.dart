@@ -78,11 +78,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final pickedFile = await picker.pickImage(source: source);
     if (pickedFile == null) return;
 
+    final bytes = await pickedFile.readAsBytes();
+    final fileName = pickedFile.name;
+
     if (isCover) {
       setState(() => _uploadingCover = true);
       try {
         final repo = ref.read(userRepositoryProvider);
-        await repo.uploadCover(pickedFile.path);
+        await repo.uploadCover(bytes, fileName);
         ref.invalidate(userProfileProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -102,7 +105,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       setState(() => _uploading = true);
       try {
         final repo = ref.read(userRepositoryProvider);
-        await repo.uploadAvatar(pickedFile.path);
+        await repo.uploadAvatar(bytes, fileName);
         ref.invalidate(userProfileProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

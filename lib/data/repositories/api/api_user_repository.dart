@@ -62,13 +62,13 @@ class ApiUserRepository implements IUserRepository {
   }
 
   @override
-  Future<UserProfile> uploadAvatar(String filePath) async {
+  Future<UserProfile> uploadAvatar(List<int> bytes, String fileName) async {
     _log.info('Tải lên ảnh đại diện qua API');
     try {
       final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(
-          filePath,
-          filename: filePath.split('/').last,
+        'file': MultipartFile.fromBytes(
+          bytes,
+          filename: fileName,
         ),
       });
 
@@ -101,13 +101,13 @@ class ApiUserRepository implements IUserRepository {
   }
 
   @override
-  Future<UserProfile> uploadCover(String filePath) async {
+  Future<UserProfile> uploadCover(List<int> bytes, String fileName) async {
     _log.info('Tải lên ảnh bìa qua API');
     try {
       final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(
-          filePath,
-          filename: filePath.split('/').last,
+        'file': MultipartFile.fromBytes(
+          bytes,
+          filename: fileName,
         ),
       });
 
