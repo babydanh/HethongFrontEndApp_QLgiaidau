@@ -107,7 +107,7 @@ class TournamentCardCarousel extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         decoration: BoxDecoration(
           color: colors.bgCard,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: colors.border),
           boxShadow: [
             BoxShadow(
@@ -118,7 +118,7 @@ class TournamentCardCarousel extends StatelessWidget {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -153,8 +153,8 @@ class TournamentCardCarousel extends StatelessWidget {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Colors.black.withValues(alpha: 0.15),
-                              Colors.black.withValues(alpha: 0.6),
+                              Colors.black.withValues(alpha: 0.1),
+                              Colors.black.withValues(alpha: 0.8),
                             ],
                           ),
                         ),
@@ -195,7 +195,7 @@ class TournamentCardCarousel extends StatelessWidget {
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -209,7 +209,7 @@ class TournamentCardCarousel extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: colors.textPrimary,
-                              fontSize: 15,
+                              fontSize: 17,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -230,8 +230,8 @@ class TournamentCardCarousel extends StatelessWidget {
                                     chipText,
                                     style: TextStyle(
                                       color: colors.textPrimary,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 );
@@ -241,24 +241,24 @@ class TournamentCardCarousel extends StatelessWidget {
                       ),
                       Row(
                         children: [
-                          Icon(Icons.calendar_today_rounded, color: colors.textMuted, size: 11),
+                          Icon(Icons.calendar_today_rounded, color: colors.textMuted, size: 13),
                           const SizedBox(width: 4),
                           Text(
                             "$startDateStr - $endDateStr",
                             style: TextStyle(
                               color: colors.textSecondary,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Icon(Icons.group_rounded, color: colors.textMuted, size: 12),
+                          Icon(Icons.group_rounded, color: colors.textMuted, size: 14),
                           const SizedBox(width: 4),
                           Text(
                             "${tournament.maxTeams} VĐV",
                             style: TextStyle(
                               color: colors.textSecondary,
-                              fontSize: 10,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

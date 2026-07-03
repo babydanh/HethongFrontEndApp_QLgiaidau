@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/gallery_image_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_ranking_model.dart';
+import 'package:app_quanly_giaidau/data/models/community_invite_model.dart';
 
 class ApiCommunityRepository implements ICommunityRepository {
   static const _log = AppLogger('ApiCommunityRepo');
@@ -134,10 +135,24 @@ class ApiCommunityRepository implements ICommunityRepository {
 
   @override
   Future<CommunityTournamentModel?> createTournament(String communityId, Map<String, dynamic> data) async {
-    // BE does not expose POST /communities/:id/tournaments
-    // Tournaments are created via POST /tournaments with communityId in body
-    _log.warning('createTournament not available via community endpoint');
-    return null;
+    _log.info('Tạo giải đấu trong CLB: $communityId');
+    try {
+      final response = await _dioClient.dio.post('/tournaments', data: {
+        ...data,
+        'communityId': communityId,
+      });
+      if (response.statusCode == 201) {
+        final d = response.data['data'] as Map<String, dynamic>? ?? response.data as Map<String, dynamic>?;
+        if (d != null) {
+          _log.success('Tạo giải đấu trong CLB thành công');
+          return CommunityTournamentModel.fromJson(d);
+        }
+      }
+      return null;
+    } catch (e, stack) {
+      _log.error('Lỗi tạo giải đấu trong CLB', e, stack);
+      return null;
+    }
   }
 
   @override
@@ -191,6 +206,135 @@ class ApiCommunityRepository implements ICommunityRepository {
     } catch (e, stack) {
       _log.error('Lỗi lấy bảng xếp hạng CLB', e, stack);
       return [];
+    }
+  }
+
+  // ─── Join Requests ─────────────────────────────────────────────
+
+  @override
+  Future<List<CommunityMemberModel>> getJoinRequests(String communityId) async {
+    _log.info('Lấy yêu cầu tham gia CLB: $communityId');
+    try {
+      final response = await _dioClient.dio.get('/communities/$communityId/join-requests');
+      if (response.statusCode == 200) {
+        final raw = response.data;
+        final data = raw is Map ? (raw['data'] as List<dynamic>? ?? []) : (raw as List<dynamic>? ?? []);
+        return data.map((e) => CommunityMemberModel.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } catch (e, stack) {
+      _log.error('Lỗi lấy yêu cầu tham gia', e, stack);
+      return [];
+    }
+  }
+
+  @override
+  Future<void> reviewJoinRequest(String communityId, String memberId, String action) async {
+    _log.info('$action yêu cầu tham gia: $memberId');
+    await _dioClient.dio.patch(
+      '/communities/$communityId/join-requests/$memberId',
+      data: {'action': action},
+    );
+  }
+
+  // ─── Admin: Pending Clubs ───────────────────────────────────────
+
+  @override
+  Future<List<Community>> getPendingCommunities() async {
+    _log.info('Lấy danh sách CLB chờ duyệt');
+    try {
+      final response = await _dioClient.dio.get('/communities', queryParameters: {'status': 'PENDING'});
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as List<dynamic>? ?? [];
+        return data.map((e) => Community.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } catch (e, stack) {
+      _log.error('Lỗi lấy CLB chờ duyệt', e, stack);
+      return [];
+    }
+  }
+
+  @override
+  Future<void> reviewCommunity(String communityId, String status, {String? rejectedReason}) async {
+    _log.info('$status CLB: $communityId');
+    final body = <String, dynamic>{'status': status};
+    if (rejectedReason != null) body['rejectedReason'] = rejectedReason;
+    await _dioClient.dio.patch('/communities/$communityId/review', data: body);
+  }
+
+  // ─── Member Management ──────────────────────────────────────────
+
+  @override
+  Future<void> updateMemberRole(String communityId, String memberId, String role) async {
+    _log.info('Cập nhật role thành viên: $memberId → $role');
+    await _dioClient.dio.patch(
+      '/communities/$communityId/members/$memberId/role',
+      data: {'role': role},
+    );
+  }
+
+  @override
+  @override
+  Future<void> removeMember(String communityId, String userId) async {
+    _log.info('Xoá thành viên: $userId khỏi CLB $communityId');
+    await _dioClient.dio.delete('/communities/$communityId/members/$userId');
+  }
+
+  @override
+  Future<void> inviteMember(String communityId, String userId, {String role = 'MEMBER'}) async {
+    _log.info('Mời thành viên $userId vào CLB $communityId với role $role');
+    await _dioClient.dio.post('/communities/$communityId/invite', data: {
+      'userId': userId,
+      'role': role,
+    });
+  }
+
+  @override
+  Future<void> respondToInvite(String communityId, String action) async {
+    _log.info('$action lời mời từ CLB $communityId');
+    await _dioClient.dio.post('/communities/$communityId/invite/$action');
+  }
+
+  @override
+  Future<void> unbanMember(String communityId, String userId) async {
+    _log.info('Gỡ cấm $userId khỏi CLB $communityId');
+    await _dioClient.dio.post('/communities/$communityId/unban/$userId');
+  }
+
+  @override
+  Future<List<CommunityInviteModel>> getMyInvites() async {
+    _log.info('Lấy danh sách lời mời CLB của tôi');
+    try {
+      final response = await _dioClient.dio.get('/communities/my/invites');
+      if (response.statusCode == 200) {
+        final raw = response.data;
+        final data = raw is Map ? (raw['data'] as List<dynamic>? ?? []) : (raw as List<dynamic>? ?? []);
+        return data.map((e) => CommunityInviteModel.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } catch (e, stack) {
+      _log.error('Lỗi lấy lời mời CLB', e, stack);
+      return [];
+    }
+  }
+
+  @override
+  Future<Community> updateCommunity(String communityId, Map<String, dynamic> data) async {
+    _log.info('Cập nhật thông tin CLB: $communityId');
+    try {
+      final response = await _dioClient.dio.patch(
+        '/communities/$communityId',
+        data: data,
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final result = response.data['data'] as Map<String, dynamic>? ?? response.data;
+        return Community.fromJson(result);
+      }
+      throw Exception('Cập nhật CLB thất bại');
+    } catch (e, stack) {
+      _log.error('Lỗi cập nhật CLB', e, stack);
+      rethrow;
     }
   }
 }

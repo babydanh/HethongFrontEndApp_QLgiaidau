@@ -105,7 +105,7 @@ class TournamentCard extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: context.colors.bgCard,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: context.colors.border),
           boxShadow: [
             BoxShadow(
@@ -123,7 +123,7 @@ class TournamentCard extends ConsumerWidget {
               height: 50,
               decoration: BoxDecoration(
                 color: context.colors.bgSurface,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: context.colors.border, width: 0.5),
               ),
               child: Center(

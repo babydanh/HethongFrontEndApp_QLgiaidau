@@ -1,9 +1,12 @@
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/di/socket_providers.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_auth_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_ranking_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_token_repository.dart';
+
+import 'package:app_quanly_giaidau/data/repositories/api/api_payment_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_user_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/local/app_session_repository.dart';
@@ -28,7 +31,10 @@ final teamRepositoryProvider = Provider<ITeamRepository>((ref) {
 });
 
 final matchRepositoryProvider = Provider<IMatchRepository>((ref) {
-  return ApiMatchRepository(ref.watch(dioClientProvider));
+  return ApiMatchRepository(
+    ref.watch(dioClientProvider),
+    ref.watch(matchSocketServiceProvider),
+  );
 });
 
 final tokenRepositoryProvider = Provider<ITokenRepository>((ref) {
@@ -53,4 +59,8 @@ final userRepositoryProvider = Provider<IUserRepository>((ref) {
 
 final sessionRepositoryProvider = Provider<ISessionRepository>((ref) {
   return AppSessionRepository(ref.watch(tokenManagerProvider));
+});
+
+final paymentRepositoryProvider = Provider<PaymentRepository>((ref) {
+  return PaymentRepository(ref.watch(dioClientProvider));
 });

@@ -240,3 +240,27 @@ class UserPublicRank {
     );
   }
 }
+
+/// Kết quả tìm kiếm người dùng (GET /users/search).
+class UserSearchResult {
+  final String id;
+  final String fullName;
+  final String? avatarUrl;
+  final String? email;
+
+  const UserSearchResult({
+    required this.id,
+    required this.fullName,
+    this.avatarUrl,
+    this.email,
+  });
+
+  factory UserSearchResult.fromJson(Map<String, dynamic> json) {
+    return UserSearchResult(
+      id: json['id'] as String? ?? json['userId'] as String? ?? '',
+      fullName: json['fullName'] as String? ?? json['name'] as String? ?? '',
+      avatarUrl: json['avatarUrl'] as String?,
+      email: json['email'] as String?,
+    );
+  }
+}

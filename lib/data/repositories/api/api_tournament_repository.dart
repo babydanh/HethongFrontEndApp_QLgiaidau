@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 
 class ApiTournamentRepository implements ITournamentRepository {
   static const _log = AppLogger('ApiTournamentRepo');
@@ -53,6 +54,35 @@ class ApiTournamentRepository implements ITournamentRepository {
       _log.error('Error fetching tournament by id', e, stack);
       return null;
     }
+  }
+
+  @override
+  Future<TournamentWorkspace> getMyWorkspace() async {
+    _log.debug('Fetching tournament workspace for current user');
+    try {
+      final response = await _dioClient.dio.get('/tournaments/workspace/me');
+      final raw = response.data;
+      final data = raw is Map<String, dynamic>
+          ? (raw['data'] as Map<String, dynamic>? ?? raw)
+          : <String, dynamic>{};
+      return TournamentWorkspace.fromJson(data);
+    } catch (e, stack) {
+      _log.error('Error fetching tournament workspace', e, stack);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> respondToRefereeInvite({
+    required String tournamentId,
+    required String refereeId,
+    required String action,
+  }) async {
+    _log.info('Responding referee invite: $tournamentId / $refereeId -> $action');
+    await _dioClient.dio.patch(
+      '/tournaments/$tournamentId/referees/$refereeId/respond',
+      data: {'action': action},
+    );
   }
 
   @override
@@ -114,5 +144,44 @@ class ApiTournamentRepository implements ITournamentRepository {
   Future<void> delete(String id) async {
     _log.info('Deleting tournament $id via API');
     await _dioClient.dio.delete('/tournaments/$id');
+  }
+
+  // ─── Follow / Unfollow ──────────────────────────────────
+
+  @override
+  Future<void> followTournament(String id) async {
+    _log.info('Following tournament $id');
+    await _dioClient.dio.post('/tournaments/$id/follow');
+  }
+
+  @override
+  Future<void> unfollowTournament(String id) async {
+    _log.info('Unfollowing tournament $id');
+    await _dioClient.dio.delete('/tournaments/$id/follow');
+  }
+
+  @override
+  Future<bool> isFollowing(String id) async {
+    try {
+      final followed = await getFollowedTournaments();
+      return followed.any((t) => t.id == id);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<List<Tournament>> getFollowedTournaments() async {
+    try {
+      final response = await _dioClient.dio.get('/tournaments/my/followed');
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as List<dynamic>? ?? [];
+        return data.map((json) => Tournament.fromJson(json as Map<String, dynamic>, json['id'])).toList();
+      }
+      return [];
+    } catch (e, stack) {
+      _log.error('Lỗi lấy danh sách theo dõi', e, stack);
+      return [];
+    }
   }
 }

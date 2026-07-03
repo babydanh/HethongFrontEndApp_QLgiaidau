@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ///  RESPONSIVE ARCHITECTURE — Dùng chung cho toàn bộ app

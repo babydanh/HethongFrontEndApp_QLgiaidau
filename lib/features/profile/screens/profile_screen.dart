@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
-import 'package:app_quanly_giaidau/providers/theme_provider.dart';
+import 'package:app_quanly_giaidau/providers/theme_provider.dart' as tp;
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 
@@ -22,6 +22,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _uploading = false;
   bool _uploadingCover = false;
+  int _activeTab = 0;
 
   Future<void> _pickImage(bool isCover) async {
     final colors = context.colors;
@@ -129,7 +130,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = ref.watch(themeProvider);
+    final themeMode = ref.watch(tp.themeProvider);
     final isDark = themeMode == ThemeMode.dark;
     final authState = ref.watch(authProvider);
 
@@ -255,36 +256,82 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
           // Name + Role + Email + Bio
           _buildUserInfo(context, profile),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // ELO + Tier card
-          if (profile.eloPoints != null || profile.tierName != null) ...[
-            _buildEloCard(context, profile),
-            const SizedBox(height: 16),
+          // Tab bar selector
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              height: 46,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: colors.bgCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.border),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildTabButton(0, "Thông tin & Chỉ số"),
+                  ),
+                  Expanded(
+                    child: _buildTabButton(1, "Cài đặt & Tiện ích"),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Tab Content
+          if (_activeTab == 0) ...[
+            // Dynamic rankings card list based on actual ELO and category ranks
+            _buildRankingsSection(context),
+            const SizedBox(height: 12),
+
+            // Info Section
+            _buildSectionTitle(colors, 'Thông tin cá nhân'),
+            const SizedBox(height: 10),
+            _buildInfoCard(context, profile),
+            const SizedBox(height: 32),
+          ] else ...[
+            // Account Section
+            _buildSectionTitle(colors, 'Tài khoản & Thiết lập'),
+            const SizedBox(height: 10),
+            _buildAccountMenu(context),
+            const SizedBox(height: 20),
+
+            // Other Section
+            _buildSectionTitle(colors, 'Tuỳ chọn hệ thống'),
+            const SizedBox(height: 10),
+            _buildOtherMenu(context, isDark),
+            const SizedBox(height: 32),
           ],
-
-          // Stats
-          _buildStatsRow(context, profile),
-          const SizedBox(height: 20),
-
-          // Info Section
-          _buildSectionTitle(colors, 'Thông tin cá nhân'),
-          const SizedBox(height: 10),
-          _buildInfoCard(context, profile),
-          const SizedBox(height: 20),
-
-          // Account Section
-          _buildSectionTitle(colors, 'Tài khoản'),
-          const SizedBox(height: 10),
-          _buildAccountMenu(context),
-          const SizedBox(height: 20),
-
-          // Other Section
-          _buildSectionTitle(colors, 'Tuỳ chọn'),
-          const SizedBox(height: 10),
-          _buildOtherMenu(context, isDark),
-          const SizedBox(height: 32),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTabButton(int index, String label) {
+    final colors = context.colors;
+    final isSelected = _activeTab == index;
+    return GestureDetector(
+      onTap: () => setState(() => _activeTab = index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : colors.textSecondary,
+          ),
+        ),
       ),
     );
   }
@@ -487,78 +534,170 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  // ─── ELO CARD ───────────────────────────────────────────────────────
-  Widget _buildEloCard(BuildContext context, UserProfile profile) {
+  // ─── DYNAMIC RANKINGS SECTION ──────────────────────────────────────────
+  Widget _buildRankingsSection(BuildContext context) {
     final colors = context.colors;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: const Color(0xFFFFD700).withValues(alpha: 0.25), blurRadius: 16, offset: const Offset(0, 4))],
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 32),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('ELO Rating', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 11, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 2),
-                Text('${profile.eloPoints ?? 0}', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)),
-              ],
+    final rankingsAsync = ref.watch(userRankingsProvider);
+    final categoriesAsync = ref.watch(categoriesProvider);
+
+    return rankingsAsync.when(
+      data: (rankings) {
+        if (rankings.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colors.bgCard,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: colors.border),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.emoji_events_outlined, color: colors.textMuted, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Chưa có dữ liệu đấu xếp hạng ELO',
+                      style: TextStyle(color: colors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (profile.tierName != null && profile.tierName!.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
-              child: Text(profile.tierName!, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800)),
-            ),
-        ],
+          );
+        }
+
+        final categories = categoriesAsync.asData?.value ?? [];
+
+        return Column(
+          children: rankings.map((ranking) {
+            final category = categories.firstWhere(
+              (c) => c.id == ranking.categoryId,
+              orElse: () => CategoryModel(id: '', name: 'Bộ môn', slug: '', description: ''),
+            );
+            final categoryName = category.name.isNotEmpty ? category.name : 'Xếp hạng';
+            
+            final tier = ranking.tierName.toLowerCase();
+            final List<Color> gradientColors;
+            if (tier.contains('vàng') || tier.contains('gold') || tier.contains('cao thủ')) {
+              gradientColors = const [Color(0xFFFFD700), Color(0xFFFFA500)];
+            } else if (tier.contains('bạc') || tier.contains('silver')) {
+              gradientColors = const [Color(0xFFB0C4DE), Color(0xFF708090)];
+            } else if (tier.contains('đồng') || tier.contains('bronze')) {
+              gradientColors = const [Color(0xFFCD7F32), Color(0xFF8B4513)];
+            } else {
+              gradientColors = const [Color(0xFF2563EB), Color(0xFF1D4ED8)];
+            }
+
+            return Container(
+              margin: const EdgeInsets.only(left: 20, right: 20, bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: gradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: gradientColors.first.withValues(alpha: 0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        categoryName.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      if (ranking.tierName.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            ranking.tierName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildRankStatItem('HẠNG', '#${ranking.rank}'),
+                      _buildRankStatItem('ELO', '${ranking.eloPoints}'),
+                      _buildRankStatItem('TỔNG TRẬN', '${ranking.matchesPlayed}'),
+                      _buildRankStatItem(
+                        'THẮNG / BẠI',
+                        '${ranking.matchesWon} / ${ranking.matchesLost}',
+                      ),
+                      _buildRankStatItem(
+                        'TỈ LỆ',
+                        '${ranking.winRate.toStringAsFixed(0)}%',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: SizedBox(
+          height: 100,
+          child: Center(child: CircularProgressIndicator(color: AppTheme.primary)),
+        ),
       ),
+      error: (e, _) => const SizedBox.shrink(),
     );
   }
 
-  // ─── STATS ROW ──────────────────────────────────────────────────────
-  Widget _buildStatsRow(BuildContext context, UserProfile profile) {
-    final colors = context.colors;
-    final stats = [
-      (Icons.people_rounded, 'CLB', '—'),
-      (Icons.emoji_events_rounded, 'Giải', '—'),
-      (Icons.how_to_vote_rounded, 'Trận', '—'),
-    ];
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colors.border),
+  Widget _buildRankStatItem(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.75),
+            fontSize: 9,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.2,
+          ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: stats.map((s) {
-            return Column(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                  child: Icon(s.$1, size: 18, color: AppTheme.primary),
-                ),
-                const SizedBox(height: 6),
-                Text(s.$2, style: TextStyle(fontSize: 10, color: colors.textMuted, fontWeight: FontWeight.w600)),
-                Text(s.$3, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: colors.textPrimary)),
-              ],
-            );
-          }).toList(),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -632,12 +771,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget _buildAccountMenu(BuildContext context) {
     final colors = context.colors;
     final items = [
+      _MenuItem(Icons.dashboard_rounded, 'Dashboard', '/dashboard'),
       _MenuItem(Icons.person_outline_rounded, 'Chỉnh sửa hồ sơ', '/profile/edit'),
-      _MenuItem(Icons.add_circle_outline_rounded, 'Tạo câu lạc bộ', '/club-create'),
+
+      _MenuItem(Icons.account_balance_wallet_rounded, 'Lịch sử thanh toán', '/payments'),
+      _MenuItem(Icons.emoji_events_rounded, 'Chuỗi giải đấu', '/series'),
+	      _MenuItem(Icons.mail_outline_rounded, 'Lời mời CLB', '/club-invites'),
       _MenuItem(Icons.settings_rounded, 'Cài đặt', '/profile/settings'),
       _MenuItem(Icons.lock_outline_rounded, 'Đổi mật khẩu', '/profile/change-password'),
       _MenuItem(Icons.leaderboard_rounded, 'Lịch sử ELO', null),
-      _MenuItem(Icons.account_balance_rounded, 'Thông tin ngân hàng', '/profile/settings'),
     ];
 
     return Container(
@@ -728,7 +870,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Switch(
                   value: isDark,
                   activeThumbColor: AppTheme.primary,
-                  onChanged: (v) => ref.read(themeProvider.notifier).toggleTheme(),
+                  onChanged: (v) => ref.read(tp.themeProvider.notifier).toggleTheme(),
                 ),
               ],
             ),

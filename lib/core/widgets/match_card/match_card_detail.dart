@@ -24,12 +24,9 @@ class MatchCardDetail extends StatelessWidget {
     final isCompleted = match.status == AppConstants.matchCompleted;
 
     return GestureDetector(
-      onTap: !isReadOnly && match.hasTeams
+      onTap: match.hasTeams
           ? () {
-              final basePath = isReferee
-                  ? '/referee'
-                  : '/admin/tournament/$tournamentId';
-              context.go('$basePath/match/${match.id}');
+              context.go('/live/${match.id}');
             }
           : null,
       child: Container(

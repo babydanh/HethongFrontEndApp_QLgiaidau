@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
@@ -332,7 +333,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             tiers: tierList,
             isMe: isAuth && r.userId == currentUserId,
             highlight: true,
-            onTap: () => _scrollToRank(r.rank, rankings.length),
+            onTap: () => context.go('/profile/user/${r.userId}'),
           );
         },
       );
@@ -370,7 +371,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               ranking: r,
               tiers: tierList,
               isMe: isAuth && r.userId == currentUserId,
-              onTap: () {},
+              onTap: () => context.go('/profile/user/${r.userId}'),
             );
           },
         ),

@@ -11,12 +11,7 @@ class NavigationHelper {
   }
 
   static String getMatchRoute(UserRole? role, String tournamentId, String matchId) {
-    if (role == UserRole.admin) {
-      return '/admin/tournament/$tournamentId/match/$matchId';
-    } else if (role == UserRole.referee) {
-      return '/referee/match/$matchId';
-    }
-    return '/home';
+    return '/live/$matchId';
   }
 
   static String getInitialRoute(UserRole? role) {

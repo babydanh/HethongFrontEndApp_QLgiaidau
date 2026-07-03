@@ -5,7 +5,9 @@ import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final tournamentsProvider = StreamProvider<List<Tournament>>((ref) {
-  return ref.watch(tournamentRepositoryProvider).watchAll();
+  return ref.watch(tournamentRepositoryProvider).watchAll().map((list) {
+    return list.where((t) => t.status != 'PENDING_DELETE' && t.status != 'pending_delete').toList();
+  });
 });
 
 final myTournamentsProvider = Provider<AsyncValue<List<Tournament>>>((ref) {
@@ -52,10 +54,24 @@ final liveMatchesProvider =
   return ref.watch(matchRepositoryProvider).watchLive(tournamentId);
 });
 
-final singleMatchProvider = StreamProvider.family<
+final singleMatchProvider = StreamProvider.autoDispose.family<
     MatchModel?,
     ({String tournamentId, String matchId})>((ref, params) {
   return ref
       .watch(matchRepositoryProvider)
       .watchMatch(params.tournamentId, params.matchId);
 });
+
+final viewerCountProvider = StreamProvider.autoDispose.family<int, String>((ref, matchId) {
+  final socketService = ref.watch(matchSocketServiceProvider);
+  socketService.connect(matchId);
+
+  ref.onDispose(() {
+    socketService.leave(matchId);
+  });
+
+  return socketService.onViewerCount
+      .where((data) => data['matchId'] == matchId)
+      .map((data) => data['viewerCount'] as int? ?? 0);
+});
+

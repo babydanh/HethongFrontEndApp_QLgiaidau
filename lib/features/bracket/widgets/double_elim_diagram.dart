@@ -360,7 +360,7 @@ class _DeBracketMatchCard extends StatelessWidget {
 
   void _onTap(BuildContext context) {
     if ((isReferee || !isReadOnly) && (match.isLive || match.isScheduled)) {
-      context.push('/referee/match/${match.id}');
+      context.push('/live/${match.id}');
       return;
     }
     showDialog(

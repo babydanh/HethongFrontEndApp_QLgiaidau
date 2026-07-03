@@ -28,7 +28,7 @@ class TournamentCardLive extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: [Color(0xFF0F172A), Color(0xFF1E293B)], // Dark bento gradient
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Colors.red.withAlpha(40), width: 1.0),
           boxShadow: [
             BoxShadow(
@@ -105,7 +105,7 @@ class TournamentCardLive extends StatelessWidget {
               height: 42,
               decoration: BoxDecoration(
                 color: Colors.red.withAlpha(35),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.red.withAlpha(50)),
               ),
               child: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.red, size: 16),

@@ -319,7 +319,7 @@ class _BracketMatchCard extends StatelessWidget {
   void _onTap(BuildContext context) {
     // Referees/admins can go directly to live scoring screen
     if ((isReferee || !isReadOnly) && (match.isLive || match.isScheduled)) {
-      context.push('/referee/match/${match.id}');
+      context.push('/live/${match.id}');
       return;
     }
     // Everyone else sees a detail dialog

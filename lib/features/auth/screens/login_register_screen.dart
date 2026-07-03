@@ -53,7 +53,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
           _errorMessage = null;
         });
         try {
-          final googleAuth = await account.authentication;
+          final googleAuth = account.authentication;
           final idToken = googleAuth.idToken;
           if (idToken == null) {
             throw Exception("Không nhận được ID Token từ Google");
@@ -61,7 +61,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
           final success = await ref.read(authProvider.notifier).loginWithGoogle(idToken);
           if (!mounted) return;
           if (success) {
-            context.go("/home");
+            context.go("/login-loading");
           } else {
             final auth = ref.read(authProvider);
             setState(() {
@@ -122,7 +122,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
     if (success) {
       ref.invalidate(userProfileProvider);
       ref.invalidate(userRankingsProvider);
-      context.go("/home");
+      context.go("/login-loading");
     } else {
       final auth = ref.read(authProvider);
       setState(() {
@@ -143,14 +143,9 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       await _initGoogleSignIn();
       GoogleSignInAccount? googleUser;
       final lightweightAuth = googleSignIn.attemptLightweightAuthentication();
-      if (lightweightAuth != null) {
-        googleUser = await lightweightAuth;
-      }
+      googleUser = await lightweightAuth;
       googleUser ??= await googleSignIn.authenticate();
-      if (googleUser == null) {
-        throw Exception("Đăng nhập bị hủy hoặc thất bại");
-      }
-      final googleAuth = await googleUser.authentication;
+      final googleAuth = googleUser.authentication;
       final idToken = googleAuth.idToken;
       if (idToken == null) {
         throw Exception("Không nhận được ID Token từ Google");
@@ -160,7 +155,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       if (success) {
         ref.invalidate(userProfileProvider);
         ref.invalidate(userRankingsProvider);
-        context.go("/home");
+        context.go("/login-loading");
       } else {
         final auth = ref.read(authProvider);
         setState(() {
@@ -181,9 +176,10 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryBgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
-    final textPrimaryColor = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
-    final textSecondaryColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final colors = context.colors;
+    final primaryBgColor = colors.bgDark;
+    final textPrimaryColor = colors.textPrimary;
+    final textSecondaryColor = colors.textSecondary;
     final ctaBgColor = AppTheme.primary;
     final ctaTextColor = Colors.white;
 
@@ -202,7 +198,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF2979FF).withOpacity(isDark ? 0.12 : 0.4),
+                    isDark ? Colors.transparent : const Color(0xFF2979FF).withOpacity(0.4),
                     const Color(0xFF2979FF).withOpacity(0.0),
                   ],
                 ),
@@ -385,7 +381,29 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 8),
+
+                        // Forgot Password
+                        if (!_isRegisterMode)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: GestureDetector(
+                              onTap: () => context.push('/forgot-password'),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                                child: Text(
+                                  'Quên mật khẩu?',
+                                  style: TextStyle(
+                                    color: const Color(0xFF2979FF),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                        const SizedBox(height: 16),
 
                         // Action Button
                         SizedBox(

@@ -140,6 +140,28 @@ class ApiUserRepository implements IUserRepository {
   }
 
   @override
+  Future<UserPublicProfile> getPublicProfile(String userId) async {
+    _log.info('Lấy hồ sơ công khai: userId=$userId');
+    try {
+      final response = await _dioClient.dio.get('/users/$userId/public');
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as Map<String, dynamic>? ?? response.data;
+        return UserPublicProfile.fromJson(data);
+      }
+      throw Exception('Không thể tải thông tin người dùng');
+    } catch (e, stack) {
+      _log.error('Lỗi tải hồ sơ công khai', e, stack);
+      if (e is DioException) {
+        throw Exception(_parseNestJsError(
+          e.response?.data,
+          e.message ?? 'Lỗi kết nối đến máy chủ',
+        ));
+      }
+      rethrow;
+    }
+  }
+
+  @override
   Future<void> changePassword(String oldPassword, String newPassword) async {
     _log.info('Đổi mật khẩu qua API');
     try {
@@ -166,6 +188,23 @@ class ApiUserRepository implements IUserRepository {
         ));
       }
       rethrow;
+    }
+  }
+
+  @override
+  Future<List<UserSearchResult>> searchUsers(String query) async {
+    _log.info('Tìm kiếm người dùng: $query');
+    try {
+      final response = await _dioClient.dio.get('/users/search', queryParameters: {'q': query});
+      if (response.statusCode == 200) {
+        final raw = response.data;
+        final data = raw is Map ? (raw['data'] as List<dynamic>? ?? []) : (raw as List<dynamic>? ?? []);
+        return data.map((e) => UserSearchResult.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } catch (e, stack) {
+      _log.error('Lỗi tìm kiếm người dùng', e, stack);
+      return [];
     }
   }
 

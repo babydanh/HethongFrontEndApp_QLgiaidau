@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/gallery_image_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_ranking_model.dart';
+import 'package:app_quanly_giaidau/data/models/community_invite_model.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_community_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/repositories/community_repository.dart';
@@ -56,4 +57,22 @@ final communityGalleryProvider = FutureProvider.family<List<GalleryImageModel>, 
 final communityRankingsProvider = FutureProvider.family<List<CommunityRankingModel>, String>((ref, communityId) async {
   final repo = ref.watch(communityRepositoryProvider);
   return repo.getRankings(communityId);
+});
+
+/// Provider danh sách yêu cầu tham gia CLB (OWNER/ADMIN thấy).
+final joinRequestsProvider = FutureProvider.family<List<CommunityMemberModel>, String>((ref, communityId) async {
+  final repo = ref.watch(communityRepositoryProvider);
+  return repo.getJoinRequests(communityId);
+});
+
+/// Provider danh sách CLB chờ duyệt (Admin).
+final pendingCommunitiesProvider = FutureProvider<List<Community>>((ref) async {
+  final repo = ref.watch(communityRepositoryProvider);
+  return repo.getPendingCommunities();
+});
+
+/// Provider danh sách lời mời CLB của tôi
+final myCommunityInvitesProvider = FutureProvider<List<CommunityInviteModel>>((ref) async {
+  final repo = ref.watch(communityRepositoryProvider);
+  return repo.getMyInvites();
 });

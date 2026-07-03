@@ -72,19 +72,23 @@ class _AdminEditScoreDialogState extends ConsumerState<AdminEditScoreDialog> {
             const SizedBox(height: 24),
             Text('Chọn đội thắng:', style: TextStyle(color: context.colors.textSecondary)),
             const SizedBox(height: 12),
-            RadioListTile<String>(
-              title: Text(widget.match.team1Name, style: TextStyle(color: context.colors.textPrimary)),
-              value: widget.match.team1Id,
+            RadioGroup<String>(
               groupValue: _selectedWinnerId,
-              activeColor: AppTheme.primary,
               onChanged: (val) => setState(() => _selectedWinnerId = val),
-            ),
-            RadioListTile<String>(
-              title: Text(widget.match.team2Name, style: TextStyle(color: context.colors.textPrimary)),
-              value: widget.match.team2Id,
-              groupValue: _selectedWinnerId,
-              activeColor: AppTheme.primary,
-              onChanged: (val) => setState(() => _selectedWinnerId = val),
+              child: Column(
+                children: [
+                  RadioListTile<String>(
+                    title: Text(widget.match.team1Name, style: TextStyle(color: context.colors.textPrimary)),
+                    value: widget.match.team1Id,
+                    activeColor: AppTheme.primary,
+                  ),
+                  RadioListTile<String>(
+                    title: Text(widget.match.team2Name, style: TextStyle(color: context.colors.textPrimary)),
+                    value: widget.match.team2Id,
+                    activeColor: AppTheme.primary,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

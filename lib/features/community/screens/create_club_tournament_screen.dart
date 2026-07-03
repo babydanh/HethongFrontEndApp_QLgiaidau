@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
-import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
 
 /// Tạo giải đấu đơn giản trong câu lạc bộ
 /// Tuân thủ SRP: UI + Repository, không gọi Dio trực tiếp
@@ -38,19 +38,19 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
     super.dispose();
   }
 
-  /// Lấy sport rules mặc định theo môn
+  /// Lấy sport rules mặc định theo môn (kèm `kind` để backend resolve config).
   Map<String, dynamic> _getSportRules() {
     switch (_selectedSport) {
       case AppConstants.sportBadminton:
-        return {'setsToWin': 2, 'pointsPerSet': 21, 'mustWinByTwo': true};
+        return {'kind': 'BADMINTON', 'setsToWin': 2, 'pointsPerSet': 21, 'mustWinByTwo': true};
       case AppConstants.sportTennis:
-        return {'setsToWin': 2, 'pointsPerSet': 6, 'mustWinByTwo': true, 'tiebreakPoints': 7};
+        return {'kind': 'TENNIS', 'setsToWin': 2, 'pointsPerSet': 6, 'mustWinByTwo': true, 'tiebreakPoints': 7};
       case AppConstants.sportPickleball:
-        return {'setsToWin': 2, 'pointsPerSet': 11, 'mustWinByTwo': true};
+        return {'kind': 'PICKLEBALL', 'setsToWin': 2, 'pointsPerSet': 11, 'mustWinByTwo': true};
       case AppConstants.sportTableTennis:
-        return {'setsToWin': 3, 'pointsPerSet': 11, 'mustWinByTwo': true};
+        return {'kind': 'TABLE_TENNIS', 'setsToWin': 3, 'pointsPerSet': 11, 'mustWinByTwo': true};
       default:
-        return {'setsToWin': 2, 'pointsPerSet': 21, 'mustWinByTwo': true};
+        return {'kind': 'BADMINTON', 'setsToWin': 2, 'pointsPerSet': 21, 'mustWinByTwo': true};
     }
   }
 
@@ -59,29 +59,27 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
 
     setState(() => _isLoading = true);
     try {
-      final dio = ref.read(dioProvider);
+      final repo = ref.read(communityRepositoryProvider);
 
-      // Map sport → categoryId
-      String categoryId;
+      // Fetch categories to resolve slug to UUID
+      final categoriesList = await ref.read(categoriesProvider.future);
+      String slug;
       switch (_selectedSport) {
-        case AppConstants.sportBadminton:
-          categoryId = 'badminton';
-          break;
-        case AppConstants.sportTennis:
-          categoryId = 'tennis';
-          break;
-        case AppConstants.sportPickleball:
-          categoryId = 'pickleball';
-          break;
-        default:
-          categoryId = 'badminton';
+        case AppConstants.sportBadminton: slug = 'badminton'; break;
+        case AppConstants.sportTennis: slug = 'tennis'; break;
+        case AppConstants.sportPickleball: slug = 'pickleball'; break;
+        default: slug = 'badminton';
       }
+
+      final category = categoriesList.firstWhere(
+        (c) => c.slug == slug,
+        orElse: () => throw Exception('Không tìm thấy môn thể thao $slug trên hệ thống'),
+      );
 
       final body = <String, dynamic>{
         'tournamentType': 'CLUB',
         'name': _nameCtrl.text.trim(),
-        'categoryId': categoryId,
-        'communityId': widget.clubId,
+        'categoryId': category.id,
         'matchType': _selectedFormat == AppConstants.formatDoubles ? 'DOUBLES' : 'SINGLES',
         'description': _descCtrl.text.trim(),
         'maxParticipants': int.tryParse(_maxTeamsCtrl.text) ?? 16,
@@ -94,7 +92,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
       };
 
       _log.info('Tạo giải đấu trong CLB: ${body['name']}, isRanked=$_isRanked');
-      await dio.post('/tournaments', data: body);
+      await repo.createTournament(widget.clubId, body);
       _log.success('Tạo giải đấu trong CLB thành công');
 
       if (mounted) {

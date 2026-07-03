@@ -75,12 +75,16 @@ class MatchModel {
   final int? timeLimitMinutes;
   final DateTime updatedAt;
   final String? refereeName;
+  final String? refereeId;
   final List<Penalty> penalties;
   final String? tournamentName;
+  final String? sportKey;
   // Sport-specific fields — từ BE JSONB
   final Map<String, dynamic>? sportRules;
   final Map<String, dynamic>? scoreDetails;
   final int? setsToWin;
+  final List<String>? team1Members;
+  final List<String>? team2Members;
 
   const MatchModel({
     required this.id,
@@ -109,11 +113,15 @@ class MatchModel {
     this.timeLimitMinutes,
     required this.updatedAt,
     this.refereeName,
+    this.refereeId,
     this.penalties = const [],
     this.tournamentName,
+    this.sportKey,
     this.sportRules,
     this.scoreDetails,
     this.setsToWin,
+    this.team1Members = const [],
+    this.team2Members = const [],
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json, String id) {
@@ -133,7 +141,7 @@ class MatchModel {
           [],
       winnerId: json['winnerId'] ?? '',
       loserId: json['loserId'] ?? '',
-      status: json['status'] ?? 'scheduled',
+      status: (json['status'] as String?)?.toLowerCase() ?? 'scheduled',
       bracketPosition: json['bracketPosition'] != null
           ? BracketPosition.fromJson(
               json['bracketPosition'] as Map<String, dynamic>,
@@ -154,17 +162,23 @@ class MatchModel {
       timeLimitMinutes: json['timeLimitMinutes'] as int?,
       updatedAt: DateParser.parseDate(json['updatedAt']),
       refereeName: json['refereeName'],
+      refereeId: json['refereeId']?.toString(),
       penalties: (json['penalties'] as List<dynamic>?)
               ?.map((p) => Penalty.fromJson(p as Map<String, dynamic>))
               .toList() ??
           [],
       tournamentName: json['tournamentName'] ?? json['tournament']?['name'],
+      sportKey: json['sport']?.toString() ?? json['tournament']?['sport']?.toString(),
       // Sport-specific: từ tournament sportRules hoặc matchConfig
       sportRules: json['tournament'] is Map
           ? (json['tournament'] as Map)['sportRules'] as Map<String, dynamic>?
           : json['sportRules'] as Map<String, dynamic>?,
       scoreDetails: json['scoreDetails'] as Map<String, dynamic>?,
       setsToWin: json['setsToWin'] as int?,
+      team1Members: (json['team1Members'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? 
+                    (json['participant1']?['rosters'] as List<dynamic>?)?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? const [],
+      team2Members: (json['team2Members'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? 
+                    (json['participant2']?['rosters'] as List<dynamic>?)?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? const [],
     );
   }
 
@@ -195,8 +209,12 @@ class MatchModel {
       'timeLimitMinutes': timeLimitMinutes,
       'updatedAt': updatedAt.toIso8601String(),
       if (refereeName != null) 'refereeName': refereeName,
+      if (refereeId != null) 'refereeId': refereeId,
       'penalties': penalties.map((p) => p.toJson()).toList(),
       if (tournamentName != null) 'tournamentName': tournamentName,
+      if (sportKey != null) 'sport': sportKey,
+      'team1Members': team1Members,
+      'team2Members': team2Members,
     };
   }
 
@@ -227,11 +245,15 @@ class MatchModel {
     int? timeLimitMinutes,
     DateTime? updatedAt,
     String? refereeName,
+    String? refereeId,
     List<Penalty>? penalties,
     String? tournamentName,
+    String? sportKey,
     Map<String, dynamic>? sportRules,
     Map<String, dynamic>? scoreDetails,
     int? setsToWin,
+    List<String>? team1Members,
+    List<String>? team2Members,
   }) {
     return MatchModel(
       id: id ?? this.id,
@@ -260,15 +282,19 @@ class MatchModel {
       timeLimitMinutes: timeLimitMinutes ?? this.timeLimitMinutes,
       updatedAt: updatedAt ?? this.updatedAt,
       refereeName: refereeName ?? this.refereeName,
+      refereeId: refereeId ?? this.refereeId,
       penalties: penalties ?? this.penalties,
       tournamentName: tournamentName ?? this.tournamentName,
+      sportKey: sportKey ?? this.sportKey,
       sportRules: sportRules ?? this.sportRules,
       scoreDetails: scoreDetails ?? this.scoreDetails,
       setsToWin: setsToWin ?? this.setsToWin,
+      team1Members: team1Members ?? this.team1Members,
+      team2Members: team2Members ?? this.team2Members,
     );
   }
 
-  bool get isLive => status == 'live';
+  bool get isLive => status == 'live' || status == 'ongoing' || status == 'in_progress';
   bool get isCompleted => status == 'completed';
   bool get isScheduled => status == 'scheduled';
   bool get hasTeams => team1Id.isNotEmpty && team2Id.isNotEmpty;

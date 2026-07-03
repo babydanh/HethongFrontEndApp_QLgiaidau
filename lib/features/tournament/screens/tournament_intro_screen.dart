@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_state_
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_registration_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_teams_empty.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/core/widgets/countdown_timer.dart';
 
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -29,11 +30,48 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _selectedDivision = "Tất cả";
+  bool _isFollowing = false;
+  bool _isFollowLoading = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _checkFollowing();
+  }
+
+  Future<void> _checkFollowing() async {
+    try {
+      final repo = ref.read(tournamentRepositoryProvider);
+      final following = await repo.isFollowing(widget.tournamentId);
+      if (mounted) setState(() => _isFollowing = following);
+    } catch (_) {}
+  }
+
+  Future<void> _toggleFollow() async {
+    setState(() => _isFollowLoading = true);
+    try {
+      final repo = ref.read(tournamentRepositoryProvider);
+      if (_isFollowing) {
+        await repo.unfollowTournament(widget.tournamentId);
+        setState(() => _isFollowing = false);
+      } else {
+        await repo.followTournament(widget.tournamentId);
+        setState(() => _isFollowing = true);
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isFollowing ? 'Đã theo dõi giải đấu' : 'Đã bỏ theo dõi'),
+            backgroundColor: context.colors.success,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _isFollowLoading = false);
+    }
   }
 
   @override
@@ -219,7 +257,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         ),
         Positioned(
           right: 16,
-          bottom: 90,
+          bottom: 120,
           child: _buildBottomBar(tournament, role),
         ),
       ],
@@ -367,6 +405,13 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               Divider(color: colors.border.withValues(alpha: 0.5), height: 1),
               const SizedBox(height: 16),
             ],
+            if (tournament.status == 'upcoming' && tournament.registrationStartDate != null) ...[
+              const SizedBox(height: 4),
+              CountdownTimer(targetDate: tournament.registrationStartDate!, compact: false),
+              const SizedBox(height: 16),
+              Divider(color: colors.border.withValues(alpha: 0.5), height: 1),
+              const SizedBox(height: 16),
+            ],
             Text(
               "CƠ CẤU GIẢI THƯỞNG",
               style: TextStyle(
@@ -443,34 +488,12 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   ],
                 ),
             ] else ...[
-              Row(
-                children: [
-                  Icon(Icons.phone_rounded, size: 18, color: colors.textSecondary),
-                  const SizedBox(width: 8),
-                  Text(
-                    "0808080080",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: colors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.email_rounded, size: 18, color: colors.textSecondary),
-                  const SizedBox(width: 8),
-                  Text(
-                    "Macter.979@gmail.com",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: colors.textSecondary,
-                    ),
-                  ),
-                ],
+              Text(
+                "Chưa cập nhật",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colors.textSecondary,
+                ),
               ),
             ],
             const SizedBox(height: 16),
@@ -774,192 +797,62 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _buildMemberRow(String memberName, bool isCaptain, AppColorsExtension colors) {
-    final int mockElo = 1200 + (memberName.hashCode * 70) % 600;
-    final Color tierColor = mockElo >= 1600
-        ? const Color(0xFFFF9800)
-        : mockElo >= 1300
-            ? const Color(0xFF9E9E9E)
-            : const Color(0xFFCD7F32);
-
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: colors.bgSurface,
         borderRadius: BorderRadius.circular(10),
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: () => _showMemberProfile(context, memberName, mockElo, isCaptain),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-              child: Text(
-                memberName.isNotEmpty ? memberName[0].toUpperCase() : "?",
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primary,
-                ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+            child: Text(
+              memberName.isNotEmpty ? memberName[0].toUpperCase() : "?",
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primary,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Row(
-                children: [
-                  Text(
-                    memberName,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: colors.textPrimary,
-                    ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Row(
+              children: [
+                Text(
+                  memberName,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textPrimary,
                   ),
-                  if (isCaptain) ...[
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: const Text(
-                        "Đội Trưởng",
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primary,
-                        ),
-                      ),
+                ),
+                if (isCaptain) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(3),
                     ),
-                  ],
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: tierColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                "$mockElo",
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: tierColor,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(Icons.chevron_right_rounded, size: 14, color: colors.textSecondary),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showMemberProfile(BuildContext context, String name, int elo, bool isCaptain) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) {
-          final colors = context.colors;
-          return Scaffold(
-            backgroundColor: colors.bgDark,
-            appBar: AppBar(
-              backgroundColor: colors.bgDark,
-              elevation: 0,
-              leading: IconButton(
-                icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              title: Text(
-                "Vận động viên",
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 48,
-                    backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                    child: Text(
-                      name.isNotEmpty ? name[0].toUpperCase() : "?",
-                      style: const TextStyle(
-                        fontSize: 32,
+                    child: const Text(
+                      "Đội Trưởng",
+                      style: TextStyle(
+                        fontSize: 9,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.primary,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    name,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                  if (isCaptain) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        "Đội Trưởng",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: colors.bgCard,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: colors.border),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          "Hệ số Elo",
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: colors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "$elo",
-                          style: TextStyle(
-                            fontSize: 48,
-                            fontWeight: FontWeight.bold,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
-              ),
+              ],
             ),
-          );
-        },
+          ),
+          Icon(Icons.person_outline_rounded, size: 16, color: colors.textMuted),
+        ],
       ),
     );
   }
@@ -975,16 +868,52 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final hasRole = role != null;
     final isLive = tournament.status == "in_progress";
     final isRegistration = tournament.status == "registration" || tournament.status == "draft";
+    final isCompleted = tournament.status == "completed";
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Nút theo dõi
+        _followButton(),
+        const SizedBox(width: 8),
         if (hasRole) _enterButton(role),
         if (hasRole && isLive) const SizedBox(width: 12),
         if (isLive) _liveButton(role, tournament.id),
         if (!hasRole && !isLive && isRegistration) _registrationButton(tournament),
-        if (!hasRole && !isLive && !isRegistration) _lockedButton(),
+        if (!hasRole && !isLive && !isRegistration)
+          isCompleted
+              ? _viewBracketButton("Xem kết quả")
+              : _viewBracketButton("Xem lịch thi đấu"),
       ],
+    );
+  }
+
+  Widget _viewBracketButton(String label) {
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primary.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: FilledButton.icon(
+        style: FilledButton.styleFrom(
+          backgroundColor: AppTheme.primary,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+        ),
+        onPressed: () {
+          _tabController.animateTo(2);
+        },
+        icon: const Icon(Icons.account_tree_rounded, size: 20),
+        label: Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
     );
   }
 
@@ -1046,9 +975,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           }
         },
         icon: const Icon(Icons.login_rounded, size: 22),
-        label: const Text(
-          "Vào bảng quản trị",
-          style: TextStyle(fontWeight: FontWeight.bold),
+        label: Text(
+          role == UserRole.admin ? "Vào bảng quản trị" : "Xem sơ đồ thi đấu",
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -1090,35 +1019,43 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  Widget _lockedButton() {
-    final colors = context.colors;
+  Widget _followButton() {
     return Container(
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: colors.textMuted.withValues(alpha: 0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: AppTheme.primary.withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: FilledButton.icon(
-        style: FilledButton.styleFrom(
-          backgroundColor: colors.bgSurface,
-          foregroundColor: colors.textMuted,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
-            side: BorderSide(color: colors.border),
-          ),
-        ),
-        onPressed: () {},
-        icon: const Icon(Icons.lock_rounded, size: 18),
-        label: const Text(
-          "Đã đóng đăng ký",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
+      child: _isFollowing
+          ? OutlinedButton.icon(
+              onPressed: _isFollowLoading ? null : _toggleFollow,
+              icon: _isFollowLoading
+                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.bookmark_rounded, size: 16),
+              label: const Text("Đang theo dõi", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.primary,
+                side: const BorderSide(color: AppTheme.primary),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+              ),
+            )
+          : FilledButton.icon(
+              onPressed: _isFollowLoading ? null : _toggleFollow,
+              icon: _isFollowLoading
+                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.bookmark_border_rounded, size: 16),
+              label: const Text("Theo dõi", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+              ),
+            ),
     );
   }
 }

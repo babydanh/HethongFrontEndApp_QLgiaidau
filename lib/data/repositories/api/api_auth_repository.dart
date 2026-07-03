@@ -3,7 +3,6 @@ import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/auth_session.dart';
 import 'package:app_quanly_giaidau/domain/repositories/auth_repository.dart';
-import 'package:dio/dio.dart';
 
 class ApiAuthRepository implements IAuthRepository {
   static const _log = AppLogger('ApiAuthRepository');

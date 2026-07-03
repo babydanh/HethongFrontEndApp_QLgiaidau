@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/data/models/penalty_model.dart';
 import 'package:app_quanly_giaidau/core/services/penalty_service.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 
 typedef MatchControlParams = ({String tournamentId, String matchId});
 
@@ -178,6 +179,60 @@ class MatchController {
       finalScore1: m.score1,
       finalScore2: m.score2,
     );
+  }
+
+  /// Gửi scoreDetails theo DTO backend: p1SetsWon, p2SetsWon, scoreDetails.sets.
+  Future<void> updateSetsWithDetails({
+    required int p1SetsWon,
+    required int p2SetsWon,
+    required List<SetScoreData> scoreDetails,
+    String? winnerId,
+    String? overrideReason,
+  }) async {
+    _log.info('updateSetsWithDetails: $p1SetsWon-$p2SetsWon, ${scoreDetails.length} sets');
+    await ref.read(matchRepositoryProvider).updateScoreDetails(
+      tournamentId,
+      matchId,
+      p1SetsWon: p1SetsWon,
+      p2SetsWon: p2SetsWon,
+      scoreDetails: scoreDetails,
+      winnerId: winnerId,
+      overrideReason: overrideReason,
+    );
+  }
+
+  /// Kết thúc trận kèm scoreDetails đầy đủ (sets).
+  /// Gọi updateScoreDetails + completeMatch.
+  Future<void> completeMatchWithDetails({
+    required String winnerId,
+    required String loserId,
+    required List<SetScoreData> finalSets,
+    String? overrideReason,
+  }) async {
+    _log.info('completeMatchWithDetails: winner=$winnerId, ${finalSets.length} sets');
+    final (p1Sets, p2Sets) = computeMatchSetsWon(finalSets);
+
+    // 1. Gửi scoreDetails
+    await updateSetsWithDetails(
+      p1SetsWon: p1Sets,
+      p2SetsWon: p2Sets,
+      scoreDetails: finalSets,
+      winnerId: winnerId,
+      overrideReason: overrideReason,
+    );
+
+    // 2. Complete match
+    final m = match;
+    if (m != null) {
+      await ref.read(matchRepositoryProvider).completeMatch(
+        tournamentId,
+        matchId,
+        winnerId: winnerId,
+        loserId: loserId,
+        finalScore1: finalSets.isNotEmpty ? finalSets.last.score1 : 0,
+        finalScore2: finalSets.isNotEmpty ? finalSets.last.score2 : 0,
+      );
+    }
   }
 
   Future<void> advanceWinner({

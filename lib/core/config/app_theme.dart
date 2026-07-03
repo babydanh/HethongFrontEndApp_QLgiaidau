@@ -134,13 +134,13 @@ class AppTheme {
   static const AppColorsExtension _darkColors = AppColorsExtension(
     bgDark: Color(0xFF000000),
     bgCard: Color(0xFF0D0D0D),
-    bgSurface: Color(0xFF1A1A1A),
-    bgElevated: Color(0xFF262626),
-    textPrimary: Color(0xFFF8FAFC),
-    textSecondary: Color(0xFF94A3B8),
-    textMuted: Color(0xFF64748B),
-    border: Color(0xFF1F293D),
-    borderLight: Color(0xFF151C2C),
+    bgSurface: Color(0xFF161616),
+    bgElevated: Color(0xFF222222),
+    textPrimary: Color(0xFFF5F5F5),
+    textSecondary: Color(0xFFE5E5E5), // Brighter grey (neutral-200/300) for dark mode readability
+    textMuted: Color(0xFFA3A3A3),     // Brighter muted grey (neutral-400) for contrast
+    border: Color(0xFF262626),
+    borderLight: Color(0xFF171717),
     success: Color(0xFF22C55E),
     warning: Color(0xFFF59E0B),
     error: Color(0xFFEF4444),
@@ -153,8 +153,8 @@ class AppTheme {
     bgSurface: Color(0xFFF1F5F9),
     bgElevated: Color(0xFFFFFFFF),
     textPrimary: Color(0xFF0F172A),
-    textSecondary: Color(0xFF64748B),
-    textMuted: Color(0xFF94A3B8),
+    textSecondary: Color(0xFF334155), // Darker slate (slate-700) for high readability
+    textMuted: Color(0xFF57606a),     // Darker muted text for high contrast
     border: Color(0xFFE2E8F0),
     borderLight: Color(0xFFF1F5F9),
     success: Color(0xFF22C55E),

@@ -1,10 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
-import 'package:app_quanly_giaidau/providers/notification_provider.dart';
 
 class BottomNavClipper extends CustomClipper<Path> {
   @override

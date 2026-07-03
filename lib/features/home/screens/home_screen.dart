@@ -7,20 +7,15 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
-import 'package:app_quanly_giaidau/providers/theme_provider.dart';
 import 'package:app_quanly_giaidau/providers/notification_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/core/widgets/vnsport_header.dart';
-import 'package:app_quanly_giaidau/features/explore/widgets/live_match_card.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_carousel.dart';
-import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_live.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
-import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_v2.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_filter_chips.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
-import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
@@ -311,7 +306,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 }).toList();
 
                 final live = allTournaments.where((t) => t.status == 'in_progress').toList();
-                final upcoming = allTournaments.where((t) => t.status == 'draft' || t.status == 'registration').toList();
+                final upcoming = allTournaments.where((t) => t.status == 'draft' || t.status == 'registration' || t.status == 'upcoming').toList();
                 final finished = allTournaments.where((t) => t.status == 'completed').toList();
 
                 return CustomScrollView(
@@ -483,10 +478,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           left: 0.0,
           right: 0.0,
           height: currentHeaderHeight,
-          child: CustomPaint(
-            size: Size(screenSize.width, currentHeaderHeight),
-            painter: VnsportHeaderPainter(
-              isLoggedIn: ref.watch(authProvider).isAuthenticated,
+          child: Hero(
+            tag: "vnsport_header_bg",
+            child: CustomPaint(
+              size: Size(screenSize.width, currentHeaderHeight),
+              painter: VnsportHeaderPainter(
+                isLoggedIn: ref.watch(authProvider).isAuthenticated,
+                colors: context.colors,
+              ),
             ),
           ),
         ),
@@ -1351,7 +1350,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildClubListWithApi() {
-    final communitiesAsync = ref.watch(communitiesProvider(_searchQuery.isEmpty ? null : _searchQuery));
+    final communitiesAsync = ref.watch(communitiesProvider(null));
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
@@ -1369,56 +1368,98 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
           actions: [
-            // Tạo CLB đã chuyển sang tab Profile
             const SizedBox(width: 16),
           ],
         ),
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: Container(
-              height: 42.0,
-              decoration: BoxDecoration(
-                color: context.colors.bgSurface,
-                borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(color: context.colors.border, width: 1.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.02),
-                    blurRadius: 6.0,
-                    offset: const Offset(0, 2),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                child: Container(
+                  height: 42.0,
+                  decoration: BoxDecoration(
+                    color: context.colors.bgSurface,
+                    borderRadius: BorderRadius.circular(12.0),
+                    border: Border.all(color: context.colors.border, width: 1.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 6.0,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (v) => setState(() => _searchQuery = v),
-                style: TextStyle(fontSize: 13.5, color: context.colors.textPrimary),
-                textAlignVertical: TextAlignVertical.center,
-                decoration: InputDecoration(
-                  hintText: "Tìm kiếm câu lạc bộ...",
-                  hintStyle: TextStyle(fontSize: 13.5, color: context.colors.textMuted),
-                  prefixIcon: Icon(Icons.search, size: 18.0, color: context.colors.textMuted),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.clear, size: 16.0, color: context.colors.textMuted),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _searchQuery = "");
-                          },
-                        )
-                      : null,
-                  border: InputBorder.none,
-                  isCollapsed: true,
-                  contentPadding: EdgeInsets.zero,
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                    style: TextStyle(fontSize: 13.5, color: context.colors.textPrimary),
+                    textAlignVertical: TextAlignVertical.center,
+                    decoration: InputDecoration(
+                      hintText: "Tìm kiếm câu lạc bộ...",
+                      hintStyle: TextStyle(fontSize: 13.5, color: context.colors.textMuted),
+                      prefixIcon: Icon(Icons.search, size: 18.0, color: context.colors.textMuted),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(Icons.clear, size: 16.0, color: context.colors.textMuted),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = "");
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      isCollapsed: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
                 ),
               ),
-            ),
+              SportFilterChips(
+                selectedSport: _selectedSport,
+                onSportChanged: (s) => setState(() => _selectedSport = s),
+              ),
+              const SizedBox(height: 12),
+            ],
           ),
         ),
         communitiesAsync.when(
           data: (clubs) {
-            final display = clubs.isNotEmpty ? clubs : _getClubFallback();
+            final filtered = clubs.where((c) {
+              if (_selectedSport != 'all') {
+                final hasSport = c.sports.any((s) {
+                  final name = s.toLowerCase();
+                  if (_selectedSport == 'badminton' && (name.contains('badminton') || name.contains('cầu lông') || name.contains('cau long'))) return true;
+                  if (_selectedSport == 'tennis' && name.contains('tennis')) return true;
+                  if (_selectedSport == 'pickleball' && name.contains('pickleball')) return true;
+                  return name.contains(_selectedSport);
+                });
+                if (!hasSport) return false;
+              }
+              final q = _searchQuery.toLowerCase().trim();
+              if (q.isNotEmpty && !c.name.toLowerCase().contains(q) && !(c.description ?? '').toLowerCase().contains(q)) {
+                return false;
+              }
+              return true;
+            }).toList();
+
+            final display = filtered.isNotEmpty ? filtered : _getClubFallback().where((c) {
+              if (_selectedSport != 'all') {
+                final hasSport = c.sports.any((s) {
+                  final name = s.toLowerCase();
+                  if (_selectedSport == 'badminton' && (name.contains('badminton') || name.contains('cầu lông') || name.contains('cau long'))) return true;
+                  if (_selectedSport == 'tennis' && name.contains('tennis')) return true;
+                  if (_selectedSport == 'pickleball' && name.contains('pickleball')) return true;
+                  return name.contains(_selectedSport);
+                });
+                if (!hasSport) return false;
+              }
+              final q = _searchQuery.toLowerCase().trim();
+              if (q.isNotEmpty && !c.name.toLowerCase().contains(q) && !(c.description ?? '').toLowerCase().contains(q)) {
+                return false;
+              }
+              return true;
+            }).toList();
             return SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
               sliver: SliverList(
@@ -1630,7 +1671,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // ─── Content Area ───
               Padding(
-                padding: const EdgeInsets.fromLTRB(14, 34, 14, 14),
+                padding: const EdgeInsets.fromLTRB(14, 30, 14, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1641,7 +1682,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           child: Text(
                             club.name,
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 18,
                               fontWeight: FontWeight.w900,
                               color: context.colors.textPrimary,
                               letterSpacing: -0.2,
@@ -1653,35 +1694,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         if (club.status == 'ACTIVE')
                           Padding(
                             padding: const EdgeInsets.only(left: 4),
-                            child: Icon(Icons.verified_rounded, size: 16, color: sportColor),
+                            child: Icon(Icons.verified_rounded, size: 18, color: sportColor),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
 
                     // Stats
                     Row(
                       children: [
-                        Icon(Icons.people_rounded, size: 13, color: context.colors.textSecondary),
-                        const SizedBox(width: 3),
+                        Icon(Icons.people_rounded, size: 14, color: context.colors.textSecondary),
+                        const SizedBox(width: 4),
                         Text(
                           "${club.memberCount} thành viên",
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: context.colors.textSecondary),
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary),
                         ),
-                        const SizedBox(width: 12),
-                        Icon(Icons.location_on_rounded, size: 13, color: context.colors.textMuted),
-                        const SizedBox(width: 3),
+                        const SizedBox(width: 16),
+                        Icon(Icons.location_on_rounded, size: 14, color: context.colors.textMuted),
+                        const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             club.locationAddress ?? "Việt Nam",
-                            style: TextStyle(fontSize: 10, color: context.colors.textMuted, fontWeight: FontWeight.w500),
+                            style: TextStyle(fontSize: 12, color: context.colors.textMuted, fontWeight: FontWeight.bold),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 6),
 
                     // Sport tag
                     if (sportName.isNotEmpty)
@@ -1694,7 +1735,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         child: Text(
                           sportName.toUpperCase(),
-                          style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: sportColor, letterSpacing: 0.8),
+                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: sportColor, letterSpacing: 0.8),
                         ),
                       ),
                   ],

@@ -21,6 +21,7 @@ class AppTextFormField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final TextAlign textAlign;
   final TextCapitalization textCapitalization;
+  final bool enabled;
 
   const AppTextFormField({
     super.key,
@@ -42,6 +43,7 @@ class AppTextFormField extends StatelessWidget {
     this.inputFormatters,
     this.textAlign = TextAlign.start,
     this.textCapitalization = TextCapitalization.none,
+    this.enabled = true,
   });
 
   @override
@@ -57,10 +59,11 @@ class AppTextFormField extends StatelessWidget {
       minLines: minLines,
       obscureText: obscureText,
       maxLength: maxLength,
+      enabled: enabled,
       onChanged: onChanged,
       onFieldSubmitted: onSubmitted,
       inputFormatters: inputFormatters,
-      style: TextStyle(color: context.colors.textPrimary),
+      style: TextStyle(color: enabled ? context.colors.textPrimary : context.colors.textMuted),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,

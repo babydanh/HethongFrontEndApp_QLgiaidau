@@ -21,22 +21,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
+    _scaleAnimation = Tween<double>(begin: 0.92, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
 
     _controller.forward();
 
     // Khởi tạo auth và chuyển trang
-    Future.delayed(const Duration(milliseconds: 2000), () {
+    Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
         _initAuth();
       }
@@ -83,48 +83,41 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Logo / Icon
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        gradient: context.primaryGradient,
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 10, offset: Offset(0, 4))],
-                      ),
-                      child: const Icon(
-                        Icons.emoji_events_rounded,
-                        size: 64,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // App Name
-                    ShaderMask(
-                      shaderCallback: (bounds) =>
-                          context.primaryGradient.createShader(bounds),
-                      child: const Text(
-                        'QUẢN LÝ\nGIẢI ĐẤU',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
+                    // Logo VNSPORT
+                    Hero(
+                      tag: "vnsport_logo",
+                      child: SizedBox(
+                        width: 192,
+                        height: 60,
+                        child: Image.asset(
+                          "assets/images/vndc_sport.png",
+                          fit: BoxFit.contain,
                           color: Colors.white,
-                          height: 1.2,
-                          letterSpacing: 2,
+                          colorBlendMode: BlendMode.srcIn,
+                          errorBuilder: (_, __, ___) => const Material(
+                            color: Colors.transparent,
+                            child: Text(
+                              "VNSPORT",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 44,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
 
                     // Tagline
                     Text(
                       'Tổ chức giải đấu chuyên nghiệp',
                       style: TextStyle(
-                        fontSize: 14,
-                        color: context.colors.textSecondary.withValues(alpha: 0.7),
-                        letterSpacing: 1,
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.6),
+                        letterSpacing: 1.5,
                       ),
                     ),
                     const SizedBox(height: 48),

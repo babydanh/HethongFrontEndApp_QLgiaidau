@@ -252,7 +252,13 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
   ) {
     final colors = context.colors;
 
-    final filteredMatches = matches.where((m) {
+    final validMatches = matches.where((m) {
+      if (m.isLive || m.isCompleted) return true;
+      final hasTeams = m.team1Name != 'TBD' && m.team2Name != 'TBD';
+      return m.scheduledTime != null && hasTeams;
+    }).toList();
+
+    final filteredMatches = validMatches.where((m) {
       if (_matchFilter == 'live') return m.isLive;
       if (_matchFilter == 'scheduled') return m.isScheduled;
       if (_matchFilter == 'completed') return m.isCompleted;
@@ -337,13 +343,13 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _filterChip('all', 'Tất cả (${matches.length})'),
+                _filterChip('all', 'Tất cả (${validMatches.length})'),
                 const SizedBox(width: 8),
-                _filterChip('live', 'Đang Live (${matches.where((m) => m.isLive).length})'),
+                _filterChip('live', 'Đang Live (${validMatches.where((m) => m.isLive).length})'),
                 const SizedBox(width: 8),
-                _filterChip('scheduled', 'Sắp diễn ra (${matches.where((m) => m.isScheduled).length})'),
+                _filterChip('scheduled', 'Sắp diễn ra (${validMatches.where((m) => m.isScheduled).length})'),
                 const SizedBox(width: 8),
-                _filterChip('completed', 'Đã kết thúc (${matches.where((m) => m.isCompleted).length})'),
+                _filterChip('completed', 'Đã kết thúc (${validMatches.where((m) => m.isCompleted).length})'),
               ],
             ),
           ),
@@ -418,207 +424,379 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
 
     String timeStr = 'Chưa xếp lịch';
     if (match.scheduledTime != null) {
-      timeStr = DateFormat('HH:mm - dd/MM').format(match.scheduledTime!.toLocal());
+      timeStr = DateFormat('HH:mm - dd/MM/yyyy').format(match.scheduledTime!.toLocal());
     }
 
-    Color statusColor = colors.textMuted;
-    String statusLabel = 'Chưa đấu';
+    Color statusColor;
+    String statusLabel;
     if (match.isLive) {
       statusColor = colors.error;
-      statusLabel = 'ĐANG LIVE';
+      statusLabel = 'Đang thi đấu';
     } else if (match.isCompleted) {
       statusColor = colors.success;
-      statusLabel = 'ĐÃ XONG';
+      statusLabel = 'Đã kết thúc';
     } else {
       statusColor = AppTheme.primary;
-      statusLabel = 'SẮP ĐẤU';
+      statusLabel = 'Chưa thi đấu';
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          // Referees/admins go directly to live scoring screen for live/scheduled matches
-          if (widget.isReferee && (match.isLive || match.isScheduled)) {
-            context.push('/referee/match/${match.id}');
-            return;
-          }
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              backgroundColor: colors.bgCard,
-              contentPadding: EdgeInsets.zero,
-              content: SizedBox(
-                width: 320,
-                child: MatchCardDetail(
-                  match: match,
-                  isReferee: widget.isReferee,
-                  isReadOnly: isReadOnly,
-                  tournamentId: widget.tournamentId,
+    final isT1Winner = match.isCompleted && match.winnerId == match.team1Id;
+    final isT2Winner = match.isCompleted && match.winnerId == match.team2Id;
+
+    final isT1Loser = match.isCompleted && match.winnerId == match.team2Id;
+    final isT2Loser = match.isCompleted && match.winnerId == match.team1Id;
+
+    int maxCols = 3; // default
+    int? stw = match.setsToWin;
+    if (stw == null && match.sportRules != null) {
+      final rules = match.sportRules!;
+      final stwVal = rules['setsToWin'] ?? rules['sets_to_win'];
+      if (stwVal != null) {
+        stw = int.tryParse(stwVal.toString());
+      }
+    }
+    if (stw != null) {
+      if (stw == 1) maxCols = 1;
+      else if (stw == 2) maxCols = 3;
+      else if (stw == 3) maxCols = 5;
+    }
+
+    Widget buildSetHeaders() {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          const Expanded(child: SizedBox.shrink()),
+          ...List.generate(maxCols, (index) {
+            return Container(
+              width: 28,
+              alignment: Alignment.center,
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              child: Text(
+                'S${index + 1}',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textMuted,
+                ),
+              ),
+            );
+          }),
+          const SizedBox(width: 8),
+          Container(
+            width: 32,
+            alignment: Alignment.center,
+            child: Text(
+              'TỔNG',
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: colors.textMuted,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    Widget buildTeamRow({
+      required String name,
+      required int score,
+      required List<SetScore> sets,
+      required bool isTeam1,
+      required bool isWinner,
+      required bool isLoser,
+    }) {
+      final nameColor = isLoser ? colors.textMuted : colors.textPrimary;
+      final fontWeight = isWinner ? FontWeight.w800 : FontWeight.w600;
+      final displayNames = name.split(RegExp(r'[-–\n]'));
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            // Overlapping circular avatars
+            SizedBox(
+              width: 38,
+              height: 24,
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: 0,
+                    child: CircleAvatar(
+                      radius: 11,
+                      backgroundColor: Colors.green.withValues(alpha: 0.15),
+                      child: Text(
+                        displayNames[0].trim().isNotEmpty ? displayNames[0].trim()[0].toUpperCase() : 'T',
+                        style: const TextStyle(fontSize: 9, color: Colors.green, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  if (displayNames.length > 1 && displayNames[1].trim().isNotEmpty)
+                    Positioned(
+                      left: 12,
+                      child: CircleAvatar(
+                        radius: 11,
+                        backgroundColor: Colors.blue.withValues(alpha: 0.15),
+                        child: Text(
+                          displayNames[1].trim()[0].toUpperCase(),
+                          style: const TextStyle(fontSize: 9, color: Colors.blue, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Team Name
+            Expanded(
+              child: Text(
+                name,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: fontWeight,
+                  color: nameColor,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Sets display
+            ...List.generate(maxCols, (index) {
+              String setScoreStr = '-';
+              if (index < sets.length) {
+                final setScore = isTeam1 ? sets[index].score1 : sets[index].score2;
+                setScoreStr = '$setScore';
+              }
+              final hasScore = setScoreStr != '-';
+              return Container(
+                width: 28,
+                height: 24,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  color: hasScore ? colors.bgDark.withValues(alpha: 0.3) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: hasScore ? colors.border.withValues(alpha: 0.5) : colors.border.withValues(alpha: 0.15),
+                    width: 0.5,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    setScoreStr,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: hasScore ? colors.textSecondary : colors.textMuted.withValues(alpha: 0.5),
+                      fontWeight: hasScore ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              );
+            }),
+            const SizedBox(width: 8),
+            // Main score
+            Container(
+              width: 32,
+              height: 28,
+              decoration: BoxDecoration(
+                color: isWinner
+                    ? colors.success.withValues(alpha: 0.15)
+                    : (match.isLive ? colors.error.withValues(alpha: 0.1) : colors.bgSurface),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: isWinner
+                      ? colors.success.withValues(alpha: 0.3)
+                      : (match.isLive ? colors.error.withValues(alpha: 0.3) : colors.border),
+                  width: 0.5,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  '$score',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: isWinner
+                        ? colors.success
+                        : (match.isLive ? colors.error : colors.textPrimary),
+                  ),
                 ),
               ),
             ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: match.isLive ? colors.error.withValues(alpha: 0.6) : colors.border,
+          width: match.isLive ? 1.5 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+          if (match.isLive)
+            BoxShadow(
+              color: colors.error.withValues(alpha: 0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () {
+            context.push('/live/${match.id}');
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header (Status and Round info)
+                Row(
                   children: [
-                    Text(
-                      roundName,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: colors.textPrimary,
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        shape: BoxShape.circle,
+                        boxShadow: match.isLive
+                            ? [
+                                BoxShadow(
+                                  color: statusColor.withValues(alpha: 0.5),
+                                  blurRadius: 6,
+                                  spreadRadius: 1,
+                                )
+                              ]
+                            : null,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(width: 6),
                     Text(
-                      timeStr,
+                      statusLabel.toUpperCase(),
                       style: TextStyle(
                         fontSize: 10,
-                        color: colors.textMuted,
+                        fontWeight: FontWeight.w900,
+                        color: statusColor,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: colors.textPrimary.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: colors.textPrimary.withValues(alpha: 0.1),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: Text(
+                        roundName.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          color: colors.textSecondary,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              Expanded(
-                flex: 5,
-                child: Column(
+                const SizedBox(height: 8),
+                
+                // Set columns header
+                buildSetHeaders(),
+                const SizedBox(height: 4),
+
+                // Teams list
+                Column(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            match.team1Name,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: match.isCompleted && match.winnerId == match.team1Id
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              color: match.isCompleted && match.winnerId == match.team1Id
-                                  ? colors.textPrimary
-                                  : colors.textSecondary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        if (match.sets.isNotEmpty) ...[
-                          _buildSetsDisplay(match.sets, true),
-                          const SizedBox(width: 8),
-                        ],
-                        Text(
-                          '${match.score1}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: match.isLive ? colors.error : colors.textPrimary,
-                          ),
-                        ),
-                      ],
+                    buildTeamRow(
+                      name: match.team1Name,
+                      score: match.score1,
+                      sets: match.sets,
+                      isTeam1: true,
+                      isWinner: isT1Winner,
+                      isLoser: isT1Loser,
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            match.team2Name,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: match.isCompleted && match.winnerId == match.team2Id
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              color: match.isCompleted && match.winnerId == match.team2Id
-                                  ? colors.textPrimary
-                                  : colors.textSecondary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        if (match.sets.isNotEmpty) ...[
-                          _buildSetsDisplay(match.sets, false),
-                          const SizedBox(width: 8),
-                        ],
-                        Text(
-                          '${match.score2}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: match.isLive ? colors.error : colors.textPrimary,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 6),
+                    buildTeamRow(
+                      name: match.team2Name,
+                      score: match.score2,
+                      sets: match.sets,
+                      isTeam1: false,
+                      isWinner: isT2Winner,
+                      isLoser: isT2Loser,
                     ),
                   ],
                 ),
-              ),
-               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: statusColor.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (match.isLive) ...[
-                          Container(
-                            width: 5,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              color: statusColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                        ],
-                        Text(
-                          statusLabel,
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            color: statusColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (widget.isReferee && (match.isLive || match.isScheduled)) ...[
-                    const SizedBox(height: 4),
+                const SizedBox(height: 8),
+                Divider(height: 1, color: colors.border.withValues(alpha: 0.8)),
+                const SizedBox(height: 8),
+
+                // Footer (Court, Sport & Time metadata)
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today_rounded, size: 12, color: colors.textMuted),
+                    const SizedBox(width: 4),
                     Text(
-                      'Tính điểm →',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        color: match.isLive ? colors.error : AppTheme.primary,
+                      timeStr,
+                      style: TextStyle(fontSize: 11, color: colors.textMuted),
+                    ),
+                    const SizedBox(width: 14),
+                    Icon(Icons.location_on_rounded, size: 12, color: colors.textMuted),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        match.court.isNotEmpty ? match.court : 'Chưa xếp sân',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colors.textMuted,
+                          fontStyle: match.court.isNotEmpty ? null : FontStyle.italic,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    if (widget.isReferee && (match.isLive || match.isScheduled)) ...[
+                      const SizedBox(width: 8),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Tính điểm',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: match.isLive ? colors.error : AppTheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 10,
+                            color: match.isLive ? colors.error : AppTheme.primary,
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

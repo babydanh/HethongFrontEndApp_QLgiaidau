@@ -6,8 +6,12 @@ import 'package:app_quanly_giaidau/features/home/screens/home_screen.dart';
 import 'package:app_quanly_giaidau/features/home/screens/qr_scanner_screen.dart';
 import 'package:app_quanly_giaidau/features/auth/screens/splash_screen.dart';
 import 'package:app_quanly_giaidau/features/auth/screens/login_register_screen.dart';
+import 'package:app_quanly_giaidau/features/auth/screens/forgot_password_screen.dart';
+import 'package:app_quanly_giaidau/features/auth/screens/reset_password_screen.dart';
+import 'package:app_quanly_giaidau/features/auth/screens/login_loading_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/create_tournament_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_detail_screen.dart';
+import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/add_team_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
@@ -17,14 +21,33 @@ import 'package:app_quanly_giaidau/features/tournament/screens/token_management_
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/features/notification/screens/notification_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_detail_screen.dart';
+import 'package:app_quanly_giaidau/features/community/screens/club_challenges_screen.dart';
+import 'package:app_quanly_giaidau/features/community/screens/club_tournaments_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/create_club_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/create_club_tournament_screen.dart';
-import 'package:app_quanly_giaidau/data/models/team_model.dart';
+import 'package:app_quanly_giaidau/features/community/screens/club_management_screen.dart';
+import 'package:app_quanly_giaidau/features/community/screens/club_invites_screen.dart';
+import 'package:app_quanly_giaidau/features/community/screens/edit_club_screen.dart';
+import 'package:app_quanly_giaidau/features/payment/screens/payments_screen.dart';
+import 'package:app_quanly_giaidau/features/payment/screens/checkout_screen.dart';
+import 'package:app_quanly_giaidau/features/payment/screens/mock_gateway_screen.dart';
+import 'package:app_quanly_giaidau/features/payment/screens/payos_verify_screen.dart';
+import 'package:app_quanly_giaidau/features/payment/screens/payment_result_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/profile_screen.dart';
+import 'package:app_quanly_giaidau/features/profile/screens/user_profile_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/edit_profile_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/change_password_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/settings_screen.dart';
+import 'package:app_quanly_giaidau/features/admin/screens/admin_clubs_screen.dart';
+import 'package:app_quanly_giaidau/features/referee/screens/referee_invites_screen.dart';
+import 'package:app_quanly_giaidau/features/live/screens/live_match_screen.dart';
 
+import 'package:app_quanly_giaidau/features/register/screens/tournament_register_screen.dart';
+import 'package:app_quanly_giaidau/features/register/screens/join_invite_screen.dart';
+import 'package:app_quanly_giaidau/features/register/screens/join_team_screen.dart';
+import 'package:app_quanly_giaidau/features/dashboard/screens/dashboard_screen.dart';
+import 'package:app_quanly_giaidau/features/dashboard/screens/organizer_lite_screen.dart';
+import 'package:app_quanly_giaidau/features/series/screens/series_screen.dart';
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
@@ -34,21 +57,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       final currentPath = state.matchedLocation;
 
       // Splash screen & Login screen — luôn cho phép
-      if (currentPath == '/' || currentPath == '/login') return null;
+      if (currentPath == '/' || currentPath == '/login' || currentPath == '/login-loading') return null;
 
       // Chưa auth nhưng cố truy cập referee hoặc admin
       if (!isAuth && (currentPath.startsWith('/referee') || currentPath.startsWith('/admin'))) {
         return '/login';
       }
 
-      // Chưa auth thì mặc định về /home (cho phép truy cập /scan-qr, /profile, /intro, /club, /tournament)
+      // Chưa auth thì mặc định về /home (cho phép truy cập /scan-qr, /profile, /intro, /club, /tournament, /live-matches)
       if (!isAuth &&
           currentPath != '/home' &&
+          currentPath != '/login-loading' &&
           currentPath != '/scan-qr' &&
           !currentPath.startsWith('/profile') &&
           !currentPath.startsWith('/intro') &&
           !currentPath.startsWith('/club') &&
-          !currentPath.startsWith('/tournament')) {
+          !currentPath.startsWith('/tournament') &&
+          !currentPath.startsWith('/live-matches') &&
+          !currentPath.startsWith('/live')) {
         return '/home';
       }
 
@@ -80,6 +106,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginRegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) {
+          final token = state.uri.queryParameters['token'] ?? '';
+          return ResetPasswordScreen(token: token);
+        },
+      ),
+
+      // ─── Login Loading Transition ───
+      GoRoute(
+        path: '/login-loading',
+        builder: (context, state) => const LoginLoadingScreen(),
       ),
 
       // ─── Home ───
@@ -175,6 +218,11 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          // Admin: Quản lý CLB
+          GoRoute(
+            path: 'clubs',
+            builder: (context, state) => const AdminClubsScreen(),
+          ),
         ],
       ),
 
@@ -184,6 +232,28 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return TournamentIntroScreen(tournamentId: id);
+        },
+      ),
+
+      // ─── Live Matches Screen ───
+      GoRoute(
+        path: '/live-matches/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return LiveMatchScreen(tournamentId: id);
+        },
+      ),
+
+      // ─── Public Live Match Viewer Route ───
+      GoRoute(
+        path: '/live/:matchId',
+        builder: (context, state) {
+          final matchId = state.pathParameters['matchId']!;
+          return LiveScoreScreen(
+            tournamentId: '',
+            matchId: matchId,
+            isViewer: true,
+          );
         },
       ),
 
@@ -207,6 +277,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 matchId: matchId,
               );
             },
+          ),
+          GoRoute(
+            path: 'invites',
+            builder: (context, state) => const RefereeInvitesScreen(),
           ),
         ],
       ),
@@ -247,6 +321,35 @@ final routerProvider = Provider<GoRouter>((ref) {
               return CreateClubTournamentScreen(clubId: id);
             },
           ),
+          GoRoute(
+            path: 'edit',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return EditClubScreen(clubId: id);
+            },
+          ),
+          GoRoute(
+            path: 'manage',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              final isOwner = state.extra as bool? ?? false;
+              return ClubManagementScreen(clubId: id, isOwner: isOwner);
+            },
+          ),
+          GoRoute(
+            path: 'challenges',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return ClubChallengesScreen(clubId: id);
+            },
+          ),
+          GoRoute(
+            path: 'tournaments',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return ClubTournamentsScreen(clubId: id);
+            },
+          ),
         ],
       ),
 
@@ -280,7 +383,107 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'settings',
             builder: (context, state) => const SettingsScreen(),
           ),
+          GoRoute(
+            path: 'user/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return UserProfileScreen(userId: id);
+            },
+          ),
         ],
+      ),
+
+      // ─── Join by Invite ───
+      GoRoute(
+        path: '/join/:inviteCode',
+        builder: (context, state) {
+          final code = state.pathParameters['inviteCode']!;
+          return JoinInviteScreen(inviteCode: code);
+        },
+      ),
+      GoRoute(
+        path: '/join-team',
+        builder: (context, state) {
+          final extra = state.extra as Map?;
+          return JoinTeamScreen(
+            tournamentId: extra?['tournamentId'] ?? '',
+            participantId: extra?['participantId'] ?? '',
+            token: extra?['token'] ?? '',
+          );
+        },
+      ),
+
+      // ─── Tournament Register ───
+      GoRoute(
+        path: '/register/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          final inviteCode = state.uri.queryParameters['invite'];
+          return TournamentRegisterScreen(tournamentId: id, inviteCode: inviteCode);
+        },
+      ),
+
+      // ─── Series ───
+      GoRoute(
+        path: '/series',
+        builder: (context, state) => const SeriesScreen(),
+      ),
+
+      // ─── Dashboard ───
+      GoRoute(
+        path: '/dashboard',
+        builder: (context, state) => const DashboardScreen(),
+      ),
+      GoRoute(
+        path: '/organizer-lite/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return OrganizerLiteScreen(tournamentId: id);
+        },
+      ),
+
+      // ─── Club Invites ───
+      GoRoute(
+        path: '/club-invites',
+        builder: (context, state) => const ClubInvitesScreen(),
+      ),
+
+      // ─── Payment Routes ───
+      GoRoute(
+        path: '/payments',
+        builder: (context, state) => const PaymentsScreen(),
+      ),
+      GoRoute(
+        path: '/payment/checkout',
+        builder: (context, state) {
+          final extra = state.extra as Map?;
+          return CheckoutScreen(
+            tournamentId: extra?['tournamentId'] ?? '',
+            participantId: extra?['participantId'] ?? '',
+            amount: (extra?['amount'] ?? 0).toDouble(),
+            tournamentName: extra?['tournamentName']?.toString(),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/payment/mock-gateway',
+        builder: (context, state) => const MockGatewayScreen(),
+      ),
+      GoRoute(
+        path: '/payment/payos-verify',
+        builder: (context, state) {
+          final extra = state.extra as Map?;
+          return PayOSVerifyScreen(
+            paymentId: extra?['paymentId'] ?? '',
+            amount: (extra?['amount'] ?? 0).toDouble(),
+            tournamentId: extra?['tournamentId'] ?? '',
+            tournamentName: extra?['tournamentName']?.toString(),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/payment/result',
+        builder: (context, state) => const PaymentResultScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

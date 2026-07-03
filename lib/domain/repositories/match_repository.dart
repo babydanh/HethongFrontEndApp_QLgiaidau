@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/match_event.dart';
 import 'package:app_quanly_giaidau/domain/entities/penalty.dart';
+import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 
 abstract class IMatchRepository {
   Future<MatchModel> create(String tournamentId, MatchModel match);
@@ -8,7 +9,7 @@ abstract class IMatchRepository {
   Stream<List<MatchModel>> watchByTournament(String tournamentId);
   Stream<List<MatchModel>> watchLive(String tournamentId);
   Stream<MatchModel?> watchMatch(String tournamentId, String matchId);
-  
+
   Future<void> updateScore(
     String tournamentId,
     String matchId, {
@@ -37,7 +38,7 @@ abstract class IMatchRepository {
     int? timeLimitMinutes,
     String? refereeName,
   });
-  
+
   Future<void> completeMatch(
     String tournamentId,
     String matchId, {
@@ -52,6 +53,18 @@ abstract class IMatchRepository {
     String matchId,
     List<SetScore> sets,
   );
+
+  /// Cập nhật scoreDetails theo đúng backend DTO.
+  /// Gửi p1SetsWon, p2SetsWon, scoreDetails.sets, winnerId, overrideReason.
+  Future<void> updateScoreDetails(
+    String tournamentId,
+    String matchId, {
+    required int p1SetsWon,
+    required int p2SetsWon,
+    required List<SetScoreData> scoreDetails,
+    String? winnerId,
+    String? overrideReason,
+  });
 
   Future<void> advanceWinner(
     String tournamentId,

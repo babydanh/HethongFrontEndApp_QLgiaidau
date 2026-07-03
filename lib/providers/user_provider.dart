@@ -15,6 +15,13 @@ final userProfileProvider = FutureProvider<UserProfile>((ref) async {
   return await repo.getProfile();
 });
 
+/// Provider lấy hồ sơ công khai của người dùng khác.
+/// GET /users/:id/public — dùng cho trang xem profile người khác.
+final userPublicProfileProvider = FutureProvider.family<UserPublicProfile, String>((ref, userId) async {
+  final repo = ref.read(userRepositoryProvider);
+  return repo.getPublicProfile(userId);
+});
+
 /// Gọi GET /api/v1/rankings/user/:userId
 /// BE trả về { data: { publicRanks: [...], communityRanks: [...] } }
 /// TransformInterceptor wrap: { data: { publicRanks: [...], ... }, message, statusCode }

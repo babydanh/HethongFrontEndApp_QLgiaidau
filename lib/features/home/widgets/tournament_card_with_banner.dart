@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
+import 'package:app_quanly_giaidau/core/widgets/countdown_timer.dart';
 
 class TournamentCardWithBanner extends StatelessWidget {
   final Tournament tournament;
@@ -110,7 +111,7 @@ class TournamentCardWithBanner extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: colors.bgCard,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: colors.border, width: 1.5),
           boxShadow: [
             BoxShadow(
@@ -125,8 +126,8 @@ class TournamentCardWithBanner extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(15),
-                topRight: Radius.circular(15),
+                topLeft: Radius.circular(7),
+                topRight: Radius.circular(7),
               ),
               child: Stack(
                 children: [
@@ -173,21 +174,21 @@ class TournamentCardWithBanner extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     tournament.name,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.bold,
                       color: colors.textPrimary,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
@@ -233,7 +234,7 @@ class TournamentCardWithBanner extends StatelessWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Row(
                     children: [
                       Icon(Icons.group, size: 16, color: colors.textMuted),
@@ -258,6 +259,10 @@ class TournamentCardWithBanner extends StatelessWidget {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
+                      ],
+                      if (tournament.status == 'upcoming' && tournament.registrationStartDate != null) ...[
+                        const SizedBox(width: 8),
+                        CountdownTimer(targetDate: tournament.registrationStartDate!, compact: true),
                       ],
                     ],
                   ),

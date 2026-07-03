@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
 class VnsportHeader extends StatelessWidget {
   final bool isLoggedIn;
@@ -30,7 +31,7 @@ class VnsportHeader extends StatelessWidget {
           tag: "vnsport_header_bg",
           child: CustomPaint(
             size: const Size(double.infinity, 240),
-            painter: VnsportHeaderPainter(isLoggedIn: isLoggedIn),
+            painter: VnsportHeaderPainter(isLoggedIn: isLoggedIn, colors: context.colors),
           ),
         ),
         SafeArea(
@@ -215,26 +216,33 @@ class VnsportHeader extends StatelessWidget {
 
 class VnsportHeaderPainter extends CustomPainter {
   final bool isLoggedIn;
+  final AppColorsExtension colors;
 
-  VnsportHeaderPainter({required this.isLoggedIn});
+  VnsportHeaderPainter({required this.isLoggedIn, required this.colors});
+
+  bool get _isDark => colors.bgDark == const Color(0xFF000000);
 
   @override
   void paint(Canvas canvas, Size size) {
     final Rect rect = Offset.zero & size;
+    final gradientColors = _isDark
+        ? const [Color(0xFF000000), Color(0xFF131313)]
+        : const [Color(0xFF2563EB), Color(0xFF1D4ED8)];
+
     final Paint bgPaint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+        colors: gradientColors,
       ).createShader(rect);
     canvas.drawRect(rect, bgPaint);
 
     final Paint circlePaint1 = Paint()
-      ..color = Colors.white.withValues(alpha: 0.05);
+      ..color = Colors.white.withValues(alpha: _isDark ? 0.02 : 0.05);
     canvas.drawCircle(Offset(size.width * 0.85, 30.0), 72.0, circlePaint1);
 
     final Paint circlePaint2 = Paint()
-      ..color = Colors.white.withValues(alpha: 0.04);
+      ..color = Colors.white.withValues(alpha: _isDark ? 0.015 : 0.04);
     canvas.drawCircle(Offset(size.width * 0.08, 175.0), 52.0, circlePaint2);
 
     _drawRacket(canvas, size);
@@ -248,13 +256,13 @@ class VnsportHeaderPainter extends CustomPainter {
     canvas.rotate(-28 * 3.1415926535 / 180);
 
     final Paint paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.22)
+      ..color = Colors.white.withValues(alpha: _isDark ? 0.12 : 0.22)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0;
     canvas.drawOval(const Rect.fromLTWH(0, 0, 56, 76), paint);
 
     final Paint thinPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.14)
+      ..color = Colors.white.withValues(alpha: _isDark ? 0.07 : 0.14)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
     canvas.drawOval(const Rect.fromLTWH(4, 4, 48, 68), thinPaint);
@@ -267,20 +275,20 @@ class VnsportHeaderPainter extends CustomPainter {
     }
 
     final Paint shaftPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.22)
+      ..color = Colors.white.withValues(alpha: _isDark ? 0.12 : 0.22)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.2
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(const Offset(28, 76), const Offset(28, 130), shaftPaint);
 
     final Paint handlePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.22)
+      ..color = Colors.white.withValues(alpha: _isDark ? 0.12 : 0.22)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0;
     canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(24, 130, 8, 30), const Radius.circular(2)), handlePaint);
 
     final Paint capPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.22)
+      ..color = Colors.white.withValues(alpha: _isDark ? 0.12 : 0.22)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5;
     canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(23, 160, 10, 4), const Radius.circular(1)), capPaint);
@@ -293,12 +301,12 @@ class VnsportHeaderPainter extends CustomPainter {
     canvas.rotate(12 * 3.1415926535 / 180);
 
     final Paint thinPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.14)
+      ..color = Colors.white.withValues(alpha: _isDark ? 0.07 : 0.14)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
 
     final Paint paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.22)
+      ..color = Colors.white.withValues(alpha: _isDark ? 0.12 : 0.22)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5;
 
@@ -317,8 +325,18 @@ class VnsportHeaderPainter extends CustomPainter {
     final double w = size.width;
     final double h = size.height;
 
+    final Color w1Color = _isDark
+        ? const Color(0xFF161616).withValues(alpha: 0.5)
+        : const Color(0xFF1D4ED8).withValues(alpha: 0.5);
+
+    final Color w2Color = _isDark
+        ? const Color(0xFF222222).withValues(alpha: 0.3)
+        : const Color(0xFF1E40AF).withValues(alpha: 0.3);
+
+    final Color w3Color = colors.bgDark;
+
     final Paint wave1Paint = Paint()
-      ..color = const Color(0xFF1D4ED8).withValues(alpha: 0.5)
+      ..color = w1Color
       ..style = PaintingStyle.fill;
     final Path path1 = Path();
     path1.moveTo(0.0, h - 54);
@@ -331,7 +349,7 @@ class VnsportHeaderPainter extends CustomPainter {
     canvas.drawPath(path1, wave1Paint);
 
     final Paint wave2Paint = Paint()
-      ..color = const Color(0xFF1E40AF).withValues(alpha: 0.3)
+      ..color = w2Color
       ..style = PaintingStyle.fill;
     final Path path2 = Path();
     path2.moveTo(0.0, h - 40);
@@ -344,7 +362,7 @@ class VnsportHeaderPainter extends CustomPainter {
     canvas.drawPath(path2, wave2Paint);
 
     final Paint wave3Paint = Paint()
-      ..color = Colors.white
+      ..color = w3Color
       ..style = PaintingStyle.fill;
     final Path path3 = Path();
     path3.moveTo(0.0, h - 26);
