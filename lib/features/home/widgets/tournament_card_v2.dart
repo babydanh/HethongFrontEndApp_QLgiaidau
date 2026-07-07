@@ -23,9 +23,10 @@ class TournamentCardV2 extends ConsumerWidget {
     final bracketName = AppConstants.bracketTypeNames[tournament.bracketType] ?? "";
     final formatName = AppConstants.formatNames[tournament.format] ?? "";
     
-    final statusColor = StatusHelper.getStatusColor(tournament.status, context);
-    final statusName = AppConstants.statusNames[tournament.status] ?? tournament.status;
-    final isLive = tournament.status == AppConstants.statusInProgress;
+    final statusColor =
+        StatusHelper.getTournamentStatusColor(tournament.status, context);
+    final statusName = StatusHelper.getTournamentStatusLabel(tournament.status);
+    final isLive = StatusHelper.isTournamentInProgress(tournament.status);
 
     return GestureDetector(
       onTap: onTap ?? () {},

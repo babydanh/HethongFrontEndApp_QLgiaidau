@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,8 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:app_quanly_giaidau/features/auth/widgets/gsi_button_web.dart' as gsi;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class LoginRegisterScreen extends ConsumerStatefulWidget {
   const LoginRegisterScreen({super.key});
@@ -28,60 +26,10 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
   bool _obscurePassword = true;
   String? _errorMessage;
 
-  static bool _gsiInitialized = false;
-
-  Future<void> _initGoogleSignIn() async {
-    if (_gsiInitialized) return;
-    try {
-      await GoogleSignIn.instance.initialize(
-        clientId: "581793214855-tgne1210qdpstpksou74q1c8uvdo3kso.apps.googleusercontent.com",
-      );
-      _gsiInitialized = true;
-    } catch (e) {
-      debugPrint("Google Sign-In Init Error: $e");
-    }
-  }
 
   @override
   void initState() {
     super.initState();
-    GoogleSignIn.instance.authenticationEvents.listen((event) async {
-      if (event is GoogleSignInAuthenticationEventSignIn) {
-        final account = event.user;
-        setState(() {
-          _isLoading = true;
-          _errorMessage = null;
-        });
-        try {
-          final googleAuth = account.authentication;
-          final idToken = googleAuth.idToken;
-          if (idToken == null) {
-            throw Exception("Không nhận được ID Token từ Google");
-          }
-          final success = await ref.read(authProvider.notifier).loginWithGoogle(idToken);
-          if (!mounted) return;
-          if (success) {
-            context.go("/login-loading");
-          } else {
-            final auth = ref.read(authProvider);
-            setState(() {
-              _isLoading = false;
-              _errorMessage = auth.errorMessage ?? "Đăng nhập Google thất bại";
-            });
-          }
-        } catch (e) {
-          if (!mounted) return;
-          setState(() {
-            _isLoading = false;
-            _errorMessage = "Lỗi Google Sign-In: ${e.toString()}";
-          });
-        }
-      }
-    });
-
-    if (kIsWeb) {
-      _initGoogleSignIn();
-    }
   }
 
   @override
@@ -139,13 +87,18 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       _errorMessage = null;
     });
     try {
-      final googleSignIn = GoogleSignIn.instance;
-      await _initGoogleSignIn();
-      GoogleSignInAccount? googleUser;
-      final lightweightAuth = googleSignIn.attemptLightweightAuthentication();
-      googleUser = await lightweightAuth;
-      googleUser ??= await googleSignIn.authenticate();
-      final googleAuth = googleUser.authentication;
+      final googleSignIn = GoogleSignIn(
+        serverClientId: dotenv.env['GOOGLE_WEB_CLIENT_ID'],
+        scopes: ['email'],
+      );
+      // Xoá cache tài khoản cũ để luôn hiện account picker
+      await googleSignIn.signOut();
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+      final googleAuth = await googleUser.authentication;
       final idToken = googleAuth.idToken;
       if (idToken == null) {
         throw Exception("Không nhận được ID Token từ Google");
@@ -463,13 +416,6 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                         const SizedBox(height: 24),
 
                         // Google Button
-                        if (kIsWeb)
-                          SizedBox(
-                            height: 52,
-                            width: double.infinity,
-                            child: gsi.buildGoogleSignInButton(),
-                          )
-                        else
                           OutlinedButton.icon(
                             onPressed: _isLoading ? null : _submitGoogle,
                             style: OutlinedButton.styleFrom(

@@ -23,7 +23,20 @@ class DashboardScreen extends ConsumerWidget {
     if (!isAuth) {
       return Scaffold(
         backgroundColor: context.colors.bgDark,
-        appBar: AppBar(title: const Text('Của tôi'), centerTitle: true),
+        appBar: AppBar(
+          title: const Text('Của tôi'),
+          centerTitle: true,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/profile');
+              }
+            },
+          ),
+        ),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
@@ -63,7 +76,20 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: context.colors.bgDark,
-      appBar: AppBar(title: const Text('Của tôi'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Của tôi'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/profile');
+            }
+          },
+        ),
+      ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
         child: SingleChildScrollView(
@@ -503,7 +529,7 @@ class _OrganizerLiteSection extends StatelessWidget {
     }
 
     return _SectionCard(
-      title: 'Organizer Lite',
+      title: 'Quản lý nhanh',
       child: Column(
         children: managedTournaments.take(3).map((tournament) {
           final isOwner = workspace.organizedTournaments.any((item) => item.id == tournament.id);

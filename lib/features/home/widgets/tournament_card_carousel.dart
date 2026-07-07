@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 
 class TournamentCardCarousel extends StatelessWidget {
@@ -18,6 +18,7 @@ class TournamentCardCarousel extends StatelessWidget {
     final List<String> chips = [];
     if (t.divisions.isNotEmpty) {
       for (var divName in t.divisions) {
+        if (divName.trim() == t.name.trim()) continue;
         final divLower = divName.toLowerCase();
         if (divLower.contains("đơn nam")) {
           chips.add("Đơn Nam");
@@ -57,9 +58,22 @@ class TournamentCardCarousel extends StatelessWidget {
       if (nameLower.contains("đồng đội") || descLower.contains("đồng đội")) {
         chips.add("Đồng đội");
       }
+      if (nameLower.contains("đôi") || descLower.contains("đôi")) {
+        if (!chips.any((c) => c.contains("Đôi"))) {
+          chips.add("Thi đấu đôi");
+        }
+      }
+      if (nameLower.contains("đơn") || descLower.contains("đơn")) {
+        if (!chips.any((c) => c.contains("Đơn"))) {
+          chips.add("Thi đấu đơn");
+        }
+      }
     }
     if (chips.isEmpty) {
-      if (t.category != null && t.category!.isNotEmpty && t.category!.toLowerCase() != t.sport.toLowerCase()) {
+      final sportNameLower = (AppConstants.sportNames[t.sport] ?? '').toLowerCase();
+      if (t.category != null && t.category!.isNotEmpty && 
+          t.category!.toLowerCase() != t.sport.toLowerCase() &&
+          t.category!.toLowerCase() != sportNameLower) {
         final catLower = t.category!.toLowerCase();
         if (catLower == "singles" || catLower == "đơn") {
           chips.add("Thi đấu đơn");
@@ -69,9 +83,9 @@ class TournamentCardCarousel extends StatelessWidget {
           chips.add(t.category!);
         }
       } else {
-        if (t.maxPlayersPerTeam == 2) {
+        if (t.format == AppConstants.formatDoubles || t.maxPlayersPerTeam == 2) {
           chips.add("Thi đấu đôi");
-        } else if (t.maxPlayersPerTeam == 1) {
+        } else {
           chips.add("Thi đấu đơn");
         }
       }
@@ -83,22 +97,29 @@ class TournamentCardCarousel extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final sportLabel = (AppConstants.sportNames[tournament.sport] ?? tournament.sport).toUpperCase();
+    final normalizedStatus = StatusHelper.normalizeTournamentStatus(tournament.status);
     String statusText = "ĐANG ĐĂNG KÝ";
     Color statusBg = const Color(0xFF2563EB);
-    if (tournament.status == "in_progress") {
+    if (StatusHelper.isTournamentInProgress(normalizedStatus)) {
       statusText = "ĐANG DIỄN RA";
       statusBg = const Color(0xFFEF4444);
-    } else if (tournament.status == "completed") {
+    } else if (StatusHelper.isTournamentCompleted(normalizedStatus)) {
       statusText = "ĐÃ KẾT THÚC";
       statusBg = Colors.grey.shade600;
-    } else if (tournament.status == "registration_closed") {
-      statusText = "ĐÓNG ĐĂNG KÝ";
-      statusBg = Colors.red.shade900;
+    } else if (StatusHelper.isTournamentRegistration(normalizedStatus)) {
+      statusText = "ĐANG ĐĂNG KÝ";
+      statusBg = const Color(0xFF2563EB);
     }
 
-    final startDateStr = DateFormatterUtils.formatDate(tournament.createdAt);
-    final endDate = tournament.createdAt.add(const Duration(days: 7));
-    final endDateStr = DateFormatterUtils.formatDate(endDate);
+    final start = tournament.startDate ?? tournament.createdAt;
+    final end = tournament.endDate ?? start.add(const Duration(days: 7));
+
+    String formatDayMonth(DateTime dt) {
+      return "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}";
+    }
+
+    final startDateStr = formatDayMonth(start);
+    final endDateStr = formatDayMonth(end);
     final categoryChips = _getCategoryChips(tournament);
 
     return GestureDetector(
@@ -123,7 +144,7 @@ class TournamentCardCarousel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AspectRatio(
-                aspectRatio: 2.8,
+                aspectRatio: 2.0,
                 child: Stack(
                   children: [
                     Container(
@@ -247,19 +268,34 @@ class TournamentCardCarousel extends StatelessWidget {
                             "$startDateStr - $endDateStr",
                             style: TextStyle(
                               color: colors.textSecondary,
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
                           Icon(Icons.group_rounded, color: colors.textMuted, size: 14),
                           const SizedBox(width: 4),
                           Text(
-                            "${tournament.maxTeams} VĐV",
+                            "${tournament.maxTeams} Đội",
                             style: TextStyle(
                               color: colors.textSecondary,
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(Icons.account_tree_rounded, color: colors.textMuted, size: 13),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              AppConstants.bracketTypeNames[tournament.bracketType] ?? tournament.bracketType,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: colors.textSecondary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],

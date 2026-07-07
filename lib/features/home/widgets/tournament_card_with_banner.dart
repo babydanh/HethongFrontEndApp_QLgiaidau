@@ -3,11 +3,11 @@ import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io' show Platform;
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
 import 'package:app_quanly_giaidau/core/widgets/countdown_timer.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 
 class TournamentCardWithBanner extends StatelessWidget {
   final Tournament tournament;
@@ -37,6 +37,7 @@ class TournamentCardWithBanner extends StatelessWidget {
     final List<String> chips = [];
     if (t.divisions.isNotEmpty) {
       for (var divName in t.divisions) {
+        if (divName.trim() == t.name.trim()) continue;
         final divLower = divName.toLowerCase();
         if (divLower.contains("đơn nam")) {
           chips.add("Đơn Nam");
@@ -76,9 +77,22 @@ class TournamentCardWithBanner extends StatelessWidget {
       if (nameLower.contains("đồng đội") || descLower.contains("đồng đội")) {
         chips.add("Đồng đội");
       }
+      if (nameLower.contains("đôi") || descLower.contains("đôi")) {
+        if (!chips.any((c) => c.contains("Đôi"))) {
+          chips.add("Thi đấu đôi");
+        }
+      }
+      if (nameLower.contains("đơn") || descLower.contains("đơn")) {
+        if (!chips.any((c) => c.contains("Đơn"))) {
+          chips.add("Thi đấu đơn");
+        }
+      }
     }
     if (chips.isEmpty) {
-      if (t.category != null && t.category!.isNotEmpty && t.category!.toLowerCase() != t.sport.toLowerCase()) {
+      final sportNameLower = t.sport.toLowerCase() == 'badminton' ? 'cầu lông' : (t.sport.toLowerCase() == 'table_tennis' ? 'bóng bàn' : t.sport.toLowerCase());
+      if (t.category != null && t.category!.isNotEmpty && 
+          t.category!.toLowerCase() != t.sport.toLowerCase() &&
+          t.category!.toLowerCase() != sportNameLower) {
         final catLower = t.category!.toLowerCase();
         if (catLower == "singles" || catLower == "đơn") {
           chips.add("Thi đấu đơn");
@@ -88,9 +102,9 @@ class TournamentCardWithBanner extends StatelessWidget {
           chips.add(t.category!);
         }
       } else {
-        if (t.maxPlayersPerTeam == 2) {
+        if (t.format == "doubles" || t.maxPlayersPerTeam == 2) {
           chips.add("Thi đấu đôi");
-        } else if (t.maxPlayersPerTeam == 1) {
+        } else {
           chips.add("Thi đấu đơn");
         }
       }
@@ -260,7 +274,7 @@ class TournamentCardWithBanner extends StatelessWidget {
                           ),
                         ),
                       ],
-                      if (tournament.status == 'upcoming' && tournament.registrationStartDate != null) ...[
+                      if (StatusHelper.isTournamentUpcoming(tournament.status) && tournament.registrationStartDate != null) ...[
                         const SizedBox(width: 8),
                         CountdownTimer(targetDate: tournament.registrationStartDate!, compact: true),
                       ],

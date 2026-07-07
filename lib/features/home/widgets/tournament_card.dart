@@ -34,12 +34,12 @@ class TournamentCard extends ConsumerWidget {
     final sportIcon = AppConstants.sportIcons[tournament.sport] ?? '🏆';
     final sportName =
         AppConstants.sportNames[tournament.sport] ?? tournament.sport;
-    final statusName =
-        AppConstants.statusNames[tournament.status] ?? tournament.status;
+    final statusName = StatusHelper.getTournamentStatusLabel(tournament.status);
     final bracketName =
         AppConstants.bracketTypeNames[tournament.bracketType] ?? '';
 
-    final statusColor = StatusHelper.getStatusColor(tournament.status, context);
+    final statusColor =
+        StatusHelper.getTournamentStatusColor(tournament.status, context);
     final ledIndicator = StatusIndicator(status: tournament.status);
 
     final isCreator = tournament.creatorId == 'admin-mobile-id';

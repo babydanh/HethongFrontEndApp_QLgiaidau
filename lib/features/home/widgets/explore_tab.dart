@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'dart:math' as math;
@@ -87,23 +88,11 @@ const _sports = [
 ];
 
 // ─── Status badge helpers ───
-Color _statusColor(String status) {
-  switch (status) {
-    case AppConstants.statusInProgress:
-      return const Color(0xFF22C55E);
-    case AppConstants.statusRegistration:
-      return const Color(0xFF3B82F6);
-    case AppConstants.statusDraft:
-      return const Color(0xFF94A3B8);
-    case AppConstants.statusCompleted:
-      return const Color(0xFF6B7280);
-    default:
-      return const Color(0xFF94A3B8);
-  }
-}
+Color _statusColor(BuildContext context, String status) =>
+    StatusHelper.getTournamentStatusColor(status, context);
 
 String _statusLabel(String status) =>
-    AppConstants.statusNames[status] ?? status;
+    StatusHelper.getTournamentStatusLabel(status);
 
 IconData _sportIcon(String sport) {
   switch (sport) {
@@ -650,7 +639,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
   // ─────────────────────────────────────
   Widget _buildTournamentHorizontal(List<Tournament> items) {
     return SizedBox(
-      height: 200,
+      height: 210,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -816,7 +805,7 @@ class _TournamentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = _statusColor(tournament.status);
+    final statusColor = _statusColor(context, tournament.status);
     final sportLabel = AppConstants.sportNames[tournament.sport] ?? tournament.sport;
     final bracketLabel = AppConstants.bracketTypeNames[tournament.bracketType] ?? tournament.bracketType;
 

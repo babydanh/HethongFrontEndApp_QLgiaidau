@@ -50,13 +50,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     final auth = ref.read(authProvider);
     if (auth.isAuthenticated) {
-      final route = switch (auth.role) {
-        UserRole.admin => '/admin/tournament/${auth.tournamentId}',
-        UserRole.referee => '/referee',
-        UserRole.viewer => '/viewer',
-        _ => '/home',
-      };
-      context.go(route);
+      final tournamentId = auth.tournamentId;
+      if (tournamentId != null && tournamentId.isNotEmpty) {
+        final route = switch (auth.role) {
+          UserRole.admin => '/admin/tournament/$tournamentId',
+          UserRole.referee => '/referee',
+          UserRole.viewer => '/viewer',
+          _ => '/home',
+        };
+        context.go(route);
+      } else {
+        // Tài khoản đăng nhập chung (email/google), chưa có giải đấu cụ thể -> Trang Khám Phá
+        context.go('/home');
+      }
     } else {
       context.go('/home');
     }
