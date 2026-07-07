@@ -9,7 +9,6 @@ import 'package:app_quanly_giaidau/features/auth/screens/login_register_screen.d
 import 'package:app_quanly_giaidau/features/auth/screens/forgot_password_screen.dart';
 import 'package:app_quanly_giaidau/features/auth/screens/reset_password_screen.dart';
 import 'package:app_quanly_giaidau/features/auth/screens/login_loading_screen.dart';
-import 'package:app_quanly_giaidau/features/tournament/screens/create_tournament_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_detail_screen.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
@@ -38,6 +37,7 @@ import 'package:app_quanly_giaidau/features/profile/screens/user_profile_screen.
 import 'package:app_quanly_giaidau/features/profile/screens/edit_profile_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/change_password_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/settings_screen.dart';
+import 'package:app_quanly_giaidau/features/rankings/screens/user_ranking_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/admin/screens/admin_clubs_screen.dart';
 import 'package:app_quanly_giaidau/features/referee/screens/referee_invites_screen.dart';
 import 'package:app_quanly_giaidau/features/live/screens/live_match_screen.dart';
@@ -48,6 +48,7 @@ import 'package:app_quanly_giaidau/features/register/screens/join_team_screen.da
 import 'package:app_quanly_giaidau/features/dashboard/screens/dashboard_screen.dart';
 import 'package:app_quanly_giaidau/features/dashboard/screens/organizer_lite_screen.dart';
 import 'package:app_quanly_giaidau/features/series/screens/series_screen.dart';
+
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
@@ -57,10 +58,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       final currentPath = state.matchedLocation;
 
       // Splash screen & Login screen — luôn cho phép
-      if (currentPath == '/' || currentPath == '/login' || currentPath == '/login-loading') return null;
+      if (currentPath == '/' ||
+          currentPath == '/login' ||
+          currentPath == '/login-loading')
+        return null;
 
       // Chưa auth nhưng cố truy cập referee hoặc admin
-      if (!isAuth && (currentPath.startsWith('/referee') || currentPath.startsWith('/admin'))) {
+      if (!isAuth &&
+          (currentPath.startsWith('/referee') ||
+              currentPath.startsWith('/admin'))) {
         return '/login';
       }
 
@@ -82,13 +88,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isAuth && currentPath == '/login') {
         return '/home';
       }
-      
+
       // Kiểm tra quyền truy cập route
       if (isAuth) {
+        final hasTournament =
+            auth.tournamentId != null && auth.tournamentId!.isNotEmpty;
+        if ((currentPath == '/referee' || currentPath == '/viewer') &&
+            !hasTournament) {
+          return '/home';
+        }
+
         if (currentPath.startsWith('/admin') && auth.role != UserRole.admin) {
           return auth.role == UserRole.referee ? '/referee' : '/viewer';
         }
-        if (currentPath.startsWith('/referee') && auth.role == UserRole.viewer) {
+        if (currentPath.startsWith('/referee') &&
+            auth.role == UserRole.viewer) {
           return '/viewer';
         }
       }
@@ -97,10 +111,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       // ─── Splash ───
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const SplashScreen(),
-      ),
+      GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
 
       // ─── Login/Register ───
       GoRoute(
@@ -149,10 +160,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           return null;
         },
         routes: [
-          GoRoute(
-            path: 'create',
-            builder: (context, state) => const CreateTournamentScreen(),
-          ),
           GoRoute(
             path: 'tournament/:id',
             builder: (context, state) {
@@ -262,10 +269,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/referee',
         builder: (context, state) {
           final tournamentId = ref.read(authProvider).tournamentId ?? '';
-          return BracketViewScreen(
-            tournamentId: tournamentId,
-            isReferee: true,
-          );
+          return BracketViewScreen(tournamentId: tournamentId, isReferee: true);
         },
         routes: [
           GoRoute(
@@ -384,6 +388,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const SettingsScreen(),
           ),
           GoRoute(
+            path: 'elo',
+            builder: (context, state) => const UserRankingDetailScreen(),
+          ),
+          GoRoute(
             path: 'user/:id',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
@@ -419,7 +427,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           final inviteCode = state.uri.queryParameters['invite'];
-          return TournamentRegisterScreen(tournamentId: id, inviteCode: inviteCode);
+          return TournamentRegisterScreen(
+            tournamentId: id,
+            inviteCode: inviteCode,
+          );
         },
       ),
 

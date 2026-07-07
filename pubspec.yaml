@@ -49,12 +49,11 @@ dependencies:
   wakelock_plus: ^1.2.10
   shared_preferences: ^2.3.4
   flutter_dotenv: ^6.0.1
-  firebase_database: ^12.4.1
   path_provider: ^2.1.5
   graphview: ^1.5.1
   dio: ^5.4.0
   flutter_secure_storage: ^10.3.1
-  google_sign_in: ^7.2.0
+  google_sign_in: ^6.2.1
   image_picker: ^1.1.2
   socket_io_client: ^3.1.6
   url_launcher: ^6.3.2
@@ -62,7 +61,11 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
   flutter_lints: ^6.0.0
+  mocktail: ^1.0.4
+  build_runner: ^2.4.0
 
 flutter:
   uses-material-design: true

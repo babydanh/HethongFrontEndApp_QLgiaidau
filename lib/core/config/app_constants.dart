@@ -75,17 +75,21 @@ class AppConstants {
 
   // ─── Tournament Status ───
   static const String statusDraft = 'draft';
+  static const String statusUpcoming = 'upcoming';
   static const String statusRegistration = 'registration';
   static const String statusDrawing = 'drawing';
   static const String statusInProgress = 'in_progress';
   static const String statusCompleted = 'completed';
+  static const String statusCancelled = 'cancelled';
 
   static const Map<String, String> statusNames = {
     statusDraft: 'Nháp',
+    statusUpcoming: 'Sắp diễn ra',
     statusRegistration: 'Đang đăng ký',
     statusDrawing: 'Bốc thăm',
     statusInProgress: 'Đang thi đấu',
     statusCompleted: 'Hoàn thành',
+    statusCancelled: 'Đã hủy',
   };
 
   // ─── Match Status ───
