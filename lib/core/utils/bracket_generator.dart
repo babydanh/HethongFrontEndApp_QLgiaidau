@@ -478,7 +478,7 @@ class RoundRobinGenerator implements IBracketGenerator {
           members: const [],
           group: '',
           photoUrl: '',
-          isCheckedIn: true,
+          approvalStatus: 'COMPLETE',
           contactEmail: '',
           createdAt: DateTime.now(),
           seed: 0,

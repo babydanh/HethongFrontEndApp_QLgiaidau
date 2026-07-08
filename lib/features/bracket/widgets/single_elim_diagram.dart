@@ -47,10 +47,11 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
 
   // ── Build structured layout ───────────────────────────────────────────────
   Map<int, List<MatchModel>> _buildRoundMap() {
-    // Only valid matches (filter full-BYE if they have no nextMatchId)
+    // Only valid matches — exclude full BYE-vs-BYE (both slots are BYE/unset)
     final valid = widget.matches.where((m) {
       if (m.status == 'cancelled') return false;
-      // Keep single-BYE matches (they are real matches with walkovers)
+      // Hide matches where both sides are BYE (no real participant at all)
+      if (m.isFullByeMatch) return false;
       return true;
     }).toList();
 
@@ -99,11 +100,20 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
       // For each match in current round, adjust Y to midpoint of children
       for (final m in roundMap[round]!) {
         final children = childrenOf[m.id];
-        if (children != null && children.length == 2) {
-          final y1 = positions[children[0]]?.dy ?? 0;
-          final y2 = positions[children[1]]?.dy ?? 0;
-          final midY = (y1 + y2) / 2;
-          positions[m.id] = Offset(positions[m.id]!.dx, midY);
+        if (children != null && children.isNotEmpty) {
+          double totalY = 0;
+          int count = 0;
+          for (final c in children) {
+            final pos = positions[c];
+            if (pos != null) {
+              totalY += pos.dy + _kCardH / 2;
+              count++;
+            }
+          }
+          if (count > 0) {
+            final centerY = totalY / count - _kCardH / 2;
+            positions[m.id] = Offset(positions[m.id]!.dx, centerY);
+          }
         }
       }
     }

@@ -5,62 +5,16 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
-import 'package:graphview/GraphView.dart';
-import 'package:app_quanly_giaidau/core/services/bracket_graph_service.dart';
+
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/match_node_card.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
 
-// ── Bracket-tree walker (graphview-backed, used only by _buildBracketTree) ──
-class SeparatedBuchheimWalkerAlgorithm implements Algorithm {
-  final BuchheimWalkerAlgorithm _inner;
-  final double separation;
 
-  @override
-  EdgeRenderer? get renderer => _inner.renderer;
-  @override
-  set renderer(EdgeRenderer? value) { _inner.renderer = value; }
-
-  SeparatedBuchheimWalkerAlgorithm(BuchheimWalkerConfiguration config, TreeEdgeRenderer renderer, this.separation)
-      : _inner = BuchheimWalkerAlgorithm(config, renderer);
-
-  @override
-  void init(Graph? graph) => _inner.init(graph);
-  @override
-  void setDimensions(double width, double height) => _inner.setDimensions(width, height);
-
-  @override
-  Size run(Graph? graph, double shiftX, double shiftY) {
-    final size = _inner.run(graph, shiftX, shiftY);
-    if (graph != null && graph.nodes.isNotEmpty) {
-      for (var node in graph.nodes) {
-        final match = node.key?.value as MatchModel?;
-        if (match != null) {
-          if (match.bracketPosition.bracket == 'losers') { node.y += separation; }
-          else if (['final', 'grand_final', 'grand_final_reset'].contains(match.bracketPosition.bracket)) { node.y += separation / 2; }
-        }
-      }
-      double minX = double.infinity, minY = double.infinity;
-      double maxX = -double.infinity, maxY = -double.infinity;
-      for (var node in graph.nodes) {
-        if (node.x < minX) minX = node.x;
-        if (node.y < minY) minY = node.y;
-      }
-      for (var node in graph.nodes) {
-        node.x -= minX; node.y -= minY;
-        if (node.x + node.width > maxX) maxX = node.x + node.width;
-        if (node.y + node.height > maxY) maxY = node.y + node.height;
-      }
-      return Size(maxX, maxY);
-    }
-    return size;
-  }
-}
 
 class BracketViewScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -111,7 +65,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
 
   @override
   Widget build(BuildContext context) {
-    final matchesAsync = ref.watch(matchesProvider(widget.tournamentId));
+    final matchesAsync = ref.watch(bracketMatchesProvider(widget.tournamentId));
     final tournamentAsync = ref.watch(tournamentProvider(widget.tournamentId));
     final tournament = tournamentAsync.value;
     final auth = ref.watch(authProvider);
@@ -155,6 +109,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
       ),
       body: matchesAsync.when(
         data: (matches) {
+          debugPrint('DEBUG_BRACKET: Matches loaded count = ${matches.length}, tournamentId = ${widget.tournamentId}');
+          for (var i = 0; i < matches.length && i < 3; i++) {
+            debugPrint('  match[$i]: id=${matches[i].id}, rnd=${matches[i].round}, ord=${matches[i].matchNumber}, team1=${matches[i].team1Name}, team2=${matches[i].team2Name}');
+          }
           if (matches.isEmpty) {
             return Center(
               child: Column(
@@ -254,8 +212,8 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
 
     final validMatches = matches.where((m) {
       if (m.isLive || m.isCompleted) return true;
-      final hasTeams = m.team1Name != 'TBD' && m.team2Name != 'TBD';
-      return m.scheduledTime != null && hasTeams;
+      // Hiển thị các trận ở Vòng 1 hoặc các trận đã xác định được ít nhất 1 đội đấu
+      return m.round == 1 || m.team1Name != 'TBD' || m.team2Name != 'TBD';
     }).toList();
 
     final filteredMatches = validMatches.where((m) {
@@ -999,7 +957,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
           maxScale: 2.0,
           child: Padding(
             padding: const EdgeInsets.all(40),
-            child: _buildBracketTree(matches, isReadOnly),
+            child: _buildHorizontalRounds(matches, isRoundRobin, isReadOnly),
           ),
         ),
       );
@@ -1074,112 +1032,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     );
   }
 
-  Widget _buildBracketTree(List<MatchModel> matches, bool isReadOnly) {
-    if (matches.isEmpty) return const SizedBox.shrink();
-
-    // 1. Tính toán Vòng đấu tối đa để đặt tên
-    int maxRoundWinners = 0;
-    int maxRoundLosers = 0;
-    int maxRoundMain = 0;
-    
-    for (final m in matches) {
-      if (m.bracketPosition.bracket == 'winners' && m.round > maxRoundWinners) maxRoundWinners = m.round;
-      if (m.bracketPosition.bracket == 'losers' && m.round > maxRoundLosers) maxRoundLosers = m.round;
-      if (m.bracketPosition.bracket != 'winners' && m.bracketPosition.bracket != 'losers' && m.bracketPosition.bracket != 'final' && m.bracketPosition.bracket != 'grand_final' && m.round > maxRoundMain) {
-        maxRoundMain = m.round;
-      }
-    }
-
-    // Sử dụng BracketGraphService để tạo Graph (áp dụng cho cả Single và Double)
-    final graph = BracketGraphService.buildSingleEliminationGraph(matches);
-
-    final builder = BuchheimWalkerConfiguration()
-      ..siblingSeparation = (100)
-      ..levelSeparation = (250)
-      ..subtreeSeparation = (180)
-      ..orientation = (BuchheimWalkerConfiguration.ORIENTATION_RIGHT_LEFT);
-
-    return GraphView(
-      graph: graph,
-      algorithm: SeparatedBuchheimWalkerAlgorithm(builder, TreeEdgeRenderer(builder), 2200),
-      paint: Paint()
-        ..color = AppTheme.primary.withValues(alpha: 0.6) // Làm nét nối mềm mại hơn
-        ..strokeWidth = 3 // Cho nét nối dày hơn một xíu
-        ..style = PaintingStyle.stroke,
-      builder: (Node node) {
-        final match = node.key!.value as MatchModel;
-        
-        if (match.id == 'DUMMY_ROOT') {
-          return const SizedBox.shrink();
-        }
-
-        Widget card = MatchNodeCard(
-          match: match,
-          isReferee: widget.isReferee,
-          isReadOnly: isReadOnly,
-          tournamentId: widget.tournamentId,
-        );
-
-        final bracket = match.bracketPosition.bracket;
-        final round = match.round;
-        String roundName = '';
-        if (bracket == 'final' || bracket == 'grand_final') {
-           roundName = 'Chung Kết Tổng';
-        } else if (bracket == 'winners') {
-           if (round == maxRoundWinners) roundName = 'Chung Kết Nhánh Thắng';
-           else if (round == maxRoundWinners - 1) roundName = 'Bán Kết Nhánh Thắng';
-           else if (round == maxRoundWinners - 2) roundName = 'Tứ Kết Nhánh Thắng';
-           else roundName = 'Vòng $round Nhánh Thắng';
-        } else if (bracket == 'losers') {
-           if (round == maxRoundLosers) roundName = 'Chung Kết Nhánh Thua';
-           else if (round == maxRoundLosers - 1) roundName = 'Bán Kết Nhánh Thua';
-           else if (round == maxRoundLosers - 2) roundName = 'Tứ Kết Nhánh Thua';
-           else roundName = 'Vòng $round Nhánh Thua';
-        } else {
-           if (round == maxRoundMain) roundName = 'Chung Kết';
-           else if (round == maxRoundMain - 1) roundName = 'Bán Kết';
-           else if (round == maxRoundMain - 2) roundName = 'Tứ Kết';
-           else roundName = 'Vòng $round';
-        }
-
-        if (roundName.isNotEmpty) {
-          card = Stack(
-            clipBehavior: Clip.none,
-            children: [
-              card,
-              Positioned(
-                top: -36,
-                left: -10,
-                right: -10,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
-                    ),
-                    child: Text(
-                      roundName,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primary,
-                        letterSpacing: 0.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        }
-
-        return card;
-      },
-    );
-  }
 
   Widget _buildHorizontalRounds(List<MatchModel> matches, bool isRoundRobin, bool isReadOnly) {
     final roundMap = <int, List<MatchModel>>{};

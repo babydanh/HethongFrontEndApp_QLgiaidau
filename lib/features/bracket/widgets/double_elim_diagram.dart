@@ -50,7 +50,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
   // ── Separate matches into bands ───────────────────────────────────────────
   _BandData _buildBands() {
     final valid = widget.matches
-        .where((m) => m.status != 'cancelled')
+        .where((m) => m.status != 'cancelled' && !m.isFullByeMatch)
         .toList();
 
     final winners = <int, List<MatchModel>>{};
@@ -112,10 +112,20 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
       }
       for (final m in roundMap[round]!) {
         final children = childrenOf[m.id];
-        if (children != null && children.length == 2) {
-          final y1 = positions[children[0]]?.dy ?? 0;
-          final y2 = positions[children[1]]?.dy ?? 0;
-          positions[m.id] = Offset(positions[m.id]!.dx, (y1 + y2) / 2);
+        if (children != null && children.isNotEmpty) {
+          double totalY = 0;
+          int count = 0;
+          for (final c in children) {
+            final pos = positions[c];
+            if (pos != null) {
+              totalY += pos.dy + _kCardH / 2;
+              count++;
+            }
+          }
+          if (count > 0) {
+            final centerY = totalY / count - _kCardH / 2;
+            positions[m.id] = Offset(positions[m.id]!.dx, centerY);
+          }
         }
       }
     }
@@ -185,9 +195,10 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
               if (wRounds.isNotEmpty)
                 Positioned(
                   left: 0,
-                  top: wOffsetY - 32,
+                  top: wOffsetY - 40,
                   child: _DeBandLabel(
-                    label: '▲ NHÁNH THẮNG',
+                    title: '▲ NHÁNH THẮNG (Winners)',
+                    subtitle: 'Đội thắng đi tiếp — Đội thua xuống nhánh thua',
                     color: const Color(0xFF0284C7),
                     width: wRounds.length * (_kCardW + _kColGap) - _kColGap,
                   ),
@@ -195,9 +206,10 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
               if (lRounds.isNotEmpty)
                 Positioned(
                   left: 0,
-                  top: lOffsetY - 32,
+                  top: lOffsetY - 40,
                   child: _DeBandLabel(
-                    label: '▼ NHÁNH TUA',
+                    title: '▼ NHÁNH THUA (Losers)',
+                    subtitle: 'Đội thua lần đầu — Thua nữa là bị loại',
                     color: const Color(0xFFDC2626),
                     width: lRounds.length * (_kCardW + _kColGap) - _kColGap,
                   ),
@@ -247,8 +259,8 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                 final round = e.value;
                 final fromEnd = lRounds.length - (ci + 1);
                 String label;
-                if (fromEnd == 0) label = 'CK NHÁNH TUA';
-                else if (fromEnd == 1) label = 'BK NHÁNH TUA';
+                if (fromEnd == 0) label = 'CK NHÁNH THUA';
+                else if (fromEnd == 1) label = 'BK NHÁNH THUA';
                 else label = 'VÒNG $round';
                 return Positioned(
                   left: ci * (_kCardW + _kColGap),
@@ -285,32 +297,52 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
 
 // ── Band label ────────────────────────────────────────────────────────────────
 class _DeBandLabel extends StatelessWidget {
-  final String label;
+  final String title;
+  final String subtitle;
   final Color color;
   final double width;
-  const _DeBandLabel({required this.label, required this.color, required this.width});
+  const _DeBandLabel({
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.width,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: width,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(6),
-          topRight: Radius.circular(6),
+          topLeft: Radius.circular(8),
+          topRight: Radius.circular(8),
         ),
         border: Border(top: BorderSide(color: color.withValues(alpha: 0.35), width: 2)),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.w900,
-          color: color,
-          letterSpacing: 1.2,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: color,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w500,
+              color: color.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
       ),
     );
   }
