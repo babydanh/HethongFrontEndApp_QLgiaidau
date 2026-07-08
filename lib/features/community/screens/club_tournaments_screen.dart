@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:intl/intl.dart';
 
 final _clubTournamentsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, clubId) async {
@@ -59,7 +60,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
     final status = t['status'] ?? '';
     final date = t['startDate'] != null ? DateTime.parse(t['startDate']) : null;
     final dateStr = date != null ? DateFormat('dd/MM/yyyy').format(date) : '';
-    final isLive = status == 'ONGOING' || status == 'IN_PROGRESS';
+    final isLive = StatusHelper.isTournamentInProgress(status);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),

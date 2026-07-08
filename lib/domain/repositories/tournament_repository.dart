@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
+import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
 abstract class ITournamentRepository {
   Future<Tournament> create(Tournament tournament);
@@ -22,4 +23,8 @@ abstract class ITournamentRepository {
   Future<void> unfollowTournament(String id);
   Future<bool> isFollowing(String id);
   Future<List<Tournament>> getFollowedTournaments();
+
+  // Bracket
+  Future<List<MatchModel>> getBracketMatches(String tournamentId);
+  Stream<List<MatchModel>> watchBracketMatches(String tournamentId);
 }

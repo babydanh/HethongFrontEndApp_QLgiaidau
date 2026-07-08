@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/payment_model.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
@@ -22,6 +23,16 @@ class PaymentsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Lịch sử thanh toán'),
         centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/profile');
+            }
+          },
+        ),
       ),
       body: paymentsAsync.when(
         data: (payments) => _buildContent(context, ref, payments),

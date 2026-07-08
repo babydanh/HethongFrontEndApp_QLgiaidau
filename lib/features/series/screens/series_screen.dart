@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 class SeriesItem {
   final String id;
@@ -54,7 +55,20 @@ class SeriesScreen extends ConsumerWidget {
     final seriesAsync = ref.watch(_seriesListProvider);
     return Scaffold(
       backgroundColor: context.colors.bgDark,
-      appBar: AppBar(title: const Text('Chuỗi giải đấu'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Chuỗi giải đấu'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/profile');
+            }
+          },
+        ),
+      ),
       body: seriesAsync.when(
         data: (list) {
           if (list.isEmpty) return _buildEmpty(context);

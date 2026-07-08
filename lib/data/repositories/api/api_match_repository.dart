@@ -26,10 +26,10 @@ class ApiMatchRepository implements IMatchRepository {
   }
 
   @override
-  Stream<List<MatchModel>> watchByTournament(String tournamentId) async* {
-    yield await getAllByTournament(tournamentId);
+  Stream<List<MatchModel>> watchByTournament(String tournamentId, {String? divisionId}) async* {
+    yield await getAllByTournament(tournamentId, divisionId: divisionId);
     yield* Stream.periodic(const Duration(seconds: 10))
-        .asyncMap((_) => getAllByTournament(tournamentId));
+        .asyncMap((_) => getAllByTournament(tournamentId, divisionId: divisionId));
   }
 
   @override
@@ -54,6 +54,37 @@ class ApiMatchRepository implements IMatchRepository {
     return null;
   }
 
+  // ── Status mapping ───────────────────────────────────────────────────────
+  static String _mapMatchStatus(String? status) {
+    switch (status?.toUpperCase()) {
+      case 'ONGOING':
+      case 'IN_PROGRESS':
+        return 'live';
+      case 'COMPLETED':
+        return 'completed';
+      case 'WALKOVER':
+        return 'walkover';
+      case 'CANCELLED':
+        return 'cancelled';
+      default:
+        return 'scheduled';
+    }
+  }
+
+  // ── Bracket branch mapping ────────────────────────────────────────────────
+  static String _mapBracketBranch(String? branch) {
+    switch (branch?.toUpperCase()) {
+      case 'MAIN':
+        return 'winners';
+      case 'LOSERS':
+        return 'losers';
+      case 'GRAND_FINALS':
+        return 'grand_final';
+      default:
+        return 'winners';
+    }
+  }
+
   MatchModel _parseMatch(Map<String, dynamic> json) {
     final team1Name = json['participant1']?['teamName'] ?? json['team1Name'] ?? 'TBD';
     final team2Name = json['participant2']?['teamName'] ?? json['team2Name'] ?? 'TBD';
@@ -65,17 +96,24 @@ class ApiMatchRepository implements IMatchRepository {
     return MatchModel(
       id: json['id'] ?? '',
       round: json['roundNumber'] ?? 1,
-      matchNumber: json['matchNumber'] ?? 1,
+      matchNumber: json['matchOrder'] ?? json['matchNumber'] ?? 1,
       team1Id: json['team1Id'] ?? '',
       team1Name: team1Name,
       team2Id: json['team2Id'] ?? '',
       team2Name: team2Name,
       score1: json['score1'] ?? 0,
       score2: json['score2'] ?? 0,
-      status: json['status'] == 'ONGOING' ? 'live' : (json['status'] == 'COMPLETED' ? 'completed' : 'scheduled'),
-      bracketPosition: const BracketPosition(round: 1, position: 0),
+      status: _mapMatchStatus(json['status'] as String?),
+      bracketPosition: json['bracketBranch'] != null
+          ? BracketPosition(
+              bracket: _mapBracketBranch(json['bracketBranch'] as String?),
+              round: json['roundNumber'] ?? 1,
+              position: json['matchOrder'] ?? json['matchNumber'] ?? 0,
+            )
+          : const BracketPosition(round: 1, position: 0),
       nextMatchId: json['nextMatchId'] ?? '',
       winnerId: json['winnerId'] ?? '',
+      isBye: json['isBye'] ?? json['is_bye'] ?? false,
       court: json['court'] ?? '',
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
       refereeId: json['refereeId']?.toString(),
@@ -284,11 +322,12 @@ class ApiMatchRepository implements IMatchRepository {
   }
 
   @override
-  Future<List<MatchModel>> getAllByTournament(String tournamentId) async {
-    _log.debug('Fetching all matches for tournament $tournamentId via API');
+  Future<List<MatchModel>> getAllByTournament(String tournamentId, {String? divisionId}) async {
+    _log.debug('Fetching all matches for tournament $tournamentId via API (division: $divisionId)');
     try {
       final response = await _dioClient.dio.get('/matches', queryParameters: {
         'tournamentId': tournamentId,
+        if (divisionId != null) 'divisionId': divisionId,
       });
       if (response.statusCode == 200) {
         final List<dynamic> list = response.data['data'] ?? response.data ?? [];
@@ -300,21 +339,28 @@ class ApiMatchRepository implements IMatchRepository {
           final team1Members = rosters1?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
           final rosters2 = json['participant2']?['rosters'] as List<dynamic>?;
           final team2Members = rosters2?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
-          
+
           return MatchModel(
             id: id,
             round: json['roundNumber'] ?? 1,
-            matchNumber: json['matchNumber'] ?? 1,
+            matchNumber: json['matchOrder'] ?? json['matchNumber'] ?? 1,
             team1Id: json['team1Id'] ?? '',
             team1Name: team1Name,
             team2Id: json['team2Id'] ?? '',
             team2Name: team2Name,
             score1: json['score1'] ?? 0,
             score2: json['score2'] ?? 0,
-            status: json['status'] == 'ONGOING' ? 'live' : (json['status'] == 'COMPLETED' ? 'completed' : 'scheduled'),
-            bracketPosition: const BracketPosition(round: 1, position: 0),
+            status: _mapMatchStatus(json['status'] as String?),
+            bracketPosition: json['bracketBranch'] != null
+                ? BracketPosition(
+                    bracket: _mapBracketBranch(json['bracketBranch'] as String?),
+                    round: json['roundNumber'] ?? 1,
+                    position: json['matchOrder'] ?? json['matchNumber'] ?? 0,
+                  )
+                : const BracketPosition(round: 1, position: 0),
             nextMatchId: json['nextMatchId'] ?? '',
             winnerId: json['winnerId'] ?? '',
+            isBye: json['isBye'] ?? json['is_bye'] ?? false,
             court: json['court'] ?? '',
             updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
             // Sport rules từ tournament setting
@@ -357,21 +403,28 @@ class ApiMatchRepository implements IMatchRepository {
           final team1Members = rosters1?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
           final rosters2 = json['participant2']?['rosters'] as List<dynamic>?;
           final team2Members = rosters2?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
-          
+
           return MatchModel(
             id: id,
             round: json['roundNumber'] ?? 1,
-            matchNumber: json['matchNumber'] ?? 1,
+            matchNumber: json['matchOrder'] ?? json['matchNumber'] ?? 1,
             team1Id: json['team1Id'] ?? '',
             team1Name: team1Name,
             team2Id: json['team2Id'] ?? '',
             team2Name: team2Name,
             score1: json['score1'] ?? 0,
             score2: json['score2'] ?? 0,
-            status: json['status'] == 'ONGOING' ? 'live' : (json['status'] == 'COMPLETED' ? 'completed' : 'scheduled'),
-            bracketPosition: const BracketPosition(round: 1, position: 0),
+            status: _mapMatchStatus(json['status'] as String?),
+            bracketPosition: json['bracketBranch'] != null
+                ? BracketPosition(
+                    bracket: _mapBracketBranch(json['bracketBranch'] as String?),
+                    round: json['roundNumber'] ?? 1,
+                    position: json['matchOrder'] ?? json['matchNumber'] ?? 0,
+                  )
+                : const BracketPosition(round: 1, position: 0),
             nextMatchId: json['nextMatchId'] ?? '',
             winnerId: json['winnerId'] ?? '',
+            isBye: json['isBye'] ?? json['is_bye'] ?? false,
             court: json['court'] ?? '',
             updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
             // Sport rules từ tournament setting

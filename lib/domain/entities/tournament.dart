@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 
 class Tournament {
   final String id;
@@ -10,6 +11,7 @@ class Tournament {
   final String? category;
   final String bracketType;
   final String status;
+  final String visibility;
   final String adminToken;
   final String refereeToken;
   final String viewerToken;
@@ -45,6 +47,7 @@ class Tournament {
     this.category,
     required this.bracketType,
     this.status = 'draft',
+    this.visibility = 'PUBLIC',
     required this.adminToken,
     required this.refereeToken,
     required this.viewerToken,
@@ -89,13 +92,21 @@ class Tournament {
       sportVal = json['sport'].toString();
     }
 
-    // ─── Format: từ matchType ───
+    // ─── Format: từ matchType + genderRestriction ───
     String formatVal = '';
     if (json['matchType'] != null) {
       final mt = json['matchType'].toString().toLowerCase();
-      formatVal = mt == 'doubles'
-          ? AppConstants.formatDoubles
-          : AppConstants.formatSingles;
+      final gender = json['genderRestriction']?.toString().toLowerCase() ?? '';
+      if (mt == 'doubles' || mt == 'double') {
+        if (gender == 'female') formatVal = AppConstants.categoryWomenDoubles;
+        else if (gender == 'male') formatVal = AppConstants.categoryMenDoubles;
+        else if (gender == 'mixed') formatVal = AppConstants.categoryMixedDoubles;
+        else formatVal = AppConstants.formatDoubles;
+      } else {
+        if (gender == 'female') formatVal = AppConstants.categoryWomenSingles;
+        else if (gender == 'male') formatVal = AppConstants.categoryMenSingles;
+        else formatVal = AppConstants.formatSingles;
+      }
     } else if (json['format'] != null) {
       formatVal = json['format'].toString();
     }
@@ -110,20 +121,10 @@ class Tournament {
     int maxTeamsVal = _toInt(config['maxTeams']) ?? json['maxTeams'] ?? 16;
     int roundCountVal = _toInt(config['roundRobinLegs']) ?? json['roundCount'] ?? 1;
 
-    // ─── Status mapping ───
-    String apiStatus = (json['status'] ?? '').toString().toUpperCase();
-    String mappedStatus = 'draft';
-    if (apiStatus == 'DRAFT') {
-      mappedStatus = 'draft';
-    } else if (apiStatus == 'REGISTRATION_OPEN' || apiStatus == 'REGISTRATION_CLOSED') {
-      mappedStatus = 'registration';
-    } else if (apiStatus == 'ONGOING' || apiStatus == 'IN_PROGRESS') {
-      mappedStatus = 'in_progress';
-    } else if (apiStatus == 'COMPLETED') {
-      mappedStatus = 'completed';
-    } else {
-      mappedStatus = apiStatus.toLowerCase();
-    }
+    final mappedStatus =
+        StatusHelper.normalizeTournamentStatus(json['status']?.toString());
+
+    final parsedVisibility = (json['visibility'] ?? 'PUBLIC').toString().toUpperCase();
 
     double? parsedEntryFee;
     if (json['entryFee'] != null) {
@@ -152,6 +153,7 @@ class Tournament {
       category: parsedCategory,
       bracketType: bracketTypeVal,
       status: mappedStatus,
+      visibility: parsedVisibility == 'PRIVATE' ? 'PRIVATE' : 'PUBLIC',
       adminToken: json['adminToken'] ?? json['inviteCode'] ?? '',
       refereeToken: json['refereeToken'] ?? json['inviteCode'] ?? '',
       viewerToken: json['viewerToken'] ?? json['inviteCode'] ?? '',
@@ -197,6 +199,7 @@ class Tournament {
       if (category != null) 'category': category,
       'bracketType': bracketType,
       'status': status,
+      'visibility': visibility,
       'adminToken': adminToken,
       'refereeToken': refereeToken,
       'viewerToken': viewerToken,
@@ -231,6 +234,7 @@ class Tournament {
     String? category,
     String? bracketType,
     String? status,
+    String? visibility,
     String? adminToken,
     String? refereeToken,
     String? viewerToken,
@@ -264,6 +268,7 @@ class Tournament {
       category: category ?? this.category,
       bracketType: bracketType ?? this.bracketType,
       status: status ?? this.status,
+      visibility: visibility ?? this.visibility,
       adminToken: adminToken ?? this.adminToken,
       refereeToken: refereeToken ?? this.refereeToken,
       viewerToken: viewerToken ?? this.viewerToken,

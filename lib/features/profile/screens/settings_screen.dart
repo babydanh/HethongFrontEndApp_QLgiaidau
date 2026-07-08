@@ -47,7 +47,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/profile');
+            }
+          },
         ),
         title: Text(
           'Cài đặt',
@@ -103,15 +109,43 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
   final _addressCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
 
+  static const Map<String, String> _provinceCodeToName = {
+    '1': 'Hà Nội',
+    '31': 'Hải Phòng',
+    '48': 'Đà Nẵng',
+    '56': 'Khánh Hòa',
+    '60': 'Bình Thuận',
+    '68': 'Lâm Đồng',
+    '74': 'Bình Dương',
+    '75': 'Đồng Nai',
+    '79': 'TP. Hồ Chí Minh',
+    '89': 'An Giang',
+    '92': 'Cần Thơ',
+  };
+
+  static const Map<String, String> _provinceNameToCode = {
+    'Hà Nội': '1',
+    'Hải Phòng': '31',
+    'Đà Nẵng': '48',
+    'Khánh Hòa': '56',
+    'Bình Thuận': '60',
+    'Lâm Đồng': '68',
+    'Bình Dương': '74',
+    'Đồng Nai': '75',
+    'TP. Hồ Chí Minh': '79',
+    'An Giang': '89',
+    'Cần Thơ': '92',
+  };
+
   String _gender = 'Nam';
-  String _province = '';
+  String _province = 'Hà Nội';
   bool _isLoading = false;
   bool _initialized = false;
 
   final _genders = ['Nam', 'Nữ', 'Khác'];
   final _provinces = [
     'Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ',
-    'An Giang', 'Bình Dương', 'Đồng Nai', 'Khánh Hòa', 'Lâm Đồng',
+    'An Giang', 'Bình Dương', 'Đồng Nai', 'Khánh Hòa', 'Lâm Đồng', 'Bình Thuận',
   ];
 
   @override
@@ -137,7 +171,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         'address': _addressCtrl.text.trim(),
         'bio': _bioCtrl.text.trim(),
         'gender': _gender,
-        'provinceCode': _province,
+        'provinceCode': _provinceNameToCode[_province] ?? '1',
       });
 
       _log.success('Cập nhật hồ sơ thành công');
@@ -181,7 +215,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
           _addressCtrl.text = profile.address ?? '';
           _bioCtrl.text = profile.bio ?? '';
           _gender = profile.gender ?? 'Nam';
-          _province = profile.provinceCode ?? 'Hà Nội';
+          _province = _provinceCodeToName[profile.provinceCode] ?? 'Hà Nội';
           _initialized = true;
         }
         return _buildForm(colors, profile.avatarUrl, profile.email);

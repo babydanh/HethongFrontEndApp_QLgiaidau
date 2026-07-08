@@ -206,7 +206,7 @@ class TournamentTeamSheet extends StatelessWidget {
                 ),
               );
             }),
-          if (!team.isCheckedIn) ...[
+          if (!team.isApproved) ...[
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -215,12 +215,16 @@ class TournamentTeamSheet extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.2)),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, size: 16, color: Color(0xFFD97706)),
-                  SizedBox(width: 8),
+                  const Icon(Icons.warning_amber_rounded, size: 16, color: Color(0xFFD97706)),
+                  const SizedBox(width: 8),
                   Text(
-                    "Đội chưa check-in",
+                    team.isWaitlisted
+                        ? "Đội đang trong hàng chờ"
+                        : team.isPendingPartner
+                            ? "Đội đang chờ đồng đội"
+                            : "Đội đang duyệt",
                     style: TextStyle(
                       fontSize: 12,
                       color: Color(0xFFD97706),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
@@ -16,6 +17,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_regist
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_teams_empty.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/core/widgets/countdown_timer.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -205,6 +207,33 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         ),
         error: (e, _) => _buildTabContent(tournament, [], role),
       ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String text, AppColorsExtension colors) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 16, color: AppTheme.primary),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              color: colors.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -405,7 +434,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               Divider(color: colors.border.withValues(alpha: 0.5), height: 1),
               const SizedBox(height: 16),
             ],
-            if (tournament.status == 'upcoming' && tournament.registrationStartDate != null) ...[
+            if (StatusHelper.isTournamentUpcoming(tournament.status) && tournament.registrationStartDate != null) ...[
               const SizedBox(height: 4),
               CountdownTimer(targetDate: tournament.registrationStartDate!, compact: false),
               const SizedBox(height: 16),
@@ -438,6 +467,28 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+            Divider(color: colors.border.withValues(alpha: 0.5), height: 1),
+            const SizedBox(height: 16),
+            Text(
+              "THÔNG TIN GIẢI ĐẤU",
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: colors.textMuted,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildInfoRow(Icons.sports_rounded, AppConstants.sportNames[tournament.sport] ?? tournament.sport, colors),
+            const SizedBox(height: 8),
+            _buildInfoRow(Icons.people_alt_rounded, AppConstants.formatNames[tournament.format] ?? tournament.format.replaceAll('_', ' '), colors),
+            const SizedBox(height: 8),
+            _buildInfoRow(Icons.emoji_events_rounded, AppConstants.bracketTypeNames[tournament.bracketType] ?? tournament.bracketType, colors),
+            if (tournament.bracketType != AppConstants.bracketRoundRobin) ...[
+              const SizedBox(height: 8),
+              _buildInfoRow(Icons.groups_rounded, 'Tối đa ${tournament.maxTeams} đội', colors),
+            ],
             const SizedBox(height: 16),
             Divider(color: colors.border.withValues(alpha: 0.5), height: 1),
             const SizedBox(height: 16),
@@ -655,7 +706,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   Widget _buildExpandableTeamCard(Team team) {
     final colors = context.colors;
     final divisionLabel = team.group.isNotEmpty ? team.group : "Đơn nam";
-    final isCheckedIn = team.isCheckedIn;
+    final isApproved = team.isApproved;
+    final statusColor = isApproved ? colors.success : const Color(0xFFD97706);
     final isFemale = divisionLabel.contains("Nữ");
     final isMale = divisionLabel.contains("Nam");
     final themeColor = isFemale
@@ -675,61 +727,38 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          childrenPadding: const EdgeInsets.all(12),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          childrenPadding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
           shape: const Border(),
           collapsedShape: const Border(),
-          leading: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: team.photoUrl.isNotEmpty
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        team.photoUrl,
-                        width: 40,
-                        height: 40,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.group,
-                          color: AppTheme.primary,
-                          size: 22,
-                        ),
-                      ),
-                    )
-                  : const Icon(Icons.group, color: AppTheme.primary, size: 22),
-            ),
-          ),
           title: Row(
             children: [
               Expanded(
                 child: Text(
                   team.name,
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: colors.textPrimary,
+                    letterSpacing: -0.2,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: themeColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
+                  color: themeColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: themeColor.withValues(alpha: 0.2)),
                 ),
                 child: Text(
                   divisionLabel,
                   style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
                     color: themeColor,
                   ),
                 ),
@@ -737,39 +766,64 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             ],
           ),
           subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Row(
+            padding: const EdgeInsets.only(top: 8),
+            child: Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
               children: [
-                Icon(Icons.person_outline, size: 12, color: colors.textSecondary),
-                const SizedBox(width: 4),
-                Text(
-                  "${team.members.length} VĐV",
-                  style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.person_outline_rounded, size: 14, color: colors.textMuted),
+                    const SizedBox(width: 4),
+                    Text(
+                      "${team.members.length} VĐV",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isCheckedIn ? colors.success : colors.error,
-                  ),
-                ),
-                const SizedBox(width: 4),
                 Text(
-                  isCheckedIn ? "Đã check-in" : "Chưa check-in",
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: isCheckedIn ? colors.success : colors.error,
-                  ),
+                  "•",
+                  style: TextStyle(color: colors.textMuted.withValues(alpha: 0.5)),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: statusColor,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      team.approvalLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: statusColor,
+                      ),
+                    ),
+                  ],
                 ),
                 if (team.seed > 0) ...[
-                  const SizedBox(width: 12),
+                  Text(
+                    "•",
+                    style: TextStyle(color: colors.textMuted.withValues(alpha: 0.5)),
+                  ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppTheme.accent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(4),
+                      color: AppTheme.accent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppTheme.accent.withValues(alpha: 0.2)),
                     ),
                     child: Text(
                       "Seed #${team.seed}",
@@ -866,9 +920,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
   Widget _buildBottomBar(Tournament tournament, UserRole? role) {
     final hasRole = role != null;
-    final isLive = tournament.status == "in_progress";
-    final isRegistration = tournament.status == "registration" || tournament.status == "draft";
-    final isCompleted = tournament.status == "completed";
+    final isLive = StatusHelper.isTournamentInProgress(tournament.status);
+    final isRegistration = StatusHelper.isTournamentRegistration(tournament.status) || StatusHelper.isTournamentDraft(tournament.status) || StatusHelper.isTournamentUpcoming(tournament.status);
+    final isCompleted = StatusHelper.isTournamentCompleted(tournament.status);
 
     return Row(
       mainAxisSize: MainAxisSize.min,

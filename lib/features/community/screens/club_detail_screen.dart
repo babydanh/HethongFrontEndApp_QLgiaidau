@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
@@ -71,13 +72,45 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       backgroundColor: context.colors.bgDark,
       body: clubAsync.when(
         data: (club) {
-          final activeClub = club ?? _fallbackClub();
-          return _buildContent(activeClub);
+          if (club == null) {
+            return Scaffold(
+              appBar: AppBar(backgroundColor: context.colors.bgDark),
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.cloud_off_rounded, size: 48, color: context.colors.textMuted),
+                    const SizedBox(height: 12),
+                    Text('Không tìm thấy câu lạc bộ', style: TextStyle(color: context.colors.textSecondary)),
+                  ],
+                ),
+              ),
+            );
+          }
+          return _buildContent(club);
         },
         loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
         error: (e, st) {
           _log.error('Lỗi load club detail', e, st);
-          return _buildContent(_fallbackClub());
+          return Scaffold(
+            backgroundColor: context.colors.bgDark,
+            appBar: AppBar(backgroundColor: context.colors.bgDark),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.cloud_off_rounded, size: 48, color: context.colors.error),
+                  const SizedBox(height: 12),
+                  Text('Không thể tải thông tin CLB', style: TextStyle(color: context.colors.textSecondary)),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => ref.invalidate(communityDetailProvider(widget.clubId)),
+                    child: const Text('Thử lại'),
+                  ),
+                ],
+              ),
+            ),
+          );
         },
       ),
       bottomNavigationBar: FloatingBottomNav(
@@ -87,19 +120,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         },
         onProfileTap: () => context.go('/profile'),
       ),
-    );
-  }
-
-  Community _fallbackClub() {
-    return Community(
-      id: widget.clubId,
-      name: "CLB Cầu lông ABC",
-      description: "Câu lạc bộ cầu lông hàng đầu Việt Nam với hơn 10 năm hoạt động. "
-          "Chúng tôi tổ chức các giải đấu thường xuyên và có các huấn luyện viên chuyên nghiệp.",
-      memberCount: 128,
-      sports: const ["Cầu lông"],
-      locationAddress: "Hà Nội",
-      joinMode: "OPEN",
     );
   }
 
@@ -554,28 +574,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   }
 
   Widget _buildTourneyCard(CommunityTournamentModel t, AppColorsExtension colors) {
-    String statusLabel;
-    Color statusColor;
-    switch (t.status) {
-      case 'REGISTRATION_OPEN':
-      case 'registration':
-        statusLabel = 'Đăng ký';
-        statusColor = Colors.blue;
-        break;
-      case 'ONGOING':
-      case 'in_progress':
-        statusLabel = 'Thi đấu';
-        statusColor = Colors.green;
-        break;
-      case 'COMPLETED':
-      case 'completed':
-        statusLabel = 'Hoàn thành';
-        statusColor = Colors.grey;
-        break;
-      default:
-        statusLabel = t.status;
-        statusColor = Colors.grey;
-    }
+    final normalizedStatus = StatusHelper.normalizeTournamentStatus(t.status);
+    final statusLabel = StatusHelper.getTournamentStatusLabel(normalizedStatus);
+    final statusColor = StatusHelper.getTournamentStatusColor(
+      normalizedStatus,
+      context,
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

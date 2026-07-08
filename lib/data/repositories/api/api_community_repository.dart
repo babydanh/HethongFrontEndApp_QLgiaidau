@@ -141,17 +141,18 @@ class ApiCommunityRepository implements ICommunityRepository {
         ...data,
         'communityId': communityId,
       });
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final d = response.data['data'] as Map<String, dynamic>? ?? response.data as Map<String, dynamic>?;
         if (d != null) {
           _log.success('Tạo giải đấu trong CLB thành công');
           return CommunityTournamentModel.fromJson(d);
         }
       }
-      return null;
+      final msg = response.data?['message']?.toString() ?? 'Tạo giải đấu thất bại';
+      throw Exception(msg);
     } catch (e, stack) {
       _log.error('Lỗi tạo giải đấu trong CLB', e, stack);
-      return null;
+      rethrow;
     }
   }
 

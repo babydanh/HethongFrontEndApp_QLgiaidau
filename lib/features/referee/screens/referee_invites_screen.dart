@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 import 'package:flutter/material.dart';
@@ -378,19 +379,6 @@ class _InviteErrorView extends StatelessWidget {
 }
 
 String _mapTournamentStatus(String status) {
-  switch (status.toUpperCase()) {
-    case 'DRAFT':
-      return 'Bản nháp';
-    case 'REGISTRATION_OPEN':
-      return 'Đang mở đăng ký';
-    case 'REGISTRATION_CLOSED':
-      return 'Đã đóng đăng ký';
-    case 'ONGOING':
-    case 'IN_PROGRESS':
-      return 'Đang diễn ra';
-    case 'COMPLETED':
-      return 'Đã hoàn thành';
-    default:
-      return 'Đang cập nhật';
-  }
+  final normalized = StatusHelper.normalizeTournamentStatus(status);
+  return StatusHelper.getTournamentStatusLabel(normalized);
 }

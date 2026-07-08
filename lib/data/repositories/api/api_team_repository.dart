@@ -69,7 +69,10 @@ class ApiTeamRepository implements ITeamRepository {
             members: members.isNotEmpty ? members : [teamName],
             contactEmail: json['contactPhone'] ?? '',
             qrCode: json['qrCode'] ?? id,
-            isCheckedIn: json['status'] == 'APPROVED',
+            approvalStatus:
+                json['teamStatus']?.toString().toUpperCase() ??
+                json['status']?.toString().toUpperCase() ??
+                'PENDING',
             createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
           );
         }).toList();
@@ -85,12 +88,6 @@ class ApiTeamRepository implements ITeamRepository {
   Future<void> update(String tournamentId, String teamId, Map<String, dynamic> data) async {
     _log.info('Updating team $teamId via API: $data');
     await _dioClient.dio.patch('/tournaments/$tournamentId/participants/$teamId', data: data);
-  }
-
-  @override
-  Future<void> checkIn(String tournamentId, String teamId) async {
-    _log.info('Checkin team $teamId via API');
-    await _dioClient.dio.post('/tournaments/$tournamentId/participants/$teamId/checkin');
   }
 
   @override

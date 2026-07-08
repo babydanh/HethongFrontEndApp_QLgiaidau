@@ -72,7 +72,7 @@ class ApiTokenRepository implements ITokenRepository {
       return null;
     } catch (e, stack) {
       _log.error('Error validating token via API', e, stack);
-      return null;
+      rethrow;
     }
   }
 
@@ -156,6 +156,6 @@ class ApiTokenRepository implements ITokenRepository {
 
   @override
   Future<void> deleteTokensByTournament(String tournamentId) async {
-    throw UnimplementedError('Mobile app cannot delete tokens.');
+    _log.info('Backend mới không có token riêng — bỏ qua');
   }
 }

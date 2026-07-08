@@ -7,6 +7,8 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/theme_provider.dart' as tp;
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
+import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
@@ -293,6 +295,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _buildSectionTitle(colors, 'Thông tin cá nhân'),
             const SizedBox(height: 10),
             _buildInfoCard(context, profile),
+            const SizedBox(height: 24),
+
+            // Tournament Section
+            _buildSectionTitle(colors, 'Giải đấu của tôi'),
+            const SizedBox(height: 10),
+            _buildMyTournamentsSection(context),
             const SizedBox(height: 32),
           ] else ...[
             // Account Section
@@ -704,12 +712,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── INFO CARD ──────────────────────────────────────────────────────
   Widget _buildInfoCard(BuildContext context, UserProfile profile) {
     final colors = context.colors;
+    final provincesAsync = ref.watch(provincesProvider);
+    final provinces = provincesAsync.value ?? [];
+    final province = provinces.firstWhere(
+      (p) => p.code == profile.provinceCode,
+      orElse: () => Province(code: '', name: ''),
+    );
+    final provinceDisplay = province.name.isNotEmpty 
+        ? province.name 
+        : (profile.provinceCode != null && profile.provinceCode!.isNotEmpty ? profile.provinceCode! : '—');
+
     final items = <_InfoItem>[
       _InfoItem(Icons.phone_rounded, 'Số điện thoại', profile.phoneNumber ?? '—'),
       _InfoItem(Icons.cake_rounded, 'Ngày sinh', profile.dateOfBirth ?? '—'),
       _InfoItem(Icons.wc_rounded, 'Giới tính', profile.gender ?? '—'),
       _InfoItem(Icons.location_on_rounded, 'Địa chỉ', profile.address ?? '—'),
-      _InfoItem(Icons.map_rounded, 'Tỉnh/Thành phố', profile.provinceCode ?? '—'),
+      _InfoItem(Icons.map_rounded, 'Tỉnh/Thành phố', provinceDisplay),
       _InfoItem(Icons.verified_outlined, 'Email xác thực', profile.isEmailVerified == true ? 'Đã xác thực' : 'Chưa xác thực'),
       _InfoItem(Icons.phone_android_rounded, 'SĐT xác thực', profile.isPhoneVerified == true ? 'Đã xác thực' : 'Chưa xác thực'),
     ];
@@ -767,6 +785,170 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  // ─── MY TOURNAMENTS SECTION ──────────────────────────────────────────
+  Widget _buildMyTournamentsSection(BuildContext context) {
+    final colors = context.colors;
+    final workspaceAsync = ref.watch(myTournamentWorkspaceProvider);
+
+    return workspaceAsync.when(
+      data: (workspace) {
+        final tournaments = [
+          ...workspace.organizedTournaments,
+          ...workspace.coOrganizerTournaments,
+          ...workspace.participatingTournaments,
+        ];
+        final visible = tournaments.take(4).toList();
+
+        if (visible.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colors.border),
+            ),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(Icons.emoji_events_outlined, size: 40, color: colors.textMuted),
+                  const SizedBox(height: 8),
+                  Text('Bạn chưa tạo hoặc tham gia giải nào.',
+                      style: TextStyle(color: colors.textSecondary, fontSize: 13)),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () => context.go('/dashboard'),
+                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                    label: const Text('Xem Dashboard'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Container(
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            children: [
+              ...visible.map((t) => _buildTournamentRow(t, colors, context)),
+              if (tournaments.length > 4)
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: TextButton.icon(
+                    onPressed: () => context.go('/dashboard'),
+                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                    label: Text('Xem tất cả (${tournaments.length})'),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+      loading: () => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary),
+        ),
+      ),
+      error: (e, _) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.border),
+        ),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.cloud_off_rounded, size: 32, color: colors.textMuted),
+              const SizedBox(height: 8),
+              Text('Không thể tải dữ liệu', style: TextStyle(color: colors.textSecondary, fontSize: 13)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTournamentRow(dynamic t, AppColorsExtension colors, BuildContext context) {
+    final statusLabel = t.status?.toString().replaceAll('_', ' ') ?? 'draft';
+    return GestureDetector(
+      onLongPress: () async {
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: colors.bgCard,
+            title: const Text('Xóa giải đấu?'),
+            content: Text('Bạn có chắc muốn xóa "${t.name}"?',
+                style: TextStyle(color: colors.textSecondary, fontSize: 14)),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Hủy')),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: Text('Xóa', style: TextStyle(color: colors.error)),
+              ),
+            ],
+          ),
+        );
+        if (confirm == true && context.mounted) {
+          final success = await ref.read(tournamentActionProvider.notifier).deleteTournament(t.id);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(success ? 'Đã xóa giải đấu' : 'Không thể xóa giải đấu'),
+                backgroundColor: success ? colors.success : colors.error,
+              ),
+            );
+            if (success) ref.invalidate(myTournamentWorkspaceProvider);
+          }
+        }
+      },
+      child: InkWell(
+      onTap: () => context.push('/intro/${t.id}'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.emoji_events_rounded, size: 18, color: AppTheme.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t.name ?? '',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    statusLabel,
+                    style: TextStyle(fontSize: 11, color: colors.textMuted),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, size: 18, color: colors.textMuted),
+          ],
+        ),
+      ),
+    ),
+    );
+  }
+
   // ─── ACCOUNT MENU ──────────────────────────────────────────────────
   Widget _buildAccountMenu(BuildContext context) {
     final colors = context.colors;
@@ -779,7 +961,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 	      _MenuItem(Icons.mail_outline_rounded, 'Lời mời CLB', '/club-invites'),
       _MenuItem(Icons.settings_rounded, 'Cài đặt', '/profile/settings'),
       _MenuItem(Icons.lock_outline_rounded, 'Đổi mật khẩu', '/profile/change-password'),
-      _MenuItem(Icons.leaderboard_rounded, 'Lịch sử ELO', null),
+      _MenuItem(Icons.leaderboard_rounded, 'Lịch sử ELO', '/profile/elo'),
     ];
 
     return Container(
@@ -798,7 +980,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           final item = items[i];
           final isLast = i == items.length - 1;
           return InkWell(
-            onTap: item.route != null ? () => context.go(item.route!) : null,
+            onTap: item.route != null ? () => context.push(item.route!) : null,
             borderRadius: isLast ? const BorderRadius.vertical(bottom: Radius.circular(20)) : BorderRadius.zero,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart';
@@ -174,7 +175,7 @@ class _TournamentDetailScreenState
         : null;
     final bracketName =
         AppConstants.bracketTypeNames[tournament.bracketType] ?? '';
-    final statusName = AppConstants.statusNames[tournament.status] ?? '';
+    final statusName = StatusHelper.getTournamentStatusLabel(tournament.status);
 
     return ListView(
       padding: const EdgeInsets.all(16),

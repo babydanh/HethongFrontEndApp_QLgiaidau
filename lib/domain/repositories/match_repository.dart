@@ -6,7 +6,7 @@ import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 abstract class IMatchRepository {
   Future<MatchModel> create(String tournamentId, MatchModel match);
   Future<void> createBatch(String tournamentId, List<MatchModel> matches);
-  Stream<List<MatchModel>> watchByTournament(String tournamentId);
+  Stream<List<MatchModel>> watchByTournament(String tournamentId, {String? divisionId});
   Stream<List<MatchModel>> watchLive(String tournamentId);
   Stream<MatchModel?> watchMatch(String tournamentId, String matchId);
 
@@ -81,7 +81,7 @@ abstract class IMatchRepository {
     required String loserId,
   });
 
-  Future<List<MatchModel>> getAllByTournament(String tournamentId);
+  Future<List<MatchModel>> getAllByTournament(String tournamentId, {String? divisionId});
   Future<void> deleteAll(String tournamentId);
   Future<List<MatchModel>> getMatches({String? status, bool? publicOnly});
 }

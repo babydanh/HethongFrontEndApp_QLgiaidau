@@ -1,6 +1,8 @@
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
+import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 
@@ -13,29 +15,134 @@ class ApiTournamentRepository implements ITournamentRepository {
   @override
   Future<Tournament> create(Tournament tournament) async {
     _log.info('Creating tournament via API: ${tournament.name}');
-    final payload = {
+    final categoryId = await _resolveCategoryId(tournament.sport);
+    final matchType = _resolveMatchType(
+      format: tournament.format,
+      category: tournament.category,
+    );
+    final genderRestriction = _resolveGenderRestriction(tournament.category);
+    final payload = <String, dynamic>{
       'name': tournament.name,
-      'categoryId': tournament.category ?? 'badminton',
+      'categoryId': categoryId,
       'tournamentType': 'PUBLIC',
-      'matchType': tournament.format == 'Doubles' ? 'DOUBLES' : 'SINGLES',
+      'visibility': tournament.visibility.isNotEmpty ? tournament.visibility : 'PUBLIC',
+      'matchType': matchType,
       'description': tournament.description,
       'entryFee': 0,
-      'sportRules': {
-        'sets': 3,
-        'pointsPerSet': 21,
-      },
+      'maxParticipants': tournament.maxTeams,
+      'isRanked': false,
+      'sportRules': _buildSportRules(tournament.sport),
       'tournamentConfig': {
-        'bracketType': tournament.bracketType,
+        'bracketType': _normalizeBracketType(tournament.bracketType),
         'maxTeams': tournament.maxTeams,
         'roundRobinLegs': tournament.roundCount,
       },
     };
+    if (genderRestriction != null) {
+      payload['genderRestriction'] = genderRestriction;
+    }
     final response = await _dioClient.dio.post('/tournaments', data: payload);
     if (response.statusCode == 200 || response.statusCode == 201) {
       final data = response.data['data'];
       return Tournament.fromJson(data, data['id']);
     }
     throw Exception('Failed to create tournament via API');
+  }
+
+  Future<String> _resolveCategoryId(String sportSlug) async {
+    final response = await _dioClient.dio.get('/categories');
+    final raw = response.data;
+    final data = raw is Map<String, dynamic>
+        ? (raw['data'] as List<dynamic>? ?? const [])
+        : (raw as List<dynamic>? ?? const []);
+
+    for (final item in data) {
+      if (item is! Map<String, dynamic>) continue;
+      final slug = (item['slug'] ?? '').toString().toLowerCase();
+      if (slug == sportSlug.toLowerCase()) {
+        final id = (item['id'] ?? '').toString();
+        if (id.isNotEmpty) {
+          return id;
+        }
+      }
+    }
+
+    throw Exception('Không tìm thấy bộ môn "${sportSlug.isEmpty ? 'không xác định' : sportSlug}" trên hệ thống');
+  }
+
+  String _resolveMatchType({
+    required String format,
+    required String? category,
+  }) {
+    if (category == AppConstants.categoryMixedDoubles) {
+      return 'MIXED_DOUBLES';
+    }
+    if (format.toLowerCase() == AppConstants.formatDoubles) {
+      return 'DOUBLES';
+    }
+    return 'SINGLES';
+  }
+
+  String? _resolveGenderRestriction(String? category) {
+    switch (category) {
+      case AppConstants.categoryMenSingles:
+      case AppConstants.categoryMenDoubles:
+        return 'MALE';
+      case AppConstants.categoryWomenSingles:
+      case AppConstants.categoryWomenDoubles:
+        return 'FEMALE';
+      case AppConstants.categoryMixedDoubles:
+        return 'MIXED';
+      default:
+        return null;
+    }
+  }
+
+  Map<String, dynamic> _buildSportRules(String sport) {
+    switch (sport) {
+      case AppConstants.sportTennis:
+        return {
+          'kind': 'TENNIS',
+          'setsToWin': 2,
+          'pointsPerSet': 6,
+          'mustWinByTwo': true,
+          'tiebreakPoints': 7,
+        };
+      case AppConstants.sportPickleball:
+        return {
+          'kind': 'PICKLEBALL',
+          'setsToWin': 2,
+          'pointsPerSet': 11,
+          'mustWinByTwo': true,
+        };
+      case AppConstants.sportTableTennis:
+        return {
+          'kind': 'TABLE_TENNIS',
+          'setsToWin': 3,
+          'pointsPerSet': 11,
+          'mustWinByTwo': true,
+        };
+      case AppConstants.sportBadminton:
+      default:
+        return {
+          'kind': 'BADMINTON',
+          'setsToWin': 2,
+          'pointsPerSet': 21,
+          'mustWinByTwo': true,
+        };
+    }
+  }
+
+  String _normalizeBracketType(String bracketType) {
+    switch (bracketType.toLowerCase()) {
+      case AppConstants.bracketDoubleElimination:
+        return 'DOUBLE_ELIMINATION';
+      case AppConstants.bracketRoundRobin:
+        return 'ROUND_ROBIN';
+      case AppConstants.bracketSingleElimination:
+      default:
+        return 'SINGLE_ELIMINATION';
+    }
   }
 
   @override
@@ -146,7 +253,134 @@ class ApiTournamentRepository implements ITournamentRepository {
     await _dioClient.dio.delete('/tournaments/$id');
   }
 
-  // ─── Follow / Unfollow ──────────────────────────────────
+  // ─── Bracket API ─────────────────────────────────────────────────────────
+
+  /// Gọi GET /tournaments/:id/bracket và trả về danh sách matches đã có
+  /// đầy đủ roundNumber, matchOrder, bracketBranch, isBye, nextMatchId.
+  /// Đây là endpoint ĐÚNG để render bracket diagram (khác với /matches flat list).
+  @override
+  Future<List<MatchModel>> getBracketMatches(String tournamentId) async {
+    _log.debug('Fetching bracket matches for tournament $tournamentId');
+    try {
+      final response = await _dioClient.dio.get('/tournaments/$tournamentId/bracket');
+      if (response.statusCode != 200) return [];
+      final data = response.data['data'];
+      if (data == null) return [];
+
+      final stages = data['stages'] as List<dynamic>? ?? [];
+      final allMatches = <MatchModel>[];
+
+      if (stages.isNotEmpty) {
+        final stage = stages.last;
+        final groups = stage['groups'] as List<dynamic>? ?? [];
+        for (final group in groups) {
+          final rawMatches = group['matches'] as List<dynamic>? ?? [];
+          for (final json in rawMatches) {
+            if (json is! Map<String, dynamic>) continue;
+            try {
+              allMatches.add(_parseBracketMatch(json));
+            } catch (e) {
+              _log.warning('Failed to parse bracket match: $e');
+            }
+          }
+        }
+      }
+
+      // Sort: round ascending, then matchOrder ascending
+      allMatches.sort((a, b) {
+        final r = a.round.compareTo(b.round);
+        return r != 0 ? r : a.matchNumber.compareTo(b.matchNumber);
+      });
+
+      _log.info('Bracket: ${allMatches.length} matches loaded for $tournamentId');
+      return allMatches;
+    } catch (e, stack) {
+      _log.error('Error fetching bracket matches', e, stack);
+      return [];
+    }
+  }
+
+  @override
+  Stream<List<MatchModel>> watchBracketMatches(String tournamentId) async* {
+    yield await getBracketMatches(tournamentId);
+    yield* Stream.periodic(const Duration(seconds: 10))
+        .asyncMap((_) => getBracketMatches(tournamentId));
+  }
+
+  static String _mapBracketMatchStatus(String? status) {
+    switch (status?.toUpperCase()) {
+      case 'ONGOING':
+      case 'IN_PROGRESS':
+        return 'live';
+      case 'COMPLETED':
+        return 'completed';
+      case 'WALKOVER':
+        return 'walkover';
+      case 'CANCELLED':
+        return 'cancelled';
+      default:
+        return 'scheduled';
+    }
+  }
+
+  static String _mapBracketBranch(String? branch) {
+    switch (branch?.toUpperCase()) {
+      case 'MAIN':
+        return 'winners';
+      case 'LOSERS':
+        return 'losers';
+      case 'GRAND_FINALS':
+        return 'grand_final';
+      default:
+        return 'winners';
+    }
+  }
+
+  static MatchModel _parseBracketMatch(Map<String, dynamic> json) {
+    final p1 = json['participant1'] as Map<String, dynamic>?;
+    final p2 = json['participant2'] as Map<String, dynamic>?;
+    final team1Name = p1?['teamName']?.toString() ?? '';
+    final team2Name = p2?['teamName']?.toString() ?? '';
+    final rosters1 = p1?['rosters'] as List<dynamic>?;
+    final team1Members = rosters1?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
+    final rosters2 = p2?['rosters'] as List<dynamic>?;
+    final team2Members = rosters2?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
+
+    final roundNumber = (json['roundNumber'] as int?) ?? 1;
+    final matchOrder = (json['matchOrder'] as int?) ?? 1;
+    final branch = _mapBracketBranch(json['bracketBranch'] as String?);
+
+    return MatchModel(
+      id: json['id']?.toString() ?? '',
+      round: roundNumber,
+      matchNumber: matchOrder,
+      team1Id: p1?['id']?.toString() ?? '',
+      team1Name: team1Name.isNotEmpty ? team1Name : 'TBD',
+      team2Id: p2?['id']?.toString() ?? '',
+      team2Name: team2Name.isNotEmpty ? team2Name : 'TBD',
+      score1: (json['p1SetsWon'] as int?) ?? 0,
+      score2: (json['p2SetsWon'] as int?) ?? 0,
+      status: _mapBracketMatchStatus(json['status'] as String?),
+      bracketPosition: BracketPosition(
+        bracket: branch,
+        round: roundNumber,
+        position: matchOrder,
+      ),
+      nextMatchId: json['nextMatchId']?.toString() ?? '',
+      winnerId: json['winnerId']?.toString() ?? '',
+      isBye: json['isBye'] as bool? ?? false,
+      court: json['courtName']?.toString() ?? '',
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      refereeId: json['refereeId']?.toString(),
+      scoreDetails: json['scoreDetails'] as Map<String, dynamic>?,
+      team1Members: team1Members,
+      team2Members: team2Members,
+    );
+  }
+
+  // ─── Follow / Unfollow ────────────────────────────────────────────────────
 
   @override
   Future<void> followTournament(String id) async {

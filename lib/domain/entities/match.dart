@@ -85,6 +85,8 @@ class MatchModel {
   final int? setsToWin;
   final List<String>? team1Members;
   final List<String>? team2Members;
+  /// True nếu đây là trận BYE (miễn đấu) do backend đánh dấu
+  final bool isBye;
 
   const MatchModel({
     required this.id,
@@ -122,6 +124,7 @@ class MatchModel {
     this.setsToWin,
     this.team1Members = const [],
     this.team2Members = const [],
+    this.isBye = false,
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json, String id) {
@@ -179,6 +182,7 @@ class MatchModel {
                     (json['participant1']?['rosters'] as List<dynamic>?)?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? const [],
       team2Members: (json['team2Members'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? 
                     (json['participant2']?['rosters'] as List<dynamic>?)?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? const [],
+      isBye: json['isBye'] ?? json['is_bye'] ?? false,
     );
   }
 
@@ -215,6 +219,7 @@ class MatchModel {
       if (sportKey != null) 'sport': sportKey,
       'team1Members': team1Members,
       'team2Members': team2Members,
+      'isBye': isBye,
     };
   }
 
@@ -254,6 +259,7 @@ class MatchModel {
     int? setsToWin,
     List<String>? team1Members,
     List<String>? team2Members,
+    bool? isBye,
   }) {
     return MatchModel(
       id: id ?? this.id,
@@ -291,13 +297,19 @@ class MatchModel {
       setsToWin: setsToWin ?? this.setsToWin,
       team1Members: team1Members ?? this.team1Members,
       team2Members: team2Members ?? this.team2Members,
+      isBye: isBye ?? this.isBye,
     );
   }
 
   bool get isLive => status == 'live' || status == 'ongoing' || status == 'in_progress';
   bool get isCompleted => status == 'completed';
   bool get isScheduled => status == 'scheduled';
+  bool get isWalkover => status == 'walkover';
   bool get hasTeams => team1Id.isNotEmpty && team2Id.isNotEmpty;
+  bool get isByeMatch => (isBye == true) || team1Name == 'BYE' || team2Name == 'BYE' || team1Id == 'BYE' || team2Id == 'BYE';
+  bool get isFullByeMatch => (isBye == true) && 
+      (team1Id.isEmpty || team1Name == 'BYE') && 
+      (team2Id.isEmpty || team2Name == 'BYE');
 
   @override
   String toString() =>

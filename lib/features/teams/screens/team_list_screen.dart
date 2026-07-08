@@ -287,14 +287,14 @@ class TeamListTile extends ConsumerWidget {
               ],
             ),
           ),
-          if (team.isCheckedIn)
+          if (team.isApproved)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: context.colors.success.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text('✓ Có mặt',
+              child: Text('✓ Đã duyệt',
                   style: TextStyle(fontSize: 10, color: context.colors.success, fontWeight: FontWeight.w600)),
             ),
           if (!isLocked) ...[

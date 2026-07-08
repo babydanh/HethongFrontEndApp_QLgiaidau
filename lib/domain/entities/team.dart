@@ -8,7 +8,7 @@ class Team {
   final String group;
   final String photoUrl;
   final String qrCode;
-  final bool isCheckedIn;
+  final String approvalStatus;
   final String contactEmail;
   final DateTime createdAt;
 
@@ -20,7 +20,7 @@ class Team {
     this.group = '',
     this.photoUrl = '',
     this.qrCode = '',
-    this.isCheckedIn = false,
+    this.approvalStatus = 'PENDING_APPROVAL',
     this.contactEmail = '',
     required this.createdAt,
   });
@@ -34,7 +34,10 @@ class Team {
       group: json['group'] ?? '',
       photoUrl: json['photoUrl'] ?? '',
       qrCode: json['qrCode'] ?? '',
-      isCheckedIn: json['isCheckedIn'] ?? false,
+      approvalStatus: json['approvalStatus']?.toString().toUpperCase() ??
+          json['teamStatus']?.toString().toUpperCase() ??
+          json['status']?.toString().toUpperCase() ??
+          'PENDING_APPROVAL',
       contactEmail: json['contactEmail'] ?? '',
       createdAt: DateParser.parseDate(json['createdAt']),
     );
@@ -48,7 +51,7 @@ class Team {
       'group': group,
       'photoUrl': photoUrl,
       'qrCode': qrCode,
-      'isCheckedIn': isCheckedIn,
+      'approvalStatus': approvalStatus,
       'contactEmail': contactEmail,
       'createdAt': createdAt.toIso8601String(),
     };
@@ -62,7 +65,7 @@ class Team {
     String? group,
     String? photoUrl,
     String? qrCode,
-    bool? isCheckedIn,
+    String? approvalStatus,
     String? contactEmail,
     DateTime? createdAt,
   }) {
@@ -74,10 +77,41 @@ class Team {
       group: group ?? this.group,
       photoUrl: photoUrl ?? this.photoUrl,
       qrCode: qrCode ?? this.qrCode,
-      isCheckedIn: isCheckedIn ?? this.isCheckedIn,
+      approvalStatus: approvalStatus ?? this.approvalStatus,
       contactEmail: contactEmail ?? this.contactEmail,
       createdAt: createdAt ?? this.createdAt,
     );
+  }
+
+  bool get isApproved => approvalStatus == 'APPROVED' || approvalStatus == 'COMPLETE';
+  bool get isPendingApproval =>
+      approvalStatus == 'PENDING_APPROVAL' || approvalStatus == 'PENDING';
+  bool get isPendingPartner => approvalStatus == 'PENDING_PARTNER';
+  bool get isWaitlisted => approvalStatus == 'WAITLISTED';
+  bool get isComplete => approvalStatus == 'COMPLETE';
+
+  String get approvalLabel {
+    switch (approvalStatus) {
+      case 'COMPLETE':
+        return 'Đã duyệt';
+      case 'APPROVED':
+        return 'Đã duyệt';
+      case 'PENDING_PARTNER':
+        return 'Chờ đồng đội';
+      case 'PENDING_APPROVAL':
+      case 'PENDING':
+        return 'Đang duyệt';
+      case 'WAITLISTED':
+        return 'Hàng chờ';
+      case 'REJECTED':
+        return 'Bị từ chối';
+      case 'WITHDRAWN':
+        return 'Đã rút lui';
+      case 'KICKED':
+        return 'Đã bị loại';
+      default:
+        return 'Đang duyệt';
+    }
   }
 
   @override

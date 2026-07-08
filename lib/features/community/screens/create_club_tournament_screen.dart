@@ -5,10 +5,10 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
-import 'package:app_quanly_giaidau/providers/category_provider.dart';
+import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 
-/// Tạo giải đấu đơn giản trong câu lạc bộ
-/// Tuân thủ SRP: UI + Repository, không gọi Dio trực tiếp
+/// Tạo giải đấu Lite trong câu lạc bộ
+/// Gọi POST /tournaments/lite — đơn giản, không cần categoryId UUID
 class CreateClubTournamentScreen extends ConsumerStatefulWidget {
   final String clubId;
   const CreateClubTournamentScreen({super.key, required this.clubId});
@@ -27,7 +27,6 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   String _selectedSport = AppConstants.sportBadminton;
   String _selectedFormat = AppConstants.formatSingles;
   String _selectedBracket = AppConstants.bracketSingleElimination;
-  bool _isRanked = false;
   bool _isLoading = false;
 
   @override
@@ -38,19 +37,14 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
     super.dispose();
   }
 
-  /// Lấy sport rules mặc định theo môn (kèm `kind` để backend resolve config).
-  Map<String, dynamic> _getSportRules() {
+  /// Map App sport slug → backend slug
+  String _mapSportSlug() {
     switch (_selectedSport) {
-      case AppConstants.sportBadminton:
-        return {'kind': 'BADMINTON', 'setsToWin': 2, 'pointsPerSet': 21, 'mustWinByTwo': true};
-      case AppConstants.sportTennis:
-        return {'kind': 'TENNIS', 'setsToWin': 2, 'pointsPerSet': 6, 'mustWinByTwo': true, 'tiebreakPoints': 7};
-      case AppConstants.sportPickleball:
-        return {'kind': 'PICKLEBALL', 'setsToWin': 2, 'pointsPerSet': 11, 'mustWinByTwo': true};
-      case AppConstants.sportTableTennis:
-        return {'kind': 'TABLE_TENNIS', 'setsToWin': 3, 'pointsPerSet': 11, 'mustWinByTwo': true};
-      default:
-        return {'kind': 'BADMINTON', 'setsToWin': 2, 'pointsPerSet': 21, 'mustWinByTwo': true};
+      case AppConstants.sportBadminton: return 'badminton';
+      case AppConstants.sportTennis: return 'tennis';
+      case AppConstants.sportPickleball: return 'pickleball';
+      case AppConstants.sportTableTennis: return 'table_tennis';
+      default: return 'badminton';
     }
   }
 
@@ -59,41 +53,24 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
 
     setState(() => _isLoading = true);
     try {
-      final repo = ref.read(communityRepositoryProvider);
-
-      // Fetch categories to resolve slug to UUID
-      final categoriesList = await ref.read(categoriesProvider.future);
-      String slug;
-      switch (_selectedSport) {
-        case AppConstants.sportBadminton: slug = 'badminton'; break;
-        case AppConstants.sportTennis: slug = 'tennis'; break;
-        case AppConstants.sportPickleball: slug = 'pickleball'; break;
-        default: slug = 'badminton';
-      }
-
-      final category = categoriesList.firstWhere(
-        (c) => c.slug == slug,
-        orElse: () => throw Exception('Không tìm thấy môn thể thao $slug trên hệ thống'),
-      );
+      final dio = ref.read(dioClientProvider).dio;
 
       final body = <String, dynamic>{
-        'tournamentType': 'CLUB',
         'name': _nameCtrl.text.trim(),
-        'categoryId': category.id,
-        'matchType': _selectedFormat == AppConstants.formatDoubles ? 'DOUBLES' : 'SINGLES',
+        'communityId': widget.clubId,
+        'sport': _mapSportSlug(),
+        'format': _selectedFormat,
+        'bracketType': _selectedBracket,
+        'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
         'description': _descCtrl.text.trim(),
-        'maxParticipants': int.tryParse(_maxTeamsCtrl.text) ?? 16,
-        'isRanked': _isRanked,
-        'sportRules': _getSportRules(),
-        'tournamentConfig': {
-          'bracketType': _selectedBracket.toUpperCase(),
-          'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
-        },
       };
 
-      _log.info('Tạo giải đấu trong CLB: ${body['name']}, isRanked=$_isRanked');
-      await repo.createTournament(widget.clubId, body);
-      _log.success('Tạo giải đấu trong CLB thành công');
+      _log.info('Tạo giải Lite trong CLB: ${body['name']}');
+      final response = await dio.post('/tournaments/lite', data: body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        _log.success('Tạo giải Lite thành công');
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -107,7 +84,10 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
       _log.error('Lỗi tạo giải đấu trong CLB', e, stack);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -206,41 +186,32 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
               ),
               const SizedBox(height: 20),
 
-              // ─── Tính ELO ───
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: colors.bgCard,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: _isRanked ? AppTheme.primary.withValues(alpha: 0.3) : colors.border),
+                  border: Border.all(color: colors.border),
                 ),
                 child: Row(
                   children: [
                     Container(
                       width: 36, height: 36,
                       decoration: BoxDecoration(
-                        color: _isRanked ? Colors.amber.withValues(alpha: 0.15) : colors.bgSurface,
+                        color: colors.bgSurface,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(Icons.auto_graph_rounded, size: 18,
-                        color: _isRanked ? Colors.amber : colors.textMuted),
+                      child: const Icon(Icons.lock_rounded, size: 18, color: Color(0xFFF97316)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Tính điểm ELO / Xếp hạng',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
-                          Text('Kết quả trận đấu sẽ ảnh hưởng đến điểm ELO của người chơi',
-                            style: TextStyle(fontSize: 11, color: colors.textMuted)),
+                          Text('Giải đóng mặc định', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                          Text('Giải CLB tạo từ app sẽ mặc định ở chế độ PRIVATE, chỉ người có quyền hoặc có mã mời mới vào được.', style: TextStyle(fontSize: 11, color: colors.textMuted)),
                         ],
                       ),
-                    ),
-                    Switch(
-                      value: _isRanked,
-                      onChanged: (v) => setState(() => _isRanked = v),
-                      activeColor: AppTheme.primary,
                     ),
                   ],
                 ),
@@ -280,7 +251,8 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
     final sports = [
       (AppConstants.sportBadminton, 'Cầu lông', '🏸'),
       (AppConstants.sportTennis, 'Tennis', '🎾'),
-      (AppConstants.sportPickleball, 'Pickleball', '🏓'),
+      (AppConstants.sportPickleball, 'Pickleball', '🥒'),
+      (AppConstants.sportTableTennis, 'Bóng bàn', '🏓'),
     ];
     return Row(
       children: sports.map((s) {

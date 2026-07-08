@@ -63,7 +63,7 @@ class TournamentTeamCard extends StatelessWidget {
                           fit: BoxFit.cover,
                           width: 52,
                           height: 52,
-                          errorBuilder: (_, __, ___) => Icon(
+                          errorBuilder: (context, error, stackTrace) => Icon(
                             Icons.person,
                             size: 24,
                             color: colors.textMuted,
@@ -103,22 +103,22 @@ class TournamentTeamCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: team.isCheckedIn
+                color: team.isApproved
                     ? colors.success.withValues(alpha: 0.1)
                     : colors.bgSurface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: team.isCheckedIn
+                  color: team.isApproved
                       ? colors.success.withValues(alpha: 0.2)
                       : Colors.transparent,
                 ),
               ),
               child: Text(
-                team.isCheckedIn ? "Đã check-in" : "Chưa check-in",
+                team.approvalLabel,
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: team.isCheckedIn ? colors.success : colors.textMuted,
+                  color: team.isApproved ? colors.success : colors.textMuted,
                 ),
               ),
             ),

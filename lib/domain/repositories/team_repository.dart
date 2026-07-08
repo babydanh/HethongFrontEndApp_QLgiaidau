@@ -7,7 +7,6 @@ abstract class ITeamRepository {
   Stream<List<Team>> watchByTournament(String tournamentId);
   Future<List<Team>> getAllByTournament(String tournamentId);
   Future<void> update(String tournamentId, String teamId, Map<String, dynamic> data);
-  Future<void> checkIn(String tournamentId, String teamId);
   Future<Team?> findByQrCode(String tournamentId, String qrCode);
   Future<void> delete(String tournamentId, String teamId);
   Future<void> deleteAll(String tournamentId);
