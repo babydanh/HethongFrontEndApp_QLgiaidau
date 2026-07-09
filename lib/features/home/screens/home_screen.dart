@@ -983,9 +983,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
             itemBuilder: (context, i) => Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: TournamentCardWithBanner(
-                tournament: items[i],
-                onTap: () => context.push("/intro/${items[i].id}"),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: TournamentCardWithBanner(
+                  tournament: items[i],
+                  onTap: () => context.push("/intro/${items[i].id}"),
+                  margin: EdgeInsets.zero,
+                ),
               ),
             ),
           ),
@@ -1805,7 +1809,14 @@ class _TournamentCard extends StatelessWidget {
         } else if (divLower.contains("đồng đội")) {
           chips.add("Đồng đội");
         } else {
-          chips.add(divName);
+          // If the division name itself is generic, normalize it
+          if (divLower == "thi đấu đơn" || divLower == "đơn") {
+            chips.add("Đơn");
+          } else if (divLower == "thi đấu đôi" || divLower == "đôi") {
+            chips.add("Đôi");
+          } else {
+            chips.add(divName);
+          }
         }
       }
     }
@@ -1832,12 +1843,12 @@ class _TournamentCard extends StatelessWidget {
       }
       if (nameLower.contains("đôi") || descLower.contains("đôi")) {
         if (!chips.any((c) => c.contains("Đôi"))) {
-          chips.add("Thi đấu đôi");
+          chips.add("Đôi");
         }
       }
       if (nameLower.contains("đơn") || descLower.contains("đơn")) {
         if (!chips.any((c) => c.contains("Đơn"))) {
-          chips.add("Thi đấu đơn");
+          chips.add("Đơn");
         }
       }
     }
@@ -1848,17 +1859,17 @@ class _TournamentCard extends StatelessWidget {
           t.category!.toLowerCase() != sportNameLower) {
         final catLower = t.category!.toLowerCase();
         if (catLower == "singles" || catLower == "đơn") {
-          chips.add("Thi đấu đơn");
+          chips.add("Đơn");
         } else if (catLower == "doubles" || catLower == "đôi") {
-          chips.add("Thi đấu đôi");
+          chips.add("Đôi");
         } else {
           chips.add(t.category!);
         }
       } else {
         if (t.format == AppConstants.formatDoubles || t.maxPlayersPerTeam == 2) {
-          chips.add("Thi đấu đôi");
+          chips.add("Đôi");
         } else {
-          chips.add("Thi đấu đơn");
+          chips.add("Đơn");
         }
       }
     }

@@ -5,6 +5,27 @@ import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
+class Province {
+  final String code;
+  final String name;
+
+  Province({required this.code, required this.name});
+
+  factory Province.fromJson(Map<String, dynamic> json) {
+    return Province(
+      code: json['code'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+    );
+  }
+}
+
+final provincesProvider = FutureProvider<List<Province>>((ref) async {
+  final dio = ref.read(dioProvider);
+  final response = await dio.get('/regions/provinces');
+  final List<dynamic> data = response.data['data'] ?? response.data;
+  return data.map((json) => Province.fromJson(json)).toList();
+});
+
 final userProfileProvider = FutureProvider<UserProfile>((ref) async {
   final authState = ref.watch(authProvider);
   if (!authState.isAuthenticated) {

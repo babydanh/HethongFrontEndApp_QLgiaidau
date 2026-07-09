@@ -49,9 +49,28 @@ final matchesProvider =
   return ref.watch(matchRepositoryProvider).watchByTournament(tournamentId);
 });
 
+final tournamentDivisionsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, tournamentId) async {
+  final dio = ref.watch(dioClientProvider).dio;
+  final response = await dio.get('/tournaments/$tournamentId/divisions');
+  if (response.statusCode == 200) {
+    final list = response.data['data'] as List<dynamic>;
+    return list.map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+  return [];
+});
+
+final matchesWithDivisionProvider = StreamProvider.family<List<MatchModel>, ({String tournamentId, String? divisionId})>((ref, params) {
+  return ref.watch(matchRepositoryProvider).watchByTournament(params.tournamentId, divisionId: params.divisionId);
+});
+
 final liveMatchesProvider =
     StreamProvider.family<List<MatchModel>, String>((ref, tournamentId) {
   return ref.watch(matchRepositoryProvider).watchLive(tournamentId);
+});
+
+final bracketMatchesProvider =
+    StreamProvider.family<List<MatchModel>, String>((ref, tournamentId) {
+  return ref.watch(tournamentRepositoryProvider).watchBracketMatches(tournamentId);
 });
 
 final singleMatchProvider = StreamProvider.autoDispose.family<

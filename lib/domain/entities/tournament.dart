@@ -38,6 +38,7 @@ class Tournament {
   final String? prizeDescription;
   final Map<String, dynamic>? contactInfo;
   final List<String> divisions;
+  final bool isRanked;
 
   const Tournament({
     required this.id,
@@ -72,6 +73,7 @@ class Tournament {
     this.prizeDescription,
     this.contactInfo,
     this.divisions = const [],
+    this.isRanked = false,
   });
 
   factory Tournament.fromJson(Map<String, dynamic> json, String id) {
@@ -179,6 +181,7 @@ class Tournament {
       prizeDescription: json['prizeDescription'] ?? json['prize_description'],
       contactInfo: parsedContactInfo,
       divisions: parsedDivisions,
+      isRanked: json['isRanked'] == true || json['is_ranked'] == true,
     );
   }
 
@@ -223,6 +226,7 @@ class Tournament {
       if (locationAddress != null) 'locationAddress': locationAddress,
       if (prizeDescription != null) 'prizeDescription': prizeDescription,
       if (contactInfo != null) 'contactInfo': contactInfo,
+      'isRanked': isRanked,
     };
   }
 
@@ -259,6 +263,7 @@ class Tournament {
     String? prizeDescription,
     Map<String, dynamic>? contactInfo,
     List<String>? divisions,
+    bool? isRanked,
   }) {
     return Tournament(
       id: id ?? this.id,
@@ -293,6 +298,7 @@ class Tournament {
       prizeDescription: prizeDescription ?? this.prizeDescription,
       contactInfo: contactInfo ?? this.contactInfo,
       divisions: divisions ?? this.divisions,
+      isRanked: isRanked ?? this.isRanked,
     );
   }
 
