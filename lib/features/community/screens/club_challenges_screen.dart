@@ -157,9 +157,13 @@ class _ClubChallengesScreenState extends ConsumerState<ClubChallengesScreen> {
           try {
             final dio = ref.read(dioClientProvider).dio;
             await dio.post('/communities/${widget.clubId}/challenges', data: {'message': msgCtrl.text.trim()});
-            if (!mounted) return;
+            if (!context.mounted) return;
             ref.invalidate(_challengesProvider(widget.clubId));
-          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e'))); }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+            }
+          }
         }, child: const Text('Gửi')),
       ],
     ));

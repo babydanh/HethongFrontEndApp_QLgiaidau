@@ -1,0 +1,174 @@
+KẾT QUẢ TEST - 2026-07-08T12:42:24.789285
+132/150 passed
+
+--- FAILURES ---
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_bracket_test.dart: loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_bracket_test.dart
+❌ TC-FLUTTER-DASH-007: TC-FLUTTER-DASH-007: Dashboard Loading state
+❌ TC-FLUTTER-HOME-001: TC-FLUTTER-HOME-001: Hien thi danh sach giai dau
+❌ TC-FLUTTER-HOME-004: TC-FLUTTER-HOME-004: Carousel giai noi bat
+❌ TC-FLUTTER-HOME-005: TC-FLUTTER-HOME-005: Pull-to-refresh
+❌ TC-FLUTTER-HOME-006: TC-FLUTTER-HOME-006: Tab giai dau Tournaments tab
+❌ TC-FLUTTER-HOME-007: TC-FLUTTER-HOME-007: Loading state
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_intro_test.dart: loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_intro_test.dart
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_match_test.dart: loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_match_test.dart
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_notification_test.dart: loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_notification_test.dart
+❌ TC-FLUTTER-PAYMENT-021: TC-FLUTTER-PAYMENT-021: Payments screen - refresh
+❌ TC-FLUTTER-PROFILE-001: TC-FLUTTER-PROFILE-001: Settings Tab Ho so
+❌ TC-FLUTTER-PROFILE-005: TC-FLUTTER-PROFILE-005: Doi mat khau
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_qr_test.dart: loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_qr_test.dart
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_ranking_test.dart: loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_ranking_test.dart
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_referee_test.dart: loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_referee_test.dart
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_series_test.dart: loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_series_test.dart
+❌ TC-FLUTTER-TEAMS-001: TC-FLUTTER-TEAMS-001: Danh sach doi trong giai dau
+
+--- ALL ---
+✅ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_admin_test.dart: Pass
+✅ TC-FLUTTER-CROSS-001: Pass
+✅ TC-FLUTTER-CROSS-002: Pass
+✅ TC-FLUTTER-CROSS-003: Pass
+✅ TC-FLUTTER-CROSS-004: Pass
+✅ TC-FLUTTER-CROSS-005: Pass
+✅ (tearDownAll): Pass
+✅ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_auth_test.dart: Pass
+✅ TC-FLUTTER-AUTH-001: Pass
+✅ TC-FLUTTER-AUTH-002: Pass
+✅ TC-FLUTTER-AUTH-003: Pass
+✅ TC-FLUTTER-AUTH-004: Pass
+✅ TC-FLUTTER-AUTH-005: Pass
+✅ TC-FLUTTER-AUTH-006: Pass
+✅ TC-FLUTTER-AUTH-007: Pass
+✅ TC-FLUTTER-AUTH-008: Pass
+✅ TC-FLUTTER-AUTH-009: Pass
+✅ TC-FLUTTER-AUTH-010: Pass
+✅ TC-FLUTTER-AUTH-011: Pass
+✅ TC-FLUTTER-AUTH-012: Pass
+✅ TC-FLUTTER-AUTH-016: Pass
+✅ TC-FLUTTER-AUTH-020: Pass
+✅ TC-FLUTTER-AUTH-021: Pass
+✅ TC-FLUTTER-AUTH-022: Pass
+✅ TC-FLUTTER-AUTH-023: Pass
+✅ TC-FLUTTER-AUTH-032: Pass
+✅ TC-FLUTTER-AUTH-036: Pass
+✅ TC-FLUTTER-AUTH-037: Pass
+✅ TC-FLUTTER-AUTH-038: Pass
+✅ TC-FLUTTER-AUTH-039: Pass
+✅ TC-FLUTTER-AUTH-040: Pass
+✅ TC-FLUTTER-AUTH-013: Pass
+✅ TC-FLUTTER-AUTH-014: Pass
+✅ TC-FLUTTER-AUTH-015: Pass
+✅ TC-FLUTTER-AUTH-017: Pass
+✅ TC-FLUTTER-AUTH-018: Pass
+✅ TC-FLUTTER-AUTH-019: Pass
+✅ TC-FLUTTER-AUTH-024: Pass
+✅ TC-FLUTTER-AUTH-025: Pass
+✅ TC-FLUTTER-AUTH-026: Pass
+✅ TC-FLUTTER-AUTH-027: Pass
+✅ TC-FLUTTER-AUTH-028: Pass
+✅ TC-FLUTTER-AUTH-029: Pass
+✅ TC-FLUTTER-AUTH-030: Pass
+✅ TC-FLUTTER-AUTH-031: Pass
+✅ TC-FLUTTER-AUTH-033: Pass
+✅ TC-FLUTTER-AUTH-034: Pass
+✅ TC-FLUTTER-AUTH-035: Pass
+✅ (tearDownAll): Pass
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_bracket_test.dart: Fail
+✅ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_club_lite_test.dart: Pass
+✅ TC-FLUTTER-COMMUNITY-001: Pass
+✅ TC-FLUTTER-COMMUNITY-002: Pass
+✅ TC-FLUTTER-COMMUNITY-003: Pass
+✅ TC-FLUTTER-COMMUNITY-004: Pass
+✅ TC-FLUTTER-COMMUNITY-005: Pass
+✅ TC-FLUTTER-COMMUNITY-006: Pass
+✅ TC-FLUTTER-COMMUNITY-007: Pass
+✅ TC-FLUTTER-COMMUNITY-008: Pass
+✅ TC-FLUTTER-COMMUNITY-009: Pass
+✅ TC-FLUTTER-COMMUNITY-010: Pass
+✅ TC-FLUTTER-COMMUNITY-011: Pass
+✅ TC-FLUTTER-COMMUNITY-012: Pass
+✅ TC-FLUTTER-COMMUNITY-013: Pass
+✅ TC-FLUTTER-COMMUNITY-014: Pass
+✅ TC-FLUTTER-COMMUNITY-015: Pass
+✅ (tearDownAll): Pass
+✅ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_cross_test.dart: Pass
+✅ TC-FLUTTER-CROSS-001: Pass
+✅ TC-FLUTTER-CROSS-002: Pass
+✅ TC-FLUTTER-CROSS-003: Pass
+✅ TC-FLUTTER-CROSS-004: Pass
+✅ TC-FLUTTER-CROSS-005: Pass
+✅ (tearDownAll): Pass
+✅ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_dashboard_test.dart: Pass
+✅ TC-FLUTTER-DASH-001: Pass
+✅ TC-FLUTTER-DASH-002: Pass
+✅ TC-FLUTTER-DASH-003: Pass
+✅ TC-FLUTTER-DASH-004: Pass
+✅ TC-FLUTTER-DASH-005: Pass
+✅ TC-FLUTTER-DASH-006: Pass
+❌ TC-FLUTTER-DASH-007: Fail
+✅ TC-FLUTTER-OLITE-001: Pass
+✅ TC-FLUTTER-OLITE-002: Pass
+✅ (tearDownAll): Pass
+✅ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_home_test.dart: Pass
+❌ TC-FLUTTER-HOME-001: Fail
+✅ TC-FLUTTER-HOME-002: Pass
+✅ TC-FLUTTER-HOME-003: Pass
+❌ TC-FLUTTER-HOME-004: Fail
+❌ TC-FLUTTER-HOME-005: Fail
+❌ TC-FLUTTER-HOME-006: Fail
+❌ TC-FLUTTER-HOME-007: Fail
+✅ TC-FLUTTER-HOME-008: Pass
+✅ (tearDownAll): Pass
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_intro_test.dart: Fail
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_match_test.dart: Fail
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_notification_test.dart: Fail
+✅ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_payment_test.dart: Pass
+✅ TC-FLUTTER-PAYMENT-001: Pass
+✅ TC-FLUTTER-PAYMENT-002: Pass
+✅ TC-FLUTTER-PAYMENT-003: Pass
+✅ TC-FLUTTER-PAYMENT-004: Pass
+✅ TC-FLUTTER-PAYMENT-005: Pass
+✅ TC-FLUTTER-PAYMENT-006: Pass
+✅ TC-FLUTTER-PAYMENT-007: Pass
+✅ TC-FLUTTER-PAYMENT-008: Pass
+✅ TC-FLUTTER-PAYMENT-009: Pass
+✅ TC-FLUTTER-PAYMENT-010: Pass
+✅ TC-FLUTTER-PAYMENT-011: Pass
+✅ TC-FLUTTER-PAYMENT-012: Pass
+✅ TC-FLUTTER-PAYMENT-013: Pass
+✅ TC-FLUTTER-PAYMENT-014: Pass
+✅ TC-FLUTTER-PAYMENT-015: Pass
+✅ TC-FLUTTER-PAYMENT-016: Pass
+✅ TC-FLUTTER-PAYMENT-017: Pass
+✅ TC-FLUTTER-PAYMENT-018: Pass
+✅ TC-FLUTTER-PAYMENT-019: Pass
+✅ TC-FLUTTER-PAYMENT-020: Pass
+❌ TC-FLUTTER-PAYMENT-021: Fail
+✅ (tearDownAll): Pass
+✅ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_profile_test.dart: Pass
+❌ TC-FLUTTER-PROFILE-001: Fail
+✅ TC-FLUTTER-PROFILE-002: Pass
+✅ TC-FLUTTER-PROFILE-003: Pass
+✅ TC-FLUTTER-PROFILE-004: Pass
+❌ TC-FLUTTER-PROFILE-005: Fail
+✅ TC-FLUTTER-PROFILE-006: Pass
+✅ TC-FLUTTER-PROFILE-007: Pass
+✅ (tearDownAll): Pass
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_qr_test.dart: Fail
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_ranking_test.dart: Fail
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_referee_test.dart: Fail
+✅ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_register_test.dart: Pass
+✅ TC-FLUTTER-REGISTER-001: Pass
+✅ TC-FLUTTER-REGISTER-002: Pass
+✅ TC-FLUTTER-REGISTER-003: Pass
+✅ (tearDownAll): Pass
+❌ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_series_test.dart: Fail
+✅ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_teams_test.dart: Pass
+❌ TC-FLUTTER-TEAMS-001: Fail
+✅ TC-FLUTTER-TEAMS-002: Pass
+✅ TC-FLUTTER-TEAMS-003: Pass
+✅ TC-FLUTTER-TEAMS-004: Pass
+✅ (tearDownAll): Pass
+✅ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_upload_test.dart: Pass
+✅ TC-FLUTTER-UPLOAD-001: Pass
+✅ TC-FLUTTER-UPLOAD-002: Pass
+✅ TC-FLUTTER-UPLOAD-003: Pass
+✅ (tearDownAll): Pass

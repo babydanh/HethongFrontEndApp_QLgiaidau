@@ -4,15 +4,19 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/theme_provider.dart' as tp;
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -279,6 +283,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Expanded(
                     child: _buildTabButton(1, "Cài đặt & Tiện ích"),
                   ),
+                  Expanded(
+                    child: _buildTabButton(2, "Theo dõi"),
+                  ),
                 ],
               ),
             ),
@@ -302,7 +309,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 10),
             _buildMyTournamentsSection(context),
             const SizedBox(height: 32),
-          ] else ...[
+          ] else if (_activeTab == 1) ...[
             // Account Section
             _buildSectionTitle(colors, 'Tài khoản & Thiết lập'),
             const SizedBox(height: 10),
@@ -313,6 +320,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _buildSectionTitle(colors, 'Tuỳ chọn hệ thống'),
             const SizedBox(height: 10),
             _buildOtherMenu(context, isDark),
+            const SizedBox(height: 32),
+          ] else ...[
+            _buildSectionTitle(colors, 'Giải đấu đang theo dõi'),
+            const SizedBox(height: 10),
+            _buildFollowedTournamentsSection(context),
             const SizedBox(height: 32),
           ],
         ],
@@ -370,7 +382,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     fit: StackFit.expand,
                     children: [
                       Image.network(profile.coverUrl!, fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _coverGradient()),
+                        errorBuilder: (context, error, stackTrace) => _coverGradient()),
                       Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -430,7 +442,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(43),
                               child: Image.network(profile.avatarUrl!, fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => _avatarFallback(context, profile),
+                                errorBuilder: (context, error, stackTrace) => _avatarFallback(context, profile),
                               ),
                             )
                           : _avatarFallback(context, profile),
@@ -498,12 +510,105 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             children: [
               Icon(Icons.email_outlined, size: 13, color: colors.textMuted),
               const SizedBox(width: 5),
-              Text(profile.email ?? '', style: TextStyle(fontSize: 13, color: colors.textSecondary)),
-              if (profile.isEmailVerified == true) ...[
-                const SizedBox(width: 6),
-                const Icon(Icons.verified_rounded, size: 14, color: Color(0xFF22C55E)),
-              ],
+              Expanded(
+                child: Text(
+                  profile.email ?? '',
+                  style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: profile.isEmailVerified == true
+                  ? const Color(0xFF22C55E).withValues(alpha: 0.10)
+                  : colors.warning.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: profile.isEmailVerified == true
+                    ? const Color(0xFF22C55E).withValues(alpha: 0.22)
+                    : colors.warning.withValues(alpha: 0.22),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: profile.isEmailVerified == true
+                        ? const Color(0xFF22C55E).withValues(alpha: 0.18)
+                        : colors.warning.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    profile.isEmailVerified == true
+                        ? Icons.verified_rounded
+                        : Icons.mark_email_unread_rounded,
+                    color: profile.isEmailVerified == true ? const Color(0xFF16A34A) : colors.warning,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profile.isEmailVerified == true
+                            ? 'Email đã xác thực'
+                            : 'Email chưa xác thực',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        profile.isEmailVerified == true
+                            ? 'Tài khoản đã sẵn sàng cho các thao tác bảo mật.'
+                            : 'Xác minh email để hoàn tất bảo mật tài khoản và mở khóa các luồng xác nhận.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textMuted,
+                          height: 1.35,
+                        ),
+                      ),
+                      if (profile.isEmailVerified != true) ...[
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 40,
+                          child: FilledButton.icon(
+                            onPressed: () => startEmailVerificationFlow(
+                              context,
+                              ref,
+                              profile.email ?? '',
+                            ),
+                            icon: const Icon(Icons.mail_outline_rounded, size: 16),
+                            label: const Text(
+                              'Xác minh ngay',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                            ),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppTheme.primary,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           if (profile.bio != null && profile.bio!.isNotEmpty) ...[
             const SizedBox(height: 10),
@@ -722,13 +827,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ? province.name 
         : (profile.provinceCode != null && profile.provinceCode!.isNotEmpty ? profile.provinceCode! : '—');
 
+    final emailVerified = profile.isEmailVerified == true;
     final items = <_InfoItem>[
       _InfoItem(Icons.phone_rounded, 'Số điện thoại', profile.phoneNumber ?? '—'),
       _InfoItem(Icons.cake_rounded, 'Ngày sinh', profile.dateOfBirth ?? '—'),
       _InfoItem(Icons.wc_rounded, 'Giới tính', profile.gender ?? '—'),
       _InfoItem(Icons.location_on_rounded, 'Địa chỉ', profile.address ?? '—'),
       _InfoItem(Icons.map_rounded, 'Tỉnh/Thành phố', provinceDisplay),
-      _InfoItem(Icons.verified_outlined, 'Email xác thực', profile.isEmailVerified == true ? 'Đã xác thực' : 'Chưa xác thực'),
+      _InfoItem(Icons.verified_outlined, 'Email xác thực', emailVerified ? 'Đã xác thực' : 'Chưa xác thực'),
       _InfoItem(Icons.phone_android_rounded, 'SĐT xác thực', profile.isPhoneVerified == true ? 'Đã xác thực' : 'Chưa xác thực'),
     ];
     if (profile.bankName != null && profile.bankName!.isNotEmpty) {
@@ -746,41 +852,85 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: colors.border),
       ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: items.length,
-        separatorBuilder: (_, __) => Padding(
-          padding: const EdgeInsets.only(left: 58),
-          child: Divider(height: 1, color: colors.borderLight),
-        ),
-        itemBuilder: (_, i) {
-          final item = items[i];
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
             child: Row(
               children: [
                 Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
-                  child: Icon(item.icon, size: 16, color: AppTheme.primary),
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: (emailVerified ? const Color(0xFF22C55E) : colors.warning).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    emailVerified ? Icons.verified_rounded : Icons.mark_email_unread_rounded,
+                    color: emailVerified ? const Color(0xFF16A34A) : colors.warning,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: colors.textSecondary)),
-                      const SizedBox(height: 2),
-                      Text(item.value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary)),
+                      Text(
+                        'Trạng thái email',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.textPrimary),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        emailVerified
+                            ? 'Email đã được xác thực và sẵn sàng cho các chức năng bảo mật.'
+                            : 'Email chưa xác thực, nên xác minh để hoàn tất bảo mật tài khoản.',
+                        style: TextStyle(fontSize: 12, color: colors.textMuted, height: 1.35),
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
-          );
-        },
+          ),
+          Divider(height: 1, color: colors.borderLight, indent: 16, endIndent: 16),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: items.length,
+            separatorBuilder: (context, index) => Padding(
+              padding: const EdgeInsets.only(left: 58),
+              child: Divider(height: 1, color: colors.borderLight),
+            ),
+            itemBuilder: (_, i) {
+              final item = items[i];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
+                      child: Icon(item.icon, size: 16, color: AppTheme.primary),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item.label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: colors.textSecondary)),
+                          const SizedBox(height: 2),
+                          Text(item.value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -872,6 +1022,211 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildFollowedTournamentsSection(BuildContext context) {
+    final colors = context.colors;
+    final followedAsync = ref.watch(followedTournamentsProvider);
+
+    return followedAsync.when(
+      data: (tournaments) {
+        final visible = [...tournaments]
+          ..sort((a, b) {
+            final priorityDiff = _followedTournamentPriority(a).compareTo(_followedTournamentPriority(b));
+            if (priorityDiff != 0) return priorityDiff;
+            return _followedTournamentTimestamp(b).compareTo(_followedTournamentTimestamp(a));
+          });
+        final topVisible = visible.take(5).toList();
+
+        if (topVisible.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colors.border),
+            ),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(Icons.bookmark_border_rounded, size: 40, color: colors.textMuted),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Bạn chưa theo dõi giải nào.',
+                    style: TextStyle(color: colors.textSecondary, fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () => context.go('/home'),
+                    icon: const Icon(Icons.explore_rounded, size: 16),
+                    label: const Text('Khám phá giải đấu'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Container(
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: const [
+                    _StatusPill(label: 'Vừa kết thúc', backgroundColor: Color(0xFF0F172A), foregroundColor: Colors.white),
+                    _StatusPill(label: 'Đang diễn ra', backgroundColor: Color(0xFFFEF2F2), foregroundColor: Color(0xFFB91C1C), borderColor: Color(0xFFFECACA)),
+                    _StatusPill(label: 'Mở đăng ký', backgroundColor: Color(0xFFF0FDF4), foregroundColor: Color(0xFF047857), borderColor: Color(0xFFBBF7D0)),
+                    _StatusPill(label: 'Sắp diễn ra', backgroundColor: Color(0xFFEFF6FF), foregroundColor: Color(0xFF1D4ED8), borderColor: Color(0xFFBFDBFE)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...topVisible.map((tournament) => _buildFollowedTournamentRow(tournament, colors, context)),
+              if (visible.length > 5)
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: TextButton.icon(
+                    onPressed: () => context.go('/dashboard'),
+                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                    label: Text('Xem tất cả (${visible.length})'),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary),
+        ),
+      ),
+      error: (e, _) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.border),
+        ),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.cloud_off_rounded, size: 32, color: colors.textMuted),
+              const SizedBox(height: 8),
+              Text(
+                'Không thể tải danh sách theo dõi',
+                style: TextStyle(color: colors.textSecondary, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFollowedTournamentRow(Tournament tournament, AppColorsExtension colors, BuildContext context) {
+    final statusLabel = StatusHelper.getTournamentStatusLabel(tournament.status);
+    final isCompleted = StatusHelper.isTournamentCompleted(tournament.status);
+    final isRecentCompleted = isCompleted &&
+        tournament.endDate != null &&
+        DateTime.now().difference(tournament.endDate!).inDays <= 14;
+    final statusHint = isRecentCompleted
+        ? 'Vừa kết thúc trong 14 ngày gần đây'
+        : isCompleted
+            ? 'Đã kết thúc'
+            : StatusHelper.isTournamentInProgress(tournament.status)
+                ? 'Đang diễn ra'
+                : StatusHelper.isTournamentRegistration(tournament.status)
+                    ? 'Mở đăng ký'
+                    : StatusHelper.isTournamentUpcoming(tournament.status)
+                        ? 'Sắp diễn ra'
+                        : 'Đang theo dõi';
+    return InkWell(
+      onTap: () => context.push('/intro/${tournament.id}'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.bookmark_rounded, size: 18, color: AppTheme.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tournament.name.isNotEmpty ? tournament.name : '(Chưa có tên)',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    statusLabel,
+                    style: TextStyle(fontSize: 11, color: colors.textMuted),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    statusHint,
+                    style: TextStyle(fontSize: 10, color: colors.textMuted),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      if (isRecentCompleted)
+                        _StatusPill(
+                          label: 'Vừa kết thúc',
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                        ),
+                      if (isCompleted && !isRecentCompleted)
+                        _StatusPill(
+                          label: 'Đã kết thúc',
+                          backgroundColor: colors.bgSurface,
+                          foregroundColor: colors.textSecondary,
+                          borderColor: colors.border,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, size: 18, color: colors.textMuted),
+          ],
+        ),
+      ),
+    );
+  }
+
+  int _followedTournamentPriority(Tournament tournament) {
+    if (StatusHelper.isTournamentCompleted(tournament.status)) return 0;
+    if (StatusHelper.isTournamentInProgress(tournament.status)) return 1;
+    if (StatusHelper.isTournamentRegistration(tournament.status) || StatusHelper.isTournamentUpcoming(tournament.status)) return 2;
+    if (StatusHelper.isTournamentCancelled(tournament.status)) return 3;
+    return 4;
+  }
+
+  DateTime _followedTournamentTimestamp(Tournament tournament) {
+    return tournament.endDate ?? tournament.updatedAt;
   }
 
   Widget _buildTournamentRow(dynamic t, AppColorsExtension colors, BuildContext context) {
@@ -975,7 +1330,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: items.length,
-        separatorBuilder: (_, __) => Divider(height: 1, color: colors.borderLight, indent: 56),
+        separatorBuilder: (context, index) => Divider(height: 1, color: colors.borderLight, indent: 56),
         itemBuilder: (_, i) {
           final item = items[i];
           final isLast = i == items.length - 1;
@@ -1063,7 +1418,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               await ref.read(authProvider.notifier).signOut();
               ref.invalidate(userProfileProvider);
               ref.invalidate(userRankingsProvider);
-              if (mounted) context.go('/home');
+              if (!context.mounted) return;
+              context.go('/home');
             },
             borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
             child: Padding(
@@ -1125,6 +1481,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final p = name.trim().split(' ');
     if (p.length >= 2) return '${p[p.length - 2][0]}${p[p.length - 1][0]}'.toUpperCase();
     return name.isNotEmpty ? name[0].toUpperCase() : '?';
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({
+    required this.label,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    this.borderColor,
+  });
+
+  final String label;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final Color? borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: borderColor ?? Colors.transparent),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: foregroundColor,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
   }
 }
 

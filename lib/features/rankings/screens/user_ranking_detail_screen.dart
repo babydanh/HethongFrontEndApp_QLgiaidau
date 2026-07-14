@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
-import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
-import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 
 // ═══════════════════════════════════════════════════════════
 //  USER RANKING DETAIL SCREEN — Thông tin xếp hạng cá nhân
@@ -13,9 +12,7 @@ class UserRankingDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
-    final userId = authState.isAuthenticated ? 'self' : '';
-    final rankingAsync = ref.watch(userRankingsSummaryProvider(userId));
+    final rankingAsync = ref.watch(userRankingsProvider);
 
     return Scaffold(
       backgroundColor: context.colors.bgDark,

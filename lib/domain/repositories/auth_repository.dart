@@ -13,4 +13,10 @@ abstract class IAuthRepository {
   });
 
   Future<AuthSession> loginWithGoogle(String idToken);
+
+  Future<void> requestEmailVerification();
+
+  Future<void> confirmEmailVerification({
+    required String token,
+  });
 }

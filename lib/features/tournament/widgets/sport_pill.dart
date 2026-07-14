@@ -31,7 +31,7 @@ class SportPill extends StatelessWidget {
               icon,
               width: 14,
               height: 14,
-              errorBuilder: (_, __, ___) => const Text("🏆", style: TextStyle(fontSize: 12)),
+              errorBuilder: (context, error, stackTrace) => const Text("🏆", style: TextStyle(fontSize: 12)),
             )
           else
             Text(icon, style: const TextStyle(fontSize: 12)),

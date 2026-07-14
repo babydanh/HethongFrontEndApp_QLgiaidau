@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_lite.dart';
@@ -44,19 +45,37 @@ class _OrganizerLiteScreenState extends ConsumerState<OrganizerLiteScreen>
     return tournamentAsync.when(
       loading: () => Scaffold(
         backgroundColor: context.colors.bgDark,
-        appBar: AppBar(title: const Text('Organizer Lite')),
+        appBar: AppBar(
+          title: const Text('Quản lý nhanh'),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
+            onPressed: () => context.pop(),
+          ),
+        ),
         body: const Center(child: CircularProgressIndicator()),
       ),
       error: (error, _) => Scaffold(
         backgroundColor: context.colors.bgDark,
-        appBar: AppBar(title: const Text('Organizer Lite')),
+        appBar: AppBar(
+          title: const Text('Quản lý nhanh'),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
+            onPressed: () => context.pop(),
+          ),
+        ),
         body: Center(child: Text('Không thể tải giải đấu: $error')),
       ),
       data: (tournament) {
         if (tournament == null) {
           return Scaffold(
             backgroundColor: context.colors.bgDark,
-            appBar: AppBar(title: const Text('Organizer Lite')),
+            appBar: AppBar(
+              title: const Text('Quản lý nhanh'),
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
+                onPressed: () => context.pop(),
+              ),
+            ),
             body: const Center(child: Text('Giải đấu không tồn tại')),
           );
         }
@@ -64,7 +83,11 @@ class _OrganizerLiteScreenState extends ConsumerState<OrganizerLiteScreen>
         return Scaffold(
           backgroundColor: context.colors.bgDark,
           appBar: AppBar(
-            title: const Text('Organizer Lite'),
+            title: const Text('Quản lý nhanh'),
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
+              onPressed: () => context.pop(),
+            ),
             bottom: TabBar(
               controller: _tabController,
               isScrollable: true,
@@ -148,7 +171,7 @@ class _OrganizerHeader extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '$dateText • ${_mapStatus(tournament.status)}',
+            '$dateText • ${StatusHelper.getTournamentStatusLabel(tournament.status)}',
             style: TextStyle(fontSize: 12, color: colors.textMuted),
           ),
           const SizedBox(height: 14),
@@ -811,19 +834,4 @@ int _countLiveMatches(List<MatchModel> matches) {
     final status = match.status.toLowerCase();
     return status == 'live' || status == 'ongoing' || status == 'in_progress';
   }).length;
-}
-
-String _mapStatus(String status) {
-  switch (status.toLowerCase()) {
-    case 'draft':
-      return 'Bản nháp';
-    case 'registration':
-      return 'Đăng ký';
-    case 'in_progress':
-      return 'Đang diễn ra';
-    case 'completed':
-      return 'Hoàn thành';
-    default:
-      return status;
-  }
 }

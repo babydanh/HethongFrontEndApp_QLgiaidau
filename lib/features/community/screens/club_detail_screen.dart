@@ -310,7 +310,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               height: 240, width: double.infinity, color: colors.bgCard,
               child: hasBanner
                   ? Image.network(club.bannerUrl!, fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _bannerGradient(sColor, emoji))
+                      errorBuilder: (context, error, stackTrace) => _bannerGradient(sColor, emoji))
                   : _bannerGradient(sColor, emoji),
             ),
           ],
@@ -343,7 +343,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       borderRadius: BorderRadius.circular(11),
                       child: club.logoUrl != null && club.logoUrl!.isNotEmpty
                           ? Image.network(club.logoUrl!, fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _logoSportBg(sColor, emoji))
+                              errorBuilder: (context, error, stackTrace) => _logoSportBg(sColor, emoji))
                           : _logoSportBg(sColor, emoji),
                     ),
                   ),
@@ -844,7 +844,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     height: 200,
                     child: ListView.separated(
                       itemCount: searchResults.length,
-                      separatorBuilder: (_, __) => Divider(height: 1, color: colors.borderLight),
+                      separatorBuilder: (context, index) => Divider(height: 1, color: colors.borderLight),
                       itemBuilder: (_, i) {
                         final u = searchResults[i] as Map<String, dynamic>;
                         final name = u['fullName'] ?? 'Người dùng';
@@ -916,7 +916,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         );
       },
       loading: () => const SizedBox(height: 40, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (context, error) => const SizedBox.shrink(),
     );
   }
 
@@ -1035,7 +1035,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               child: Image.network(
                 images[i].imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
+                errorBuilder: (context, error, stackTrace) => Container(
                   color: colors.bgSurface,
                   child: Icon(Icons.broken_image_rounded, color: colors.textMuted, size: 28),
                 ),
@@ -1072,7 +1072,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Image.network(url, fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (context, error, stackTrace) => Container(
                 height: 200, color: Colors.black,
                 child: const Center(child: Icon(Icons.broken_image, color: Colors.white54, size: 48)),
               ),

@@ -89,6 +89,33 @@ class ApiAuthRepository implements IAuthRepository {
     }
   }
 
+  @override
+  Future<void> requestEmailVerification() async {
+    _log.info('Gửi yêu cầu xác minh email qua Mobile API');
+    try {
+      await _dioClient.dio.post('/auth/verify-email/request');
+    } catch (e, stack) {
+      _log.error('Lỗi gửi yêu cầu xác minh email', e, stack);
+      throw Exception(ErrorParser.parse(e, 'Lỗi kết nối đến máy chủ'));
+    }
+  }
+
+  @override
+  Future<void> confirmEmailVerification({
+    required String token,
+  }) async {
+    _log.info('Xác minh email qua Mobile API');
+    try {
+      await _dioClient.dio.post(
+        '/auth/verify-email/confirm',
+        data: {'token': token},
+      );
+    } catch (e, stack) {
+      _log.error('Lỗi xác minh email', e, stack);
+      throw Exception(ErrorParser.parse(e, 'Lỗi kết nối đến máy chủ'));
+    }
+  }
+
   AuthSession _mapAuthSession(dynamic rawData) {
     final data = rawData as Map<String, dynamic>;
     final innerData =

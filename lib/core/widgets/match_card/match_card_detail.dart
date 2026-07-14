@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,6 +23,16 @@ class MatchCardDetail extends StatelessWidget {
   Widget build(BuildContext context) {
     final isLive = match.status == AppConstants.matchLive;
     final isCompleted = match.status == AppConstants.matchCompleted;
+    final scheduleText = match.scheduledTime != null
+        ? DateFormatterUtils.formatDateTime(match.scheduledTime!.toLocal())
+        : 'Chưa xếp lịch';
+    final venueText = _venueText(match);
+    final tournamentText = (match.tournamentName ?? '').trim().isNotEmpty
+        ? match.tournamentName!.trim()
+        : 'Giải đấu';
+    final refereeText = (match.refereeName ?? '').trim().isNotEmpty
+        ? match.refereeName!.trim()
+        : 'Chưa có';
 
     return GestureDetector(
       onTap: match.hasTeams
@@ -30,6 +41,7 @@ class MatchCardDetail extends StatelessWidget {
             }
           : null,
       child: Container(
+        constraints: const BoxConstraints(maxWidth: 380),
         decoration: BoxDecoration(
           color: context.colors.bgCard,
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -51,66 +63,187 @@ class MatchCardDetail extends StatelessWidget {
                 ]
               : null,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Live indicator
-            if (isLive)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                decoration: BoxDecoration(
-                  gradient: context.liveGradient,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(AppTheme.radiusMedium - 1),
-                    topRight: Radius.circular(AppTheme.radiusMedium - 1),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isLive)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  decoration: BoxDecoration(
+                    gradient: context.liveGradient,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(AppTheme.radiusMedium - 1),
+                      topRight: Radius.circular(AppTheme.radiusMedium - 1),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.fiber_manual_record,
+                        size: 8,
+                        color: Colors.white,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'LIVE',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.fiber_manual_record,
-                      size: 8,
-                      color: Colors.white,
-                    ),
-                    SizedBox(width: 4),
                     Text(
-                      'LIVE',
+                      tournamentText,
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: 1,
+                        color: context.colors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _roundLabel(match),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ],
                 ),
               ),
-            // Team 1
-            _buildTeamRow(
-              context,
-              match.team1Name,
-              match.score1,
-              isWinner: isCompleted && match.winnerId == match.team1Id,
-            ),
-            Divider(
-              color: context.colors.border,
-              height: 1,
-              indent: 12,
-              endIndent: 12,
-            ),
-            // Team 2
-            _buildTeamRow(
-              context,
-              match.team2Name,
-              match.score2,
-              isWinner: isCompleted && match.winnerId == match.team2Id,
-            ),
-          ],
+              _buildTeamRow(
+                context,
+                match.team1Name,
+                match.score1,
+                isWinner: isCompleted && match.winnerId == match.team1Id,
+              ),
+              Divider(
+                color: context.colors.border,
+                height: 1,
+                indent: 12,
+                endIndent: 12,
+              ),
+              _buildTeamRow(
+                context,
+                match.team2Name,
+                match.score2,
+                isWinner: isCompleted && match.winnerId == match.team2Id,
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                child: Column(
+                  children: [
+                    _infoRow(
+                      context,
+                      Icons.schedule_rounded,
+                      'Thời gian',
+                      scheduleText,
+                    ),
+                    const SizedBox(height: 8),
+                    _infoRow(
+                      context,
+                      Icons.location_on_rounded,
+                      'Địa điểm',
+                      venueText,
+                    ),
+                    const SizedBox(height: 8),
+                    _infoRow(
+                      context,
+                      Icons.verified_user_rounded,
+                      'Trọng tài',
+                      refereeText,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Widget _infoRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: context.colors.bgSurface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: context.colors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 15, color: AppTheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: context.colors.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: context.colors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _roundLabel(MatchModel match) {
+    final branch = match.bracketPosition.bracket.toLowerCase();
+    final round = match.round;
+    if (branch == 'losers') return 'Nhánh thua - Vòng $round';
+    if (branch == 'grand_final') return 'Chung kết tổng';
+    if (branch == 'grand_final_reset') return 'Chung kết tổng (đấu lại)';
+    return 'Nhánh thắng - Vòng $round';
+  }
+
+  String _venueText(MatchModel match) {
+    final court = match.court.trim();
+    final address = match.courtAddress.trim();
+    if (court.isEmpty && address.isEmpty) return 'Chưa xếp sân';
+    if (court.isNotEmpty && address.isNotEmpty) {
+      if (court.contains(address)) return court;
+      return '$court - $address';
+    }
+    return court.isNotEmpty ? court : address;
   }
 
   Widget _buildTeamRow(

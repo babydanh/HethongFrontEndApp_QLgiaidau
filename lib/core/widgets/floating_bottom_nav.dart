@@ -308,7 +308,7 @@ class FloatingBottomNav extends ConsumerWidget {
         child: Image.network(
           avatarUrl,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Icon(Icons.person_rounded, color: isActive ? Colors.white : Colors.grey, size: 24),
+          errorBuilder: (context, error, stackTrace) => Icon(Icons.person_rounded, color: isActive ? Colors.white : Colors.grey, size: 24),
           loadingBuilder: (context, child, progress) {
             if (progress == null) return child;
             return const Center(child: CircularProgressIndicator(strokeWidth: 2));

@@ -51,17 +51,20 @@ class AppConstants {
   static const String bracketSingleElimination = 'single_elimination';
   static const String bracketDoubleElimination = 'double_elimination';
   static const String bracketRoundRobin = 'round_robin';
+  static const String bracketGroupStageKnockout = 'group_stage_knockout';
 
   static const Map<String, String> bracketTypeNames = {
     bracketSingleElimination: 'Đấu loại trực tiếp',
     bracketDoubleElimination: 'Đấu loại kép',
     bracketRoundRobin: 'Vòng tròn',
+    bracketGroupStageKnockout: 'Vòng bảng + Loại trực tiếp',
   };
 
   static const Map<String, String> bracketTypeDescriptions = {
     bracketSingleElimination: 'Loại ngay khi thua, tối ưu thời gian',
     bracketDoubleElimination: 'Có nhánh thắng - nhánh thua, tăng cơ hội',
     bracketRoundRobin: 'Tất cả gặp nhau, tích điểm, công bằng cao',
+    bracketGroupStageKnockout: 'Chia bảng đấu vòng tròn, chọn đội đi tiếp đánh loại trực tiếp',
   };
 
   static const Map<String, String> bracketTypeDetails = {
@@ -71,6 +74,8 @@ class AppConstants {
         'Thể thức đấu loại kép. Các đội thua trận đầu sẽ rơi xuống "Nhánh thua" thay vì bị loại ngay. Chỉ bị loại hoàn toàn khi thua trận thứ 2. Đội vô địch Nhánh thắng sẽ gặp đội vô địch Nhánh thua ở trận Chung kết tổng.',
     bracketRoundRobin:
         'Thể thức đấu vòng tròn (League). Tất cả các đội đều sẽ thi đấu với nhau. Thứ hạng được quyết định bằng điểm số (Thắng 3đ, Hòa 1đ, Thua 0đ). Nếu điểm bằng nhau sẽ xét hiệu số. Công bằng nhất nhưng tốn nhiều thời gian nhất.',
+    bracketGroupStageKnockout:
+        'Kết hợp vòng bảng Round Robin và vòng loại trực tiếp (Knockout). Các đội được chia vào các bảng thi đấu vòng tròn tính điểm, sau đó các đội đứng đầu mỗi bảng sẽ đi tiếp vào vòng loại trực tiếp để tranh chức vô địch.',
   };
 
   // ─── Tournament Status ───

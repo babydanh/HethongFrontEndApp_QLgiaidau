@@ -139,6 +139,8 @@ class ApiTournamentRepository implements ITournamentRepository {
         return 'DOUBLE_ELIMINATION';
       case AppConstants.bracketRoundRobin:
         return 'ROUND_ROBIN';
+      case AppConstants.bracketGroupStageKnockout:
+        return 'GROUP_STAGE_KNOCKOUT';
       case AppConstants.bracketSingleElimination:
       default:
         return 'SINGLE_ELIMINATION';
@@ -336,14 +338,27 @@ class ApiTournamentRepository implements ITournamentRepository {
     }
   }
 
+  static String _buildCourtDisplay({
+    String? court,
+    String? courtName,
+    String? courtAddress,
+  }) {
+    final name = (courtName ?? court ?? '').toString().trim();
+    final address = (courtAddress ?? '').toString().trim();
+    if (name.isEmpty) return address;
+    if (address.isEmpty) return name;
+    if (name.contains(address)) return name;
+    return '$name - $address';
+  }
+
   static MatchModel _parseBracketMatch(Map<String, dynamic> json) {
     final p1 = json['participant1'] as Map<String, dynamic>?;
     final p2 = json['participant2'] as Map<String, dynamic>?;
     final team1Name = p1?['teamName']?.toString() ?? '';
     final team2Name = p2?['teamName']?.toString() ?? '';
-    final rosters1 = p1?['rosters'] as List<dynamic>?;
+    final rosters1 = (p1?['members'] ?? p1?['rosters']) as List<dynamic>?;
     final team1Members = rosters1?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
-    final rosters2 = p2?['rosters'] as List<dynamic>?;
+    final rosters2 = (p2?['members'] ?? p2?['rosters']) as List<dynamic>?;
     final team2Members = rosters2?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
 
     final roundNumber = (json['roundNumber'] as int?) ?? 1;
@@ -367,9 +382,15 @@ class ApiTournamentRepository implements ITournamentRepository {
         position: matchOrder,
       ),
       nextMatchId: json['nextMatchId']?.toString() ?? '',
+      loserNextMatchId: json['loserNextMatchId']?.toString() ?? '',
       winnerId: json['winnerId']?.toString() ?? '',
       isBye: json['isBye'] as bool? ?? false,
-      court: json['courtName']?.toString() ?? '',
+      court: _buildCourtDisplay(
+        court: json['court']?.toString(),
+        courtName: json['courtName']?.toString(),
+        courtAddress: json['courtAddress']?.toString(),
+      ),
+      courtAddress: json['courtAddress']?.toString() ?? '',
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now()
           : DateTime.now(),

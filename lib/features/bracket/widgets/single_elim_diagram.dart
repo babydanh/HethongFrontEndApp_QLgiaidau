@@ -9,8 +9,8 @@ import 'package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dar
 // ══════════════════════════════════════════════════════════════════════════════
 const _kCardW = 240.0;
 const _kCardH = 88.0;
-const _kColGap = 72.0;  // horizontal gap between columns (where connectors run)
-const _kRowGap = 20.0;  // minimum vertical gap between cards in same column
+const _kColGap = 80.0;  // horizontal gap between columns (where connectors run)
+const _kRowGap = 36.0;  // minimum vertical gap between cards in same column
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  SingleElimDiagram
@@ -179,7 +179,7 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
                 final roundName = _getRoundLabel(round, totalRounds);
                 return Positioned(
                   left: colX,
-                  top: -36,
+                  top: -42,
                   width: _kCardW,
                   child: _RoundHeader(label: roundName),
                 );
@@ -213,7 +213,10 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     if (fromEnd == 0) return 'CHUNG KẾT';
     if (fromEnd == 1) return 'BÁN KẾT';
     if (fromEnd == 2) return 'TỨ KẾT';
-    return 'VÒNG $round';
+    if (fromEnd == 3) return 'VÒNG 1/8';
+    if (fromEnd == 4) return 'VÒNG 1/16';
+    if (fromEnd == 5) return 'VÒNG 1/32';
+    return 'VÒNG 1/${1 << fromEnd}';
   }
 }
 
@@ -357,32 +360,44 @@ class _BracketMatchCard extends StatelessWidget {
     final isBye1 = match.team1Name == 'BYE' || match.team1Id == 'BYE';
     final isBye2 = match.team2Name == 'BYE' || match.team2Id == 'BYE';
 
+    final isFinal = match.nextMatchId.isEmpty;
+    final isGrandFinalWinner = isFinal && match.isCompleted;
+
     Color statusColor = colors.textMuted;
     String statusLabel = 'SẮP ĐẤU';
     Color borderColor = colors.border;
+    Color cardBgColor = colors.bgCard;
 
     if (match.isLive) {
       statusColor = colors.error;
       statusLabel = 'LIVE';
       borderColor = colors.error.withValues(alpha: 0.5);
+      cardBgColor = colors.error.withValues(alpha: 0.06);
     } else if (match.isCompleted) {
       statusColor = colors.success;
       statusLabel = 'XONG';
+    }
+
+    if (isGrandFinalWinner) {
+      borderColor = Colors.amber.shade400;
+      cardBgColor = Colors.amber.shade50.withValues(alpha: 0.35);
+      statusColor = Colors.amber.shade700;
+      statusLabel = 'VÔ ĐỊCH';
     }
 
     return GestureDetector(
       onTap: () => _onTap(context),
       child: Container(
         decoration: BoxDecoration(
-          color: match.isLive
-              ? colors.error.withValues(alpha: 0.06)
-              : colors.bgCard,
+          color: cardBgColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor),
+          border: Border.all(color: borderColor, width: isGrandFinalWinner ? 2.0 : 1.0),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
+              color: isGrandFinalWinner 
+                  ? Colors.amber.shade200.withValues(alpha: 0.2)
+                  : Colors.black.withValues(alpha: 0.06),
+              blurRadius: isGrandFinalWinner ? 12 : 8,
               offset: const Offset(0, 2),
             ),
           ],
@@ -400,6 +415,7 @@ class _BracketMatchCard extends StatelessWidget {
                 isWinner: match.isCompleted && match.winnerId == match.team1Id,
                 isLive: match.isLive,
                 isBye: isBye1,
+                isGrandFinalWinner: isGrandFinalWinner,
                 colors: colors,
               ),
             ),
@@ -415,6 +431,7 @@ class _BracketMatchCard extends StatelessWidget {
                 isWinner: match.isCompleted && match.winnerId == match.team2Id,
                 isLive: match.isLive,
                 isBye: isBye2,
+                isGrandFinalWinner: isGrandFinalWinner,
                 colors: colors,
               ),
             ),
@@ -422,7 +439,7 @@ class _BracketMatchCard extends StatelessWidget {
             Container(
               height: 22,
               decoration: BoxDecoration(
-                color: colors.bgSurface,
+                color: isGrandFinalWinner ? Colors.amber.shade100.withValues(alpha: 0.3) : colors.bgSurface,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(11),
                   bottomRight: Radius.circular(11),
@@ -470,7 +487,9 @@ class _BracketMatchCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 8,
                           fontWeight: FontWeight.bold,
-                          color: colors.textMuted,
+                          color: isGrandFinalWinner 
+                              ? Colors.amber.shade800
+                              : colors.textMuted,
                         ),
                       ),
                     ),
@@ -491,6 +510,7 @@ class _TeamRow extends StatelessWidget {
   final bool isWinner;
   final bool isLive;
   final bool isBye;
+  final bool isGrandFinalWinner;
   final AppColorsExtension colors;
 
   const _TeamRow({
@@ -499,79 +519,95 @@ class _TeamRow extends StatelessWidget {
     required this.isWinner,
     required this.isLive,
     required this.isBye,
+    required this.isGrandFinalWinner,
     required this.colors,
     this.sets,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Row(
-        children: [
-          // Winner indicator
-          Container(
-            width: 3,
-            height: 24,
-            decoration: BoxDecoration(
-              color: isWinner
-                  ? colors.success
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              name,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isWinner ? FontWeight.w800 : FontWeight.w500,
-                color: isBye
-                    ? colors.textMuted
-                    : isWinner
-                        ? colors.textPrimary
-                        : colors.textSecondary,
-                fontStyle: isBye ? FontStyle.italic : FontStyle.normal,
+    Color indicatorColor = Colors.transparent;
+    Color rowBgColor = Colors.transparent;
+    Color textColor = colors.textSecondary;
+
+    if (isGrandFinalWinner && isWinner) {
+      indicatorColor = Colors.amber.shade500;
+      rowBgColor = Colors.amber.shade100.withValues(alpha: 0.35);
+      textColor = Colors.amber.shade900;
+    } else if (isWinner) {
+      indicatorColor = colors.success;
+      rowBgColor = colors.success.withValues(alpha: 0.08);
+      textColor = colors.success;
+    } else if (isBye) {
+      indicatorColor = Colors.blue;
+      rowBgColor = Colors.blue.withValues(alpha: 0.08);
+      textColor = Colors.blue.shade700;
+    }
+
+    return Container(
+      color: rowBgColor,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          children: [
+            // Winner indicator
+            Container(
+              width: 3,
+              height: 24,
+              decoration: BoxDecoration(
+                color: indicatorColor,
+                borderRadius: BorderRadius.circular(2),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
-          ),
-          // Set scores
-          if (sets != null)
-            ...sets!.map((s) => Container(
-                  margin: const EdgeInsets.only(left: 2),
-                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: colors.bgSurface,
-                    borderRadius: BorderRadius.circular(3),
-                    border: Border.all(color: colors.border),
-                  ),
-                  child: Text(
-                    '$s',
-                    style: TextStyle(
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                      color: colors.textSecondary,
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                name,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isWinner ? FontWeight.w800 : FontWeight.w500,
+                  color: isWinner ? textColor : (isBye ? colors.textMuted : colors.textSecondary),
+                  fontStyle: isBye ? FontStyle.italic : FontStyle.normal,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            // Set scores
+            if (sets != null)
+              ...sets!.map((s) => Container(
+                    margin: const EdgeInsets.only(left: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: colors.bgSurface,
+                      borderRadius: BorderRadius.circular(3),
+                      border: Border.all(color: colors.border),
                     ),
-                  ),
-                )),
-          const SizedBox(width: 6),
-          // Total score
-          Text(
-            isBye ? '' : '$score',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-              color: isLive
-                  ? colors.error
-                  : isWinner
-                      ? colors.textPrimary
-                      : colors.textMuted,
+                    child: Text(
+                      '$s',
+                      style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  )),
+            const SizedBox(width: 6),
+            // Total score
+            Text(
+              isBye ? '' : '$score',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: isLive
+                    ? colors.error
+                    : isWinner
+                        ? textColor
+                        : colors.textMuted,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

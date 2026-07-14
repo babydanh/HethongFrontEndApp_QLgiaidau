@@ -1,0 +1,61 @@
+{"protocolVersion":"0.1.1","runnerVersion":"1.26.3","pid":28740,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_match_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_match_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":1}
+{"count":1,"time":5,"type":"allSuites"}
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/C:/Users/GIGABYTE/.gradle/wrapper/dists/gradle-8.14-all/c2qonpi39x1mddn7hk5gh9iqj/gradle-8.14/lib/native-platform-0.22-milestone-28.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+D:\Duancanhan\Project_QuanLyGiaiDau\app_quanly_giaidau\l10n.yaml: The argument "synthetic-package" no longer has any effect and should be removed. See http://flutter.dev/to/flutter-gen-deprecation
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":"http://127.0.0.1:53006/kQtQCAJ5w3c=/"}}]
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":39305}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":26,"line":null,"column":null,"url":null},"type":"group","time":39309}
+{"test":{"id":3,"name":"TC-FLUTTER-MATCH-001: LiveScoreScreen - Setup State Scheduled","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":39310}
+{"testID":3,"messageType":"print","message":"[SCREENSHOT WARNING] Could not save screenshot: Bad state: Call convertFlutterSurfaceToImage() before taking a screenshot","type":"print","time":39622}
+{"testID":3,"messageType":"print","message":"[SCREENSHOT WARNING] Could not save screenshot: Bad state: Call convertFlutterSurfaceToImage() before taking a screenshot","type":"print","time":39628}
+{"testID":3,"messageType":"print","message":"[SCREENSHOT WARNING] Could not save screenshot: Bad state: Call convertFlutterSurfaceToImage() before taking a screenshot","type":"print","time":52673}
+{"testID":3,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":52699}
+{"test":{"id":4,"name":"TC-FLUTTER-MATCH-002: LiveScoreScreen - Start Match","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":52700}
+{"testID":4,"messageType":"print","message":"[SCREENSHOT WARNING] Could not save screenshot: Bad state: Call convertFlutterSurfaceToImage() before taking a screenshot","type":"print","time":52710}
+{"testID":4,"messageType":"print","message":"[SCREENSHOT WARNING] Could not save screenshot: Bad state: Call convertFlutterSurfaceToImage() before taking a screenshot","type":"print","time":52711}
+{"testID":4,"messageType":"print","message":"[SCREENSHOT WARNING] Could not save screenshot: Bad state: Call convertFlutterSurfaceToImage() before taking a screenshot","type":"print","time":65757}
+{"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":65760}
+{"test":{"id":5,"name":"TC-FLUTTER-MATCH-003: LiveScoreScreen - Referee Score Controls","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":65761}
+{"testID":5,"messageType":"print","message":"[SCREENSHOT WARNING] Could not save screenshot: Bad state: Call convertFlutterSurfaceToImage() before taking a screenshot","type":"print","time":65776}
+{"testID":5,"messageType":"print","message":"[SCREENSHOT WARNING] Could not save screenshot: Bad state: Call convertFlutterSurfaceToImage() before taking a screenshot","type":"print","time":65777}
+{"testID":5,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76937}
+{"test":{"id":6,"name":"TC-FLUTTER-MATCH-004: LiveScoreScreen - Win Condition Check","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76947}
+{"testID":6,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76948}
+{"test":{"id":7,"name":"TC-FLUTTER-MATCH-005: LiveScoreScreen - Foul Sheet Penalty","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76949}
+{"testID":7,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76950}
+{"test":{"id":8,"name":"TC-FLUTTER-MATCH-006: LiveScoreScreen - Force Win","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76950}
+{"testID":8,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76951}
+{"test":{"id":9,"name":"TC-FLUTTER-MATCH-007: LiveScoreScreen - Viewer State","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76952}
+{"testID":9,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76952}
+{"test":{"id":10,"name":"TC-FLUTTER-MATCH-008: LiveScoreScreen - Comments Chat","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76953}
+{"testID":10,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76953}
+{"test":{"id":11,"name":"TC-FLUTTER-MATCH-009: LiveScoreScreen - Completed State","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76954}
+{"testID":11,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76954}
+{"test":{"id":12,"name":"TC-FLUTTER-MATCH-010: LiveScoreScreen - Admin Edit Dialog","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76956}
+{"testID":12,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76956}
+{"test":{"id":13,"name":"TC-FLUTTER-MATCH-011: LiveScoreScreen - Error Null Match","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76957}
+{"testID":13,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76957}
+{"test":{"id":14,"name":"TC-FLUTTER-MATCH-012: LiveScoreScreen - Official Score Modal","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76957}
+{"testID":14,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76958}
+{"test":{"id":15,"name":"TC-FLUTTER-MATCH-013: TennisScorePanel - Normal Point","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76958}
+{"testID":15,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76959}
+{"test":{"id":16,"name":"TC-FLUTTER-MATCH-014: TennisScorePanel - Deuce State","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76962}
+{"testID":16,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76962}
+{"test":{"id":17,"name":"TC-FLUTTER-MATCH-015: TennisScorePanel - Tiebreak State","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76964}
+{"testID":17,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76965}
+{"test":{"id":18,"name":"TC-FLUTTER-MATCH-016: TennisScorePanel - Responsive Layout","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76965}
+{"testID":18,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76966}
+{"test":{"id":19,"name":"TC-FLUTTER-MATCH-017: TennisScorePanel - Read-Only Mode","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76966}
+{"testID":19,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76967}
+{"test":{"id":20,"name":"TC-FLUTTER-MATCH-018: TeamScoreCard - Score Display","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76968}
+{"testID":20,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":76969}
+{"test":{"id":21,"name":"TC-FLUTTER-MATCH-019: TeamScoreCard - Score Controls Live","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart"},"type":"testStart","time":76969}
+{"testID":21,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":7

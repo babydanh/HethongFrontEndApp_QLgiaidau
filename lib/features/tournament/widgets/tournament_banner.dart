@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_registration_sheet.dart';
+import 'package:go_router/go_router.dart';
 
 class TournamentBanner extends StatefulWidget {
   final Tournament tournament;
@@ -158,16 +161,16 @@ class _TournamentBannerState extends State<TournamentBanner> {
                                   ? widget.tournament.logoUrl!
                                   : "https://qlgiaidau.esports.vn${widget.tournament.logoUrl!}",
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Image.network(
+                              errorBuilder: (context, error, stackTrace) => Image.network(
                                 widget.tournament.creatorAvatarUrl ?? "https://cdn-icons-png.flaticon.com/512/3344/3344397.png",
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Icon(Icons.emoji_events, size: 28),
+                                errorBuilder: (context, error, stackTrace) => const Icon(Icons.emoji_events, size: 28),
                               ),
                             )
                           : Image.network(
                               widget.tournament.creatorAvatarUrl ?? "https://cdn-icons-png.flaticon.com/512/3344/3344397.png",
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const Icon(Icons.emoji_events, size: 28),
+                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.emoji_events, size: 28),
                             ),
                     ),
                   ),
@@ -226,11 +229,54 @@ class _TournamentBannerState extends State<TournamentBanner> {
                 ],
               ),
               const SizedBox(height: 16),
+              _buildActionButton(colors),
+              const SizedBox(height: 12),
               Divider(color: colors.border, height: 1.0),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildActionButton(AppColorsExtension colors) {
+    final status = widget.tournament.status;
+    final isRegistration = status == AppConstants.statusRegistration || status == AppConstants.statusUpcoming;
+    final isLive = status == AppConstants.statusInProgress;
+
+    if (!isRegistration && !isLive) return const SizedBox.shrink();
+
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.icon(
+        onPressed: () {
+          if (isRegistration) {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => TournamentRegistrationSheet(
+                tournament: widget.tournament,
+              ),
+            );
+          } else if (isLive) {
+            context.push('/tournament/${widget.tournament.id}/bracket');
+          }
+        },
+        icon: Icon(isRegistration ? Icons.how_to_reg_rounded : Icons.visibility_rounded),
+        label: Text(
+          isRegistration ? 'Đăng ký tham gia' : 'Theo dõi giải đấu',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
+        style: FilledButton.styleFrom(
+          backgroundColor: isRegistration ? AppTheme.primary : colors.success,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
     );
   }
 

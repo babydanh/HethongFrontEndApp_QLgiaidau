@@ -320,6 +320,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
       (AppConstants.bracketSingleElimination, 'Loại trực tiếp', 'Loại ngay khi thua'),
       (AppConstants.bracketDoubleElimination, 'Loại kép', 'Có nhánh thắng/thua'),
       (AppConstants.bracketRoundRobin, 'Vòng tròn', 'Tất cả gặp nhau'),
+      (AppConstants.bracketGroupStageKnockout, 'Vòng bảng + Loại trực tiếp', 'Chia bảng, chọn đội đi tiếp'),
     ];
     return Column(
       children: brackets.map((b) {

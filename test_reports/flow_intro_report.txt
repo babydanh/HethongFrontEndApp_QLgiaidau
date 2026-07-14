@@ -1,0 +1,22 @@
+KẾT QUẢ TEST - 2026-07-08T14:48:50.748954
+17/17 passed
+
+
+--- ALL ---
+✅ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_intro_test.dart: Pass
+✅ TC-FLUTTER-INTRO-001: Pass
+✅ TC-FLUTTER-INTRO-002: Pass
+✅ TC-FLUTTER-INTRO-003: Pass
+✅ TC-FLUTTER-INTRO-004: Pass
+✅ TC-FLUTTER-INTRO-005: Pass
+✅ TC-FLUTTER-INTRO-006: Pass
+✅ TC-FLUTTER-INTRO-007: Pass
+✅ TC-FLUTTER-INTRO-008: Pass
+✅ TC-FLUTTER-DETAIL-001: Pass
+✅ TC-FLUTTER-DETAIL-002: Pass
+✅ TC-FLUTTER-DETAIL-003: Pass
+✅ TC-FLUTTER-DETAIL-004: Pass
+✅ TC-FLUTTER-DETAIL-005: Pass
+✅ TC-FLUTTER-DETAIL-006: Pass
+✅ TC-FLUTTER-DETAIL-007: Pass
+✅ (tearDownAll): Pass

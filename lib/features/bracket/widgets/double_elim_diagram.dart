@@ -10,9 +10,9 @@ import 'package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dar
 // ══════════════════════════════════════════════════════════════════════════════
 const _kCardW = 240.0;
 const _kCardH = 88.0;
-const _kColGap = 72.0;
-const _kRowGap = 20.0;
-const _kBandGap = 80.0; // gap between winners and losers bands
+const _kColGap = 80.0;
+const _kRowGap = 36.0;
+const _kBandGap = 90.0; // gap between winners and losers bands
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  DoubleElimDiagram
@@ -154,8 +154,8 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
     final lBandH = lMaxCount * (_kCardH + _kRowGap);
 
     // Offsets: winners at top, then gap, then losers
-    const wOffsetY = 52.0; // room for band label + round header
-    final lOffsetY = wOffsetY + wBandH + _kBandGap + 52.0;
+    const wOffsetY = 92.0; // room for band label + round header
+    final lOffsetY = wOffsetY + wBandH + _kBandGap + 92.0;
 
     final positions = <String, Offset>{};
     positions.addAll(_layoutBand(bands.winners, wRounds, wOffsetY));
@@ -195,7 +195,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
               if (wRounds.isNotEmpty)
                 Positioned(
                   left: 0,
-                  top: wOffsetY - 40,
+                  top: wOffsetY - 80,
                   child: _DeBandLabel(
                     title: '▲ NHÁNH THẮNG (Winners)',
                     subtitle: 'Đội thắng đi tiếp — Đội thua xuống nhánh thua',
@@ -206,7 +206,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
               if (lRounds.isNotEmpty)
                 Positioned(
                   left: 0,
-                  top: lOffsetY - 40,
+                  top: lOffsetY - 80,
                   child: _DeBandLabel(
                     title: '▼ NHÁNH THUA (Losers)',
                     subtitle: 'Đội thua lần đầu — Thua nữa là bị loại',
@@ -217,7 +217,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
               if (bands.finals.isNotEmpty)
                 Positioned(
                   left: finalsX,
-                  top: finalsStartY - 30,
+                  top: finalsStartY - 36,
                   width: _kCardW,
                   child: _DeRoundHeader(label: 'CHUNG KẾT TỔNG'),
                 ),
@@ -247,7 +247,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                 else label = 'VÒNG $round';
                 return Positioned(
                   left: ci * (_kCardW + _kColGap),
-                  top: wOffsetY - 18,
+                  top: wOffsetY - 36,
                   width: _kCardW,
                   child: _DeRoundHeader(label: label),
                 );
@@ -264,7 +264,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                 else label = 'VÒNG $round';
                 return Positioned(
                   left: ci * (_kCardW + _kColGap),
-                  top: lOffsetY - 18,
+                  top: lOffsetY - 36,
                   width: _kCardW,
                   child: _DeRoundHeader(label: label),
                 );

@@ -1,0 +1,264 @@
+{
+  "metadata": {
+    "timestamp": "2026-07-08T11:26:51.435173",
+    "total": 42,
+    "passed": 42,
+    "failed": 0
+  },
+  "summary": "42/42 passed",
+  "testCases": [
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_auth_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_auth_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-001",
+      "name": "TC-FLUTTER-AUTH-001: Hien thi man hinh Login mac dinh",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-002",
+      "name": "TC-FLUTTER-AUTH-002: Hien thi man hinh Register mac dinh",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-003",
+      "name": "TC-FLUTTER-AUTH-003: Login thanh cong voi email/password",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-004",
+      "name": "TC-FLUTTER-AUTH-004: Login that bai voi email/password sai",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-005",
+      "name": "TC-FLUTTER-AUTH-005: Register thanh cong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-006",
+      "name": "TC-FLUTTER-AUTH-006: Register that bai",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-007",
+      "name": "TC-FLUTTER-AUTH-007: Validation email khong hop le",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-008",
+      "name": "TC-FLUTTER-AUTH-008: Validation password qua ngan",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-009",
+      "name": "TC-FLUTTER-AUTH-009: Validation truong trong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-010",
+      "name": "TC-FLUTTER-AUTH-010: Toggle hien an password",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-011",
+      "name": "TC-FLUTTER-AUTH-011: Chuyen giua Login va Register mode",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-012",
+      "name": "TC-FLUTTER-AUTH-012: Kham pha khong can dang nhap",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-016",
+      "name": "TC-FLUTTER-AUTH-016: Splash screen hien thi va animation",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-020",
+      "name": "TC-FLUTTER-AUTH-020: Forgot password gui email thanh cong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-021",
+      "name": "TC-FLUTTER-AUTH-021: Forgot password gui email that bai",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-022",
+      "name": "TC-FLUTTER-AUTH-022: Forgot password validation",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-023",
+      "name": "TC-FLUTTER-AUTH-023: Login loading screen hien thi",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-032",
+      "name": "TC-FLUTTER-AUTH-032: signOut xoa session",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-036",
+      "name": "TC-FLUTTER-AUTH-036: Token input sheet submit token thanh cong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-037",
+      "name": "TC-FLUTTER-AUTH-037: Token input sheet submit token that bai",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-038",
+      "name": "TC-FLUTTER-AUTH-038: Token input sheet empty token",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-039",
+      "name": "TC-FLUTTER-AUTH-039: Token input sheet clear error",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-040",
+      "name": "TC-FLUTTER-AUTH-040: Token input sheet onSubmitted",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-013",
+      "name": "TC-FLUTTER-AUTH-013: Login Google (can mock Google Sign-In)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-014",
+      "name": "TC-FLUTTER-AUTH-014: Login Google that bai (can mock)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-015",
+      "name": "TC-FLUTTER-AUTH-015: Google Sign-In event listener (can mock)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-017",
+      "name": "TC-FLUTTER-AUTH-017: Splash restore session JWT",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-018",
+      "name": "TC-FLUTTER-AUTH-018: Splash restore session invite token",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-019",
+      "name": "TC-FLUTTER-AUTH-019: Splash no session",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-024",
+      "name": "TC-FLUTTER-AUTH-024: validateToken thanh cong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-025",
+      "name": "TC-FLUTTER-AUTH-025: validateToken that bai null",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-026",
+      "name": "TC-FLUTTER-AUTH-026: validateToken role khong xac dinh",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-027",
+      "name": "TC-FLUTTER-AUTH-027: validateToken exception",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-028",
+      "name": "TC-FLUTTER-AUTH-028: loginLocally",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-029",
+      "name": "TC-FLUTTER-AUTH-029: loginWithEmailPassword session",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-030",
+      "name": "TC-FLUTTER-AUTH-030: loginWithGoogle session",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-031",
+      "name": "TC-FLUTTER-AUTH-031: registerWithEmailPassword session",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-033",
+      "name": "TC-FLUTTER-AUTH-033: startTokenListener phat hien token vo hieu",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-034",
+      "name": "TC-FLUTTER-AUTH-034: startTokenListener khong lang nghe SESSION",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-035",
+      "name": "TC-FLUTTER-AUTH-035: AuthState cac getter",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    }
+  ],
+  "failures": []
+}

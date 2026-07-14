@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -188,10 +187,10 @@ class _TournamentRegisterScreenState extends ConsumerState<TournamentRegisterScr
                   ),
                 ),
               );
-            }).toList(),
+            }),
           ]);
         }, loading: () => const SizedBox(height: 24, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
-          error: (_, __) => const SizedBox.shrink()),
+          error: (context, error) => const SizedBox.shrink()),
         const SizedBox(height: 24),
         SizedBox(width: double.infinity, height: 50,
           child: ElevatedButton.icon(

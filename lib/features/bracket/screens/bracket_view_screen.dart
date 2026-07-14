@@ -44,12 +44,14 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
 
-    // Mở khóa cho phép xoay ngang riêng ở màn hình Bracket
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    // Chỉ cho phép xoay ngang nếu không phải là Widget nhúng (Embedded)
+    if (!widget.isEmbedded) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    }
   }
 
   @override
@@ -57,8 +59,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     _tabController.dispose();
     _transformationController.dispose();
 
-    // Khóa lại màn hình dọc khi thoát khỏi Bracket
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    // Khóa lại màn hình dọc khi thoát khỏi Bracket (nếu không phải là Embedded)
+    if (!widget.isEmbedded) {
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    }
 
     super.dispose();
   }
@@ -150,10 +154,36 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
           final isRoundRobin = bracketType == AppConstants.bracketRoundRobin;
           final isDoubleElimination =
               bracketType == AppConstants.bracketDoubleElimination;
+          final isGroupStageKnockout =
+              bracketType == AppConstants.bracketGroupStageKnockout;
 
-          if (isRoundRobin) {
+          if (isRoundRobin || isGroupStageKnockout) {
             return Column(
               children: [
+                if (isGroupStageKnockout)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 16, color: AppTheme.primary),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Vòng bảng: các đội thi đấu vòng tròn tính điểm. ',
+                              style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 TabBar(
                   controller: _tabController,
                   labelColor: AppTheme.primary,
@@ -209,6 +239,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     bool isReferee,
   ) {
     final colors = context.colors;
+
+    // Tính tổng số vòng dựa trên bracket type
+    final totalRounds = _computeTotalRounds(matches, bracketType);
 
     final validMatches = matches.where((m) {
       if (m.isLive || m.isCompleted) return true;
@@ -337,7 +370,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                 : ListView.builder(
                     itemCount: filteredMatches.length,
                     itemBuilder: (context, index) {
-                      return _buildMatchTableRow(filteredMatches[index], isReadOnly);
+                      return _buildMatchTableRow(filteredMatches[index], isReadOnly, totalRounds);
                     },
                   ),
           ),
@@ -376,9 +409,19 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     );
   }
 
-  Widget _buildMatchTableRow(MatchModel match, bool isReadOnly) {
+  Widget _buildMatchTableRow(MatchModel match, bool isReadOnly, int totalRounds) {
     final colors = context.colors;
-    String roundName = _getRoundName(match.round, 4);
+
+    // Xác định tên vòng theo bracket branch
+    final branch = match.bracketPosition.bracket;
+    String roundName;
+    if (branch == 'grand_final' || branch == 'grand_final_reset') {
+      roundName = 'Chung kết tổng';
+    } else if (branch == 'losers') {
+      roundName = 'Nhánh thua Vòng ${match.round}';
+    } else {
+      roundName = _getRoundName(match.round, totalRounds);
+    }
 
     String timeStr = 'Chưa xếp lịch';
     if (match.scheduledTime != null) {
@@ -790,12 +833,16 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
 
   Widget _buildStandingsView() {
     final standingsAsync = ref.watch(standingsProvider(widget.tournamentId));
+    final tournamentAsync = ref.watch(tournamentProvider(widget.tournamentId));
+    final tournament = tournamentAsync.value;
+    final isGsknockout = tournament?.bracketType == AppConstants.bracketGroupStageKnockout;
 
     return standingsAsync.when(
       data: (standings) {
         if (standings.isEmpty) {
           return const Center(child: Text('Chưa có dữ liệu bảng xếp hạng'));
         }
+        final advancingCount = isGsknockout ? (standings.length / 2).ceil() : 0;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -818,7 +865,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('• T: Số trận Thắng', style: TextStyle(color: context.colors.textSecondary)),
-                              Text('• H: Số trận Hòa', style: TextStyle(color: context.colors.textSecondary)),
                               Text('• B: Số trận Bại (Thua)', style: TextStyle(color: context.colors.textSecondary)),
                               Text('• BT: Bàn Thắng (Số điểm ghi được)', style: TextStyle(color: context.colors.textSecondary)),
                               Text('• BB: Bàn Bại (Số điểm bị thủng lưới)', style: TextStyle(color: context.colors.textSecondary)),
@@ -854,7 +900,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                       DataColumn(label: Text('Đội')),
                       DataColumn(label: Text('Trận')),
                       DataColumn(label: Text('T')),
-                      DataColumn(label: Text('H')),
                       DataColumn(label: Text('B')),
                       DataColumn(label: Text('BT')),
                       DataColumn(label: Text('BB')),
@@ -863,9 +908,33 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                     ],
                     rows: List.generate(standings.length, (index) {
                       final st = standings[index];
+                      final isAdvancing = isGsknockout && index < advancingCount;
                       return DataRow(
+                        color: isAdvancing
+                            ? WidgetStateProperty.all(context.colors.success.withValues(alpha: 0.06))
+                            : null,
                         cells: [
-                          DataCell(Text('${index + 1}')),
+                          DataCell(
+                            isAdvancing
+                                ? Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: context.colors.success.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: context.colors.success.withValues(alpha: 0.3),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      '${index + 1}',
+                                      style: TextStyle(
+                                        color: context.colors.success,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  )
+                                : Text('${index + 1}'),
+                          ),
                           DataCell(
                             Text(
                               st.teamName,
@@ -874,7 +943,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                           ),
                           DataCell(Text('${st.played}')),
                           DataCell(Text('${st.won}')),
-                          DataCell(Text('${st.drawn}')),
                           DataCell(Text('${st.lost}')),
                           DataCell(Text('${st.pointsFor}')),
                           DataCell(Text('${st.pointsAgainst}')),
@@ -914,57 +982,68 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     bool isReadOnly,
   ) {
     if (!isRoundRobin) {
-      return FocusableActionDetector(
-        autofocus: true,
-        shortcuts: {
-          SingleActivator(LogicalKeyboardKey.arrowUp): const ScrollIntent(
-            direction: AxisDirection.up,
+      return Column(
+        children: [
+          _buildScheduleHeader(),
+          Expanded(
+            child: FocusableActionDetector(
+              autofocus: true,
+              shortcuts: {
+                SingleActivator(LogicalKeyboardKey.arrowUp): const ScrollIntent(
+                  direction: AxisDirection.up,
+                ),
+                SingleActivator(LogicalKeyboardKey.arrowDown): const ScrollIntent(
+                  direction: AxisDirection.down,
+                ),
+                SingleActivator(LogicalKeyboardKey.arrowLeft): const ScrollIntent(
+                  direction: AxisDirection.left,
+                ),
+                SingleActivator(LogicalKeyboardKey.arrowRight): const ScrollIntent(
+                  direction: AxisDirection.right,
+                ),
+              },
+              actions: {
+                ScrollIntent: CallbackAction<ScrollIntent>(
+                  onInvoke: (intent) {
+                    final matrix = _transformationController.value.clone();
+                    double dx = 0;
+                    double dy = 0;
+                    final step = 100.0;
+                    if (intent.direction == AxisDirection.up) dy = step;
+                    if (intent.direction == AxisDirection.down) dy = -step;
+                    if (intent.direction == AxisDirection.left) dx = step;
+                    if (intent.direction == AxisDirection.right) dx = -step;
+                    // ignore: deprecated_member_use
+                    matrix.translate(dx, dy);
+                    _transformationController.value = matrix;
+                    return null;
+                  },
+                ),
+              },
+              child: InteractiveViewer(
+                alignment: Alignment.topLeft,
+                transformationController: _transformationController,
+                constrained: false,
+                boundaryMargin: const EdgeInsets.all(500),
+                minScale: 0.1,
+                maxScale: 2.0,
+                child: Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: _buildHorizontalRounds(matches, isRoundRobin, isReadOnly),
+                ),
+              ),
+            ),
           ),
-          SingleActivator(LogicalKeyboardKey.arrowDown): const ScrollIntent(
-            direction: AxisDirection.down,
-          ),
-          SingleActivator(LogicalKeyboardKey.arrowLeft): const ScrollIntent(
-            direction: AxisDirection.left,
-          ),
-          SingleActivator(LogicalKeyboardKey.arrowRight): const ScrollIntent(
-            direction: AxisDirection.right,
-          ),
-        },
-        actions: {
-          ScrollIntent: CallbackAction<ScrollIntent>(
-            onInvoke: (intent) {
-              final matrix = _transformationController.value.clone();
-              double dx = 0;
-              double dy = 0;
-              final step = 100.0;
-              if (intent.direction == AxisDirection.up) dy = step;
-              if (intent.direction == AxisDirection.down) dy = -step;
-              if (intent.direction == AxisDirection.left) dx = step;
-              if (intent.direction == AxisDirection.right) dx = -step;
-              // ignore: deprecated_member_use
-              matrix.translate(dx, dy);
-              _transformationController.value = matrix;
-              return null;
-            },
-          ),
-        },
-        child: InteractiveViewer(
-          alignment: Alignment.topLeft,
-          transformationController: _transformationController,
-          constrained: false,
-          boundaryMargin: const EdgeInsets.all(500),
-          minScale: 0.1,
-          maxScale: 2.0,
-          child: Padding(
-            padding: const EdgeInsets.all(40),
-            child: _buildHorizontalRounds(matches, isRoundRobin, isReadOnly),
-          ),
-        ),
+        ],
       );
     }
 
     // Round Robin fallback
-    return FocusableActionDetector(
+    return Column(
+      children: [
+        _buildScheduleHeader(),
+        Expanded(
+          child: FocusableActionDetector(
       autofocus: true,
       shortcuts: {
         SingleActivator(LogicalKeyboardKey.arrowUp): const ScrollIntent(
@@ -1009,6 +1088,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
           child: _buildHorizontalRounds(matches, isRoundRobin, isReadOnly),
         ),
       ),
+      ),
+        ),
+      ],
     );
   }
 
@@ -1032,6 +1114,47 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     );
   }
 
+  Widget _buildScheduleHeader() {
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Text(
+            'Lịch thi đấu vòng bảng',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            icon: Icon(Icons.info_outline, color: AppTheme.primary),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: colors.bgCard,
+                  title: Text('Cách tính điểm', style: TextStyle(color: colors.textPrimary)),
+                  content: Text(
+                    'Thắng: +${AppConstants.pointsForWin}đ  •  Thua: +${AppConstants.pointsForLoss}đ  •  Tie-breaker: Head-to-Head',
+                    style: TextStyle(color: colors.textSecondary),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Đóng'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildHorizontalRounds(List<MatchModel> matches, bool isRoundRobin, bool isReadOnly) {
     final roundMap = <int, List<MatchModel>>{};
@@ -1047,7 +1170,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
       children: rounds.map((round) {
         final roundMatches = roundMap[round]!;
         final roundName = isRoundRobin
-            ? 'Lượt $round'
+            ? 'Vòng $round'
             : _getRoundName(round, rounds.length);
         return _buildRoundColumn(
           context,
@@ -1062,10 +1185,28 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     );
   }
 
+  int _computeTotalRounds(List<MatchModel> matches, String bracketType) {
+    if (matches.isEmpty) return 1;
+    if (bracketType == AppConstants.bracketDoubleElimination) {
+      // DE: chỉ tính số vòng từ nhánh thắng (winners)
+      final winnersRounds = matches
+          .where((m) => m.bracketPosition.bracket == 'winners')
+          .map((m) => m.round);
+      return winnersRounds.isEmpty ? 1 : winnersRounds.reduce((a, b) => a > b ? a : b);
+    }
+    // SE, RR: max round của tất cả match
+    return matches.map((m) => m.round).reduce((a, b) => a > b ? a : b);
+  }
+
   String _getRoundName(int round, int totalRounds) {
-    if (round == totalRounds) return 'Chung kết';
-    if (round == totalRounds - 1) return 'Bán kết';
-    if (round == totalRounds - 2) return 'Tứ kết';
+    final fromEnd = totalRounds - round;
+    if (fromEnd == 0) return 'Chung kết';
+    if (fromEnd == 1) return 'Bán kết';
+    if (fromEnd == 2) return 'Tứ kết';
+    if (fromEnd == 3) return 'Vòng 1/8';
+    if (fromEnd == 4) return 'Vòng 1/16';
+    if (fromEnd == 5) return 'Vòng 1/32';
+    if (fromEnd >= 6) return 'Vòng 1/${1 << fromEnd}';
     return 'Vòng $round';
   }
 
@@ -1092,24 +1233,36 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
             margin: EdgeInsets.only(bottom: verticalMargin),
             decoration: BoxDecoration(
-              color: context.colors.bgSurface,
+              color: AppTheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: context.colors.border.withValues(alpha: 0.5),
+                color: AppTheme.primary.withValues(alpha: 0.25),
               ),
             ),
-            child: Text(
-              roundName.toUpperCase(),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: context.colors.textPrimary,
-                letterSpacing: 1.2,
-              ),
+            child: Column(
+              children: [
+                Text(
+                  roundName.toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.primary,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '⚔️ ${matches.length} trận',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: context.colors.textMuted,
+                  ),
+                ),
+              ],
             ),
           ),
           ...matches.map((match) {

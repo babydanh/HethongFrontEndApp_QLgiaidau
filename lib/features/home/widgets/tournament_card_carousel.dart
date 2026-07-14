@@ -14,34 +14,32 @@ class TournamentCardCarousel extends StatelessWidget {
     required this.onTap,
   });
 
+  String _getFormatLabel(String matchType, String? genderRestriction) {
+    final mt = matchType.toUpperCase();
+    final gr = genderRestriction?.toUpperCase() ?? '';
+    if (mt == 'SINGLES') {
+      return gr == 'FEMALE' ? 'Đơn Nữ' : 'Đơn Nam';
+    }
+    if (mt == 'DOUBLES') {
+      return gr == 'FEMALE' ? 'Đôi Nữ' : 'Đôi Nam';
+    }
+    if (mt == 'MIXED_DOUBLES' || mt == 'MIXED' || gr == 'MIXED') {
+      return 'Đôi Nam Nữ';
+    }
+    return mt == 'DOUBLES' ? 'Đôi' : mt == 'SINGLES' ? 'Đơn' : 'Đôi Nam Nữ';
+  }
+
   List<String> _getCategoryChips(Tournament t) {
     final List<String> chips = [];
     if (t.divisions.isNotEmpty) {
-      for (var divName in t.divisions) {
-        if (divName.trim() == t.name.trim()) continue;
-        final divLower = divName.toLowerCase();
-        if (divLower.contains("đơn nam")) {
-          chips.add("Đơn Nam");
-        } else if (divLower.contains("đơn nữ")) {
-          chips.add("Đơn Nữ");
-        } else if (divLower.contains("đôi nam nữ") || divLower.contains("nam nữ")) {
-          chips.add("Đôi Nam Nữ");
-        } else if (divLower.contains("đôi nam")) {
-          chips.add("Đôi Nam");
-        } else if (divLower.contains("đôi nữ")) {
-          chips.add("Đôi Nữ");
-        } else if (divLower.contains("đồng đội")) {
-          chips.add("Đồng đội");
-        } else {
-          // If the division name itself is generic, normalize it
-          if (divLower == "thi đấu đơn" || divLower == "đơn") {
-            chips.add("Đơn");
-          } else if (divLower == "thi đấu đôi" || divLower == "đôi") {
-            chips.add("Đôi");
-          } else {
-            chips.add(divName);
-          }
-        }
+      for (var div in t.divisions) {
+        if (div.name.trim() == t.name.trim()) continue;
+        
+        final label = _getFormatLabel(div.matchType, div.genderRestriction);
+        final regCount = div.participantCount;
+        final maxCount = div.maxParticipants != null ? "${div.maxParticipants}" : "-";
+        
+        chips.add("$label ($regCount/$maxCount)");
       }
     }
     if (chips.isEmpty) {

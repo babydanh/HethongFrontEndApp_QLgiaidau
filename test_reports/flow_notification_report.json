@@ -1,0 +1,145 @@
+{
+  "metadata": {
+    "timestamp": "2026-07-08T14:22:10.931622",
+    "total": 18,
+    "passed": 14,
+    "failed": 4
+  },
+  "summary": "14/18 passed",
+  "testCases": [
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_notification_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_notification_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-001",
+      "name": "TC-FLUTTER-NOTIFICATION-001: Notification screen - hien thi danh sach",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-002",
+      "name": "TC-FLUTTER-NOTIFICATION-002: Notification screen - empty state",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-003",
+      "name": "TC-FLUTTER-NOTIFICATION-003: Notification grouping theo thoi gian",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-004",
+      "name": "TC-FLUTTER-NOTIFICATION-004: Notification - danh dau da doc khi tap",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-005",
+      "name": "TC-FLUTTER-NOTIFICATION-005: Notification - redirect URL",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-006",
+      "name": "TC-FLUTTER-NOTIFICATION-006: Notification - doc tat ca",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-007",
+      "name": "TC-FLUTTER-NOTIFICATION-007: Notification - pagination load more",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-008",
+      "name": "TC-FLUTTER-NOTIFICATION-008: Notification - pull to refresh",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-009",
+      "name": "TC-FLUTTER-NOTIFICATION-009: Notification provider - addNotification socket",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-010",
+      "name": "TC-FLUTTER-NOTIFICATION-010: Notification provider - markAsRead",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-011",
+      "name": "TC-FLUTTER-NOTIFICATION-011: Notification provider - markAllAsRead",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-012",
+      "name": "TC-FLUTTER-NOTIFICATION-012: Notification provider - loadPage > 1 append",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-013",
+      "name": "TC-FLUTTER-NOTIFICATION-013: Notification provider - loadPage page 1 reset",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-014",
+      "name": "TC-FLUTTER-NOTIFICATION-014: AppNotification entity - fromJson",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-015",
+      "name": "TC-FLUTTER-NOTIFICATION-015: AppNotification - icon va color theo type",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-016",
+      "name": "TC-FLUTTER-NOTIFICATION-016: AppNotification - timeAgo format",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    }
+  ],
+  "failures": [
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-001",
+      "name": "TC-FLUTTER-NOTIFICATION-001: Notification screen - hien thi danh sach",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-003",
+      "name": "TC-FLUTTER-NOTIFICATION-003: Notification grouping theo thoi gian",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-008",
+      "name": "TC-FLUTTER-NOTIFICATION-008: Notification - pull to refresh",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-NOTIFICATION-009",
+      "name": "TC-FLUTTER-NOTIFICATION-009: Notification provider - addNotification socket",
+      "status": "Fail",
+      "totalTime": 0
+    }
+  ]
+}

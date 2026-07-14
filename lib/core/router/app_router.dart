@@ -60,8 +60,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Splash screen & Login screen — luôn cho phép
       if (currentPath == '/' ||
           currentPath == '/login' ||
-          currentPath == '/login-loading')
+          currentPath == '/login-loading') {
         return null;
+      }
 
       // Chưa auth nhưng cố truy cập referee hoặc admin
       if (!isAuth &&

@@ -85,6 +85,19 @@ class ApiMatchRepository implements IMatchRepository {
     }
   }
 
+  static String _buildCourtDisplay({
+    String? court,
+    String? courtName,
+    String? courtAddress,
+  }) {
+    final name = (courtName ?? court ?? '').toString().trim();
+    final address = (courtAddress ?? '').toString().trim();
+    if (name.isEmpty) return address;
+    if (address.isEmpty) return name;
+    if (name.contains(address)) return name;
+    return '$name - $address';
+  }
+
   MatchModel _parseMatch(Map<String, dynamic> json) {
     final team1Name = json['participant1']?['teamName'] ?? json['team1Name'] ?? 'TBD';
     final team2Name = json['participant2']?['teamName'] ?? json['team2Name'] ?? 'TBD';
@@ -112,9 +125,15 @@ class ApiMatchRepository implements IMatchRepository {
             )
           : const BracketPosition(round: 1, position: 0),
       nextMatchId: json['nextMatchId'] ?? '',
+      loserNextMatchId: json['loserNextMatchId'] ?? '',
       winnerId: json['winnerId'] ?? '',
       isBye: json['isBye'] ?? json['is_bye'] ?? false,
-      court: json['court'] ?? '',
+      court: _buildCourtDisplay(
+        court: json['court']?.toString(),
+        courtName: json['courtName']?.toString(),
+        courtAddress: json['courtAddress']?.toString(),
+      ),
+      courtAddress: json['courtAddress']?.toString() ?? '',
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
       refereeId: json['refereeId']?.toString(),
       refereeName: json['refereeName']?.toString(),
@@ -325,10 +344,13 @@ class ApiMatchRepository implements IMatchRepository {
   Future<List<MatchModel>> getAllByTournament(String tournamentId, {String? divisionId}) async {
     _log.debug('Fetching all matches for tournament $tournamentId via API (division: $divisionId)');
     try {
-      final response = await _dioClient.dio.get('/matches', queryParameters: {
+      final queryParameters = <String, dynamic>{
         'tournamentId': tournamentId,
-        if (divisionId != null) 'divisionId': divisionId,
-      });
+      };
+      if (divisionId != null) {
+        queryParameters['divisionId'] = divisionId;
+      }
+      final response = await _dioClient.dio.get('/matches', queryParameters: queryParameters);
       if (response.statusCode == 200) {
         final List<dynamic> list = response.data['data'] ?? response.data ?? [];
         return list.map((json) {
@@ -359,6 +381,7 @@ class ApiMatchRepository implements IMatchRepository {
                   )
                 : const BracketPosition(round: 1, position: 0),
             nextMatchId: json['nextMatchId'] ?? '',
+            loserNextMatchId: json['loserNextMatchId'] ?? '',
             winnerId: json['winnerId'] ?? '',
             isBye: json['isBye'] ?? json['is_bye'] ?? false,
             court: json['court'] ?? '',
@@ -423,6 +446,7 @@ class ApiMatchRepository implements IMatchRepository {
                   )
                 : const BracketPosition(round: 1, position: 0),
             nextMatchId: json['nextMatchId'] ?? '',
+            loserNextMatchId: json['loserNextMatchId'] ?? '',
             winnerId: json['winnerId'] ?? '',
             isBye: json['isBye'] ?? json['is_bye'] ?? false,
             court: json['court'] ?? '',

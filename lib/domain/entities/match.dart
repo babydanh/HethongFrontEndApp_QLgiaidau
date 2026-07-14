@@ -66,6 +66,7 @@ class MatchModel {
   final String nextMatchId;
   final String loserNextMatchId;
   final String court;
+  final String courtAddress;
   final int? maxScore;
   final bool winByTwo;
   final List<MatchEvent> events;
@@ -106,6 +107,7 @@ class MatchModel {
     this.nextMatchId = '',
     this.loserNextMatchId = '',
     this.court = '',
+    this.courtAddress = '',
     this.maxScore,
     this.winByTwo = true,
     this.events = const [],
@@ -152,7 +154,8 @@ class MatchModel {
           : const BracketPosition(round: 1, position: 0),
       nextMatchId: json['nextMatchId'] ?? '',
       loserNextMatchId: json['loserNextMatchId'] ?? '',
-      court: json['court'] ?? '',
+      court: json['court']?.toString() ?? json['courtName']?.toString() ?? '',
+      courtAddress: json['courtAddress']?.toString() ?? json['court_address']?.toString() ?? '',
       maxScore: json['maxScore'] as int?,
       winByTwo: json['winByTwo'] as bool? ?? true,
       events: (json['events'] as List<dynamic>?)
@@ -204,6 +207,7 @@ class MatchModel {
       'nextMatchId': nextMatchId,
       'loserNextMatchId': loserNextMatchId,
       'court': court,
+      if (courtAddress.isNotEmpty) 'courtAddress': courtAddress,
       'maxScore': maxScore,
       'winByTwo': winByTwo,
       'events': events.map((e) => e.toJson()).toList(),
@@ -241,6 +245,7 @@ class MatchModel {
     String? nextMatchId,
     String? loserNextMatchId,
     String? court,
+    String? courtAddress,
     int? maxScore,
     bool? winByTwo,
     List<MatchEvent>? events,
@@ -279,6 +284,7 @@ class MatchModel {
       nextMatchId: nextMatchId ?? this.nextMatchId,
       loserNextMatchId: loserNextMatchId ?? this.loserNextMatchId,
       court: court ?? this.court,
+      courtAddress: courtAddress ?? this.courtAddress,
       maxScore: maxScore ?? this.maxScore,
       winByTwo: winByTwo ?? this.winByTwo,
       events: events ?? this.events,

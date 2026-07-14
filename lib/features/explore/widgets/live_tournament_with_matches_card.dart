@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
@@ -72,15 +73,6 @@ class _LiveTournamentWithMatchesCardState extends ConsumerState<LiveTournamentWi
       default:
         return sport;
     }
-  }
-
-  // Tạo số điểm ELO giả lập dựa vào tên đội
-  int _getMockTeamElo(String name) {
-    int sum = 0;
-    for (int i = 0; i < name.length; i++) {
-      sum += name.codeUnitAt(i);
-    }
-    return 1100 + (sum % 400); // Trả về ELO khoảng 1100 - 1500
   }
 
   @override
@@ -193,7 +185,7 @@ class _LiveTournamentWithMatchesCardState extends ConsumerState<LiveTournamentWi
 
               // Find champion
               String? championName;
-              if (widget.tournament.status == 'completed' || widget.tournament.status == 'finished') {
+              if (StatusHelper.isTournamentCompleted(widget.tournament.status)) {
                 MatchModel? finalMatch;
                 for (final m in completedMatches) {
                   if (finalMatch == null || 
@@ -629,7 +621,7 @@ class _LiveTournamentWithMatchesCardState extends ConsumerState<LiveTournamentWi
     final fontWeight = isWinner ? FontWeight.w800 : FontWeight.w600;
     
     final displayNames = name.split(RegExp(r'[-–\n]'));
-    final teamKey = '${matchId}_${name}';
+    final teamKey = '${matchId}_$name';
     final isExpanded = _expandedKey == teamKey;
 
     final team = teams.firstWhere(
@@ -637,7 +629,7 @@ class _LiveTournamentWithMatchesCardState extends ConsumerState<LiveTournamentWi
       orElse: () => Team(id: '', name: name, createdAt: DateTime.now()),
     );
 
-    final avgElo = _getMockTeamElo(name);
+    final avgElo = 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

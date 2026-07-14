@@ -54,7 +54,7 @@ class VnsportHeader extends StatelessWidget {
                           alignment: Alignment.centerLeft,
                           color: Colors.white,
                           colorBlendMode: BlendMode.srcIn,
-                          errorBuilder: (_, __, ___) => const Text(
+                          errorBuilder: (context, error, stackTrace) => const Text(
                             "VNSPORT",
                             style: TextStyle(
                               color: Colors.white,

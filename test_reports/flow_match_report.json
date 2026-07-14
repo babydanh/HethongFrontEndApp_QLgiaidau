@@ -1,0 +1,331 @@
+{
+  "metadata": {
+    "timestamp": "2026-07-08T15:13:57.428370",
+    "total": 28,
+    "passed": 3,
+    "failed": 25
+  },
+  "summary": "3/28 passed",
+  "testCases": [
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_match_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_match_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-001",
+      "name": "TC-FLUTTER-MATCH-001: LiveScoreScreen - Setup State Scheduled",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-002",
+      "name": "TC-FLUTTER-MATCH-002: LiveScoreScreen - Start Match",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-003",
+      "name": "TC-FLUTTER-MATCH-003: LiveScoreScreen - Referee Score Controls",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-004",
+      "name": "TC-FLUTTER-MATCH-004: LiveScoreScreen - Win Condition Check",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-005",
+      "name": "TC-FLUTTER-MATCH-005: LiveScoreScreen - Foul Sheet Penalty",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-006",
+      "name": "TC-FLUTTER-MATCH-006: LiveScoreScreen - Force Win",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-007",
+      "name": "TC-FLUTTER-MATCH-007: LiveScoreScreen - Viewer State",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-008",
+      "name": "TC-FLUTTER-MATCH-008: LiveScoreScreen - Comments Chat",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-009",
+      "name": "TC-FLUTTER-MATCH-009: LiveScoreScreen - Completed State",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-010",
+      "name": "TC-FLUTTER-MATCH-010: LiveScoreScreen - Admin Edit Dialog",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-011",
+      "name": "TC-FLUTTER-MATCH-011: LiveScoreScreen - Error Null Match",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-012",
+      "name": "TC-FLUTTER-MATCH-012: LiveScoreScreen - Official Score Modal",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-013",
+      "name": "TC-FLUTTER-MATCH-013: TennisScorePanel - Normal Point",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-014",
+      "name": "TC-FLUTTER-MATCH-014: TennisScorePanel - Deuce State",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-015",
+      "name": "TC-FLUTTER-MATCH-015: TennisScorePanel - Tiebreak State",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-016",
+      "name": "TC-FLUTTER-MATCH-016: TennisScorePanel - Responsive Layout",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-017",
+      "name": "TC-FLUTTER-MATCH-017: TennisScorePanel - Read-Only Mode",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-018",
+      "name": "TC-FLUTTER-MATCH-018: TeamScoreCard - Score Display",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-019",
+      "name": "TC-FLUTTER-MATCH-019: TeamScoreCard - Score Controls Live",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-020",
+      "name": "TC-FLUTTER-MATCH-020: Official Score Modal - Display Structure",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-021",
+      "name": "TC-FLUTTER-MATCH-021: Official Score Modal - MatchOpsSummary",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-022",
+      "name": "TC-FLUTTER-MATCH-022: LiveMatchScreen - Match Sections",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-023",
+      "name": "TC-FLUTTER-MATCH-023: LiveMatchScreen - Match Filtering",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-024",
+      "name": "TC-FLUTTER-MATCH-024: LiveMatchScreen - Empty State",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-025",
+      "name": "TC-FLUTTER-MATCH-025: AdminEditScoreDialog - Edit Score",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-026",
+      "name": "TC-FLUTTER-MATCH-026: LiveScoreScreen - Heart Animation",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Fail",
+      "totalTime": 0
+    }
+  ],
+  "failures": [
+    {
+      "id": "TC-FLUTTER-MATCH-003",
+      "name": "TC-FLUTTER-MATCH-003: LiveScoreScreen - Referee Score Controls",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-004",
+      "name": "TC-FLUTTER-MATCH-004: LiveScoreScreen - Win Condition Check",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-005",
+      "name": "TC-FLUTTER-MATCH-005: LiveScoreScreen - Foul Sheet Penalty",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-006",
+      "name": "TC-FLUTTER-MATCH-006: LiveScoreScreen - Force Win",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-007",
+      "name": "TC-FLUTTER-MATCH-007: LiveScoreScreen - Viewer State",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-008",
+      "name": "TC-FLUTTER-MATCH-008: LiveScoreScreen - Comments Chat",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-009",
+      "name": "TC-FLUTTER-MATCH-009: LiveScoreScreen - Completed State",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-010",
+      "name": "TC-FLUTTER-MATCH-010: LiveScoreScreen - Admin Edit Dialog",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-011",
+      "name": "TC-FLUTTER-MATCH-011: LiveScoreScreen - Error Null Match",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-012",
+      "name": "TC-FLUTTER-MATCH-012: LiveScoreScreen - Official Score Modal",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-013",
+      "name": "TC-FLUTTER-MATCH-013: TennisScorePanel - Normal Point",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-014",
+      "name": "TC-FLUTTER-MATCH-014: TennisScorePanel - Deuce State",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-015",
+      "name": "TC-FLUTTER-MATCH-015: TennisScorePanel - Tiebreak State",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-016",
+      "name": "TC-FLUTTER-MATCH-016: TennisScorePanel - Responsive Layout",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-017",
+      "name": "TC-FLUTTER-MATCH-017: TennisScorePanel - Read-Only Mode",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-018",
+      "name": "TC-FLUTTER-MATCH-018: TeamScoreCard - Score Display",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-019",
+      "name": "TC-FLUTTER-MATCH-019: TeamScoreCard - Score Controls Live",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-020",
+      "name": "TC-FLUTTER-MATCH-020: Official Score Modal - Display Structure",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-021",
+      "name": "TC-FLUTTER-MATCH-021: Official Score Modal - MatchOpsSummary",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-022",
+      "name": "TC-FLUTTER-MATCH-022: LiveMatchScreen - Match Sections",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-023",
+      "name": "TC-FLUTTER-MATCH-023: LiveMatchScreen - Match Filtering",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-024",
+      "name": "TC-FLUTTER-MATCH-024: LiveMatchScreen - Empty State",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-025",
+      "name": "TC-FLUTTER-MATCH-025: AdminEditScoreDialog - Edit Score",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-MATCH-026",
+      "name": "TC-FLUTTER-MATCH-026: LiveScoreScreen - Heart Animation",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Fail",
+      "totalTime": 0
+    }
+  ]
+}

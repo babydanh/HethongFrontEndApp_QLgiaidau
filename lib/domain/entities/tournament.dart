@@ -37,7 +37,7 @@ class Tournament {
   final String? locationAddress;
   final String? prizeDescription;
   final Map<String, dynamic>? contactInfo;
-  final List<String> divisions;
+  final List<TournamentDivision> divisions;
   final bool isRanked;
 
   const Tournament({
@@ -119,7 +119,7 @@ class Tournament {
       config = json['tournamentConfig'] as Map<String, dynamic>;
     }
 
-    String bracketTypeVal = config['bracketType']?.toString() ?? json['bracketType']?.toString() ?? '';
+    String bracketTypeVal = (config['bracketType']?.toString() ?? json['bracketType']?.toString() ?? '').toLowerCase();
     int maxTeamsVal = _toInt(config['maxTeams']) ?? json['maxTeams'] ?? 16;
     int roundCountVal = _toInt(config['roundRobinLegs']) ?? json['roundCount'] ?? 1;
 
@@ -138,11 +138,18 @@ class Tournament {
       parsedContactInfo = Map<String, dynamic>.from(json['contactInfo'] as Map);
     }
 
-    final List<String> parsedDivisions = [];
+    final List<TournamentDivision> parsedDivisions = [];
     if (json['divisions'] != null && json['divisions'] is List) {
       for (var div in json['divisions']) {
-        if (div is Map && div['name'] != null) {
-          parsedDivisions.add(div['name'].toString());
+        if (div is Map) {
+          parsedDivisions.add(TournamentDivision.fromJson(Map<String, dynamic>.from(div)));
+        } else {
+          // If the element is a string directly
+          parsedDivisions.add(TournamentDivision(
+            id: '',
+            name: div.toString(),
+            matchType: 'SINGLES',
+          ));
         }
       }
     }
@@ -226,6 +233,7 @@ class Tournament {
       if (locationAddress != null) 'locationAddress': locationAddress,
       if (prizeDescription != null) 'prizeDescription': prizeDescription,
       if (contactInfo != null) 'contactInfo': contactInfo,
+      'divisions': divisions.map((e) => e.toJson()).toList(),
       'isRanked': isRanked,
     };
   }
@@ -262,7 +270,7 @@ class Tournament {
     String? locationAddress,
     String? prizeDescription,
     Map<String, dynamic>? contactInfo,
-    List<String>? divisions,
+    List<TournamentDivision>? divisions,
     bool? isRanked,
   }) {
     return Tournament(
@@ -304,4 +312,48 @@ class Tournament {
 
   @override
   String toString() => 'Tournament(id: $id, name: $name, status: $status)';
+}
+
+class TournamentDivision {
+  final String id;
+  final String name;
+  final String matchType;
+  final String? genderRestriction;
+  final int? maxParticipants;
+  final int participantCount;
+
+  const TournamentDivision({
+    required this.id,
+    required this.name,
+    required this.matchType,
+    this.genderRestriction,
+    this.maxParticipants,
+    this.participantCount = 0,
+  });
+
+  factory TournamentDivision.fromJson(Map<String, dynamic> json) {
+    int parsedCount = 0;
+    if (json['_count'] != null && json['_count'] is Map && json['_count']['participants'] != null) {
+      parsedCount = int.tryParse(json['_count']['participants'].toString()) ?? 0;
+    }
+    return TournamentDivision(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      matchType: json['matchType']?.toString() ?? json['match_type']?.toString() ?? 'SINGLES',
+      genderRestriction: json['genderRestriction']?.toString() ?? json['gender_restriction']?.toString(),
+      maxParticipants: json['maxParticipants'] != null ? int.tryParse(json['maxParticipants'].toString()) : null,
+      participantCount: parsedCount,
+    );
+  }
+  
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'matchType': matchType,
+      'genderRestriction': genderRestriction,
+      'maxParticipants': maxParticipants,
+      '_count': {'participants': participantCount},
+    };
+  }
 }

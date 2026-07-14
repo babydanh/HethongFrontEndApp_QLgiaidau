@@ -100,7 +100,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           fit: BoxFit.contain,
                           color: Colors.white,
                           colorBlendMode: BlendMode.srcIn,
-                          errorBuilder: (_, __, ___) => const Material(
+                          errorBuilder: (context, error, stackTrace) => const Material(
                             color: Colors.transparent,
                             child: Text(
                               "VNSPORT",

@@ -143,6 +143,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(authProvider.notifier).init();
     });
+
+    // Khóa màn hình dọc (Portrait) riêng cho Trang chủ
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
   }
 
   void _startCarouselTimer(int itemCount) {
@@ -193,6 +199,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _scrollController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
+
+    // Khôi phục lại hướng màn hình thông minh khi thoát Trang chủ
+    final view = PlatformDispatcher.instance.views.first;
+    final logicalWidth = view.physicalSize.width / view.devicePixelRatio;
+    if (logicalWidth < 600) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
+    } else {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    }
+
     super.dispose();
   }
 
@@ -1793,7 +1816,8 @@ class _TournamentCard extends StatelessWidget {
   List<String> _getCategoryChips(Tournament t) {
     final List<String> chips = [];
     if (t.divisions.isNotEmpty) {
-      for (var divName in t.divisions) {
+      for (var div in t.divisions) {
+        final divName = div.name;
         if (divName.trim() == t.name.trim()) continue;
         final divLower = divName.toLowerCase();
         if (divLower.contains("đơn nam")) {

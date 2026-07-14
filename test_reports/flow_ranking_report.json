@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "timestamp": "2026-07-08T15:12:36.238265",
+    "total": 14,
+    "passed": 14,
+    "failed": 0
+  },
+  "summary": "14/14 passed",
+  "testCases": [
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_ranking_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_ranking_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-RANKING-001",
+      "name": "TC-FLUTTER-RANKING-001: LeaderboardScreen - Category Selection",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-RANKING-002",
+      "name": "TC-FLUTTER-RANKING-002: LeaderboardScreen - Podium List",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-RANKING-003",
+      "name": "TC-FLUTTER-RANKING-003: LeaderboardScreen - Search",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-RANKING-004",
+      "name": "TC-FLUTTER-RANKING-004: LeaderboardScreen - My Ranking Card",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-RANKING-005",
+      "name": "TC-FLUTTER-RANKING-005: LeaderboardScreen - Tier Legend",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-RANKING-006",
+      "name": "TC-FLUTTER-RANKING-006: LeaderboardScreen - Empty State",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-RANKING-007",
+      "name": "TC-FLUTTER-RANKING-007: User Ranking Detail Screen",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-RANKING-008",
+      "name": "TC-FLUTTER-RANKING-008: LeaderboardScreen - Pull-to-refresh",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-RANKING-009",
+      "name": "TC-FLUTTER-RANKING-009: LeaderboardScreen - Loading",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-RANKING-010",
+      "name": "TC-FLUTTER-RANKING-010: LeaderboardScreen - Error State",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-RANKING-011",
+      "name": "TC-FLUTTER-RANKING-011: LeaderboardScreen - Scroll Loading",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-RANKING-012",
+      "name": "TC-FLUTTER-RANKING-012: LeaderboardScreen - Podium Animation",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    }
+  ],
+  "failures": []
+}

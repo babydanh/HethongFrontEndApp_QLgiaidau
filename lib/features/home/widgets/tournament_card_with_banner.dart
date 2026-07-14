@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io' show Platform;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
-import 'package:app_quanly_giaidau/core/widgets/countdown_timer.dart';
-import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 
-class TournamentCardWithBanner extends StatelessWidget {
+class TournamentCardWithBanner extends ConsumerStatefulWidget {
   final Tournament tournament;
   final VoidCallback onTap;
   final EdgeInsetsGeometry? margin;
@@ -20,6 +23,59 @@ class TournamentCardWithBanner extends StatelessWidget {
     required this.onTap,
     this.margin,
   });
+
+  @override
+  ConsumerState<TournamentCardWithBanner> createState() => _TournamentCardWithBannerState();
+}
+
+class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBanner> {
+  bool _isFollowLoading = false;
+
+  Future<void> _toggleFollow(BuildContext context) async {
+    final auth = ref.read(authProvider);
+    if (!auth.isAuthenticated) {
+      if (context.mounted) {
+        context.go('/login');
+      }
+      return;
+    }
+
+    if (_isFollowLoading) return;
+
+    final repo = ref.read(tournamentRepositoryProvider);
+    final followedAsync = ref.read(followedTournamentsProvider);
+    final currentlyFollowing = followedAsync.maybeWhen(
+      data: (items) => items.any((t) => t.id == widget.tournament.id),
+      orElse: () => false,
+    );
+
+    setState(() => _isFollowLoading = true);
+    try {
+      if (currentlyFollowing) {
+        await repo.unfollowTournament(widget.tournament.id);
+      } else {
+        await repo.followTournament(widget.tournament.id);
+      }
+      ref.invalidate(followedTournamentsProvider);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            currentlyFollowing ? 'Đã bỏ theo dõi giải đấu' : 'Đã theo dõi giải đấu',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể cập nhật theo dõi: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isFollowLoading = false);
+      }
+    }
+  }
 
   String _resolveImageUrl(String? url) {
     if (url == null || url.isEmpty) return "";
@@ -35,34 +91,32 @@ class TournamentCardWithBanner extends StatelessWidget {
     return "$host$url";
   }
 
+  String _getFormatLabel(String matchType, String? genderRestriction) {
+    final mt = matchType.toUpperCase();
+    final gr = genderRestriction?.toUpperCase() ?? '';
+    if (mt == 'SINGLES') {
+      return gr == 'FEMALE' ? 'Đơn Nữ' : 'Đơn Nam';
+    }
+    if (mt == 'DOUBLES') {
+      return gr == 'FEMALE' ? 'Đôi Nữ' : 'Đôi Nam';
+    }
+    if (mt == 'MIXED_DOUBLES' || mt == 'MIXED' || gr == 'MIXED') {
+      return 'Đôi Nam Nữ';
+    }
+    return mt == 'DOUBLES' ? 'Đôi' : mt == 'SINGLES' ? 'Đơn' : 'Đôi Nam Nữ';
+  }
+
   List<String> _getCategoryChips(Tournament t) {
     final List<String> chips = [];
     if (t.divisions.isNotEmpty) {
-      for (var divName in t.divisions) {
-        if (divName.trim() == t.name.trim()) continue;
-        final divLower = divName.toLowerCase();
-        if (divLower.contains("đơn nam")) {
-          chips.add("Đơn Nam");
-        } else if (divLower.contains("đơn nữ")) {
-          chips.add("Đơn Nữ");
-        } else if (divLower.contains("đôi nam nữ") || divLower.contains("nam nữ")) {
-          chips.add("Đôi Nam Nữ");
-        } else if (divLower.contains("đôi nam")) {
-          chips.add("Đôi Nam");
-        } else if (divLower.contains("đôi nữ")) {
-          chips.add("Đôi Nữ");
-        } else if (divLower.contains("đồng đội")) {
-          chips.add("Đồng đội");
-        } else {
-          // If the division name itself is generic, normalize it
-          if (divLower == "thi đấu đơn" || divLower == "đơn") {
-            chips.add("Đơn");
-          } else if (divLower == "thi đấu đôi" || divLower == "đôi") {
-            chips.add("Đôi");
-          } else {
-            chips.add(divName);
-          }
-        }
+      for (var div in t.divisions) {
+        if (div.name.trim() == t.name.trim()) continue;
+        
+        final label = _getFormatLabel(div.matchType, div.genderRestriction);
+        final regCount = div.participantCount;
+        final maxCount = div.maxParticipants != null ? "${div.maxParticipants}" : "-";
+        
+        chips.add("$label ($regCount/$maxCount)");
       }
     }
     if (chips.isEmpty) {
@@ -122,8 +176,8 @@ class TournamentCardWithBanner extends StatelessWidget {
   }
 
   Widget _buildDateBlock(BuildContext context, dynamic colors) {
-    final start = tournament.startDate ?? tournament.createdAt;
-    final end = tournament.endDate ?? start.add(const Duration(days: 7));
+    final start = widget.tournament.startDate ?? widget.tournament.createdAt;
+    final end = widget.tournament.endDate ?? start.add(const Duration(days: 7));
     final startDay = start.day.toString().padLeft(2, '0');
     final endDay = end.day.toString().padLeft(2, '0');
     final startMonth = start.month.toString().padLeft(2, '0');
@@ -182,18 +236,23 @@ class TournamentCardWithBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final resolvedBannerUrl = _resolveImageUrl(tournament.bannerUrl);
+    final resolvedBannerUrl = _resolveImageUrl(widget.tournament.bannerUrl);
     final hasBanner = resolvedBannerUrl.isNotEmpty;
-    final categoryChips = _getCategoryChips(tournament);
+    final categoryChips = _getCategoryChips(widget.tournament);
+    final followedAsync = ref.watch(followedTournamentsProvider);
+    final isFollowing = followedAsync.maybeWhen(
+      data: (items) => items.any((t) => t.id == widget.tournament.id),
+      orElse: () => false,
+    );
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
-        margin: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin: widget.margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: colors.bgCard,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colors.border.withOpacity(0.7), width: 1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: colors.border.withValues(alpha: 0.7), width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -207,8 +266,8 @@ class TournamentCardWithBanner extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(11),
-                topRight: Radius.circular(11),
+                topLeft: Radius.circular(7.5),
+                topRight: Radius.circular(7.5),
               ),
               child: Stack(
                 children: [
@@ -250,25 +309,44 @@ class TournamentCardWithBanner extends StatelessWidget {
                   Positioned(
                     top: 12,
                     right: 12,
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          )
-                        ],
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.bookmark_border_rounded,
-                          size: 18,
-                          color: Color(0xFF1E293B),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _isFollowLoading ? null : () => _toggleFollow(context),
+                        customBorder: const CircleBorder(),
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: isFollowing
+                                ? const Color(0xFF2563EB).withValues(alpha: 0.14)
+                                : Colors.white.withValues(alpha: 0.92),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              )
+                            ],
+                          ),
+                          child: Center(
+                            child: _isFollowLoading
+                                ? const SizedBox(
+                                    width: 15,
+                                    height: 15,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : Icon(
+                                    isFollowing
+                                        ? Icons.bookmark_rounded
+                                        : Icons.bookmark_border_rounded,
+                                    size: 18,
+                                    color: isFollowing
+                                        ? AppTheme.primary
+                                        : const Color(0xFF1E293B),
+                                  ),
+                          ),
                         ),
                       ),
                     ),
@@ -277,7 +355,7 @@ class TournamentCardWithBanner extends StatelessWidget {
                   Positioned(
                     top: 12,
                     left: 12,
-                    child: StatusBadge(statusKey: tournament.status),
+                    child: StatusBadge(statusKey: widget.tournament.status),
                   ),
                   // Location badge bottom-left
                   Positioned(
@@ -290,7 +368,7 @@ class TournamentCardWithBanner extends StatelessWidget {
                         borderRadius: BorderRadius.circular(100),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color: Colors.black.withValues(alpha: 0.06),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           )
@@ -299,11 +377,11 @@ class TournamentCardWithBanner extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.location_on, size: 12, color: Colors.rose),
+                          const Icon(Icons.location_on, size: 12, color: Color(0xFFF43F5E)),
                           const SizedBox(width: 4),
                           Text(
-                            tournament.locationAddress != null && tournament.locationAddress!.isNotEmpty
-                                ? (tournament.locationAddress!.split(',').last.trim().toUpperCase())
+                            widget.tournament.locationAddress != null && widget.tournament.locationAddress!.isNotEmpty
+                                ? (widget.tournament.locationAddress!.split(',').last.trim().toUpperCase())
                                 : 'CHƯA CẬP NHẬT',
                             style: const TextStyle(
                               fontSize: 9.5,
@@ -331,7 +409,7 @@ class TournamentCardWithBanner extends StatelessWidget {
                     width: 1,
                     height: 52,
                     margin: const EdgeInsets.symmetric(horizontal: 12),
-                    color: colors.border.withOpacity(0.6),
+                    color: colors.border.withValues(alpha: 0.6),
                   ),
                   
                   // Right Column: Details
@@ -343,7 +421,7 @@ class TournamentCardWithBanner extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              _getSportEmojiAndLabel(tournament.sport),
+                              _getSportEmojiAndLabel(widget.tournament.sport),
                               style: TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w800,
@@ -351,7 +429,7 @@ class TournamentCardWithBanner extends StatelessWidget {
                                 letterSpacing: 0.5,
                               ),
                             ),
-                            if (tournament.isRanked == true) ...[
+                            if (widget.tournament.isRanked == true) ...[
                               const SizedBox(width: 6),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
@@ -375,7 +453,7 @@ class TournamentCardWithBanner extends StatelessWidget {
                         const SizedBox(height: 5),
                         // Row 2: Title
                         Text(
-                          tournament.name,
+                          widget.tournament.name,
                           style: TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.bold,
@@ -392,9 +470,9 @@ class TournamentCardWithBanner extends StatelessWidget {
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Text(
-                              tournament.entryFee == null || tournament.entryFee == 0
+                              widget.tournament.entryFee == null || widget.tournament.entryFee == 0
                                   ? "0 đ"
-                                  : "${NumberFormat.decimalPattern().format(tournament.entryFee)} đ",
+                                  : "${NumberFormat.decimalPattern().format(widget.tournament.entryFee)} đ",
                               style: const TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.bold,
@@ -416,25 +494,40 @@ class TournamentCardWithBanner extends StatelessWidget {
                                 color: colors.textMuted,
                               ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9), // Slate 100
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                categoryChips.isNotEmpty
-                                    ? categoryChips.first
-                                    : (tournament.format == "single_elimination"
-                                        ? "Loại trực tiếp"
-                                        : "Vòng tròn"),
-                                style: const TextStyle(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF475569), // Slate 600
+                            if (categoryChips.isNotEmpty)
+                              ...categoryChips.map((chipText) => Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF1F5F9), // Slate 100
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  chipText,
+                                  style: const TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF475569), // Slate 600
+                                  ),
+                                ),
+                              ))
+                            else
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF1F5F9), // Slate 100
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  widget.tournament.format == "single_elimination"
+                                      ? "Loại trực tiếp"
+                                      : "Vòng tròn",
+                                  style: const TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF475569), // Slate 600
+                                  ),
                                 ),
                               ),
-                            ),
                           ],
                         ),
                       ],

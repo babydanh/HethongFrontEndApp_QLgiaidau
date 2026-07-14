@@ -49,18 +49,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     }
   }
 
-  void _scrollToRank(int rankIndex, int totalCount) {
-    if (!_scrollCtrl.hasClients) return;
-    // Ước lượng vị trí: mỗi row ~ 62px + podium ~ 200px + header.
-    final podiumOffset = totalCount >= 3 ? 230.0 : 0.0;
-    final target = podiumOffset + (rankIndex - (totalCount >= 3 ? 3 : 0)) * 62.0;
-    _scrollCtrl.animateTo(
-      target.clamp(0.0, _scrollCtrl.position.maxScrollExtent),
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOutCubic,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
@@ -116,7 +104,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                     return TierLegendView(tiers: tiers, highlightElo: myElo);
                   },
                   loading: () => const SizedBox(height: 52),
-                  error: (_, __) => const SizedBox(height: 52),
+                  error: (context, error) => const SizedBox(height: 52),
                 ),
                 const SizedBox(height: 8),
                 Expanded(
@@ -196,8 +184,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (_, i) {
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
           final c = categories[i];
           final selected = _selectedCategory == c.id;
           return GestureDetector(

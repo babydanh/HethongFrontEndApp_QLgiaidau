@@ -63,7 +63,7 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                         fit: BoxFit.contain,
                         color: Colors.white,
                         colorBlendMode: BlendMode.srcIn,
-                        errorBuilder: (_, __, ___) => const Text(
+                        errorBuilder: (context, error, stackTrace) => const Text(
                           "VNSPORT",
                           style: TextStyle(
                             color: Colors.white,
@@ -114,7 +114,7 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
                       ),
                     ),
-                    error: (_, __) => Text(
+                    error: (context, error) => Text(
                       "Đăng nhập thành công!",
                       style: const TextStyle(
                         color: Colors.white,

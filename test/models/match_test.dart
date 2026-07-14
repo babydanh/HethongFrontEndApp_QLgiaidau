@@ -33,6 +33,7 @@ void main() {
         ],
         'bracketPosition': {'bracket': 'winners', 'round': 1, 'position': 0},
         'nextMatchId': 'match-2',
+        'loserNextMatchId': 'loser-match-1',
       };
 
       // We can only test MatchModel.fromJson since MatchModel has fromJson
@@ -45,6 +46,7 @@ void main() {
       expect(match.status, 'completed');
       expect(match.court, 'San 1');
       expect(match.bracketPosition?.bracket, 'winners');
+      expect(match.loserNextMatchId, 'loser-match-1');
     });
 
     test('should parse Minimal JSON with defaults', () {
@@ -69,26 +71,106 @@ void main() {
     });
   });
 
-    final _defaultBracket = BracketPosition(round: 1, position: 0);
-    final _now = DateTime.now();
+  final _defaultBracket = BracketPosition(round: 1, position: 0);
+  final _now = DateTime.now();
 
   // Test MatchModel isLive/isCompleted
   group('TC-FLUTTER-MATCH-005: MatchModel status getters', () {
     test('isLive returns true for live statuses', () {
-      expect(MatchModel(id: '1', round: 1, matchNumber: 1, status: 'live', bracketPosition: _defaultBracket, updatedAt: _now).isLive, true);
-      expect(MatchModel(id: '1', round: 1, matchNumber: 1, status: 'ongoing', bracketPosition: _defaultBracket, updatedAt: _now).isLive, true);
-      expect(MatchModel(id: '1', round: 1, matchNumber: 1, status: 'in_progress', bracketPosition: _defaultBracket, updatedAt: _now).isLive, true);
+      expect(
+        MatchModel(
+          id: '1',
+          round: 1,
+          matchNumber: 1,
+          status: 'live',
+          bracketPosition: _defaultBracket,
+          updatedAt: _now,
+        ).isLive,
+        true,
+      );
+      expect(
+        MatchModel(
+          id: '1',
+          round: 1,
+          matchNumber: 1,
+          status: 'ongoing',
+          bracketPosition: _defaultBracket,
+          updatedAt: _now,
+        ).isLive,
+        true,
+      );
+      expect(
+        MatchModel(
+          id: '1',
+          round: 1,
+          matchNumber: 1,
+          status: 'in_progress',
+          bracketPosition: _defaultBracket,
+          updatedAt: _now,
+        ).isLive,
+        true,
+      );
     });
 
     test('isLive returns false for non-live statuses', () {
-      expect(MatchModel(id: '1', round: 1, matchNumber: 1, status: 'scheduled', bracketPosition: _defaultBracket, updatedAt: _now).isLive, false);
-      expect(MatchModel(id: '1', round: 1, matchNumber: 1, status: 'completed', bracketPosition: _defaultBracket, updatedAt: _now).isLive, false);
-      expect(MatchModel(id: '1', round: 1, matchNumber: 1, status: 'cancelled', bracketPosition: _defaultBracket, updatedAt: _now).isLive, false);
+      expect(
+        MatchModel(
+          id: '1',
+          round: 1,
+          matchNumber: 1,
+          status: 'scheduled',
+          bracketPosition: _defaultBracket,
+          updatedAt: _now,
+        ).isLive,
+        false,
+      );
+      expect(
+        MatchModel(
+          id: '1',
+          round: 1,
+          matchNumber: 1,
+          status: 'completed',
+          bracketPosition: _defaultBracket,
+          updatedAt: _now,
+        ).isLive,
+        false,
+      );
+      expect(
+        MatchModel(
+          id: '1',
+          round: 1,
+          matchNumber: 1,
+          status: 'cancelled',
+          bracketPosition: _defaultBracket,
+          updatedAt: _now,
+        ).isLive,
+        false,
+      );
     });
 
     test('isCompleted returns true for completed', () {
-      expect(MatchModel(id: '1', round: 1, matchNumber: 1, status: 'completed', bracketPosition: _defaultBracket, updatedAt: _now).isCompleted, true);
-      expect(MatchModel(id: '1', round: 1, matchNumber: 1, status: 'scheduled', bracketPosition: _defaultBracket, updatedAt: _now).isCompleted, false);
+      expect(
+        MatchModel(
+          id: '1',
+          round: 1,
+          matchNumber: 1,
+          status: 'completed',
+          bracketPosition: _defaultBracket,
+          updatedAt: _now,
+        ).isCompleted,
+        true,
+      );
+      expect(
+        MatchModel(
+          id: '1',
+          round: 1,
+          matchNumber: 1,
+          status: 'scheduled',
+          bracketPosition: _defaultBracket,
+          updatedAt: _now,
+        ).isCompleted,
+        false,
+      );
     });
   });
 
@@ -110,7 +192,11 @@ void main() {
   // Test BracketPosition
   group('BracketPosition.fromJson', () {
     test('should parse correctly', () {
-      final bp = BracketPosition.fromJson({'bracket': 'winners', 'round': 2, 'position': 1});
+      final bp = BracketPosition.fromJson({
+        'bracket': 'winners',
+        'round': 2,
+        'position': 1,
+      });
       expect(bp.bracket, 'winners');
       expect(bp.round, 2);
       expect(bp.position, 1);

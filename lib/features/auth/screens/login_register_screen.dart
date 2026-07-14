@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -151,8 +150,8 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    isDark ? Colors.transparent : const Color(0xFF2979FF).withOpacity(0.4),
-                    const Color(0xFF2979FF).withOpacity(0.0),
+                    isDark ? Colors.transparent : const Color(0xFF2979FF).withValues(alpha: 0.4),
+                    const Color(0xFF2979FF).withValues(alpha: 0.0),
                   ],
                 ),
               ),
@@ -231,10 +230,10 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: context.colors.error.withOpacity(0.08),
+                          color: context.colors.error.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: context.colors.error.withOpacity(0.2),
+                            color: context.colors.error.withValues(alpha: 0.2),
                             width: 1.0,
                           ),
                         ),
@@ -432,7 +431,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                             icon: Image.network(
                               "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png",
                               height: 18.0,
-                              errorBuilder: (_, __, ___) => const Icon(
+                              errorBuilder: (context, error, stackTrace) => const Icon(
                                 Icons.g_mobiledata,
                                 size: 24,
                               ),
@@ -486,7 +485,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                         child: Text(
                           "Khám phá không cần đăng nhập",
                           style: TextStyle(
-                            color: textSecondaryColor.withOpacity(0.7),
+                            color: textSecondaryColor.withValues(alpha: 0.7),
                             fontSize: 13.0,
                             decoration: TextDecoration.underline,
                           ),
@@ -526,7 +525,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.bold,
-              color: textPrimaryColor.withOpacity(0.85),
+              color: textPrimaryColor.withValues(alpha: 0.85),
               letterSpacing: 0.1,
             ),
           ),
@@ -544,7 +543,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
               fontSize: 14.5,
             ),
             filled: true,
-            fillColor: isDark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.015),
+            fillColor: isDark ? Colors.white.withValues(alpha: 0.02) : Colors.black.withValues(alpha: 0.015),
             prefixIcon: Icon(
               icon,
               color: isDark ? Colors.white54 : Colors.black54,
@@ -567,7 +566,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.0),
               borderSide: BorderSide(
-                color: context.colors.error.withOpacity(0.4),
+                color: context.colors.error.withValues(alpha: 0.4),
               ),
             ),
             focusedErrorBorder: OutlineInputBorder(

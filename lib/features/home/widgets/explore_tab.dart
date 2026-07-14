@@ -185,7 +185,12 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
 
   List<Tournament> get _completedTournaments => _filtered
       .where((t) => t.status == AppConstants.statusCompleted)
-      .toList();
+      .toList()
+    ..sort((a, b) => _completedTimestamp(b).compareTo(_completedTimestamp(a)));
+
+  DateTime _completedTimestamp(Tournament tournament) {
+    return tournament.endDate ?? tournament.updatedAt;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -274,7 +279,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
           Positioned.fill(
             child: AnimatedBuilder(
               animation: _waveController,
-              builder: (_, __) => CustomPaint(
+              builder: (context, child) => CustomPaint(
                 painter: _WaveHeaderPainter(wave: _waveController),
               ),
             ),
@@ -305,7 +310,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                           'assets/images/vndc_sport.png',
                           height: 28,
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Text(
+                          errorBuilder: (context, error, stackTrace) => const Text(
                             'VNSPORT',
                             style: TextStyle(
                               color: Colors.white,
@@ -501,7 +506,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 16),
           itemCount: _sports.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          separatorBuilder: (context, index) => const SizedBox(width: 8),
           itemBuilder: (_, i) {
             final s = _sports[i];
             final selected = _selectedSport == s.key;
@@ -645,7 +650,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
         itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (_, i) => _TournamentCard(tournament: items[i]),
       ),
     );
@@ -662,7 +667,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
         itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (_, i) => _LiveTournamentCard(tournament: items[i]),
       ),
     );

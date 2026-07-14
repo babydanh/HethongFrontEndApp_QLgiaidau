@@ -385,7 +385,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                           'Đang tải...',
                           style: TextStyle(color: Colors.white70),
                         ),
-                        error: (_, __) => const Text(
+                        error: (context, error) => const Text(
                           'Giải đấu',
                           style: TextStyle(color: Colors.white70),
                         ),
@@ -657,7 +657,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                         'Giải đấu',
                         style: TextStyle(color: Colors.white70),
                       ),
-                      error: (_, __) => const Text(
+                      error: (context, error) => const Text(
                         'Giải đấu',
                         style: TextStyle(color: Colors.white70),
                       ),

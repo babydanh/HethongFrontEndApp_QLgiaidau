@@ -121,7 +121,7 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(11),
                         child: Image.network(invite.communityLogoUrl!, fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.groups_rounded, color: AppTheme.primary, size: 24),
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.groups_rounded, color: AppTheme.primary, size: 24),
                         ),
                       )
                     : const Icon(Icons.groups_rounded, color: AppTheme.primary, size: 24),

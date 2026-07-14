@@ -1,0 +1,59 @@
+KẾT QUẢ TEST - 2026-07-08T15:13:57.428370
+3/28 passed
+
+--- FAILURES ---
+❌ TC-FLUTTER-MATCH-003: TC-FLUTTER-MATCH-003: LiveScoreScreen - Referee Score Controls
+❌ TC-FLUTTER-MATCH-004: TC-FLUTTER-MATCH-004: LiveScoreScreen - Win Condition Check
+❌ TC-FLUTTER-MATCH-005: TC-FLUTTER-MATCH-005: LiveScoreScreen - Foul Sheet Penalty
+❌ TC-FLUTTER-MATCH-006: TC-FLUTTER-MATCH-006: LiveScoreScreen - Force Win
+❌ TC-FLUTTER-MATCH-007: TC-FLUTTER-MATCH-007: LiveScoreScreen - Viewer State
+❌ TC-FLUTTER-MATCH-008: TC-FLUTTER-MATCH-008: LiveScoreScreen - Comments Chat
+❌ TC-FLUTTER-MATCH-009: TC-FLUTTER-MATCH-009: LiveScoreScreen - Completed State
+❌ TC-FLUTTER-MATCH-010: TC-FLUTTER-MATCH-010: LiveScoreScreen - Admin Edit Dialog
+❌ TC-FLUTTER-MATCH-011: TC-FLUTTER-MATCH-011: LiveScoreScreen - Error Null Match
+❌ TC-FLUTTER-MATCH-012: TC-FLUTTER-MATCH-012: LiveScoreScreen - Official Score Modal
+❌ TC-FLUTTER-MATCH-013: TC-FLUTTER-MATCH-013: TennisScorePanel - Normal Point
+❌ TC-FLUTTER-MATCH-014: TC-FLUTTER-MATCH-014: TennisScorePanel - Deuce State
+❌ TC-FLUTTER-MATCH-015: TC-FLUTTER-MATCH-015: TennisScorePanel - Tiebreak State
+❌ TC-FLUTTER-MATCH-016: TC-FLUTTER-MATCH-016: TennisScorePanel - Responsive Layout
+❌ TC-FLUTTER-MATCH-017: TC-FLUTTER-MATCH-017: TennisScorePanel - Read-Only Mode
+❌ TC-FLUTTER-MATCH-018: TC-FLUTTER-MATCH-018: TeamScoreCard - Score Display
+❌ TC-FLUTTER-MATCH-019: TC-FLUTTER-MATCH-019: TeamScoreCard - Score Controls Live
+❌ TC-FLUTTER-MATCH-020: TC-FLUTTER-MATCH-020: Official Score Modal - Display Structure
+❌ TC-FLUTTER-MATCH-021: TC-FLUTTER-MATCH-021: Official Score Modal - MatchOpsSummary
+❌ TC-FLUTTER-MATCH-022: TC-FLUTTER-MATCH-022: LiveMatchScreen - Match Sections
+❌ TC-FLUTTER-MATCH-023: TC-FLUTTER-MATCH-023: LiveMatchScreen - Match Filtering
+❌ TC-FLUTTER-MATCH-024: TC-FLUTTER-MATCH-024: LiveMatchScreen - Empty State
+❌ TC-FLUTTER-MATCH-025: TC-FLUTTER-MATCH-025: AdminEditScoreDialog - Edit Score
+❌ TC-FLUTTER-MATCH-026: TC-FLUTTER-MATCH-026: LiveScoreScreen - Heart Animation
+❌ (tearDownAll): (tearDownAll)
+
+--- ALL ---
+✅ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_match_test.dart: Pass
+✅ TC-FLUTTER-MATCH-001: Pass
+✅ TC-FLUTTER-MATCH-002: Pass
+❌ TC-FLUTTER-MATCH-003: Fail
+❌ TC-FLUTTER-MATCH-004: Fail
+❌ TC-FLUTTER-MATCH-005: Fail
+❌ TC-FLUTTER-MATCH-006: Fail
+❌ TC-FLUTTER-MATCH-007: Fail
+❌ TC-FLUTTER-MATCH-008: Fail
+❌ TC-FLUTTER-MATCH-009: Fail
+❌ TC-FLUTTER-MATCH-010: Fail
+❌ TC-FLUTTER-MATCH-011: Fail
+❌ TC-FLUTTER-MATCH-012: Fail
+❌ TC-FLUTTER-MATCH-013: Fail
+❌ TC-FLUTTER-MATCH-014: Fail
+❌ TC-FLUTTER-MATCH-015: Fail
+❌ TC-FLUTTER-MATCH-016: Fail
+❌ TC-FLUTTER-MATCH-017: Fail
+❌ TC-FLUTTER-MATCH-018: Fail
+❌ TC-FLUTTER-MATCH-019: Fail
+❌ TC-FLUTTER-MATCH-020: Fail
+❌ TC-FLUTTER-MATCH-021: Fail
+❌ TC-FLUTTER-MATCH-022: Fail
+❌ TC-FLUTTER-MATCH-023: Fail
+❌ TC-FLUTTER-MATCH-024: Fail
+❌ TC-FLUTTER-MATCH-025: Fail
+❌ TC-FLUTTER-MATCH-026: Fail
+❌ (tearDownAll): Fail

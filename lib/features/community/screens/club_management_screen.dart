@@ -88,13 +88,14 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
         leading: IconButton(icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary), onPressed: () => context.pop()),
         title: const Text('Điều phối CLB', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
         centerTitle: true,
-        actions: [
-          if (!_isLoading)
-            IconButton(
-              icon: Icon(Icons.refresh_rounded, color: colors.textSecondary, size: 20),
-              onPressed: _loadData,
-            ),
-        ],
+        actions: _isLoading
+            ? []
+            : [
+                IconButton(
+                  icon: Icon(Icons.refresh_rounded, color: colors.textSecondary, size: 20),
+                  onPressed: _loadData,
+                ),
+              ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -261,7 +262,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: _searchResults.length,
-                separatorBuilder: (_, __) => Divider(height: 1, color: colors.borderLight),
+                separatorBuilder: (context, index) => Divider(height: 1, color: colors.borderLight),
                 itemBuilder: (_, i) {
                   final u = _searchResults[i];
                   return ListTile(
@@ -387,11 +388,17 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
               try {
                 await ref.read(communityRepositoryProvider).removeMember(widget.clubId, m.userId);
                 _loadData();
-                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Đã thu hồi lời mời'), backgroundColor: Colors.orange, behavior: SnackBarBehavior.floating,
-                ));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Đã thu hồi lời mời'),
+                    backgroundColor: Colors.orange,
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                }
               } catch (e) {
-                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red));
+                }
               }
             },
             child: Container(
@@ -439,11 +446,17 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
               try {
                 await ref.read(communityRepositoryProvider).unbanMember(widget.clubId, m.userId);
                 _loadData();
-                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Đã gỡ cấm thành viên'), backgroundColor: const Color(0xFF10B981), behavior: SnackBarBehavior.floating,
-                ));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Đã gỡ cấm thành viên'),
+                    backgroundColor: Color(0xFF10B981),
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                }
               } catch (e) {
-                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red));
+                }
               }
             },
             child: Container(

@@ -1,0 +1,168 @@
+{
+  "metadata": {
+    "timestamp": "2026-07-08T15:09:54.497772",
+    "total": 26,
+    "passed": 26,
+    "failed": 0
+  },
+  "summary": "26/26 passed",
+  "testCases": [
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_bracket_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_bracket_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-001",
+      "name": "TC-FLUTTER-BRACKET-001: BracketViewScreen - Single Elimination Layout",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-002",
+      "name": "TC-FLUTTER-BRACKET-002: BracketViewScreen - Double Elimination Layout",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-003",
+      "name": "TC-FLUTTER-BRACKET-003: BracketViewScreen - Round Robin Layout",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-004",
+      "name": "TC-FLUTTER-BRACKET-004: BracketViewScreen - Match Filtering",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-005",
+      "name": "TC-FLUTTER-BRACKET-005: BracketViewScreen - Match Table Row",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-006",
+      "name": "TC-FLUTTER-BRACKET-006: BracketViewScreen - Referee Indicator",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-007",
+      "name": "TC-FLUTTER-BRACKET-007: BracketViewScreen - Standings DataTable",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-008",
+      "name": "TC-FLUTTER-BRACKET-008: BracketViewScreen - Empty State",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-009",
+      "name": "TC-FLUTTER-BRACKET-009: BracketViewScreen - Bracket Tree Diagram",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-010",
+      "name": "TC-FLUTTER-BRACKET-010: BracketViewScreen - Cross Table",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-011",
+      "name": "TC-FLUTTER-BRACKET-011: BracketViewScreen - Back Navigation",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-012",
+      "name": "TC-FLUTTER-BRACKET-012: Bracket Loading State",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-013",
+      "name": "TC-FLUTTER-BRACKET-013: Bracket Empty",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-014",
+      "name": "TC-FLUTTER-BRACKET-014: Bracket Error",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-015",
+      "name": "TC-FLUTTER-BRACKET-015: Auto Draw Screen - Button",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-016",
+      "name": "TC-FLUTTER-BRACKET-016: Auto Draw Loading",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-017",
+      "name": "TC-FLUTTER-BRACKET-017: Auto Draw Success",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-018",
+      "name": "TC-FLUTTER-BRACKET-018: Auto Draw Empty",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-019",
+      "name": "TC-FLUTTER-BRACKET-019: Bracket Status After Draw",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-020",
+      "name": "TC-FLUTTER-BRACKET-020: Bracket - Large Scale 64 teams",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-021",
+      "name": "TC-FLUTTER-BRACKET-021: Bracket - Idle Data Refetch",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-022",
+      "name": "TC-FLUTTER-BRACKET-022: Bracket - Score Update Trigger",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-023",
+      "name": "TC-FLUTTER-BRACKET-023: Bracket - Walkover / Bye",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-BRACKET-024",
+      "name": "TC-FLUTTER-BRACKET-024: Bracket - Winner Path Highlight",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    }
+  ],
+  "failures": []
+}

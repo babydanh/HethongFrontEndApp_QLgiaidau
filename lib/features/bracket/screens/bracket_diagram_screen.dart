@@ -33,10 +33,8 @@ class _BracketDiagramScreenState extends State<BracketDiagramScreen> {
   @override
   void initState() {
     super.initState();
-    // Unlock all orientations for diagram screen
+    // Khóa hướng màn hình ngang (Landscape) khi vào sơ đồ để tối ưu hiển thị nhánh đấu
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
@@ -54,12 +52,15 @@ class _BracketDiagramScreenState extends State<BracketDiagramScreen> {
     final colors = context.colors;
     final isRoundRobin = widget.bracketType == AppConstants.bracketRoundRobin;
     final isDouble = widget.bracketType == AppConstants.bracketDoubleElimination;
+    final isGroupStageKnockout = widget.bracketType == AppConstants.bracketGroupStageKnockout;
 
     final String title;
     if (isRoundRobin) {
       title = 'Bảng chéo vòng tròn';
     } else if (isDouble) {
       title = 'Sơ đồ nhánh thắng / thua';
+    } else if (isGroupStageKnockout) {
+      title = 'Sơ đồ vòng loại';
     } else {
       title = 'Sơ đồ thi đấu';
     }
@@ -110,11 +111,11 @@ class _BracketDiagramScreenState extends State<BracketDiagramScreen> {
       ),
       body: widget.matches.isEmpty
           ? _buildEmpty(colors)
-          : _buildDiagram(colors, isRoundRobin, isDouble),
+          : _buildDiagram(colors, isRoundRobin, isDouble, isGroupStageKnockout),
     );
   }
 
-  Widget _buildDiagram(AppColorsExtension colors, bool isRoundRobin, bool isDouble) {
+  Widget _buildDiagram(AppColorsExtension colors, bool isRoundRobin, bool isDouble, bool isGroupStageKnockout) {
     if (isRoundRobin) {
       // Round robin — show cross table
       return Padding(
@@ -128,6 +129,16 @@ class _BracketDiagramScreenState extends State<BracketDiagramScreen> {
 
     if (isDouble) {
       return DoubleElimDiagram(
+        matches: widget.matches,
+        tournamentId: widget.tournamentId,
+        isReferee: widget.isReferee,
+        isReadOnly: widget.isReadOnly,
+      );
+    }
+
+    if (isGroupStageKnockout) {
+      // Group stage knockout — show SE diagram (knockout stage only)
+      return SingleElimDiagram(
         matches: widget.matches,
         tournamentId: widget.tournamentId,
         isReferee: widget.isReferee,

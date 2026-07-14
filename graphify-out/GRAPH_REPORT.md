@@ -1,16 +1,16 @@
-# Graph Report - app_quanly_giaidau  (2026-07-03)
+# Graph Report - app_quanly_giaidau  (2026-07-14)
 
 ## Corpus Check
-- 327 files · ~207,874 words
+- 391 files · ~281,295 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4746 nodes · 6610 edges · 299 communities (284 shown, 15 thin omitted)
+- 5490 nodes · 7539 edges · 340 communities (322 shown, 18 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 8 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ab86638b`
+- Built from commit: `97cce045`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -300,46 +300,87 @@
 - [[_COMMUNITY_Community 293|Community 293]]
 - [[_COMMUNITY_Community 294|Community 294]]
 - [[_COMMUNITY_Community 295|Community 295]]
+- [[_COMMUNITY_Community 296|Community 296]]
+- [[_COMMUNITY_Community 297|Community 297]]
+- [[_COMMUNITY_Community 298|Community 298]]
 - [[_COMMUNITY_Community 299|Community 299]]
 - [[_COMMUNITY_Community 300|Community 300]]
 - [[_COMMUNITY_Community 301|Community 301]]
+- [[_COMMUNITY_Community 302|Community 302]]
+- [[_COMMUNITY_Community 303|Community 303]]
+- [[_COMMUNITY_Community 304|Community 304]]
+- [[_COMMUNITY_Community 305|Community 305]]
+- [[_COMMUNITY_Community 306|Community 306]]
+- [[_COMMUNITY_Community 307|Community 307]]
+- [[_COMMUNITY_Community 308|Community 308]]
+- [[_COMMUNITY_Community 309|Community 309]]
+- [[_COMMUNITY_Community 310|Community 310]]
+- [[_COMMUNITY_Community 311|Community 311]]
+- [[_COMMUNITY_Community 312|Community 312]]
+- [[_COMMUNITY_Community 313|Community 313]]
+- [[_COMMUNITY_Community 314|Community 314]]
+- [[_COMMUNITY_Community 315|Community 315]]
+- [[_COMMUNITY_Community 316|Community 316]]
+- [[_COMMUNITY_Community 317|Community 317]]
+- [[_COMMUNITY_Community 318|Community 318]]
+- [[_COMMUNITY_Community 319|Community 319]]
+- [[_COMMUNITY_Community 320|Community 320]]
+- [[_COMMUNITY_Community 321|Community 321]]
+- [[_COMMUNITY_Community 322|Community 322]]
+- [[_COMMUNITY_Community 323|Community 323]]
+- [[_COMMUNITY_Community 324|Community 324]]
+- [[_COMMUNITY_Community 325|Community 325]]
+- [[_COMMUNITY_Community 326|Community 326]]
+- [[_COMMUNITY_Community 327|Community 327]]
+- [[_COMMUNITY_Community 328|Community 328]]
+- [[_COMMUNITY_Community 329|Community 329]]
+- [[_COMMUNITY_Community 330|Community 330]]
+- [[_COMMUNITY_Community 331|Community 331]]
+- [[_COMMUNITY_Community 333|Community 333]]
+- [[_COMMUNITY_Community 334|Community 334]]
+- [[_COMMUNITY_Community 335|Community 335]]
+- [[_COMMUNITY_Community 336|Community 336]]
+- [[_COMMUNITY_Community 339|Community 339]]
+- [[_COMMUNITY_Community 342|Community 342]]
+- [[_COMMUNITY_Community 344|Community 344]]
+- [[_COMMUNITY_Community 346|Community 346]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `authProvider` - 54 edges
-2. `communityRepositoryProvider` - 25 edges
-3. `🏆 TOURNAMENT MODULE — Tổng quan Nghiệp vụ Giải đấu` - 25 edges
-4. `tournamentProvider` - 24 edges
-5. `userProfileProvider` - 24 edges
-6. `Refactor Roadmap - Backend API + SOLID + Riverpod` - 23 edges
-7. `dioClientProvider` - 18 edges
-8. `singleMatchProvider` - 16 edges
-9. `📱 Flutter App — Phân tích chi tiết UI & Nghiệp vụ còn thiếu so với Web` - 16 edges
-10. `🏗 Plan Thiết Kế Trang Chi Tiết Giải Đấu (Tournament Intro/Detail)` - 16 edges
+2. `Module: FLUTTER (Flutter Mobile App)` - 41 edges
+3. `1. AUTH MODULE` - 41 edges
+4. `2. MATCH / SCORE MODULE` - 27 edges
+5. `communityRepositoryProvider` - 25 edges
+6. `🏆 TOURNAMENT MODULE — Tổng quan Nghiệp vụ Giải đấu` - 25 edges
+7. `1. BRACKET MODULE` - 25 edges
+8. `tournamentProvider` - 24 edges
+9. `userProfileProvider` - 24 edges
+10. `Refactor Roadmap - Backend API + SOLID + Riverpod` - 23 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `_submit` --references--> `dioClientProvider`  [EXTRACTED]
   lib/features/auth/screens/forgot_password_screen.dart → lib/core/di/core_di_providers.dart
+- `_fetchTournament` --references--> `dioClientProvider`  [EXTRACTED]
+  lib/features/register/screens/join_invite_screen.dart → lib/core/di/core_di_providers.dart
 - `_join` --references--> `dioClientProvider`  [EXTRACTED]
   lib/features/register/screens/join_team_screen.dart → lib/core/di/core_di_providers.dart
-- `_buildClubCard` --references--> `communityRepositoryProvider`  [EXTRACTED]
-  lib/features/admin/screens/pending_clubs_screen.dart → lib/providers/community_provider.dart
-- `_showRejectDialog` --references--> `communityRepositoryProvider`  [EXTRACTED]
-  lib/features/admin/screens/pending_clubs_screen.dart → lib/providers/community_provider.dart
-- `_handleAction` --references--> `communityRepositoryProvider`  [EXTRACTED]
-  lib/features/community/screens/club_invites_screen.dart → lib/providers/community_provider.dart
+- `_submit` --references--> `dioClientProvider`  [EXTRACTED]
+  lib/features/auth/screens/reset_password_screen.dart → lib/core/di/core_di_providers.dart
+- `build` --references--> `userProfileProvider`  [EXTRACTED]
+  lib/features/auth/screens/login_loading_screen.dart → lib/providers/user_provider.dart
 
 ## Import Cycles
 - None detected.
 
-## Communities (299 total, 15 thin omitted)
+## Communities (340 total, 18 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.03
-Nodes (67): package:app_quanly_giaidau/core/widgets/sport_filter_chips.dart, package:app_quanly_giaidau/core/widgets/status_segment.dart, package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart, package:app_quanly_giaidau/features/home/widgets/tournament_card_carousel.dart, package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart, package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart, _anim, animValue (+59 more)
+Nodes (70): package:app_quanly_giaidau/core/widgets/sport_filter_chips.dart, package:app_quanly_giaidau/core/widgets/status_segment.dart, package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart, package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart, package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart, communitiesProvider, tournamentsProvider, _anim (+62 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.03
-Nodes (61): AppConstants, appName, appVersion, bracketDoubleElimination, bracketRoundRobin, bracketSingleElimination, bracketTypeDescriptions, bracketTypeDetails (+53 more)
+Nodes (62): AppConstants, appName, appVersion, bracketDoubleElimination, bracketRoundRobin, bracketSingleElimination, bracketTypeDescriptions, bracketTypeDetails (+54 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.04
@@ -350,20 +391,20 @@ Cohesion: 0.06
 Nodes (42): DartProject, RegisterPlugins(), PluginRegistry, Point, RECT, MessageHandler(), OnCreate(), Create() (+34 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.05
-Nodes (39): userRepositoryProvider, Province?, _addressController, _bioController, _buildAvatarPicker, _buildDatePicker, _buildGenderDropdown, _buildProvinceDropdown (+31 more)
+Cohesion: 0.06
+Nodes (32): Province?, _addressController, _bioController, _buildAvatarPicker, _buildDatePicker, _buildGenderDropdown, _buildProvinceDropdown, code (+24 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.05
-Nodes (36): Any, cloud_firestore, Cocoa, file_picker, file_selector_macos, firebase_auth, firebase_core, firebase_database (+28 more)
+Nodes (35): Any, cloud_firestore, Cocoa, file_picker, file_selector_macos, firebase_auth, firebase_core, Flutter (+27 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.29
-Nodes (7): tournamentRepositoryProvider, build, refresh, _checkFollowing, _toggleFollow, TournamentIntroScreen, _TournamentIntroScreenState
+Cohesion: 0.12
+Nodes (19): AsyncValue, tournamentRepositoryProvider, TournamentWorkspace, build, _log, myRefereeInvitesProvider, MyTournamentWorkspaceNotifier, myTournamentWorkspaceProvider (+11 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.04
-Nodes (47): bracket, BracketPosition, completedAt, copyWith, court, events, fromJson, hasTeams (+39 more)
+Nodes (52): bracket, BracketPosition, completedAt, copyWith, court, courtAddress, events, fromJson (+44 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.05
@@ -375,15 +416,15 @@ Nodes (23): 1. Dinh huong san pham, 2. Nguyen tac pham vi, 3.1 Khu vuc "Cua toi"
 
 ### Community 10 - "Community 10"
 Cohesion: 0.09
-Nodes (22): package:app_quanly_giaidau/providers/category_provider.dart, build, _buildBracketSelector, _buildFormatSelector, _buildSportSelector, clubId, CreateClubTournamentScreen, _CreateClubTournamentScreenState (+14 more)
+Nodes (23): categoriesProvider, build, _buildBracketSelector, _buildFormatSelector, _buildSportSelector, clubId, CreateClubTournamentScreen, _CreateClubTournamentScreenState (+15 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.05
 Nodes (43): _BandData, build, _buildBands, cardH, cardW, color, colors, createState (+35 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.05
-Nodes (38): double?, adminToken, bannerUrl, bracketType, category, contactInfo, copyWith, createdAt (+30 more)
+Cohesion: 0.04
+Nodes (45): double?, adminToken, bannerUrl, bracketType, category, contactInfo, copyWith, createdAt (+37 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.15
@@ -395,7 +436,7 @@ Nodes (41): GoRouter, package:app_quanly_giaidau/features/admin/screens/admin_cl
 
 ### Community 15 - "Community 15"
 Cohesion: 0.05
-Nodes (42): TickerProviderStateMixin, _anim, build, _buildCompactStatsRow, _buildCompactTournamentRow, _buildEmptyState, _buildLiveHorizontal, _buildMiniStat (+34 more)
+Nodes (40): _anim, build, _buildCompactStatsRow, _buildCompactTournamentRow, _buildEmptyState, _buildLiveHorizontal, _buildMiniStat, _buildSearch (+32 more)
 
 ### Community 16 - "Community 16"
 Cohesion: 0.12
@@ -407,7 +448,7 @@ Nodes (34): bestOf, computeMatchSetsWon, copyWith, defaults, fromJson, fromStrin
 
 ### Community 18 - "Community 18"
 Cohesion: 0.05
-Nodes (43): ConsumerState, ConsumerStatefulWidget, LeaderboardScreen, LiveScoreScreen, LoginRegisterScreen, _LoginRegisterScreenState, _accountNameCtrl, _accountNumberCtrl (+35 more)
+Nodes (38): package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart, _accountNameCtrl, _accountNumberCtrl, _actionRow, _addressCtrl, _bankNameCtrl, _BankTab, _BankTabState (+30 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.06
@@ -426,52 +467,52 @@ Cohesion: 0.07
 Nodes (33): package:app_quanly_giaidau/core/strategy/penalty_strategy.dart, package:app_quanly_giaidau/core/widgets/app_info_dialog.dart, BadmintonPenaltyStrategy, color, DefaultPenaltyStrategy, getOptions, getRulesDescription, getStrategy (+25 more)
 
 ### Community 23 - "Community 23"
-Cohesion: 0.05
-Nodes (36): _bannerGradient, _buildAboutTab, _buildClubBanner, _buildContent, _buildInviteButton, _buildJoinModeBadge, _buildJoinRequestsSection, _buildMemberItem (+28 more)
+Cohesion: 0.06
+Nodes (35): _bannerGradient, _buildAboutTab, _buildClubBanner, _buildContent, _buildInviteButton, _buildJoinModeBadge, _buildJoinRequestsSection, _buildMemberItem (+27 more)
 
 ### Community 24 - "Community 24"
 Cohesion: 0.06
 Nodes (35): _BracketMatchCard, build, _buildRoundMap, cardH, cardW, colGap, colors, _computePositions (+27 more)
 
 ### Community 25 - "Community 25"
-Cohesion: 0.11
-Nodes (16): changePassword, _dioClient, getProfile, getPublicProfile, _log, _parseNestJsError, searchUsers, updateProfile (+8 more)
+Cohesion: 0.14
+Nodes (13): ApiUserRepository, changePassword, _dioClient, getProfile, getPublicProfile, _log, _parseNestJsError, searchUsers (+5 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.06
-Nodes (30): app_localizations_en.dart, app_localizations_vi.dart, delegate, emailLabel, exploreWithoutLogin, fullNameLabel, hasAccount, isSupported (+22 more)
+Cohesion: 0.07
+Nodes (29): app_localizations_en.dart, app_localizations_vi.dart, delegate, emailLabel, exploreWithoutLogin, fullNameLabel, hasAccount, isSupported (+21 more)
 
 ### Community 27 - "Community 27"
-Cohesion: 0.13
-Nodes (19): build, dragDevices, MyCustomScrollBehavior, TournamentApp, MaterialScrollBehavior, package:app_quanly_giaidau/core/router/app_router.dart, package:app_quanly_giaidau/core/widgets/socket_observer.dart, package:app_quanly_giaidau/providers/theme_provider.dart (+11 more)
+Cohesion: 0.10
+Nodes (28): authProvider, userProfileProvider, Route /club-invites, Route /login, Route /profile, Route /profile/change-password, Route /referee/invites, build (+20 more)
 
 ### Community 28 - "Community 28"
-Cohesion: 0.05
-Nodes (37): Algorithm, BuchheimWalkerAlgorithm, EdgeRenderer? get, MaterialPageRoute, package:app_quanly_giaidau/core/services/bracket_graph_service.dart, package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart, package:app_quanly_giaidau/features/bracket/widgets/match_node_card.dart, BracketViewScreen (+29 more)
+Cohesion: 0.07
+Nodes (28): package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart, package:app_quanly_giaidau/providers/standings_provider.dart, standingsProvider, _buildBracketViewer, _buildHorizontalRounds, _buildMatchTableRow, _buildRoundColumn, _buildSectionHeader (+20 more)
 
 ### Community 29 - "Community 29"
 Cohesion: 0.06
-Nodes (32): package:app_quanly_giaidau/features/tournament/widgets/division_filter_segment.dart, package:app_quanly_giaidau/features/tournament/widgets/leaderboard_view.dart, package:app_quanly_giaidau/features/tournament/widgets/tournament_banner.dart, package:app_quanly_giaidau/features/tournament/widgets/tournament_registration_sheet.dart, package:app_quanly_giaidau/features/tournament/widgets/tournament_state_views.dart, package:app_quanly_giaidau/features/tournament/widgets/tournament_teams_empty.dart, _buildAboutTab, _buildBottomBar (+24 more)
+Nodes (33): package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart, package:app_quanly_giaidau/features/tournament/widgets/leaderboard_view.dart, package:app_quanly_giaidau/features/tournament/widgets/tournament_banner.dart, package:app_quanly_giaidau/features/tournament/widgets/tournament_registration_sheet.dart, package:app_quanly_giaidau/features/tournament/widgets/tournament_state_views.dart, package:app_quanly_giaidau/features/tournament/widgets/tournament_teams_empty.dart, _buildAboutTab, _buildBottomBar (+25 more)
 
 ### Community 30 - "Community 30"
-Cohesion: 0.10
-Nodes (19): package:app_quanly_giaidau/features/rankings/widgets/podium_view.dart, package:app_quanly_giaidau/features/rankings/widgets/ranking_row.dart, package:app_quanly_giaidau/features/rankings/widgets/tier_legend_view.dart, package:app_quanly_giaidau/features/rankings/widgets/user_stats_card.dart, _buildHeader, _buildRankingsList, _buildSearchBar, _buildSportChips (+11 more)
+Cohesion: 0.09
+Nodes (24): package:app_quanly_giaidau/features/rankings/widgets/podium_view.dart, package:app_quanly_giaidau/features/rankings/widgets/ranking_row.dart, package:app_quanly_giaidau/features/rankings/widgets/tier_legend_view.dart, package:app_quanly_giaidau/features/rankings/widgets/user_stats_card.dart, package:app_quanly_giaidau/providers/category_provider.dart, eloTiersProvider, rankingsProvider, build (+16 more)
 
 ### Community 31 - "Community 31"
-Cohesion: 0.13
-Nodes (16): TokenModel, package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart, package:app_quanly_giaidau/core/extensions/string_extensions.dart, package:app_quanly_giaidau/providers/token_management_notifier.dart, package:qr_flutter/qr_flutter.dart, presenceCountProvider, build, isEmbedded (+8 more)
+Cohesion: 0.15
+Nodes (13): TokenModel, package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart, package:app_quanly_giaidau/core/extensions/string_extensions.dart, package:app_quanly_giaidau/providers/token_management_notifier.dart, package:qr_flutter/qr_flutter.dart, build, isEmbedded, _regenerateToken (+5 more)
 
 ### Community 32 - "Community 32"
-Cohesion: 0.16
-Nodes (12): package:app_quanly_giaidau/core/di/repository_providers.dart, package:app_quanly_giaidau/data/models/payment_model.dart, getMatches, liveMatchesProvider, matchRepo, query_providers.dart, build, _buildContent (+4 more)
+Cohesion: 0.24
+Nodes (8): main, package:app_quanly_giaidau/data/models/payment_model.dart, build, _buildContent, _buildPaymentCard, myPaymentsProvider, PaymentsScreen, watch
 
 ### Community 33 - "Community 33"
 Cohesion: 0.07
 Nodes (28): 1.1 Tạo Token, 1.2 Nhập Token, 1.3 Chia sẻ Token, 1. Hệ thống Token & Xác thực, 2.1 Tạo giải đấu, 2.2 Trạng thái giải đấu (State Machine), 2. Quản lý Giải đấu (Admin), 3.1 Nhập thủ công (+20 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.20
-Nodes (8): package:app_quanly_giaidau/domain/entities/match.dart, _getDefaultForKind, kind, matchSportConfigProvider, null, resolveSportConfig, sportDefaultsProvider, sportRules
+Cohesion: 0.10
+Nodes (17): _defaultBracket, main, _now, package:app_quanly_giaidau/core/services/bracket_graph_service.dart, package:app_quanly_giaidau/domain/entities/match.dart, _getDefaultForKind, kind, matchSportConfigProvider (+9 more)
 
 ### Community 35 - "Community 35"
 Cohesion: 0.06
@@ -479,11 +520,11 @@ Nodes (35): address, avatarUrl, bankAccountName, bankAccountNumber, bankName, bi
 
 ### Community 36 - "Community 36"
 Cohesion: 0.04
-Nodes (53): package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart, package:app_quanly_giaidau/features/match/widgets/penalty_input_dialog.dart, _buildInfoChip, _buildInfoRow, _buildLiveState, _buildSetupChip, _buildTeamScoreControl, _buildViewerConfigChip (+45 more)
+Nodes (55): package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart, package:app_quanly_giaidau/features/match/widgets/penalty_input_dialog.dart, _buildCompletedState, _buildInfoChip, _buildInfoRow, _buildLiveState, _buildSetupChip, _buildTeamScoreControl (+47 more)
 
 ### Community 37 - "Community 37"
-Cohesion: 0.05
-Nodes (41): createTournamentUseCaseProvider, FormState, GlobalKey, package:app_quanly_giaidau/features/tournament/widgets/tournament_info_form.dart, package:app_quanly_giaidau/features/tournament/widgets/tournament_settings_form.dart, Route /admin, build, createState (+33 more)
+Cohesion: 0.12
+Nodes (16): FormState, GlobalKey, build, _buildInfoRow, _contactEmailController, createState, dispose, _formatDate (+8 more)
 
 ### Community 38 - "Community 38"
 Cohesion: 0.08
@@ -502,24 +543,24 @@ Cohesion: 0.11
 Nodes (22): FlPluginRegistry, fl_register_plugins(), FlView, GApplication, gboolean, gchar, GObject, GtkApplication (+14 more)
 
 ### Community 42 - "Community 42"
-Cohesion: 0.16
-Nodes (13): package:app_quanly_giaidau/providers/team_notifier.dart, package:file_picker/file_picker.dart, package:uuid/uuid.dart, teamServiceProvider, _saveTeam, _deleteAllTeams, _importExcel, index (+5 more)
+Cohesion: 0.11
+Nodes (17): package:app_quanly_giaidau/domain/entities/organizer_lite.dart, package:app_quanly_giaidau/features/bracket/layout/double_elim_layout.dart, data, dio, raw, response, return, allMatches (+9 more)
 
 ### Community 43 - "Community 43"
-Cohesion: 0.12
-Nodes (17): ApiMatchRepository, ApiTournamentRepository, package:app_quanly_giaidau/domain/repositories/match_repository.dart, package:app_quanly_giaidau/domain/repositories/tournament_repository.dart, IMatchRepository, ITournamentRepository, call, FinalizeTournamentUseCase (+9 more)
+Cohesion: 0.06
+Nodes (33): ApiMatchRepository, ApiRankingRepository, ApiTournamentRepository, authRepositoryProvider, rankingRepositoryProvider, sessionRepositoryProvider, package:app_quanly_giaidau/data/repositories/api/api_auth_repository.dart, package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart (+25 more)
 
 ### Community 44 - "Community 44"
-Cohesion: 0.08
-Nodes (31): AuthState, tokenManagerProvider, clearSessionUseCaseProvider, loginWithEmailUseCaseProvider, loginWithGoogleUseCaseProvider, registerWithEmailUseCaseProvider, restoreSavedInviteTokenUseCaseProvider, saveInviteTokenUseCaseProvider (+23 more)
+Cohesion: 0.10
+Nodes (25): AuthState, clearSessionUseCaseProvider, createTournamentUseCaseProvider, loginWithEmailUseCaseProvider, loginWithGoogleUseCaseProvider, registerWithEmailUseCaseProvider, saveInviteTokenUseCaseProvider, validateInviteTokenUseCaseProvider (+17 more)
 
 ### Community 45 - "Community 45"
 Cohesion: 0.08
 Nodes (23): 1. Trạng thái Chưa Công bố (`Draft` / `Unpublished`), 2. Trạng thái Đã Công bố (`Published` / `Active` / `Registration`), 3. Quy trình Vòng đời Giải đấu & Khóa Nhánh đấu (Bracket Lifecycle Flow), 4. Thanh tiến trình trạng thái trực quan (Visual Progress Stepper), 5. Bản đồ Thiết kế chi tiết cho Phát triển (Implementation Roadmap), 6. Cơ chế Tự động Hết hạn & Khóa Đăng ký Thủ công (Registration Expiry & Locking Mechanism), A. Database & Backend (API Constraints):, A. Tự động Hết hạn theo Thời gian (Automatic Expiration): (+15 more)
 
 ### Community 46 - "Community 46"
-Cohesion: 0.07
-Nodes (31): ApiAuthRepository, call, ClearSessionUseCase, _sessionRepository, _authRepository, call, LoginWithEmailUseCase, _sessionRepository (+23 more)
+Cohesion: 0.11
+Nodes (17): ApiAuthRepository, _authRepository, call, LoginWithEmailUseCase, _sessionRepository, _authRepository, call, LoginWithGoogleUseCase (+9 more)
 
 ### Community 47 - "Community 47"
 Cohesion: 0.09
@@ -530,8 +571,8 @@ Cohesion: 0.09
 Nodes (22): 10. Tournament Card, 11. Router, 12. Navigation, 1. App Responsive Architecture, 2. Filters & Segments, 3. Notification Feature, 4. Community/Club Feature, 5. Cài đặt (Settings) (+14 more)
 
 ### Community 49 - "Community 49"
-Cohesion: 0.11
-Nodes (17): ApiRankingRepository, authRepositoryProvider, rankingRepositoryProvider, sessionRepositoryProvider, tokenRepositoryProvider, package:app_quanly_giaidau/data/repositories/api/api_auth_repository.dart, package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart, package:app_quanly_giaidau/data/repositories/api/api_payment_repository.dart (+9 more)
+Cohesion: 0.13
+Nodes (17): package:app_quanly_giaidau/providers/community_provider.dart, communityRepositoryProvider, pendingCommunitiesProvider, _handleAction, _showRejectDialog, _buildJoinRequestCard, _handleMemberAction, _buildBannedCard (+9 more)
 
 ### Community 50 - "Community 50"
 Cohesion: 0.09
@@ -542,40 +583,40 @@ Cohesion: 0.09
 Nodes (21): Bộ Lọc (Filters), Bộ Lọc (Filters), Card Design, Card Spec, 🎯 Các Component Cần Tạo, Layout Tổng Thể (Mobile), Layout Tổng Thể (Mobile), 🔗 Liên Kết (+13 more)
 
 ### Community 52 - "Community 52"
-Cohesion: 0.20
-Nodes (13): static final Map, DefaultEventRenderer, FoulEventRenderer, getActionText, getColor, getIcon, getRenderer, IMatchEventRenderer (+5 more)
+Cohesion: 0.18
+Nodes (14): package:app_quanly_giaidau/data/models/match_event_model.dart, static final Map, DefaultEventRenderer, FoulEventRenderer, getActionText, getColor, getIcon, getRenderer (+6 more)
 
 ### Community 53 - "Community 53"
-Cohesion: 0.08
-Nodes (27): package:app_quanly_giaidau/data/models/community_member_model.dart, package:app_quanly_giaidau/data/models/community_ranking_model.dart, package:app_quanly_giaidau/data/models/community_tournament_model.dart, package:app_quanly_giaidau/data/repositories/api/api_community_repository.dart, package:app_quanly_giaidau/domain/repositories/community_repository.dart, communityGalleryProvider, communityMembersProvider, communityRankingsProvider (+19 more)
+Cohesion: 0.09
+Nodes (25): package:app_quanly_giaidau/data/models/community_ranking_model.dart, package:app_quanly_giaidau/data/repositories/api/api_community_repository.dart, package:app_quanly_giaidau/domain/repositories/community_repository.dart, communityGalleryProvider, communityMembersProvider, communityRankingsProvider, communityTournamentsProvider, getCommunities (+17 more)
 
 ### Community 54 - "Community 54"
 Cohesion: 0.12
-Nodes (15): package:app_quanly_giaidau/data/models/tournament_model.dart, package:app_quanly_giaidau/domain/entities/organizer_lite.dart, data, dio, raw, response, allTournaments, allTournamentsAsync (+7 more)
+Nodes (14): confirmEmailVerification, _dioClient, _log, loginWithEmailPassword, loginWithGoogle, _mapAuthSession, registerWithEmailPassword, requestEmailVerification (+6 more)
 
 ### Community 55 - "Community 55"
-Cohesion: 0.23
-Nodes (16): organizerLiteRefereesProvider, matchesProvider, teamsProvider, tournamentProvider, _checkConstraints, build, build, build (+8 more)
+Cohesion: 0.11
+Nodes (38): ConsumerState, ConsumerStatefulWidget, organizerLiteRefereesProvider, bracketMatchesProvider, matchesProvider, matchesWithDivisionProvider, teamsProvider, tournamentDivisionsProvider (+30 more)
 
 ### Community 56 - "Community 56"
-Cohesion: 0.12
-Nodes (17): build, _buildJoinModeSelector, _buildSportSelector, CreateClubScreen, _CreateClubScreenState, createState, _descCtrl, dispose (+9 more)
+Cohesion: 0.10
+Nodes (19): package:go_router/go_router.dart, build, _buildJoinModeSelector, _buildSportSelector, CreateClubScreen, _CreateClubScreenState, createState, _descCtrl (+11 more)
 
 ### Community 57 - "Community 57"
-Cohesion: 0.11
-Nodes (18): package:app_quanly_giaidau/features/auth/widgets/gsi_button_web.dart, package:google_sign_in/google_sign_in.dart, Route /forgot-password, build, _buildTextInput, createState, dispose, _emailController (+10 more)
+Cohesion: 0.04
+Nodes (44): FLUTTER APP TEST CASES — Community, Referee, Admin, Teams, Register, Series, Profile, MODULE: ADMIN, MODULE: COMMUNITY (CLB), MODULE: PROFILE / SETTINGS, MODULE: REFEREE, MODULE: REGISTER, MODULE: SERIES, MODULE: TEAMS (+36 more)
 
 ### Community 58 - "Community 58"
 Cohesion: 0.11
-Nodes (22): matchRepositoryProvider, MatchModel? get, package:app_quanly_giaidau/core/services/penalty_service.dart, package:app_quanly_giaidau/data/models/penalty_model.dart, addFoul, addPenalty, addScore, advanceWinner (+14 more)
+Nodes (21): matchRepositoryProvider, MatchModel? get, package:app_quanly_giaidau/core/services/penalty_service.dart, addFoul, addPenalty, addScore, advanceWinner, completeMatchWithDetails (+13 more)
 
 ### Community 59 - "Community 59"
 Cohesion: 0.09
 Nodes (21): FormFieldValidator, TextInputType, AppTextFormField, build, controller, enabled, hint, initialValue (+13 more)
 
 ### Community 60 - "Community 60"
-Cohesion: 0.40
-Nodes (4): GlobalErrorHandler, init, dart:ui, package:app_quanly_giaidau/core/widgets/custom_error_widget.dart
+Cohesion: 0.10
+Nodes (18): GlobalErrorHandler, init, dart:ui, dragDevices, MyCustomScrollBehavior, load, logicalWidth, main (+10 more)
 
 ### Community 61 - "Community 61"
 Cohesion: 0.06
@@ -583,71 +624,71 @@ Nodes (31): assignedAt, categoryName, coOrganizerTournaments, courtName, empty, 
 
 ### Community 62 - "Community 62"
 Cohesion: 0.06
-Nodes (33): fadeInSlide, scaleIn, slideInFromBottom, FocusNode, package:app_quanly_giaidau/core/extensions/animation_extensions.dart, package:app_quanly_giaidau/core/widgets/form_section.dart, package:flutter_animate/flutter_animate.dart, TextEditingController (+25 more)
+Nodes (32): fadeInSlide, scaleIn, slideInFromBottom, FocusNode, package:app_quanly_giaidau/core/extensions/animation_extensions.dart, package:app_quanly_giaidau/core/widgets/form_section.dart, package:flutter_animate/flutter_animate.dart, build (+24 more)
 
 ### Community 63 - "Community 63"
-Cohesion: 0.08
-Nodes (23): AuthState, AuthStatus, build, canScore, copyWith, errorMessage, _initialized, isAdmin (+15 more)
+Cohesion: 0.07
+Nodes (29): tokenManagerProvider, tokenRepositoryProvider, restoreSavedInviteTokenUseCaseProvider, AuthState, AuthStatus, build, canScore, copyWith (+21 more)
 
 ### Community 64 - "Community 64"
-Cohesion: 0.10
-Nodes (19): double get, avatarUrl, categoryId, copyWith, eloPoints, fromJson, fullName, id (+11 more)
+Cohesion: 0.04
+Nodes (47): double get, avatarUrl, categoryId, copyWith, eloPoints, fromJson, fullName, id (+39 more)
 
 ### Community 65 - "Community 65"
 Cohesion: 0.09
 Nodes (21): build, _buildDivider, _buildLoginPill, _buildNotificationBell, _buildStatItem, _buildStatsCard, colors, _drawRacket (+13 more)
 
 ### Community 66 - "Community 66"
-Cohesion: 0.07
-Nodes (27): advanceWinner, completeMatch, create, createBatch, deleteAll, _dioClient, getAllByTournament, _getMatchById (+19 more)
+Cohesion: 0.06
+Nodes (33): advanceWinner, _buildCourtDisplay, completeMatch, create, createBatch, deleteAll, _dioClient, getAllByTournament (+25 more)
 
 ### Community 67 - "Community 67"
 Cohesion: 0.11
 Nodes (18): emailLabel, exploreWithoutLogin, fullNameLabel, hasAccount, loginButton, loginNow, loginTitle, navExplore (+10 more)
 
 ### Community 68 - "Community 68"
-Cohesion: 0.09
-Nodes (26): ApiNotificationRepository, _dioClient, getMyNotifications, getUnreadCount, _log, markAllAsRead, markAsRead, package:app_quanly_giaidau/data/repositories/api/api_notification_repository.dart (+18 more)
+Cohesion: 0.13
+Nodes (18): package:app_quanly_giaidau/data/repositories/api/api_notification_repository.dart, addNotification, build, copyWith, currentPage, getMyNotifications, getUnreadCount, hasMore (+10 more)
 
 ### Community 69 - "Community 69"
 Cohesion: 0.11
 Nodes (18): app_localizations.dart, emailLabel, exploreWithoutLogin, fullNameLabel, hasAccount, loginButton, loginNow, loginTitle (+10 more)
 
 ### Community 70 - "Community 70"
-Cohesion: 0.08
-Nodes (25): package:app_quanly_giaidau/core/widgets/countdown_timer.dart, package:app_quanly_giaidau/domain/entities/tournament.dart, package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart, package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart, Tournament, build, _buildTag, createState (+17 more)
+Cohesion: 0.15
+Nodes (13): package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart, package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart, build, _buildTag, createState, _currentPage, dispose, _formatDateRange (+5 more)
 
 ### Community 71 - "Community 71"
 Cohesion: 0.11
 Nodes (17): AppTypography, body, bodyL, bodyM, bodyStyle, button, display, heading (+9 more)
 
 ### Community 72 - "Community 72"
-Cohesion: 0.13
-Nodes (17): publishTournamentDrawUseCaseProvider, resetTournamentDrawUseCaseProvider, package:app_quanly_giaidau/core/services/draw_service.dart, AutoDrawScreen, _AutoDrawScreenState, _clearDraw, createState, _generatePreview (+9 more)
+Cohesion: 0.12
+Nodes (15): publishTournamentDrawUseCaseProvider, resetTournamentDrawUseCaseProvider, package:app_quanly_giaidau/core/services/draw_service.dart, _clearDraw, createState, _generatePreview, _hasSaved, _isDrawing (+7 more)
 
 ### Community 73 - "Community 73"
-Cohesion: 0.08
-Nodes (21): AnimationExtensions, Widget, build, child, createState, _isFocused, onTap, build (+13 more)
+Cohesion: 0.11
+Nodes (16): AnimationExtensions, Widget, build, child, FormSection, title, titleAction, build (+8 more)
 
 ### Community 74 - "Community 74"
 Cohesion: 0.10
 Nodes (18): package:app_quanly_giaidau/domain/entities/match_event.dart, package:app_quanly_giaidau/domain/entities/penalty.dart, advanceWinner, completeMatch, create, createBatch, deleteAll, getAllByTournament (+10 more)
 
 ### Community 75 - "Community 75"
-Cohesion: 0.20
-Nodes (10): package:app_quanly_giaidau/core/utils/navigation_helpers.dart, build, createState, dispose, _isSubmittingToken, _submitToken, _tokenController, _tokenError (+2 more)
+Cohesion: 0.12
+Nodes (15): package:app_quanly_giaidau/core/utils/navigation_helpers.dart, package:app_quanly_giaidau/providers/auth_provider.dart, getInitialRoute, getMatchRoute, getTournamentRoute, NavigationHelper, build, createState (+7 more)
 
 ### Community 76 - "Community 76"
-Cohesion: 0.09
-Nodes (20): VoidCallback, AppBottomNav, build, buildFab, onFabTap, build, _buildTeamCol, LiveMatchCard (+12 more)
+Cohesion: 0.10
+Nodes (18): MaterialPageRoute, main, package:app_quanly_giaidau/domain/entities/team.dart, _buildKnockoutMatchTable, Team, build, onTap, team (+10 more)
 
 ### Community 77 - "Community 77"
-Cohesion: 0.08
-Nodes (24): createCommunity, createTournament, _dioClient, getCommunities, getCommunityById, getGallery, getJoinRequests, getMembers (+16 more)
+Cohesion: 0.07
+Nodes (26): ApiCommunityRepository, createCommunity, createTournament, _dioClient, getCommunities, getCommunityById, getGallery, getJoinRequests (+18 more)
 
 ### Community 78 - "Community 78"
-Cohesion: 0.13
-Nodes (14): checkIn, count, create, delete, deleteAll, _dioClient, findByQrCode, getAllByTournament (+6 more)
+Cohesion: 0.12
+Nodes (15): ApiTeamRepository, count, create, delete, deleteAll, _dioClient, findByQrCode, getAllByTournament (+7 more)
 
 ### Community 79 - "Community 79"
 Cohesion: 0.12
@@ -662,64 +703,64 @@ Cohesion: 0.15
 Nodes (12): build, height, _initials, isKing, medal, medalColor, _PodiumSlot, PodiumView (+4 more)
 
 ### Community 82 - "Community 82"
-Cohesion: 0.12
-Nodes (14): package:app_quanly_giaidau/domain/entities/team.dart, Team, build, onTap, team, TournamentTeamCard, build, elo (+6 more)
+Cohesion: 0.05
+Nodes (40): createMockNotification, createMockPlayerRanking, createMockStanding, createMockTeam, createMockTournament, createMockWorkspace, eloPoints, email (+32 more)
 
 ### Community 83 - "Community 83"
-Cohesion: 0.14
-Nodes (14): dart:async, Timer?, build, compact, CountdownTimer, _CountdownTimerState, createState, dispose (+6 more)
+Cohesion: 0.15
+Nodes (13): Timer?, build, compact, CountdownTimer, _CountdownTimerState, createState, dispose, initState (+5 more)
 
 ### Community 84 - "Community 84"
-Cohesion: 0.22
-Nodes (8): diff, isSetComplete, maxScore, minScore, validateAllSets, validatePickleballSideOutSet, validateRallyPointSet, validateTennisSet
+Cohesion: 0.07
+Nodes (26): package:app_quanly_giaidau/domain/services/sport_rule_service.dart, diff, isSetComplete, maxScore, minScore, validateAllSets, validatePickleballSideOutSet, validateRallyPointSet (+18 more)
 
 ### Community 85 - "Community 85"
 Cohesion: 0.12
 Nodes (16): package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart, package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart, package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart, BracketDiagramScreen, _BracketDiagramScreenState, bracketType, build, _buildDiagram (+8 more)
 
 ### Community 86 - "Community 86"
-Cohesion: 0.08
-Nodes (25): _dioClient, _log, loginWithEmailPassword, loginWithGoogle, _mapAuthSession, registerWithEmailPassword, createPaymentLink, _dioClient (+17 more)
+Cohesion: 0.09
+Nodes (22): ApiNotificationRepository, _dioClient, getMyNotifications, getUnreadCount, _log, markAllAsRead, markAsRead, createPaymentLink (+14 more)
 
 ### Community 87 - "Community 87"
-Cohesion: 0.12
-Nodes (16): TournamentRefereeInvite, package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart, icon, index, invite, _InviteCard, _InviteEmptyView, _InviteErrorView (+8 more)
+Cohesion: 0.08
+Nodes (24): TournamentRefereeInvite, package:app_quanly_giaidau/core/utils/date_formatter_utils.dart, package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart, package:path_provider/path_provider.dart, package:share_plus/share_plus.dart, getTournamentStatusLabel, icon, index (+16 more)
 
 ### Community 88 - "Community 88"
 Cohesion: 0.12
 Nodes (14): dart:convert, getSavedTournaments, _key, _log, removeTournament, saveTournament, SharedPrefsLocalSessionRepository, package:app_quanly_giaidau/domain/entities/saved_tournament.dart (+6 more)
 
 ### Community 89 - "Community 89"
-Cohesion: 0.12
-Nodes (15): contactEmail, copyWith, createdAt, fromJson, group, id, isCheckedIn, members (+7 more)
+Cohesion: 0.10
+Nodes (20): approvalStatus, contactEmail, copyWith, createdAt, fromJson, group, id, isApproved (+12 more)
 
 ### Community 90 - "Community 90"
-Cohesion: 0.13
-Nodes (15): _addMemberField, AddTeamScreen, _AddTeamScreenState, build, createState, dispose, _emailController, _formKey (+7 more)
+Cohesion: 0.08
+Nodes (27): package:app_quanly_giaidau/providers/team_notifier.dart, package:file_picker/file_picker.dart, teamServiceProvider, _addMemberField, AddTeamScreen, _AddTeamScreenState, build, createState (+19 more)
 
 ### Community 91 - "Community 91"
-Cohesion: 0.33
-Nodes (5): clearAuthTokens, clearInviteToken, getSavedInviteToken, saveAuthTokens, saveInviteToken
+Cohesion: 0.11
+Nodes (15): ValueChanged, build, DivisionFilterSegment, divisions, onDivisionChanged, selectedDivision, build, _buildChip (+7 more)
 
 ### Community 92 - "Community 92"
 Cohesion: 0.18
 Nodes (10): avatarUrl, email, fromJson, fullName, id, isAccepted, isInvited, OrganizerLiteReferee (+2 more)
 
 ### Community 93 - "Community 93"
-Cohesion: 0.20
-Nodes (12): myRefereeInvitesProvider, myTournamentWorkspaceProvider, userRankingsProvider, Route /club-invites, Route /referee/invites, build, DashboardScreen, _buildLoggedInHeaderDetails (+4 more)
+Cohesion: 0.16
+Nodes (13): package:app_quanly_giaidau/providers/ranking_provider.dart, userRankingsSummaryProvider, provincesProvider, userRankingsProvider, _buildLoggedInHeaderDetails, _buildInfoCard, build, _buildContent (+5 more)
 
 ### Community 94 - "Community 94"
 Cohesion: 0.08
-Nodes (25): ApiCommunityRepository, package:app_quanly_giaidau/data/models/gallery_image_model.dart, createCommunity, createTournament, getCommunities, getCommunityById, getGallery, getJoinRequests (+17 more)
+Nodes (27): main, package:app_quanly_giaidau/data/models/community_member_model.dart, package:app_quanly_giaidau/data/models/community_tournament_model.dart, package:app_quanly_giaidau/data/models/gallery_image_model.dart, package:app_quanly_giaidau/domain/entities/community.dart, createCommunity, createTournament, getCommunities (+19 more)
 
 ### Community 95 - "Community 95"
 Cohesion: 0.13
 Nodes (15): 16.1 Hiện trạng, 16.2 Cấu trúc dữ liệu Notification, 16.3 Danh sách các loại thông báo cần implement (type enum), 16.4 Nơi cần gắn trigger `sendNotification()` trong backend, 16.5 Frontend cần implement, 16.6 Thứ tự ưu tiên implement, 16.7 Open Issues — Notifications, 16. Hệ thống Thông báo (Notification System) (+7 more)
 
 ### Community 96 - "Community 96"
-Cohesion: 0.17
-Nodes (11): AnimationController, build, _buildInfoChip, _controller, createState, dispose, initState, onTap (+3 more)
+Cohesion: 0.05
+Nodes (41): Module: FLUTTER (Flutter Mobile App), TC-FLUTTER-01: Tao Lite tournament trong CLB — Happy Path, TC-FLUTTER-02: Tao Lite tournament — form validation loi, TC-FLUTTER-03: Tao Lite tournament — API error, TC-FLUTTER-04: Tao Lite tournament — sport slug mapping, TC-FLUTTER-05: Xem danh sach tournament trong CLB — co du lieu, TC-FLUTTER-06: Xem danh sach tournament trong CLB — rong, TC-FLUTTER-07: Xem danh sach tournament trong CLB — loading state (+33 more)
 
 ### Community 97 - "Community 97"
 Cohesion: 0.14
@@ -738,12 +779,12 @@ Cohesion: 0.14
 Nodes (13): package:app_quanly_giaidau/core/utils/token_generator.dart, bracketType, call, category, CreateTournamentParams, CreateTournamentUseCase, description, format (+5 more)
 
 ### Community 101 - "Community 101"
-Cohesion: 0.16
-Nodes (19): LiveMatchCardV2, _LiveMatchCardV2State, _state, _PulsingDot, _PulsingDotState, SingleTickerProviderStateMixin, StatefulWidget, AppFocusable (+11 more)
+Cohesion: 0.17
+Nodes (12): build, _buildInfoChip, _controller, createState, dispose, initState, _LiveBadge, _LiveBadgeState (+4 more)
 
 ### Community 102 - "Community 102"
-Cohesion: 0.17
-Nodes (11): ApiTokenRepository, call, _tokenRepository, ValidateInviteTokenUseCase, ITokenRepository, package:app_quanly_giaidau/domain/entities/token.dart, package:app_quanly_giaidau/domain/repositories/token_repository.dart, call (+3 more)
+Cohesion: 0.09
+Nodes (21): ApiTokenRepository, createToken, createTokensForTournament, deactivateToken, deleteTokensByTournament, _dioClient, getTokensByTournament, _log (+13 more)
 
 ### Community 103 - "Community 103"
 Cohesion: 0.15
@@ -758,24 +799,24 @@ Cohesion: 0.15
 Nodes (12): bannerUrl, CommunityTournamentModel, format, fromJson, id, locationAddress, maxTeams, name (+4 more)
 
 ### Community 106 - "Community 106"
-Cohesion: 0.06
-Nodes (40): communityRepositoryProvider, _handleAction, _showRejectDialog, _buildJoinRequestCard, _handleMemberAction, _actionBtn, _activeCount, _allMembers (+32 more)
+Cohesion: 0.07
+Nodes (29): _actionBtn, _activeCount, _allMembers, _bannedMembers, build, _buildBannedSection, _buildInvitedSection, _buildInviteSection (+21 more)
 
 ### Community 107 - "Community 107"
 Cohesion: 0.15
 Nodes (13): 1.1 Backend — Cập nhật `holdUntil` & Tính `totalCollected` Thực tế, 1.2 Backend — Hoàn thiện việc Tích hợp Notification, 1.3 Frontend — WebSocket & Notification Bell, 1.4 Frontend — Validate Ràng buộc trước khi Publish, 1.5 Frontend — Form Đăng ký Đôi (Doubles Registration), 🔴 PHASE 1: CÁC TÍNH NĂNG CỐT LÕI (P1), Step 1.1.1: Cập nhật logic `holdUntil` dựa theo Role người tạo giải, Step 1.1.2: Tính tổng số tiền thu được (`totalCollected`) từ dữ liệu thực tế (+5 more)
 
 ### Community 108 - "Community 108"
-Cohesion: 0.07
-Nodes (27): package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart, _buildCompletedState, _activeTab, _avatarFallback, _buildAccountMenu, _buildBody, _buildCoverAndAvatar, _buildError (+19 more)
+Cohesion: 0.06
+Nodes (33): Route /dashboard, _activeTab, _avatarFallback, backgroundColor, borderColor, _buildAccountMenu, _buildBody, _buildCoverAndAvatar (+25 more)
 
 ### Community 109 - "Community 109"
 Cohesion: 0.04
-Nodes (46): package:app_quanly_giaidau/providers/organizer_lite_provider.dart, assigned, _buildUpcomingRefereeLabel, color, _countLiveMatches, createState, dispose, _EmptyStateText (+38 more)
+Nodes (45): package:app_quanly_giaidau/providers/organizer_lite_provider.dart, assigned, _buildUpcomingRefereeLabel, color, _countLiveMatches, createState, dispose, _EmptyStateText (+37 more)
 
 ### Community 110 - "Community 110"
-Cohesion: 0.15
-Nodes (20): authProvider, Route /home, Route /login, Route /login-loading, _handleJoinAction, _buildCommunityTab, _buildExploreTab, _buildLoginPillHeader (+12 more)
+Cohesion: 0.10
+Nodes (24): package:google_sign_in/google_sign_in.dart, Route /forgot-password, Route /home, Route /login-loading, build, _buildTextInput, createState, dispose (+16 more)
 
 ### Community 111 - "Community 111"
 Cohesion: 0.15
@@ -794,8 +835,8 @@ Cohesion: 0.17
 Nodes (11): 1. Executive Summary, 2.1. SOLID Principles Violations, 2.2. State Management Issues, 2.3. Database Abstraction Leaks, 2.4. Hardcoded Values & Other Issues, 2. Key Findings & Violations, 3. Step-by-Step Refactoring Plan, Phase 1: Foundational Cleanup (Critical) (+3 more)
 
 ### Community 115 - "Community 115"
-Cohesion: 0.20
-Nodes (10): Animation, build, _controller, createState, dispose, _fadeAnimation, initState, _scaleAnimation (+2 more)
+Cohesion: 0.17
+Nodes (12): Animation, AnimationController, build, _controller, createState, dispose, _fadeAnimation, _initAuth (+4 more)
 
 ### Community 116 - "Community 116"
 Cohesion: 0.23
@@ -806,12 +847,12 @@ Cohesion: 0.17
 Nodes (11): communityId, CommunityMemberModel, fromJson, id, joinedAt, role, status, userAvatarUrl (+3 more)
 
 ### Community 118 - "Community 118"
-Cohesion: 0.14
-Nodes (13): ApiTeamRepository, checkIn, count, create, delete, deleteAll, findByQrCode, getAllByTournament (+5 more)
+Cohesion: 0.18
+Nodes (10): count, create, delete, deleteAll, findByQrCode, getAllByTournament, getById, importTeams (+2 more)
 
 ### Community 119 - "Community 119"
-Cohesion: 0.20
-Nodes (10): AdminEditScoreDialog, _AdminEditScoreDialogState, build, createState, dispose, initState, match, _score1Controller (+2 more)
+Cohesion: 0.18
+Nodes (11): TextEditingController, AdminEditScoreDialog, _AdminEditScoreDialogState, build, createState, dispose, initState, match (+3 more)
 
 ### Community 120 - "Community 120"
 Cohesion: 0.17
@@ -826,32 +867,32 @@ Cohesion: 0.17
 Nodes (12): 2.1 Sơ đồ trạng thái đầy đủ, 2.2 Chi tiết từng trạng thái & điều kiện chuyển tiếp, 2.3 Bảng tổng hợp — Ai làm được gì ở từng trạng thái, 2. Vòng đời Giải đấu (Tournament Lifecycle), ❌ `CANCELLED` — Đã hủy, ✅ `COMPLETED` — Kết thúc, 🟡 `DRAFT` — Bản nháp, 🔴 `IN_PROGRESS` — Đang thi đấu (+4 more)
 
 ### Community 123 - "Community 123"
-Cohesion: 0.15
-Nodes (13): _buildMatchCard, _buildTeamRow, _cheerCounts, createState, _expandedKey, _getMockTeamElo, _getSportName, _getStatusText (+5 more)
+Cohesion: 0.17
+Nodes (11): _buildMatchCard, _buildTeamRow, _cheerCounts, createState, _expandedKey, _getSportName, _getStatusText, LiveTournamentWithMatchesCard (+3 more)
 
 ### Community 124 - "Community 124"
-Cohesion: 0.27
-Nodes (9): dart:math, BracketFactory, DoubleEliminationGenerator, generate, getGenerator, IBracketGenerator, RoundRobinGenerator, SingleEliminationGenerator (+1 more)
+Cohesion: 0.09
+Nodes (22): dart:math, package:app_quanly_giaidau/core/utils/bracket_generator.dart, package:app_quanly_giaidau/data/models/team_model.dart, package:uuid/uuid.dart, DrawService, generatePreviewMatches, gen, buildTeams (+14 more)
 
 ### Community 125 - "Community 125"
-Cohesion: 0.18
-Nodes (10): DateTime?, AppNotification, body, createdAt, fromJson, id, isRead, redirectUrl (+2 more)
+Cohesion: 0.15
+Nodes (11): DateTime, AppNotification, body, createdAt, fromJson, id, isRead, redirectUrl (+3 more)
 
 ### Community 126 - "Community 126"
 Cohesion: 0.18
 Nodes (10): A. Import Excel UI, B. Create Tournament Wizard, Files cần tạo, Files cần tạo, 📋 Plan Import Excel + Create Tournament Wizard, Thứ tự ưu tiên, UI Flow, UI Flow (+2 more)
 
 ### Community 127 - "Community 127"
-Cohesion: 0.10
-Nodes (18): createToken, createTokensForTournament, deactivateToken, deleteTokensByTournament, _dioClient, getTokensByTournament, _log, regenerateToken (+10 more)
+Cohesion: 0.12
+Nodes (16): sharedPreferencesProvider, package:app_quanly_giaidau/data/models/token_model.dart, build, setThemeMode, _themeKey, ThemeNotifier, toggleTheme, build (+8 more)
 
 ### Community 128 - "Community 128"
-Cohesion: 0.18
-Nodes (9): package:app_quanly_giaidau/domain/entities/standing.dart, build, _buildHeader, _buildStandingRow, LeaderboardView, selectedDivision, standings, _statCell (+1 more)
+Cohesion: 0.15
+Nodes (10): main, package:app_quanly_giaidau/domain/entities/standing.dart, build, _buildHeader, _buildStandingRow, LeaderboardView, selectedDivision, standings (+2 more)
 
 ### Community 129 - "Community 129"
-Cohesion: 0.09
-Nodes (20): MatchStatusExtension, build, isCompleted, match, MatchCardCompact, MatchModel, package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dart, package:app_quanly_giaidau/data/models/match_model.dart (+12 more)
+Cohesion: 0.11
+Nodes (15): package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dart, package:app_quanly_giaidau/data/models/match_model.dart, package:graphview/GraphView.dart, BracketGraphService, buildDoubleEliminationGraph, buildSingleEliminationGraph, _ensureSingleRoot, main (+7 more)
 
 ### Community 130 - "Community 130"
 Cohesion: 0.18
@@ -882,12 +923,12 @@ Cohesion: 0.20
 Nodes (9): 1. Mục tiêu, 2. Công nghệ và Thư viện sử dụng, 3.1 Màn hình chính (Bracket Screen), 3.2 Component hiển thị Trận Đấu (Match Node Card), 3.3 Tương tác và Luồng hoạt động, 3. Cấu trúc Giao diện (UI Structure), 4. Cấu trúc dữ liệu liên quan (Tham chiếu từ Database), 5. Các bước thực hiện chi tiết (ImpleBracketGraphService)**: (+1 more)
 
 ### Community 137 - "Community 137"
-Cohesion: 0.22
-Nodes (8): package:app_quanly_giaidau/core/utils/bracket_generator.dart, package:app_quanly_giaidau/data/models/team_model.dart, DrawService, generatePreviewMatches, gen, main, matches, teams
+Cohesion: 0.17
+Nodes (15): build, TournamentApp, unreadCountProvider, themeProvider, tournamentActionProvider, Route /notifications, Route /profile/edit, routerProvider (+7 more)
 
 ### Community 138 - "Community 138"
-Cohesion: 0.12
-Nodes (15): load, logicalWidth, main, view, package:app_quanly_giaidau/core/config/global_error_handler.dart, package:app_quanly_giaidau/core/widgets/app_text_field.dart, package:flutter/services.dart, build (+7 more)
+Cohesion: 0.22
+Nodes (9): package:app_quanly_giaidau/core/widgets/app_text_field.dart, build, createState, dispose, MatchSettingsDialog, _MatchSettingsDialogState, _maxScoreController, _refereeController (+1 more)
 
 ### Community 139 - "Community 139"
 Cohesion: 0.10
@@ -910,8 +951,8 @@ Cohesion: 0.22
 Nodes (8): dart:developer, AppLogger, debug, error, info, success, _tag, warning
 
 ### Community 144 - "Community 144"
-Cohesion: 0.20
-Nodes (11): sharedPreferencesProvider, Locale, Notifier, LocaleNotifier, build, setThemeMode, _themeKey, ThemeNotifier (+3 more)
+Cohesion: 0.67
+Nodes (3): Locale, Notifier, LocaleNotifier
 
 ### Community 145 - "Community 145"
 Cohesion: 0.04
@@ -930,12 +971,12 @@ Cohesion: 0.22
 Nodes (8): int?, avatarUrl, CommunityRankingModel, eloPoints, fromJson, fullName, rank, userId
 
 ### Community 149 - "Community 149"
-Cohesion: 0.14
-Nodes (13): package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart, package:shimmer/shimmer.dart, _buildContent, _buildEmptyState, _buildErrorState, _buildHeaderBanner, _buildSectionHeader, _buildShimmerLoading (+5 more)
+Cohesion: 0.12
+Nodes (16): package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart, package:app_quanly_giaidau/features/tournament/widgets/division_filter_segment.dart, _buildContent, _buildEmptyState, _buildErrorState, _buildFilterChip, _buildHeaderBanner, _buildSectionHeader (+8 more)
 
 ### Community 150 - "Community 150"
-Cohesion: 0.07
-Nodes (23): build, _buildTeamRow, isReadOnly, isReferee, match, MatchCardDetail, tournamentId, package:app_quanly_giaidau/core/config/app_constants.dart (+15 more)
+Cohesion: 0.12
+Nodes (16): getStatusColor, getStatusDisplayName, getTournamentStatusColor, getTournamentStatusLabel, isCompleted, isLive, isScheduled, isTournamentCancelled (+8 more)
 
 ### Community 151 - "Community 151"
 Cohesion: 0.10
@@ -946,16 +987,16 @@ Cohesion: 0.11
 Nodes (20): _actionBtn, _adminClubsProvider, AdminClubsScreen, _AdminClubsScreenState, build, _buildClubCard, _buildClubList, _buildEmpty (+12 more)
 
 ### Community 153 - "Community 153"
-Cohesion: 0.09
-Nodes (28): socketServiceProvider, package:app_quanly_giaidau/core/di/socket_providers.dart, package:app_quanly_giaidau/providers/notification_provider.dart, notificationStateProvider, build, _buildCard, _buildEmpty, _buildList (+20 more)
+Cohesion: 0.17
+Nodes (15): package:app_quanly_giaidau/providers/notification_provider.dart, notificationStateProvider, build, _buildCard, _buildEmpty, _buildList, createState, dispose (+7 more)
 
 ### Community 154 - "Community 154"
-Cohesion: 0.24
-Nodes (9): package:go_router/go_router.dart, package:intl/intl.dart, build, _buildCard, _buildEmpty, clubId, _clubTournamentsProvider, ClubTournamentsScreen (+1 more)
+Cohesion: 0.05
+Nodes (40): 1. AUTH MODULE, TC-FLUTTER-AUTH-001: Hien thi man hinh Login mac dinh, TC-FLUTTER-AUTH-002: Hien thi man hinh Register mac dinh, TC-FLUTTER-AUTH-003: Login thanh cong voi email/password, TC-FLUTTER-AUTH-004: Login that bai voi email/password sai, TC-FLUTTER-AUTH-005: Register thanh cong, TC-FLUTTER-AUTH-006: Register that bai, TC-FLUTTER-AUTH-007: Validation email khong hop le (+32 more)
 
 ### Community 155 - "Community 155"
-Cohesion: 0.12
-Nodes (19): Route /payment/checkout, build, _buildForm, _buildHeader, _buildLoginPrompt, _buildSuccess, createState, dispose (+11 more)
+Cohesion: 0.13
+Nodes (17): build, _buildForm, _buildHeader, _buildLoginPrompt, _buildSuccess, createState, dispose, _divisionsProvider (+9 more)
 
 ### Community 156 - "Community 156"
 Cohesion: 0.25
@@ -966,12 +1007,12 @@ Cohesion: 0.25
 Nodes (8): 3.2 Backend — Logic Hoàn tiền tự động & Tìm kiếm User, 3.3 Frontend — Giao diện Quản lý Trọng tài & Quản lý Tài chính, 🟢 PHASE 3: TRỌNG TÀI & SAO UY TÍN (P3), Step 3.2.1: Logic Tự động hoàn tiền khi hủy giải (Cancel Tournament - Edge Case), Step 3.2.2: API tìm kiếm người dùng qua Email / SĐT, Step 3.2.3: Hoàn lệ phí khi đồng đội từ chối hoặc hủy đăng ký & Quản lý ELO Cặp đôi (Edge Case), Step 3.3.1: Tab Quản lý Trọng tài (trong trang Manage), Step 3.3.2: Tab Tài chính & Rút tiền sớm (Tab Finance)
 
 ### Community 158 - "Community 158"
-Cohesion: 0.04
-Nodes (43): cancelText, confirmText, showConfirmDialog, FlutterErrorDetails, build, match, MatchCardLive, package:app_quanly_giaidau/core/config/app_theme.dart (+35 more)
+Cohesion: 0.10
+Nodes (16): package:app_quanly_giaidau/core/config/app_constants.dart, calculateOpponentPoints, PenaltyService, AppInfoDialog, build, content, show, title (+8 more)
 
 ### Community 159 - "Community 159"
-Cohesion: 0.08
-Nodes (26): Dio, Dio get, clearAuthTokens, clearInviteToken, getSavedInviteToken, _inviteTokenKey, saveAuthTokens, saveInviteToken (+18 more)
+Cohesion: 0.10
+Nodes (20): getInstance, watch, Dio, Dio get, clearAuthTokens, clearInviteToken, getSavedInviteToken, _inviteTokenKey (+12 more)
 
 ### Community 160 - "Community 160"
 Cohesion: 0.07
@@ -1010,12 +1051,12 @@ Cohesion: 0.29
 Nodes (6): caption, createdAt, fromJson, GalleryImageModel, id, imageUrl
 
 ### Community 169 - "Community 169"
-Cohesion: 0.12
-Nodes (18): dioClientProvider, _handleChallenge, _showCreateDialog, createState, dispose, _fetchTournament, initState, inviteCode (+10 more)
+Cohesion: 0.18
+Nodes (11): createState, dispose, _fetchTournament, initState, inviteCode, JoinInviteScreen, _JoinInviteScreenState, _loading (+3 more)
 
 ### Community 170 - "Community 170"
-Cohesion: 0.10
-Nodes (19): package:app_quanly_giaidau/core/utils/status_helpers.dart, package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart, package:app_quanly_giaidau/core/widgets/status_indicator.dart, package:app_quanly_giaidau/features/home/widgets/token_input_sheet.dart, package:app_quanly_giaidau/providers/saved_tournaments_provider.dart, package:app_quanly_giaidau/providers/tournament_action_notifier.dart, animate, build (+11 more)
+Cohesion: 0.06
+Nodes (30): FlutterErrorDetails, package:app_quanly_giaidau/core/config/app_theme.dart, package:app_quanly_giaidau/core/utils/status_helpers.dart, package:app_quanly_giaidau/core/widgets/status_indicator.dart, Tournament, VoidCallback, AppBottomNav, build (+22 more)
 
 ### Community 171 - "Community 171"
 Cohesion: 0.29
@@ -1058,16 +1099,16 @@ Cohesion: 0.08
 Nodes (25): 0. Tien do thuc te, 1. Muc tieu, 2. Nguyen tac thuc thi, 3. Hien trang tom tat, 4.1 Role model trong app, 4.2 Trung tam "Cua toi", 4. Kien truc du kien, 5. Phase thuc thi (+17 more)
 
 ### Community 181 - "Community 181"
-Cohesion: 0.29
-Nodes (7): communitiesProvider, unreadCountProvider, tournamentsProvider, build, _buildClubListWithApi, HomeScreen, _HomeScreenState
+Cohesion: 0.18
+Nodes (13): socketServiceProvider, package:app_quanly_giaidau/core/di/socket_providers.dart, build, child, createState, didChangeAppLifecycleState, dispose, initState (+5 more)
 
 ### Community 182 - "Community 182"
-Cohesion: 0.15
-Nodes (12): build, isTeam1, isTeam1Serving, PickleballServerIndicator, _point, serveNumber, SetHistoryDisplay, sets (+4 more)
+Cohesion: 0.14
+Nodes (13): allTournaments, allTournamentsAsync, data, dio, liveMatchesProvider, myTournamentsProvider, presenceCountProvider, ref (+5 more)
 
 ### Community 183 - "Community 183"
-Cohesion: 0.08
-Nodes (24): create, delete, _dioClient, followTournament, getById, getFollowedTournaments, getMyWorkspace, isFollowing (+16 more)
+Cohesion: 0.07
+Nodes (27): _buildCourtDisplay, _buildSportRules, create, delete, _dioClient, followTournament, getBracketMatches, getById (+19 more)
 
 ### Community 184 - "Community 184"
 Cohesion: 0.33
@@ -1194,8 +1235,8 @@ Cohesion: 0.50
 Nodes (3): RoleExtension, toRoleDisplayName, toRoleShortName
 
 ### Community 216 - "Community 216"
-Cohesion: 0.09
-Nodes (24): Route /profile, build, _buildRequirementRow, ChangePasswordScreen, _ChangePasswordScreenState, _confirmPasswordController, createState, _currentPasswordController (+16 more)
+Cohesion: 0.11
+Nodes (18): _buildRequirementRow, ChangePasswordScreen, _ChangePasswordScreenState, _confirmPasswordController, createState, _currentPasswordController, dispose, _FieldLabel (+10 more)
 
 ### Community 217 - "Community 217"
 Cohesion: 0.38
@@ -1262,24 +1303,24 @@ Cohesion: 0.67
 Nodes (3): 14.1 Bảo mật Dữ liệu (Data Security), 14.2 Quyền Riêng Tư (Privacy) & UX Store, 14. Bảo mật Dữ liệu & Tiêu chuẩn App Store / Google Play
 
 ### Community 235 - "Community 235"
-Cohesion: 0.13
-Nodes (14): create, delete, followTournament, getById, getFollowedTournaments, getMyWorkspace, isFollowing, respondToRefereeInvite (+6 more)
+Cohesion: 0.08
+Nodes (21): main, main, _makeTournament, package:app_quanly_giaidau/domain/entities/tournament.dart, package:app_quanly_giaidau/domain/entities/tournament_workspace.dart, create, delete, followTournament (+13 more)
 
 ### Community 238 - "Community 238"
 Cohesion: 0.12
 Nodes (18): build, _buildCard, _buildEmpty, challengedClubId, challengedClubName, ChallengeItem, challengerClubName, _challengesProvider (+10 more)
 
 ### Community 239 - "Community 239"
-Cohesion: 0.27
-Nodes (10): teamRepositoryProvider, addTeam, deleteAllTeams, deleteTeam, importTeams, ref, TeamService, tournamentId (+2 more)
+Cohesion: 0.24
+Nodes (11): teamRepositoryProvider, addTeam, _checkConstraints, deleteAllTeams, deleteTeam, importTeams, ref, TeamService (+3 more)
 
 ### Community 245 - "Community 245"
-Cohesion: 0.09
-Nodes (20): PlayerRanking, package:app_quanly_giaidau/domain/entities/elo_tier.dart, package:app_quanly_giaidau/domain/entities/ranking.dart, getEloTiers, getRankings, getUserRank, build, highlight (+12 more)
+Cohesion: 0.07
+Nodes (28): PlayerRanking, main, main, package:app_quanly_giaidau/domain/entities/elo_tier.dart, package:app_quanly_giaidau/domain/entities/ranking.dart, package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart, getEloTiers, getRankings (+20 more)
 
 ### Community 246 - "Community 246"
-Cohesion: 0.25
-Nodes (7): bool get, hasResult, hasWinner, isCompleted, isLive, isScheduled, isWalkover
+Cohesion: 0.18
+Nodes (10): borderRadius, build, ErrorView, height, message, NotFoundView, onGoHome, onRetry (+2 more)
 
 ### Community 260 - "Community 260"
 Cohesion: 0.12
@@ -1294,48 +1335,48 @@ Cohesion: 0.13
 Nodes (15): build, createState, dispose, _gatewayColors, _gatewayLabels, initState, _isExpired, _isSubmitting (+7 more)
 
 ### Community 263 - "Community 263"
-Cohesion: 0.12
-Nodes (18): package:app_quanly_giaidau/core/services/excel_export_service.dart, package:app_quanly_giaidau/core/widgets/app_action_button.dart, package:app_quanly_giaidau/core/widgets/info_chip.dart, package:app_quanly_giaidau/core/widgets/responsive_layout.dart, package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dart, package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart, package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart, package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart (+10 more)
+Cohesion: 0.11
+Nodes (17): package:app_quanly_giaidau/core/services/excel_export_service.dart, package:app_quanly_giaidau/core/widgets/app_action_button.dart, package:app_quanly_giaidau/core/widgets/info_chip.dart, package:app_quanly_giaidau/core/widgets/responsive_layout.dart, package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dart, package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart, package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart, package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart (+9 more)
 
 ### Community 264 - "Community 264"
-Cohesion: 0.12
-Nodes (15): _commentNewController, connect, disconnect, isConnected, leave, _log, _matchStatusController, onCommentNew (+7 more)
+Cohesion: 0.08
+Nodes (25): package:socket_io_client/socket_io_client.dart, _commentNewController, connect, disconnect, isConnected, leave, _log, _matchStatusController (+17 more)
 
 ### Community 265 - "Community 265"
 Cohesion: 0.15
 Nodes (12): communityBannerUrl, communityId, CommunityInviteModel, communityLogoUrl, communityName, createdAt, fromJson, id (+4 more)
 
 ### Community 266 - "Community 266"
-Cohesion: 0.08
-Nodes (28): CustomClipper, package:app_quanly_giaidau/core/widgets/vnsport_header.dart, package:app_quanly_giaidau/providers/user_provider.dart, Path, userProfileProvider, Route /profile/change-password, _fetchMembership, build (+20 more)
+Cohesion: 0.13
+Nodes (14): CustomClipper, Path, backgroundColor, borderColor, BottomNavClipper, _buildAvatarContent, _buildNavItem, currentIndex (+6 more)
 
 ### Community 267 - "Community 267"
 Cohesion: 0.13
 Nodes (14): LinearGradient, _a, _b, _c, color, _d, from, grade (+6 more)
 
 ### Community 268 - "Community 268"
-Cohesion: 0.06
-Nodes (29): ApiUserRepository, package:app_quanly_giaidau/domain/entities/user.dart, userPublicProfileProvider, changePassword, getProfile, getPublicProfile, IUserRepository, searchUsers (+21 more)
+Cohesion: 0.10
+Nodes (20): package:shimmer/shimmer.dart, userPublicProfileProvider, _avatarFallback, build, _buildBody, _buildCoverSection, _buildEmptyPlaceholder, _buildNoRank (+12 more)
 
 ### Community 269 - "Community 269"
-Cohesion: 0.17
-Nodes (12): build, _buildForm, _buildSuccess, _confirmCtrl, createState, dispose, _pwCtrl, ResetPasswordScreen (+4 more)
+Cohesion: 0.15
+Nodes (13): build, _buildForm, _buildSuccess, _confirmCtrl, createState, dispose, _pwCtrl, ResetPasswordScreen (+5 more)
 
 ### Community 270 - "Community 270"
-Cohesion: 0.18
-Nodes (11): build, _buildForm, _buildSent, createState, dispose, _emailCtrl, ForgotPasswordScreen, _ForgotPasswordScreenState (+3 more)
+Cohesion: 0.38
+Nodes (6): build, _buildCard, _buildEmpty, clubId, _clubTournamentsProvider, ClubTournamentsScreen
 
 ### Community 271 - "Community 271"
 Cohesion: 0.18
 Nodes (10): categoryId, EloTier, fromJson, iconUrl, id, maxElo, minElo, name (+2 more)
 
 ### Community 272 - "Community 272"
-Cohesion: 0.14
-Nodes (12): Fake, FlutterSecureStorage, package:app_quanly_giaidau/app.dart, package:app_quanly_giaidau/core/services/api_response.dart, package:flutter_secure_storage/flutter_secure_storage.dart, package:flutter_test/flutter_test.dart, map, FakeFlutterSecureStorage (+4 more)
+Cohesion: 0.11
+Nodes (17): Fake, FlutterSecureStorage, Map, package:app_quanly_giaidau/core/services/api_response.dart, package:flutter_secure_storage/flutter_secure_storage.dart, map, ApiResponse, data (+9 more)
 
 ### Community 273 - "Community 273"
-Cohesion: 0.10
-Nodes (21): package:app_quanly_giaidau/core/di/di.dart, categoriesProvider, CategoryModel, dataList, description, dio, fromJson, id (+13 more)
+Cohesion: 0.12
+Nodes (15): package:app_quanly_giaidau/core/di/di.dart, CategoryModel, dataList, description, dio, fromJson, id, name (+7 more)
 
 ### Community 274 - "Community 274"
 Cohesion: 0.17
@@ -1346,40 +1387,40 @@ Cohesion: 0.20
 Nodes (11): package:app_quanly_giaidau/data/models/community_invite_model.dart, myCommunityInvitesProvider, build, _buildEmpty, _buildError, _buildInviteCard, ClubInvitesScreen, _ClubInvitesScreenState (+3 more)
 
 ### Community 276 - "Community 276"
-Cohesion: 0.25
-Nodes (7): ApiResponse, data, fromJson, message, meta, statusCode, T?
+Cohesion: 0.18
+Nodes (11): build, _buildForm, _buildSent, createState, dispose, _emailCtrl, ForgotPasswordScreen, _ForgotPasswordScreenState (+3 more)
 
 ### Community 277 - "Community 277"
-Cohesion: 0.22
-Nodes (8): package:app_quanly_giaidau/core/utils/date_formatter_utils.dart, package:app_quanly_giaidau/data/models/match_event_model.dart, package:flutter/foundation.dart, package:path_provider/path_provider.dart, package:share_plus/share_plus.dart, ExcelExportService, exportMatchProtocol, exportTournamentData
+Cohesion: 0.20
+Nodes (10): package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart, package:app_quanly_giaidau/data/models/tournament_model.dart, package:app_quanly_giaidau/features/home/widgets/token_input_sheet.dart, package:app_quanly_giaidau/providers/saved_tournaments_provider.dart, package:app_quanly_giaidau/providers/tournament_action_notifier.dart, savedTournamentsProvider, build, _showTokenSheet (+2 more)
 
 ### Community 278 - "Community 278"
 Cohesion: 0.06
 Nodes (31): package:app_quanly_giaidau/features/match/widgets/match_bottom_bar.dart, package:app_quanly_giaidau/features/match/widgets/pickleball_panel.dart, package:app_quanly_giaidau/features/match/widgets/rally_score_panel.dart, package:app_quanly_giaidau/features/match/widgets/set_history_bar.dart, package:app_quanly_giaidau/features/match/widgets/tennis_score_panel.dart, build, color, colors (+23 more)
 
 ### Community 279 - "Community 279"
-Cohesion: 0.29
-Nodes (7): package:app_quanly_giaidau/domain/entities/community.dart, package:app_quanly_giaidau/providers/community_provider.dart, pendingCommunitiesProvider, build, _buildClubCard, PendingClubsScreen, _showRejectDialog
+Cohesion: 0.07
+Nodes (28): 1. HOME / EXPLORE (TC-FLUTTER-HOME), 2. DASHBOARD (TC-FLUTTER-DASH), 3. UPLOAD (TC-FLUTTER-UPLOAD), 4. QR SCANNER (TC-FLUTTER-QR), 5. DASHBOARD LITE (TC-FLUTTER-OLITE), TC-FLUTTER-DASH-001: Dashboard workspace, TC-FLUTTER-DASH-002: Chưa login redirect, TC-FLUTTER-DASH-003: OrganizerLiteSection (+20 more)
 
 ### Community 280 - "Community 280"
 Cohesion: 0.22
 Nodes (8): package:app_quanly_giaidau/core/widgets/score_stepper.dart, _addScore, build, isCompleted, isLive, isTeam1, matchId, tournamentId
 
 ### Community 281 - "Community 281"
-Cohesion: 0.24
-Nodes (11): AsyncNotifier, localSessionRepositoryProvider, TournamentWorkspace, List, MyTournamentWorkspaceNotifier, build, removeTournament, SavedTournamentsNotifier (+3 more)
+Cohesion: 0.13
+Nodes (17): AsyncNotifier, localSessionRepositoryProvider, accessToken, AuthSession, refreshToken, roles, List, build (+9 more)
 
 ### Community 282 - "Community 282"
-Cohesion: 0.22
-Nodes (9): package:app_quanly_giaidau/providers/ranking_provider.dart, userRankingsSummaryProvider, build, _buildContent, _buildRecentMatch, _buildStatDivider, _buildStatItemWhite, _getInitials (+1 more)
+Cohesion: 0.07
+Nodes (26): binding, dashNav, dashTab, emailFields, loginBtn, loginWithEmail, logout, logoutBtn (+18 more)
 
 ### Community 283 - "Community 283"
-Cohesion: 0.13
-Nodes (13): UserProfile, package:app_quanly_giaidau/providers/auth_provider.dart, authState, getProfile, getPublicProfile, profile, profileAsync, repo (+5 more)
+Cohesion: 0.12
+Nodes (16): UserProfile, authState, code, data, dio, fromJson, getProfile, getPublicProfile (+8 more)
 
 ### Community 284 - "Community 284"
-Cohesion: 0.25
-Nodes (8): CustomPainter, _WavePainter, ScannerOverlayPainter, _DoubleElimPainter, _WaveHeaderPainter, BottomNavCurvePainter, _BracketConnectorPainter, VnsportHeaderPainter
+Cohesion: 0.33
+Nodes (5): gsi_web_stub.dart, package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart, buildGoogleSignInButton, googleSignInPlugin, renderButton
 
 ### Community 285 - "Community 285"
 Cohesion: 0.13
@@ -1387,63 +1428,216 @@ Nodes (15): _timer, amount, _autoCheckTimer, build, _checkAttempts, createState,
 
 ### Community 287 - "Community 287"
 Cohesion: 0.25
-Nodes (8): package:app_quanly_giaidau/providers/standings_provider.dart, standingsProvider, _buildStandingsView, _buildLeaderboardTab, build, CrossTableView, matches, tournamentId
+Nodes (7): bool get, hasResult, hasWinner, isCompleted, isLive, isScheduled, isWalkover
 
 ### Community 288 - "Community 288"
 Cohesion: 0.25
 Nodes (7): build, _buildStatCard, completedMatches, liveMatches, totalMatches, totalTeams, TournamentStatsRow
 
 ### Community 289 - "Community 289"
-Cohesion: 0.29
-Nodes (6): package:app_quanly_giaidau/domain/services/sport_rule_service.dart, build, finishedSets, SetHistoryBar, team1SetWins, team2SetWins
+Cohesion: 0.07
+Nodes (27): 2. MATCH / SCORE MODULE, TC-FLUTTER-MATCH-001: LiveScoreScreen - Setup State (Scheduled Match), TC-FLUTTER-MATCH-002: LiveScoreScreen - Start Match, TC-FLUTTER-MATCH-003: LiveScoreScreen - Live State: Referee Score Controls, TC-FLUTTER-MATCH-004: LiveScoreScreen - Win Condition Check, TC-FLUTTER-MATCH-005: LiveScoreScreen - Foul Sheet / Penalty, TC-FLUTTER-MATCH-006: LiveScoreScreen - Force Win (Xu thang), TC-FLUTTER-MATCH-007: LiveScoreScreen - Viewer State (Match Live) (+19 more)
 
 ### Community 290 - "Community 290"
-Cohesion: 0.33
-Nodes (5): package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart, build, highlightElo, TierLegendView, tiers
+Cohesion: 0.08
+Nodes (25): 1. BRACKET MODULE, TC-FLUTTER-BRACKET-001: BracketViewScreen - Single Elimination Layout, TC-FLUTTER-BRACKET-002: BracketViewScreen - Double Elimination Layout, TC-FLUTTER-BRACKET-003: BracketViewScreen - Round Robin Layout, TC-FLUTTER-BRACKET-004: BracketViewScreen - Match Filtering (All / Live / Scheduled / Completed), TC-FLUTTER-BRACKET-005: BracketViewScreen - Match Table Row Rendering, TC-FLUTTER-BRACKET-006: BracketViewScreen - Match Row Referee Indicator, TC-FLUTTER-BRACKET-007: BracketViewScreen - Standings DataTable (+17 more)
 
 ### Community 291 - "Community 291"
+Cohesion: 0.33
+Nodes (5): leaderboardBtns, main, navigateToLeaderboard, rankNav, rankTab
+
+### Community 292 - "Community 292"
+Cohesion: 0.16
+Nodes (21): ChangeNotifier, ConsumerWidget, completeMatch, ScorePanelNotifier, scorePanelNotifierProvider, matchControllerProvider, singleMatchProvider, build (+13 more)
+
+### Community 293 - "Community 293"
+Cohesion: 0.10
+Nodes (21): helpers/test_utils.dart, adminNav, clubsNav, main, navigateToAdminClubs, main, dashNav, dashTab (+13 more)
+
+### Community 294 - "Community 294"
+Cohesion: 0.25
+Nodes (7): package:intl/intl.dart, DateFormatterUtils, formatDate, formatDateTime, formatFileTime, formatTime, formatTimeWithSeconds
+
+### Community 295 - "Community 295"
+Cohesion: 0.09
+Nodes (21): 1. `_buildBands` uses `m.bracketPosition.bracket` correctly, 2. `_mapBracketBranch` mapping is correct, 3. Losers bracket starts at X=0 in both web and Flutter, Bug, Double Elimination Bracket Branch Bug Analysis, Execution Trace, File Paths Referenced, Fix (+13 more)
+
+### Community 296 - "Community 296"
+Cohesion: 0.09
+Nodes (21): 1.1 Sửa `api_match_repository.dart`, 1.2 Sửa `MatchModel` entity, 2.1 Sửa typo `double_elim_diagram.dart`, 2.2 Thêm BYE-vs-BYE filter, 3.1 Xóa `graphview` khỏi `pubspec.yaml`, 3.2 Xóa dead code trong `bracket_view_screen.dart`, 4.1 Thêm endpoint vào `api_tournament_repository.dart`, 4.2 Tạo model `BracketData` (+13 more)
+
+### Community 297 - "Community 297"
+Cohesion: 0.09
+Nodes (22): 2. PAYMENT MODULE, TC-FLUTTER-PAYMENT-001: Checkout screen hien thi thong tin, TC-FLUTTER-PAYMENT-002: Checkout - chon gateway khac, TC-FLUTTER-PAYMENT-003: Checkout - thanh toan PAYOS thanh cong, TC-FLUTTER-PAYMENT-004: Checkout - thanh toan VNPAY/MoMo/TRANSFER, TC-FLUTTER-PAYMENT-005: Checkout - createPaymentLink that bai, TC-FLUTTER-PAYMENT-006: Mock gateway - hien thi man hinh, TC-FLUTTER-PAYMENT-007: Mock gateway - nhap OTP tu dong chuyen focus (+14 more)
+
+### Community 298 - "Community 298"
+Cohesion: 0.10
+Nodes (15): cancelText, confirmText, showConfirmDialog, package:app_quanly_giaidau/app.dart, package:app_quanly_giaidau/domain/entities/app_notification.dart, package:flutter/material.dart, required String content,
+  String, main (+7 more)
+
+### Community 299 - "Community 299"
+Cohesion: 0.25
+Nodes (8): CustomPainter, _WavePainter, ScannerOverlayPainter, _DoubleElimPainter, _WaveHeaderPainter, BottomNavCurvePainter, _BracketConnectorPainter, VnsportHeaderPainter
+
+### Community 300 - "Community 300"
+Cohesion: 0.25
+Nodes (8): dioClientProvider, Route /payment/checkout, _handleChallenge, _showCreateDialog, _join, _fetchComments, _postComment, _register
+
+### Community 302 - "Community 302"
+Cohesion: 0.29
+Nodes (6): main, navigateToTeamList, teamNav, teamNav2, tourCards, vdvNav
+
+### Community 303 - "Community 303"
+Cohesion: 0.13
+Nodes (16): EdgeInsetsGeometry?, package:app_quanly_giaidau/core/widgets/countdown_timer.dart, followedTournamentsProvider, build, _buildDateBlock, createState, _getCategoryChips, _getFormatLabel (+8 more)
+
+### Community 304 - "Community 304"
+Cohesion: 0.12
+Nodes (17): 3. NOTIFICATION MODULE, TC-FLUTTER-NOTIFICATION-001: Notification screen - hien thi danh sach, TC-FLUTTER-NOTIFICATION-002: Notification screen - empty state, TC-FLUTTER-NOTIFICATION-003: Notification grouping theo thoi gian, TC-FLUTTER-NOTIFICATION-004: Notification - danh dau da doc khi tap, TC-FLUTTER-NOTIFICATION-005: Notification - redirect URL, TC-FLUTTER-NOTIFICATION-006: Notification - doc tat ca, TC-FLUTTER-NOTIFICATION-007: Notification - pagination (load more) (+9 more)
+
+### Community 305 - "Community 305"
+Cohesion: 0.12
+Nodes (16): 4. TOURNAMENT INTRO MODULE, TC-FLUTTER-DETAIL-001: TournamentDetailScreen - Tournament Info Card, TC-FLUTTER-DETAIL-002: TournamentDetailScreen - Quick Actions, TC-FLUTTER-DETAIL-003: TournamentDetailScreen - Finalize Tournament, TC-FLUTTER-DETAIL-004: TournamentDetailScreen - Delete Tournament, TC-FLUTTER-DETAIL-005: TournamentDetailScreen - Excel Export, TC-FLUTTER-DETAIL-006: TournamentDetailScreen - Responsive Layout (Tablet), TC-FLUTTER-DETAIL-007: TournamentDetailScreen - Embedded Screens (+8 more)
+
+### Community 306 - "Community 306"
+Cohesion: 0.10
+Nodes (17): call, ClearSessionUseCase, _sessionRepository, call, RestoreSavedInviteTokenUseCase, _sessionRepository, call, SaveInviteTokenUseCase (+9 more)
+
+### Community 307 - "Community 307"
+Cohesion: 0.14
+Nodes (13): dart:async, package:app_quanly_giaidau/core/widgets/vnsport_header.dart, package:app_quanly_giaidau/providers/user_provider.dart, build, createState, initState, LoginLoadingScreen, _LoginLoadingScreenState (+5 more)
+
+### Community 308 - "Community 308"
 Cohesion: 0.40
 Nodes (6): AppLocalizations, _AppLocalizationsDelegate, AppLocalizationsEn, of, AppLocalizationsVi, LocalizationsDelegate
 
-### Community 292 - "Community 292"
-Cohesion: 0.13
-Nodes (26): ChangeNotifier, ConsumerWidget, matchSocketServiceProvider, completeMatch, ScorePanelNotifier, scorePanelNotifierProvider, matchControllerProvider, singleMatchProvider (+18 more)
+### Community 309 - "Community 309"
+Cohesion: 0.33
+Nodes (5): package:app_quanly_giaidau/core/di/repository_providers.dart, getMatches, liveMatchesProvider, matchRepo, query_providers.dart
 
-### Community 293 - "Community 293"
-Cohesion: 0.40
-Nodes (4): accessToken, AuthSession, refreshToken, roles
+### Community 310 - "Community 310"
+Cohesion: 0.14
+Nodes (13): models/app_notification_test.dart, models/community_test.dart, models/elo_tier_test.dart, models/match_test.dart, models/payment_test.dart, models/player_ranking_test.dart, models/standing_test.dart, models/team_test.dart (+5 more)
 
-### Community 294 - "Community 294"
+### Community 311 - "Community 311"
 Cohesion: 0.29
-Nodes (6): DateFormatterUtils, formatDate, formatDateTime, formatFileTime, formatTime, formatTimeWithSeconds
+Nodes (7): userRepositoryProvider, EditProfileScreen, _EditProfileScreenState, _pickAndUploadAvatar, _save, _pickImage, _save
 
-### Community 295 - "Community 295"
+### Community 312 - "Community 312"
+Cohesion: 0.15
+Nodes (12): clubCards, clubNav, clubNav2, communityNav, createBtn, fab, main, navigateToClubDetail (+4 more)
+
+### Community 313 - "Community 313"
+Cohesion: 0.15
+Nodes (12): bracketBtn, liveNav, liveNav2, liveTab, main, matchRows, navigateToLiveMatch, navigateToLiveMatchScreen (+4 more)
+
+### Community 314 - "Community 314"
+Cohesion: 0.15
+Nodes (13): 3. RANKING MODULE, TC-FLUTTER-RANKING-001: LeaderboardScreen - Category Selection, TC-FLUTTER-RANKING-002: LeaderboardScreen - Rankings List with Podium, TC-FLUTTER-RANKING-003: LeaderboardScreen - Search Functionality, TC-FLUTTER-RANKING-004: LeaderboardScreen - User Stats Card (Sticky Me), TC-FLUTTER-RANKING-005: LeaderboardScreen - Tier Legend, TC-FLUTTER-RANKING-006: LeaderboardScreen - Empty / Error States, TC-FLUTTER-RANKING-007: UserRankingDetailScreen - User Stats Display (+5 more)
+
+### Community 315 - "Community 315"
+Cohesion: 0.33
+Nodes (5): confirmEmailVerification, loginWithEmailPassword, loginWithGoogle, registerWithEmailPassword, requestEmailVerification
+
+### Community 316 - "Community 316"
 Cohesion: 0.40
-Nodes (4): build, main, tokenManagementProvider, tournamentId
+Nodes (4): main, navigateToTournamentRegister, regBtn, tourCards
 
-### Community 300 - "Community 300"
+### Community 317 - "Community 317"
+Cohesion: 0.07
+Nodes (24): MatchStatusExtension, build, isCompleted, match, MatchCardCompact, build, _buildTeamRow, _infoRow (+16 more)
+
+### Community 318 - "Community 318"
 Cohesion: 0.50
 Nodes (4): _TabBarDelegate, _StickyHeaderDelegate, _TabBarDelegate, SliverPersistentHeaderDelegate
 
+### Community 319 - "Community 319"
+Cohesion: 0.29
+Nodes (10): find_flutter(), get_test_path(), main(), parse_results(), Parse machine output thành report., Cập nhật trực tiếp testcases.json + Excel, Chạy flutter test (có --machine và chỉ định thiết bị) và trả về raw output + tes, run_test() (+2 more)
+
+### Community 321 - "Community 321"
+Cohesion: 0.20
+Nodes (9): bracketTab, bracketTab2, drawBtn, main, navigateToAutoDraw, navigateToTournamentBracket, takeScreenshot, tester (+1 more)
+
+### Community 322 - "Community 322"
+Cohesion: 0.20
+Nodes (9): main, navigateToNotifications, navigateToProfile, notifIcon, notifText, notifyTab, pumpAndSettle, settingsTab (+1 more)
+
+### Community 323 - "Community 323"
+Cohesion: 0.20
+Nodes (8): package:app_quanly_giaidau/domain/entities/user.dart, changePassword, getProfile, getPublicProfile, searchUsers, updateProfile, uploadAvatar, uploadCover
+
+### Community 324 - "Community 324"
+Cohesion: 0.29
+Nodes (9): main(), parse_results(), Ghi report ra file JSON + TXT., Gọi Python script update-results.py để cập nhật Excel., Chạy flutter test và trả về raw output., Parse machine output thành report., run_flutter_test(), save_report() (+1 more)
+
+### Community 325 - "Community 325"
+Cohesion: 0.29
+Nodes (9): export_json(), main(), parse_flutter_results(), Đọc file với auto-detect encoding (UTF-8, UTF-16)., Parse flutter test --machine output (JSON Lines) -> list of {id, status}., Update Excel với kết quả test., Xuất results.json chuẩn cho Flutter test., read_file_auto_encoding() (+1 more)
+
+### Community 327 - "Community 327"
+Cohesion: 0.22
+Nodes (8): C. Test cases cu the (TC-FLUTTER-XX), D. JSON export format (tuong thich tournaments.json), E.1. Mock helpers (`test/helpers/test_helpers.dart`), E.2. Widget test pattern, E.3. Unit test pattern (Provider), E. Cac test pattern can xay dung, F. Checklist khi implement test, Flutter Test Plan — app_quanly_giaidau
+
+### Community 328 - "Community 328"
+Cohesion: 0.25
+Nodes (7): bracketBtn, drawNav, main, navigateToBracket, navigateToDrawScreen, navigateToTournamentIntro, tourCards
+
+### Community 329 - "Community 329"
+Cohesion: 0.25
+Nodes (7): main, navigateToProfile, navigateToSettings, pumpAndSettle, settingsIcon, settingsText, tester
+
+### Community 330 - "Community 330"
+Cohesion: 0.25
+Nodes (7): editIcon, editText, main, navigateToEditProfile, navigateToProfile, pumpAndSettle, tester
+
+### Community 331 - "Community 331"
+Cohesion: 0.25
+Nodes (7): Chụp ảnh màn hình, Cách chạy, File Excel testcases, Flutter Integration Tests, Mock note, Structure, Test files
+
+### Community 333 - "Community 333"
+Cohesion: 0.36
+Nodes (7): main(), parse_markdown(), Write testcases to JSON., Extract testcases from markdown file., Write testcases to Excel via win32com., write_excel(), write_json()
+
+### Community 334 - "Community 334"
+Cohesion: 0.25
+Nodes (7): 5. CROSS-MODULE / INTEGRATION, TC-FLUTTER-CROSS-001: Bracket -> Match Flow (Tap Match -> LiveScore), TC-FLUTTER-CROSS-002: Draw -> Bracket Preview Flow, TC-FLUTTER-CROSS-003: Score Update -> Standings Recalculation, TC-FLUTTER-CROSS-004: Tournament Intro -> Bracket/Live/Registration Navigation, TC-FLUTTER-CROSS-005: Admin Edit Score -> Bracket Advancement, Test Cases: Flutter Modules - Bracket, Match/Score, Ranking, Tournament Intro
+
+### Community 335 - "Community 335"
+Cohesion: 0.14
+Nodes (17): LiveMatchCardV2, _LiveMatchCardV2State, _state, _PulsingDot, _PulsingDotState, StatefulWidget, AppFocusable, _AppFocusableState (+9 more)
+
+### Community 336 - "Community 336"
+Cohesion: 0.29
+Nodes (6): main, navigateToAdminTournament, navigateToTournamentIntro, pumpAndSettle, tester, tourCards
+
+### Community 339 - "Community 339"
+Cohesion: 0.33
+Nodes (6): A.1. Man hinh (Screens) can test, A.2. API calls can test, A.3. State management can test, A.4. Navigation can test, A.5. Business logic can test, A. Phan tich Flutter App — nhung gi can test
+
+### Community 342 - "Community 342"
+Cohesion: 0.40
+Nodes (5): B.1. Khuyen nghi: Unit / Widget test (mock) la chinh, B.2. Packages can cai them, B.3. Cau truc thu muc test de xuat, B.4. % Coverage khuyen nghi, B. De xuat test strategy
+
 ## Knowledge Gaps
-- **3163 isolated node(s):** `excel`, `sheetObject`, `fileBytes`, `main`, `generateSingles` (+3158 more)
+- **3752 isolated node(s):** `excel`, `sheetObject`, `fileBytes`, `main`, `generateSingles` (+3747 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **15 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `authProvider` connect `Community 110` to `Community 6`, `Community 266`, `Community 15`, `Community 273`, `Community 18`, `Community 281`, `Community 282`, `Community 27`, `Community 28`, `Community 155`, `Community 153`, `Community 31`, `Community 292`, `Community 37`, `Community 169`, `Community 44`, `Community 53`, `Community 181`, `Community 55`, `Community 63`, `Community 75`, `Community 216`, `Community 93`, `Community 99`, `Community 115`?**
-  _High betweenness centrality (0.008) - this node is a cross-community bridge._
-- **Why does `map` connect `Community 272` to `Community 7`, `Community 169`, `Community 11`, `Community 12`, `Community 140`, `Community 273`, `Community 276`, `Community 24`, `Community 123`?**
-  _High betweenness centrality (0.006) - this node is a cross-community bridge._
-- **Why does `ISessionRepository` connect `Community 46` to `Community 49`, `Community 91`?**
-  _High betweenness centrality (0.003) - this node is a cross-community bridge._
+- **Why does `EloTier` connect `Community 271` to `Community 81`?**
+  _High betweenness centrality (0.016) - this node is a cross-community bridge._
+- **Why does `authProvider` connect `Community 27` to `Community 0`, `Community 6`, `Community 137`, `Community 277`, `Community 155`, `Community 30`, `Community 292`, `Community 169`, `Community 303`, `Community 53`, `Community 182`, `Community 55`, `Community 181`, `Community 63`, `Community 75`, `Community 93`, `Community 99`, `Community 110`, `Community 115`?**
+  _High betweenness centrality (0.005) - this node is a cross-community bridge._
+- **Why does `map` connect `Community 272` to `Community 7`, `Community 169`, `Community 11`, `Community 12`, `Community 140`, `Community 273`, `Community 24`, `Community 123`?**
+  _High betweenness centrality (0.004) - this node is a cross-community bridge._
 - **What connects `excel`, `sheetObject`, `fileBytes` to the rest of the system?**
-  _3164 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _3767 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.029411764705882353 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.02937625754527163 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.03225806451612903 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.031746031746031744 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.03773584905660377 - nodes in this community are weakly interconnected._

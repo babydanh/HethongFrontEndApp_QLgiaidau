@@ -1,0 +1,1021 @@
+{
+  "metadata": {
+    "timestamp": "2026-07-08T12:42:24.789285",
+    "total": 150,
+    "passed": 132,
+    "failed": 18
+  },
+  "summary": "132/150 passed",
+  "testCases": [
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_admin_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_admin_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-CROSS-001",
+      "name": "TC-FLUTTER-CROSS-001: Bracket -> Match Flow Tap Match to LiveScore",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-CROSS-002",
+      "name": "TC-FLUTTER-CROSS-002: Draw -> Bracket Preview Flow",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-CROSS-003",
+      "name": "TC-FLUTTER-CROSS-003: Score Update -> Standings Recalculation",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-CROSS-004",
+      "name": "TC-FLUTTER-CROSS-004: Tournament Intro to Bracket/Live/Register",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-CROSS-005",
+      "name": "TC-FLUTTER-CROSS-005: Admin Edit Score -> Bracket Advancement",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_auth_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_auth_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-001",
+      "name": "TC-FLUTTER-AUTH-001: Hien thi man hinh Login mac dinh",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-002",
+      "name": "TC-FLUTTER-AUTH-002: Hien thi man hinh Register mac dinh",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-003",
+      "name": "TC-FLUTTER-AUTH-003: Login thanh cong voi email/password",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-004",
+      "name": "TC-FLUTTER-AUTH-004: Login that bai voi email/password sai",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-005",
+      "name": "TC-FLUTTER-AUTH-005: Register thanh cong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-006",
+      "name": "TC-FLUTTER-AUTH-006: Register that bai",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-007",
+      "name": "TC-FLUTTER-AUTH-007: Validation email khong hop le",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-008",
+      "name": "TC-FLUTTER-AUTH-008: Validation password qua ngan",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-009",
+      "name": "TC-FLUTTER-AUTH-009: Validation truong trong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-010",
+      "name": "TC-FLUTTER-AUTH-010: Toggle hien an password",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-011",
+      "name": "TC-FLUTTER-AUTH-011: Chuyen giua Login va Register mode",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-012",
+      "name": "TC-FLUTTER-AUTH-012: Kham pha khong can dang nhap",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-016",
+      "name": "TC-FLUTTER-AUTH-016: Splash screen hien thi va animation",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-020",
+      "name": "TC-FLUTTER-AUTH-020: Forgot password gui email thanh cong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-021",
+      "name": "TC-FLUTTER-AUTH-021: Forgot password gui email that bai",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-022",
+      "name": "TC-FLUTTER-AUTH-022: Forgot password validation",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-023",
+      "name": "TC-FLUTTER-AUTH-023: Login loading screen hien thi",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-032",
+      "name": "TC-FLUTTER-AUTH-032: signOut xoa session",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-036",
+      "name": "TC-FLUTTER-AUTH-036: Token input sheet submit token thanh cong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-037",
+      "name": "TC-FLUTTER-AUTH-037: Token input sheet submit token that bai",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-038",
+      "name": "TC-FLUTTER-AUTH-038: Token input sheet empty token",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-039",
+      "name": "TC-FLUTTER-AUTH-039: Token input sheet clear error",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-040",
+      "name": "TC-FLUTTER-AUTH-040: Token input sheet onSubmitted",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-013",
+      "name": "TC-FLUTTER-AUTH-013: Login Google (can mock Google Sign-In)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-014",
+      "name": "TC-FLUTTER-AUTH-014: Login Google that bai (can mock)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-015",
+      "name": "TC-FLUTTER-AUTH-015: Google Sign-In event listener (can mock)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-017",
+      "name": "TC-FLUTTER-AUTH-017: Splash restore session JWT",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-018",
+      "name": "TC-FLUTTER-AUTH-018: Splash restore session invite token",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-019",
+      "name": "TC-FLUTTER-AUTH-019: Splash no session",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-024",
+      "name": "TC-FLUTTER-AUTH-024: validateToken thanh cong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-025",
+      "name": "TC-FLUTTER-AUTH-025: validateToken that bai null",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-026",
+      "name": "TC-FLUTTER-AUTH-026: validateToken role khong xac dinh",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-027",
+      "name": "TC-FLUTTER-AUTH-027: validateToken exception",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-028",
+      "name": "TC-FLUTTER-AUTH-028: loginLocally",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-029",
+      "name": "TC-FLUTTER-AUTH-029: loginWithEmailPassword session",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-030",
+      "name": "TC-FLUTTER-AUTH-030: loginWithGoogle session",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-031",
+      "name": "TC-FLUTTER-AUTH-031: registerWithEmailPassword session",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-033",
+      "name": "TC-FLUTTER-AUTH-033: startTokenListener phat hien token vo hieu",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-034",
+      "name": "TC-FLUTTER-AUTH-034: startTokenListener khong lang nghe SESSION",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-AUTH-035",
+      "name": "TC-FLUTTER-AUTH-035: AuthState cac getter",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_bracket_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_bracket_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_club_lite_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_club_lite_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-001",
+      "name": "TC-FLUTTER-COMMUNITY-001: Xem danh sach CLB filter search",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-002",
+      "name": "TC-FLUTTER-COMMUNITY-002: Tab CLB cua toi",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-003",
+      "name": "TC-FLUTTER-COMMUNITY-003: Chi tiet CLB",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-004",
+      "name": "TC-FLUTTER-COMMUNITY-004: Tham gia CLB",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-005",
+      "name": "TC-FLUTTER-COMMUNITY-005: Quan ly member",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-006",
+      "name": "TC-FLUTTER-COMMUNITY-006: Duyet join request",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-007",
+      "name": "TC-FLUTTER-COMMUNITY-007: Invite dialog",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-008",
+      "name": "TC-FLUTTER-COMMUNITY-008: Tao CLB",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-009",
+      "name": "TC-FLUTTER-COMMUNITY-009: Sua CLB",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-010",
+      "name": "TC-FLUTTER-COMMUNITY-010: Quan ly CLB",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-011",
+      "name": "TC-FLUTTER-COMMUNITY-011: Loi moi CLB",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-012",
+      "name": "TC-FLUTTER-COMMUNITY-012: Giai dau trong CLB",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-013",
+      "name": "TC-FLUTTER-COMMUNITY-013: Tao giai trong CLB",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-014",
+      "name": "TC-FLUTTER-COMMUNITY-014: Gallery",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-COMMUNITY-015",
+      "name": "TC-FLUTTER-COMMUNITY-015: Bang xep hang CLB",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_cross_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_cross_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-CROSS-001",
+      "name": "TC-FLUTTER-CROSS-001: Bracket -> Match Flow Tap Match to LiveScore",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-CROSS-002",
+      "name": "TC-FLUTTER-CROSS-002: Draw -> Bracket Preview Flow",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-CROSS-003",
+      "name": "TC-FLUTTER-CROSS-003: Score Update -> Standings Recalculation",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-CROSS-004",
+      "name": "TC-FLUTTER-CROSS-004: Tournament Intro to Bracket/Live/Register",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-CROSS-005",
+      "name": "TC-FLUTTER-CROSS-005: Admin Edit Score -> Bracket Advancement",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_dashboard_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_dashboard_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DASH-001",
+      "name": "TC-FLUTTER-DASH-001: Dashboard workspace",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DASH-002",
+      "name": "TC-FLUTTER-DASH-002: Chua login redirect",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DASH-003",
+      "name": "TC-FLUTTER-DASH-003: OrganizerLiteSection",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DASH-004",
+      "name": "TC-FLUTTER-DASH-004: RoleSection",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DASH-005",
+      "name": "TC-FLUTTER-DASH-005: TournamentSection Giai cua toi",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DASH-006",
+      "name": "TC-FLUTTER-DASH-006: AssignedMatchesSection",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DASH-007",
+      "name": "TC-FLUTTER-DASH-007: Dashboard Loading state",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-OLITE-001",
+      "name": "TC-FLUTTER-OLITE-001: OrganizerLiteScreen",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-OLITE-002",
+      "name": "TC-FLUTTER-OLITE-002: Lite screen loading error",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_home_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_home_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-HOME-001",
+      "name": "TC-FLUTTER-HOME-001: Hien thi danh sach giai dau",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-HOME-002",
+      "name": "TC-FLUTTER-HOME-002: Filter theo mon the thao",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-HOME-003",
+      "name": "TC-FLUTTER-HOME-003: Search giai dau",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-HOME-004",
+      "name": "TC-FLUTTER-HOME-004: Carousel giai noi bat",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-HOME-005",
+      "name": "TC-FLUTTER-HOME-005: Pull-to-refresh",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-HOME-006",
+      "name": "TC-FLUTTER-HOME-006: Tab giai dau Tournaments tab",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-HOME-007",
+      "name": "TC-FLUTTER-HOME-007: Loading state",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-HOME-008",
+      "name": "TC-FLUTTER-HOME-008: Error state",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_intro_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_intro_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_match_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_match_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_notification_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_notification_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_payment_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_payment_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-001",
+      "name": "TC-FLUTTER-PAYMENT-001: Checkout screen hien thi thong tin",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-002",
+      "name": "TC-FLUTTER-PAYMENT-002: Checkout - chon gateway khac",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-003",
+      "name": "TC-FLUTTER-PAYMENT-003: Checkout - thanh toan PAYOS thanh cong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-004",
+      "name": "TC-FLUTTER-PAYMENT-004: Checkout - thanh toan VNPAY/MoMo/TRANSFER",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-005",
+      "name": "TC-FLUTTER-PAYMENT-005: Checkout - createPaymentLink that bai",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-006",
+      "name": "TC-FLUTTER-PAYMENT-006: Mock gateway - hien thi man hinh",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-007",
+      "name": "TC-FLUTTER-PAYMENT-007: Mock gateway - nhap OTP tu dong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-008",
+      "name": "TC-FLUTTER-PAYMENT-008: Mock gateway - verify OTP thanh cong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-009",
+      "name": "TC-FLUTTER-PAYMENT-009: Mock gateway - verify OTP that bai",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-010",
+      "name": "TC-FLUTTER-PAYMENT-010: Mock gateway - timer het han",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-011",
+      "name": "TC-FLUTTER-PAYMENT-011: Mock gateway - huy",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-012",
+      "name": "TC-FLUTTER-PAYMENT-012: PayOS verify screen hien thi",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-013",
+      "name": "TC-FLUTTER-PAYMENT-013: PayOS verify - auto poll moi 5 giay",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-014",
+      "name": "TC-FLUTTER-PAYMENT-014: PayOS verify - nhan thanh toan thanh cong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-015",
+      "name": "TC-FLUTTER-PAYMENT-015: PayOS verify - that bai",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-016",
+      "name": "TC-FLUTTER-PAYMENT-016: PayOS verify - huy quay ve",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-017",
+      "name": "TC-FLUTTER-PAYMENT-017: Payment result screen - thanh cong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-018",
+      "name": "TC-FLUTTER-PAYMENT-018: Payment result screen - that bai",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-019",
+      "name": "TC-FLUTTER-PAYMENT-019: Payments screen - lich su thanh toan",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-020",
+      "name": "TC-FLUTTER-PAYMENT-020: Payments screen - cac status khac nhau",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-021",
+      "name": "TC-FLUTTER-PAYMENT-021: Payments screen - refresh",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_profile_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_profile_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PROFILE-001",
+      "name": "TC-FLUTTER-PROFILE-001: Settings Tab Ho so",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PROFILE-002",
+      "name": "TC-FLUTTER-PROFILE-002: Settings Tab Ngan hang",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PROFILE-003",
+      "name": "TC-FLUTTER-PROFILE-003: Settings Tab Bao mat",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PROFILE-004",
+      "name": "TC-FLUTTER-PROFILE-004: Chinh sua thong tin ca nhan",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PROFILE-005",
+      "name": "TC-FLUTTER-PROFILE-005: Doi mat khau",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PROFILE-006",
+      "name": "TC-FLUTTER-PROFILE-006: Xem ho so nguoi dung khac",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PROFILE-007",
+      "name": "TC-FLUTTER-PROFILE-007: QR Scanner",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_qr_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_qr_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_ranking_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_ranking_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_referee_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_referee_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_register_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_register_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-REGISTER-001",
+      "name": "TC-FLUTTER-REGISTER-001: Dang ky tham gia giai dau",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-REGISTER-002",
+      "name": "TC-FLUTTER-REGISTER-002: Tham gia giai bang ma moi",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-REGISTER-003",
+      "name": "TC-FLUTTER-REGISTER-003: Tham gia doi Join Team",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_series_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_series_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_teams_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_teams_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-TEAMS-001",
+      "name": "TC-FLUTTER-TEAMS-001: Danh sach doi trong giai dau",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-TEAMS-002",
+      "name": "TC-FLUTTER-TEAMS-002: Import doi tu file Excel",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-TEAMS-003",
+      "name": "TC-FLUTTER-TEAMS-003: Xoa toan bo doi",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-TEAMS-004",
+      "name": "TC-FLUTTER-TEAMS-004: Them Sua doi",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_upload_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_upload_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-UPLOAD-001",
+      "name": "TC-FLUTTER-UPLOAD-001: Upload avatar thanh cong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-UPLOAD-002",
+      "name": "TC-FLUTTER-UPLOAD-002: Upload cover thanh cong",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-UPLOAD-003",
+      "name": "TC-FLUTTER-UPLOAD-003: Upload that bai",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    }
+  ],
+  "failures": [
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_bracket_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_bracket_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DASH-007",
+      "name": "TC-FLUTTER-DASH-007: Dashboard Loading state",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-HOME-001",
+      "name": "TC-FLUTTER-HOME-001: Hien thi danh sach giai dau",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-HOME-004",
+      "name": "TC-FLUTTER-HOME-004: Carousel giai noi bat",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-HOME-005",
+      "name": "TC-FLUTTER-HOME-005: Pull-to-refresh",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-HOME-006",
+      "name": "TC-FLUTTER-HOME-006: Tab giai dau Tournaments tab",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-HOME-007",
+      "name": "TC-FLUTTER-HOME-007: Loading state",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_intro_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_intro_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_match_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_match_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_notification_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_notification_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PAYMENT-021",
+      "name": "TC-FLUTTER-PAYMENT-021: Payments screen - refresh",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PROFILE-001",
+      "name": "TC-FLUTTER-PROFILE-001: Settings Tab Ho so",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-PROFILE-005",
+      "name": "TC-FLUTTER-PROFILE-005: Doi mat khau",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_qr_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_qr_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_ranking_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_ranking_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_referee_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_referee_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_series_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_series_test.dart",
+      "status": "Fail",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-TEAMS-001",
+      "name": "TC-FLUTTER-TEAMS-001: Danh sach doi trong giai dau",
+      "status": "Fail",
+      "totalTime": 0
+    }
+  ]
+}

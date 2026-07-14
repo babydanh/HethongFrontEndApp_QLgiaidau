@@ -109,7 +109,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, i) {
           final f = filters[i];
           final selected = _statusFilter == f.$1;
@@ -147,7 +147,9 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
         final filtered = clubs.where((c) {
           if (_statusFilter != 'all' && c.status != _statusFilter) return false;
           if (_searchQuery.isNotEmpty &&
-              !c.name.toLowerCase().contains(_searchQuery.toLowerCase())) return false;
+              !c.name.toLowerCase().contains(_searchQuery.toLowerCase())) {
+            return false;
+          }
           return true;
         }).toList();
 

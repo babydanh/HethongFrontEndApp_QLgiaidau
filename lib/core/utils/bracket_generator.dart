@@ -16,6 +16,8 @@ class BracketFactory {
         return DoubleEliminationGenerator();
       case AppConstants.bracketRoundRobin:
         return RoundRobinGenerator();
+      case AppConstants.bracketGroupStageKnockout:
+        return GroupStageKnockoutGenerator();
       case AppConstants.bracketSingleElimination:
       default:
         return SingleEliminationGenerator();
@@ -229,7 +231,7 @@ class DoubleEliminationGenerator implements IBracketGenerator {
         if (r == 1) {
           loserNextMatchId = matchIds['L_1_${pos ~/ 2}']!;
         } else {
-          int dropPos = (r % 2 == 0) ? (matchesInRound - 1 - pos) : pos;
+          final dropPos = matchesInRound > 1 ? pos ^ 1 : 0;
           loserNextMatchId = matchIds['L_${2 * (r - 1)}_$dropPos']!;
         }
 
@@ -410,7 +412,9 @@ class DoubleEliminationGenerator implements IBracketGenerator {
               final nextMatch = allMatches[nextIndex];
               bool forwardIsTeam1 = isTeam1;
               if (currentMatch.bracketPosition.bracket == 'losers' && currentMatch.round % 2 != 0) {
-                forwardIsTeam1 = false;
+                // Odd losers rounds keep the survivor in slot 1. Slot 2 is
+                // reserved for the participant dropping from winners.
+                forwardIsTeam1 = true;
               }
               
               String newT1Id = forwardIsTeam1 ? winnerId : nextMatch.team1Id;
@@ -434,7 +438,9 @@ class DoubleEliminationGenerator implements IBracketGenerator {
                final loserNextMatch = allMatches[loserNextIndex];
                bool isLoserTeam1 = currentMatch.matchNumber % 2 != 0;
                if (currentMatch.round > 1) {
-                  isLoserTeam1 = true; 
+                  // After winners round 1, every drop enters slot 2 of the
+                  // corresponding even losers round.
+                  isLoserTeam1 = false;
                }
                
                String newT1Id = isLoserTeam1 ? loserId : loserNextMatch.team1Id;
@@ -517,6 +523,115 @@ class RoundRobinGenerator implements IBracketGenerator {
       }
       // Dịch chuyển vòng tròn: Đội ở vị trí index 0 giữ nguyên, các đội còn lại xoay vòng
       currentTeams.insert(1, currentTeams.removeLast());
+    }
+
+    return allMatches;
+  }
+}
+
+class GroupStageKnockoutGenerator implements IBracketGenerator {
+  static const _uuid = Uuid();
+
+  @override
+  List<MatchModel> generate(String tournamentId, List<Team> teams, {int roundCount = 1}) {
+    if (teams.isEmpty) return [];
+
+    // 1. Phân bố teams vào groups
+    final groups = <List<Team>>[];
+    final shuffled = List<Team>.from(teams)..shuffle();
+    final numGroups = 2;
+    final perGroup = (shuffled.length / numGroups).ceil();
+
+    for (int g = 0; g < numGroups; g++) {
+      final start = g * perGroup;
+      final end = (start + perGroup > shuffled.length) ? shuffled.length : start + perGroup;
+      groups.add(shuffled.sublist(start, end));
+    }
+
+    // 2. Sinh Round Robin matches cho mỗi group
+    List<MatchModel> allMatches = [];
+    int matchCounter = 1;
+
+    for (int g = 0; g < groups.length; g++) {
+      final groupTeams = List<Team>.from(groups[g]);
+      if (groupTeams.length % 2 != 0) {
+        groupTeams.add(Team(
+          id: 'BYE',
+          name: 'BYE',
+          qrCode: '',
+          members: const [],
+          group: '',
+          photoUrl: '',
+          approvalStatus: 'COMPLETE',
+          contactEmail: '',
+          createdAt: DateTime.now(),
+          seed: 0,
+        ));
+      }
+
+      final numRounds = groupTeams.length - 1;
+      final matchesPerRound = groupTeams.length ~/ 2;
+
+      for (int round = 1; round <= numRounds; round++) {
+        for (int i = 0; i < matchesPerRound; i++) {
+          final t1 = groupTeams[i];
+          final t2 = groupTeams[groupTeams.length - 1 - i];
+
+          if (t1.id != 'BYE' && t2.id != 'BYE') {
+            allMatches.add(MatchModel(
+              id: _uuid.v4(),
+              round: round,
+              matchNumber: matchCounter++,
+              team1Id: t1.id,
+              team1Name: t1.name,
+              team2Id: t2.id,
+              team2Name: t2.name,
+              status: 'scheduled',
+              bracketPosition: BracketPosition(bracket: 'winners', round: round, position: i),
+              updatedAt: DateTime.now(),
+            ));
+          }
+        }
+        // Circle rotation
+        groupTeams.insert(1, groupTeams.removeLast());
+      }
+    }
+
+    // 3. Sinh Knockout matches (Single Elimination)
+    final advancingTeams = numGroups * 2; // top 2 mỗi bảng
+    int p = 1;
+    while (p < advancingTeams) {
+      p *= 2;
+    }
+    final koRounds = (log(p) / log(2)).round();
+
+    Map<String, String> koMatchIds = {};
+    for (int r = 1; r <= koRounds; r++) {
+      int matchesInRound = p ~/ (1 << r);
+      for (int pos = 0; pos < matchesInRound; pos++) {
+        koMatchIds['KO_${r}_$pos'] = _uuid.v4();
+      }
+    }
+
+    // Generate KO matches with TBD slots
+    for (int r = 1; r <= koRounds; r++) {
+      int matchesInRound = p ~/ (1 << r);
+      for (int pos = 0; pos < matchesInRound; pos++) {
+        String nextId = r < koRounds ? koMatchIds['KO_${r + 1}_${pos ~/ 2}']! : '';
+        allMatches.add(MatchModel(
+          id: koMatchIds['KO_${r}_$pos']!,
+          round: r + 100, // offset round number for KO stage
+          matchNumber: pos + 1,
+          team1Id: '',
+          team1Name: 'TBD',
+          team2Id: '',
+          team2Name: 'TBD',
+          status: 'scheduled',
+          bracketPosition: BracketPosition(bracket: 'winners', round: r, position: pos),
+          nextMatchId: nextId,
+          updatedAt: DateTime.now(),
+        ));
+      }
     }
 
     return allMatches;

@@ -1,0 +1,114 @@
+{
+  "metadata": {
+    "timestamp": "2026-07-08T14:48:50.748954",
+    "total": 17,
+    "passed": 17,
+    "failed": 0
+  },
+  "summary": "17/17 passed",
+  "testCases": [
+    {
+      "id": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_intro_test.dart",
+      "name": "loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_intro_test.dart",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-INTRO-001",
+      "name": "TC-FLUTTER-INTRO-001: TournamentIntroScreen - Tab Navigation",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-INTRO-002",
+      "name": "TC-FLUTTER-INTRO-002: TournamentIntroScreen - About Tab",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-INTRO-003",
+      "name": "TC-FLUTTER-INTRO-003: TournamentIntroScreen - Teams Tab",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-INTRO-004",
+      "name": "TC-FLUTTER-INTRO-004: TournamentIntroScreen - Bottom Action Bar",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-INTRO-005",
+      "name": "TC-FLUTTER-INTRO-005: TournamentIntroScreen - Follow Unfollow",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-INTRO-006",
+      "name": "TC-FLUTTER-INTRO-006: TournamentIntroScreen - Registration",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-INTRO-007",
+      "name": "TC-FLUTTER-INTRO-007: TournamentIntroScreen - Viewer Count",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-INTRO-008",
+      "name": "TC-FLUTTER-INTRO-008: TournamentIntroScreen - Loading Error Null",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DETAIL-001",
+      "name": "TC-FLUTTER-DETAIL-001: TournamentDetailScreen - Info Card",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DETAIL-002",
+      "name": "TC-FLUTTER-DETAIL-002: TournamentDetailScreen - Quick Actions",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DETAIL-003",
+      "name": "TC-FLUTTER-DETAIL-003: TournamentDetailScreen - Finalize",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DETAIL-004",
+      "name": "TC-FLUTTER-DETAIL-004: TournamentDetailScreen - Delete",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DETAIL-005",
+      "name": "TC-FLUTTER-DETAIL-005: TournamentDetailScreen - Excel Export",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DETAIL-006",
+      "name": "TC-FLUTTER-DETAIL-006: TournamentDetailScreen - Responsive Layout",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "TC-FLUTTER-DETAIL-007",
+      "name": "TC-FLUTTER-DETAIL-007: TournamentDetailScreen - Embedded Screens",
+      "status": "Pass",
+      "totalTime": 0
+    },
+    {
+      "id": "(tearDownAll)",
+      "name": "(tearDownAll)",
+      "status": "Pass",
+      "totalTime": 0
+    }
+  ],
+  "failures": []
+}

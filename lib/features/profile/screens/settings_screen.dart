@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart';
 
 /// Màn hình Cài đặt — 3 tab: Hồ sơ, Ngân hàng, Bảo mật.
 ///
@@ -509,6 +510,20 @@ class _SecurityTab extends ConsumerWidget {
                   verified: profile.isPhoneVerified == true,
                   fallbackText: profile.phoneNumber,
                 ),
+                if (profile.isEmailVerified != true) ...[
+                  _divider(colors),
+                  _actionRow(
+                    colors,
+                    icon: Icons.mark_email_unread_rounded,
+                    title: 'Xác minh Email',
+                    subtitle: 'Gửi mã xác minh tới email đang dùng',
+                    onTap: () => startEmailVerificationFlow(
+                      context,
+                      ref,
+                      profile.email ?? '',
+                    ),
+                  ),
+                ],
               ],
               loading: () => [const Padding(
                 padding: EdgeInsets.all(16),

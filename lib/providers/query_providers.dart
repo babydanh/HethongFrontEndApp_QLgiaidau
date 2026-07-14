@@ -28,6 +28,10 @@ final myTournamentsProvider = Provider<AsyncValue<List<Tournament>>>((ref) {
   return AsyncValue.data(allTournaments);
 });
 
+final followedTournamentsProvider = FutureProvider<List<Tournament>>((ref) async {
+  return ref.watch(tournamentRepositoryProvider).getFollowedTournaments();
+});
+
 final tournamentProvider = StreamProvider.family<Tournament?, String>((ref, id) {
   return ref.watch(tournamentRepositoryProvider).watch(id);
 });
@@ -93,4 +97,3 @@ final viewerCountProvider = StreamProvider.autoDispose.family<int, String>((ref,
       .where((data) => data['matchId'] == matchId)
       .map((data) => data['viewerCount'] as int? ?? 0);
 });
-

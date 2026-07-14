@@ -345,12 +345,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       border: Border.all(color: context.colors.border),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primary.withOpacity(0.06),
+                          color: AppTheme.primary.withValues(alpha: 0.06),
                           blurRadius: 16,
                           offset: const Offset(0, 4),
                         ),
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.02),
+                          color: Colors.black.withValues(alpha: 0.02),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -391,7 +391,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: context.colors.border.withOpacity(0.5)),
+                              borderSide: BorderSide(color: context.colors.border.withValues(alpha: 0.5)),
                             ),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           ),
@@ -461,7 +461,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: context.colors.border.withOpacity(0.5)),
+                              borderSide: BorderSide(color: context.colors.border.withValues(alpha: 0.5)),
                             ),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           ),
@@ -476,7 +476,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               gradient: context.primaryGradient,
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppTheme.primary.withOpacity(0.3),
+                                  color: AppTheme.primary.withValues(alpha: 0.3),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
@@ -549,7 +549,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF2979FF).withOpacity(0.3),
+                  color: const Color(0xFF2979FF).withValues(alpha: 0.3),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
@@ -568,7 +568,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         child: Image.network(
                           avatarUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Icon(
+                          errorBuilder: (context, error, stackTrace) => Icon(
                             Icons.person_rounded,
                             size: 50,
                             color: context.colors.textMuted,
@@ -599,7 +599,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 border: Border.all(color: Colors.white, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF2979FF).withOpacity(0.3),
+                    color: const Color(0xFF2979FF).withValues(alpha: 0.3),
                     blurRadius: 8,
                   ),
                 ],
@@ -629,7 +629,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         decoration: BoxDecoration(
           color: context.colors.bgSurface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.colors.border.withOpacity(0.5)),
+          border: Border.all(color: context.colors.border.withValues(alpha: 0.5)),
         ),
         child: Row(
           children: [
@@ -659,7 +659,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       decoration: BoxDecoration(
         color: context.colors.bgSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.colors.border.withOpacity(0.5)),
+        border: Border.all(color: context.colors.border.withValues(alpha: 0.5)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -691,7 +691,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         decoration: BoxDecoration(
           color: context.colors.bgSurface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.colors.border.withOpacity(0.5)),
+          border: Border.all(color: context.colors.border.withValues(alpha: 0.5)),
         ),
         child: const Center(
           child: SizedBox(
@@ -709,7 +709,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       decoration: BoxDecoration(
         color: context.colors.bgSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.colors.border.withOpacity(0.5)),
+        border: Border.all(color: context.colors.border.withValues(alpha: 0.5)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<Province>(

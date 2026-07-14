@@ -1,0 +1,19 @@
+KẾT QUẢ TEST - 2026-07-08T15:12:36.238265
+14/14 passed
+
+
+--- ALL ---
+✅ loading D:/Duancanhan/Project_QuanLyGiaiDau/app_quanly_giaidau/integration_test/flow_ranking_test.dart: Pass
+✅ TC-FLUTTER-RANKING-001: Pass
+✅ TC-FLUTTER-RANKING-002: Pass
+✅ TC-FLUTTER-RANKING-003: Pass
+✅ TC-FLUTTER-RANKING-004: Pass
+✅ TC-FLUTTER-RANKING-005: Pass
+✅ TC-FLUTTER-RANKING-006: Pass
+✅ TC-FLUTTER-RANKING-007: Pass
+✅ TC-FLUTTER-RANKING-008: Pass
+✅ TC-FLUTTER-RANKING-009: Pass
+✅ TC-FLUTTER-RANKING-010: Pass
+✅ TC-FLUTTER-RANKING-011: Pass
+✅ TC-FLUTTER-RANKING-012: Pass
+✅ (tearDownAll): Pass
