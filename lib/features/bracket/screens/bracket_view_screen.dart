@@ -35,6 +35,8 @@ class BracketViewScreen extends ConsumerStatefulWidget {
 class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
   int _selectedRound = 0;
   String _matchFilter = 'all';
   String _selectedBranch = 'all';
@@ -57,6 +59,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
 
     if (!widget.isEmbedded) {
       SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -229,6 +232,11 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
       return !(t1 == 'TBD' && t2 == 'TBD' && !m.isLive && !m.isCompleted && m.round > 1);
     }).toList();
 
+    // Status counts
+    final liveCount = validMatches.where((m) => m.isLive).length;
+    final scheduledCount = validMatches.where((m) => m.isScheduled).length;
+    final completedCount = validMatches.where((m) => m.isCompleted).length;
+
     // Available branches/groups/rounds
     final availableRounds = validMatches.map((m) => m.round).toSet().toList()..sort();
     final availableGroups = validMatches
@@ -241,6 +249,12 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
 
     // Filter logic
     final filteredMatches = validMatches.where((m) {
+      // Search query filter
+      if (_searchQuery.isNotEmpty) {
+        final t1 = m.team1Name.toLowerCase();
+        final t2 = m.team2Name.toLowerCase();
+        if (!t1.contains(_searchQuery) && !t2.contains(_searchQuery)) return false;
+      }
       // Branch filter
       if (_selectedBranch != 'all') {
         if (_selectedBranch == 'winners' && m.bracketPosition.bracket != 'winners') return false;
@@ -284,7 +298,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
               ),
               child: Row(
@@ -315,7 +329,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primary,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       minimumSize: Size.zero,
@@ -343,158 +357,161 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
               ),
             ),
 
-          // ── FILTER ROW 1: Branch / Format Specific Filter ──
-          if (isDoubleElimination) ...[
-            SizedBox(
-              height: 32,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  RoundFilterPill(
-                    isSelected: _selectedBranch == 'all',
-                    label: 'Tất cả nhánh',
-                    onTap: () => setState(() => _selectedBranch = 'all'),
-                  ),
-                  const SizedBox(width: 6),
-                  RoundFilterPill(
-                    isSelected: _selectedBranch == 'winners',
-                    label: 'Nhánh thắng',
-                    onTap: () => setState(() => _selectedBranch = 'winners'),
-                  ),
-                  const SizedBox(width: 6),
-                  RoundFilterPill(
-                    isSelected: _selectedBranch == 'losers',
-                    label: 'Nhánh thua',
-                    onTap: () => setState(() => _selectedBranch = 'losers'),
-                  ),
-                  const SizedBox(width: 6),
-                  RoundFilterPill(
-                    isSelected: _selectedBranch == 'grand_final',
-                    label: 'Chung kết',
-                    onTap: () => setState(() => _selectedBranch = 'grand_final'),
-                  ),
-                ],
-              ),
+          // ── Search Input Field (Matching Image 1) ──
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
-            const SizedBox(height: 8),
-          ],
-
-          if (isGroupStageKnockout) ...[
-            SizedBox(
-              height: 32,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  RoundFilterPill(
-                    isSelected: _selectedBranch == 'all',
-                    label: 'Tất cả giai đoạn',
-                    onTap: () => setState(() => _selectedBranch = 'all'),
-                  ),
-                  const SizedBox(width: 6),
-                  RoundFilterPill(
-                    isSelected: _selectedBranch == 'group_stage',
-                    label: 'Vòng bảng',
-                    onTap: () => setState(() => _selectedBranch = 'group_stage'),
-                  ),
-                  const SizedBox(width: 6),
-                  RoundFilterPill(
-                    isSelected: _selectedBranch == 'knockout',
-                    label: 'Vòng Knockout',
-                    onTap: () => setState(() => _selectedBranch = 'knockout'),
-                  ),
-                ],
+            child: TextField(
+              controller: _searchController,
+              onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
+              style: const TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
+              decoration: const InputDecoration(
+                hintText: 'Tìm kiếm theo tên người chơi hoặc tên đội...',
+                hintStyle: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                prefixIcon: Icon(Icons.search_rounded, size: 18, color: Color(0xFF94A3B8)),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                isDense: true,
               ),
-            ),
-            const SizedBox(height: 8),
-          ],
-
-          // ── FILTER ROW 2: Groups Filter (Bảng A, Bảng B...) ──
-          if (availableGroups.length > 1) ...[
-            SizedBox(
-              height: 32,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                itemCount: availableGroups.length + 1,
-                separatorBuilder: (_, _) => const SizedBox(width: 6),
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return RoundFilterPill(
-                      isSelected: _selectedGroup == 'all',
-                      label: 'Tất cả bảng',
-                      onTap: () => setState(() => _selectedGroup = 'all'),
-                    );
-                  }
-                  final group = availableGroups[index - 1];
-                  return RoundFilterPill(
-                    isSelected: _selectedGroup == group,
-                    label: group,
-                    onTap: () => setState(() => _selectedGroup = group),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-
-          // ── FILTER ROW 3: Rounds Filter (Vòng 1, Vòng 2, Tứ kết...) ──
-          if (availableRounds.length > 1) ...[
-            SizedBox(
-              height: 32,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                itemCount: availableRounds.length + 1,
-                separatorBuilder: (_, _) => const SizedBox(width: 6),
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return RoundFilterPill(
-                      isSelected: _selectedRound == 0,
-                      label: 'Tất cả vòng',
-                      onTap: () => setState(() => _selectedRound = 0),
-                    );
-                  }
-                  final r = availableRounds[index - 1];
-                  final label = isRoundRobin ? 'Vòng $r' : _getRoundName(r, totalRounds);
-                  return RoundFilterPill(
-                    isSelected: _selectedRound == r,
-                    label: '$label (${validMatches.where((m) => m.round == r).length})',
-                    onTap: () => setState(() => _selectedRound = r),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-
-          // ── FILTER ROW 4: Status Filter (Tất cả, LIVE, Sắp đấu, Đã xong) ──
-          SizedBox(
-            height: 32,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: 4,
-              separatorBuilder: (_, _) => const SizedBox(width: 6),
-              itemBuilder: (context, index) {
-                final items = [
-                  ('all', 'Tất cả trạng thái'),
-                  ('live', '🔴 LIVE'),
-                  ('scheduled', '⏰ Sắp diễn ra'),
-                  ('completed', '✅ Đã kết thúc'),
-                ];
-                final item = items[index];
-                return RoundFilterPill(
-                  isSelected: _matchFilter == item.$1,
-                  label: item.$2,
-                  onTap: () => setState(() => _matchFilter = item.$1),
-                );
-              },
             ),
           ),
 
-          const SizedBox(height: 10),
+          // ── ROW 1: TRẠNG THÁI (Matching Image 1 - NO EMOJIS!) ──
+          _buildFilterRow(
+            title: 'TRẠNG THÁI:',
+            children: [
+              RoundFilterPill(
+                isSelected: _matchFilter == 'all',
+                label: 'Tất cả',
+                count: validMatches.length,
+                onTap: () => setState(() => _matchFilter = 'all'),
+              ),
+              RoundFilterPill(
+                isSelected: _matchFilter == 'live',
+                label: 'Trực tiếp',
+                count: liveCount,
+                onTap: () => setState(() => _matchFilter = 'live'),
+              ),
+              RoundFilterPill(
+                isSelected: _matchFilter == 'scheduled',
+                label: 'Chưa đấu',
+                count: scheduledCount,
+                onTap: () => setState(() => _matchFilter = 'scheduled'),
+              ),
+              RoundFilterPill(
+                isSelected: _matchFilter == 'completed',
+                label: 'Đã xong',
+                count: completedCount,
+                onTap: () => setState(() => _matchFilter = 'completed'),
+              ),
+            ],
+          ),
+
+          // ── ROW 2: NHÁNH THẮNG / GIAI ĐOẠN ──
+          if (isDoubleElimination) ...[
+            _buildFilterRow(
+              title: 'NHÁNH THẮNG:',
+              children: [
+                RoundFilterPill(
+                  isSelected: _selectedBranch == 'all',
+                  label: 'Tất cả',
+                  onTap: () => setState(() => _selectedBranch = 'all'),
+                ),
+                RoundFilterPill(
+                  isSelected: _selectedBranch == 'winners',
+                  label: 'Nhánh thắng',
+                  onTap: () => setState(() => _selectedBranch = 'winners'),
+                ),
+                RoundFilterPill(
+                  isSelected: _selectedBranch == 'grand_final',
+                  label: 'Chung kết tổng',
+                  onTap: () => setState(() => _selectedBranch = 'grand_final'),
+                ),
+              ],
+            ),
+            _buildFilterRow(
+              title: 'NHÁNH THUA:',
+              children: [
+                RoundFilterPill(
+                  isSelected: _selectedBranch == 'losers',
+                  label: 'Nhánh thua',
+                  onTap: () => setState(() => _selectedBranch = 'losers'),
+                ),
+              ],
+            ),
+          ],
+
+          if (isGroupStageKnockout) ...[
+            _buildFilterRow(
+              title: 'GIAI ĐOẠN:',
+              children: [
+                RoundFilterPill(
+                  isSelected: _selectedBranch == 'all',
+                  label: 'Tất cả',
+                  onTap: () => setState(() => _selectedBranch = 'all'),
+                ),
+                RoundFilterPill(
+                  isSelected: _selectedBranch == 'group_stage',
+                  label: 'Vòng bảng',
+                  onTap: () => setState(() => _selectedBranch = 'group_stage'),
+                ),
+                RoundFilterPill(
+                  isSelected: _selectedBranch == 'knockout',
+                  label: 'Vòng Knockout',
+                  onTap: () => setState(() => _selectedBranch = 'knockout'),
+                ),
+              ],
+            ),
+          ],
+
+          // ── ROW 3: BẢNG ĐẤU ──
+          if (availableGroups.length > 1)
+            _buildFilterRow(
+              title: 'BẢNG ĐẤU:',
+              children: [
+                RoundFilterPill(
+                  isSelected: _selectedGroup == 'all',
+                  label: 'Tất cả',
+                  onTap: () => setState(() => _selectedGroup = 'all'),
+                ),
+                ...availableGroups.map(
+                  (group) => RoundFilterPill(
+                    isSelected: _selectedGroup == group,
+                    label: group,
+                    onTap: () => setState(() => _selectedGroup = group),
+                  ),
+                ),
+              ],
+            ),
+
+          // ── ROW 4: VÒNG ĐẤU ──
+          if (availableRounds.length > 1)
+            _buildFilterRow(
+              title: 'VÒNG ĐẤU:',
+              children: [
+                RoundFilterPill(
+                  isSelected: _selectedRound == 0,
+                  label: 'Tất cả',
+                  onTap: () => setState(() => _selectedRound = 0),
+                ),
+                ...availableRounds.map((r) {
+                  final label = isRoundRobin ? 'Vòng $r' : _getRoundName(r, totalRounds);
+                  final count = validMatches.where((m) => m.round == r).length;
+                  return RoundFilterPill(
+                    isSelected: _selectedRound == r,
+                    label: label,
+                    count: count,
+                    onTap: () => setState(() => _selectedRound = r),
+                  );
+                }),
+              ],
+            ),
+
+          const SizedBox(height: 6),
 
           // ── MATCHES LIST ──
           Expanded(
@@ -504,7 +521,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.sports_esports_outlined,
+                          Icons.search_off_rounded,
                           size: 40,
                           color: colors.textMuted.withValues(alpha: 0.4),
                         ),
@@ -533,6 +550,44 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                       );
                     },
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterRow({
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 90,
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF64748B),
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          Expanded(
+            child: SizedBox(
+              height: 32,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: children.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 6),
+                itemBuilder: (context, index) => children[index],
+              ),
+            ),
           ),
         ],
       ),
