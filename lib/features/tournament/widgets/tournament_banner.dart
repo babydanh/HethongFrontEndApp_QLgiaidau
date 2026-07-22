@@ -47,24 +47,22 @@ class _TournamentBannerState extends State<TournamentBanner> {
               width: double.infinity,
               color: colors.bgCard,
               child: images.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.image_not_supported_outlined,
-                            size: 56,
-                            color: colors.textMuted.withValues(alpha: 0.2),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Chưa cập nhật ảnh",
+                  ? Image.network(
+                      "https://giaidau.vnvar.com/vndcsport.svg",
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: const Color(0xFF1E293B),
+                        child: const Center(
+                          child: Text(
+                            "VNSPORT",
                             style: TextStyle(
-                              color: colors.textMuted.withValues(alpha: 0.5),
-                              fontSize: 12,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white24,
+                              letterSpacing: 4,
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     )
                   : PageView.builder(
@@ -76,14 +74,29 @@ class _TournamentBannerState extends State<TournamentBanner> {
                       },
                       itemCount: images.length,
                       itemBuilder: (context, index) {
+                        final imgUrl = images[index].startsWith("http")
+                            ? images[index]
+                            : "https://qlgiaidau.esports.vn${images[index]}";
                         return Image.network(
-                          images[index],
+                          imgUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
-                            return Center(
-                              child: Icon(
-                                Icons.broken_image_rounded,
-                                color: colors.textMuted,
+                            return Image.network(
+                              "https://giaidau.vnvar.com/vndcsport.svg",
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                color: const Color(0xFF1E293B),
+                                child: const Center(
+                                  child: Text(
+                                    "VNSPORT",
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white24,
+                                      letterSpacing: 4,
+                                    ),
+                                  ),
+                                ),
                               ),
                             );
                           },

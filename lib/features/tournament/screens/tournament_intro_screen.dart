@@ -428,15 +428,18 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   children: [
                     CircleAvatar(
                       radius: 22,
-                      backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                      backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
                       backgroundImage: resolvedAvatar.isNotEmpty
                           ? NetworkImage(resolvedAvatar)
                           : null,
                       child: resolvedAvatar.isEmpty
-                          ? const Icon(
-                              Icons.person,
-                              color: AppTheme.primary,
-                              size: 22,
+                          ? Text(
+                              creatorName.isNotEmpty ? creatorName[0].toUpperCase() : 'B',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primary,
+                              ),
                             )
                           : null,
                     ),
