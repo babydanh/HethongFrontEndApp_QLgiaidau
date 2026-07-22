@@ -71,8 +71,15 @@ final liveMatchesProvider =
 });
 
 final bracketMatchesProvider =
-    StreamProvider.family<List<MatchModel>, String>((ref, tournamentId) {
-  return ref.watch(tournamentRepositoryProvider).watchBracketMatches(tournamentId);
+    StreamProvider.family<List<MatchModel>, String>((ref, tournamentId) async* {
+  final repo = ref.watch(tournamentRepositoryProvider);
+  final bracketMatches = await repo.getBracketMatches(tournamentId);
+  if (bracketMatches.isNotEmpty) {
+    yield bracketMatches;
+    yield* repo.watchBracketMatches(tournamentId);
+  } else {
+    yield* ref.watch(matchRepositoryProvider).watchByTournament(tournamentId);
+  }
 });
 
 final singleMatchProvider = StreamProvider.autoDispose.family<

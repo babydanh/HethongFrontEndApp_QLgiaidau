@@ -57,23 +57,31 @@ class ApiTeamRepository implements ITeamRepository {
       if (response.statusCode == 200) {
         final List<dynamic> list = response.data['data'] ?? response.data ?? [];
         return list.map((json) {
-          // Xử lý mapping format API NestJS khác với Team model cũ của app
-          final String id = json['id'] ?? '';
-          final String teamName = json['teamName'] ?? '';
-          final List<dynamic> rosters = json['rosters'] ?? [];
-          final List<String> members = rosters.map((r) => r['fullName'] as String).toList();
-          
+          final String id = json['id']?.toString() ?? '';
+          final String teamName = json['teamName']?.toString() ?? '';
+          final List<dynamic> rosters = json['rosters'] as List<dynamic>? ?? [];
+          final List<String> members = rosters
+              .map((r) => (r['fullName'] ?? r['user']?['fullName'] ?? '').toString())
+              .where((n) => n.isNotEmpty)
+              .toList();
+
+          final divisionMap = json['division'] as Map<String, dynamic>?;
+          final groupName = divisionMap?['name']?.toString() ?? json['divisionName']?.toString() ?? '';
+
           return Team(
             id: id,
-            name: teamName,
-            members: members.isNotEmpty ? members : [teamName],
-            contactEmail: json['contactPhone'] ?? '',
-            qrCode: json['qrCode'] ?? id,
+            name: teamName.isNotEmpty ? teamName : 'Đội $id',
+            group: groupName,
+            members: members.isNotEmpty ? members : [teamName.isNotEmpty ? teamName : 'VĐV'],
+            contactEmail: json['contactPhone']?.toString() ?? '',
+            qrCode: json['qrCode']?.toString() ?? id,
             approvalStatus:
                 json['teamStatus']?.toString().toUpperCase() ??
                 json['status']?.toString().toUpperCase() ??
                 'PENDING',
-            createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
+            createdAt: json['createdAt'] != null
+                ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+                : DateTime.now(),
           );
         }).toList();
       }

@@ -367,7 +367,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   _buildAboutTab(tournament, teams.length),
                   _buildTeamsTab(teams),
                   _buildBracketTab(tournament),
-                  _buildLeaderboardTab(tournament),
                   _buildGalleryTab(tournament),
                 ],
               ),
