@@ -928,7 +928,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
         // Nhóm standings theo Group
         final groupedStandings = <String, List<dynamic>>{};
         for (final st in standings) {
-          final groupName = teamGroupMap[st.teamName] ?? 'Bảng chung';
+          final groupName = (st.group.isNotEmpty ? st.group : teamGroupMap[st.teamName]) ?? 'Bảng A';
           groupedStandings.putIfAbsent(groupName, () => []).add(st);
         }
 
