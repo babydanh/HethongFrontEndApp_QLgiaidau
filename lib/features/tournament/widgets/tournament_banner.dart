@@ -164,8 +164,9 @@ class _TournamentBannerState extends State<TournamentBanner> {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   Image.network(
-                                    widget.tournament.creatorAvatarUrl ??
-                                        "https://cdn-icons-png.flaticon.com/512/3344/3344397.png",
+                                    widget.tournament.creatorAvatarUrl != null && widget.tournament.creatorAvatarUrl!.isNotEmpty
+                                        ? widget.tournament.creatorAvatarUrl!
+                                        : "https://giaidau.vnvar.com/vndcsport.svg",
                                     fit: BoxFit.cover,
                                     errorBuilder:
                                         (context, error, stackTrace) =>
@@ -176,8 +177,9 @@ class _TournamentBannerState extends State<TournamentBanner> {
                                   ),
                             )
                           : Image.network(
-                              widget.tournament.creatorAvatarUrl ??
-                                  "https://cdn-icons-png.flaticon.com/512/3344/3344397.png",
+                              widget.tournament.creatorAvatarUrl != null && widget.tournament.creatorAvatarUrl!.isNotEmpty
+                                  ? widget.tournament.creatorAvatarUrl!
+                                  : "https://giaidau.vnvar.com/vndcsport.svg",
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   const Icon(Icons.emoji_events, size: 28),

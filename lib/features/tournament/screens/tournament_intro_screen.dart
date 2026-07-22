@@ -1241,12 +1241,16 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           Expanded(
             child: Row(
               children: [
-                Text(
-                  memberName,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textPrimary,
+                Expanded(
+                  child: Text(
+                    memberName,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (isCaptain) ...[
