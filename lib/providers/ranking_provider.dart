@@ -5,9 +5,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Provider gọi API GET /rankings thật.
 /// Mặc định tải Top 100 (limit=100) theo categoryId để hiển thị bảng xếp hạng.
-final rankingsProvider = FutureProvider.family<List<PlayerRanking>, String?>((ref, categoryId) async {
+typedef RankingQuery = ({
+  String categoryId,
+  String matchType,
+  String? genderRestriction,
+  String? provinceCode,
+});
+
+final rankingsProvider = FutureProvider.family<List<PlayerRanking>, RankingQuery>((ref, query) async {
   final repo = ref.read(rankingRepositoryProvider);
-  return repo.getRankings(categoryId: categoryId, page: 1, limit: 100);
+  return repo.getRankings(
+    categoryId: query.categoryId,
+    matchType: query.matchType,
+    genderRestriction: query.genderRestriction,
+    provinceCode: query.provinceCode,
+    page: 1,
+    limit: 100,
+  );
 });
 
 /// Provider lấy danh sách bậc ELO (tier) của 1 môn thể thao.

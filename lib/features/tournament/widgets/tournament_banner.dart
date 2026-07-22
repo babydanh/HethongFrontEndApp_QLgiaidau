@@ -4,16 +4,12 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_registration_sheet.dart';
 import 'package:go_router/go_router.dart';
 
 class TournamentBanner extends StatefulWidget {
   final Tournament tournament;
 
-  const TournamentBanner({
-    super.key,
-    required this.tournament,
-  });
+  const TournamentBanner({super.key, required this.tournament});
 
   @override
   State<TournamentBanner> createState() => _TournamentBannerState();
@@ -33,7 +29,8 @@ class _TournamentBannerState extends State<TournamentBanner> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final List<String> images = [];
-    if (widget.tournament.bannerUrl != null && widget.tournament.bannerUrl!.isNotEmpty) {
+    if (widget.tournament.bannerUrl != null &&
+        widget.tournament.bannerUrl!.isNotEmpty) {
       images.add(widget.tournament.bannerUrl!);
     }
     if (widget.tournament.galleryImages.isNotEmpty) {
@@ -109,7 +106,9 @@ class _TournamentBannerState extends State<TournamentBanner> {
                       height: 6,
                       width: isActive ? 16.0 : 6.0,
                       decoration: BoxDecoration(
-                        color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.4),
+                        color: isActive
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );
@@ -155,22 +154,33 @@ class _TournamentBannerState extends State<TournamentBanner> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(11),
-                      child: widget.tournament.logoUrl != null && widget.tournament.logoUrl!.isNotEmpty
+                      child:
+                          widget.tournament.logoUrl != null &&
+                              widget.tournament.logoUrl!.isNotEmpty
                           ? Image.network(
                               widget.tournament.logoUrl!.startsWith("http")
                                   ? widget.tournament.logoUrl!
                                   : "https://qlgiaidau.esports.vn${widget.tournament.logoUrl!}",
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Image.network(
-                                widget.tournament.creatorAvatarUrl ?? "https://cdn-icons-png.flaticon.com/512/3344/3344397.png",
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => const Icon(Icons.emoji_events, size: 28),
-                              ),
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Image.network(
+                                    widget.tournament.creatorAvatarUrl ??
+                                        "https://cdn-icons-png.flaticon.com/512/3344/3344397.png",
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(
+                                              Icons.emoji_events,
+                                              size: 28,
+                                            ),
+                                  ),
                             )
                           : Image.network(
-                              widget.tournament.creatorAvatarUrl ?? "https://cdn-icons-png.flaticon.com/512/3344/3344397.png",
+                              widget.tournament.creatorAvatarUrl ??
+                                  "https://cdn-icons-png.flaticon.com/512/3344/3344397.png",
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.emoji_events, size: 28),
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.emoji_events, size: 28),
                             ),
                     ),
                   ),
@@ -183,11 +193,19 @@ class _TournamentBannerState extends State<TournamentBanner> {
                           children: [
                             _buildTag("ĐĂNG KÝ", colors),
                             const SizedBox(width: 6),
-                            _buildTag("VÒNG TRÒN", colors, icon: Icons.loop_rounded, iconColor: const Color(0xFFD97706)),
+                            _buildTag(
+                              "VÒNG TRÒN",
+                              colors,
+                              icon: Icons.loop_rounded,
+                              iconColor: const Color(0xFFD97706),
+                            ),
                             const SizedBox(width: 6),
                             OutlinedButton.icon(
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 minimumSize: const Size(0, 24),
                                 foregroundColor: colors.textSecondary,
                                 side: BorderSide(color: colors.border),
@@ -197,7 +215,10 @@ class _TournamentBannerState extends State<TournamentBanner> {
                               ),
                               onPressed: () {},
                               icon: const Icon(Icons.share, size: 12),
-                              label: const Text("Chia sẻ", style: TextStyle(fontSize: 10)),
+                              label: const Text(
+                                "Chia sẻ",
+                                style: TextStyle(fontSize: 10),
+                              ),
                             ),
                           ],
                         ),
@@ -208,12 +229,16 @@ class _TournamentBannerState extends State<TournamentBanner> {
                           children: [
                             _iconText(
                               Icons.calendar_today_rounded,
-                              _formatDateRange(widget.tournament.registrationStartDate, widget.tournament.registrationEndDate),
+                              _formatDateRange(
+                                widget.tournament.registrationStartDate,
+                                widget.tournament.registrationEndDate,
+                              ),
                               colors,
                             ),
                             _iconText(
                               Icons.location_on_outlined,
-                              widget.tournament.locationAddress ?? "Chưa cập nhật địa điểm",
+                              widget.tournament.locationAddress ??
+                                  "Chưa cập nhật địa điểm",
                               colors,
                             ),
                             _iconText(
@@ -241,7 +266,9 @@ class _TournamentBannerState extends State<TournamentBanner> {
 
   Widget _buildActionButton(AppColorsExtension colors) {
     final status = widget.tournament.status;
-    final isRegistration = status == AppConstants.statusRegistration || status == AppConstants.statusUpcoming;
+    final isRegistration =
+        status == AppConstants.statusRegistration ||
+        status == AppConstants.statusUpcoming;
     final isLive = status == AppConstants.statusInProgress;
 
     if (!isRegistration && !isLive) return const SizedBox.shrink();
@@ -251,19 +278,14 @@ class _TournamentBannerState extends State<TournamentBanner> {
       child: FilledButton.icon(
         onPressed: () {
           if (isRegistration) {
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (_) => TournamentRegistrationSheet(
-                tournament: widget.tournament,
-              ),
-            );
+            context.push('/register/${widget.tournament.id}');
           } else if (isLive) {
             context.push('/tournament/${widget.tournament.id}/bracket');
           }
         },
-        icon: Icon(isRegistration ? Icons.how_to_reg_rounded : Icons.visibility_rounded),
+        icon: Icon(
+          isRegistration ? Icons.how_to_reg_rounded : Icons.visibility_rounded,
+        ),
         label: Text(
           isRegistration ? 'Đăng ký tham gia' : 'Theo dõi giải đấu',
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
@@ -293,7 +315,12 @@ class _TournamentBannerState extends State<TournamentBanner> {
     return "$startStr - $endStr";
   }
 
-  Widget _buildTag(String text, AppColorsExtension colors, {IconData? icon, Color? iconColor}) {
+  Widget _buildTag(
+    String text,
+    AppColorsExtension colors, {
+    IconData? icon,
+    Color? iconColor,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -327,13 +354,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
       children: [
         Icon(icon, size: 14, color: colors.textMuted),
         const SizedBox(width: 4),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 11,
-            color: colors.textSecondary,
-          ),
-        ),
+        Text(text, style: TextStyle(fontSize: 11, color: colors.textSecondary)),
       ],
     );
   }

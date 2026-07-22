@@ -20,20 +20,28 @@ class Province {
 }
 
 final provincesProvider = FutureProvider<List<Province>>((ref) async {
-  final dio = ref.read(dioProvider);
-  final response = await dio.get('/regions/provinces');
-  final List<dynamic> data = response.data['data'] ?? response.data;
-  return data.map((json) => Province.fromJson(json)).toList();
+  try {
+    final dio = ref.read(dioProvider);
+    final response = await dio.get('/regions/provinces');
+    final List<dynamic> data = response.data['data'] ?? response.data;
+    return data.map((json) => Province.fromJson(json)).toList();
+  } catch (_) {
+    return [];
+  }
 });
 
 final userProfileProvider = FutureProvider<UserProfile>((ref) async {
   final authState = ref.watch(authProvider);
   if (!authState.isAuthenticated) {
-    throw Exception('Chưa đăng nhập');
+    return UserProfile(id: '', fullName: 'Người dùng', email: '');
   }
 
-  final repo = ref.read(userRepositoryProvider);
-  return await repo.getProfile();
+  try {
+    final repo = ref.read(userRepositoryProvider);
+    return await repo.getProfile();
+  } catch (e) {
+    return UserProfile(id: '', fullName: 'Người dùng', email: '');
+  }
 });
 
 /// Provider lấy hồ sơ công khai của người dùng khác.

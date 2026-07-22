@@ -31,7 +31,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _fetchMembership());
   }
 
@@ -235,8 +235,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           _buildAboutTab(club, colors),
           _buildTournamentsTab(colors),
           _buildMembersTab(colors),
-          _buildGalleryTab(colors),
+          _buildGalleryTab(club, colors),
           _buildRankingsTab(colors),
+          _buildSettingsTab(club, colors),
         ],
       ),
     );
@@ -1004,11 +1005,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   // ════════════════════════════════════
   //  TAB 4: ẢNH (Gallery)
   // ════════════════════════════════════
-  Widget _buildGalleryTab(AppColorsExtension colors) {
+  Widget _buildGalleryTab(Community club, AppColorsExtension colors) {
     final galleryAsync = ref.watch(communityGalleryProvider(widget.clubId));
     return galleryAsync.when(
       data: (images) {
-        if (images.isEmpty) {
+        if (images.isEmpty && club.logoUrl == null && club.bannerUrl == null) {
           return Center(child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -1020,32 +1021,124 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ],
           ));
         }
-        return GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-          ),
-          itemCount: images.length,
-          itemBuilder: (context, i) => GestureDetector(
-            onTap: () => _showImagePreview(images[i].imageUrl),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                images[i].imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  color: colors.bgSurface,
-                  child: Icon(Icons.broken_image_rounded, color: colors.textMuted, size: 28),
+
+        // Collect all club images: logo, banner, and gallery
+        final List<Widget> imageWidgets = [];
+
+        // Add club banner first
+        if (club.bannerUrl != null && club.bannerUrl!.isNotEmpty) {
+          imageWidgets.add(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: GestureDetector(
+                onTap: () => _showImagePreview(club.bannerUrl!),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 180,
+                    child: Image.network(
+                      club.bannerUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: colors.bgSurface,
+                        child: Icon(Icons.broken_image_rounded, color: colors.textMuted, size: 28),
+                      ),
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return Container(color: colors.bgSurface, child: const Center(child: CircularProgressIndicator(strokeWidth: 2)));
+                      },
+                    ),
+                  ),
                 ),
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return Container(color: colors.bgSurface, child: const Center(child: CircularProgressIndicator(strokeWidth: 2)));
-                },
               ),
             ),
-          ),
+          );
+        }
+
+        // Add club logo
+        if (club.logoUrl != null && club.logoUrl!.isNotEmpty) {
+          imageWidgets.add(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: GestureDetector(
+                onTap: () => _showImagePreview(club.logoUrl!),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    width: 120,
+                    height: 120,
+                    child: Image.network(
+                      club.logoUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: colors.bgSurface,
+                        child: Icon(Icons.broken_image_rounded, color: colors.textMuted, size: 28),
+                      ),
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return Container(color: colors.bgSurface, child: const Center(child: CircularProgressIndicator(strokeWidth: 2)));
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        if (images.isNotEmpty) {
+          imageWidgets.add(
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.only(top: 8),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                ),
+                itemCount: images.length,
+                itemBuilder: (context, i) => GestureDetector(
+                  onTap: () => _showImagePreview(images[i].imageUrl),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      images[i].imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: colors.bgSurface,
+                        child: Icon(Icons.broken_image_rounded, color: colors.textMuted, size: 28),
+                      ),
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return Container(color: colors.bgSurface, child: const Center(child: CircularProgressIndicator(strokeWidth: 2)));
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Row(
+                children: [
+                  if (images.isNotEmpty)
+                    Text('${images.length} ảnh', style: TextStyle(fontSize: 11, color: colors.textMuted, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: imageWidgets,
+              ),
+            ),
+          ],
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -1182,6 +1275,224 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       },
     );
   }
+
+  // ════════════════════════════════════
+  //  TAB 6: CÀI ĐẶT (Settings)
+  // ════════════════════════════════════
+  Widget _buildSettingsTab(Community club, AppColorsExtension colors) {
+    final isAdmin = _myMembership?.role == 'OWNER' || _myMembership?.role == 'ADMIN' || _myMembership?.role == 'MODERATOR';
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Thông tin CLB
+        _settingsSectionHeader("THÔNG TIN CLB", colors),
+        const SizedBox(height: 8),
+        _settingsTile(
+          icon: Icons.edit_rounded,
+          title: 'Chỉnh sửa thông tin',
+          subtitle: 'Tên, mô tả, địa điểm, môn thể thao',
+          color: AppTheme.primary,
+          onTap: isAdmin ? () => context.push('/club/${widget.clubId}/edit') : null,
+        ),
+        if (isAdmin) ...[
+          const SizedBox(height: 8),
+          _settingsTile(
+            icon: Icons.tune_rounded,
+            title: 'Quản lý CLB',
+            subtitle: 'Thiết lập, quy tắc, thông số',
+            color: AppTheme.primary,
+            onTap: () => context.push('/club/${widget.clubId}/manage', extra: _myMembership?.role == 'OWNER'),
+          ),
+        ],
+        const SizedBox(height: 20),
+
+        // Hình thức tham gia
+        _settingsSectionHeader("HÌNH THỨC THAM GIA", colors),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: colors.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                child: Icon(Icons.how_to_reg_rounded, color: AppTheme.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Hình thức tham gia', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                    Text(
+                      club.joinMode == 'OPEN' ? 'Tự do' : club.joinMode == 'APPROVAL' ? 'Xét duyệt' : 'Chỉ mời',
+                      style: TextStyle(fontSize: 12, color: colors.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Thống kê
+        _settingsSectionHeader("THỐNG KÊ", colors),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(child: _settingsStatBox('Thành viên', '${club.memberCount}', Icons.people_rounded, AppTheme.primary, colors)),
+            const SizedBox(width: 10),
+            Expanded(child: _settingsStatBox('Môn thi đấu', club.sports.isNotEmpty ? club.sports.first : 'Chưa có', Icons.sports_rounded, const Color(0xFF059669), colors)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(child: _settingsStatBox('Trạng thái', club.status == 'ACTIVE' ? 'Hoạt động' : 'Chờ duyệt', Icons.circle_rounded, club.status == 'ACTIVE' ? const Color(0xFF10B981) : const Color(0xFFF59E0B), colors)),
+            const SizedBox(width: 10),
+            Expanded(child: _settingsStatBox('Ngày tạo', club.createdAt.isNotEmpty ? club.createdAt.substring(0, 10) : '---', Icons.calendar_today_rounded, colors.textMuted, colors)),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        // Hành động nguy hiểm (chỉ OWNER)
+        if (_myMembership?.role == 'OWNER') ...[
+          _settingsSectionHeader("NGUY HIỂM", colors),
+          const SizedBox(height: 8),
+          _settingsTile(
+            icon: Icons.delete_forever_rounded,
+            title: 'Xoá câu lạc bộ',
+            subtitle: 'Hành động này không thể hoàn tác',
+            color: colors.error,
+            onTap: () => _showDeleteClubDialog(club, colors),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _settingsSectionHeader(String title, AppColorsExtension colors) {
+    return Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: colors.textSecondary, letterSpacing: 0.5));
+  }
+
+  Widget _settingsTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    VoidCallback? onTap,
+  }) {
+    final colors = context.colors;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: TextStyle(fontSize: 11, color: colors.textMuted)),
+                ],
+              ),
+            ),
+            if (onTap != null)
+              Icon(Icons.chevron_right_rounded, color: colors.textMuted, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _settingsStatBox(String label, String value, IconData icon, Color color, AppColorsExtension colors) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 38, height: 38,
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(height: 8),
+          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: colors.textPrimary),
+            maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 10, color: colors.textMuted)),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showDeleteClubDialog(Community club, AppColorsExtension colors) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.bgCard,
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 22),
+            const SizedBox(width: 8),
+            const Text('Xoá câu lạc bộ?', style: TextStyle(fontWeight: FontWeight.w800)),
+          ],
+        ),
+        content: Text(
+          'Bạn có chắc muốn xoá "${club.name}"?\nHành động này không thể hoàn tác.',
+          style: TextStyle(color: colors.textSecondary),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Xoá', style: TextStyle(color: colors.error, fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      try {
+        await ref.read(communityRepositoryProvider).deleteCommunity(widget.clubId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Đã xoá câu lạc bộ'), backgroundColor: Color(0xFF10B981), behavior: SnackBarBehavior.floating,
+          ));
+          context.pop();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Lỗi: $e'), backgroundColor: colors.error, behavior: SnackBarBehavior.floating,
+          ));
+        }
+      }
+    }
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -1212,6 +1523,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
           Tab(text: "Thành viên"),
           Tab(text: "Ảnh"),
           Tab(text: "Xếp hạng"),
+          Tab(text: "Cài đặt"),
         ],
       ),
     );

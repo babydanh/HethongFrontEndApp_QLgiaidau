@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class TournamentCardCarousel extends StatelessWidget {
   final Tournament tournament;
@@ -18,15 +19,20 @@ class TournamentCardCarousel extends StatelessWidget {
     final mt = matchType.toUpperCase();
     final gr = genderRestriction?.toUpperCase() ?? '';
     if (mt == 'SINGLES') {
-      return gr == 'FEMALE' ? 'Đơn Nữ' : 'Đơn Nam';
+      if (gr == 'FEMALE') return 'Đơn Nữ';
+      if (gr == 'MALE') return 'Đơn Nam';
+      return 'Đơn';
     }
     if (mt == 'DOUBLES') {
-      return gr == 'FEMALE' ? 'Đôi Nữ' : 'Đôi Nam';
+      if (gr == 'FEMALE') return 'Đôi Nữ';
+      if (gr == 'MALE') return 'Đôi Nam';
+      if (gr == 'MIXED') return 'Đôi Nam Nữ';
+      return 'Đôi';
     }
     if (mt == 'MIXED_DOUBLES' || mt == 'MIXED' || gr == 'MIXED') {
       return 'Đôi Nam Nữ';
     }
-    return mt == 'DOUBLES' ? 'Đôi' : mt == 'SINGLES' ? 'Đơn' : 'Đôi Nam Nữ';
+    return mt == 'DOUBLES' ? 'Đôi' : (mt == 'SINGLES' ? 'Đơn' : 'Đôi Nam Nữ');
   }
 
   List<String> _getCategoryChips(Tournament t) {
@@ -45,55 +51,36 @@ class TournamentCardCarousel extends StatelessWidget {
     if (chips.isEmpty) {
       final nameLower = t.name.toLowerCase();
       final descLower = t.description.toLowerCase();
-      if (nameLower.contains("đơn nam") || descLower.contains("đơn nam")) {
-        chips.add("Đơn Nam");
-      }
-      if (nameLower.contains("đơn nữ") || descLower.contains("đơn nữ")) {
+      
+      // Safely check gender from divisions if available
+      final divGender = t.divisions.isNotEmpty ? (t.divisions.first.genderRestriction ?? '').toLowerCase() : '';
+
+      // Check Female
+      if (divGender == 'female' || nameLower.contains("đơn nữ") || descLower.contains("đơn nữ")) {
         chips.add("Đơn Nữ");
-      }
-      if (nameLower.contains("đôi nam nữ") || descLower.contains("đôi nam nữ") || nameLower.contains("nam nữ") || descLower.contains("nam nữ")) {
-        chips.add("Đôi Nam Nữ");
-      }
-      if ((nameLower.contains("đôi nam") || descLower.contains("đôi nam")) && !nameLower.contains("đôi nam nữ") && !descLower.contains("đôi nam nữ")) {
-        chips.add("Đôi Nam");
-      }
-      if (nameLower.contains("đôi nữ") || descLower.contains("đôi nữ")) {
+      } else if (divGender == 'female' || nameLower.contains("đôi nữ") || descLower.contains("đôi nữ")) {
         chips.add("Đôi Nữ");
       }
-      if (nameLower.contains("đồng đội") || descLower.contains("đồng đội")) {
-        chips.add("Đồng đội");
+      // Check Mixed
+      else if (divGender == 'mixed' || nameLower.contains("đôi nam nữ") || descLower.contains("đôi nam nữ") || nameLower.contains("nam nữ")) {
+        chips.add("Đôi Nam Nữ");
       }
-      if (nameLower.contains("đôi") || descLower.contains("đôi")) {
-        if (!chips.any((c) => c.contains("Đôi"))) {
-          chips.add("Đôi");
-        }
+      // Check Male
+      else if (nameLower.contains("đơn nam") || descLower.contains("đơn nam")) {
+        chips.add("Đơn Nam");
+      } else if (nameLower.contains("đôi nam") || descLower.contains("đôi nam")) {
+        chips.add("Đôi Nam");
       }
-      if (nameLower.contains("đơn") || descLower.contains("đơn")) {
-        if (!chips.any((c) => c.contains("Đơn"))) {
-          chips.add("Đơn");
-        }
+      // Generic Singles / Doubles
+      else if (nameLower.contains("đôi") || descLower.contains("đôi") || t.format == "doubles" || t.maxPlayersPerTeam == 2) {
+        chips.add(divGender == 'female' ? "Đôi Nữ" : (divGender == 'mixed' ? "Đôi Nam Nữ" : "Đôi Nam"));
+      } else if (nameLower.contains("đơn") || descLower.contains("đơn") || t.format == "singles" || t.maxPlayersPerTeam == 1) {
+        chips.add(divGender == 'female' ? "Đơn Nữ" : "Đơn Nam");
       }
     }
     if (chips.isEmpty) {
-      final sportNameLower = (AppConstants.sportNames[t.sport] ?? '').toLowerCase();
-      if (t.category != null && t.category!.isNotEmpty && 
-          t.category!.toLowerCase() != t.sport.toLowerCase() &&
-          t.category!.toLowerCase() != sportNameLower) {
-        final catLower = t.category!.toLowerCase();
-        if (catLower == "singles" || catLower == "đơn") {
-          chips.add("Đơn");
-        } else if (catLower == "doubles" || catLower == "đôi") {
-          chips.add("Đôi");
-        } else {
-          chips.add(t.category!);
-        }
-      } else {
-        if (t.format == AppConstants.formatDoubles || t.maxPlayersPerTeam == 2) {
-          chips.add("Đôi");
-        } else {
-          chips.add("Đơn");
-        }
-      }
+      final isDoubles = t.format == "doubles" || t.maxPlayersPerTeam == 2;
+      chips.add(isDoubles ? "Đôi Nam" : "Đơn Nam");
     }
     return chips.toSet().toList();
   }
@@ -149,7 +136,7 @@ class TournamentCardCarousel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AspectRatio(
-                aspectRatio: 2.0,
+                aspectRatio: 1.6,
                 child: Stack(
                   children: [
                     Container(
@@ -162,12 +149,10 @@ class TournamentCardCarousel extends StatelessWidget {
                       ),
                       child: tournament.bannerUrl == null || tournament.bannerUrl!.isEmpty
                           ? Center(
-                              child: Image.asset(
-                                "assets/images/vndc_sport.png",
+                              child: SvgPicture.asset(
+                                "assets/images/vndcsport.svg",
                                 width: 120,
                                 fit: BoxFit.contain,
-                                color: Colors.white.withValues(alpha: 0.85),
-                                colorBlendMode: BlendMode.srcIn,
                               ),
                             )
                           : null,

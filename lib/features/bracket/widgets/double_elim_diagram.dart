@@ -1,9 +1,10 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dart';
+import 'package:app_quanly_giaidau/features/bracket/layout/double_elim_layout.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  LAYOUT CONSTANTS
@@ -39,7 +40,7 @@ class DoubleElimDiagram extends StatefulWidget {
 
 class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
   final TransformationController _tc =
-      TransformationController(Matrix4.identity()..scale(0.6));
+      TransformationController(Matrix4.diagonal3Values(0.6, 0.6, 1));
 
   @override
   void dispose() {
@@ -81,57 +82,6 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
     return _BandData(winners: winners, losers: losers, finals: finals);
   }
 
-  // ── Layout positions for one band ─────────────────────────────────────────
-  Map<String, Offset> _layoutBand(
-    Map<int, List<MatchModel>> roundMap,
-    List<int> sortedRounds,
-    double offsetY,
-  ) {
-    final positions = <String, Offset>{};
-
-    // Phase 1: initial grid layout
-    for (int ci = 0; ci < sortedRounds.length; ci++) {
-      final colX = ci * (_kCardW + _kColGap);
-      final matches = roundMap[sortedRounds[ci]]!;
-      for (int mi = 0; mi < matches.length; mi++) {
-        final y = offsetY + mi * (_kCardH + _kRowGap);
-        positions[matches[mi].id] = Offset(colX, y);
-      }
-    }
-
-    // Phase 2: align parent to midpoint of children
-    for (int ci = sortedRounds.length - 1; ci >= 1; ci--) {
-      final round = sortedRounds[ci];
-      final prevRound = sortedRounds[ci - 1];
-      final prevMatches = roundMap[prevRound]!;
-      final childrenOf = <String, List<String>>{};
-      for (final m in prevMatches) {
-        if (m.nextMatchId.isNotEmpty) {
-          childrenOf.putIfAbsent(m.nextMatchId, () => []).add(m.id);
-        }
-      }
-      for (final m in roundMap[round]!) {
-        final children = childrenOf[m.id];
-        if (children != null && children.isNotEmpty) {
-          double totalY = 0;
-          int count = 0;
-          for (final c in children) {
-            final pos = positions[c];
-            if (pos != null) {
-              totalY += pos.dy + _kCardH / 2;
-              count++;
-            }
-          }
-          if (count > 0) {
-            final centerY = totalY / count - _kCardH / 2;
-            positions[m.id] = Offset(positions[m.id]!.dx, centerY);
-          }
-        }
-      }
-    }
-    return positions;
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -146,36 +96,20 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
     final wRounds = bands.winners.keys.toList()..sort();
     final lRounds = bands.losers.keys.toList()..sort();
 
-    // Estimate heights
-    final wMaxCount = wRounds.isEmpty ? 1 : wRounds.map((r) => bands.winners[r]!.length).reduce(max);
-    final lMaxCount = lRounds.isEmpty ? 1 : lRounds.map((r) => bands.losers[r]!.length).reduce(max);
-
-    final wBandH = wMaxCount * (_kCardH + _kRowGap);
-    final lBandH = lMaxCount * (_kCardH + _kRowGap);
-
-    // Offsets: winners at top, then gap, then losers
-    const wOffsetY = 92.0; // room for band label + round header
-    final lOffsetY = wOffsetY + wBandH + _kBandGap + 92.0;
-
-    final positions = <String, Offset>{};
-    positions.addAll(_layoutBand(bands.winners, wRounds, wOffsetY));
-    positions.addAll(_layoutBand(bands.losers, lRounds, lOffsetY));
-
-    // Finals placement: right-most column, centered between bands
-    final maxCols = max(wRounds.length, lRounds.length);
-    final finalsX = maxCols * (_kCardW + _kColGap);
-    final totalBandsH = lOffsetY + lBandH - wOffsetY;
-    final finalsStartY = wOffsetY + totalBandsH / 2 - (bands.finals.length * (_kCardH + _kRowGap)) / 2;
-    for (int fi = 0; fi < bands.finals.length; fi++) {
-      positions[bands.finals[fi].id] = Offset(finalsX, finalsStartY + fi * (_kCardH + _kRowGap));
-    }
-
-    // Canvas size
-    double maxX = 0, maxY = 0;
-    for (final pos in positions.values) {
-      if (pos.dx + _kCardW > maxX) maxX = pos.dx + _kCardW;
-      if (pos.dy + _kCardH > maxY) maxY = pos.dy + _kCardH;
-    }
+    const calculator = DoubleElimLayoutCalculator(
+      cardWidth: _kCardW,
+      cardHeight: _kCardH,
+      columnGap: _kColGap,
+      rowGap: _kRowGap,
+      bandGap: _kBandGap,
+      winnersTop: 92,
+    );
+    final layout = calculator.calculate(
+      winners: bands.winners,
+      losers: bands.losers,
+      finals: bands.finals,
+    );
+    final positions = layout.positions;
 
     return InteractiveViewer(
       transformationController: _tc,
@@ -186,8 +120,8 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
       child: Padding(
         padding: const EdgeInsets.all(40),
         child: SizedBox(
-          width: maxX + 80,
-          height: maxY + 80,
+          width: layout.width,
+          height: layout.height,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -195,29 +129,29 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
               if (wRounds.isNotEmpty)
                 Positioned(
                   left: 0,
-                  top: wOffsetY - 80,
+                  top: layout.winnersTop - 80,
                   child: _DeBandLabel(
                     title: '▲ NHÁNH THẮNG (Winners)',
                     subtitle: 'Đội thắng đi tiếp — Đội thua xuống nhánh thua',
                     color: const Color(0xFF0284C7),
-                    width: wRounds.length * (_kCardW + _kColGap) - _kColGap,
+                    width: layout.winnersBandWidth,
                   ),
                 ),
               if (lRounds.isNotEmpty)
                 Positioned(
                   left: 0,
-                  top: lOffsetY - 80,
+                  top: layout.losersTop - 80,
                   child: _DeBandLabel(
                     title: '▼ NHÁNH THUA (Losers)',
                     subtitle: 'Đội thua lần đầu — Thua nữa là bị loại',
                     color: const Color(0xFFDC2626),
-                    width: lRounds.length * (_kCardW + _kColGap) - _kColGap,
+                    width: layout.losersBandWidth,
                   ),
                 ),
               if (bands.finals.isNotEmpty)
                 Positioned(
-                  left: finalsX,
-                  top: finalsStartY - 36,
+                  left: layout.grandFinalX,
+                  top: layout.grandFinalTop - 36,
                   width: _kCardW,
                   child: _DeRoundHeader(label: 'CHUNG KẾT TỔNG'),
                 ),
@@ -242,12 +176,16 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                 final round = e.value;
                 final fromEnd = wRounds.length - (ci + 1);
                 String label;
-                if (fromEnd == 0) label = 'CK NHÁNH THẮNG';
-                else if (fromEnd == 1) label = 'BK NHÁNH THẮNG';
-                else label = 'VÒNG $round';
+                if (fromEnd == 0) {
+                  label = 'CK NHÁNH THẮNG';
+                } else if (fromEnd == 1) {
+                  label = 'BK NHÁNH THẮNG';
+                } else {
+                  label = MatchRoundLabel.doubleUpperHeader(fromEnd);
+                }
                 return Positioned(
-                  left: ci * (_kCardW + _kColGap),
-                  top: wOffsetY - 36,
+                  left: layout.winnerColumnX(round),
+                  top: layout.winnersTop - 36,
                   width: _kCardW,
                   child: _DeRoundHeader(label: label),
                 );
@@ -259,12 +197,16 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                 final round = e.value;
                 final fromEnd = lRounds.length - (ci + 1);
                 String label;
-                if (fromEnd == 0) label = 'CK NHÁNH THUA';
-                else if (fromEnd == 1) label = 'BK NHÁNH THUA';
-                else label = 'VÒNG $round';
+                if (fromEnd == 0) {
+                  label = 'CK NHÁNH THUA';
+                } else if (fromEnd == 1) {
+                  label = 'BK NHÁNH THUA';
+                } else {
+                  label = MatchRoundLabel.doubleLowerHeader(fromEnd, round);
+                }
                 return Positioned(
-                  left: ci * (_kCardW + _kColGap),
-                  top: lOffsetY - 36,
+                  left: layout.loserColumnX(round),
+                  top: layout.losersTop - 36,
                   width: _kCardW,
                   child: _DeRoundHeader(label: label),
                 );

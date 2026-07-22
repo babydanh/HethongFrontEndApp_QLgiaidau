@@ -38,27 +38,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       'icon': Icons.payment_rounded,
       'color': Color(0xFFFF5622),
     },
-    {
-      'id': 'VNPAY',
-      'name': 'VNPAY',
-      'desc': 'Quét QR / Internet Banking',
-      'icon': Icons.qr_code_scanner_rounded,
-      'color': Color(0xFF1565C0),
-    },
-    {
-      'id': 'MOMO',
-      'name': 'MoMo',
-      'desc': 'Quét QR qua Ví MoMo',
-      'icon': Icons.mobile_friendly_rounded,
-      'color': Color(0xFFD81B60),
-    },
-    {
-      'id': 'TRANSFER',
-      'name': 'Chuyển khoản',
-      'desc': 'Chuyển khoản thủ công',
-      'icon': Icons.account_balance_rounded,
-      'color': Color(0xFF059669),
-    },
   ];
 
   Future<void> _handleCheckout() async {
@@ -75,31 +54,26 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
       if (result != null && mounted) {
         final paymentId = result['paymentId'] ?? '';
-        if (_selectedGateway == 'PAYOS') {
-          final paymentUrl = result['paymentUrl'] ?? '';
-          if (paymentUrl.isNotEmpty) {
-            final uri = Uri.parse(paymentUrl);
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-            if (mounted) {
-              context.pushReplacement('/payment/payos-verify', extra: {
-                'paymentId': paymentId,
-                'amount': widget.amount,
-                'tournamentId': widget.tournamentId,
-                'tournamentName': widget.tournamentName,
-              });
-            }
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Không nhận được liên kết thanh toán từ PayOS')),
-            );
+        final paymentUrl = result['paymentUrl'] ?? '';
+        if (paymentUrl.isNotEmpty) {
+          final uri = Uri.parse(paymentUrl);
+          final opened = await launchUrl(
+            uri,
+            mode: LaunchMode.externalApplication,
+          );
+          if (!opened) {
+            throw Exception('Không thể mở ứng dụng thanh toán PayOS');
+          }
+          if (mounted) {
+            context.pushReplacement('/payment/payos-verify', extra: {
+              'paymentId': paymentId,
+              'amount': widget.amount,
+              'tournamentId': widget.tournamentId,
+              'tournamentName': widget.tournamentName,
+            });
           }
         } else {
-          context.push('/payment/mock-gateway', extra: {
-            'paymentId': paymentId,
-            'gateway': _selectedGateway,
-            'amount': widget.amount,
-            'tournamentId': widget.tournamentId,
-          });
+          throw Exception('Không nhận được liên kết thanh toán từ PayOS');
         }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -166,7 +140,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ).animate().fadeIn(duration: 300.ms),
 
             const SizedBox(height: 24),
-            Text('CHỌN CỔNG THANH TOÁN',
+            Text('THANH TOÁN AN TOÀN QUA PAYOS',
                 style: TextStyle(
                   fontSize: 12, fontWeight: FontWeight.w800, color: context.colors.textSecondary,
                   letterSpacing: 1,
@@ -174,7 +148,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             const SizedBox(height: 12),
 
             // Gateway options
-            ..._gateways.map((gw) => _buildGatewayOption(context, gw)).toList(),
+            ..._gateways.map((gw) => _buildGatewayOption(context, gw)),
 
             const SizedBox(height: 24),
             Text('BẰNG CÁCH NHẤN "THANH TOÁN", BẠN ĐỒNG Ý VỚI ĐIỀU KHOẢN CỦA CHÚNG TÔI',

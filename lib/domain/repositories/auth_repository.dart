@@ -14,6 +14,8 @@ abstract class IAuthRepository {
 
   Future<AuthSession> loginWithGoogle(String idToken);
 
+  Future<AuthSession> loginWithFacebook(String accessToken);
+
   Future<void> requestEmailVerification();
 
   Future<void> confirmEmailVerification({

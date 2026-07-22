@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/ranking_row.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_legend_view.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/user_stats_card.dart';
+import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
   const LeaderboardScreen({super.key});
@@ -22,9 +23,19 @@ class LeaderboardScreen extends ConsumerStatefulWidget {
 
 class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   String _selectedCategory = 'all';
+  String _selectedMatchType = 'SINGLES';
+  String? _selectedGender = 'MALE';
+  String? _selectedProvince;
   final TextEditingController _searchCtrl = TextEditingController();
   String _query = '';
   final ScrollController _scrollCtrl = ScrollController();
+
+  RankingQuery get _rankingQuery => (
+    categoryId: _selectedCategory,
+    matchType: _selectedMatchType,
+    genderRestriction: _selectedGender,
+    provinceCode: _selectedProvince,
+  );
 
   @override
   void dispose() {
@@ -84,17 +95,17 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
             final rankingsAsync = _selectedCategory == 'all'
                 ? const AsyncValue<List<PlayerRanking>>.loading()
-                : ref.watch(rankingsProvider(_selectedCategory));
+                : ref.watch(rankingsProvider(_rankingQuery));
             final tiersAsync = ref.watch(eloTiersProvider(_selectedCategory));
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(colors),
-                const SizedBox(height: 8),
-                _buildSportChips(categories, colors),
-                const SizedBox(height: 12),
-                _buildSearchBar(colors),
+                const SizedBox(height: 104),
+                const SizedBox(height: 10),
+                _buildRankingFilters(colors),
+                const SizedBox(height: 10),
+                _buildProvinceFilter(colors),
                 const SizedBox(height: 12),
                 tiersAsync.when(
                   data: (tiers) {
@@ -122,7 +133,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       icon: Icons.cloud_off_rounded,
                       title: 'Không thể tải bảng xếp hạng',
                       subtitle: '$e',
-                      onRetry: () => ref.refresh(rankingsProvider(_selectedCategory)),
+                      onRetry: () => ref.refresh(rankingsProvider(_rankingQuery)),
                     ),
                   ),
                 ),
@@ -144,6 +155,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
   // ─── Header ────────────────────────────────────────────────────────────
   Widget _buildHeader(AppColorsExtension colors) {
+    final formatLabel = _formatLabel(_selectedMatchType, _selectedGender);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
       child: Row(
@@ -161,7 +173,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 ),
               ),
               Text(
-                'Top 100 · ELO toàn quốc',
+                'Top 100 · $formatLabel',
                 style: TextStyle(
                   fontSize: 12,
                   color: colors.textMuted,
@@ -173,6 +185,15 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         ],
       ),
     );
+  }
+
+  String _formatLabel(String matchType, String? gender) {
+    if (matchType == 'SINGLES' && gender == 'MALE') return 'Đơn nam';
+    if (matchType == 'SINGLES' && gender == 'FEMALE') return 'Đơn nữ';
+    if (matchType == 'DOUBLES' && gender == 'MALE') return 'Đôi nam';
+    if (matchType == 'DOUBLES' && gender == 'FEMALE') return 'Đôi nữ';
+    if (matchType == 'MIXED_DOUBLES') return 'Đôi nam nữ';
+    return 'ELO toàn quốc';
   }
 
   // ─── Sport chips ───────────────────────────────────────────────────────
@@ -227,6 +248,101 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     );
   }
 
+  Widget _buildRankingFilters(AppColorsExtension colors) {
+    const formats = [
+      ('SINGLES', 'MALE', 'Đơn nam'),
+      ('SINGLES', 'FEMALE', 'Đơn nữ'),
+      ('DOUBLES', 'MALE', 'Đôi nam'),
+      ('DOUBLES', 'FEMALE', 'Đôi nữ'),
+      ('MIXED_DOUBLES', 'MIXED', 'Đôi nam nữ'),
+    ];
+
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: formats.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final format = formats[index];
+          final selected = _selectedMatchType == format.$1 &&
+              _selectedGender == format.$2;
+          return ChoiceChip(
+            label: Text(format.$3),
+            selected: selected,
+            onSelected: (_) => setState(() {
+              _selectedMatchType = format.$1;
+              _selectedGender = format.$2;
+            }),
+            showCheckmark: false,
+            selectedColor: AppTheme.primary,
+            backgroundColor: colors.bgCard,
+            side: BorderSide(
+              color: selected ? AppTheme.primary : colors.border,
+            ),
+            labelStyle: TextStyle(
+              color: selected ? Colors.white : colors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+          );
+        },
+      ),
+    );
+  }
+
+  // ─── Province filter ───────────────────────────────────────────────────
+  Widget _buildProvinceFilter(AppColorsExtension colors) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          Icon(Icons.location_on_outlined, size: 16, color: colors.textMuted),
+          const SizedBox(width: 8),
+          Text(
+            'Tỉnh/Thành:',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.textSecondary),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Container(
+              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: colors.bgCard,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: colors.border),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedProvince,
+                  isExpanded: true,
+                  hint: Text('Tất cả', style: TextStyle(fontSize: 13, color: colors.textSecondary)),
+                  icon: Icon(Icons.arrow_drop_down_rounded, size: 20, color: colors.textMuted),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: colors.textPrimary),
+                  dropdownColor: colors.bgCard,
+                  onChanged: (val) => setState(() => _selectedProvince = val),
+                  items: [
+                    DropdownMenuItem<String>(
+                      value: null,
+                      child: Text('Tất cả', style: TextStyle(color: colors.textSecondary)),
+                    ),
+                    ...ProvinceData.all.map((p) => DropdownMenuItem<String>(
+                      value: p.code,
+                      child: Text(p.name),
+                    )),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─── Search bar ────────────────────────────────────────────────────────
   Widget _buildSearchBar(AppColorsExtension colors) {
     return Padding(
@@ -242,7 +358,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           onChanged: (v) => setState(() => _query = v.trim()),
           style: TextStyle(color: colors.textPrimary, fontSize: 14),
           decoration: InputDecoration(
-            hintText: 'Tìm vận động viên, xem hạng của họ...',
+            hintText: 'Tìm tên, Gmail hoặc SĐT...',
             hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
             prefixIcon: Icon(Icons.search_rounded, color: colors.textMuted, size: 20),
             suffixIcon: _query.isNotEmpty
@@ -301,8 +417,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Vận động viên có thể nằm ngoài Top 100.',
+                  'Vận động viên có thể nằm ngoài Top 100 hoặc chưa tham gia giải đấu.',
                   style: TextStyle(fontSize: 12, color: colors.textMuted),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -341,7 +458,36 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           itemBuilder: (context, index) {
             if (index == 0) {
               if (hasPodium) {
-                return PodiumView(rankings: rankings, tiers: tierList);
+                return Column(
+                  children: [
+                    PodiumView(rankings: rankings, tiers: tierList),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Toàn bộ xếp hạng',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: colors.textPrimary,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          Text(
+                            'Cập nhật vừa rồi',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
               }
               return const SizedBox(height: 8);
             }

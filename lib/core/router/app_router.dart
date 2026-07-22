@@ -39,15 +39,24 @@ import 'package:app_quanly_giaidau/features/profile/screens/change_password_scre
 import 'package:app_quanly_giaidau/features/profile/screens/settings_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/user_ranking_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/admin/screens/admin_clubs_screen.dart';
+import 'package:app_quanly_giaidau/features/admin/screens/change_requests_screen.dart';
+import 'package:app_quanly_giaidau/features/admin/screens/disputes_screen.dart';
+import 'package:app_quanly_giaidau/features/admin/screens/transactions_screen.dart';
+import 'package:app_quanly_giaidau/features/admin/screens/verification_screen.dart';
 import 'package:app_quanly_giaidau/features/referee/screens/referee_invites_screen.dart';
 import 'package:app_quanly_giaidau/features/live/screens/live_match_screen.dart';
 
 import 'package:app_quanly_giaidau/features/register/screens/tournament_register_screen.dart';
+import 'package:app_quanly_giaidau/features/register/screens/doubles_registration_screen.dart';
 import 'package:app_quanly_giaidau/features/register/screens/join_invite_screen.dart';
 import 'package:app_quanly_giaidau/features/register/screens/join_team_screen.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/features/dashboard/screens/dashboard_screen.dart';
 import 'package:app_quanly_giaidau/features/dashboard/screens/organizer_lite_screen.dart';
 import 'package:app_quanly_giaidau/features/series/screens/series_screen.dart';
+import 'package:app_quanly_giaidau/features/series/screens/series_detail_screen.dart';
+import 'package:app_quanly_giaidau/features/match/screens/matches_list_screen.dart';
+import 'package:app_quanly_giaidau/features/chat/screens/chat_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -81,7 +90,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           !currentPath.startsWith('/club') &&
           !currentPath.startsWith('/tournament') &&
           !currentPath.startsWith('/live-matches') &&
-          !currentPath.startsWith('/live')) {
+          !currentPath.startsWith('/live') &&
+          !currentPath.startsWith('/matches') &&
+          !currentPath.startsWith('/chat') &&
+          !currentPath.startsWith('/series')) {
         return '/home';
       }
 
@@ -230,6 +242,22 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'clubs',
             builder: (context, state) => const AdminClubsScreen(),
+          ),
+          GoRoute(
+            path: 'change-requests',
+            builder: (context, state) => const AdminChangeRequestsScreen(),
+          ),
+          GoRoute(
+            path: 'disputes',
+            builder: (context, state) => const AdminDisputesScreen(),
+          ),
+          GoRoute(
+            path: 'transactions',
+            builder: (context, state) => const AdminTransactionsScreen(),
+          ),
+          GoRoute(
+            path: 'verification',
+            builder: (context, state) => const AdminVerificationScreen(),
           ),
         ],
       ),
@@ -434,11 +462,58 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      GoRoute(
+        path: '/register/:id/doubles',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          final inviteCode = state.uri.queryParameters['invite'];
+          final divId = state.uri.queryParameters['divisionId'] ?? '';
+          // Division info passed via extra
+          final extra = state.extra;
+          return DoublesRegistrationFlow(
+            tournamentId: id,
+            division: extra as TournamentDivisionOption,
+            inviteCode: inviteCode,
+          );
+        },
+      ),
 
       // ─── Series ───
       GoRoute(
         path: '/series',
         builder: (context, state) => const SeriesScreen(),
+      ),
+      GoRoute(
+        path: '/series/:slug',
+        builder: (context, state) {
+          final slug = state.pathParameters['slug']!;
+          return SeriesDetailScreen(slug: slug);
+        },
+      ),
+
+      // ─── Matches List ───
+      GoRoute(
+        path: '/matches',
+        builder: (context, state) => const MatchesListScreen(),
+      ),
+
+      // ─── Chat ───
+      GoRoute(
+        path: '/chat',
+        builder: (context, state) => const ChatScreen(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              final conversation = state.extra;
+              return ChatDetailScreen(
+                conversationId: id,
+                conversation: conversation as dynamic,
+              );
+            },
+          ),
+        ],
       ),
 
       // ─── Dashboard ───

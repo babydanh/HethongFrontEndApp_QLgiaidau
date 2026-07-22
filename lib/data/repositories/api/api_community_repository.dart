@@ -338,4 +338,16 @@ class ApiCommunityRepository implements ICommunityRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<void> deleteCommunity(String communityId) async {
+    _log.info('Xoá CLB: $communityId');
+    try {
+      await _dioClient.dio.delete('/communities/$communityId');
+      _log.success('Xoá CLB thành công: $communityId');
+    } catch (e, stack) {
+      _log.error('Lỗi xoá CLB', e, stack);
+      rethrow;
+    }
+  }
 }

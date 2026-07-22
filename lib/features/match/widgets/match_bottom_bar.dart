@@ -59,7 +59,7 @@ class MatchBottomBar extends ConsumerWidget {
                   icon: Icons.emoji_events_rounded,
                   color: const Color(0xFF2979FF),
                   loading: state.isSubmitting,
-                  onTap: state.isMatchComplete && state.winnerTeam == 1
+                  onTap: notifier.canCompleteAs(1)
                       ? () => notifier.completeMatch(1)
                       : null,
                 ),
@@ -72,7 +72,7 @@ class MatchBottomBar extends ConsumerWidget {
                   icon: Icons.emoji_events_rounded,
                   color: const Color(0xFFEA580C),
                   loading: state.isSubmitting,
-                  onTap: state.isMatchComplete && state.winnerTeam == 2
+                  onTap: notifier.canCompleteAs(2)
                       ? () => notifier.completeMatch(2)
                       : null,
                 ),

@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class TournamentCardWithBanner extends ConsumerStatefulWidget {
   final Tournament tournament;
@@ -95,15 +96,20 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
     final mt = matchType.toUpperCase();
     final gr = genderRestriction?.toUpperCase() ?? '';
     if (mt == 'SINGLES') {
-      return gr == 'FEMALE' ? 'Đơn Nữ' : 'Đơn Nam';
+      if (gr == 'FEMALE') return 'Đơn Nữ';
+      if (gr == 'MALE') return 'Đơn Nam';
+      return 'Đơn';
     }
     if (mt == 'DOUBLES') {
-      return gr == 'FEMALE' ? 'Đôi Nữ' : 'Đôi Nam';
+      if (gr == 'FEMALE') return 'Đôi Nữ';
+      if (gr == 'MALE') return 'Đôi Nam';
+      if (gr == 'MIXED') return 'Đôi Nam Nữ';
+      return 'Đôi';
     }
     if (mt == 'MIXED_DOUBLES' || mt == 'MIXED' || gr == 'MIXED') {
       return 'Đôi Nam Nữ';
     }
-    return mt == 'DOUBLES' ? 'Đôi' : mt == 'SINGLES' ? 'Đơn' : 'Đôi Nam Nữ';
+    return mt == 'DOUBLES' ? 'Đôi' : (mt == 'SINGLES' ? 'Đơn' : 'Đôi Nam Nữ');
   }
 
   List<String> _getCategoryChips(Tournament t) {
@@ -122,55 +128,36 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
     if (chips.isEmpty) {
       final nameLower = t.name.toLowerCase();
       final descLower = t.description.toLowerCase();
-      if (nameLower.contains("đơn nam") || descLower.contains("đơn nam")) {
-        chips.add("Đơn Nam");
-      }
-      if (nameLower.contains("đơn nữ") || descLower.contains("đơn nữ")) {
+      
+      // Safely check gender from divisions if available
+      final divGender = t.divisions.isNotEmpty ? (t.divisions.first.genderRestriction ?? '').toLowerCase() : '';
+
+      // Check Female
+      if (divGender == 'female' || nameLower.contains("đơn nữ") || descLower.contains("đơn nữ")) {
         chips.add("Đơn Nữ");
-      }
-      if (nameLower.contains("đôi nam nữ") || descLower.contains("đôi nam nữ") || nameLower.contains("nam nữ") || descLower.contains("nam nữ")) {
-        chips.add("Đôi Nam Nữ");
-      }
-      if ((nameLower.contains("đôi nam") || descLower.contains("đôi nam")) && !nameLower.contains("đôi nam nữ") && !descLower.contains("đôi nam nữ")) {
-        chips.add("Đôi Nam");
-      }
-      if (nameLower.contains("đôi nữ") || descLower.contains("đôi nữ")) {
+      } else if (divGender == 'female' || nameLower.contains("đôi nữ") || descLower.contains("đôi nữ")) {
         chips.add("Đôi Nữ");
       }
-      if (nameLower.contains("đồng đội") || descLower.contains("đồng đội")) {
-        chips.add("Đồng đội");
+      // Check Mixed
+      else if (divGender == 'mixed' || nameLower.contains("đôi nam nữ") || descLower.contains("đôi nam nữ") || nameLower.contains("nam nữ")) {
+        chips.add("Đôi Nam Nữ");
       }
-      if (nameLower.contains("đôi") || descLower.contains("đôi")) {
-        if (!chips.any((c) => c.contains("Đôi"))) {
-          chips.add("Đôi");
-        }
+      // Check Male
+      else if (nameLower.contains("đơn nam") || descLower.contains("đơn nam")) {
+        chips.add("Đơn Nam");
+      } else if (nameLower.contains("đôi nam") || descLower.contains("đôi nam")) {
+        chips.add("Đôi Nam");
       }
-      if (nameLower.contains("đơn") || descLower.contains("đơn")) {
-        if (!chips.any((c) => c.contains("Đơn"))) {
-          chips.add("Đơn");
-        }
+      // Generic Singles / Doubles
+      else if (nameLower.contains("đôi") || descLower.contains("đôi") || t.format == "doubles" || t.maxPlayersPerTeam == 2) {
+        chips.add(divGender == 'female' ? "Đôi Nữ" : (divGender == 'mixed' ? "Đôi Nam Nữ" : "Đôi Nam"));
+      } else if (nameLower.contains("đơn") || descLower.contains("đơn") || t.format == "singles" || t.maxPlayersPerTeam == 1) {
+        chips.add(divGender == 'female' ? "Đơn Nữ" : "Đơn Nam");
       }
     }
     if (chips.isEmpty) {
-      final sportNameLower = t.sport.toLowerCase() == 'badminton' ? 'cầu lông' : (t.sport.toLowerCase() == 'table_tennis' ? 'bóng bàn' : t.sport.toLowerCase());
-      if (t.category != null && t.category!.isNotEmpty && 
-          t.category!.toLowerCase() != t.sport.toLowerCase() &&
-          t.category!.toLowerCase() != sportNameLower) {
-        final catLower = t.category!.toLowerCase();
-        if (catLower == "singles" || catLower == "đơn") {
-          chips.add("Đơn");
-        } else if (catLower == "doubles" || catLower == "đôi") {
-          chips.add("Đôi");
-        } else {
-          chips.add(t.category!);
-        }
-      } else {
-        if (t.format == "doubles" || t.maxPlayersPerTeam == 2) {
-          chips.add("Đôi");
-        } else {
-          chips.add("Đơn");
-        }
-      }
+      final isDoubles = t.format == "doubles" || t.maxPlayersPerTeam == 2;
+      chips.add(isDoubles ? "Đôi Nam" : "Đơn Nam");
     }
     return chips.toSet().toList();
   }
@@ -272,7 +259,7 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
               child: Stack(
                 children: [
                   Container(
-                    height: 150,
+                    height: 170,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: Colors.blue.shade100,
@@ -295,109 +282,25 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                     ),
                     child: !hasBanner
                         ? Center(
-                            child: Image.asset(
-                              "assets/images/vndc_sport.png",
+                            child: SvgPicture.asset(
+                              "assets/images/vndcsport.svg",
                               width: 140,
                               fit: BoxFit.contain,
-                              color: Colors.white.withValues(alpha: 0.8),
-                              colorBlendMode: BlendMode.srcIn,
                             ),
                           )
                         : null,
                   ),
-                  // Bookmark button top-right
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _isFollowLoading ? null : () => _toggleFollow(context),
-                        customBorder: const CircleBorder(),
-                        child: Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: isFollowing
-                                ? const Color(0xFF2563EB).withValues(alpha: 0.14)
-                                : Colors.white.withValues(alpha: 0.92),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.08),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              )
-                            ],
-                          ),
-                          child: Center(
-                            child: _isFollowLoading
-                                ? const SizedBox(
-                                    width: 15,
-                                    height: 15,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : Icon(
-                                    isFollowing
-                                        ? Icons.bookmark_rounded
-                                        : Icons.bookmark_border_rounded,
-                                    size: 18,
-                                    color: isFollowing
-                                        ? AppTheme.primary
-                                        : const Color(0xFF1E293B),
-                                  ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                   // Status badge top-left
                   Positioned(
-                    top: 12,
-                    left: 12,
+                    top: 10,
+                    left: 10,
                     child: StatusBadge(statusKey: widget.tournament.status),
-                  ),
-                  // Location badge bottom-left
-                  Positioned(
-                    bottom: 12,
-                    left: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(100),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          )
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.location_on, size: 12, color: Color(0xFFF43F5E)),
-                          const SizedBox(width: 4),
-                          Text(
-                            widget.tournament.locationAddress != null && widget.tournament.locationAddress!.isNotEmpty
-                                ? (widget.tournament.locationAddress!.split(',').last.trim().toUpperCase())
-                                : 'CHƯA CẬP NHẬT',
-                            style: const TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF1E293B),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -407,8 +310,8 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                   // Vertical divider
                   Container(
                     width: 1,
-                    height: 52,
-                    margin: const EdgeInsets.symmetric(horizontal: 12),
+                    height: 48,
+                    margin: const EdgeInsets.symmetric(horizontal: 10),
                     color: colors.border.withValues(alpha: 0.6),
                   ),
                   
@@ -450,20 +353,20 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                             ],
                           ],
                         ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 3),
                         // Row 2: Title
                         Text(
                           widget.tournament.name,
                           style: TextStyle(
-                            fontSize: 14.5,
+                            fontSize: 14.0,
                             fontWeight: FontWeight.bold,
                             color: colors.textPrimary,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 6),
-                        // Row 3: Fee & Format/Division
+                        const SizedBox(height: 4),
+                        // Row 3: Fee & Format/Division Chips
                         Wrap(
                           spacing: 6,
                           runSpacing: 4,
@@ -476,7 +379,7 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                               style: const TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF10B981), // Emerald green
+                                color: Color(0xFF10B981),
                               ),
                             ),
                             Text(
@@ -486,19 +389,11 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                                 color: colors.textMuted,
                               ),
                             ),
-                            Text(
-                              "HÌNH THỨC:",
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                color: colors.textMuted,
-                              ),
-                            ),
                             if (categoryChips.isNotEmpty)
                               ...categoryChips.map((chipText) => Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF1F5F9), // Slate 100
+                                  color: const Color(0xFFF1F5F9),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -506,7 +401,7 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                                   style: const TextStyle(
                                     fontSize: 9.5,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF475569), // Slate 600
+                                    color: Color(0xFF475569),
                                   ),
                                 ),
                               ))
@@ -514,7 +409,7 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF1F5F9), // Slate 100
+                                  color: const Color(0xFFF1F5F9),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -524,7 +419,7 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                                   style: const TextStyle(
                                     fontSize: 9.5,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF475569), // Slate 600
+                                    color: Color(0xFF475569),
                                   ),
                                 ),
                               ),

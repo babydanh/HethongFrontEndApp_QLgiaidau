@@ -7,8 +7,10 @@ import 'package:app_quanly_giaidau/domain/entities/organizer_lite.dart';
 import 'package:app_quanly_giaidau/providers/organizer_lite_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 class OrganizerLiteScreen extends ConsumerStatefulWidget {
   const OrganizerLiteScreen({super.key, required this.tournamentId});
@@ -26,7 +28,7 @@ class _OrganizerLiteScreenState extends ConsumerState<OrganizerLiteScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -99,6 +101,8 @@ class _OrganizerLiteScreenState extends ConsumerState<OrganizerLiteScreen>
                 Tab(text: 'Đội / VĐV'),
                 Tab(text: 'Lịch đấu'),
                 Tab(text: 'Trọng tài'),
+                Tab(text: 'Tài chính'),
+                Tab(text: 'Phân quyền'),
               ],
             ),
           ),
@@ -122,6 +126,12 @@ class _OrganizerLiteScreenState extends ConsumerState<OrganizerLiteScreen>
                       refereesAsync: refereesAsync,
                       matches: matchesAsync.asData?.value ?? const [],
                     ),
+                    _FinanceTab(
+                      tournament: tournament,
+                      teamCount: teamsAsync.asData?.value.length ?? 0,
+                      teams: teamsAsync.asData?.value ?? const [],
+                    ),
+                    _PermissionsTab(tournament: tournament),
                   ],
                 ),
               ),
@@ -824,6 +834,454 @@ class _EmptyStateText extends StatelessWidget {
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 13, color: context.colors.textMuted),
         ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════
+//  TAB 5: TÀI CHÍNH (Finance)
+// ═══════════════════════════════════════════
+class _FinanceTab extends StatelessWidget {
+  const _FinanceTab({
+    required this.tournament,
+    required this.teamCount,
+    required this.teams,
+  });
+
+  final dynamic tournament;
+  final int teamCount;
+  final List<dynamic> teams;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final fmt = NumberFormat('#,###', 'vi_VN');
+    final entryFee = tournament.entryFee ?? 0.0;
+    final totalRevenue = entryFee * teamCount;
+    final hasFee = entryFee > 0;
+
+    // Tính số đội đã thanh toán (giả lập — dùng team status)
+    // Trong thực tế, gọi API payments riêng
+    final potentialRevenue = hasFee ? entryFee * tournament.maxTeams : 0.0;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      children: [
+        // Revenue overview
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [const Color(0xFF064E3B), const Color(0xFF065F46)],
+            ),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 44, height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Tổng doanh thu', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                      const SizedBox(height: 4),
+                      Text(
+                        hasFee ? '${fmt.format(totalRevenue.ceil())}đ' : 'Miễn phí',
+                        style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (hasFee) ...[
+                _financeInfoRow(context, 'Phí tham gia', '${fmt.format(entryFee.ceil())}đ/đội', Colors.white70),
+                const SizedBox(height: 6),
+                _financeInfoRow(context, 'Số đội đã đăng ký', '$teamCount/${tournament.maxTeams}', Colors.white70),
+                const SizedBox(height: 6),
+                _financeInfoRow(context, 'Doanh thu tối đa', '${fmt.format(potentialRevenue.ceil())}đ', Colors.white70),
+              ] else ...[
+                _financeInfoRow(context, 'Giải đấu miễn phí', 'Không thu phí tham gia', Colors.white70),
+                const SizedBox(height: 6),
+                _financeInfoRow(context, 'Số đội đã đăng ký', '$teamCount/${tournament.maxTeams}', Colors.white70),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Revenue details
+        _sectionLabel('CHI TIẾT DOANH THU', colors),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            children: [
+              _detailRow(context, 'Phí tham gia mỗi đội', hasFee ? '${fmt.format(entryFee.ceil())}đ' : 'Miễn phí', colors),
+              const Divider(height: 1, color: Colors.transparent),
+              _detailRow(context, 'Số đội tối đa', '${tournament.maxTeams}', colors),
+              const Divider(height: 1, color: Colors.transparent),
+              _detailRow(context, 'Đội đã đăng ký', '$teamCount', colors),
+              const Divider(height: 1, color: Colors.transparent),
+              _detailRow(context, 'Còn trống', '${tournament.maxTeams - teamCount}', colors),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Status info
+        _sectionLabel('THÔNG TIN THANH TOÁN', colors),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 16, color: colors.textMuted),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Quản lý thanh toán chi tiết và đối soát trên trang web để có trải nghiệm tốt nhất.',
+                      style: TextStyle(fontSize: 12, color: colors.textMuted, height: 1.4),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                  label: const Text('Xem trên web'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primary,
+                    side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.3)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _financeInfoRow(BuildContext context, String label, String value, Color textColor) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(label, style: TextStyle(fontSize: 12, color: textColor)),
+        ),
+        Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+      ],
+    );
+  }
+
+  Widget _sectionLabel(String text, AppColorsExtension colors) {
+    return Text(
+      text,
+      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: colors.textSecondary, letterSpacing: 0.5),
+    );
+  }
+
+  Widget _detailRow(BuildContext context, String label, String value, AppColorsExtension colors) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label, style: TextStyle(fontSize: 13, color: colors.textSecondary)),
+          ),
+          Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: colors.textPrimary)),
+        ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════
+//  TAB 6: PHÂN QUYỀN (Permissions)
+// ═══════════════════════════════════════════
+class _PermissionsTab extends StatelessWidget {
+  const _PermissionsTab({required this.tournament});
+
+  final dynamic tournament;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    // Extract staff info from tournament
+    final creatorName = tournament.creatorFullName ?? 'Chưa có';
+    final creatorAvatar = tournament.creatorAvatarUrl ?? '';
+    final visibility = tournament.visibility ?? 'PUBLIC';
+    final adminToken = tournament.adminToken ?? '';
+    final refereeToken = tournament.refereeToken ?? '';
+    final viewerToken = tournament.viewerToken ?? '';
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      children: [
+        // Creator info
+        _sectionLabel('NGƯỜI TẠO GIẢI', colors),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border),
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
+                backgroundImage: creatorAvatar.isNotEmpty ? NetworkImage(creatorAvatar) : null,
+                child: creatorAvatar.isEmpty
+                    ? Text(
+                        creatorName.isNotEmpty ? creatorName[0].toUpperCase() : '?',
+                        style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w800, fontSize: 18),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(creatorName, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: colors.textPrimary)),
+                    const SizedBox(height: 2),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text('Chủ giải', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.primary)),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.verified_rounded, color: AppTheme.primary, size: 22),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Roles & Access
+        _sectionLabel('VAI TRÒ & TRUY CẬP', colors),
+        const SizedBox(height: 8),
+        _roleCard(
+          context,
+          icon: Icons.shield_rounded,
+          title: 'Admin',
+          subtitle: 'Toàn quyền quản lý giải đấu',
+          color: const Color(0xFFEF4444),
+          token: adminToken,
+          tokenLabel: 'Mã Admin',
+        ),
+        const SizedBox(height: 8),
+        _roleCard(
+          context,
+          icon: Icons.gavel_rounded,
+          title: 'Trọng tài',
+          subtitle: 'Cập nhật tỷ số, quản lý trận đấu',
+          color: AppTheme.refereeColor,
+          token: refereeToken,
+          tokenLabel: 'Mã Trọng tài',
+        ),
+        const SizedBox(height: 8),
+        _roleCard(
+          context,
+          icon: Icons.visibility_rounded,
+          title: 'Người xem',
+          subtitle: 'Chỉ xem kết quả và bảng xếp hạng',
+          color: const Color(0xFF10B981),
+          token: viewerToken,
+          tokenLabel: 'Mã Xem',
+        ),
+        const SizedBox(height: 20),
+
+        // Visibility setting
+        _sectionLabel('CÀI ĐẶT HIỂN THỊ', colors),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42, height: 42,
+                decoration: BoxDecoration(
+                  color: (visibility == 'PUBLIC' ? const Color(0xFF10B981) : const Color(0xFFF59E0B)).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(
+                  visibility == 'PUBLIC' ? Icons.public_rounded : Icons.lock_rounded,
+                  color: visibility == 'PUBLIC' ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Hiển thị', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                    Text(
+                      visibility == 'PUBLIC' ? 'Công khai — Ai cũng có thể xem' : 'Riêng tư — Chỉ người có mã mới xem được',
+                      style: TextStyle(fontSize: 11, color: colors.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Info note
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E3A5F).withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFF1E3A5F).withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.info_outline_rounded, size: 18, color: const Color(0xFF60A5FA)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Chia sẻ mã tương ứng để cấp quyền truy cập cho từng vai trò. Mỗi mã chỉ dùng 1 lần.',
+                  style: TextStyle(fontSize: 12, color: const Color(0xFF93C5FD), height: 1.4),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _sectionLabel(String text, AppColorsExtension colors) {
+    return Text(
+      text,
+      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: colors.textSecondary, letterSpacing: 0.5),
+    );
+  }
+
+  Widget _roleCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required String token,
+    required String tokenLabel,
+  }) {
+    final colors = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42, height: 42,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.textPrimary)),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: TextStyle(fontSize: 11, color: colors.textMuted)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (token.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.vpn_key_rounded, size: 14, color: colors.textMuted),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      token,
+                      style: TextStyle(fontSize: 11, color: colors.textMuted, fontFamily: 'monospace'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: token));
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Đã sao chép $tokenLabel'),
+                        backgroundColor: const Color(0xFF10B981),
+                        behavior: SnackBarBehavior.floating,
+                        duration: const Duration(seconds: 2),
+                      ));
+                    },
+                    child: Icon(Icons.copy_rounded, size: 16, color: colors.textMuted),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

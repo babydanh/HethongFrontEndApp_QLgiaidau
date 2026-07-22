@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
+import 'package:app_quanly_giaidau/core/utils/ranking_query_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/domain/repositories/ranking_repository.dart';
@@ -15,13 +16,20 @@ class ApiRankingRepository implements IRankingRepository {
     int? page,
     int? limit,
     String? categoryId,
+    String? matchType,
+    String? genderRestriction,
+    String? provinceCode,
   }) async {
     _log.info('Tải bảng xếp hạng: page=$page, limit=$limit, categoryId=$categoryId');
     try {
-      final queryParams = <String, dynamic>{};
-      if (page != null) queryParams['page'] = page;
-      if (limit != null) queryParams['limit'] = limit;
-      if (categoryId != null) queryParams['categoryId'] = categoryId;
+      final queryParams = buildRankingQueryParams(
+        categoryId: categoryId,
+        matchType: matchType,
+        genderRestriction: genderRestriction,
+        provinceCode: provinceCode,
+        page: page ?? 1,
+        limit: limit ?? 100,
+      );
 
       final response = await _dioClient.dio.get(
         '/rankings',

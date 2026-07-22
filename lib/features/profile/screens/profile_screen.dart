@@ -264,7 +264,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _buildUserInfo(context, profile),
           const SizedBox(height: 20),
 
-          // Tab bar selector
+          // Tab bar selector (2 Tabs)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
@@ -278,13 +278,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: _buildTabButton(0, "Thông tin & Chỉ số"),
+                    child: _buildTabButton(0, "Thông tin & Tiện ích"),
                   ),
                   Expanded(
-                    child: _buildTabButton(1, "Cài đặt & Tiện ích"),
-                  ),
-                  Expanded(
-                    child: _buildTabButton(2, "Theo dõi"),
+                    child: _buildTabButton(1, "Theo dõi & Nghiên cứu"),
                   ),
                 ],
               ),
@@ -296,7 +293,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           if (_activeTab == 0) ...[
             // Dynamic rankings card list based on actual ELO and category ranks
             _buildRankingsSection(context),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
             // Info Section
             _buildSectionTitle(colors, 'Thông tin cá nhân'),
@@ -308,8 +305,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _buildSectionTitle(colors, 'Giải đấu của tôi'),
             const SizedBox(height: 10),
             _buildMyTournamentsSection(context),
-            const SizedBox(height: 32),
-          ] else if (_activeTab == 1) ...[
+            const SizedBox(height: 24),
+
             // Account Section
             _buildSectionTitle(colors, 'Tài khoản & Thiết lập'),
             const SizedBox(height: 10),
@@ -496,14 +493,44 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── USER INFO ──────────────────────────────────────────────────────
   Widget _buildUserInfo(BuildContext context, UserProfile profile) {
     final colors = context.colors;
+    final isEmailVerified = profile.isEmailVerified == true;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 46, 24, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            profile.fullName ?? 'Người dùng',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: colors.textPrimary, letterSpacing: -0.3),
+          Row(
+            children: [
+              Text(
+                profile.fullName ?? 'Người dùng',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: colors.textPrimary,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (profile.role != null && profile.role!.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Text(
+                    profile.role!.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.primary,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 4),
           Row(
@@ -511,104 +538,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Icon(Icons.email_outlined, size: 13, color: colors.textMuted),
               const SizedBox(width: 5),
               Expanded(
-                child: Text(
-                  profile.email ?? '',
-                  style: TextStyle(fontSize: 13, color: colors.textSecondary),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        profile.email ?? '',
+                        style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (isEmailVerified) ...[
+                      const SizedBox(width: 5),
+                      const Icon(
+                        Icons.verified_rounded,
+                        size: 15,
+                        color: Color(0xFF10B981),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: profile.isEmailVerified == true
-                  ? const Color(0xFF22C55E).withValues(alpha: 0.10)
-                  : colors.warning.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: profile.isEmailVerified == true
-                    ? const Color(0xFF22C55E).withValues(alpha: 0.22)
-                    : colors.warning.withValues(alpha: 0.22),
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: profile.isEmailVerified == true
-                        ? const Color(0xFF22C55E).withValues(alpha: 0.18)
-                        : colors.warning.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    profile.isEmailVerified == true
-                        ? Icons.verified_rounded
-                        : Icons.mark_email_unread_rounded,
-                    color: profile.isEmailVerified == true ? const Color(0xFF16A34A) : colors.warning,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        profile.isEmailVerified == true
-                            ? 'Email đã xác thực'
-                            : 'Email chưa xác thực',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        profile.isEmailVerified == true
-                            ? 'Tài khoản đã sẵn sàng cho các thao tác bảo mật.'
-                            : 'Xác minh email để hoàn tất bảo mật tài khoản và mở khóa các luồng xác nhận.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colors.textMuted,
-                          height: 1.35,
-                        ),
-                      ),
-                      if (profile.isEmailVerified != true) ...[
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 40,
-                          child: FilledButton.icon(
-                            onPressed: () => startEmailVerificationFlow(
-                              context,
-                              ref,
-                              profile.email ?? '',
-                            ),
-                            icon: const Icon(Icons.mail_outline_rounded, size: 16),
-                            label: const Text(
-                              'Xác minh ngay',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
-                            ),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppTheme.primary,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
           ),
           if (profile.bio != null && profile.bio!.isNotEmpty) ...[
             const SizedBox(height: 10),
@@ -620,34 +572,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: colors.border),
               ),
-              child: Text(profile.bio!, style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.4)),
+              child: Text(
+                profile.bio!,
+                style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.4),
+              ),
             ),
           ],
-          const SizedBox(height: 10),
-          // Role badge
-          if (profile.role != null && profile.role!.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.badge_rounded, size: 13, color: AppTheme.primary),
-                  const SizedBox(width: 6),
-                  Text(profile.role!, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.primary)),
-                ],
-              ),
-            ),
         ],
       ),
     );
   }
 
-  // ─── DYNAMIC RANKINGS SECTION ──────────────────────────────────────────
+  // ─── DYNAMIC RANKINGS SECTION (WEB-INSPIRED) ─────────────────────────
   Widget _buildRankingsSection(BuildContext context) {
     final colors = context.colors;
     final rankingsAsync = ref.watch(userRankingsProvider);
@@ -655,24 +591,47 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return rankingsAsync.when(
       data: (rankings) {
-        if (rankings.isEmpty) {
+        final playedRankings = rankings.where((r) => r.matchesPlayed > 0).toList();
+        if (playedRankings.isEmpty) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: colors.bgCard,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: colors.border),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.emoji_events_outlined, color: colors.textMuted, size: 24),
-                  const SizedBox(width: 12),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: colors.textMuted.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.shield_outlined, color: colors.textMuted, size: 26),
+                  ),
+                  const SizedBox(width: 14),
                   Expanded(
-                    child: Text(
-                      'Chưa có dữ liệu đấu xếp hạng ELO',
-                      style: TextStyle(color: colors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Chưa xếp hạng',
+                          style: TextStyle(
+                            color: colors.textPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Tham gia các giải đấu để có điểm ELO & cấp khiên hạng!',
+                          style: TextStyle(color: colors.textMuted, fontSize: 12),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -684,90 +643,201 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         final categories = categoriesAsync.asData?.value ?? [];
 
         return Column(
-          children: rankings.map((ranking) {
+          children: playedRankings.map((ranking) {
             final category = categories.firstWhere(
               (c) => c.id == ranking.categoryId,
-              orElse: () => CategoryModel(id: '', name: 'Bộ môn', slug: '', description: ''),
+              orElse: () => CategoryModel(id: '', name: 'Môn thể thao', slug: '', description: ''),
             );
             final categoryName = category.name.isNotEmpty ? category.name : 'Xếp hạng';
             
-            final tier = ranking.tierName.toLowerCase();
-            final List<Color> gradientColors;
-            if (tier.contains('vàng') || tier.contains('gold') || tier.contains('cao thủ')) {
-              gradientColors = const [Color(0xFFFFD700), Color(0xFFFFA500)];
-            } else if (tier.contains('bạc') || tier.contains('silver')) {
-              gradientColors = const [Color(0xFFB0C4DE), Color(0xFF708090)];
-            } else if (tier.contains('đồng') || tier.contains('bronze')) {
-              gradientColors = const [Color(0xFFCD7F32), Color(0xFF8B4513)];
-            } else {
-              gradientColors = const [Color(0xFF2563EB), Color(0xFF1D4ED8)];
-            }
+            final elo = ranking.eloPoints;
+            final winRate = ranking.winRate;
+            final matchesPlayed = ranking.matchesPlayed;
+            final matchesWon = ranking.matchesWon;
+            final matchesLost = ranking.matchesLost;
+
+            // Elo Progress calculation (Max 2500)
+            final double progressPercent = (elo / 2500.0).clamp(0.0, 1.0);
+            final int percentInt = (progressPercent * 100).toInt();
 
             return Container(
-              margin: const EdgeInsets.only(left: 20, right: 20, bottom: 12),
-              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.only(left: 20, right: 20, bottom: 14),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: gradientColors,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: gradientColors.first.withValues(alpha: 0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.3),
+                    blurRadius: 14,
+                    offset: const Offset(0, 5),
                   )
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Top Row: Category + Tier Badge + Elo Badge
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        categoryName.toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      if (ranking.tierName.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            ranking.tierName,
+                      Row(
+                        children: [
+                          const Icon(Icons.shield_rounded, color: Color(0xFF60A5FA), size: 20),
+                          const SizedBox(width: 6),
+                          Text(
+                            categoryName.toUpperCase(),
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.6,
                             ),
                           ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
                         ),
+                        child: Text(
+                          '$elo ELO',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
+
+                  // Middle Row: Donut Chart + Main Stats
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildRankStatItem('HẠNG', '#${ranking.rank}'),
-                      _buildRankStatItem('ELO', '${ranking.eloPoints}'),
-                      _buildRankStatItem('TỔNG TRẬN', '${ranking.matchesPlayed}'),
-                      _buildRankStatItem(
-                        'THẮNG / BẠI',
-                        '${ranking.matchesWon} / ${ranking.matchesLost}',
+                      // Circular Donut Chart (Winrate)
+                      SizedBox(
+                        width: 64,
+                        height: 64,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                              value: (winRate / 100.0).clamp(0.0, 1.0),
+                              strokeWidth: 6,
+                              backgroundColor: Colors.white.withValues(alpha: 0.15),
+                              color: const Color(0xFF34D399),
+                            ),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '${winRate.toStringAsFixed(0)}%',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                const Text(
+                                  'THẮNG',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                      _buildRankStatItem(
-                        'TỈ LỆ',
-                        '${ranking.winRate.toStringAsFixed(0)}%',
+                      const SizedBox(width: 18),
+
+                      // Rank & Match Details
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  ranking.tierName.isNotEmpty ? ranking.tierName : 'Tier D',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Hạng #${ranking.rank}',
+                                  style: const TextStyle(
+                                    color: Color(0xFF93C5FD),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Tổng $matchesPlayed trận · $matchesWon thắng / $matchesLost bại',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Bottom Bar: Progress Bar to Rank Up
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Tiến trình cấp hạng',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '$percentInt%',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: LinearProgressIndicator(
+                          value: progressPercent,
+                          minHeight: 7,
+                          backgroundColor: Colors.white.withValues(alpha: 0.15),
+                          color: const Color(0xFF60A5FA),
+                        ),
                       ),
                     ],
                   ),

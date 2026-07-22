@@ -7,6 +7,9 @@ import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart';
 
 class Province {
   final String code;
@@ -30,12 +33,18 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
+  static const _log = AppLogger('EditProfileScreen');
+
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   final _bioController = TextEditingController();
+  final _bankNameController = TextEditingController();
+  final _bankAccountNumberController = TextEditingController();
+  final _bankAccountNameController = TextEditingController();
+  final _deletePasswordController = TextEditingController();
 
   DateTime _selectedDate = DateTime(1995, 5, 15);
   String _selectedGender = 'Nam';
@@ -46,6 +55,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   bool _loadingProvinces = true;
   bool _isLoading = false;
   bool _isInitialized = false;
+
+  // OTP verification states
+  bool _isEmailVerified = false;
+  bool _isPhoneVerified = false;
+  bool _emailChanged = false;
+  bool _phoneChanged = false;
+  String? _originalEmail;
+  String? _originalPhone;
 
   final List<String> _genders = ['Nam', 'Nữ', 'Khác'];
 
@@ -105,6 +122,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _phoneController.dispose();
     _addressController.dispose();
     _bioController.dispose();
+    _bankNameController.dispose();
+    _bankAccountNumberController.dispose();
+    _bankAccountNameController.dispose();
+    _deletePasswordController.dispose();
     super.dispose();
   }
 
@@ -114,6 +135,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _emailController.text = profile.email ?? '';
     _phoneController.text = profile.phoneNumber ?? '';
     _addressController.text = profile.address ?? '';
+    _bankNameController.text = profile.bankName ?? '';
+    _bankAccountNumberController.text = profile.bankAccountNumber ?? '';
+    _bankAccountNameController.text = profile.bankAccountName ?? '';
+
+    _originalEmail = profile.email;
+    _originalPhone = profile.phoneNumber;
+    _isEmailVerified = profile.isEmailVerified ?? false;
+    _isPhoneVerified = profile.isPhoneVerified ?? false;
 
     if (profile.dateOfBirth != null && profile.dateOfBirth!.isNotEmpty) {
       final parsed = DateTime.tryParse(profile.dateOfBirth!);
@@ -250,6 +279,301 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
   }
 
+  // ─── OTP VERIFICATION ─────────────────────────────────────────────
+
+  Future<void> _verifyEmailWithOtp() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập email'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
+
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email không hợp lệ'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
+
+    if (email == _originalEmail && _isEmailVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email đã được xác minh'), behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
+
+    await startEmailVerificationFlow(context, ref, email);
+    if (!mounted) return;
+    
+    setState(() {
+      _isEmailVerified = true;
+      _emailChanged = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Email đã được xác minh thành công'),
+        backgroundColor: Color(0xFF10B981),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _verifyPhoneWithOtp() async {
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập số điện thoại'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
+
+    final cleanedPhone = phone.replaceAll(RegExp(r'[\s\-\.]'), '');
+    if (!RegExp(r'^(?:\+84|0)[3|5|7|8|9]\d{8}$').hasMatch(cleanedPhone)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Số điện thoại không hợp lệ'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
+
+    if (phone == _originalPhone && _isPhoneVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Số điện thoại đã được xác minh'), behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
+
+    // Request OTP for phone
+    try {
+      final dio = ref.read(dioProvider);
+      await dio.post('/auth/verify-phone/request', data: {'phoneNumber': cleanedPhone});
+    } catch (e) {
+      _log.error('Không thể gửi mã OTP đến SĐT', e);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể gửi mã OTP: $e'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+
+    // Show OTP input dialog
+    final tokenCtrl = TextEditingController();
+    var isSubmitting = false;
+    final messenger = ScaffoldMessenger.of(context);
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            Future<void> submitToken() async {
+              final token = tokenCtrl.text.trim();
+              if (token.isEmpty) {
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Vui lòng nhập mã xác minh')),
+                );
+                return;
+              }
+
+              setDialogState(() => isSubmitting = true);
+
+              try {
+                final dio = ref.read(dioProvider);
+                await dio.post('/auth/verify-phone/confirm', data: {
+                  'token': token,
+                  'phoneNumber': cleanedPhone,
+                });
+                if (!ctx.mounted) return;
+                Navigator.of(ctx).pop();
+                
+                if (mounted) {
+                  setState(() {
+                    _isPhoneVerified = true;
+                    _phoneChanged = true;
+                  });
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('Xác minh số điện thoại thành công'),
+                      backgroundColor: Color(0xFF10B981),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (!ctx.mounted) return;
+                messenger.showSnackBar(
+                  SnackBar(content: Text('Xác minh thất bại: $e')),
+                );
+              } finally {
+                if (ctx.mounted) setDialogState(() => isSubmitting = false);
+              }
+            }
+
+            return AlertDialog(
+              backgroundColor: context.colors.bgCard,
+              title: const Text('Xác minh số điện thoại'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Mã OTP đã được gửi đến $cleanedPhone. Nhập mã để hoàn tất.',
+                    style: TextStyle(color: context.colors.textSecondary),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: tokenCtrl,
+                    enabled: !isSubmitting,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Mã OTP',
+                      hintText: 'Nhập mã OTP từ tin nhắn',
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSubmitting ? null : () => Navigator.of(ctx).pop(),
+                  child: const Text('Hủy'),
+                ),
+                FilledButton(
+                  onPressed: isSubmitting ? null : submitToken,
+                  child: isSubmitting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Xác minh'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    tokenCtrl.dispose();
+  }
+
+  // ─── DELETE ACCOUNT ──────────────────────────────────────────────
+
+  Future<void> _confirmDeleteAccount() async {
+    final colors = context.colors;
+    final passwordCtrl = TextEditingController();
+    var isSubmitting = false;
+    final messenger = ScaffoldMessenger.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            Future<void> submitDelete() async {
+              final password = passwordCtrl.text;
+              if (password.isEmpty) {
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Vui lòng nhập mật khẩu')),
+                );
+                return;
+              }
+
+              setDialogState(() => isSubmitting = true);
+
+              try {
+                final dio = ref.read(dioProvider);
+                await dio.delete('/users/profile', data: {'password': password});
+                if (!ctx.mounted) return;
+                Navigator.of(ctx).pop(true);
+              } catch (e) {
+                if (!ctx.mounted) return;
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text('Xoá tài khoản thất bại: ${e.toString().replaceAll("Exception: ", "")}'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              } finally {
+                if (ctx.mounted) setDialogState(() => isSubmitting = false);
+              }
+            }
+
+            return AlertDialog(
+              backgroundColor: colors.bgCard,
+              title: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: colors.error),
+                  const SizedBox(width: 8),
+                  const Text('Xoá tài khoản'),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xoá vĩnh viễn.',
+                    style: TextStyle(color: colors.textSecondary),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: passwordCtrl,
+                    enabled: !isSubmitting,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Mật khẩu hiện tại',
+                      hintText: 'Nhập mật khẩu để xác nhận',
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSubmitting ? null : () => Navigator.of(ctx).pop(false),
+                  child: const Text('Huỷ'),
+                ),
+                FilledButton(
+                  onPressed: isSubmitting ? null : submitDelete,
+                  style: FilledButton.styleFrom(backgroundColor: colors.error),
+                  child: isSubmitting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Xoá tài khoản', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    passwordCtrl.dispose();
+
+    if (confirmed == true && mounted) {
+      await ref.read(authProvider.notifier).signOut(reason: 'Tài khoản đã được xoá');
+      if (!mounted) return;
+      context.go('/login');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tài khoản đã được xoá'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  // ─── SAVE ─────────────────────────────────────────────────────────
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -261,7 +585,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final formattedDate =
           '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}';
 
-      await repo.updateProfile({
+      final body = <String, dynamic>{
         'fullName': _fullNameController.text.trim(),
         'phoneNumber': _phoneController.text.trim(),
         'dateOfBirth': formattedDate,
@@ -269,7 +593,27 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         'address': _addressController.text.trim(),
         'provinceCode': _selectedProvince?.code,
         'bio': _bioController.text.trim(),
-      });
+      };
+
+      // Only send email if changed and verified
+      if (_emailChanged && _isEmailVerified) {
+        body['email'] = _emailController.text.trim();
+      }
+
+      // Only send phone if changed
+      if (_phoneChanged && _isPhoneVerified) {
+        body['phoneNumber'] = _phoneController.text.trim();
+      }
+
+      // Send bank fields
+      final bankName = _bankNameController.text.trim();
+      final bankAccountNumber = _bankAccountNumberController.text.trim();
+      final bankAccountName = _bankAccountNameController.text.trim();
+      if (bankName.isNotEmpty) body['bankName'] = bankName;
+      if (bankAccountNumber.isNotEmpty) body['bankAccountNumber'] = bankAccountNumber;
+      if (bankAccountName.isNotEmpty) body['bankAccountName'] = bankAccountName;
+
+      await repo.updateProfile(body);
 
       ref.invalidate(userProfileProvider);
 
@@ -300,6 +644,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       );
     }
   }
+
+  // ─── BUILD ────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -375,45 +721,67 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         const SizedBox(height: 18),
                         _FieldLabel(text: 'Email', colors: context.colors),
                         const SizedBox(height: 6),
-                        TextFormField(
-                          controller: _emailController,
-                          readOnly: true,
-                          style: TextStyle(color: context.colors.textPrimary),
-                          decoration: InputDecoration(
-                            hintText: 'example@domain.com',
-                            hintStyle: TextStyle(color: context.colors.textMuted, fontSize: 12),
-                            filled: true,
-                            fillColor: context.colors.bgSurface,
-                            prefixIcon: Icon(Icons.email_outlined, color: context.colors.textMuted),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: context.colors.border),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: AppTextFormField(
+                                controller: _emailController,
+                                hint: 'example@domain.com',
+                                keyboardType: TextInputType.emailAddress,
+                                prefixIcon: Icons.email_outlined,
+                                validator: (val) {
+                                  if (val != null && val.trim().isNotEmpty) {
+                                    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                                    if (!emailRegex.hasMatch(val.trim())) {
+                                      return 'Email không hợp lệ';
+                                    }
+                                  }
+                                  return null;
+                                },
+                                onChanged: (_) {
+                                  setState(() => _emailChanged = true);
+                                },
+                              ),
                             ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: context.colors.border.withValues(alpha: 0.5)),
+                            const SizedBox(width: 8),
+                            _buildVerifyButton(
+                              isVerified: _isEmailVerified,
+                              onVerify: _verifyEmailWithOtp,
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          ),
+                          ],
                         ),
                         const SizedBox(height: 18),
                         _FieldLabel(text: 'Số điện thoại', colors: context.colors),
                         const SizedBox(height: 6),
-                        AppTextFormField(
-                          controller: _phoneController,
-                          hint: '0987654321',
-                          keyboardType: TextInputType.phone,
-                          prefixIcon: Icons.phone_outlined,
-                          validator: (val) {
-                            if (val == null || val.trim().isEmpty) {
-                              return 'Vui lòng nhập số điện thoại';
-                            }
-                            final phone = val.trim().replaceAll(RegExp(r'[\s\-\.]'), '');
-                            if (!RegExp(r'^(?:\+84|0)[3|5|7|8|9]\d{8}$').hasMatch(phone)) {
-                              return 'Số điện thoại không hợp lệ (ví dụ: 0987654321)';
-                            }
-                            return null;
-                          },
+                        Row(
+                          children: [
+                            Expanded(
+                              child: AppTextFormField(
+                                controller: _phoneController,
+                                hint: '0987654321',
+                                keyboardType: TextInputType.phone,
+                                prefixIcon: Icons.phone_outlined,
+                                validator: (val) {
+                                  if (val == null || val.trim().isEmpty) {
+                                    return 'Vui lòng nhập số điện thoại';
+                                  }
+                                  final phone = val.trim().replaceAll(RegExp(r'[\s\-\.]'), '');
+                                  if (!RegExp(r'^(?:\+84|0)[3|5|7|8|9]\d{8}$').hasMatch(phone)) {
+                                    return 'Số điện thoại không hợp lệ (ví dụ: 0987654321)';
+                                  }
+                                  return null;
+                                },
+                                onChanged: (_) {
+                                  setState(() => _phoneChanged = true);
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _buildVerifyButton(
+                              isVerified: _isPhoneVerified,
+                              onVerify: _verifyPhoneWithOtp,
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 18),
                         _FieldLabel(text: 'Ngày sinh', colors: context.colors),
@@ -467,54 +835,171 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(14),
-                              gradient: context.primaryGradient,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.primary.withValues(alpha: 0.3),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // ─── BANK INFO SECTION ────────────────────────────
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: context.colors.bgCard,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: context.colors.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.account_balance_outlined, size: 18, color: context.colors.textSecondary),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Thông tin ngân hàng',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: context.colors.textPrimary,
+                              ),
                             ),
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _save,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Để nhận giải thưởng từ các giải đấu',
+                          style: TextStyle(fontSize: 11, color: context.colors.textMuted),
+                        ),
+                        const SizedBox(height: 16),
+                        _FieldLabel(text: 'Tên ngân hàng', colors: context.colors),
+                        const SizedBox(height: 6),
+                        AppTextFormField(
+                          controller: _bankNameController,
+                          hint: 'VD: Vietcombank, Techcombank...',
+                          prefixIcon: Icons.business_outlined,
+                        ),
+                        const SizedBox(height: 18),
+                        _FieldLabel(text: 'Số tài khoản', colors: context.colors),
+                        const SizedBox(height: 6),
+                        AppTextFormField(
+                          controller: _bankAccountNumberController,
+                          hint: 'Nhập số tài khoản',
+                          keyboardType: TextInputType.number,
+                          prefixIcon: Icons.pin_outlined,
+                        ),
+                        const SizedBox(height: 18),
+                        _FieldLabel(text: 'Chủ tài khoản', colors: context.colors),
+                        const SizedBox(height: 6),
+                        AppTextFormField(
+                          controller: _bankAccountNameController,
+                          hint: 'Nhập tên chủ tài khoản',
+                          prefixIcon: Icons.person_outline,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // ─── SAVE BUTTON ────────────────────────────────────
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    width: double.infinity,
+                    height: 52,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        gradient: context.primaryGradient,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primary.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _save,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Text(
+                                'Lưu thay đổi',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
                               ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2.5,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'Lưu thay đổi',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // ─── DELETE ACCOUNT ────────────────────────────────
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: context.colors.bgCard,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: context.colors.error.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.warning_amber_rounded, size: 18, color: context.colors.error),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Vùng nguy hiểm',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: context.colors.error,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Xoá tài khoản và tất cả dữ liệu của bạn. Hành động này không thể hoàn tác.',
+                          style: TextStyle(fontSize: 11, color: context.colors.textMuted),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: OutlinedButton.icon(
+                            onPressed: _confirmDeleteAccount,
+                            icon: const Icon(Icons.delete_forever_rounded, size: 18),
+                            label: const Text('Xoá tài khoản'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: context.colors.error,
+                              side: BorderSide(color: context.colors.error.withValues(alpha: 0.5)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -525,6 +1010,34 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           child: Text(
             'Lỗi tải hồ sơ: $e',
             style: TextStyle(color: context.colors.error),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVerifyButton({required bool isVerified, required VoidCallback onVerify}) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: isVerified ? const Color(0xFF10B981) : context.colors.bgSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isVerified ? const Color(0xFF10B981) : context.colors.border.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onVerify,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Icon(
+              isVerified ? Icons.verified_rounded : Icons.verified_outlined,
+              size: 20,
+              color: isVerified ? Colors.white : context.colors.textMuted,
+            ),
           ),
         ),
       ),

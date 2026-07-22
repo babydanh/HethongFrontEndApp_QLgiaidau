@@ -62,4 +62,8 @@ abstract class ICommunityRepository {
   /// Gỡ cấm thành viên.
   /// POST /communities/:id/unban/:userId
   Future<void> unbanMember(String communityId, String userId);
+
+  /// Xoá câu lạc bộ (OWNER only).
+  /// DELETE /communities/:id
+  Future<void> deleteCommunity(String communityId);
 }

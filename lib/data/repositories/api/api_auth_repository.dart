@@ -90,6 +90,28 @@ class ApiAuthRepository implements IAuthRepository {
   }
 
   @override
+  Future<AuthSession> loginWithFacebook(String accessToken) async {
+    _log.info('Đăng nhập bằng Facebook qua Mobile API');
+    try {
+      final response = await _dioClient.dio.post(
+        '/auth/mobile/facebook',
+        data: {
+          'accessToken': accessToken,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return _mapAuthSession(response.data);
+      }
+
+      throw Exception('Không tìm thấy thông tin xác thực Facebook');
+    } catch (e, stack) {
+      _log.error('Lỗi đăng nhập Facebook', e, stack);
+      throw Exception(ErrorParser.parse(e, 'Lỗi kết nối đến máy chủ'));
+    }
+  }
+
+  @override
   Future<void> requestEmailVerification() async {
     _log.info('Gửi yêu cầu xác minh email qua Mobile API');
     try {

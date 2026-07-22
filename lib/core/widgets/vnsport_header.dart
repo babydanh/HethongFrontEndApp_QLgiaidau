@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
+import 'package:flutter_svg/flutter_svg.dart';
+
 class VnsportHeader extends StatelessWidget {
   final bool isLoggedIn;
   final int elo;
@@ -44,26 +46,13 @@ class VnsportHeader extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Hero(
-                      tag: "vnsport_logo",
-                      child: SizedBox(
-                        height: 38,
-                        child: Image.asset(
-                          "assets/images/vndc_sport.png",
-                          fit: BoxFit.contain,
-                          alignment: Alignment.centerLeft,
-                          color: Colors.white,
-                          colorBlendMode: BlendMode.srcIn,
-                          errorBuilder: (context, error, stackTrace) => const Text(
-                            "VNSPORT",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
+                    const Text(
+                      'WSPORT',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 22,
+                        letterSpacing: 1.2,
                       ),
                     ),
                     _buildNotificationBell(context),
@@ -156,29 +145,156 @@ class VnsportHeader extends StatelessWidget {
   }
 
   Widget _buildStatsCard(BuildContext context) {
+    // Calculated win rate progress value (0.0 to 1.0)
+    final progress = (winRate / 100.0).clamp(0.0, 1.0);
+
     return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+        filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+            color: Colors.white.withValues(alpha: 0.16),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.28), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              )
+            ],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildStatItem(context, "ELO", "$elo"),
-              _buildDivider(),
-              _buildStatItem(context, "Tỉ lệ thắng", "${winRate.toStringAsFixed(1)}%"),
-              _buildDivider(),
-              _buildStatItem(context, "Xếp hạng", rank),
+              // Left: Circular Elo Progress Gauge Ring
+              SizedBox(
+                width: 52,
+                height: 52,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Background Ring
+                    SizedBox(
+                      width: 52,
+                      height: 52,
+                      child: CircularProgressIndicator(
+                        value: 1.0,
+                        strokeWidth: 4.5,
+                        color: Colors.white.withValues(alpha: 0.18),
+                      ),
+                    ),
+                    // Foreground Active Gradient Progress Ring
+                    SizedBox(
+                      width: 52,
+                      height: 52,
+                      child: CircularProgressIndicator(
+                        value: progress > 0 ? progress : 0.05,
+                        strokeWidth: 4.5,
+                        strokeCap: StrokeCap.round,
+                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)), // Gold / Neon Yellow
+                      ),
+                    ),
+                    // Center Star Icon / Badge
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFFB300),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0x66FFD700),
+                            blurRadius: 6,
+                          )
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.stars_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              // Middle: ELO Value & Tier Label
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "$elo ELO",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      rank.isNotEmpty ? rank : "Xếp hạng Quốc gia",
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Right: Stats Columns (Trận, Thắng, Rate)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildHeaderStatColumn("0", "Trận"),
+                  const SizedBox(width: 14),
+                  _buildHeaderStatColumn("0", "Thắng"),
+                  const SizedBox(width: 14),
+                  _buildHeaderStatColumn(
+                    "${winRate.toStringAsFixed(0)}%",
+                    "Rate",
+                    isRate: true,
+                  ),
+                ],
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHeaderStatColumn(String value, String label, {bool isRate = false}) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            color: isRate ? const Color(0xFF4ADE80) : Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.75),
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 

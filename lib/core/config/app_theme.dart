@@ -34,10 +34,19 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
 
   @override
   ThemeExtension<AppColorsExtension> copyWith({
-    Color? bgDark, Color? bgCard, Color? bgSurface, Color? bgElevated,
-    Color? textPrimary, Color? textSecondary, Color? textMuted,
-    Color? border, Color? borderLight,
-    Color? success, Color? warning, Color? error, Color? info,
+    Color? bgDark,
+    Color? bgCard,
+    Color? bgSurface,
+    Color? bgElevated,
+    Color? textPrimary,
+    Color? textSecondary,
+    Color? textMuted,
+    Color? border,
+    Color? borderLight,
+    Color? success,
+    Color? warning,
+    Color? error,
+    Color? info,
   }) {
     return AppColorsExtension(
       bgDark: bgDark ?? this.bgDark,
@@ -57,7 +66,10 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
   }
 
   @override
-  ThemeExtension<AppColorsExtension> lerp(ThemeExtension<AppColorsExtension>? other, double t) {
+  ThemeExtension<AppColorsExtension> lerp(
+    ThemeExtension<AppColorsExtension>? other,
+    double t,
+  ) {
     if (other is! AppColorsExtension) return this;
     return AppColorsExtension(
       bgDark: Color.lerp(bgDark, other.bgDark, t)!,
@@ -78,7 +90,8 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
 }
 
 extension AppThemeContext on BuildContext {
-  AppColorsExtension get colors => Theme.of(this).extension<AppColorsExtension>()!;
+  AppColorsExtension get colors =>
+      Theme.of(this).extension<AppColorsExtension>()!;
 
   LinearGradient get primaryGradient => const LinearGradient(
     begin: Alignment.topLeft,
@@ -118,10 +131,10 @@ class AppTheme {
   static const Color viewerColor = Color(0xFF3B82F6);
 
   // ─── Constants ───
-  static const double radiusSmall = 8.0;
-  static const double radiusMedium = 12.0;
-  static const double radiusLarge = 16.0;
-  static const double radiusXL = 24.0;
+  static const double radiusSmall = 6.0;
+  static const double radiusMedium = 8.0;
+  static const double radiusLarge = 10.0;
+  static const double radiusXL = 12.0;
 
   static const double spacingXS = 4.0;
   static const double spacingSM = 8.0;
@@ -137,8 +150,12 @@ class AppTheme {
     bgSurface: Color(0xFF161616),
     bgElevated: Color(0xFF222222),
     textPrimary: Color(0xFFF5F5F5),
-    textSecondary: Color(0xFFE5E5E5), // Brighter grey (neutral-200/300) for dark mode readability
-    textMuted: Color(0xFFA3A3A3),     // Brighter muted grey (neutral-400) for contrast
+    textSecondary: Color(
+      0xFFE5E5E5,
+    ), // Brighter grey (neutral-200/300) for dark mode readability
+    textMuted: Color(
+      0xFFA3A3A3,
+    ), // Brighter muted grey (neutral-400) for contrast
     border: Color(0xFF262626),
     borderLight: Color(0xFF171717),
     success: Color(0xFF22C55E),
@@ -153,8 +170,10 @@ class AppTheme {
     bgSurface: Color(0xFFF1F5F9),
     bgElevated: Color(0xFFFFFFFF),
     textPrimary: Color(0xFF0F172A),
-    textSecondary: Color(0xFF334155), // Darker slate (slate-700) for high readability
-    textMuted: Color(0xFF57606a),     // Darker muted text for high contrast
+    textSecondary: Color(
+      0xFF334155,
+    ), // Darker slate (slate-700) for high readability
+    textMuted: Color(0xFF57606a), // Darker muted text for high contrast
     border: Color(0xFFE2E8F0),
     borderLight: Color(0xFFF1F5F9),
     success: Color(0xFF22C55E),
@@ -163,7 +182,10 @@ class AppTheme {
     info: Color(0xFF3B82F6),
   );
 
-  static ThemeData _buildTheme(Brightness brightness, AppColorsExtension colors) {
+  static ThemeData _buildTheme(
+    Brightness brightness,
+    AppColorsExtension colors,
+  ) {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
@@ -182,23 +204,70 @@ class AppTheme {
       extensions: [colors],
       textTheme: GoogleFonts.interTextTheme(
         TextTheme(
-          displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: colors.textPrimary, letterSpacing: -0.5),
-          displayMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: colors.textPrimary, letterSpacing: -0.5),
-          headlineLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: colors.textPrimary),
-          headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: colors.textPrimary),
-          titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.textPrimary),
-          titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: colors.textPrimary),
-          bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: colors.textPrimary),
-          bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: colors.textSecondary),
-          bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: colors.textMuted),
-          labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary, letterSpacing: 0.5),
+          displayLarge: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.w600,
+            color: colors.textPrimary,
+            letterSpacing: -0.5,
+          ),
+          displayMedium: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w600,
+            color: colors.textPrimary,
+            letterSpacing: -0.5,
+          ),
+          headlineLarge: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w500,
+            color: colors.textPrimary,
+          ),
+          headlineMedium: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            color: colors.textPrimary,
+          ),
+          titleLarge: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+            color: colors.textPrimary,
+          ),
+          titleMedium: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            color: colors.textPrimary,
+          ),
+          bodyLarge: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            color: colors.textPrimary,
+          ),
+          bodyMedium: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: colors.textSecondary,
+          ),
+          bodySmall: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: colors.textMuted,
+          ),
+          labelLarge: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: colors.textPrimary,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: colors.bgDark,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: colors.textPrimary),
+        titleTextStyle: GoogleFonts.inter(
+          fontSize: 18,
+          fontWeight: FontWeight.w500,
+          color: colors.textPrimary,
+        ),
         iconTheme: IconThemeData(color: colors.textPrimary),
       ),
       cardTheme: CardThemeData(
@@ -215,8 +284,13 @@ class AppTheme {
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMedium)),
-          textStyle: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusMedium),
+          ),
+          textStyle: GoogleFonts.inter(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -224,27 +298,57 @@ class AppTheme {
           foregroundColor: colors.textPrimary,
           side: BorderSide(color: colors.border),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMedium)),
-          textStyle: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusMedium),
+          ),
+          textStyle: GoogleFonts.inter(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.bgSurface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMedium), borderSide: BorderSide(color: colors.border)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMedium), borderSide: BorderSide(color: colors.border)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMedium), borderSide: const BorderSide(color: primary, width: 2)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMedium), borderSide: BorderSide(color: colors.error)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusMedium),
+          borderSide: BorderSide(color: colors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusMedium),
+          borderSide: BorderSide(color: colors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusMedium),
+          borderSide: const BorderSide(color: primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusMedium),
+          borderSide: BorderSide(color: colors.error),
+        ),
         labelStyle: TextStyle(color: colors.textSecondary),
         hintStyle: TextStyle(color: colors.textMuted),
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: primary, foregroundColor: Colors.white, elevation: 4),
-      dividerTheme: DividerThemeData(color: colors.border, thickness: 1, space: 1),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: primary,
+        foregroundColor: Colors.white,
+        elevation: 4,
+      ),
+      dividerTheme: DividerThemeData(
+        color: colors.border,
+        thickness: 1,
+        space: 1,
+      ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: colors.bgElevated,
         contentTextStyle: GoogleFonts.inter(color: colors.textPrimary),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMedium)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusMedium),
+        ),
         behavior: SnackBarBehavior.floating,
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -256,5 +360,6 @@ class AppTheme {
   }
 
   static ThemeData get darkTheme => _buildTheme(Brightness.dark, _darkColors);
-  static ThemeData get lightTheme => _buildTheme(Brightness.light, _lightColors);
+  static ThemeData get lightTheme =>
+      _buildTheme(Brightness.light, _lightColors);
 }

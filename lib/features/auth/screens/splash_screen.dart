@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -93,25 +94,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     Hero(
                       tag: "vnsport_logo",
                       child: SizedBox(
-                        width: 192,
-                        height: 60,
-                        child: Image.asset(
-                          "assets/images/vndc_sport.png",
+                        width: 200,
+                        height: 64,
+                        child: SvgPicture.asset(
+                          "assets/images/vndcsport.svg",
                           fit: BoxFit.contain,
-                          color: Colors.white,
-                          colorBlendMode: BlendMode.srcIn,
-                          errorBuilder: (context, error, stackTrace) => const Material(
-                            color: Colors.transparent,
-                            child: Text(
-                              "VNSPORT",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 44,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
                         ),
                       ),
                     ),

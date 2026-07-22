@@ -102,25 +102,25 @@ bool isSetComplete(SetScoreData set, SportConfig config) {
   final minScore = set.score1 < set.score2 ? set.score1 : set.score2;
   final diff = maxScore - minScore;
 
+  if (maxScore < config.pointsPerSet || diff == 0) {
+    return false;
+  }
+  if (config.maxPoints > 0 && maxScore >= config.maxPoints) {
+    return true;
+  }
+  if (!config.mustWinByTwo) {
+    return true;
+  }
+
   switch (config.scoringModel) {
     case SportScoringModel.tennisSet:
-      // Tennis: set kết thúc khi ai đó đạt >= pointsPerSet và cách 2, hoặc tiebreak
-      if (maxScore >= config.pointsPerSet && diff >= 2) return true;
-      if (maxScore == config.maxPoints && diff >= 1) return true;
-      return false;
+      return diff >= 2;
 
     case SportScoringModel.pickleballSideOut:
-      // Side-out: chỉ 1 game, kết thúc khi ai đó đạt pointsPerSet và cách 2
-      if (maxScore >= config.pointsPerSet && diff >= 2) return true;
-      if (maxScore >= config.tiebreakAt && diff >= 2) return true;
-      return false;
+      return diff >= 2;
 
     case SportScoringModel.rallyPointSet:
-      // Rally point: set kết thúc khi đạt pointsPerSet và cách 2 (deuce)
-      if (maxScore >= config.pointsPerSet && diff >= 2) return true;
-      // Deuce cap: ai đó đạt maxPoints
-      if (maxScore >= config.maxPoints && diff >= 1) return true;
-      return false;
+      return diff >= 2;
   }
 }
 

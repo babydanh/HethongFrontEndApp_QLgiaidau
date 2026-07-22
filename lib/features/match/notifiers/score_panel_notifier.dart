@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
+import 'package:app_quanly_giaidau/domain/services/score_validator.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -42,7 +43,15 @@ class ScorePanelNotifier extends ChangeNotifier {
 
   void _updateStateFromMatch(MatchModel match) {
     final details = match.scoreDetails;
-    if (details == null) return;
+    final config = resolveSportConfig(
+      match.sportRules,
+      SportRuleKind.fromString(match.sportKey),
+    );
+    if (details == null) {
+      _state = _state.copyWith(config: config);
+      notifyListeners();
+      return;
+    }
 
     // 1. Finished Sets
     final rawSets = details['sets'] as List? ?? [];
@@ -101,6 +110,7 @@ class ScorePanelNotifier extends ChangeNotifier {
     }
 
     _state = _state.copyWith(
+      config: config,
       finishedSets: finishedSets,
       tennis: tennisState,
       pickleball: pbState,
@@ -182,8 +192,7 @@ class ScorePanelNotifier extends ChangeNotifier {
   void _checkTennisSetEnd() {
     final curSet = _state.finishedSets.isNotEmpty ? _state.finishedSets.last : null;
     if (curSet == null) return;
-    final max = curSet.score1 > curSet.score2 ? curSet.score1 : curSet.score2;
-    if (max >= _state.config.pointsPerSet && (curSet.score1 - curSet.score2).abs() >= 2) {
+    if (isSetComplete(curSet, _state.config)) {
       final idx = _state.finishedSets.length - 1;
       final newSets = [..._state.finishedSets];
       newSets[idx] = newSets[idx].copyWith(isFinished: true);
@@ -231,8 +240,10 @@ class ScorePanelNotifier extends ChangeNotifier {
   void _checkPickleballGameEnd() {
     final r = _state.rally;
     if (r == null) return;
-    final max = r.currentP1 > r.currentP2 ? r.currentP1 : r.currentP2;
-    if (max >= _state.config.pointsPerSet && (r.currentP1 - r.currentP2).abs() >= 2) {
+    if (isSetComplete(
+      SetScoreData(score1: r.currentP1, score2: r.currentP2),
+      _state.config,
+    )) {
       _state = _state.copyWith(finishedSets: [
         ..._state.finishedSets,
         SetScoreData(score1: r.currentP1, score2: r.currentP2, isFinished: true),
@@ -268,8 +279,10 @@ class ScorePanelNotifier extends ChangeNotifier {
   void _checkRallySetEnd() {
     final r = _state.rally;
     if (r == null) return;
-    final max = r.currentP1 > r.currentP2 ? r.currentP1 : r.currentP2;
-    if (max >= _state.config.pointsPerSet && (r.currentP1 - r.currentP2).abs() >= 2) {
+    if (isSetComplete(
+      SetScoreData(score1: r.currentP1, score2: r.currentP2),
+      _state.config,
+    )) {
       _state = _state.copyWith(finishedSets: [
         ..._state.finishedSets,
         SetScoreData(score1: r.currentP1, score2: r.currentP2, isFinished: true),
@@ -282,24 +295,56 @@ class ScorePanelNotifier extends ChangeNotifier {
 
   bool get isMatchComplete => _state.isMatchComplete;
 
+  bool canCompleteAs(int winnerTeam) {
+    if (winnerTeam != 1 && winnerTeam != 2) return false;
+    if (!_state.overrideEnabled) {
+      return _state.isMatchComplete && _state.winnerTeam == winnerTeam;
+    }
+    if (_state.overrideReason.trim().isEmpty) return false;
+
+    final (team1Wins, team2Wins) = computeMatchSetsWon(_setsForSubmission());
+    return winnerTeam == 1 ? team1Wins > team2Wins : team2Wins > team1Wins;
+  }
+
+  List<SetScoreData> _setsForSubmission() {
+    final finalSets = List<SetScoreData>.from(_state.finishedSets);
+    if (_state.config.scoringModel != SportScoringModel.tennisSet &&
+        _state.rally != null) {
+      final rally = _state.rally!;
+      if (rally.currentP1 > 0 || rally.currentP2 > 0) {
+        finalSets.add(
+          SetScoreData(
+            score1: rally.currentP1,
+            score2: rally.currentP2,
+            isFinished: true,
+          ),
+        );
+      }
+    }
+    return finalSets;
+  }
+
   Future<void> completeMatch(int winnerTeam) async {
-    if (winnerTeam != 1 && winnerTeam != 2) return;
+    if (!canCompleteAs(winnerTeam)) {
+      _state = _state.copyWith(
+        errorMessage: _state.overrideEnabled
+            ? 'Nhập lý do và bảo đảm đội được xử thắng đang dẫn theo số set/game.'
+            : 'Trận chưa đạt điều kiện kết thúc theo cấu hình.',
+      );
+      notifyListeners();
+      return;
+    }
     _state = _state.copyWith(isSubmitting: true, errorMessage: null);
     notifyListeners();
     try {
-      final finalSets = List<SetScoreData>.from(_state.finishedSets);
-      if (_state.config.scoringModel != SportScoringModel.tennisSet && _state.rally != null) {
-        final r = _state.rally!;
-        if (r.currentP1 > 0 || r.currentP2 > 0) {
-          finalSets.add(SetScoreData(score1: r.currentP1, score2: r.currentP2, isFinished: true));
-        }
-      }
+      final finalSets = _setsForSubmission();
       final match = ref.read(singleMatchProvider(arg)).value;
       final winnerId = winnerTeam == 1 ? match?.team1Id ?? '' : match?.team2Id ?? '';
       final loserId = winnerTeam == 1 ? match?.team2Id ?? '' : match?.team1Id ?? '';
       await ref.read(matchControllerProvider(arg)).completeMatchWithDetails(
         winnerId: winnerId, loserId: loserId, finalSets: finalSets,
-        overrideReason: _state.overrideEnabled ? _state.overrideReason : null,
+        overrideReason:
+            _state.overrideEnabled ? _state.overrideReason.trim() : null,
       );
       _state = _state.copyWith(isSubmitting: false);
       notifyListeners();

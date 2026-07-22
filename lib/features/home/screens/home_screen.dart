@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -71,15 +72,21 @@ class _WavePainter extends CustomPainter {
     // Sóng cong mượt: dùng cubic bezier
     // control point 1: từ phải 85% → đỉnh giữa 100%
     path.cubicTo(
-      size.width * 0.75, size.height * (0.85 + waveAnim / size.height),
-      size.width * 0.6, size.height * (1.0 + waveAnim / size.height),
-      size.width * 0.5, size.height * 1.0, // đỉnh 100%
+      size.width * 0.75,
+      size.height * (0.85 + waveAnim / size.height),
+      size.width * 0.6,
+      size.height * (1.0 + waveAnim / size.height),
+      size.width * 0.5,
+      size.height * 1.0, // đỉnh 100%
     );
     // control point 2: đỉnh giữa 100% → trái 75%
     path.cubicTo(
-      size.width * 0.35, size.height * (1.0 - waveAnim / size.height),
-      size.width * 0.18, size.height * 0.78,
-      0, size.height * 0.75, // trái thấp nhất
+      size.width * 0.35,
+      size.height * (1.0 - waveAnim / size.height),
+      size.width * 0.18,
+      size.height * 0.78,
+      0,
+      size.height * 0.75, // trái thấp nhất
     );
     path.close();
 
@@ -93,8 +100,10 @@ class _WavePainter extends CustomPainter {
     shimmerPath.moveTo(0, 0);
     shimmerPath.lineTo(size.width * 0.5, 0);
     shimmerPath.quadraticBezierTo(
-      size.width * 0.3, size.height * 0.4,
-      0, size.height * 0.5,
+      size.width * 0.3,
+      size.height * 0.4,
+      0,
+      size.height * 0.5,
     );
     shimmerPath.close();
     canvas.drawPath(shimmerPath, shimmerPaint);
@@ -132,7 +141,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   double get _safeAreaTop => MediaQuery.of(context).padding.top;
   double get _maxHeaderHeight => 240.0 + _safeAreaTop;
-  double get _minHeaderHeight => 110.0 + _safeAreaTop;
+  double get _minHeaderHeight => 90.0 + _safeAreaTop;
 
   @override
   void initState() {
@@ -155,7 +164,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _carouselTimer?.cancel();
     if (itemCount <= 1) return;
     _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_carouselController == null || !_carouselController!.hasClients) return;
+      if (_carouselController == null ||
+          !_carouselController!.hasClients ||
+          _carouselController!.positions.length != 1)
+        return;
       _carouselCurrentPage = (_carouselCurrentPage + 1) % itemCount;
       _carouselController!.animateToPage(
         _carouselCurrentPage,
@@ -170,8 +182,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final double offset = _scrollController.offset;
     if (offset > 10.0 && _headerScrollProgress == 0.0) {
       setState(() => _headerScrollProgress = 1.0);
-      final double targetOffset = offset + (_maxHeaderHeight - _minHeaderHeight);
-      _scrollController.jumpTo(targetOffset);
     }
   }
 
@@ -181,8 +191,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _headerScrollProgress = 0.0;
         _isAnimatingToTop = true;
       });
-      await _scrollController.animateTo(0.0,
-          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      await _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
       if (mounted) {
         setState(() {
           _isAnimatingToTop = false;
@@ -204,9 +217,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final view = PlatformDispatcher.instance.views.first;
     final logicalWidth = view.physicalSize.width / view.devicePixelRatio;
     if (logicalWidth < 600) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-      ]);
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     } else {
       SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
@@ -237,6 +248,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final tournamentsAsync = ref.watch(tournamentsProvider);
+    final screenSize = MediaQuery.of(context).size;
+    final double safeAreaTop = MediaQuery.of(context).padding.top;
+    final isHomeTab = _currentIndex == 0;
+    final double p = isHomeTab ? _headerScrollProgress : 1.0;
+    final double currentHeaderHeight = isHomeTab
+        ? lerpDouble(_maxHeaderHeight, _minHeaderHeight, p)!
+        : _minHeaderHeight;
+    final double iconsTop = isHomeTab
+        ? lerpDouble(safeAreaTop + 4.0, safeAreaTop + 16.0, p)!
+        : safeAreaTop + 16.0;
+    final double subtitleOpacity = isHomeTab ? (1.0 - p).clamp(0.0, 1.0) : 0.0;
+    final double headerDetailsY = lerpDouble(76.0, 16.0, p)!;
+    final activeHeaderHeight = currentHeaderHeight;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -246,12 +270,183 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Scaffold(
         backgroundColor: context.colors.bgDark,
         extendBody: true,
-        body: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          transitionBuilder: (child, animation) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          child: _buildBody(tournamentsAsync),
+        body: Stack(
+          children: [
+            // Body Content filling top to bottom
+            Positioned.fill(
+              child: _buildCurrentTabContent(
+                tournamentsAsync,
+                activeHeaderHeight,
+              ),
+            ),
+            // Shared Floating Top Header Stack
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: currentHeaderHeight,
+              child: GestureDetector(
+                onTap: isHomeTab && _headerScrollProgress == 1.0
+                    ? _expandHeader
+                    : null,
+                behavior: HitTestBehavior.translucent,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Hero(
+                        tag: "vnsport_header_bg",
+                        child: CustomPaint(
+                          size: Size(screenSize.width, currentHeaderHeight),
+                          painter: VnsportHeaderPainter(
+                            isLoggedIn: ref.watch(authProvider).isAuthenticated,
+                            colors: context.colors,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: iconsTop,
+                      left: 16.0,
+                      right: 16.0,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Left: Dropdown
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: PopupMenuButton<String>(
+                              onSelected: (key) {
+                                setState(() {
+                                  _selectedSport = key;
+                                });
+                              },
+                              offset: const Offset(0, 40),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              color: context.colors.bgSurface,
+                              elevation: 8,
+                              itemBuilder: (context) => [
+                                _buildPopupMenuItem('Tất cả', 'all'),
+                                _buildPopupMenuItem('Pickleball', 'pickleball'),
+                                _buildPopupMenuItem('Tennis', 'tennis'),
+                                _buildPopupMenuItem('Cầu lông', 'badminton'),
+                                _buildPopupMenuItem('Bóng bàn', 'table_tennis'),
+                              ],
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.18),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.35),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _selectedSport == '' ||
+                                              _selectedSport == 'all'
+                                          ? 'Tất cả'
+                                          : AppConstants
+                                                    .sportNames[_selectedSport] ??
+                                                _selectedSport,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Icon(
+                                      Icons.keyboard_arrow_down_rounded,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Center: Title for sub-tabs
+                          if (!isHomeTab)
+                            Center(
+                              child: Text(
+                                _currentIndex == 1
+                                    ? 'Giải đấu'
+                                    : _currentIndex == 3
+                                        ? 'Câu lạc bộ'
+                                        : _currentIndex == 4
+                                            ? 'Bảng xếp hạng ELO'
+                                            : 'VNSport',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 18,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+
+                          // Right: Notification Bell
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: _buildNotificationBellHeader(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (isHomeTab && subtitleOpacity > 0)
+                      Positioned(
+                        top: safeAreaTop + headerDetailsY,
+                        left: 16.0,
+                        right: 16.0,
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOut,
+                          opacity: subtitleOpacity,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (ref.watch(authProvider).isAuthenticated)
+                                GestureDetector(
+                                  onTap: () {
+                                    if (_headerScrollProgress == 1.0) {
+                                      _expandHeader();
+                                    } else {
+                                      _switchTab(2);
+                                    }
+                                  },
+                                  behavior: HitTestBehavior.translucent,
+                                  child: _buildLoggedInHeaderDetails(),
+                                )
+                              else
+                                _buildLoginPillHeader(),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            // Floating Sticky Search Bar pinned directly below collapsed Header
+            if (!isHomeTab || _headerScrollProgress > 0.0)
+              Positioned(
+                top: currentHeaderHeight + 4.0,
+                left: 16.0,
+                right: 16.0,
+                child: Opacity(
+                  opacity: isHomeTab ? _headerScrollProgress : 1.0,
+                  child: _buildSearchBar(),
+                ),
+              ),
+          ],
         ),
         bottomNavigationBar: FloatingBottomNav(
           currentIndex: _currentIndex,
@@ -262,7 +457,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildBody(AsyncValue<List<Tournament>> tournamentsAsync) {
+  Widget _buildCurrentTabContent(
+    AsyncValue<List<Tournament>> tournamentsAsync,
+    double headerHeight,
+  ) {
     if (_currentIndex == 2) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.go('/profile');
@@ -305,10 +503,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final screenSize = MediaQuery.of(context).size;
     final double safeAreaTop = MediaQuery.of(context).padding.top;
     final double p = _headerScrollProgress;
-    final double currentHeaderHeight = lerpDouble(_maxHeaderHeight, _minHeaderHeight, p)!;
+    final double currentHeaderHeight = lerpDouble(
+      _maxHeaderHeight,
+      _minHeaderHeight,
+      p,
+    )!;
     final double logoW = lerpDouble(260.0, 160.0, p)!;
     final double logoH = lerpDouble(82.0, 50.0, p)!;
-    final double iconsTop = lerpDouble(safeAreaTop + 4.0, safeAreaTop + 16.0, p)!;
+    final double iconsTop = lerpDouble(
+      safeAreaTop + 4.0,
+      safeAreaTop + 16.0,
+      p,
+    )!;
     final double subtitleOpacity = (1.0 - p).clamp(0.0, 1.0);
     final double headerDetailsY = lerpDouble(76.0, 16.0, p)!;
     final double searchOpacity = p;
@@ -322,14 +528,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: tournamentsAsync.when(
               data: (tournamentsList) {
                 final allTournaments = tournamentsList.where((t) {
-                  final sportMatch = _selectedSport == 'all' || t.sport == _selectedSport;
+                  final sportMatch =
+                      _selectedSport == 'all' || t.sport == _selectedSport;
                   final q = _searchQuery.toLowerCase();
-                  return sportMatch && (q.isEmpty || t.name.toLowerCase().contains(q));
+                  return sportMatch &&
+                      (q.isEmpty || t.name.toLowerCase().contains(q));
                 }).toList();
 
-                final live = allTournaments.where((t) => t.status == 'in_progress').toList();
-                final upcoming = allTournaments.where((t) => t.status == 'draft' || t.status == 'registration' || t.status == 'upcoming').toList();
-                final finished = allTournaments.where((t) => t.status == 'completed').toList();
+                final live = allTournaments
+                    .where((t) => t.status == 'in_progress')
+                    .toList();
+                final upcoming = allTournaments
+                    .where(
+                      (t) =>
+                          t.status == 'draft' ||
+                          t.status == 'registration' ||
+                          t.status == 'upcoming',
+                    )
+                    .toList();
+                final finished = allTournaments
+                    .where((t) => t.status == 'completed')
+                    .toList();
 
                 return CustomScrollView(
                   controller: _scrollController,
@@ -337,19 +556,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   slivers: [
                     SliverToBoxAdapter(
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        curve: Curves.easeOut,
-                        height: currentHeaderHeight - _minHeaderHeight,
-                      ),
-                    ),
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _StickyHeaderDelegate(
-                        p: searchOpacity,
-                        searchBar: _buildSearchBar(),
-                        sportChips: _buildSportChips(),
-                        backgroundColor: context.colors.bgDark,
-                        minHeaderHeight: _minHeaderHeight,
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeInOut,
+                        height: _headerScrollProgress == 1.0
+                            ? (_minHeaderHeight + 58.0)
+                            : (_maxHeaderHeight + 8.0),
                       ),
                     ),
                     if (live.isNotEmpty || upcoming.isNotEmpty) ...[
@@ -365,7 +576,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           duration: const Duration(milliseconds: 200),
                           child: KeyedSubtree(
                             key: ValueKey("featured_$_selectedSport"),
-                            child: _buildTournamentCarousel([...live, ...upcoming]),
+                            child: _buildTournamentCarousel([
+                              ...live,
+                              ...upcoming,
+                            ]),
                           ),
                         ),
                       ),
@@ -373,9 +587,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     if (live.isNotEmpty) ...[
                       SliverToBoxAdapter(
                         child: _buildSectionTitle(
-                          icon: Icons.sensors_rounded,
-                          color: const Color(0xFFEF4444),
-                          title: 'Giải đấu đang diễn ra',
+                          title: 'Trận đấu đang diễn ra',
                           badge: 'LIVE',
                         ),
                       ),
@@ -383,7 +595,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         sliver: SliverList(
                           delegate: SliverChildBuilderDelegate(
-                            (context, index) => LiveTournamentWithMatchesCard(tournament: live[index]),
+                            (context, index) => LiveTournamentWithMatchesCard(
+                              tournament: live[index],
+                            ),
                             childCount: live.length,
                           ),
                         ),
@@ -400,16 +614,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       SliverPadding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              final tournament = upcoming[index];
-                              return TournamentCardWithBanner(
-                                tournament: tournament,
-                                onTap: () => context.push('/intro/${tournament.id}'),
-                              );
-                            },
-                            childCount: upcoming.length,
-                          ),
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            final tournament = upcoming[index];
+                            return TournamentCardWithBanner(
+                              tournament: tournament,
+                              onTap: () =>
+                                  context.push('/intro/${tournament.id}'),
+                            );
+                          }, childCount: upcoming.length),
                         ),
                       ),
                     ],
@@ -424,20 +639,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       SliverPadding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              final tournament = finished[index];
-                              return LiveTournamentWithMatchesCard(tournament: tournament);
-                            },
-                            childCount: finished.length,
-                          ),
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            final tournament = finished[index];
+                            return LiveTournamentWithMatchesCard(
+                              tournament: tournament,
+                            );
+                          }, childCount: finished.length),
                         ),
                       ),
                     ],
                     if (allTournaments.isEmpty)
-                      SliverFillRemaining(
-                        child: _buildEmpty(),
-                      ),
+                      SliverFillRemaining(child: _buildEmpty()),
                     const SliverToBoxAdapter(child: SizedBox(height: 120)),
                   ],
                 );
@@ -446,161 +661,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 controller: _scrollController,
                 physics: const BouncingScrollPhysics(),
                 slivers: [
-                  SliverToBoxAdapter(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      curve: Curves.easeOut,
-                      height: currentHeaderHeight - _minHeaderHeight,
-                    ),
+                  SliverToBoxAdapter(child: SizedBox(height: _maxHeaderHeight)),
+                  const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
                   ),
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _StickyHeaderDelegate(
-                      p: searchOpacity,
-                      searchBar: _buildSearchBar(),
-                      sportChips: _buildSportChips(),
-                      backgroundColor: context.colors.bgDark,
-                      minHeaderHeight: _minHeaderHeight,
-                    ),
-                  ),
-                  const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
                 ],
               ),
               error: (e, st) => CustomScrollView(
                 controller: _scrollController,
                 physics: const BouncingScrollPhysics(),
                 slivers: [
-                  SliverToBoxAdapter(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      curve: Curves.easeOut,
-                      height: currentHeaderHeight - _minHeaderHeight,
-                    ),
-                  ),
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _StickyHeaderDelegate(
-                      p: searchOpacity,
-                      searchBar: _buildSearchBar(),
-                      sportChips: _buildSportChips(),
-                      backgroundColor: context.colors.bgDark,
-                      minHeaderHeight: _minHeaderHeight,
-                    ),
-                  ),
+                  SliverToBoxAdapter(child: SizedBox(height: _maxHeaderHeight)),
                   SliverFillRemaining(child: _buildErrorState(e)),
                 ],
               ),
-            ),
-          ),
-        ),
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
-          top: 0.0,
-          left: 0.0,
-          right: 0.0,
-          height: currentHeaderHeight,
-          child: IgnorePointer(
-            child: Hero(
-              tag: "vnsport_header_bg",
-              child: CustomPaint(
-                size: Size(screenSize.width, currentHeaderHeight),
-                painter: VnsportHeaderPainter(
-                  isLoggedIn: ref.watch(authProvider).isAuthenticated,
-                  colors: context.colors,
-                ),
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          top: 0.0,
-          left: 0.0,
-          right: 0.0,
-          height: _headerScrollProgress == 1.0 ? (safeAreaTop + 45.0) : currentHeaderHeight,
-          child: GestureDetector(
-            onTap: _expandHeader,
-            behavior: HitTestBehavior.translucent,
-            child: const SizedBox.expand(),
-          ),
-        ),
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
-          top: iconsTop,
-          left: 16.0,
-          right: 16.0,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: _expandHeader,
-                behavior: HitTestBehavior.opaque,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  curve: Curves.easeOut,
-                  width: logoW,
-                  height: logoH,
-                  child: Image.asset(
-                    "assets/images/vndc_sport.png",
-                    fit: BoxFit.contain,
-                    alignment: Alignment.centerLeft,
-                    color: Colors.white,
-                    colorBlendMode: BlendMode.srcIn,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              _buildNotificationBellHeader(),
-              const SizedBox(width: 10),
-              GestureDetector(
-                onTap: () {
-                  _expandHeader();
-                  Future.delayed(const Duration(milliseconds: 100), () {
-                    _searchFocusNode.requestFocus();
-                  });
-                },
-                child: Container(
-                  width: 36.0,
-                  height: 36.0,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.search, color: Colors.white, size: 20),
-                ),
-              ),
-            ],
-          ),
-        ),
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
-          top: safeAreaTop + headerDetailsY,
-          left: 16.0,
-          right: 16.0,
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
-            opacity: subtitleOpacity,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (ref.watch(authProvider).isAuthenticated)
-                  GestureDetector(
-                    onTap: () {
-                      if (_headerScrollProgress == 1.0) {
-                        _expandHeader();
-                      } else {
-                        _switchTab(2);
-                      }
-                    },
-                    behavior: HitTestBehavior.translucent,
-                    child: _buildLoggedInHeaderDetails(),
-                  )
-                else
-                  _buildLoginPillHeader(),
-              ],
             ),
           ),
         ),
@@ -624,7 +698,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
-            const Icon(Icons.notifications_none_rounded, color: Colors.white, size: 20),
+            const Icon(
+              Icons.notifications_none_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
             if (unread > 0)
               Positioned(
                 top: -1.0,
@@ -650,6 +728,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildPopupMenuItem(String label, String key) {
+    final isSelected =
+        (_selectedSport == key) || (key == '' && _selectedSport == 'all');
+    return PopupMenuItem<String>(
+      value: key,
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected
+                  ? const Color(0xFF2979FF)
+                  : context.colors.textPrimary,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+              fontSize: 13,
+            ),
+          ),
+          if (isSelected) ...[
+            const Spacer(),
+            const Icon(Icons.check_rounded, color: Color(0xFF2979FF), size: 16),
+          ],
+        ],
       ),
     );
   }
@@ -710,9 +814,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           (p) => p.code == profile.provinceCode,
           orElse: () => Province(code: '', name: ''),
         );
-        final city = province.name.isNotEmpty 
-            ? province.name 
-            : (profile.provinceCode != null && profile.provinceCode!.isNotEmpty ? profile.provinceCode! : "Chưa cập nhật");
+        final city = province.name.isNotEmpty
+            ? province.name
+            : (profile.provinceCode != null && profile.provinceCode!.isNotEmpty
+                  ? profile.provinceCode!
+                  : "Chưa cập nhật");
         String address = "Tennis • $city";
         return rankingsAsync.when(
           data: (rankings) {
@@ -735,7 +841,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               children: [
                 Text(
                   fullName,
-                  style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -746,7 +856,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(14),
@@ -754,7 +867,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.stars_rounded, color: Colors.amber, size: 24),
+                      const Icon(
+                        Icons.stars_rounded,
+                        color: Colors.amber,
+                        size: 24,
+                      ),
                       const SizedBox(width: 10),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -783,18 +900,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const SizedBox(width: 18),
                       _buildStatTableRow("Thắng", "$wins", Colors.white),
                       const SizedBox(width: 18),
-                      _buildStatTableRow("Rate", "${winRate.toStringAsFixed(0)}%", const Color(0xFF4ADE80)),
+                      _buildStatTableRow(
+                        "Rate",
+                        "${winRate.toStringAsFixed(0)}%",
+                        const Color(0xFF4ADE80),
+                      ),
                     ],
                   ),
                 ),
               ],
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          ),
           error: (e, _) => _buildHeaderErrorState(e.toString()),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
+      loading: () =>
+          const Center(child: CircularProgressIndicator(color: Colors.white)),
       error: (e, _) => _buildHeaderErrorState(e.toString()),
     );
   }
@@ -803,19 +927,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Không thể tải thông tin",
+        const Text(
+          "WSPORT",
           style: TextStyle(
-            color: Colors.red.shade100,
-            fontWeight: FontWeight.bold,
-            fontSize: 14.0,
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+            letterSpacing: 1.2,
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          error,
+          error.contains("ThrottlerException") ||
+                  error.contains("Too Many Requests")
+              ? "Hệ thống đang bận, vui lòng thử lại sau giây lát"
+              : "Không thể kết nối máy chủ",
           style: const TextStyle(color: Colors.white70, fontSize: 12.0),
-          maxLines: 2,
+          maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
       ],
@@ -847,58 +975,115 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Container(
-        height: 38.0,
-        decoration: BoxDecoration(
-          color: context.colors.bgCard,
-          borderRadius: BorderRadius.circular(100.0),
-          border: Border.all(color: context.colors.border, width: 1.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10.0,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: TextField(
-          controller: _searchController,
-          focusNode: _searchFocusNode,
-          onChanged: (v) => setState(() => _searchQuery = v),
-          style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.normal, color: context.colors.textPrimary),
-          cursorColor: const Color(0xFF2979FF),
-          textAlignVertical: TextAlignVertical.center,
-          decoration: InputDecoration(
-            hintText: "Tìm kiếm giải đấu...",
-            hintStyle: TextStyle(color: context.colors.textMuted, fontSize: 14.0),
-            prefixIcon: Icon(Icons.search, color: context.colors.textSecondary, size: 20.0),
-            suffixIcon: _searchQuery.isNotEmpty
-                ? IconButton(
-                    icon: Icon(Icons.clear, color: context.colors.textSecondary, size: 18.0),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() => _searchQuery = "");
-                    },
-                  )
-                : Icon(Icons.tune_rounded, color: context.colors.textSecondary, size: 18.0),
-            border: InputBorder.none,
-            isCollapsed: true,
-            contentPadding: EdgeInsets.zero,
+    return Container(
+      height: 38.0,
+      decoration: BoxDecoration(
+        color: context.colors.bgCard,
+        borderRadius: BorderRadius.circular(100.0),
+        border: Border.all(color: context.colors.border, width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10.0,
+            offset: const Offset(0, 4),
           ),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        focusNode: _searchFocusNode,
+        onChanged: (v) => setState(() => _searchQuery = v),
+        style: TextStyle(
+          fontSize: 14.0,
+          fontWeight: FontWeight.normal,
+          color: context.colors.textPrimary,
+        ),
+        cursorColor: const Color(0xFF2979FF),
+        textAlignVertical: TextAlignVertical.center,
+        decoration: InputDecoration(
+          hintText: "Tìm kiếm giải đấu...",
+          hintStyle: TextStyle(color: context.colors.textMuted, fontSize: 14.0),
+          prefixIcon: Icon(
+            Icons.search,
+            color: context.colors.textSecondary,
+            size: 20.0,
+          ),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(
+                    Icons.clear,
+                    color: context.colors.textSecondary,
+                    size: 18.0,
+                  ),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = "");
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          isCollapsed: true,
+          contentPadding: EdgeInsets.zero,
         ),
       ),
     );
   }
 
-  Widget _buildSportChips() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4.0),
-      child: SportFilterChips(
-        selectedSport: _selectedSport,
-        onSportChanged: (s) => setState(() => _selectedSport = s),
+  void _showSportFilterBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.colors.bgSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (context) {
+        final sports = [
+          {'key': '', 'label': 'Tất cả môn thể thao'},
+          {'key': 'pickleball', 'label': 'Pickleball'},
+          {'key': 'tennis', 'label': 'Tennis (Quần vợt)'},
+          {'key': 'badminton', 'label': 'Cầu lông'},
+          {'key': 'table_tennis', 'label': 'Bóng bàn'},
+        ];
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Lọc theo môn thể thao',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: context.colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...sports.map((s) {
+                final isSel = _selectedSport == s['key'];
+                return ListTile(
+                  title: Text(
+                    s['label']!,
+                    style: TextStyle(
+                      fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                      color: isSel ? AppTheme.primary : context.colors.textPrimary,
+                    ),
+                  ),
+                  trailing: isSel
+                      ? const Icon(Icons.check_circle_rounded, color: AppTheme.primary)
+                      : null,
+                  onTap: () {
+                    setState(() {
+                      _selectedSport = s['key']!;
+                    });
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -972,7 +1157,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   const SizedBox(width: 2),
-                  const Icon(Icons.arrow_forward_ios_rounded, size: 12.0, color: Color(0xFF2979FF)),
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 12.0,
+                    color: Color(0xFF2979FF),
+                  ),
                 ],
               ),
             ),
@@ -983,7 +1172,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildTournamentCarousel(List<Tournament> items) {
     if (items.isEmpty) return const SizedBox.shrink();
-    
+
     // Khởi động timer chuyển trang tự động nếu chưa có
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_carouselTimer == null) {
@@ -994,7 +1183,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       children: [
         SizedBox(
-          height: 285.0,
+          height: 265.0,
           child: PageView.builder(
             controller: _carouselController,
             physics: const BouncingScrollPhysics(),
@@ -1028,7 +1217,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               width: isSelected ? 16 : 6,
               height: 6,
               decoration: BoxDecoration(
-                color: isSelected ? AppTheme.primary : context.colors.textMuted.withValues(alpha: 0.35),
+                color: isSelected
+                    ? AppTheme.primary
+                    : context.colors.textMuted.withValues(alpha: 0.35),
                 borderRadius: BorderRadius.circular(100),
               ),
             );
@@ -1050,7 +1241,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               color: Colors.grey.withOpacity(0.08),
               borderRadius: BorderRadius.circular(20.0),
             ),
-            child: const Icon(Icons.search_off_rounded, size: 36, color: Color(0xFFB0BEC5)),
+            child: const Icon(
+              Icons.search_off_rounded,
+              size: 36,
+              color: Color(0xFFB0BEC5),
+            ),
           ),
           const SizedBox(height: 16),
           const Text(
@@ -1080,7 +1275,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (_selectedSport != "all" && t.sport != _selectedSport) {
         return false;
       }
-      if (_selectedStatus == "registration" && t.status != "registration" && t.status != "draft") {
+      if (_selectedStatus == "registration" &&
+          t.status != "registration" &&
+          t.status != "draft") {
         return false;
       }
       if (_selectedStatus == "in_progress" && t.status != "in_progress") {
@@ -1099,104 +1296,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        SliverAppBar(
-          pinned: true,
-          floating: true,
-          backgroundColor: context.colors.bgDark,
-          elevation: 0.0,
-          title: Text(
-            "Giải đấu",
-            style: TextStyle(
-              color: context.colors.textPrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 22.0,
-            ),
-          ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 16.0),
-              child: Center(
-                child: InkWell(
-                  onTap: _showTokenSheet,
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.key_rounded, size: 14, color: AppTheme.primary),
-                        const SizedBox(width: 4),
-                        Text(
-                          "Nhập mã",
-                          style: TextStyle(
-                            color: AppTheme.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12.0,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
         SliverToBoxAdapter(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                child: Container(
-                  height: 42.0,
-                  decoration: BoxDecoration(
-                    color: context.colors.bgSurface,
-                    borderRadius: BorderRadius.circular(12.0),
-                    border: Border.all(color: context.colors.border, width: 1.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
-                        blurRadius: 6.0,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (v) => setState(() => _searchQuery = v),
-                    style: TextStyle(fontSize: 13.5, color: context.colors.textPrimary),
-                    textAlignVertical: TextAlignVertical.center,
-                    decoration: InputDecoration(
-                      hintText: "Tìm kiếm giải đấu...",
-                      hintStyle: TextStyle(fontSize: 13.5, color: context.colors.textMuted),
-                      prefixIcon: Icon(Icons.search, size: 18.0, color: context.colors.textMuted),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(Icons.clear, size: 16.0, color: context.colors.textMuted),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _searchQuery = "");
-                              },
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      isCollapsed: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                ),
-              ),
-              SportFilterChips(
-                selectedSport: _selectedSport,
-                onSportChanged: (s) => setState(() => _selectedSport = s),
-              ),
-              const SizedBox(height: 12),
-              StatusSegment(
+          child: SizedBox(height: _minHeaderHeight + 58.0),
+        ),
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _StatusFilterDelegate(
+            child: Container(
+              color: context.colors.bgDark,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: StatusSegment(
                 selected: _selectedStatus,
                 onChanged: (s) => setState(() => _selectedStatus = s),
                 items: const [
@@ -1206,8 +1315,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   (key: "completed", label: "Hoàn thành"),
                 ],
               ),
-              const SizedBox(height: 12),
-            ],
+            ),
           ),
         ),
         if (displayList.isEmpty)
@@ -1216,11 +1324,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.search_off, size: 48.0, color: context.colors.textMuted),
+                  Icon(
+                    Icons.search_off,
+                    size: 48.0,
+                    color: context.colors.textMuted,
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     "Không tìm thấy giải đấu phù hợp",
-                    style: TextStyle(fontSize: 16.0, color: context.colors.textSecondary),
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      color: context.colors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -1265,7 +1380,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   color: const Color(0xFF2979FF).withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.people, size: 48.0, color: Color(0xFF2979FF)),
+                child: const Icon(
+                  Icons.people,
+                  size: 48.0,
+                  color: Color(0xFF2979FF),
+                ),
               ),
               const SizedBox(height: 24),
               Text(
@@ -1295,7 +1414,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   icon: const Icon(Icons.login),
                   label: const Text("Đăng nhập"),
                   style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.0)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.0),
+                    ),
                   ),
                 ),
               ),
@@ -1324,74 +1445,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        SliverAppBar(
-          pinned: true,
-          floating: true,
-          backgroundColor: context.colors.bgDark,
-          elevation: 0.0,
-          title: Text(
-            "Câu lạc bộ",
-            style: TextStyle(
-              color: context.colors.textPrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 22.0,
-            ),
-          ),
-          actions: [
-            const SizedBox(width: 16),
-          ],
+        SliverToBoxAdapter(
+          child: SizedBox(height: _minHeaderHeight + 58.0),
         ),
         SliverToBoxAdapter(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                child: Container(
-                  height: 42.0,
-                  decoration: BoxDecoration(
-                    color: context.colors.bgSurface,
-                    borderRadius: BorderRadius.circular(12.0),
-                    border: Border.all(color: context.colors.border, width: 1.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
-                        blurRadius: 6.0,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (v) => setState(() => _searchQuery = v),
-                    style: TextStyle(fontSize: 13.5, color: context.colors.textPrimary),
-                    textAlignVertical: TextAlignVertical.center,
-                    decoration: InputDecoration(
-                      hintText: "Tìm kiếm câu lạc bộ...",
-                      hintStyle: TextStyle(fontSize: 13.5, color: context.colors.textMuted),
-                      prefixIcon: Icon(Icons.search, size: 18.0, color: context.colors.textMuted),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(Icons.clear, size: 16.0, color: context.colors.textMuted),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _searchQuery = "");
-                              },
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      isCollapsed: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                ),
-              ),
-              SportFilterChips(
-                selectedSport: _selectedSport,
-                onSportChanged: (s) => setState(() => _selectedSport = s),
-              ),
-              const SizedBox(height: 12),
-            ],
-          ),
+          child: const SizedBox(height: 8),
         ),
         communitiesAsync.when(
           data: (clubs) {
@@ -1399,21 +1457,70 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               if (_selectedSport != 'all') {
                 final hasSport = c.sports.any((s) {
                   final name = s.toLowerCase();
-                  if (_selectedSport == 'badminton' && (name.contains('badminton') || name.contains('cầu lông') || name.contains('cau long'))) return true;
-                  if (_selectedSport == 'tennis' && name.contains('tennis')) return true;
-                  if (_selectedSport == 'pickleball' && name.contains('pickleball')) return true;
+                  if (_selectedSport == 'badminton' &&
+                      (name.contains('badminton') ||
+                          name.contains('cầu lông') ||
+                          name.contains('cau long')))
+                    return true;
+                  if (_selectedSport == 'tennis' && name.contains('tennis'))
+                    return true;
+                  if (_selectedSport == 'pickleball' &&
+                      name.contains('pickleball'))
+                    return true;
                   return name.contains(_selectedSport);
                 });
                 if (!hasSport) return false;
               }
               final q = _searchQuery.toLowerCase().trim();
-              if (q.isNotEmpty && !c.name.toLowerCase().contains(q) && !(c.description ?? '').toLowerCase().contains(q)) {
+              if (q.isNotEmpty &&
+                  !c.name.toLowerCase().contains(q) &&
+                  !(c.description ?? '').toLowerCase().contains(q)) {
                 return false;
               }
               return true;
             }).toList();
 
             final display = filtered;
+            if (display.isEmpty) {
+              return SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 72.0,
+                        height: 72.0,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        child: const Icon(
+                          Icons.group_off_rounded,
+                          size: 36,
+                          color: Color(0xFFB0BEC5),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Không tìm thấy câu lạc bộ",
+                        style: TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        "Thử thay đổi môn thể thao hoặc từ khoá tìm kiếm",
+                        style: TextStyle(fontSize: 13.0, color: Color(0xFF94A3B8)),
+                      ),
+                      const SizedBox(height: 80),
+                    ],
+                  ),
+                ),
+              );
+            }
             return SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
               sliver: SliverList(
@@ -1433,7 +1540,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     CircularProgressIndicator(color: AppTheme.primary),
                     const SizedBox(height: 12),
-                    Text('Đang tải...', style: TextStyle(color: context.colors.textSecondary)),
+                    Text(
+                      'Đang tải...',
+                      style: TextStyle(color: context.colors.textSecondary),
+                    ),
                   ],
                 ),
               ),
@@ -1446,9 +1556,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.cloud_off_rounded, size: 48, color: context.colors.textMuted),
+                    Icon(
+                      Icons.cloud_off_rounded,
+                      size: 48,
+                      color: context.colors.textMuted,
+                    ),
                     const SizedBox(height: 12),
-                    Text('Không thể tải danh sách CLB', style: TextStyle(color: context.colors.textSecondary)),
+                    Text(
+                      'Không thể tải danh sách CLB',
+                      style: TextStyle(color: context.colors.textSecondary),
+                    ),
                     const SizedBox(height: 8),
                     TextButton(
                       onPressed: () => ref.refresh(communitiesProvider(null)),
@@ -1467,11 +1584,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// ─── Helpers ───
   Color _getSportColor(String sportName) {
     final n = sportName.toLowerCase();
-    if (n.contains('badminton') || n.contains('cầu lông')) return const Color(0xFF0284C7);
+    if (n.contains('badminton') || n.contains('cầu lông'))
+      return const Color(0xFF0284C7);
     if (n.contains('tennis')) return const Color(0xFFEA580C);
     if (n.contains('pickleball')) return const Color(0xFF059669);
-    if (n.contains('table tennis') || n.contains('bóng bàn') || n.contains('bong ban')) return const Color(0xFFDC2626);
-    if (n.contains('bóng đá') || n.contains('football')) return const Color(0xFF16A34A);
+    if (n.contains('table tennis') ||
+        n.contains('bóng bàn') ||
+        n.contains('bong ban'))
+      return const Color(0xFFDC2626);
+    if (n.contains('bóng đá') || n.contains('football'))
+      return const Color(0xFF16A34A);
     if (n.contains('bơi') || n.contains('swim')) return const Color(0xFF2563EB);
     if (n.contains('cờ') || n.contains('chess')) return const Color(0xFF7C3AED);
     return const Color(0xFF0284C7);
@@ -1491,17 +1613,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   String _getJoinModeLabel(String mode) {
     switch (mode) {
-      case 'INVITE_ONLY': return 'Chỉ mời';
-      case 'APPROVAL': return 'Xét duyệt';
-      default: return 'Tự do';
+      case 'INVITE_ONLY':
+        return 'Chỉ mời';
+      case 'APPROVAL':
+        return 'Xét duyệt';
+      default:
+        return 'Tự do';
     }
   }
 
   Color _getJoinModeColor(String mode) {
     switch (mode) {
-      case 'INVITE_ONLY': return const Color(0xFFE11D48);
-      case 'APPROVAL': return const Color(0xFFF59E0B);
-      default: return const Color(0xFF059669);
+      case 'INVITE_ONLY':
+        return const Color(0xFFE11D48);
+      case 'APPROVAL':
+        return const Color(0xFFF59E0B);
+      default:
+        return const Color(0xFF059669);
     }
   }
 
@@ -1548,21 +1676,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Image.network(
                         club.bannerUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _buildCardBannerFallback(sportColor, emoji),
+                        errorBuilder: (_, __, ___) =>
+                            _buildCardBannerFallback(sportColor, emoji),
                       )
                     else
                       _buildCardBannerFallback(sportColor, emoji),
 
                     // Gradient overlay
                     Positioned(
-                      bottom: 0, left: 0, right: 0,
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
                       child: Container(
                         height: 60,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [Colors.transparent, Colors.black.withValues(alpha: 0.55)],
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.55),
+                            ],
                           ),
                         ),
                       ),
@@ -1570,20 +1704,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                     // Join mode badge
                     Positioned(
-                      top: 10, left: 10,
+                      top: 10,
+                      left: 10,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.92),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
-                              width: 6, height: 6,
-                              decoration: BoxDecoration(color: joinColor, shape: BoxShape.circle),
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: joinColor,
+                                shape: BoxShape.circle,
+                              ),
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -1609,7 +1753,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         height: 52,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: context.colors.bgCard, width: 2.5),
+                          border: Border.all(
+                            color: context.colors.bgCard,
+                            width: 2.5,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.12),
@@ -1625,14 +1772,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   club.logoUrl!,
                                   fit: BoxFit.cover,
                                   errorBuilder: (_, __, ___) => Container(
-                                    decoration: BoxDecoration(color: sportColor, borderRadius: BorderRadius.circular(12)),
-                                    child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
+                                    decoration: BoxDecoration(
+                                      color: sportColor,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        emoji,
+                                        style: const TextStyle(fontSize: 20),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               )
                             : Container(
-                                decoration: BoxDecoration(color: sportColor, borderRadius: BorderRadius.circular(12)),
-                                child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
+                                decoration: BoxDecoration(
+                                  color: sportColor,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    emoji,
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
                               ),
                       ),
                     ),
@@ -1665,7 +1828,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         if (club.status == 'ACTIVE')
                           Padding(
                             padding: const EdgeInsets.only(left: 4),
-                            child: Icon(Icons.verified_rounded, size: 18, color: sportColor),
+                            child: Icon(
+                              Icons.verified_rounded,
+                              size: 18,
+                              color: sportColor,
+                            ),
                           ),
                       ],
                     ),
@@ -1674,19 +1841,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     // Stats
                     Row(
                       children: [
-                        Icon(Icons.people_rounded, size: 14, color: context.colors.textSecondary),
+                        Icon(
+                          Icons.people_rounded,
+                          size: 14,
+                          color: context.colors.textSecondary,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           "${club.memberCount} thành viên",
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: context.colors.textSecondary,
+                          ),
                         ),
                         const SizedBox(width: 16),
-                        Icon(Icons.location_on_rounded, size: 14, color: context.colors.textMuted),
+                        Icon(
+                          Icons.location_on_rounded,
+                          size: 14,
+                          color: context.colors.textMuted,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             club.locationAddress ?? "Việt Nam",
-                            style: TextStyle(fontSize: 12, color: context.colors.textMuted, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.colors.textMuted,
+                              fontWeight: FontWeight.bold,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1698,15 +1881,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     // Sport tag
                     if (sportName.isNotEmpty)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: sportColor.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: sportColor.withValues(alpha: 0.2)),
+                          border: Border.all(
+                            color: sportColor.withValues(alpha: 0.2),
+                          ),
                         ),
                         child: Text(
                           sportName.toUpperCase(),
-                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: sportColor, letterSpacing: 0.8),
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: sportColor,
+                            letterSpacing: 0.8,
+                          ),
                         ),
                       ),
                   ],
@@ -1728,9 +1921,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           end: Alignment.bottomRight,
         ),
       ),
-      child: Center(
-        child: Text(emoji, style: const TextStyle(fontSize: 48)),
-      ),
+      child: Center(child: Text(emoji, style: const TextStyle(fontSize: 48))),
     );
   }
 
@@ -1753,11 +1944,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off_rounded, size: 48, color: Color(0xFFB0BEC5)),
+            const Icon(
+              Icons.cloud_off_rounded,
+              size: 48,
+              color: Color(0xFFB0BEC5),
+            ),
             const SizedBox(height: 16),
             const Text(
               'Không thể tải dữ liệu',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF0F172A),
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -1771,14 +1970,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             GestureDetector(
               onTap: () => ref.refresh(tournamentsProvider),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF2979FF),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
                   'Thử lại',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
@@ -1800,7 +2005,7 @@ class _TournamentCard extends StatelessWidget {
   String _resolveImageUrl(String? url) {
     if (url == null || url.isEmpty) return '';
     if (url.startsWith('http')) return url;
-    
+
     String apiBase = 'http://localhost:3000/api/v1';
     try {
       apiBase = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
@@ -1808,103 +2013,73 @@ class _TournamentCard extends StatelessWidget {
         apiBase = apiBase.replaceAll('localhost', '10.0.2.2');
       }
     } catch (_) {}
-    
+
     final host = apiBase.replaceAll('/api/v1', '');
     return '$host$url';
   }
 
   List<String> _getCategoryChips(Tournament t) {
     final List<String> chips = [];
+
+    // 1. Kiểm tra chính xác từ danh sách Divisions trả về từ API
     if (t.divisions.isNotEmpty) {
       for (var div in t.divisions) {
-        final divName = div.name;
-        if (divName.trim() == t.name.trim()) continue;
-        final divLower = divName.toLowerCase();
-        if (divLower.contains("đơn nam")) {
-          chips.add("Đơn Nam");
-        } else if (divLower.contains("đơn nữ")) {
-          chips.add("Đơn Nữ");
-        } else if (divLower.contains("đôi nam nữ") || divLower.contains("nam nữ")) {
-          chips.add("Đôi Nam Nữ");
-        } else if (divLower.contains("đôi nam")) {
-          chips.add("Đôi Nam");
-        } else if (divLower.contains("đôi nữ")) {
-          chips.add("Đôi Nữ");
-        } else if (divLower.contains("đồng đội")) {
-          chips.add("Đồng đội");
-        } else {
-          // If the division name itself is generic, normalize it
-          if (divLower == "thi đấu đơn" || divLower == "đơn") {
+        final mt = div.matchType.toUpperCase();
+        final gr = div.genderRestriction?.toUpperCase() ?? '';
+        if (mt == 'SINGLES') {
+          if (gr == 'FEMALE')
+            chips.add("Đơn Nữ");
+          else if (gr == 'MALE')
+            chips.add("Đơn Nam");
+          else
             chips.add("Đơn");
-          } else if (divLower == "thi đấu đôi" || divLower == "đôi") {
-            chips.add("Đôi");
-          } else {
-            chips.add(divName);
-          }
+        } else if (mt == 'DOUBLES') {
+          if (gr == 'FEMALE')
+            chips.add("Đôi Nữ");
+          else if (gr == 'MALE')
+            chips.add("Đôi Nam");
+          else if (gr == 'MIXED')
+            chips.add("Đôi Nam Nữ");
+          else
+            chips.add("Đôi Nam");
+        } else if (mt == 'MIXED_DOUBLES' || mt == 'MIXED' || gr == 'MIXED') {
+          chips.add("Đôi Nam Nữ");
         }
       }
     }
+
+    // 2. Nếu API không chứa Divisions, đọc thuộc tính gốc của Tournament
     if (chips.isEmpty) {
-      final nameLower = t.name.toLowerCase();
-      final descLower = t.description.toLowerCase();
-      if (nameLower.contains("đơn nam") || descLower.contains("đơn nam")) {
-        chips.add("Đơn Nam");
-      }
-      if (nameLower.contains("đơn nữ") || descLower.contains("đơn nữ")) {
-        chips.add("Đơn Nữ");
-      }
-      if (nameLower.contains("đôi nam nữ") || descLower.contains("đôi nam nữ") || nameLower.contains("nam nữ") || descLower.contains("nam nữ")) {
-        chips.add("Đôi Nam Nữ");
-      }
-      if ((nameLower.contains("đôi nam") || descLower.contains("đôi nam")) && !nameLower.contains("đôi nam nữ") && !descLower.contains("đôi nam nữ")) {
-        chips.add("Đôi Nam");
-      }
-      if (nameLower.contains("đôi nữ") || descLower.contains("đôi nữ")) {
-        chips.add("Đôi Nữ");
-      }
-      if (nameLower.contains("đồng đội") || descLower.contains("đồng đội")) {
-        chips.add("Đồng đội");
-      }
-      if (nameLower.contains("đôi") || descLower.contains("đôi")) {
-        if (!chips.any((c) => c.contains("Đôi"))) {
-          chips.add("Đôi");
-        }
-      }
-      if (nameLower.contains("đơn") || descLower.contains("đơn")) {
-        if (!chips.any((c) => c.contains("Đơn"))) {
-          chips.add("Đơn");
-        }
-      }
-    }
-    if (chips.isEmpty) {
-      final sportNameLower = (AppConstants.sportNames[t.sport] ?? '').toLowerCase();
-      if (t.category != null && t.category!.isNotEmpty && 
-          t.category!.toLowerCase() != t.sport.toLowerCase() &&
-          t.category!.toLowerCase() != sportNameLower) {
-        final catLower = t.category!.toLowerCase();
-        if (catLower == "singles" || catLower == "đơn") {
-          chips.add("Đơn");
-        } else if (catLower == "doubles" || catLower == "đôi") {
-          chips.add("Đôi");
+      final mt = t.format.toUpperCase();
+      if (mt.contains('DOUBLES') || t.maxPlayersPerTeam == 2) {
+        final nameLower = t.name.toLowerCase();
+        final descLower = t.description.toLowerCase();
+        if (nameLower.contains("nam nữ") ||
+            descLower.contains("nam nữ") ||
+            descLower.contains("đôi nam nữ")) {
+          chips.add("Đôi Nam Nữ");
+        } else if (nameLower.contains("đôi nữ") ||
+            descLower.contains("đôi nữ")) {
+          chips.add("Đôi Nữ");
         } else {
-          chips.add(t.category!);
+          chips.add("Đôi Nam");
         }
       } else {
-        if (t.format == AppConstants.formatDoubles || t.maxPlayersPerTeam == 2) {
-          chips.add("Đôi");
-        } else {
-          chips.add("Đơn");
-        }
+        chips.add("Đơn Nam");
       }
     }
+
     return chips.toSet().toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final statusLabel =
-        StatusHelper.getTournamentStatusLabel(tournament.status).toUpperCase();
-    final sportLabel = AppConstants.sportNames[tournament.sport]?.toUpperCase() ?? tournament.sport.toUpperCase();
+    final statusLabel = StatusHelper.getTournamentStatusLabel(
+      tournament.status,
+    ).toUpperCase();
+    final sportLabel =
+        AppConstants.sportNames[tournament.sport]?.toUpperCase() ??
+        tournament.sport.toUpperCase();
 
     final dateStr = (tournament.startDate != null && tournament.endDate != null)
         ? '${DateFormat('dd/MM/yyyy').format(tournament.startDate!)} - ${DateFormat('dd/MM/yyyy').format(tournament.endDate!)}'
@@ -1935,7 +2110,9 @@ class _TournamentCard extends StatelessWidget {
           children: [
             // Top: Banner Image Area
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
               child: Stack(
                 children: [
                   Container(
@@ -1946,7 +2123,8 @@ class _TournamentCard extends StatelessWidget {
                         ? Image.network(
                             bannerUrlResolved,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _buildFallbackBanner(),
+                            errorBuilder: (_, __, ___) =>
+                                _buildFallbackBanner(),
                           )
                         : _buildFallbackBanner(),
                   ),
@@ -1955,7 +2133,10 @@ class _TournamentCard extends StatelessWidget {
                     top: 10,
                     left: 10,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(6),
@@ -1976,7 +2157,10 @@ class _TournamentCard extends StatelessWidget {
                     top: 10,
                     right: 10,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF97316),
                         borderRadius: BorderRadius.circular(6),
@@ -1995,7 +2179,7 @@ class _TournamentCard extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Bottom: Tournament Details Area
             Expanded(
               child: Padding(
@@ -2022,11 +2206,17 @@ class _TournamentCard extends StatelessWidget {
                         runSpacing: 4,
                         children: categoryChips.take(3).map((div) {
                           return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFEFF6FF),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: const Color(0xFFDBEAFE), width: 0.5),
+                              border: Border.all(
+                                color: const Color(0xFFDBEAFE),
+                                width: 0.5,
+                              ),
                             ),
                             child: Text(
                               div,
@@ -2044,7 +2234,11 @@ class _TournamentCard extends StatelessWidget {
                     // Date & Participant count row
                     Row(
                       children: [
-                        const Icon(Icons.calendar_today_rounded, size: 12, color: Color(0xFF64748B)),
+                        const Icon(
+                          Icons.calendar_today_rounded,
+                          size: 12,
+                          color: Color(0xFF64748B),
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
@@ -2059,7 +2253,11 @@ class _TournamentCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(Icons.people_outline_rounded, size: 13, color: Color(0xFF64748B)),
+                        const Icon(
+                          Icons.people_outline_rounded,
+                          size: 13,
+                          color: Color(0xFF64748B),
+                        ),
                         const SizedBox(width: 3),
                         Text(
                           '${tournament.maxTeams} Đội',
@@ -2097,8 +2295,6 @@ class _TournamentCard extends StatelessWidget {
   }
 }
 
-
-
 // ═══════════════════════════════════════════════════════
 //  TOURNAMENT LIST CARD — For Giải đấu tab
 // ═══════════════════════════════════════════════════════
@@ -2109,10 +2305,15 @@ class _TournamentListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sc =
-        StatusHelper.getTournamentStatusColor(tournament.status, context);
-    final statusLabel = StatusHelper.getTournamentStatusLabel(tournament.status);
-    final sportLabel = AppConstants.sportNames[tournament.sport] ?? tournament.sport;
+    final sc = StatusHelper.getTournamentStatusColor(
+      tournament.status,
+      context,
+    );
+    final statusLabel = StatusHelper.getTournamentStatusLabel(
+      tournament.status,
+    );
+    final sportLabel =
+        AppConstants.sportNames[tournament.sport] ?? tournament.sport;
 
     return GestureDetector(
       onTap: onTap,
@@ -2139,7 +2340,11 @@ class _TournamentListCard extends StatelessWidget {
                 color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.emoji_events_rounded, color: Color(0xFF2979FF), size: 24),
+              child: const Icon(
+                Icons.emoji_events_rounded,
+                color: Color(0xFF2979FF),
+                size: 24,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -2159,7 +2364,11 @@ class _TournamentListCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '$sportLabel  •  ${tournament.maxTeams} đội',
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF94A3B8),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -2173,7 +2382,11 @@ class _TournamentListCard extends StatelessWidget {
               ),
               child: Text(
                 statusLabel,
-                style: TextStyle(color: sc, fontSize: 11, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  color: sc,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ],
@@ -2183,8 +2396,6 @@ class _TournamentListCard extends StatelessWidget {
   }
 }
 
-
-
 // ═══════════════════════════════════════════════════════
 //  PULSING DOT — for Live badge
 // ═══════════════════════════════════════════════════════
@@ -2193,15 +2404,18 @@ class _PulsingDot extends StatefulWidget {
   State<_PulsingDot> createState() => _PulsingDotState();
 }
 
-class _PulsingDotState extends State<_PulsingDot> with SingleTickerProviderStateMixin {
+class _PulsingDotState extends State<_PulsingDot>
+    with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _anim;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
-      ..repeat(reverse: true);
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
     _anim = Tween<double>(begin: 0.3, end: 1.0).animate(_ctrl);
   }
 
@@ -2218,7 +2432,10 @@ class _PulsingDotState extends State<_PulsingDot> with SingleTickerProviderState
       child: Container(
         width: 7,
         height: 7,
-        decoration: const BoxDecoration(color: Color(0xFFEF4444), shape: BoxShape.circle),
+        decoration: const BoxDecoration(
+          color: Color(0xFFEF4444),
+          shape: BoxShape.circle,
+        ),
       ),
     );
   }
@@ -2227,42 +2444,39 @@ class _PulsingDotState extends State<_PulsingDot> with SingleTickerProviderState
 class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double p;
   final Widget searchBar;
-  final Widget sportChips;
   final Color backgroundColor;
   final double minHeaderHeight;
 
   _StickyHeaderDelegate({
     required this.p,
     required this.searchBar,
-    required this.sportChips,
     required this.backgroundColor,
     required this.minHeaderHeight,
   });
 
   @override
-  double get minExtent => minHeaderHeight + 8 + 54.0 * p + 44.0;
+  double get minExtent => 54.0 * p;
 
   @override
-  double get maxExtent => minHeaderHeight + 8 + 54.0 * p + 44.0;
+  double get maxExtent => 54.0 * p;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return Container(
       color: backgroundColor,
       child: Column(
         children: [
-          SizedBox(height: minHeaderHeight + 8),
           ClipRect(
             child: Align(
               alignment: Alignment.topCenter,
               heightFactor: p,
-              child: Opacity(
-                opacity: p,
-                child: searchBar,
-              ),
+              child: Opacity(opacity: p, child: searchBar),
             ),
           ),
-          sportChips,
         ],
       ),
     );
@@ -2272,8 +2486,27 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant _StickyHeaderDelegate oldDelegate) {
     return p != oldDelegate.p ||
         backgroundColor != oldDelegate.backgroundColor ||
-        sportChips != oldDelegate.sportChips ||
         searchBar != oldDelegate.searchBar;
   }
 }
 
+class _StatusFilterDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  _StatusFilterDelegate({required this.child});
+
+  @override
+  double get minExtent => 52.0;
+
+  @override
+  double get maxExtent => 52.0;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return child;
+  }
+
+  @override
+  bool shouldRebuild(covariant _StatusFilterDelegate oldDelegate) {
+    return child != oldDelegate.child;
+  }
+}

@@ -11,11 +11,18 @@ final myPaymentsProvider = FutureProvider<List<PaymentModel>>((ref) async {
   return ref.watch(paymentRepositoryProvider).getMyPayments();
 });
 
-class PaymentsScreen extends ConsumerWidget {
+class PaymentsScreen extends ConsumerStatefulWidget {
   const PaymentsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PaymentsScreen> createState() => _PaymentsScreenState();
+}
+
+class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
+  String _filter = 'all'; // all, completed, pending, failed
+
+  @override
+  Widget build(BuildContext context) {
     final paymentsAsync = ref.watch(myPaymentsProvider);
 
     return Scaffold(
@@ -45,6 +52,20 @@ class PaymentsScreen extends ConsumerWidget {
   Widget _buildContent(BuildContext context, WidgetRef ref, List<PaymentModel> payments) {
     final pending = payments.where((p) => p.isPending).toList();
 
+    // Apply filter
+    final filteredPayments = payments.where((p) {
+      switch (_filter) {
+        case 'completed':
+          return p.isCompleted;
+        case 'pending':
+          return p.isPending;
+        case 'failed':
+          return p.isFailed || p.isRefunded;
+        default:
+          return true;
+      }
+    }).toList();
+
     return RefreshIndicator(
       onRefresh: () async => ref.refresh(myPaymentsProvider),
       child: CustomScrollView(
@@ -53,7 +74,7 @@ class PaymentsScreen extends ConsumerWidget {
           // Stats header
           SliverToBoxAdapter(
             child: Container(
-              margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -107,7 +128,12 @@ class PaymentsScreen extends ConsumerWidget {
             ),
           ),
 
-          if (payments.isEmpty)
+          // Filter chips
+          SliverToBoxAdapter(
+            child: _buildFilterChips(context),
+          ),
+
+          if (filteredPayments.isEmpty)
             SliverFillRemaining(
               child: Center(
                 child: Column(
@@ -123,7 +149,7 @@ class PaymentsScreen extends ConsumerWidget {
                           size: 40, color: context.colors.textMuted.withValues(alpha: 0.4)),
                     ),
                     const SizedBox(height: 16),
-                    Text('Chưa có giao dịch nào',
+                    Text(_filter == 'all' ? 'Chưa có giao dịch nào' : 'Không có giao dịch nào',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
                     const SizedBox(height: 6),
                     Text('Các khoản thanh toán sẽ xuất hiện tại đây',
@@ -137,14 +163,59 @@ class PaymentsScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
-                  (context, index) => _buildPaymentCard(context, payments[index]),
-                  childCount: payments.length,
+                  (context, index) => _buildPaymentCard(context, filteredPayments[index]),
+                  childCount: filteredPayments.length,
                 ),
               ),
             ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChips(BuildContext context) {
+    final filters = [
+      ('all', 'Tất cả', AppTheme.primary),
+      ('completed', 'Thành công', context.colors.success),
+      ('pending', 'Đang xử lý', context.colors.warning),
+      ('failed', 'Thất bại', context.colors.error),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      child: Row(
+        children: filters.map((f) {
+          final selected = _filter == f.$1;
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(right: f != filters.last ? 6 : 0),
+              child: GestureDetector(
+                onTap: () => setState(() => _filter = f.$1),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: selected ? f.$3.withValues(alpha: 0.12) : context.colors.bgCard,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: selected ? f.$3.withValues(alpha: 0.4) : context.colors.border,
+                    ),
+                  ),
+                  child: Text(
+                    f.$2,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: selected ? f.$3 : context.colors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:math' as math;
 
 // ─── Wave Header Painter ───
@@ -306,19 +307,10 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                             color: Colors.white.withValues(alpha: 0.3),
                           ),
                         ),
-                        child: Image.asset(
-                          'assets/images/vndc_sport.png',
+                        child: SvgPicture.asset(
+                          'assets/images/vndcsport.svg',
                           height: 28,
                           fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => const Text(
-                            'VNSPORT',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 16,
-                              letterSpacing: 1,
-                            ),
-                          ),
                         ),
                       ),
                       const Spacer(),

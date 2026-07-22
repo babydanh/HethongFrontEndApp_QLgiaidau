@@ -24,7 +24,7 @@ class ApiNotificationRepository {
       return [];
     } catch (e, stack) {
       _log.error('Lỗi lấy danh sách thông báo', e, stack);
-      return [];
+      rethrow;
     }
   }
 
@@ -39,7 +39,7 @@ class ApiNotificationRepository {
       return 0;
     } catch (e, stack) {
       _log.error('Lỗi lấy unread count', e, stack);
-      return 0;
+      rethrow;
     }
   }
 
@@ -50,6 +50,7 @@ class ApiNotificationRepository {
       await _dioClient.dio.patch('/notifications/$id/read');
     } catch (e, stack) {
       _log.error('Lỗi đánh dấu đã đọc', e, stack);
+      rethrow;
     }
   }
 
@@ -60,6 +61,7 @@ class ApiNotificationRepository {
       await _dioClient.dio.patch('/notifications/read-all');
     } catch (e, stack) {
       _log.error('Lỗi đánh dấu tất cả đã đọc', e, stack);
+      rethrow;
     }
   }
 }

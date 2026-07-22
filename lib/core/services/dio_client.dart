@@ -1,6 +1,7 @@
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, HttpClient, X509Certificate;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/token_manager.dart';
@@ -22,18 +23,28 @@ class DioClient {
     }
     _log.info('Initializing Dio with Base URL: $baseUrl');
 
-    _dio = dio ??
-        Dio(
-          BaseOptions(
-            baseUrl: baseUrl,
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 10),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-          ),
-        );
+    final dioOptions = BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    );
+
+    _dio = dio ?? Dio(dioOptions);
+
+    if (!kIsWeb) {
+      final adapter = _dio.httpClientAdapter;
+      if (adapter is IOHttpClientAdapter) {
+        adapter.createHttpClient = () {
+          final client = HttpClient();
+          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+          return client;
+        };
+      }
+    }
 
     _dio.interceptors.add(
       InterceptorsWrapper(

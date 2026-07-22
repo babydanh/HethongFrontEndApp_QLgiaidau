@@ -13,7 +13,11 @@ import 'package:app_quanly_giaidau/providers/app_providers.dart';
 class RallyScorePanel extends ConsumerWidget {
   final MatchControlParams params;
   final bool isReadOnly;
-  const RallyScorePanel({required this.params, this.isReadOnly = false, super.key});
+  const RallyScorePanel({
+    required this.params,
+    this.isReadOnly = false,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,15 +28,23 @@ class RallyScorePanel extends ConsumerWidget {
     final ts = state.config;
 
     // Fetch team names
-    final matchAsync = ref.watch(singleMatchProvider((tournamentId: params.tournamentId, matchId: params.matchId)));
+    final matchAsync = ref.watch(
+      singleMatchProvider((
+        tournamentId: params.tournamentId,
+        matchId: params.matchId,
+      )),
+    );
     final team1Name = matchAsync.value?.team1Name ?? 'Đội 1';
     final team2Name = matchAsync.value?.team2Name ?? 'Đội 2';
 
-    return Expanded(
+    return SizedBox(
+      height: 520,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = constraints.maxWidth < 620;
-          final maxLivePoint = r.currentP1 > r.currentP2 ? r.currentP1 : r.currentP2;
+          final maxLivePoint = r.currentP1 > r.currentP2
+              ? r.currentP1
+              : r.currentP2;
           final nearSetPoint = maxLivePoint >= ts.tiebreakAt;
 
           return Padding(
@@ -43,10 +55,14 @@ class RallyScorePanel extends ConsumerWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: nearSetPoint ? colors.warning.withValues(alpha: 0.12) : colors.bgSurface,
+                    color: nearSetPoint
+                        ? colors.warning.withValues(alpha: 0.12)
+                        : colors.bgSurface,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: nearSetPoint ? colors.warning.withValues(alpha: 0.3) : colors.border,
+                      color: nearSetPoint
+                          ? colors.warning.withValues(alpha: 0.3)
+                          : colors.border,
                     ),
                   ),
                   child: Wrap(
@@ -72,7 +88,8 @@ class RallyScorePanel extends ConsumerWidget {
                                 score: r.currentP1,
                                 colors: colors,
                                 onIncrement: () => notifier.rallyAddPoint(true),
-                                onDecrement: () => notifier.rallyRemovePoint(true),
+                                onDecrement: () =>
+                                    notifier.rallyRemovePoint(true),
                                 teamName: team1Name,
                                 compact: compact,
                                 targetPoint: ts.pointsPerSet,
@@ -84,8 +101,10 @@ class RallyScorePanel extends ConsumerWidget {
                                 isTeam1: false,
                                 score: r.currentP2,
                                 colors: colors,
-                                onIncrement: () => notifier.rallyAddPoint(false),
-                                onDecrement: () => notifier.rallyRemovePoint(false),
+                                onIncrement: () =>
+                                    notifier.rallyAddPoint(false),
+                                onDecrement: () =>
+                                    notifier.rallyRemovePoint(false),
                                 teamName: team2Name,
                                 compact: compact,
                                 targetPoint: ts.pointsPerSet,
@@ -101,7 +120,8 @@ class RallyScorePanel extends ConsumerWidget {
                                 score: r.currentP1,
                                 colors: colors,
                                 onIncrement: () => notifier.rallyAddPoint(true),
-                                onDecrement: () => notifier.rallyRemovePoint(true),
+                                onDecrement: () =>
+                                    notifier.rallyRemovePoint(true),
                                 teamName: team1Name,
                                 compact: compact,
                                 targetPoint: ts.pointsPerSet,
@@ -109,7 +129,10 @@ class RallyScorePanel extends ConsumerWidget {
                             ),
                             Container(
                               width: 3,
-                              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 16,
+                              ),
                               decoration: BoxDecoration(
                                 color: colors.border,
                                 borderRadius: BorderRadius.circular(2),
@@ -120,8 +143,10 @@ class RallyScorePanel extends ConsumerWidget {
                                 isTeam1: false,
                                 score: r.currentP2,
                                 colors: colors,
-                                onIncrement: () => notifier.rallyAddPoint(false),
-                                onDecrement: () => notifier.rallyRemovePoint(false),
+                                onIncrement: () =>
+                                    notifier.rallyAddPoint(false),
+                                onDecrement: () =>
+                                    notifier.rallyRemovePoint(false),
                                 teamName: team2Name,
                                 compact: compact,
                                 targetPoint: ts.pointsPerSet,
@@ -171,7 +196,11 @@ class RallyScorePanel extends ConsumerWidget {
         children: [
           Text(
             teamName,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.textPrimary),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: colors.textPrimary,
+            ),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -184,8 +213,14 @@ class RallyScorePanel extends ConsumerWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              distance > 0 ? 'Còn $distance điểm tới mốc set' : 'Đã chạm mốc set',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: colors.textMuted),
+              distance > 0
+                  ? 'Còn $distance điểm tới mốc set'
+                  : 'Đã chạm mốc set',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: colors.textMuted,
+              ),
             ),
           ),
           Expanded(
@@ -216,7 +251,11 @@ class RallyScorePanel extends ConsumerWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: colors.border),
                     ),
-                    child: Icon(Icons.remove_rounded, size: 24, color: colors.textSecondary),
+                    child: Icon(
+                      Icons.remove_rounded,
+                      size: 24,
+                      color: colors.textSecondary,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 18),
@@ -255,7 +294,11 @@ class RallyScorePanel extends ConsumerWidget {
           ),
           child: Text(
             label,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: colors.textSecondary),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: colors.textSecondary,
+            ),
           ),
         );
       },

@@ -8,6 +8,23 @@ import 'package:app_quanly_giaidau/data/models/penalty_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 
+Map<String, dynamic>? _readSportRules(Map<String, dynamic> json) {
+  Map<String, dynamic>? asMap(Object? value) {
+    return value is Map ? Map<String, dynamic>.from(value) : null;
+  }
+
+  final effectiveRules = asMap(json['effectiveSportRules']);
+  if (effectiveRules != null && effectiveRules.isNotEmpty) {
+    return effectiveRules;
+  }
+  final matchRules = asMap(json['sportRules']);
+  if (matchRules != null && matchRules.isNotEmpty) {
+    return matchRules;
+  }
+  final tournament = asMap(json['tournament']);
+  return asMap(tournament?['sportRules']);
+}
+
 class ApiMatchRepository implements IMatchRepository {
   static const _log = AppLogger('ApiMatchRepo');
   final DioClient _dioClient;
@@ -137,9 +154,7 @@ class ApiMatchRepository implements IMatchRepository {
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
       refereeId: json['refereeId']?.toString(),
       refereeName: json['refereeName']?.toString(),
-      sportRules: json['tournament'] is Map
-          ? (json['tournament'] as Map)['sportRules'] as Map<String, dynamic>?
-          : json['sportRules'] as Map<String, dynamic>?,
+      sportRules: _readSportRules(json),
       scoreDetails: json['scoreDetails'] as Map<String, dynamic>?,
       setsToWin: json['setsToWin'] as int?,
       team1Members: team1Members,
@@ -387,9 +402,7 @@ class ApiMatchRepository implements IMatchRepository {
             court: json['court'] ?? '',
             updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
             // Sport rules từ tournament setting
-            sportRules: json['tournament'] is Map
-                ? (json['tournament'] as Map)['sportRules'] as Map<String, dynamic>?
-                : null,
+            sportRules: _readSportRules(json),
             setsToWin: json['setsToWin'] as int?,
             team1Members: team1Members,
             team2Members: team2Members,
@@ -452,9 +465,7 @@ class ApiMatchRepository implements IMatchRepository {
             court: json['court'] ?? '',
             updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
             // Sport rules từ tournament setting
-            sportRules: json['tournament'] is Map
-                ? (json['tournament'] as Map)['sportRules'] as Map<String, dynamic>?
-                : null,
+            sportRules: _readSportRules(json),
             setsToWin: json['setsToWin'] as int?,
             team1Members: team1Members,
             team2Members: team2Members,

@@ -24,7 +24,7 @@ class _HeartModel {
   final Color color;
   final double speed;
   double yProgress = 0.0;
-  
+
   _HeartModel({
     required this.startX,
     required this.scale,
@@ -87,12 +87,14 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     ];
     setState(() {
       for (int i = 0; i < 3; i++) {
-        _hearts.add(_HeartModel(
-          startX: 20.0 + random.nextDouble() * 50.0,
-          scale: 0.6 + random.nextDouble() * 0.8,
-          color: colors[random.nextInt(colors.length)],
-          speed: 0.012 + random.nextDouble() * 0.012,
-        ));
+        _hearts.add(
+          _HeartModel(
+            startX: 20.0 + random.nextDouble() * 50.0,
+            scale: 0.6 + random.nextDouble() * 0.8,
+            color: colors[random.nextInt(colors.length)],
+            speed: 0.012 + random.nextDouble() * 0.012,
+          ),
+        );
       }
     });
 
@@ -126,9 +128,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
-    _livePulseAnim = Tween<double>(begin: 0.6, end: 1.0).animate(
-      CurvedAnimation(parent: _livePulseCtrl, curve: Curves.easeInOut),
-    );
+    _livePulseAnim = Tween<double>(
+      begin: 0.6,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _livePulseCtrl, curve: Curves.easeInOut));
 
     if (widget.isViewer) {
       _fetchComments();
@@ -159,8 +162,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         if (data != null) {
           setState(() {
             _comments.clear();
-            _comments
-                .addAll(data.map((e) => Map<String, dynamic>.from(e as Map)).toList());
+            _comments.addAll(
+              data.map((e) => Map<String, dynamic>.from(e as Map)).toList(),
+            );
           });
         }
       }
@@ -191,14 +195,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     setState(() => _isSubmittingComment = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
-      await dio.post('/matches/${widget.matchId}/comments', data: {
-        'commentText': text,
-      });
+      await dio.post(
+        '/matches/${widget.matchId}/comments',
+        data: {'commentText': text},
+      );
       _commentTextController.clear();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không thể gửi bình luận. Vui lòng thử lại!')),
+        const SnackBar(
+          content: Text('Không thể gửi bình luận. Vui lòng thử lại!'),
+        ),
       );
     } finally {
       setState(() => _isSubmittingComment = false);
@@ -235,12 +242,15 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         if ((match.score1 - match.score2).abs() < 2) return;
       }
 
-      String winnerName =
-          match.score1 > match.score2 ? match.team1Name : match.team2Name;
-      String winnerId =
-          match.score1 > match.score2 ? match.team1Id : match.team2Id;
-      String loserId =
-          match.score1 > match.score2 ? match.team2Id : match.team1Id;
+      String winnerName = match.score1 > match.score2
+          ? match.team1Name
+          : match.team2Name;
+      String winnerId = match.score1 > match.score2
+          ? match.team1Id
+          : match.team2Id;
+      String loserId = match.score1 > match.score2
+          ? match.team2Id
+          : match.team1Id;
 
       showDialog(
         context: context,
@@ -249,10 +259,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           backgroundColor: context.colors.bgCard,
           title: Row(
             children: [
-              const Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 28),
+              const Icon(
+                Icons.emoji_events_rounded,
+                color: Colors.amber,
+                size: 28,
+              ),
               const SizedBox(width: 8),
-              Text('Trận đấu kết thúc!',
-                  style: TextStyle(color: context.colors.textPrimary)),
+              Text(
+                'Trận đấu kết thúc!',
+                style: TextStyle(color: context.colors.textPrimary),
+              ),
             ],
           ),
           content: Column(
@@ -260,11 +276,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             children: [
               Text(
                 'Đội $winnerName đã giành chiến thắng!',
-                style: TextStyle(color: context.colors.textSecondary, fontSize: 15),
+                style: TextStyle(
+                  color: context.colors.textSecondary,
+                  fontSize: 15,
+                ),
               ),
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: context.colors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -289,10 +311,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               onPressed: () {
                 Navigator.pop(context);
                 ref
-                    .read(matchControllerProvider((
-                      tournamentId: widget.tournamentId,
-                      matchId: widget.matchId
-                    )))
+                    .read(
+                      matchControllerProvider((
+                        tournamentId: widget.tournamentId,
+                        matchId: widget.matchId,
+                      )),
+                    )
                     .endMatch(winnerId, loserId);
                 context.pop();
               },
@@ -320,10 +344,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         onSubmit: (teamName, option, reason) {
           final isT1 = teamName == match.team1Name;
           ref
-              .read(matchControllerProvider((
-                tournamentId: widget.tournamentId,
-                matchId: widget.matchId
-              )))
+              .read(
+                matchControllerProvider((
+                  tournamentId: widget.tournamentId,
+                  matchId: widget.matchId,
+                )),
+              )
               .addPenalty(isT1, sport, option.id, option.name, reason);
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -346,10 +372,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         backgroundColor: context.colors.bgCard,
         title: Row(
           children: [
-            const Icon(Icons.sports_kabaddi_rounded, color: Colors.orange, size: 24),
+            const Icon(
+              Icons.sports_kabaddi_rounded,
+              color: Colors.orange,
+              size: 24,
+            ),
             const SizedBox(width: 8),
-            Text('Đội nào bị phạt?',
-                style: TextStyle(color: context.colors.textPrimary)),
+            Text(
+              'Đội nào bị phạt?',
+              style: TextStyle(color: context.colors.textPrimary),
+            ),
           ],
         ),
         content: Column(
@@ -358,11 +390,15 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             ListTile(
               leading: CircleAvatar(
                 backgroundColor: Colors.blueAccent.withValues(alpha: 0.2),
-                child:
-                    const Icon(Icons.sports_rounded, color: Colors.blueAccent),
+                child: const Icon(
+                  Icons.sports_rounded,
+                  color: Colors.blueAccent,
+                ),
               ),
-              title: Text(match.team1Name,
-                  style: TextStyle(color: context.colors.textPrimary)),
+              title: Text(
+                match.team1Name,
+                style: TextStyle(color: context.colors.textPrimary),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 _showFoulSheet(true, match);
@@ -372,10 +408,15 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             ListTile(
               leading: CircleAvatar(
                 backgroundColor: Colors.redAccent.withValues(alpha: 0.2),
-                child: const Icon(Icons.sports_rounded, color: Colors.redAccent),
+                child: const Icon(
+                  Icons.sports_rounded,
+                  color: Colors.redAccent,
+                ),
               ),
-              title: Text(match.team2Name,
-                  style: TextStyle(color: context.colors.textPrimary)),
+              title: Text(
+                match.team2Name,
+                style: TextStyle(color: context.colors.textPrimary),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 _showFoulSheet(false, match);
@@ -396,8 +437,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           children: [
             const Icon(Icons.gavel_rounded, color: Colors.red, size: 24),
             const SizedBox(width: 8),
-            Text('Xử thắng nhanh',
-                style: TextStyle(color: context.colors.error)),
+            Text(
+              'Xử thắng nhanh',
+              style: TextStyle(color: context.colors.error),
+            ),
           ],
         ),
         content: Text(
@@ -432,40 +475,48 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
 
   void _forceWinMatch(String winnerId, String loserId) {
     final match = ref
-        .read(singleMatchProvider((
-          tournamentId: widget.tournamentId,
-          matchId: widget.matchId
-        )))
+        .read(
+          singleMatchProvider((
+            tournamentId: widget.tournamentId,
+            matchId: widget.matchId,
+          )),
+        )
         .value;
     if (match != null) {
       int newScore1 = match.score1;
       int newScore2 = match.score2;
 
       if (winnerId == match.team1Id) {
-        newScore1 = match.maxScore ??
+        newScore1 =
+            match.maxScore ??
             (match.score1 <= match.score2 ? match.score2 + 1 : match.score1);
       } else {
-        newScore2 = match.maxScore ??
+        newScore2 =
+            match.maxScore ??
             (match.score2 <= match.score1 ? match.score1 + 1 : match.score2);
       }
 
       ref
-          .read(matchControllerProvider((
-            tournamentId: widget.tournamentId,
-            matchId: widget.matchId
-          )))
+          .read(
+            matchControllerProvider((
+              tournamentId: widget.tournamentId,
+              matchId: widget.matchId,
+            )),
+          )
           .updateMatchResultByAdmin(
-        score1: newScore1,
-        score2: newScore2,
-        winnerId: winnerId,
-        loserId: loserId,
-      );
+            score1: newScore1,
+            score2: newScore2,
+            winnerId: winnerId,
+            loserId: loserId,
+          );
     } else {
       ref
-          .read(matchControllerProvider((
-            tournamentId: widget.tournamentId,
-            matchId: widget.matchId
-          )))
+          .read(
+            matchControllerProvider((
+              tournamentId: widget.tournamentId,
+              matchId: widget.matchId,
+            )),
+          )
           .endMatch(winnerId, loserId);
     }
     context.pop();
@@ -473,15 +524,19 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
 
   @override
   Widget build(BuildContext context) {
-    final matchAsync = ref.watch(singleMatchProvider((
-      tournamentId: widget.tournamentId,
-      matchId: widget.matchId
-    )));
+    final matchAsync = ref.watch(
+      singleMatchProvider((
+        tournamentId: widget.tournamentId,
+        matchId: widget.matchId,
+      )),
+    );
 
-    ref.watch(matchControllerProvider((
-      tournamentId: widget.tournamentId,
-      matchId: widget.matchId
-    )));
+    ref.watch(
+      matchControllerProvider((
+        tournamentId: widget.tournamentId,
+        matchId: widget.matchId,
+      )),
+    );
     final authRole = ref.watch(authProvider).role;
     final canOpenScoring =
         authRole == UserRole.admin || authRole == UserRole.referee;
@@ -520,8 +575,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             Text(
               widget.isViewer
                   ? (matchAsync.value?.isLive == true
-                      ? 'Trực tiếp'
-                      : 'Chi Tiết Trận Đấu')
+                        ? 'Trực tiếp'
+                        : 'Chi Tiết Trận Đấu')
                   : 'Bàn Trọng Tài',
               style: TextStyle(
                 fontSize: isLandscape ? 16 : 18,
@@ -533,8 +588,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         centerTitle: true,
         toolbarHeight: isLandscape ? 40 : 52,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded,
-              size: isLandscape ? 18 : 22),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: isLandscape ? 18 : 22,
+          ),
           onPressed: () => context.pop(),
         ),
         actions: [
@@ -577,11 +634,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.search_off_rounded,
-                          size: 64, color: context.colors.textMuted),
+                      Icon(
+                        Icons.search_off_rounded,
+                        size: 64,
+                        color: context.colors.textMuted,
+                      ),
                       const SizedBox(height: 16),
-                      Text('Không tìm thấy trận đấu',
-                          style: TextStyle(color: context.colors.textSecondary)),
+                      Text(
+                        'Không tìm thấy trận đấu',
+                        style: TextStyle(color: context.colors.textSecondary),
+                      ),
                     ],
                   ),
                 );
@@ -591,8 +653,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               _trackScoreChanges(match);
 
               if (match.isLive) {
-                WidgetsBinding.instance
-                    .addPostFrameCallback((_) => _checkWinner(match));
+                WidgetsBinding.instance.addPostFrameCallback(
+                  (_) => _checkWinner(match),
+                );
               }
 
               if (widget.isViewer) {
@@ -607,20 +670,20 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 return _buildCompletedState(match, authRole);
               }
             },
-            loading: () => const Center(
-              child: CircularProgressIndicator(),
-            ),
+            loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline_rounded,
-                        size: 48, color: context.colors.error),
+                    Icon(
+                      Icons.error_outline_rounded,
+                      size: 48,
+                      color: context.colors.error,
+                    ),
                     const SizedBox(height: 12),
-                    Text('Lỗi: $e',
-                        style: const TextStyle(color: Colors.red)),
+                    Text('Lỗi: $e', style: const TextStyle(color: Colors.red)),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () => context.pop(),
@@ -638,7 +701,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   final double opacity = math.max(0.0, 1.0 - heart.yProgress);
                   return Positioned(
                     bottom: 80.0 + (heart.yProgress * 320.0),
-                    right: heart.startX + math.sin(heart.yProgress * 4 * math.pi) * 16.0,
+                    right:
+                        heart.startX +
+                        math.sin(heart.yProgress * 4 * math.pi) * 16.0,
                     child: Opacity(
                       opacity: opacity,
                       child: Transform.scale(
@@ -697,8 +762,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   color: context.colors.info.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(Icons.settings_rounded,
-                    color: context.colors.info, size: 28),
+                child: Icon(
+                  Icons.settings_rounded,
+                  color: context.colors.info,
+                  size: 28,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -711,8 +779,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
               const SizedBox(height: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: context.colors.info.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
@@ -771,11 +841,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               ? '${config.pointsPerSet} game'
                               : '${config.pointsPerSet} điểm',
                         ),
-                        if (config.mustWinByTwo) _buildSetupChip('Luật', 'Cách biệt 2'),
-                        if (config.scoringModel == SportScoringModel.pickleballSideOut)
+                        if (config.mustWinByTwo)
+                          _buildSetupChip('Luật', 'Cách biệt 2'),
+                        if (config.scoringModel ==
+                            SportScoringModel.pickleballSideOut)
                           _buildSetupChip('Scoring', 'Side-out'),
                         if (kind == SportRuleKind.tennis)
-                          _buildSetupChip('Tiebreak', '${config.tiebreakPoints ?? 7} điểm'),
+                          _buildSetupChip(
+                            'Tiebreak',
+                            '${config.tiebreakPoints ?? 7} điểm',
+                          ),
                       ],
                     ),
                   ],
@@ -789,12 +864,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 style: TextStyle(
-                    fontSize: 16, color: context.colors.textPrimary),
+                  fontSize: 16,
+                  color: context.colors.textPrimary,
+                ),
                 decoration: InputDecoration(
                   labelText: scoreLabel,
-                  helperText: 'Giá trị mặc định đang lấy từ setting của giải. Đây là tuỳ chỉnh ở cấp trận.',
-                  prefixIcon: Icon(Icons.track_changes_rounded,
-                      color: context.colors.textMuted),
+                  helperText:
+                      'Giá trị mặc định đang lấy từ setting của giải. Đây là tuỳ chỉnh ở cấp trận.',
+                  prefixIcon: Icon(
+                    Icons.track_changes_rounded,
+                    color: context.colors.textMuted,
+                  ),
                   filled: true,
                   fillColor: context.colors.bgDark,
                   border: OutlineInputBorder(
@@ -813,12 +893,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 style: TextStyle(
-                    fontSize: 16, color: context.colors.textPrimary),
+                  fontSize: 16,
+                  color: context.colors.textPrimary,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Giới hạn thời gian (phút, tuỳ chọn)',
-                  helperText: 'Nếu để trống, trận sẽ không giới hạn thời gian ở cấp trận.',
-                  prefixIcon: Icon(Icons.timer_outlined,
-                      color: context.colors.textMuted),
+                  helperText:
+                      'Nếu để trống, trận sẽ không giới hạn thời gian ở cấp trận.',
+                  prefixIcon: Icon(
+                    Icons.timer_outlined,
+                    color: context.colors.textMuted,
+                  ),
                   filled: true,
                   fillColor: context.colors.bgDark,
                   border: OutlineInputBorder(
@@ -837,11 +922,15 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               TextField(
                 controller: _refereeController,
                 style: TextStyle(
-                    fontSize: 16, color: context.colors.textPrimary),
+                  fontSize: 16,
+                  color: context.colors.textPrimary,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Tên trọng tài (Tùy chọn)',
-                  prefixIcon: Icon(Icons.person_outline_rounded,
-                      color: context.colors.textMuted),
+                  prefixIcon: Icon(
+                    Icons.person_outline_rounded,
+                    color: context.colors.textMuted,
+                  ),
                   filled: true,
                   fillColor: context.colors.bgDark,
                   border: OutlineInputBorder(
@@ -858,16 +947,21 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
 
               // Win by 2 toggle
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: context.colors.bgDark,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.swap_vert_rounded,
-                        color: context.colors.textSecondary, size: 20),
+                    Icon(
+                      Icons.swap_vert_rounded,
+                      color: context.colors.textSecondary,
+                      size: 20,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -880,8 +974,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     ),
                     Switch(
                       value: _winByTwo,
-                      onChanged: (val) =>
-                          setState(() => _winByTwo = val),
+                      onChanged: (val) => setState(() => _winByTwo = val),
                       activeTrackColor: context.colors.info,
                     ),
                   ],
@@ -895,16 +988,19 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 height: 52,
                 child: ElevatedButton.icon(
                   onPressed: () async {
-                    final controller = ref.read(matchControllerProvider((
-                      tournamentId: widget.tournamentId,
-                      matchId: widget.matchId
-                    )));
+                    final controller = ref.read(
+                      matchControllerProvider((
+                        tournamentId: widget.tournamentId,
+                        matchId: widget.matchId,
+                      )),
+                    );
                     final resolvedMaxScore =
                         int.tryParse(_maxScoreController.text) ??
                         match.maxScore ??
                         config.pointsPerSet;
-                    final resolvedTimeLimit =
-                        int.tryParse(_timeLimitController.text);
+                    final resolvedTimeLimit = int.tryParse(
+                      _timeLimitController.text,
+                    );
                     await controller.updateConfig(
                       maxScore: resolvedMaxScore,
                       winByTwo: _winByTwo,
@@ -936,9 +1032,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     );
                   },
                   icon: const Icon(Icons.play_arrow_rounded),
-                  label: const Text('BẮT ĐẦU VÀ MỞ BÀN CHẤM ĐIỂM',
-                      style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    'BẮT ĐẦU VÀ MỞ BÀN CHẤM ĐIỂM',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.colors.success,
                     foregroundColor: Colors.white,
@@ -960,12 +1057,14 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       return;
     }
     final seededMaxScore = match.maxScore ?? config.pointsPerSet;
-    final seededWinByTwo = match.sportRules != null && match.sportRules!.isNotEmpty
+    final seededWinByTwo =
+        match.sportRules != null && match.sportRules!.isNotEmpty
         ? config.mustWinByTwo
         : match.winByTwo;
     _maxScoreController.text = seededMaxScore.toString();
-    _timeLimitController.text =
-        match.timeLimitMinutes != null ? match.timeLimitMinutes.toString() : '';
+    _timeLimitController.text = match.timeLimitMinutes != null
+        ? match.timeLimitMinutes.toString()
+        : '';
     _refereeController.text = match.refereeName ?? '';
     _winByTwo = seededWinByTwo;
     _didSeedSetupControls = true;
@@ -1027,7 +1126,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     if (widget.isViewer || canOpenScoring) {
       return _buildViewerState(
         match,
-        canOpenScoring: canOpenScoring && !match.isScheduled && !match.isCompleted,
+        canOpenScoring:
+            canOpenScoring && !match.isScheduled && !match.isCompleted,
       );
     }
 
@@ -1046,10 +1146,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
               if (match.winByTwo) ...[
                 const SizedBox(width: 12),
-                _buildInfoChip(
-                  Icons.swap_vert_rounded,
-                  'Cách biệt 2',
-                ),
+                _buildInfoChip(Icons.swap_vert_rounded, 'Cách biệt 2'),
               ],
               if (match.refereeName != null &&
                   match.refereeName!.isNotEmpty) ...[
@@ -1081,8 +1178,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: context.colors.bgCard,
                       borderRadius: BorderRadius.circular(10),
@@ -1103,7 +1202,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     opacity: _livePulseAnim,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: context.colors.error,
                         borderRadius: BorderRadius.circular(20),
@@ -1111,8 +1212,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.fiber_manual_record,
-                              size: 8, color: Colors.white),
+                          Icon(
+                            Icons.fiber_manual_record,
+                            size: 8,
+                            color: Colors.white,
+                          ),
                           SizedBox(width: 4),
                           Text(
                             'LIVE',
@@ -1161,9 +1265,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   label: const Text(
                     'THỔI CÒI',
                     style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5),
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                   onPressed: () => _showFoulSelectionDialog(match),
                 ),
@@ -1182,9 +1287,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   label: const Text(
                     'XỬ THẮNG',
                     style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5),
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                   onPressed: () => _showForceWinDialog(match),
                 ),
@@ -1229,10 +1335,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }) {
     final teamName = isTeam1 ? match.team1Name : match.team2Name;
     final score = isTeam1 ? match.score1 : match.score2;
-    final controller = ref.read(matchControllerProvider((
-      tournamentId: widget.tournamentId,
-      matchId: widget.matchId
-    )));
+    final controller = ref.read(
+      matchControllerProvider((
+        tournamentId: widget.tournamentId,
+        matchId: widget.matchId,
+      )),
+    );
 
     return GestureDetector(
       onTap: () => controller.addScore(isTeam1, 1),
@@ -1303,8 +1411,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
             ),
             IconButton(
-              icon: Icon(Icons.remove_circle_outline_rounded,
-                  size: 36, color: color.withValues(alpha: 0.6)),
+              icon: Icon(
+                Icons.remove_circle_outline_rounded,
+                size: 36,
+                color: color.withValues(alpha: 0.6),
+              ),
               onPressed: () => controller.addScore(isTeam1, -1),
               splashRadius: 24,
             ),
@@ -1444,11 +1555,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     top: 10,
                     left: 10,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 0.5),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          width: 0.5,
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1465,7 +1582,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             const SizedBox(width: 4),
                           ],
                           Text(
-                            match.isLive ? 'LIVE' : (match.isCompleted ? 'KẾT THÚC' : 'SẮP ĐẤU'),
+                            match.isLive
+                                ? 'LIVE'
+                                : (match.isCompleted ? 'KẾT THÚC' : 'SẮP ĐẤU'),
                             style: TextStyle(
                               fontSize: 8.5,
                               fontWeight: FontWeight.w900,
@@ -1482,17 +1601,32 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           const SizedBox(width: 6),
                           Text(
                             '${_compactTeamName(match.team1Name)} ',
-                            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                           _scoreBadge(match.score1, const Color(0xFF2979FF)),
                           const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 3),
-                            child: Text('-', style: TextStyle(fontSize: 9, color: Colors.white70, fontWeight: FontWeight.bold)),
+                            child: Text(
+                              '-',
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: Colors.white70,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                           _scoreBadge(match.score2, const Color(0xFFEF4444)),
                           Text(
                             ' ${_compactTeamName(match.team2Name)}',
-                            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
@@ -1504,7 +1638,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     top: 10,
                     right: 10,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(4),
@@ -1512,7 +1649,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.videocam_rounded, size: 10, color: Colors.white.withValues(alpha: 0.7)),
+                          Icon(
+                            Icons.videocam_rounded,
+                            size: 10,
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
                           const SizedBox(width: 3),
                           Text(
                             'CAM 1 (SÂN CHÍNH)',
@@ -1533,7 +1674,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     left: 0,
                     right: 0,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.bottomCenter,
@@ -1546,28 +1690,54 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 16),
+                          const Icon(
+                            Icons.play_arrow_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             match.isLive ? '02:40' : '--:--',
-                            style: const TextStyle(color: Colors.white70, fontSize: 9, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const Spacer(),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.white54, width: 0.5),
+                              border: Border.all(
+                                color: Colors.white54,
+                                width: 0.5,
+                              ),
                               borderRadius: BorderRadius.circular(3),
                             ),
                             child: const Text(
                               '1080p 60fps',
-                              style: TextStyle(color: Colors.white, fontSize: 7, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 7,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.volume_up_rounded, color: Colors.white, size: 14),
+                          const Icon(
+                            Icons.volume_up_rounded,
+                            color: Colors.white,
+                            size: 14,
+                          ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.fullscreen_rounded, color: Colors.white, size: 16),
+                          const Icon(
+                            Icons.fullscreen_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                         ],
                       ),
                     ),
@@ -1581,7 +1751,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.2),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          width: 1.2,
+                        ),
                       ),
                       child: const Icon(
                         Icons.play_arrow_rounded,
@@ -1642,8 +1815,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             ),
             indicatorSize: TabBarIndicatorSize.tab,
             dividerColor: Colors.transparent,
-            labelStyle:
-                const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
             tabs: const [
               Tab(text: 'Tỉ số & Diễn biến'),
               Tab(text: 'Phòng thảo luận'),
@@ -1673,13 +1848,65 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
-  int _getEloForName(String name, int defaultVal) {
-    if (name.toLowerCase() == 'tbd') return defaultVal;
-    int hash = 0;
-    for (int i = 0; i < name.length; i++) {
-      hash = name.codeUnitAt(i) + ((hash << 5) - hash);
+  String _memberEloLabel(MatchMemberInfo member) {
+    final name = member.fullName.trim();
+    final elo = member.eloPoints;
+    final tier = member.tierName?.trim();
+    if (elo == null) return '$name • Chưa có ELO';
+    if (tier != null && tier.isNotEmpty) return '$name • ELO $elo • $tier';
+    return '$name • ELO $elo';
+  }
+
+  String _teamMemberSummary(
+    List<MatchMemberInfo> memberInfos,
+    List<String> displayList,
+  ) {
+    final realMembers = memberInfos
+        .where((member) => member.fullName.trim().isNotEmpty)
+        .toList();
+    if (realMembers.isNotEmpty) {
+      return realMembers.map(_memberEloLabel).join('\n');
     }
-    return 1000 + (hash.abs() % 200);
+    if (displayList.length == 1) return '${displayList.first} • Chưa có ELO';
+    return displayList.join(' & ');
+  }
+
+  Widget _teamMemberSummaryWidget(
+    List<MatchMemberInfo> memberInfos,
+    List<String> displayList,
+    TextStyle style,
+  ) {
+    final realMembers = memberInfos
+        .where((member) => member.fullName.trim().isNotEmpty)
+        .toList();
+    if (realMembers.isEmpty) {
+      return Text(
+        _teamMemberSummary(memberInfos, displayList),
+        style: style,
+        textAlign: TextAlign.center,
+      );
+    }
+    return Column(
+      children: realMembers.map((member) {
+        final userId = member.userId?.trim();
+        final label = _memberEloLabel(member);
+        if (userId == null || userId.isEmpty) {
+          return Text(label, style: style, textAlign: TextAlign.center);
+        }
+        return InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => context.push('/profile/user/$userId'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            child: Text(
+              label,
+              style: style.copyWith(decoration: TextDecoration.underline),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      }).toList(),
+    );
   }
 
   String _compactTeamName(String name) {
@@ -1707,7 +1934,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
-  Widget _buildViewerScoreboard(MatchModel match, ScorePanelState notifierState) {
+  Widget _buildViewerScoreboard(
+    MatchModel match,
+    ScorePanelState notifierState,
+  ) {
     final colors = context.colors;
     final int team1SetWins = notifierState.team1SetWins;
     final int team2SetWins = notifierState.team2SetWins;
@@ -1716,26 +1946,41 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final maxSets = config.bestOf;
     final scoreSummary = _viewerScoreSummary(match, config);
     final modelLabel = _viewerModelLabel(config);
-    final currentSetLabel = _viewerCurrentSetLabel(match, notifierState, config);
-    
+    final currentSetLabel = _viewerCurrentSetLabel(
+      match,
+      notifierState,
+      config,
+    );
+
     // Split names if double matches format
     final t1Names = match.team1Name.split(RegExp(r'[-–\n]'));
     final t2Names = match.team2Name.split(RegExp(r'[-–\n]'));
 
-    final t1List = (match.team1Members != null && match.team1Members!.isNotEmpty) ? match.team1Members! : t1Names;
-    final t2List = (match.team2Members != null && match.team2Members!.isNotEmpty) ? match.team2Members! : t2Names;
+    final t1List =
+        (match.team1Members != null && match.team1Members!.isNotEmpty)
+        ? match.team1Members!
+        : t1Names;
+    final t2List =
+        (match.team2Members != null && match.team2Members!.isNotEmpty)
+        ? match.team2Members!
+        : t2Names;
 
-    final t1Cleaned = t1List.where((name) => name.trim().isNotEmpty && name.trim().toLowerCase() != 'tbd').toList();
-    final t2Cleaned = t2List.where((name) => name.trim().isNotEmpty && name.trim().toLowerCase() != 'tbd').toList();
+    final t1Cleaned = t1List
+        .where(
+          (name) =>
+              name.trim().isNotEmpty && name.trim().toLowerCase() != 'tbd',
+        )
+        .toList();
+    final t2Cleaned = t2List
+        .where(
+          (name) =>
+              name.trim().isNotEmpty && name.trim().toLowerCase() != 'tbd',
+        )
+        .toList();
 
     final t1DisplayList = t1Cleaned.isNotEmpty ? t1Cleaned : [match.team1Name];
     final t2DisplayList = t2Cleaned.isNotEmpty ? t2Cleaned : [match.team2Name];
-    
-    final bool t1IsSingleAndIdentical = t1Cleaned.length == 1 &&
-        t1Cleaned.first.trim().toLowerCase() == match.team1Name.trim().toLowerCase();
-    final bool t2IsSingleAndIdentical = t2Cleaned.length == 1 &&
-        t2Cleaned.first.trim().toLowerCase() == match.team2Name.trim().toLowerCase();
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -1751,22 +1996,37 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             ),
             child: Row(
               children: [
-                Icon(Icons.location_on_rounded, size: 16, color: AppTheme.primary),
+                Icon(
+                  Icons.location_on_rounded,
+                  size: 16,
+                  color: AppTheme.primary,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   match.court.isNotEmpty ? match.court : 'Sân trung tâm',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: colors.textSecondary,
+                  ),
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     scoreSummary,
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.primary),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.primary,
+                    ),
                   ),
                 ),
               ],
@@ -1791,12 +2051,15 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 if (config.mustWinByTwo)
                   _buildViewerConfigChip('Luật', 'Cách biệt 2'),
                 if (kind == SportRuleKind.tennis)
-                  _buildViewerConfigChip('Tiebreak', '${config.tiebreakPoints ?? 7} điểm'),
+                  _buildViewerConfigChip(
+                    'Tiebreak',
+                    '${config.tiebreakPoints ?? 7} điểm',
+                  ),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Main Premium Scoreboard
           Container(
             padding: const EdgeInsets.all(16),
@@ -1804,10 +2067,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  colors.bgCard,
-                  colors.bgSurface,
-                ],
+                colors: [colors.bgCard, colors.bgSurface],
               ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: colors.border, width: 1),
@@ -1829,42 +2089,63 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         children: [
                           CircleAvatar(
                             radius: 28,
-                            backgroundColor: const Color(0xFF2979FF).withValues(alpha: 0.1),
-                            child: const Icon(Icons.sports_tennis_rounded, size: 28, color: Color(0xFF2979FF)),
+                            backgroundColor: const Color(
+                              0xFF2979FF,
+                            ).withValues(alpha: 0.1),
+                            child: const Icon(
+                              Icons.sports_tennis_rounded,
+                              size: 28,
+                              color: Color(0xFF2979FF),
+                            ),
                           ),
                           const SizedBox(height: 12),
                           Text(
                             match.team1Name,
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.textPrimary),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: colors.textPrimary,
+                            ),
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 6),
-                          // Player Info / Elo Mock
-                          Text(
-                            t1IsSingleAndIdentical
-                                ? 'Elo: ${_getEloForName(t1Cleaned.first.trim(), 1240)}'
-                                : t1DisplayList.map((n) => '${n.trim()} (Elo: ${_getEloForName(n.trim(), 1240)})').join('\n'),
-                            style: TextStyle(fontSize: 11, color: colors.textMuted, height: 1.3),
-                            textAlign: TextAlign.center,
+                          // Player Info / ELO từ API thật; fallback trung thực nếu chưa có.
+                          _teamMemberSummaryWidget(
+                            match.team1MemberInfos,
+                            t1DisplayList,
+                            TextStyle(
+                              fontSize: 11,
+                              color: colors.textMuted,
+                              height: 1.3,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF2979FF).withValues(alpha: 0.1),
+                              color: const Color(
+                                0xFF2979FF,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               'SET THẮNG: $team1SetWins',
-                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF2979FF)),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2979FF),
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    
+
                     // Center Score
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1886,7 +2167,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                                 padding: EdgeInsets.symmetric(horizontal: 6),
                                 child: Text(
                                   '-',
-                                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.grey),
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                               ),
                               Text(
@@ -1902,7 +2187,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           ),
                           const SizedBox(height: 6),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.red.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
@@ -1921,7 +2209,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                                 const SizedBox(width: 4),
                                 Text(
                                   currentSetLabel,
-                                  style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.red),
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red,
+                                  ),
                                 ),
                               ],
                             ),
@@ -1929,43 +2221,64 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         ],
                       ),
                     ),
-                    
+
                     // Team 2
                     Expanded(
                       child: Column(
                         children: [
                           CircleAvatar(
                             radius: 28,
-                            backgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.1),
-                            child: const Icon(Icons.sports_tennis_rounded, size: 28, color: Color(0xFFEF4444)),
+                            backgroundColor: const Color(
+                              0xFFEF4444,
+                            ).withValues(alpha: 0.1),
+                            child: const Icon(
+                              Icons.sports_tennis_rounded,
+                              size: 28,
+                              color: Color(0xFFEF4444),
+                            ),
                           ),
                           const SizedBox(height: 12),
                           Text(
                             match.team2Name,
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.textPrimary),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: colors.textPrimary,
+                            ),
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 6),
-                          // Player Info / Elo Mock
-                          Text(
-                            t2IsSingleAndIdentical
-                                ? 'Elo: ${_getEloForName(t2Cleaned.first.trim(), 1190)}'
-                                : t2DisplayList.map((n) => '${n.trim()} (Elo: ${_getEloForName(n.trim(), 1190)})').join('\n'),
-                            style: TextStyle(fontSize: 11, color: colors.textMuted, height: 1.3),
-                            textAlign: TextAlign.center,
+                          // Player Info / ELO từ API thật; fallback trung thực nếu chưa có.
+                          _teamMemberSummaryWidget(
+                            match.team2MemberInfos,
+                            t2DisplayList,
+                            TextStyle(
+                              fontSize: 11,
+                              color: colors.textMuted,
+                              height: 1.3,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                              color: const Color(
+                                0xFFEF4444,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               'SET THẮNG: $team2SetWins',
-                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFEF4444)),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFEF4444),
+                              ),
                             ),
                           ),
                         ],
@@ -1977,11 +2290,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // TỈ SỐ CÁC SET Section
           Text(
             'TỈ SỐ CÁC SET',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.textSecondary, letterSpacing: 0.5),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: colors.textSecondary,
+              letterSpacing: 0.5,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
@@ -1993,7 +2311,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               String scoreDisplay = '-';
               Color boxBg = colors.bgSurface;
               Color borderCol = colors.border;
-              
+
               if (isPlayed) {
                 final setScore = notifierState.finishedSets[index];
                 scoreDisplay = '${setScore.score1} - ${setScore.score2}';
@@ -2004,10 +2322,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 boxBg = AppTheme.primary.withValues(alpha: 0.05);
                 borderCol = AppTheme.primary.withValues(alpha: 0.3);
               }
-              
+
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: boxBg,
                   borderRadius: BorderRadius.circular(16),
@@ -2017,7 +2338,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   children: [
                     Text(
                       'SET ${index + 1}',
-                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: colors.textMuted),
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: colors.textMuted,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -2025,7 +2350,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
-                        color: isPlayed || currentPlaying ? colors.textPrimary : colors.textMuted.withValues(alpha: 0.5),
+                        color: isPlayed || currentPlaying
+                            ? colors.textPrimary
+                            : colors.textMuted.withValues(alpha: 0.5),
                       ),
                     ),
                   ],
@@ -2033,7 +2360,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               );
             }),
           ),
-          
+
           // Match details expansion card
           const SizedBox(height: 24),
           Card(
@@ -2047,21 +2374,40 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               shape: const Border(),
               title: Text(
                 'Thông tin trận đấu chi tiết',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.textPrimary),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: colors.textPrimary,
+                ),
               ),
-              leading: Icon(Icons.info_outline_rounded, color: colors.textSecondary, size: 20),
+              leading: Icon(
+                Icons.info_outline_rounded,
+                color: colors.textSecondary,
+                size: 20,
+              ),
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: Column(
                     children: [
-                      _buildInfoRow('Giải đấu', match.tournamentName ?? 'Giải Vô Địch Mùa Hè'),
+                      _buildInfoRow(
+                        'Giải đấu',
+                        match.tournamentName ?? 'Giải Vô Địch Mùa Hè',
+                      ),
                       const Divider(height: 16),
-                      _buildInfoRow('Trọng tài chính', match.refereeName ?? 'Nguyễn Trọng Tài'),
+                      _buildInfoRow(
+                        'Trọng tài chính',
+                        match.refereeName ?? 'Nguyễn Trọng Tài',
+                      ),
                       const Divider(height: 16),
-                      _buildInfoRow('Thời gian xếp lịch', match.scheduledTime != null 
-                          ? DateFormat('HH:mm - dd/MM/yyyy').format(match.scheduledTime!.toLocal())
-                          : 'Chưa xếp lịch'),
+                      _buildInfoRow(
+                        'Thời gian xếp lịch',
+                        match.scheduledTime != null
+                            ? DateFormat(
+                                'HH:mm - dd/MM/yyyy',
+                              ).format(match.scheduledTime!.toLocal())
+                            : 'Chưa xếp lịch',
+                      ),
                     ],
                   ),
                 ),
@@ -2072,13 +2418,23 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       ),
     );
   }
-  
+
   Widget _buildInfoRow(String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
-        Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: context.colors.textPrimary)),
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: context.colors.textPrimary,
+          ),
+        ),
       ],
     );
   }
@@ -2159,11 +2515,18 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           children: [
             const SizedBox(height: 40),
             // Trophy animation
-            const Icon(Icons.emoji_events_rounded, size: 72, color: Colors.amber)
+            const Icon(
+                  Icons.emoji_events_rounded,
+                  size: 72,
+                  color: Colors.amber,
+                )
                 .animate()
                 .scale(duration: 600.ms, curve: Curves.elasticOut)
                 .then()
-                .shimmer(duration: 1500.ms, color: Colors.amber.withValues(alpha: 0.3)),
+                .shimmer(
+                  duration: 1500.ms,
+                  color: Colors.amber.withValues(alpha: 0.3),
+                ),
             const SizedBox(height: 16),
             Text(
               'TRẬN ĐẤU ĐÃ KẾT THÚC',
@@ -2213,10 +2576,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           match.team1Name,
                           style: TextStyle(
                             fontSize: 13,
-                            fontWeight:
-                                match.winnerId == match.team1Id
-                                    ? FontWeight.w700
-                                    : FontWeight.w400,
+                            fontWeight: match.winnerId == match.team1Id
+                                ? FontWeight.w700
+                                : FontWeight.w400,
                             color: match.winnerId == match.team1Id
                                 ? context.colors.success
                                 : context.colors.textSecondary,
@@ -2258,10 +2620,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           match.team2Name,
                           style: TextStyle(
                             fontSize: 13,
-                            fontWeight:
-                                match.winnerId == match.team2Id
-                                    ? FontWeight.w700
-                                    : FontWeight.w400,
+                            fontWeight: match.winnerId == match.team2Id
+                                ? FontWeight.w700
+                                : FontWeight.w400,
                             color: match.winnerId == match.team2Id
                                 ? context.colors.success
                                 : context.colors.textSecondary,
@@ -2285,14 +2646,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               decoration: BoxDecoration(
                 color: Colors.amber.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                    color: Colors.amber.withValues(alpha: 0.3)),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.emoji_events_rounded,
-                      size: 16, color: Colors.amber),
+                  const Icon(
+                    Icons.emoji_events_rounded,
+                    size: 16,
+                    color: Colors.amber,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Thắng: ${match.winnerId == match.team1Id ? match.team1Name : match.team2Name}',
@@ -2311,12 +2674,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             if (role == UserRole.admin) ...[
               OutlinedButton.icon(
                 icon: const Icon(Icons.edit, color: Colors.red, size: 18),
-                label: const Text('SỬA KẾT QUẢ (ADMIN)',
-                    style: TextStyle(color: Colors.red, fontSize: 13)),
+                label: const Text(
+                  'SỬA KẾT QUẢ (ADMIN)',
+                  style: TextStyle(color: Colors.red, fontSize: 13),
+                ),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Colors.red),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -2333,8 +2700,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.colors.bgSurface,
                 foregroundColor: context.colors.textPrimary,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -2343,8 +2712,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => context.go('/'),
-              child: Text('Về trang chủ',
-                  style: TextStyle(color: context.colors.textMuted)),
+              child: Text(
+                'Về trang chủ',
+                style: TextStyle(color: context.colors.textMuted),
+              ),
             ),
             const SizedBox(height: 40),
           ],
@@ -2356,8 +2727,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   void _showAdminEditDialog(BuildContext context, MatchModel match) {
     final score1Ctrl = TextEditingController(text: match.score1.toString());
     final score2Ctrl = TextEditingController(text: match.score2.toString());
-    String selectedWinnerId =
-        match.winnerId.isNotEmpty ? match.winnerId : match.team1Id;
+    String selectedWinnerId = match.winnerId.isNotEmpty
+        ? match.winnerId
+        : match.team1Id;
 
     showDialog(
       context: context,
@@ -2368,12 +2740,19 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               backgroundColor: context.colors.bgCard,
               title: Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded,
-                      color: Colors.orange, size: 24),
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.orange,
+                    size: 24,
+                  ),
                   const SizedBox(width: 8),
-                  Text('Admin: Sửa Kết Quả',
-                      style: TextStyle(
-                          color: context.colors.textPrimary, fontSize: 18)),
+                  Text(
+                    'Admin: Sửa Kết Quả',
+                    style: TextStyle(
+                      color: context.colors.textPrimary,
+                      fontSize: 18,
+                    ),
+                  ),
                 ],
               ),
               content: SingleChildScrollView(
@@ -2401,23 +2780,28 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(match.team1Name,
-                                  style: TextStyle(
-                                      color: context.colors.textPrimary,
-                                      fontWeight: FontWeight.bold)),
+                              Text(
+                                match.team1Name,
+                                style: TextStyle(
+                                  color: context.colors.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               const SizedBox(height: 8),
                               TextField(
                                 controller: score1Ctrl,
                                 keyboardType: TextInputType.number,
                                 style: TextStyle(
-                                    color: context.colors.textPrimary),
+                                  color: context.colors.textPrimary,
+                                ),
                                 decoration: InputDecoration(
                                   filled: true,
                                   fillColor: context.colors.bgDark,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
                                     borderSide: BorderSide(
-                                        color: context.colors.border),
+                                      color: context.colors.border,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -2429,23 +2813,28 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(match.team2Name,
-                                  style: TextStyle(
-                                      color: context.colors.textPrimary,
-                                      fontWeight: FontWeight.bold)),
+                              Text(
+                                match.team2Name,
+                                style: TextStyle(
+                                  color: context.colors.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               const SizedBox(height: 8),
                               TextField(
                                 controller: score2Ctrl,
                                 keyboardType: TextInputType.number,
                                 style: TextStyle(
-                                    color: context.colors.textPrimary),
+                                  color: context.colors.textPrimary,
+                                ),
                                 decoration: InputDecoration(
                                   filled: true,
                                   fillColor: context.colors.bgDark,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
                                     borderSide: BorderSide(
-                                        color: context.colors.border),
+                                      color: context.colors.border,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -2455,25 +2844,32 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       ],
                     ),
                     const SizedBox(height: 20),
-                    Text('Đội chiến thắng:',
-                        style: TextStyle(
-                            color: context.colors.textPrimary,
-                            fontWeight: FontWeight.bold)),
+                    Text(
+                      'Đội chiến thắng:',
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       initialValue: selectedWinnerId,
                       dropdownColor: context.colors.bgCard,
                       items: [
                         DropdownMenuItem(
-                            value: match.team1Id,
-                            child: Text(match.team1Name,
-                                style: TextStyle(
-                                    color: context.colors.textPrimary))),
+                          value: match.team1Id,
+                          child: Text(
+                            match.team1Name,
+                            style: TextStyle(color: context.colors.textPrimary),
+                          ),
+                        ),
                         DropdownMenuItem(
-                            value: match.team2Id,
-                            child: Text(match.team2Name,
-                                style: TextStyle(
-                                    color: context.colors.textPrimary))),
+                          value: match.team2Id,
+                          child: Text(
+                            match.team2Name,
+                            style: TextStyle(color: context.colors.textPrimary),
+                          ),
+                        ),
                       ],
                       onChanged: (val) {
                         if (val != null) {
@@ -2485,8 +2881,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         fillColor: context.colors.bgDark,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide:
-                              BorderSide(color: context.colors.border),
+                          borderSide: BorderSide(color: context.colors.border),
                         ),
                       ),
                     ),
@@ -2499,8 +2894,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   child: const Text('Hủy'),
                 ),
                 ElevatedButton(
-                  style:
-                      ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                   onPressed: () {
                     final s1 = int.tryParse(score1Ctrl.text) ?? 0;
                     final s2 = int.tryParse(score2Ctrl.text) ?? 0;
@@ -2511,10 +2905,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
 
                     Navigator.pop(ctx);
                     ref
-                        .read(matchControllerProvider((
-                          tournamentId: widget.tournamentId,
-                          matchId: widget.matchId
-                        )))
+                        .read(
+                          matchControllerProvider((
+                            tournamentId: widget.tournamentId,
+                            matchId: widget.matchId,
+                          )),
+                        )
                         .updateMatchResultByAdmin(
                           score1: s1,
                           score2: s2,
@@ -2524,11 +2920,14 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                          content: Text('Đã cập nhật kết quả trận đấu!')),
+                        content: Text('Đã cập nhật kết quả trận đấu!'),
+                      ),
                     );
                   },
-                  child: const Text('Lưu Thay Đổi',
-                      style: TextStyle(color: Colors.white)),
+                  child: const Text(
+                    'Lưu Thay Đổi',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -2546,7 +2945,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final isAuth = ref.watch(authProvider).status == AuthStatus.authenticated;
 
     final List<Map<String, dynamic>> mergedList = [];
-    
+
     // Add comments
     for (final c in _comments) {
       mergedList.add({
@@ -2554,10 +2953,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         'id': c['id'],
         'user': c['user'],
         'commentText': c['commentText'],
-        'createdAt': DateTime.tryParse(c['createdAt']?.toString() ?? '') ?? DateTime.now(),
+        'createdAt':
+            DateTime.tryParse(c['createdAt']?.toString() ?? '') ??
+            DateTime.now(),
       });
     }
-    
+
     // Add match events
     for (final e in match.events) {
       mergedList.add({
@@ -2568,7 +2969,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         'eventType': e.type,
       });
     }
-    
+
     // Sort by createdAt descending
     mergedList.sort((a, b) {
       final DateTime da = a['createdAt'] as DateTime;
@@ -2588,199 +2989,218 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           Expanded(
             child: _isLoadingComments && mergedList.isEmpty
                 ? const Center(
-                    child: CircularProgressIndicator(color: AppTheme.primary))
+                    child: CircularProgressIndicator(color: AppTheme.primary),
+                  )
                 : mergedList.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: colors.bgSurface,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Icon(
-                                Icons.chat_bubble_outline_rounded,
-                                size: 28,
-                                color: colors.textMuted,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Chưa có thảo luận',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: colors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Hãy là người đầu tiên chia sẻ cảm nghĩ!',
-                              style: TextStyle(
-                                color: colors.textMuted,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: colors.bgSurface,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            size: 28,
+                            color: colors.textMuted,
+                          ),
                         ),
-                      )
-                    : ListView.builder(
-                        reverse: true,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        itemCount: mergedList.length,
-                        itemBuilder: (context, index) {
-                          final item = mergedList[index];
-                          final isSystem = item['isSystem'] as bool? ?? false;
-                          final timeStr = item['createdAt'] != null
-                              ? (item['createdAt'] as DateTime)
-                                  .toLocal()
-                                  .toString()
-                                  .substring(11, 16)
-                              : '';
+                        const SizedBox(height: 12),
+                        Text(
+                          'Chưa có thảo luận',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Hãy là người đầu tiên chia sẻ cảm nghĩ!',
+                          style: TextStyle(
+                            color: colors.textMuted,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    reverse: true,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    itemCount: mergedList.length,
+                    itemBuilder: (context, index) {
+                      final item = mergedList[index];
+                      final isSystem = item['isSystem'] as bool? ?? false;
+                      final timeStr = item['createdAt'] != null
+                          ? (item['createdAt'] as DateTime)
+                                .toLocal()
+                                .toString()
+                                .substring(11, 16)
+                          : '';
 
-                          if (isSystem) {
-                            final eventType = item['eventType'] as MatchEventType;
-                            final text = item['commentText']?.toString() ?? '';
-                            
-                            IconData eventIcon = Icons.notifications_rounded;
-                            Color badgeColor = Colors.blue;
-                            if (eventType == MatchEventType.score) {
-                              eventIcon = Icons.sports_tennis_rounded;
-                              badgeColor = Colors.green;
-                            } else if (eventType == MatchEventType.foul || eventType == MatchEventType.yellowCard) {
-                              eventIcon = Icons.warning_amber_rounded;
-                              badgeColor = Colors.amber;
-                            } else if (eventType == MatchEventType.redCard) {
-                              eventIcon = Icons.gavel_rounded;
-                              badgeColor = Colors.red;
-                            }
+                      if (isSystem) {
+                        final eventType = item['eventType'] as MatchEventType;
+                        final text = item['commentText']?.toString() ?? '';
 
-                            return Container(
-                              margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: badgeColor.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: badgeColor.withValues(alpha: 0.2), width: 0.5),
-                              ),
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 12,
-                                    backgroundColor: badgeColor.withValues(alpha: 0.15),
-                                    child: Icon(eventIcon, size: 12, color: badgeColor),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      text,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: colors.textPrimary,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    timeStr,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: colors.textMuted,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
+                        IconData eventIcon = Icons.notifications_rounded;
+                        Color badgeColor = Colors.blue;
+                        if (eventType == MatchEventType.score) {
+                          eventIcon = Icons.sports_tennis_rounded;
+                          badgeColor = Colors.green;
+                        } else if (eventType == MatchEventType.foul ||
+                            eventType == MatchEventType.yellowCard) {
+                          eventIcon = Icons.warning_amber_rounded;
+                          badgeColor = Colors.amber;
+                        } else if (eventType == MatchEventType.redCard) {
+                          eventIcon = Icons.gavel_rounded;
+                          badgeColor = Colors.red;
+                        }
 
-                          final user = item['user'] as Map?;
-                          final avatarUrl = user?['avatarUrl']?.toString() ?? '';
-                          final userName =
-                              user?['fullName']?.toString() ?? 'Người xem';
-                          final commentText =
-                              item['commentText']?.toString() ?? '';
-
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                CircleAvatar(
-                                  radius: 16,
-                                  backgroundColor:
-                                      AppTheme.primary.withValues(alpha: 0.1),
-                                  backgroundImage: avatarUrl.isNotEmpty
-                                      ? NetworkImage(avatarUrl)
-                                      : null,
-                                  child: avatarUrl.isEmpty
-                                      ? Text(
-                                          userName.isNotEmpty
-                                              ? userName[0].toUpperCase()
-                                              : '?',
-                                          style: const TextStyle(
-                                            color: AppTheme.primary,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        )
-                                      : null,
+                        return Container(
+                          margin: const EdgeInsets.symmetric(
+                            vertical: 6,
+                            horizontal: 8,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: badgeColor.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: badgeColor.withValues(alpha: 0.2),
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 12,
+                                backgroundColor: badgeColor.withValues(
+                                  alpha: 0.15,
                                 ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            userName,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              color: colors.textPrimary,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            timeStr,
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: colors.textMuted,
-                                            ),
-                                          ),
-                                        ],
+                                child: Icon(
+                                  eventIcon,
+                                  size: 12,
+                                  color: badgeColor,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  text,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: colors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                timeStr,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: colors.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      final user = item['user'] as Map?;
+                      final avatarUrl = user?['avatarUrl']?.toString() ?? '';
+                      final userName =
+                          user?['fullName']?.toString() ?? 'Người xem';
+                      final commentText = item['commentText']?.toString() ?? '';
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CircleAvatar(
+                              radius: 16,
+                              backgroundColor: AppTheme.primary.withValues(
+                                alpha: 0.1,
+                              ),
+                              backgroundImage: avatarUrl.isNotEmpty
+                                  ? NetworkImage(avatarUrl)
+                                  : null,
+                              child: avatarUrl.isEmpty
+                                  ? Text(
+                                      userName.isNotEmpty
+                                          ? userName[0].toUpperCase()
+                                          : '?',
+                                      style: const TextStyle(
+                                        color: AppTheme.primary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                      const SizedBox(height: 4),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 8),
-                                        decoration: BoxDecoration(
-                                          color: colors.bgSurface,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        userName,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: colors.textPrimary,
                                         ),
-                                        child: Text(
-                                          commentText,
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: colors.textSecondary,
-                                          ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        timeStr,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: colors.textMuted,
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: colors.bgSurface,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      commentText,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: colors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          );
-                        },
-                      ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -2799,8 +3219,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       hintText: isAuth
                           ? 'Nhập bình luận...'
                           : 'Đăng nhập để bình luận',
-                      hintStyle:
-                          TextStyle(color: colors.textMuted, fontSize: 14),
+                      hintStyle: TextStyle(
+                        color: colors.textMuted,
+                        fontSize: 14,
+                      ),
                       border: InputBorder.none,
                       isDense: true,
                     ),
@@ -2808,17 +3230,22 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.favorite_rounded,
-                      color: Color(0xFFE11D48)),
+                  icon: const Icon(
+                    Icons.favorite_rounded,
+                    color: Color(0xFFE11D48),
+                  ),
                   onPressed: _spawnHeart,
                 ),
                 if (!isAuth)
                   TextButton(
                     onPressed: () => context.go('/login'),
-                    child: const Text('Đăng nhập',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primary)),
+                    child: const Text(
+                      'Đăng nhập',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primary,
+                      ),
+                    ),
                   )
                 else
                   IconButton(
@@ -2831,8 +3258,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               color: AppTheme.primary,
                             ),
                           )
-                        : const Icon(Icons.send_rounded,
-                            color: AppTheme.primary),
+                        : const Icon(
+                            Icons.send_rounded,
+                            color: AppTheme.primary,
+                          ),
                     onPressed: _postComment,
                   ),
               ],

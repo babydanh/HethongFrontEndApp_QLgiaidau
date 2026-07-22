@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/vnsport_header.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginLoadingScreen extends ConsumerStatefulWidget {
   const LoginLoadingScreen({super.key});
@@ -58,20 +59,9 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                     tag: "vnsport_logo",
                     child: SizedBox(
                       height: 75,
-                      child: Image.asset(
-                        "assets/images/vndc_sport.png",
+                      child: SvgPicture.asset(
+                        "assets/images/vndcsport.svg",
                         fit: BoxFit.contain,
-                        color: Colors.white,
-                        colorBlendMode: BlendMode.srcIn,
-                        errorBuilder: (context, error, stackTrace) => const Text(
-                          "VNSPORT",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 40,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.0,
-                          ),
-                        ),
                       ),
                     ),
                   ),

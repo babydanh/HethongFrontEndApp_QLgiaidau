@@ -9,10 +9,7 @@ class SetScore {
   const SetScore({required this.score1, required this.score2});
 
   factory SetScore.fromJson(Map<String, dynamic> json) {
-    return SetScore(
-      score1: json['score1'] ?? 0,
-      score2: json['score2'] ?? 0,
-    );
+    return SetScore(score1: json['score1'] ?? 0, score2: json['score2'] ?? 0);
   }
 
   Map<String, dynamic> toJson() {
@@ -40,12 +37,79 @@ class BracketPosition {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'bracket': bracket,
-      'round': round,
-      'position': position,
-    };
+    return {'bracket': bracket, 'round': round, 'position': position};
   }
+}
+
+class MatchMemberInfo {
+  final String? userId;
+  final String fullName;
+  final int? eloPoints;
+  final String? tierName;
+
+  const MatchMemberInfo({
+    this.userId,
+    required this.fullName,
+    this.eloPoints,
+    this.tierName,
+  });
+
+  factory MatchMemberInfo.fromJson(Map<String, dynamic> json) {
+    final user = json['user'] is Map<String, dynamic>
+        ? json['user'] as Map<String, dynamic>
+        : null;
+    final ranking = json['ranking'] is Map<String, dynamic>
+        ? json['ranking'] as Map<String, dynamic>
+        : null;
+    final rank = json['rank'] is Map<String, dynamic>
+        ? json['rank'] as Map<String, dynamic>
+        : null;
+    final tier = json['tier'] is Map<String, dynamic>
+        ? json['tier'] as Map<String, dynamic>
+        : null;
+
+    int? parseInt(dynamic value) {
+      if (value is int) return value;
+      if (value is num) return value.round();
+      if (value is String) return int.tryParse(value);
+      return null;
+    }
+
+    final fullName =
+        json['fullName']?.toString() ??
+        json['name']?.toString() ??
+        user?['fullName']?.toString() ??
+        user?['name']?.toString() ??
+        '';
+
+    return MatchMemberInfo(
+      userId:
+          json['userId']?.toString() ??
+          json['user_id']?.toString() ??
+          user?['id']?.toString(),
+      fullName: fullName,
+      eloPoints: parseInt(
+        json['eloPoints'] ??
+            json['elo'] ??
+            json['elo_points'] ??
+            ranking?['eloPoints'] ??
+            ranking?['elo'] ??
+            rank?['eloPoints'],
+      ),
+      tierName:
+          json['tierName']?.toString() ??
+          ranking?['tierName']?.toString() ??
+          rank?['tierName']?.toString() ??
+          tier?['name']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    if (userId != null) 'userId': userId,
+    'fullName': fullName,
+    if (eloPoints != null) 'eloPoints': eloPoints,
+    if (tierName != null) 'tierName': tierName,
+  };
 }
 
 class MatchModel {
@@ -86,6 +150,9 @@ class MatchModel {
   final int? setsToWin;
   final List<String>? team1Members;
   final List<String>? team2Members;
+  final List<MatchMemberInfo> team1MemberInfos;
+  final List<MatchMemberInfo> team2MemberInfos;
+
   /// True nếu đây là trận BYE (miễn đấu) do backend đánh dấu
   final bool isBye;
 
@@ -126,10 +193,46 @@ class MatchModel {
     this.setsToWin,
     this.team1Members = const [],
     this.team2Members = const [],
+    this.team1MemberInfos = const [],
+    this.team2MemberInfos = const [],
     this.isBye = false,
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json, String id) {
+    List<MatchMemberInfo> parseMemberInfos(
+      dynamic explicitMembers,
+      dynamic participant,
+    ) {
+      final source = explicitMembers is List
+          ? explicitMembers
+          : participant is Map<String, dynamic>
+          ? participant['rosters'] as List<dynamic>?
+          : null;
+      if (source == null) return const [];
+      return source
+          .map((entry) {
+            if (entry is String) return MatchMemberInfo(fullName: entry);
+            if (entry is Map<String, dynamic>) {
+              return MatchMemberInfo.fromJson(entry);
+            }
+            if (entry is Map) {
+              return MatchMemberInfo.fromJson(Map<String, dynamic>.from(entry));
+            }
+            return MatchMemberInfo(fullName: entry.toString());
+          })
+          .where((member) => member.fullName.trim().isNotEmpty)
+          .toList();
+    }
+
+    final team1MemberInfos = parseMemberInfos(
+      json['team1MemberInfos'] ?? json['team1Members'],
+      json['participant1'],
+    );
+    final team2MemberInfos = parseMemberInfos(
+      json['team2MemberInfos'] ?? json['team2Members'],
+      json['participant2'],
+    );
+
     return MatchModel(
       id: id,
       round: json['round'] ?? 1,
@@ -140,7 +243,8 @@ class MatchModel {
       team2Name: json['team2Name'] ?? 'TBD',
       score1: json['score1'] ?? 0,
       score2: json['score2'] ?? 0,
-      sets: (json['sets'] as List<dynamic>?)
+      sets:
+          (json['sets'] as List<dynamic>?)
               ?.map((s) => SetScore.fromJson(s as Map<String, dynamic>))
               .toList() ??
           [],
@@ -155,10 +259,14 @@ class MatchModel {
       nextMatchId: json['nextMatchId'] ?? '',
       loserNextMatchId: json['loserNextMatchId'] ?? '',
       court: json['court']?.toString() ?? json['courtName']?.toString() ?? '',
-      courtAddress: json['courtAddress']?.toString() ?? json['court_address']?.toString() ?? '',
+      courtAddress:
+          json['courtAddress']?.toString() ??
+          json['court_address']?.toString() ??
+          '',
       maxScore: json['maxScore'] as int?,
       winByTwo: json['winByTwo'] as bool? ?? true,
-      events: (json['events'] as List<dynamic>?)
+      events:
+          (json['events'] as List<dynamic>?)
               ?.map((e) => MatchEvent.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
@@ -169,22 +277,24 @@ class MatchModel {
       updatedAt: DateParser.parseDate(json['updatedAt']),
       refereeName: json['refereeName'],
       refereeId: json['refereeId']?.toString(),
-      penalties: (json['penalties'] as List<dynamic>?)
+      penalties:
+          (json['penalties'] as List<dynamic>?)
               ?.map((p) => Penalty.fromJson(p as Map<String, dynamic>))
               .toList() ??
           [],
       tournamentName: json['tournamentName'] ?? json['tournament']?['name'],
-      sportKey: json['sport']?.toString() ?? json['tournament']?['sport']?.toString(),
+      sportKey:
+          json['sport']?.toString() ?? json['tournament']?['sport']?.toString(),
       // Sport-specific: từ tournament sportRules hoặc matchConfig
       sportRules: json['tournament'] is Map
           ? (json['tournament'] as Map)['sportRules'] as Map<String, dynamic>?
           : json['sportRules'] as Map<String, dynamic>?,
       scoreDetails: json['scoreDetails'] as Map<String, dynamic>?,
       setsToWin: json['setsToWin'] as int?,
-      team1Members: (json['team1Members'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? 
-                    (json['participant1']?['rosters'] as List<dynamic>?)?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? const [],
-      team2Members: (json['team2Members'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? 
-                    (json['participant2']?['rosters'] as List<dynamic>?)?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? const [],
+      team1Members: team1MemberInfos.map((m) => m.fullName).toList(),
+      team2Members: team2MemberInfos.map((m) => m.fullName).toList(),
+      team1MemberInfos: team1MemberInfos,
+      team2MemberInfos: team2MemberInfos,
       isBye: json['isBye'] ?? json['is_bye'] ?? false,
     );
   }
@@ -223,6 +333,8 @@ class MatchModel {
       if (sportKey != null) 'sport': sportKey,
       'team1Members': team1Members,
       'team2Members': team2Members,
+      'team1MemberInfos': team1MemberInfos.map((m) => m.toJson()).toList(),
+      'team2MemberInfos': team2MemberInfos.map((m) => m.toJson()).toList(),
       'isBye': isBye,
     };
   }
@@ -264,6 +376,8 @@ class MatchModel {
     int? setsToWin,
     List<String>? team1Members,
     List<String>? team2Members,
+    List<MatchMemberInfo>? team1MemberInfos,
+    List<MatchMemberInfo>? team2MemberInfos,
     bool? isBye,
   }) {
     return MatchModel(
@@ -303,18 +417,27 @@ class MatchModel {
       setsToWin: setsToWin ?? this.setsToWin,
       team1Members: team1Members ?? this.team1Members,
       team2Members: team2Members ?? this.team2Members,
+      team1MemberInfos: team1MemberInfos ?? this.team1MemberInfos,
+      team2MemberInfos: team2MemberInfos ?? this.team2MemberInfos,
       isBye: isBye ?? this.isBye,
     );
   }
 
-  bool get isLive => status == 'live' || status == 'ongoing' || status == 'in_progress';
+  bool get isLive =>
+      status == 'live' || status == 'ongoing' || status == 'in_progress';
   bool get isCompleted => status == 'completed';
   bool get isScheduled => status == 'scheduled';
   bool get isWalkover => status == 'walkover';
   bool get hasTeams => team1Id.isNotEmpty && team2Id.isNotEmpty;
-  bool get isByeMatch => (isBye == true) || team1Name == 'BYE' || team2Name == 'BYE' || team1Id == 'BYE' || team2Id == 'BYE';
-  bool get isFullByeMatch => (isBye == true) && 
-      (team1Id.isEmpty || team1Name == 'BYE') && 
+  bool get isByeMatch =>
+      (isBye == true) ||
+      team1Name == 'BYE' ||
+      team2Name == 'BYE' ||
+      team1Id == 'BYE' ||
+      team2Id == 'BYE';
+  bool get isFullByeMatch =>
+      (isBye == true) &&
+      (team1Id.isEmpty || team1Name == 'BYE') &&
       (team2Id.isEmpty || team2Name == 'BYE');
 
   @override

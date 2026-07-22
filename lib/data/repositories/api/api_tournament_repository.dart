@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 
 class ApiTournamentRepository implements ITournamentRepository {
   static const _log = AppLogger('ApiTournamentRepo');
@@ -195,10 +196,104 @@ class ApiTournamentRepository implements ITournamentRepository {
   }
 
   @override
+  Future<List<TournamentDivisionOption>> getDivisions(
+    String tournamentId,
+  ) async {
+    final response = await _dioClient.dio.get(
+      '/tournaments/$tournamentId/divisions',
+    );
+    final rawData = response.data['data'];
+    if (rawData is! List) return const [];
+    return rawData
+        .whereType<Map>()
+        .map(
+          (item) => TournamentDivisionOption.fromJson(
+            Map<String, dynamic>.from(item),
+          ),
+        )
+        .where((division) => division.id.isNotEmpty)
+        .toList();
+  }
+
+  @override
+  Future<TournamentRegistrationResult> registerParticipant({
+    required String tournamentId,
+    required String teamName,
+    String? divisionId,
+    String? inviteCode,
+    String? partnerEmailOrPhone,
+  }) async {
+    final response = await _dioClient.dio.post(
+      '/tournaments/$tournamentId/register',
+      data: {
+        'teamName': teamName.trim(),
+        'divisionId': divisionId,
+        if (inviteCode != null && inviteCode.trim().isNotEmpty)
+          'inviteCode': inviteCode.trim(),
+        if (partnerEmailOrPhone != null && partnerEmailOrPhone.trim().isNotEmpty)
+          'partnerEmailOrPhone': partnerEmailOrPhone.trim(),
+      },
+    );
+    final rawData = response.data['data'];
+    if (rawData is! Map) {
+      throw const FormatException('Phản hồi đăng ký không hợp lệ.');
+    }
+    return TournamentRegistrationResult.fromJson(
+      Map<String, dynamic>.from(rawData),
+    );
+  }
+
+  @override
+  Future<Map<String, dynamic>> withdraw({
+    required String tournamentId,
+    String? bankName,
+    String? bankAccountNumber,
+    String? bankAccountName,
+    String? divisionId,
+  }) async {
+    final response = await _dioClient.dio.post(
+      '/tournaments/$tournamentId/withdraw',
+      data: {
+        if (bankName != null) 'bankName': bankName,
+        if (bankAccountNumber != null) 'bankAccountNumber': bankAccountNumber,
+        if (bankAccountName != null) 'bankAccountName': bankAccountName,
+        if (divisionId != null) 'tournamentDivisionId': divisionId,
+      },
+    );
+    return (response.data is Map) ? response.data as Map<String, dynamic> : {};
+  }
+
+  @override
   Stream<Tournament?> watch(String id) async* {
     yield await getById(id);
     yield* Stream.periodic(const Duration(seconds: 10))
         .asyncMap((_) => getById(id));
+  }
+
+  List<Tournament> _parseTournamentList(dynamic rawData) {
+    if (rawData == null) return [];
+    List<dynamic> list = [];
+    if (rawData is Map<String, dynamic>) {
+      if (rawData['data'] is List) {
+        list = rawData['data'] as List<dynamic>;
+      } else if (rawData['items'] is List) {
+        list = rawData['items'] as List<dynamic>;
+      }
+    } else if (rawData is List) {
+      list = rawData;
+    }
+    
+    final List<Tournament> result = [];
+    for (final item in list) {
+      if (item is! Map<String, dynamic>) continue;
+      try {
+        final t = Tournament.fromJson(item, item['id']?.toString() ?? '');
+        result.add(t);
+      } catch (err) {
+        _log.warning('Skipping malformed tournament item: $err');
+      }
+    }
+    return result;
   }
 
   @override
@@ -206,8 +301,8 @@ class ApiTournamentRepository implements ITournamentRepository {
     try {
       final response = await _dioClient.dio.get('/tournaments/public');
       if (response.statusCode == 200) {
-        final List<dynamic> list = response.data['data'] ?? [];
-        yield list.map((json) => Tournament.fromJson(json, json['id'])).toList();
+        final raw = response.data['data'];
+        yield _parseTournamentList(raw);
       } else {
         yield <Tournament>[];
       }
@@ -221,8 +316,8 @@ class ApiTournamentRepository implements ITournamentRepository {
           try {
             final response = await _dioClient.dio.get('/tournaments/public');
             if (response.statusCode == 200) {
-              final List<dynamic> list = response.data['data'] ?? [];
-              return list.map((json) => Tournament.fromJson(json, json['id'])).toList();
+              final raw = response.data['data'];
+              return _parseTournamentList(raw);
             }
           } catch (e, stack) {
             _log.error('Error polling public tournaments', e, stack);

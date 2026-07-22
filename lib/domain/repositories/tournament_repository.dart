@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
 abstract class ITournamentRepository {
@@ -10,6 +11,14 @@ abstract class ITournamentRepository {
     required String tournamentId,
     required String refereeId,
     required String action,
+  });
+  Future<List<TournamentDivisionOption>> getDivisions(String tournamentId);
+  Future<TournamentRegistrationResult> registerParticipant({
+    required String tournamentId,
+    required String teamName,
+    String? divisionId,
+    String? inviteCode,
+    String? partnerEmailOrPhone,
   });
   Stream<Tournament?> watch(String id);
   Stream<List<Tournament>> watchAll();
@@ -23,6 +32,15 @@ abstract class ITournamentRepository {
   Future<void> unfollowTournament(String id);
   Future<bool> isFollowing(String id);
   Future<List<Tournament>> getFollowedTournaments();
+
+  // Withdraw
+  Future<Map<String, dynamic>> withdraw({
+    required String tournamentId,
+    String? bankName,
+    String? bankAccountNumber,
+    String? bankAccountName,
+    String? divisionId,
+  });
 
   // Bracket
   Future<List<MatchModel>> getBracketMatches(String tournamentId);

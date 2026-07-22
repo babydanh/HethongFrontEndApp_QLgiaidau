@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginRegisterScreen extends ConsumerStatefulWidget {
   const LoginRegisterScreen({super.key});
@@ -124,6 +125,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -168,21 +170,17 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                   children: [
                     // VNSPORT Logo (Animated Hero)
                     SizedBox(
-                      height: 60,
-                      width: 220,
+                      height: 70,
+                      width: 260,
                       child: Hero(
                         tag: "vnsport_logo",
-                        child: Transform.translate(
-                          offset: const Offset(-22, 0), // Dịch phải thêm một chút để không bị cắt chữ V và thẳng hàng form
-                          child: Transform.scale(
-                            scale: 2.1, // Phóng to logo thực tế bên trong để lấp khoảng trống trên dưới
+                        child: Transform.scale(
+                          scale: 1.6,
+                          alignment: Alignment.centerLeft,
+                          child: SvgPicture.asset(
+                            "assets/images/vndcsport.svg",
+                            fit: BoxFit.contain,
                             alignment: Alignment.centerLeft,
-                            child: Image.asset(
-                              "assets/images/vndc_sport.png",
-                              fit: BoxFit.contain,
-                              alignment: Alignment.centerLeft,
-                              color: isDark ? Colors.white : AppTheme.primary,
-                            ),
                           ),
                         ),
                       ),
@@ -445,6 +443,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                               ),
                             ),
                           ),
+                          const SizedBox(height: 12),
                       ],
                     ).animate().fadeIn(delay: 250.ms, duration: 400.ms),
                     const SizedBox(height: 24),

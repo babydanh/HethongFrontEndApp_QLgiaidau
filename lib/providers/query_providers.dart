@@ -5,27 +5,25 @@ import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final tournamentsProvider = StreamProvider<List<Tournament>>((ref) {
-  return ref.watch(tournamentRepositoryProvider).watchAll().map((list) {
-    return list.where((t) => t.status != 'PENDING_DELETE' && t.status != 'pending_delete').toList();
-  });
+  return ref
+      .watch(tournamentRepositoryProvider)
+      .watchAll()
+      .handleError((error, stackTrace) {
+        return <Tournament>[];
+      })
+      .map((list) {
+        return list.where((t) => t.status != 'PENDING_DELETE' && t.status != 'pending_delete').toList();
+      });
 });
 
 final myTournamentsProvider = Provider<AsyncValue<List<Tournament>>>((ref) {
   final allTournamentsAsync = ref.watch(tournamentsProvider);
 
-  if (allTournamentsAsync is AsyncLoading) {
-    return const AsyncValue.loading();
-  }
-
-  if (allTournamentsAsync.hasError) {
-    return AsyncValue.error(
-      allTournamentsAsync.error!,
-      allTournamentsAsync.stackTrace!,
-    );
-  }
-
-  final allTournaments = allTournamentsAsync.value ?? [];
-  return AsyncValue.data(allTournaments);
+  return allTournamentsAsync.when(
+    data: (allTournaments) => AsyncValue.data(allTournaments),
+    loading: () => const AsyncValue.loading(),
+    error: (err, stack) => AsyncValue.data(const <Tournament>[]),
+  );
 });
 
 final followedTournamentsProvider = FutureProvider<List<Tournament>>((ref) async {

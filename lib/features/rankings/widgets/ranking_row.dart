@@ -26,70 +26,76 @@ class RankingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final wr = ranking.winRate;
-    final tier = TierPalette.matchTier(ranking.eloPoints, tiers);
-    final palette = TierPalette.from(tier);
+
+    // Fixed color for avatar initial based on rank or name
+    final List<Color> avatarColors = [
+      const Color(0xFF10B981), // Emerald
+      const Color(0xFFA855F7), // Purple
+      const Color(0xFFEC4899), // Pink
+      const Color(0xFF06B6D4), // Cyan
+      const Color(0xFFF97316), // Orange
+      const Color(0xFF3B82F6), // Blue
+    ];
+    final avatarColor = avatarColors[ranking.rank % avatarColors.length];
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: highlight ? palette.soft.withValues(alpha: 0.5) : colors.bgCard,
-          borderRadius: BorderRadius.circular(14),
+          color: isMe ? const Color(0xFF1E40AF) : colors.bgCard,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isMe
-                ? AppTheme.primary
-                : highlight
-                    ? palette.color
-                    : colors.border,
-            width: isMe || highlight ? 1.5 : 1,
+            color: isMe ? const Color(0xFF1E40AF) : colors.border.withValues(alpha: 0.8),
+            width: isMe ? 1.5 : 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
             // Số hạng
             SizedBox(
-              width: 30,
+              width: 32,
               child: Text(
-                '#${ranking.rank}',
-                textAlign: TextAlign.center,
+                '${ranking.rank}',
+                textAlign: TextAlign.start,
                 style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: ranking.rank <= 3
-                      ? (ranking.rank == 1
-                          ? const Color(0xFFFFD700)
-                          : ranking.rank == 2
-                              ? const Color(0xFFC0C0C0)
-                              : const Color(0xFFCD7F32))
-                      : colors.textMuted,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: isMe ? Colors.white : colors.textSecondary,
                 ),
               ),
             ),
-            const SizedBox(width: 10),
-            // Avatar chữ
+            const SizedBox(width: 8),
+            // Avatar tròn chữ cái
             Container(
-              width: 38,
-              height: 38,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                gradient: palette.gradient,
-                borderRadius: BorderRadius.circular(11),
+                color: isMe ? Colors.white.withValues(alpha: 0.2) : avatarColor,
+                shape: BoxShape.circle,
               ),
               child: Center(
                 child: Text(
                   _initials(ranking.fullName),
                   style: const TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w900,
                     color: Colors.white,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 10),
-            // Tên + W/L
+            const SizedBox(width: 14),
+            // Tên + Tỉnh thành & Winrate
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,24 +109,24 @@ class RankingRow extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: colors.textPrimary,
+                            fontWeight: FontWeight.w800,
+                            color: isMe ? Colors.white : colors.textPrimary,
                           ),
                         ),
                       ),
                       if (isMe) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppTheme.primary,
-                            borderRadius: BorderRadius.circular(4),
+                            color: Colors.white.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Text(
                             'Bạn',
                             style: TextStyle(
                               fontSize: 9,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w900,
                               color: Colors.white,
                             ),
                           ),
@@ -129,60 +135,26 @@ class RankingRow extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      // Tier badge
-                      if (tier != null) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: palette.soft,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            tier.shortLabel,
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: palette.color,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                      ],
-                      Text(
-                        'W ${ranking.matchesWon} · L ${ranking.matchesLost}',
-                        style: TextStyle(fontSize: 10, color: colors.textMuted),
-                      ),
-                    ],
+                  Text(
+                    'Việt Nam · ${wr.toStringAsFixed(0)}% thắng',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isMe ? Colors.white.withValues(alpha: 0.8) : colors.textMuted,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
             ),
-            // ELO + winrate
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${ranking.eloPoints}',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: palette.color,
-                  ),
-                ),
-                Text(
-                  '${wr.toStringAsFixed(0)}%',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: wr >= 60 ? colors.success : colors.textMuted,
-                    fontWeight: wr >= 60 ? FontWeight.w700 : FontWeight.w500,
-                  ),
-                ),
-              ],
+            // ELO Score
+            Text(
+              '${ranking.eloPoints}',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                color: isMe ? Colors.white : const Color(0xFF1E40AF),
+              ),
             ),
-            const SizedBox(width: 4),
-            Icon(Icons.chevron_right_rounded, size: 16, color: colors.textMuted),
           ],
         ),
       ),

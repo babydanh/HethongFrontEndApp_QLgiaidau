@@ -14,8 +14,6 @@ class JoinInviteScreen extends ConsumerStatefulWidget {
 }
 
 class _JoinInviteScreenState extends ConsumerState<JoinInviteScreen> {
-  final _nameCtrl = TextEditingController();
-  bool _submitting = false;
   bool _loading = true;
   Map<String, dynamic>? _tournament;
 
@@ -25,35 +23,26 @@ class _JoinInviteScreenState extends ConsumerState<JoinInviteScreen> {
     _fetchTournament();
   }
 
-  @override
-  void dispose() { _nameCtrl.dispose(); super.dispose(); }
-
   Future<void> _fetchTournament() async {
     try {
       final dio = ref.read(dioClientProvider).dio;
       final res = await dio.get('/tournaments/join/${widget.inviteCode}');
       if (res.statusCode == 200 && mounted) {
-        setState(() => _tournament = res.data['data']);
+        final data = res.data['data'] as Map<String, dynamic>?;
+        setState(() => _tournament = data);
+        // Redirect to real registration flow with gates (profile, gender, ELO)
+        if (data != null && data['id'] != null && mounted) {
+          final tournamentId = data['id'].toString();
+          context.go('/register/$tournamentId?invite=${widget.inviteCode}');
+          return;
+        }
       }
-    } catch (_) {} finally { if (mounted) setState(() => _loading = false); }
+    } catch (_) {}
+    if (mounted) setState(() => _loading = false);
   }
 
-  Future<void> _join() async {
-    if (_nameCtrl.text.trim().length < 3) return;
-    setState(() => _submitting = true);
-    try {
-      final dio = ref.read(dioClientProvider).dio;
-      final res = await dio.post('/tournaments/join/${widget.inviteCode}', data: {
-        'teamName': _nameCtrl.text.trim(),
-      });
-      if (res.statusCode == 200 || res.statusCode == 201) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tham gia thành công!')));
-        if (mounted) context.go('/home');
-      }
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
-    } finally { if (mounted) setState(() => _submitting = false); }
-  }
+  @override
+  void dispose() { super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
@@ -80,21 +69,6 @@ class _JoinInviteScreenState extends ConsumerState<JoinInviteScreen> {
                 const SizedBox(height: 32),
                 if (!isAuth) ...[
                   ElevatedButton.icon(onPressed: () => context.push('/login'), icon: const Icon(Icons.login), label: const Text('Đăng nhập để tiếp tục')),
-                ] else ...[
-                  TextField(
-                    controller: _nameCtrl,
-                    style: TextStyle(color: context.colors.textPrimary),
-                    decoration: InputDecoration(labelText: 'Tên đội / VĐV',
-                      prefixIcon: Icon(Icons.group_rounded, color: context.colors.textMuted),
-                      filled: true, fillColor: context.colors.bgDark, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(width: double.infinity, height: 50, child: ElevatedButton.icon(
-                    onPressed: _submitting ? null : _join,
-                    icon: _submitting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.check_circle_outline_rounded),
-                    label: Text(_submitting ? 'Đang xử lý...' : 'Xác nhận tham gia'),
-                    style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  )),
                 ],
               ]),
             ),

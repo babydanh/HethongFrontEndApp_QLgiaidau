@@ -8,6 +8,9 @@ abstract class IRankingRepository {
     int? page,
     int? limit,
     String? categoryId,
+    String? matchType,
+    String? genderRestriction,
+    String? provinceCode,
   });
 
   /// Lấy rank tổng hợp của 1 user (public + community).

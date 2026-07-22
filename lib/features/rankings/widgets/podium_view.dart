@@ -14,45 +14,89 @@ class PodiumView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (rankings.length < 3) return const SizedBox.shrink();
+    final colors = context.colors;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisAlignment: MainAxisAlignment.center,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
         children: [
-          // Hạng 2
-          Expanded(
-            child: _PodiumSlot(
-              ranking: rankings[1],
-              medal: '🥈',
-              tier: TierPalette.matchTier(rankings[1].eloPoints, tiers),
-              height: 116,
-              medalColor: const Color(0xFFC0C0C0),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Top vận động viên',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: colors.textPrimary,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              Text(
+                'Mùa giải 2026',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textMuted,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
-          // Hạng 1
-          Expanded(
-            child: _PodiumSlot(
-              ranking: rankings[0],
-              medal: '👑',
-              tier: TierPalette.matchTier(rankings[0].eloPoints, tiers),
-              height: 150,
-              medalColor: const Color(0xFFFFD700),
-              isKing: true,
-            ),
-          ),
-          const SizedBox(width: 10),
-          // Hạng 3
-          Expanded(
-            child: _PodiumSlot(
-              ranking: rankings[2],
-              medal: '🥉',
-              tier: TierPalette.matchTier(rankings[2].eloPoints, tiers),
-              height: 100,
-              medalColor: const Color(0xFFCD7F32),
-            ),
+          const SizedBox(height: 18),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Hạng 2
+              Expanded(
+                child: _PodiumSlot(
+                  ranking: rankings[1],
+                  rankNumber: '2',
+                  tier: TierPalette.matchTier(rankings[1].eloPoints, tiers),
+                  podiumHeight: 52,
+                  podiumColor: const Color(0xFF94A3B8),
+                  avatarBg: const Color(0xFF94A3B8),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Hạng 1
+              Expanded(
+                child: _PodiumSlot(
+                  ranking: rankings[0],
+                  rankNumber: '1',
+                  tier: TierPalette.matchTier(rankings[0].eloPoints, tiers),
+                  podiumHeight: 82,
+                  podiumColor: const Color(0xFFF59E0B),
+                  avatarBg: const Color(0xFFF59E0B),
+                  isKing: true,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Hạng 3
+              Expanded(
+                child: _PodiumSlot(
+                  ranking: rankings[2],
+                  rankNumber: '3',
+                  tier: TierPalette.matchTier(rankings[2].eloPoints, tiers),
+                  podiumHeight: 44,
+                  podiumColor: const Color(0xFFF97316),
+                  avatarBg: const Color(0xFFF97316),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -62,41 +106,46 @@ class PodiumView extends StatelessWidget {
 
 class _PodiumSlot extends StatelessWidget {
   final PlayerRanking ranking;
-  final String medal;
+  final String rankNumber;
   final EloTier? tier;
-  final double height;
-  final Color medalColor;
+  final double podiumHeight;
+  final Color podiumColor;
+  final Color avatarBg;
   final bool isKing;
 
   const _PodiumSlot({
     required this.ranking,
-    required this.medal,
+    required this.rankNumber,
     required this.tier,
-    required this.height,
-    required this.medalColor,
+    required this.podiumHeight,
+    required this.podiumColor,
+    required this.avatarBg,
     this.isKing = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final palette = TierPalette.from(tier);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(medal, style: TextStyle(fontSize: isKing ? 26 : 20)),
-        const SizedBox(height: 4),
+        if (isKing)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 4),
+            child: Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 24),
+          )
+        else
+          const SizedBox(height: 28),
         Container(
-          width: isKing ? 64 : 50,
-          height: isKing ? 64 : 50,
+          width: isKing ? 58 : 50,
+          height: isKing ? 58 : 50,
           decoration: BoxDecoration(
-            gradient: palette.gradient,
+            color: avatarBg,
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 2),
             boxShadow: [
               BoxShadow(
-                color: palette.color.withValues(alpha: isKing ? 0.45 : 0.25),
-                blurRadius: isKing ? 18 : 10,
+                color: avatarBg.withValues(alpha: 0.3),
+                blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
             ],
@@ -106,72 +155,50 @@ class _PodiumSlot extends StatelessWidget {
               _initials(ranking.fullName),
               style: TextStyle(
                 color: Colors.white,
-                fontSize: isKing ? 20 : 15,
-                fontWeight: FontWeight.w800,
+                fontSize: isKing ? 18 : 15,
+                fontWeight: FontWeight.w900,
               ),
             ),
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         Text(
           ranking.fullName,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: isKing ? 13 : 11,
-            fontWeight: FontWeight.w700,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
             color: colors.textPrimary,
           ),
         ),
         const SizedBox(height: 2),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '${ranking.eloPoints}',
-              style: TextStyle(
-                fontSize: isKing ? 14 : 12,
-                fontWeight: FontWeight.w800,
-                color: palette.color,
-              ),
-            ),
-            if (tier != null) ...[
-              const SizedBox(width: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                decoration: BoxDecoration(
-                  color: palette.soft,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  tier!.shortLabel,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w900,
-                    color: palette.color,
-                  ),
-                ),
-              ),
-            ],
-          ],
+        Text(
+          '${ranking.eloPoints} ELO',
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF2563EB),
+          ),
         ),
         const SizedBox(height: 8),
-        // Đế bục
+        // Khối bục xếp hạng với số
         Container(
-          height: height * 0.32,
+          height: podiumHeight,
+          width: double.infinity,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                medalColor.withValues(alpha: 0.35),
-                medalColor.withValues(alpha: 0.05),
-              ],
-            ),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            border: Border(
-              top: BorderSide(color: medalColor.withValues(alpha: 0.6), width: 2),
+            color: podiumColor,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: Text(
+              rankNumber,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ),

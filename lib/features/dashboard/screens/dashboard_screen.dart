@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,7 +28,10 @@ class DashboardScreen extends ConsumerWidget {
           title: const Text('Của tôi'),
           centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
+            icon: Icon(
+              Icons.arrow_back_rounded,
+              color: context.colors.textPrimary,
+            ),
             onPressed: () {
               if (context.canPop()) {
                 context.pop();
@@ -80,7 +84,10 @@ class DashboardScreen extends ConsumerWidget {
         title: const Text('Của tôi'),
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: context.colors.textPrimary,
+          ),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -91,9 +98,12 @@ class DashboardScreen extends ConsumerWidget {
         ),
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
+        onRefresh: () =>
+            ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,7 +116,9 @@ class DashboardScreen extends ConsumerWidget {
               workspaceAsync.when(
                 loading: () => const _DashboardLoadingCard(),
                 error: (error, _) => _DashboardErrorCard(
-                  onRetry: () => ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
+                  onRetry: () => ref
+                      .read(myTournamentWorkspaceProvider.notifier)
+                      .refresh(),
                 ),
                 data: (workspace) => Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,134 +159,17 @@ class _DashboardHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = profileAsync.asData?.value.fullName ?? 'Người dùng';
-    int elo = 0;
-    int played = 0;
-    int won = 0;
-    double winRate = 0;
+    final email = profileAsync.asData?.value.email as String?;
+    final avatarUrl = profileAsync.asData?.value.avatarUrl as String?;
+    final rankings = rankingsAsync.asData?.value ?? const [];
 
-    if (rankingsAsync.asData?.value != null) {
-      final rankings = rankingsAsync.asData!.value;
-      if (rankings.isNotEmpty) {
-        elo = rankings.first.eloPoints;
-        played = rankings.first.matchesPlayed;
-        won = rankings.first.matchesWon;
-        winRate = played > 0 ? (won / played) * 100 : 0;
-      }
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-        ),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
-                child: Text(
-                  name.isNotEmpty ? name[0].toUpperCase() : '?',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.stars_rounded, color: Colors.amber, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$elo ELO',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ).animate().fadeIn(duration: 260.ms),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _HeaderStat(label: 'Đã đấu', value: '$played'),
-              const SizedBox(width: 8),
-              _HeaderStat(label: 'Thắng', value: '$won'),
-              const SizedBox(width: 8),
-              _HeaderStat(label: 'Tỉ lệ', value: '${winRate.toStringAsFixed(0)}%'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeaderStat extends StatelessWidget {
-  const _HeaderStat({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
-                fontSize: 10,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return EloProgressCard(
+      userName: name,
+      userEmail: email,
+      avatarUrl: avatarUrl,
+      rankings: rankings,
+      onTapProfile: () => context.push('/profile'),
+    ).animate().fadeIn(duration: 260.ms);
   }
 }
 
@@ -361,10 +256,7 @@ class _OverviewMetric extends StatelessWidget {
               color: colors.textPrimary,
             ),
           ),
-          Text(
-            label,
-            style: TextStyle(fontSize: 11, color: colors.textMuted),
-          ),
+          Text(label, style: TextStyle(fontSize: 11, color: colors.textMuted)),
         ],
       ),
     );
@@ -378,7 +270,9 @@ class _PendingInviteSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pendingInvites = workspace.refereeInvites.where((invite) => invite.isPending).toList();
+    final pendingInvites = workspace.refereeInvites
+        .where((invite) => invite.isPending)
+        .toList();
     if (pendingInvites.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -402,7 +296,9 @@ class _PendingInviteSection extends StatelessWidget {
             icon: Icons.schedule_rounded,
             label: 'Ngày mời',
             value: latestInvite.assignedAt != null
-                ? DateFormatterUtils.formatDateTime(latestInvite.assignedAt!.toLocal())
+                ? DateFormatterUtils.formatDateTime(
+                    latestInvite.assignedAt!.toLocal(),
+                  )
                 : 'Đang cập nhật',
           ),
         ],
@@ -453,11 +349,7 @@ class _RoleSection extends StatelessWidget {
       title: 'Vai trò của tôi',
       child: items.isEmpty
           ? const _EmptySectionText('Bạn chưa có vai trò nào trong giải đấu.')
-          : Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: items,
-            ),
+          : Wrap(spacing: 10, runSpacing: 10, children: items),
     );
   }
 }
@@ -506,7 +398,9 @@ class _AssignedMatchesSection extends StatelessWidget {
       parts.add(match.courtName);
     }
     if (match.scheduledAt != null) {
-      parts.add(DateFormatterUtils.formatDateTime(match.scheduledAt!.toLocal()));
+      parts.add(
+        DateFormatterUtils.formatDateTime(match.scheduledAt!.toLocal()),
+      );
     }
     return parts.isEmpty ? 'Chờ sắp lịch' : parts.join(' • ');
   }
@@ -532,7 +426,9 @@ class _OrganizerLiteSection extends StatelessWidget {
       title: 'Quản lý nhanh',
       child: Column(
         children: managedTournaments.take(3).map((tournament) {
-          final isOwner = workspace.organizedTournaments.any((item) => item.id == tournament.id);
+          final isOwner = workspace.organizedTournaments.any(
+            (item) => item.id == tournament.id,
+          );
           return Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: InkWell(
@@ -553,7 +449,10 @@ class _OrganizerLiteSection extends StatelessWidget {
                         color: AppTheme.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.dashboard_customize_rounded, color: AppTheme.primary),
+                      child: const Icon(
+                        Icons.dashboard_customize_rounded,
+                        color: AppTheme.primary,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -571,15 +470,22 @@ class _OrganizerLiteSection extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             isOwner ? 'Chủ giải' : 'Ban tổ chức',
-                            style: TextStyle(fontSize: 12, color: context.colors.textMuted),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.colors.textMuted,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     FilledButton(
-                      onPressed: () => context.push('/organizer-lite/${tournament.id}'),
+                      onPressed: () =>
+                          context.push('/organizer-lite/${tournament.id}'),
                       style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         minimumSize: Size.zero,
                       ),
                       child: const Text('Mở'),
@@ -713,7 +619,10 @@ class _QuickActionRow extends StatelessWidget {
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 11, color: context.colors.textMuted),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: context.colors.textMuted,
+                    ),
                   ),
                 ],
               ),
@@ -810,7 +719,11 @@ class _RoleChip extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '$label • $count',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: color),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
           ),
         ],
       ),
@@ -854,7 +767,10 @@ class _AssignmentTile extends StatelessWidget {
                 color: AppTheme.refereeColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.scoreboard_rounded, color: AppTheme.refereeColor),
+              child: const Icon(
+                Icons.scoreboard_rounded,
+                color: AppTheme.refereeColor,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -920,7 +836,10 @@ class _TournamentTile extends StatelessWidget {
                   color: AppTheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.emoji_events_rounded, color: AppTheme.primary),
+                child: const Icon(
+                  Icons.emoji_events_rounded,
+                  color: AppTheme.primary,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -957,7 +876,8 @@ class _TournamentTile extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: FilledButton(
-                  onPressed: () => context.push('/tournament/${tournament.id}/bracket'),
+                  onPressed: () =>
+                      context.push('/tournament/${tournament.id}/bracket'),
                   child: const Text('Xem bracket'),
                 ),
               ),

@@ -10,8 +10,12 @@ final notificationRepositoryProvider = Provider<ApiNotificationRepository>((ref)
 
 /// Provider cho số thông báo chưa đọc
 final unreadCountProvider = FutureProvider<int>((ref) async {
-  final repo = ref.watch(notificationRepositoryProvider);
-  return repo.getUnreadCount();
+  try {
+    final repo = ref.watch(notificationRepositoryProvider);
+    return await repo.getUnreadCount();
+  } catch (_) {
+    return 0;
+  }
 });
 
 /// Provider cho danh sách thông báo (phân trang)
@@ -31,14 +35,28 @@ class NotificationNotifier extends Notifier<NotificationState> {
   Future<void> loadPage(int page) async {
     _log.info('Load notifications page: $page');
     final repo = ref.read(notificationRepositoryProvider);
-    final items = await repo.getMyNotifications(page: page, limit: 20);
-    if (page == 1) {
-      state = NotificationState(notifications: items, currentPage: 1, hasMore: items.length >= 20);
-    } else {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final items = await repo.getMyNotifications(page: page, limit: 20);
+      if (page == 1) {
+        state = NotificationState(
+          notifications: items,
+          currentPage: 1,
+          hasMore: items.length >= 20,
+        );
+      } else {
+        state = state.copyWith(
+          notifications: [...state.notifications, ...items],
+          currentPage: page,
+          hasMore: items.length >= 20,
+          isLoading: false,
+        );
+      }
+    } catch (e, stack) {
+      _log.error('Không thể tải thông báo', e, stack);
       state = state.copyWith(
-        notifications: [...state.notifications, ...items],
-        currentPage: page,
-        hasMore: items.length >= 20,
+        isLoading: false,
+        errorMessage: 'Không thể tải thông báo. Hãy thử lại.',
       );
     }
   }
@@ -82,22 +100,31 @@ class NotificationState {
   final List<AppNotification> notifications;
   final int currentPage;
   final bool hasMore;
+  final bool isLoading;
+  final String? errorMessage;
 
   const NotificationState({
     this.notifications = const [],
     this.currentPage = 0,
     this.hasMore = true,
+    this.isLoading = false,
+    this.errorMessage,
   });
 
   NotificationState copyWith({
     List<AppNotification>? notifications,
     int? currentPage,
     bool? hasMore,
+    bool? isLoading,
+    String? errorMessage,
+    bool clearError = false,
   }) {
     return NotificationState(
       notifications: notifications ?? this.notifications,
       currentPage: currentPage ?? this.currentPage,
       hasMore: hasMore ?? this.hasMore,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 }
