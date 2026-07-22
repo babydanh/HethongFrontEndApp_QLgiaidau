@@ -41,7 +41,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _checkFollowing();
   }
 
@@ -369,7 +369,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   _buildBracketTab(tournament),
                   _buildLeaderboardTab(tournament),
                   _buildGalleryTab(tournament),
-                  _buildPrizeTab(tournament),
                 ],
               ),
               if (!isLive)
@@ -600,6 +599,42 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 ),
                 const SizedBox(height: 12),
                 _buildContactCard(tournament.contactInfo, colors),
+                if (tournament.prizeDescription != null && tournament.prizeDescription!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Divider(color: colors.border.withValues(alpha: 0.5), height: 1),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 18),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        "GIẢI THƯỞNG",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: colors.textMuted,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    tournament.prizeDescription!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colors.textSecondary,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -1689,7 +1724,6 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
               Tab(text: "Bảng thi đấu"),
               Tab(text: "Bảng xếp hạng"),
               Tab(text: "Gallery"),
-              Tab(text: "Giải thưởng"),
             ],
           ),
         ],

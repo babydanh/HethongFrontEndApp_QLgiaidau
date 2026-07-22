@@ -265,41 +265,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
   }
 
   Widget _buildActionButton(AppColorsExtension colors) {
-    final status = widget.tournament.status;
-    final isRegistration =
-        status == AppConstants.statusRegistration ||
-        status == AppConstants.statusUpcoming;
-    final isLive = status == AppConstants.statusInProgress;
-
-    if (!isRegistration && !isLive) return const SizedBox.shrink();
-
-    return SizedBox(
-      width: double.infinity,
-      child: FilledButton.icon(
-        onPressed: () {
-          if (isRegistration) {
-            context.push('/register/${widget.tournament.id}');
-          } else if (isLive) {
-            context.push('/tournament/${widget.tournament.id}/bracket');
-          }
-        },
-        icon: Icon(
-          isRegistration ? Icons.how_to_reg_rounded : Icons.visibility_rounded,
-        ),
-        label: Text(
-          isRegistration ? 'Đăng ký tham gia' : 'Theo dõi giải đấu',
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-        ),
-        style: FilledButton.styleFrom(
-          backgroundColor: isRegistration ? AppTheme.primary : colors.success,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-    );
+    return const SizedBox.shrink();
   }
 
   String _formatDateRange(DateTime? start, DateTime? end) {
