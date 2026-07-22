@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
@@ -12,7 +13,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dar
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/filter_chips.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/filter_chips.dart' show RoundFilterPill;
 import 'package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dart';
 
 
@@ -226,9 +227,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             );
           }
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppTheme.primary),
-        ),
+        loading: () => const _BracketShimmerLoading(),
         error: (e, _) => Center(child: Text('Lỗi: $e')),
       ),
     );
@@ -337,87 +336,69 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             ),
           ),
           const SizedBox(height: 16),
-          // ── BỘ LỌC VÒNG ĐẤU ──
+          // ── BỘ LỌC VÒNG ĐẤU (Redesigned Pills) ──
           if (availableRounds.length > 1) ...[
-            Text(
-              'BỘ LỌC VÒNG ĐẤU',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: colors.textMuted,
-                letterSpacing: 0.5,
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                'VÒNG ĐẤU',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textMuted,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
-            const SizedBox(height: 6),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: [
-                  BracketFilterChip(
-                    isSelected: _selectedRound == 0,
-                    label: 'Tất cả các vòng (${validMatches.length})',
-                    onSelected: (selected) {
-                      if (selected) setState(() => _selectedRound = 0);
-                    },
-                  ),
-                  const SizedBox(width: 6),
-                  ...availableRounds.map((r) {
-                    final label = _getRoundName(r, totalRounds);
-                    final count = validMatches.where((m) => m.round == r).length;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: BracketFilterChip(
-                        isSelected: _selectedRound == r,
-                        label: '$label ($count)',
-                        onSelected: (selected) {
-                          if (selected) setState(() => _selectedRound = r);
-                        },
-                      ),
+            SizedBox(
+              height: 36,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: availableRounds.length + 1,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return RoundFilterPill(
+                      isSelected: _selectedRound == 0,
+                      label: 'Tất cả',
+                      onTap: () => setState(() => _selectedRound = 0),
                     );
-                  }),
-                ],
+                  }
+                  final r = availableRounds[index - 1];
+                  final label = _getRoundName(r, totalRounds);
+                  return RoundFilterPill(
+                    isSelected: _selectedRound == r,
+                    label: '$label (${validMatches.where((m) => m.round == r).length})',
+                    onTap: () => setState(() => _selectedRound = r),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 12),
           ],
-          // ── BỘ LỌC TRẠNG THÁI ──
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                BracketFilterChip(
-                  isSelected: _matchFilter == 'all',
-                  label: 'Tất cả trạng thái (${validMatches.length})',
-                  onSelected: (selected) {
-                    if (selected) setState(() => _matchFilter = 'all');
-                  },
-                ),
-                const SizedBox(width: 8),
-                BracketFilterChip(
-                  isSelected: _matchFilter == 'live',
-                  label: 'Đang Live (${validMatches.where((m) => m.isLive).length})',
-                  onSelected: (selected) {
-                    if (selected) setState(() => _matchFilter = 'live');
-                  },
-                ),
-                const SizedBox(width: 8),
-                BracketFilterChip(
-                  isSelected: _matchFilter == 'scheduled',
-                  label: 'Sắp diễn ra (${validMatches.where((m) => m.isScheduled).length})',
-                  onSelected: (selected) {
-                    if (selected) setState(() => _matchFilter = 'scheduled');
-                  },
-                ),
-                const SizedBox(width: 8),
-                BracketFilterChip(
-                  isSelected: _matchFilter == 'completed',
-                  label: 'Đã kết thúc (${validMatches.where((m) => m.isCompleted).length})',
-                  onSelected: (selected) {
-                    if (selected) setState(() => _matchFilter = 'completed');
-                  },
-                ),
-              ],
+          // ── BỘ LỌC TRẠNG THÁI (Redesigned Pills) ──
+          SizedBox(
+            height: 36,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: 4,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final items = [
+                  ('all', 'Tất cả'),
+                  ('live', 'Đang Live'),
+                  ('scheduled', 'Sắp diễn ra'),
+                  ('completed', 'Đã kết thúc'),
+                ];
+                final item = items[index];
+                return RoundFilterPill(
+                  isSelected: _matchFilter == item.$1,
+                  label: item.$2,
+                  onTap: () => setState(() => _matchFilter = item.$1),
+                );
+              },
             ),
           ),
           const SizedBox(height: 16),
@@ -438,9 +419,32 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
           Expanded(
             child: filteredMatches.isEmpty
                 ? Center(
-                    child: Text(
-                      'Không có trận đấu nào',
-                      style: TextStyle(color: colors.textSecondary),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.sports_esports_outlined,
+                          size: 48,
+                          color: colors.textMuted.withValues(alpha: 0.4),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Không có trận đấu nào',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Thử thay đổi bộ lọc để xem thêm kết quả',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 : ListView.builder(
@@ -767,6 +771,61 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             );
           }),
         ],
+      ),
+    );
+  }
+}
+
+/// Shimmer loading placeholder for bracket view.
+class _BracketShimmerLoading extends StatelessWidget {
+  const _BracketShimmerLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Shimmer.fromColors(
+      baseColor: colors.bgSurface,
+      highlightColor: colors.bgCard,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildShimmerBox(width: 200, height: 16),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                _buildShimmerBox(width: 80, height: 32, radius: 20),
+                const SizedBox(width: 8),
+                _buildShimmerBox(width: 100, height: 32, radius: 20),
+                const SizedBox(width: 8),
+                _buildShimmerBox(width: 90, height: 32, radius: 20),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...List.generate(4, (index) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  color: colors.bgSurface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerBox({required double width, required double height, double radius = 8}) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(radius),
       ),
     );
   }

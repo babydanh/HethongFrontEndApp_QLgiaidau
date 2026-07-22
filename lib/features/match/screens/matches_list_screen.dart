@@ -243,11 +243,77 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
 
   Widget _buildFilterRow(AppColorsExtension colors) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
+            // Status Pills
+            _StatusFilterPill(
+              label: 'Vừa kết thúc',
+              isSelected: _selectedStatus == 'completed',
+              activeBgColor: const Color(0xFFF3F4F1),
+              activeTextColor: const Color(0xFF4A4E4D),
+              onTap: () {
+                setState(() {
+                  _selectedStatus = _selectedStatus == 'completed' ? '' : 'completed';
+                  _applyFilters();
+                });
+              },
+            ),
+            const SizedBox(width: 8),
+            _StatusFilterPill(
+              label: 'Đang diễn ra',
+              isSelected: _selectedStatus == 'live',
+              activeBgColor: const Color(0xFFEBF5FF),
+              activeTextColor: const Color(0xFF1E56A0),
+              onTap: () {
+                setState(() {
+                  _selectedStatus = _selectedStatus == 'live' ? '' : 'live';
+                  _applyFilters();
+                });
+              },
+            ),
+            const SizedBox(width: 8),
+            _StatusFilterPill(
+              label: 'Mở đăng ký',
+              isSelected: _selectedStatus == 'registration',
+              activeBgColor: const Color(0xFFEFF8E9),
+              activeTextColor: const Color(0xFF386629),
+              onTap: () {
+                setState(() {
+                  _selectedStatus = _selectedStatus == 'registration' ? '' : 'registration';
+                  _applyFilters();
+                });
+              },
+            ),
+            const SizedBox(width: 8),
+            _StatusFilterPill(
+              label: 'Sắp diễn ra',
+              isSelected: _selectedStatus == 'scheduled',
+              activeBgColor: const Color(0xFFFFF5E6),
+              activeTextColor: const Color(0xFF995C00),
+              onTap: () {
+                setState(() {
+                  _selectedStatus = _selectedStatus == 'scheduled' ? '' : 'scheduled';
+                  _applyFilters();
+                });
+              },
+            ),
+            const SizedBox(width: 8),
+            _StatusFilterPill(
+              label: 'Đã kết thúc',
+              isSelected: _selectedStatus == 'finished',
+              activeBgColor: const Color(0xFFF1F5F9),
+              activeTextColor: const Color(0xFF64748B),
+              onTap: () {
+                setState(() {
+                  _selectedStatus = _selectedStatus == 'finished' ? '' : 'finished';
+                  _applyFilters();
+                });
+              },
+            ),
+            const SizedBox(width: 12),
             // Sport filter
             _FilterChip(
               label: _selectedSport.isEmpty
@@ -257,15 +323,6 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
               isActive: _selectedSport.isNotEmpty,
               colors: colors,
               onTap: () => _showSportPicker(colors),
-            ),
-            const SizedBox(width: 8),
-            // Status filter
-            _FilterChip(
-              label: _statusLabels[_selectedStatus] ?? 'Trạng thái',
-              icon: Icons.flag_rounded,
-              isActive: _selectedStatus.isNotEmpty,
-              colors: colors,
-              onTap: () => _showStatusPicker(colors),
             ),
             const SizedBox(width: 8),
             // Date filter
@@ -752,6 +809,53 @@ class _FilterChip extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Status Filter Pill (Hình 1 design) ───
+
+class _StatusFilterPill extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final Color activeBgColor;
+  final Color activeTextColor;
+  final VoidCallback onTap;
+
+  const _StatusFilterPill({
+    required this.label,
+    required this.isSelected,
+    required this.activeBgColor,
+    required this.activeTextColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? activeBgColor : colors.bgCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? activeTextColor.withValues(alpha: 0.3) : colors.border,
+            width: isSelected ? 1.2 : 1.0,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+            color: isSelected ? activeTextColor : colors.textSecondary,
+          ),
         ),
       ),
     );
