@@ -153,6 +153,9 @@ class MatchModel {
   final List<MatchMemberInfo> team1MemberInfos;
   final List<MatchMemberInfo> team2MemberInfos;
 
+  final String? groupName;
+  final String? stageName;
+
   /// True nếu đây là trận BYE (miễn đấu) do backend đánh dấu
   final bool isBye;
 
@@ -195,6 +198,8 @@ class MatchModel {
     this.team2Members = const [],
     this.team1MemberInfos = const [],
     this.team2MemberInfos = const [],
+    this.groupName,
+    this.stageName,
     this.isBye = false,
   });
 

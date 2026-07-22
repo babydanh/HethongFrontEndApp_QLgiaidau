@@ -369,13 +369,15 @@ class ApiTournamentRepository implements ITournamentRepository {
 
       if (stages.isNotEmpty) {
         for (final stage in stages) {
+          final stageName = stage['name']?.toString();
           final groups = stage['groups'] as List<dynamic>? ?? [];
           for (final group in groups) {
+            final groupName = group['name']?.toString();
             final rawMatches = group['matches'] as List<dynamic>? ?? [];
             for (final json in rawMatches) {
               if (json is! Map<String, dynamic>) continue;
               try {
-                allMatches.add(_parseBracketMatch(json));
+                allMatches.add(_parseBracketMatch(json, groupName: groupName, stageName: stageName));
               } catch (e) {
                 _log.warning('Failed to parse bracket match: $e');
               }
@@ -447,7 +449,11 @@ class ApiTournamentRepository implements ITournamentRepository {
     return '$name - $address';
   }
 
-  static MatchModel _parseBracketMatch(Map<String, dynamic> json) {
+  static MatchModel _parseBracketMatch(
+    Map<String, dynamic> json, {
+    String? groupName,
+    String? stageName,
+  }) {
     final p1 = json['participant1'] as Map<String, dynamic>?;
     final p2 = json['participant2'] as Map<String, dynamic>?;
     final team1Name = p1?['teamName']?.toString() ?? '';
@@ -460,6 +466,11 @@ class ApiTournamentRepository implements ITournamentRepository {
     final roundNumber = (json['roundNumber'] as int?) ?? 1;
     final matchOrder = (json['matchOrder'] as int?) ?? 1;
     final branch = _mapBracketBranch(json['bracketBranch'] as String?);
+
+    final rawGroup = json['group'] as Map<String, dynamic>?;
+    final resolvedGroupName = groupName ?? rawGroup?['name']?.toString();
+    final rawStage = rawGroup?['stage'] as Map<String, dynamic>?;
+    final resolvedStageName = stageName ?? rawStage?['name']?.toString();
 
     return MatchModel(
       id: json['id']?.toString() ?? '',
@@ -494,6 +505,8 @@ class ApiTournamentRepository implements ITournamentRepository {
       scoreDetails: json['scoreDetails'] as Map<String, dynamic>?,
       team1Members: team1Members,
       team2Members: team2Members,
+      groupName: resolvedGroupName,
+      stageName: resolvedStageName,
     );
   }
 
