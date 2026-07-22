@@ -906,9 +906,17 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     final tournament = tournamentAsync.value;
     final isGsknockout = tournament?.bracketType == AppConstants.bracketGroupStageKnockout;
 
-    // Map tên đội với groupName từ matches
+    // Map tên đội với groupName từ matches thuộc Vòng Bảng
     final teamGroupMap = <String, String>{};
-    for (final m in matches) {
+    final groupStageMatches = matches.where((m) {
+      final stage = (m.stageName ?? '').toUpperCase();
+      final group = (m.groupName ?? '').toUpperCase();
+      // Nếu có stageName chứa 'PLAYOFF' hoặc 'KNOCKOUT' thì bỏ qua
+      if (stage.contains('PLAYOFF') || stage.contains('KNOCKOUT')) return false;
+      return group.isNotEmpty || stage.contains('BẢNG') || stage.contains('GROUP') || stage.contains('ROUND ROBIN');
+    }).toList();
+
+    for (final m in groupStageMatches) {
       if (m.groupName != null && m.groupName!.isNotEmpty) {
         if (m.team1Name.isNotEmpty && m.team1Name != 'TBD') {
           teamGroupMap[m.team1Name] = m.groupName!;
