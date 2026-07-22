@@ -164,7 +164,7 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
                   painter: _BracketConnectorPainter(
                     matches: widget.matches,
                     positions: positions,
-                    lineColor: AppTheme.primary.withValues(alpha: 0.35),
+                    lineColor: colors.border.withValues(alpha: 0.8),
                     cardW: _kCardW,
                     cardH: _kCardH,
                     colGap: _kColGap,

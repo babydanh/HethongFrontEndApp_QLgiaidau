@@ -635,7 +635,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: match.isLive ? colors.error.withValues(alpha: 0.6) : colors.border,
+          color: match.isLive ? AppTheme.primary : colors.border,
           width: match.isLive ? 1.5 : 1,
         ),
         boxShadow: [
@@ -646,7 +646,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
           ),
           if (match.isLive)
             BoxShadow(
-              color: colors.error.withValues(alpha: 0.08),
+              color: AppTheme.primary.withValues(alpha: 0.08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
