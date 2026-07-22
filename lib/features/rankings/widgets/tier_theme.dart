@@ -21,40 +21,41 @@ class TierPalette {
     required this.gradient,
   });
 
+  // Palette màu sắc tinh tế cho các Tier (S, A, B, C, D)
   static const _s = TierPalette(
     grade: 'S',
     label: 'S',
-    color: Color(0xFFFF7A00),
-    soft: Color(0x33FF7A00),
-    gradient: LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFF7A00)]),
+    color: Color(0xFFD97706),
+    soft: Color(0xFFFEF3C7),
+    gradient: LinearGradient(colors: [Color(0xFFFDE68A), Color(0xFFF59E0B)]),
   );
   static const _a = TierPalette(
     grade: 'A',
     label: 'A',
-    color: Color(0xFFEF4444),
-    soft: Color(0x33EF4444),
-    gradient: LinearGradient(colors: [Color(0xFFFF6B6B), Color(0xFFEF4444)]),
+    color: Color(0xFFDC2626),
+    soft: Color(0xFFFEE2E2),
+    gradient: LinearGradient(colors: [Color(0xFFFCA5A5), Color(0xFFEF4444)]),
   );
   static const _b = TierPalette(
     grade: 'B',
     label: 'B',
-    color: Color(0xFF3B82F6),
-    soft: Color(0x333B82F6),
-    gradient: LinearGradient(colors: [Color(0xFF60A5FA), Color(0xFF3B82F6)]),
+    color: Color(0xFF2563EB),
+    soft: Color(0xFFDBEAFE),
+    gradient: LinearGradient(colors: [Color(0xFF93C5FD), Color(0xFF3B82F6)]),
   );
   static const _c = TierPalette(
     grade: 'C',
     label: 'C',
-    color: Color(0xFF22C55E),
-    soft: Color(0x3322C55E),
-    gradient: LinearGradient(colors: [Color(0xFF4ADE80), Color(0xFF22C55E)]),
+    color: Color(0xFF059669),
+    soft: Color(0xFFD1FAE5),
+    gradient: LinearGradient(colors: [Color(0xFF6EE7B7), Color(0xFF10B981)]),
   );
   static const _d = TierPalette(
     grade: 'D',
     label: 'D',
-    color: Color(0xFF94A3B8),
-    soft: Color(0x3394A3B8),
-    gradient: LinearGradient(colors: [Color(0xFFCBD5E1), Color(0xFF94A3B8)]),
+    color: Color(0xFF475569),
+    soft: Color(0xFFF1F5F9),
+    gradient: LinearGradient(colors: [Color(0xFFCBD5E1), Color(0xFF64748B)]),
   );
 
   /// Lấy palette theo tier (nếu null/empty → chưa xếp hạng).

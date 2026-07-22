@@ -350,6 +350,31 @@ class ApiTournamentRepository implements ITournamentRepository {
     await _dioClient.dio.delete('/tournaments/$id');
   }
 
+  // ─── Group Standings API ──────────────────────────────────────────────────
+
+  @override
+  Future<Map<String, dynamic>> getGroupStandings(String tournamentId, {String? divisionId}) async {
+    _log.debug('Fetching group standings for tournament $tournamentId');
+    try {
+      final queryParams = <String, dynamic>{};
+      if (divisionId != null && divisionId.isNotEmpty) {
+        queryParams['divisionId'] = divisionId;
+      }
+      final response = await _dioClient.dio.get(
+        '/tournaments/$tournamentId/standings',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as Map<String, dynamic>? ?? response.data as Map<String, dynamic>? ?? {};
+        return data;
+      }
+      return {};
+    } catch (e, stack) {
+      _log.error('Error fetching group standings', e, stack);
+      return {};
+    }
+  }
+
   // ─── Bracket API ─────────────────────────────────────────────────────────
 
   /// Gọi GET /tournaments/:id/bracket và trả về danh sách matches đã có

@@ -109,8 +109,6 @@ class TournamentTeamSheet extends StatelessWidget {
             ...team.members.asMap().entries.map((entry) {
               final index = entry.key;
               final memberName = entry.value;
-              final mockElo = 1200 + (index * 50) % 600;
-              final mockTier = mockElo >= 1600 ? "Vàng" : mockElo >= 1300 ? "Bạc" : "Đồng";
               final isCaptain = index == 0;
 
               return Container(
@@ -123,18 +121,18 @@ class TournamentTeamSheet extends StatelessWidget {
                 ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () => _showMemberProfile(context, memberName, mockElo, mockTier, isCaptain),
+                  onTap: () => _showMemberProfile(context, memberName, isCaptain),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 18,
-                        backgroundColor: const Color(0xFF2979FF).withValues(alpha: 0.1),
+                        backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                         child: Text(
                           memberName.isNotEmpty ? memberName[0].toUpperCase() : "?",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF2979FF),
+                            color: AppTheme.primary,
                           ),
                         ),
                       ),
@@ -158,14 +156,14 @@ class TournamentTeamSheet extends StatelessWidget {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFE11D48).withValues(alpha: 0.12),
+                                      color: colors.error.withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
-                                    child: const Text(
+                                    child: Text(
                                       "Trưởng nhóm",
                                       style: TextStyle(
                                         fontSize: 9,
-                                        color: Color(0xFFE11D48),
+                                        color: colors.error,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -176,30 +174,6 @@ class TournamentTeamSheet extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: mockElo >= 1600
-                              ? const Color(0xFFD97706).withValues(alpha: 0.12)
-                              : mockElo >= 1300
-                                  ? const Color(0xFF475569).withValues(alpha: 0.12)
-                                  : const Color(0xFF92400E).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          "$mockElo",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: mockElo >= 1600
-                                ? const Color(0xFFD97706)
-                                : mockElo >= 1300
-                                    ? const Color(0xFF475569)
-                                    : const Color(0xFF92400E),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
                       Icon(Icons.arrow_forward_ios_rounded, size: 16, color: colors.textMuted),
                     ],
                   ),
@@ -240,13 +214,11 @@ class TournamentTeamSheet extends StatelessWidget {
     );
   }
 
-  void _showMemberProfile(BuildContext context, String name, int elo, String tier, bool isCaptain) {
+  void _showMemberProfile(BuildContext context, String name, bool isCaptain) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => _MemberProfileScreen(
           name: name,
-          elo: elo,
-          tier: tier,
           isCaptain: isCaptain,
         ),
       ),
@@ -256,14 +228,10 @@ class TournamentTeamSheet extends StatelessWidget {
 
 class _MemberProfileScreen extends StatelessWidget {
   final String name;
-  final int elo;
-  final String tier;
   final bool isCaptain;
 
   const _MemberProfileScreen({
     required this.name,
-    required this.elo,
-    this.tier = "Đồng",
     this.isCaptain = false,
   });
 
@@ -294,13 +262,13 @@ class _MemberProfileScreen extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 48,
-              backgroundColor: const Color(0xFF2979FF).withValues(alpha: 0.1),
+              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
               child: Text(
                 name.isNotEmpty ? name[0].toUpperCase() : "?",
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF2979FF),
+                  color: AppTheme.primary,
                 ),
               ),
             ),
@@ -318,67 +286,19 @@ class _MemberProfileScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE11D48).withValues(alpha: 0.12),
+                  color: colors.error.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
+                child: Text(
                   "Trưởng nhóm",
                   style: TextStyle(
                     fontSize: 12,
-                    color: Color(0xFFE11D48),
+                    color: colors.error,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ],
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: colors.border),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "ĐIỂM ĐÁNH GIÁ",
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: colors.textMuted,
-                      letterSpacing: 1.0,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "$elo",
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w900,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFD700).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      "Hạng $tier",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFD97706),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),

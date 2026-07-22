@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 
@@ -109,7 +110,7 @@ class LeaderboardView extends StatelessWidget {
         textAlign: TextAlign.center,
         style: TextStyle(
           fontWeight: FontWeight.bold,
-          color: isHighlight ? const Color(0xFF2979FF) : colors.textMuted,
+          color: isHighlight ? AppTheme.primary : colors.textMuted,
           fontSize: 11,
         ),
       ),
@@ -119,6 +120,7 @@ class LeaderboardView extends StatelessWidget {
   Widget _buildStandingRow(BuildContext context, Standing standing, int rank) {
     final colors = context.colors;
     final isTop3 = rank <= 3;
+    final fmt = NumberFormat('#,###');
     Color rankColor;
 
     if (rank == 1) {
@@ -188,12 +190,12 @@ class LeaderboardView extends StatelessWidget {
               ),
             ),
           ),
-          _statCell(standing.played.toString(), colors),
-          _statCell(standing.won.toString(), colors),
-          _statCell(standing.drawn.toString(), colors),
-          _statCell(standing.lost.toString(), colors),
-          _statCell((standing.pointDifference > 0 ? "+" : "") + standing.pointDifference.toString(), colors),
-          _statCell(standing.totalPoints.toString(), colors, isHighlight: true),
+          _statCell(fmt.format(standing.played), colors),
+          _statCell(fmt.format(standing.won), colors),
+          _statCell(fmt.format(standing.drawn), colors),
+          _statCell(fmt.format(standing.lost), colors),
+          _statCell((standing.pointDifference > 0 ? "+" : "") + fmt.format(standing.pointDifference), colors),
+          _statCell(fmt.format(standing.totalPoints), colors, isHighlight: true),
         ],
       ),
     );
@@ -206,7 +208,7 @@ class LeaderboardView extends StatelessWidget {
         textAlign: TextAlign.center,
         style: TextStyle(
           fontWeight: isHighlight ? FontWeight.bold : FontWeight.normal,
-          color: isHighlight ? const Color(0xFF2979FF) : colors.textSecondary,
+          color: isHighlight ? AppTheme.primary : colors.textSecondary,
           fontSize: 13,
         ),
       ),

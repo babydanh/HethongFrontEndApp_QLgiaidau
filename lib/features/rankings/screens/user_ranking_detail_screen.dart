@@ -13,9 +13,10 @@ class UserRankingDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rankingAsync = ref.watch(userRankingsProvider);
+    final colors = context.colors;
 
     return Scaffold(
-      backgroundColor: context.colors.bgDark,
+      backgroundColor: colors.bgDark,
       body: rankingAsync.when(
         data: (rankings) {
           final ranking = rankings.isNotEmpty ? rankings.first : const PlayerRanking(
@@ -23,9 +24,9 @@ class UserRankingDetailScreen extends ConsumerWidget {
           );
           return _buildContent(context, ranking);
         },
-        loading: () => const Center(
+        loading: () => Center(
           child: CircularProgressIndicator(
-            color: Color(0xFF2979FF),
+            color: AppTheme.primary,
             strokeWidth: 2.5,
           ),
         ),
@@ -35,21 +36,21 @@ class UserRankingDetailScreen extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.cloud_off_rounded, size: 48, color: Color(0xFFB0BEC5)),
+                Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Không thể tải thông tin',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F172A),
+                    color: colors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   '$e',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                  style: TextStyle(fontSize: 12, color: colors.textMuted),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -62,6 +63,7 @@ class UserRankingDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildContent(BuildContext context, PlayerRanking ranking) {
+    final colors = context.colors;
     final winRate = ranking.winRate;
     final matchesLost = ranking.matchesLost;
 
@@ -81,13 +83,13 @@ class UserRankingDetailScreen extends ConsumerWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: colors.bgCard,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: colors.border),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_back_rounded,
-                      color: Color(0xFF0F172A),
+                      color: colors.textPrimary,
                       size: 20,
                     ),
                   ),
@@ -98,7 +100,7 @@ class UserRankingDetailScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
+                    color: Colors.white,
                     letterSpacing: -0.3,
                   ),
                 ),
@@ -211,25 +213,6 @@ class UserRankingDetailScreen extends ConsumerWidget {
                       height: 1.1,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.4),
-                      ),
-                    ),
-                    child: const Text(
-                      '↑ +34 tuần này',
-                      style: TextStyle(
-                        color: Color(0xFF10B981),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 20),
 
                   // Stats row
@@ -260,34 +243,43 @@ class UserRankingDetailScreen extends ConsumerWidget {
             const SizedBox(height: 20),
 
             // ── Recent Matches Section ──
+            const SizedBox(height: 20),
             const Text(
               'Trận đấu gần đây',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 12),
 
-            // Mock recent matches
-            _buildRecentMatch(
-              opponent: 'Trần Văn B',
-              result: 'Thắng',
-              score: '6-4, 6-3',
-              isWin: true,
-            ),
-            _buildRecentMatch(
-              opponent: 'Lê Thị C',
-              result: 'Thua',
-              score: '3-6, 4-6',
-              isWin: false,
-            ),
-            _buildRecentMatch(
-              opponent: 'Phạm Văn D',
-              result: 'Thắng',
-              score: '6-2, 7-5',
-              isWin: true,
+            // Empty state — no API for match history yet
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.sports_tennis_rounded,
+                    size: 40,
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Chưa có dữ liệu trận đấu',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -324,98 +316,6 @@ class UserRankingDetailScreen extends ConsumerWidget {
       width: 1,
       height: 32,
       color: Colors.white.withValues(alpha: 0.15),
-    );
-  }
-
-  Widget _buildRecentMatch({
-    required String opponent,
-    required String result,
-    required String score,
-    required bool isWin,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Result indicator
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: isWin
-                  ? const Color(0xFF10B981).withValues(alpha: 0.1)
-                  : const Color(0xFFEF4444).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              isWin ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
-              color: isWin ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Opponent info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'vs $opponent',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  score,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF94A3B8),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Result badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: isWin
-                  ? const Color(0xFF10B981).withValues(alpha: 0.1)
-                  : const Color(0xFFEF4444).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              result,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: isWin ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

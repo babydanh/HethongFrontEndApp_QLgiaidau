@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dart';
 import 'package:app_quanly_giaidau/features/bracket/layout/double_elim_layout.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/team_row.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_match_card.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  LAYOUT CONSTANTS
@@ -221,11 +221,12 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                   top: pos.dy,
                   width: _kCardW,
                   height: _kCardH,
-                  child: _DeBracketMatchCard(
+                  child: BracketMatchCard(
                     match: match,
                     tournamentId: widget.tournamentId,
                     isReferee: widget.isReferee,
                     isReadOnly: widget.isReadOnly,
+                    isGrandFinal: match.nextMatchId.isEmpty,
                   ),
                 );
               }),
@@ -318,217 +319,7 @@ class _DeRoundHeader extends StatelessWidget {
   }
 }
 
-// ── Match card ────────────────────────────────────────────────────────────────
-class _DeBracketMatchCard extends StatelessWidget {
-  final MatchModel match;
-  final String tournamentId;
-  final bool isReferee;
-  final bool isReadOnly;
 
-  const _DeBracketMatchCard({
-    required this.match,
-    required this.tournamentId,
-    required this.isReferee,
-    required this.isReadOnly,
-  });
-
-  void _onTap(BuildContext context) {
-    if ((isReferee || !isReadOnly) && (match.isLive || match.isScheduled)) {
-      context.push('/live/${match.id}');
-      return;
-    }
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.colors.bgCard,
-        contentPadding: EdgeInsets.zero,
-        content: SizedBox(
-          width: 320,
-          child: MatchCardDetail(
-            match: match,
-            isReferee: isReferee,
-            isReadOnly: isReadOnly,
-            tournamentId: tournamentId,
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final isBye1 = match.team1Name == 'BYE' || match.team1Id == 'BYE';
-    final isBye2 = match.team2Name == 'BYE' || match.team2Id == 'BYE';
-
-    Color statusColor = AppTheme.primary;
-    String statusLabel = 'SẮP ĐẤU';
-    Color borderColor = colors.border;
-
-    if (match.isLive) {
-      statusColor = colors.error;
-      statusLabel = 'LIVE';
-      borderColor = colors.error.withValues(alpha: 0.5);
-    } else if (match.isCompleted) {
-      statusColor = colors.success;
-      statusLabel = 'XONG';
-    }
-
-    return GestureDetector(
-      onTap: () => _onTap(context),
-      child: Container(
-        decoration: BoxDecoration(
-          color: match.isLive
-              ? colors.error.withValues(alpha: 0.05)
-              : colors.bgCard,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            _DeTeamRow(
-              name: isBye1 ? 'Miễn đấu' : match.team1Name,
-              score: match.score1,
-              sets: match.sets.isNotEmpty ? match.sets.map((s) => s.score1).toList() : null,
-              isWinner: match.isCompleted && match.winnerId == match.team1Id,
-              isLive: match.isLive,
-              isBye: isBye1,
-              colors: colors,
-            ),
-            Divider(height: 1, thickness: 1, color: colors.border),
-            _DeTeamRow(
-              name: isBye2 ? 'Miễn đấu' : match.team2Name,
-              score: match.score2,
-              sets: match.sets.isNotEmpty ? match.sets.map((s) => s.score2).toList() : null,
-              isWinner: match.isCompleted && match.winnerId == match.team2Id,
-              isLive: match.isLive,
-              isBye: isBye2,
-              colors: colors,
-            ),
-            // ── Footer ──
-            Container(
-              height: 22,
-              decoration: BoxDecoration(
-                color: colors.bgSurface,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(11),
-                  bottomRight: Radius.circular(11),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 5, height: 5,
-                    decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    statusLabel,
-                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: statusColor, letterSpacing: 0.5),
-                  ),
-                  const Spacer(),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Text(
-                      (isReferee || !isReadOnly) && match.isLive ? 'Tính điểm →' : 'Xem →',
-                      style: TextStyle(
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                        color: (isReferee || !isReadOnly) && match.isLive ? colors.error : colors.textMuted,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DeTeamRow extends StatelessWidget {
-  final String name;
-  final int score;
-  final List<int>? sets;
-  final bool isWinner;
-  final bool isLive;
-  final bool isBye;
-  final AppColorsExtension colors;
-
-  const _DeTeamRow({
-    required this.name,
-    required this.score,
-    required this.isWinner,
-    required this.isLive,
-    required this.isBye,
-    required this.colors,
-    this.sets,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Row(
-          children: [
-            Container(
-              width: 3, height: 22,
-              decoration: BoxDecoration(
-                color: isWinner ? colors.success : Colors.transparent,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                name,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isWinner ? FontWeight.w800 : FontWeight.w500,
-                  color: isBye ? colors.textMuted : isWinner ? colors.textPrimary : colors.textSecondary,
-                  fontStyle: isBye ? FontStyle.italic : FontStyle.normal,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (sets != null)
-              ...sets!.map((s) => Container(
-                    margin: const EdgeInsets.only(left: 2),
-                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: colors.bgSurface,
-                      borderRadius: BorderRadius.circular(3),
-                      border: Border.all(color: colors.border),
-                    ),
-                    child: Text('$s', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: colors.textSecondary)),
-                  )),
-            const SizedBox(width: 6),
-            Text(
-              isBye ? '' : '$score',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-                color: isLive ? colors.error : isWinner ? colors.textPrimary : colors.textMuted,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ── Connector painter ─────────────────────────────────────────────────────────
 class _DoubleElimPainter extends CustomPainter {

@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 
 abstract class ITournamentRepository {
   Future<Tournament> create(Tournament tournament);
@@ -26,6 +27,9 @@ abstract class ITournamentRepository {
   Future<void> updateStatus(String id, String status);
   Future<void> updateToken(String id, String role, String newToken);
   Future<void> delete(String id);
+
+  // Group Standings
+  Future<Map<String, dynamic>> getGroupStandings(String tournamentId, {String? divisionId});
 
   // Follow / Unfollow
   Future<void> followTournament(String id);

@@ -13,10 +13,13 @@ import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
+import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -264,7 +267,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _buildUserInfo(context, profile),
           const SizedBox(height: 20),
 
-          // Tab bar selector (2 Tabs)
+          // Tab bar selector (3 Tabs: Thông tin | Theo dõi | Thành tích)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
@@ -281,7 +284,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     child: _buildTabButton(0, "Thông tin & Tiện ích"),
                   ),
                   Expanded(
-                    child: _buildTabButton(1, "Theo dõi & Nghiên cứu"),
+                    child: _buildTabButton(1, "Theo dõi & NC"),
+                  ),
+                  Expanded(
+                    child: _buildTabButton(2, "Thành tích"),
                   ),
                 ],
               ),
@@ -293,7 +299,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           if (_activeTab == 0) ...[
             // Dynamic rankings card list based on actual ELO and category ranks
             _buildRankingsSection(context),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+
+            // ELO Progress Chart
+            _buildEloChartSection(context),
+            const SizedBox(height: 20),
 
             // Info Section
             _buildSectionTitle(colors, 'Thông tin cá nhân'),
@@ -318,10 +328,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 10),
             _buildOtherMenu(context, isDark),
             const SizedBox(height: 32),
-          ] else ...[
+          ] else if (_activeTab == 1) ...[
             _buildSectionTitle(colors, 'Giải đấu đang theo dõi'),
             const SizedBox(height: 10),
             _buildFollowedTournamentsSection(context),
+            const SizedBox(height: 32),
+          ] else ...[
+            // Tab 2: Thành tích
+            const AchievementsTab(),
             const SizedBox(height: 32),
           ],
         ],
@@ -854,6 +868,40 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: Center(child: CircularProgressIndicator(color: AppTheme.primary)),
         ),
       ),
+      error: (e, _) => const SizedBox.shrink(),
+    );
+  }
+
+  // ─── ELO PROGRESS CHART SECTION ─────────────────────────────────────
+  Widget _buildEloChartSection(BuildContext context) {
+    final rankingsAsync = ref.watch(userRankingsProvider);
+
+    return rankingsAsync.when(
+      data: (rankings) {
+        final playedRankings = rankings.where((r) => r.matchesPlayed > 0).toList();
+        PlayerRanking? bestRank;
+        if (playedRankings.isNotEmpty) {
+          playedRankings.sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
+          bestRank = playedRankings.first;
+        }
+
+        final currentElo = bestRank?.eloPoints ?? 1000;
+        final tierName = bestRank?.tierName;
+
+        // Generate mock ELO history from current ELO
+        // TODO: Replace with real API data from GET /api/v1/players/:id/elo-history when available
+        final eloHistory = generateMockEloHistory(currentElo);
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: EloProgressChart(
+            data: eloHistory,
+            currentElo: currentElo,
+            tierName: tierName,
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
       error: (e, _) => const SizedBox.shrink(),
     );
   }

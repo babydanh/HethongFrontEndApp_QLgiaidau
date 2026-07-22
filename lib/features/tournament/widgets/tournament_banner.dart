@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -224,7 +225,12 @@ class _TournamentBannerState extends State<TournamentBanner> {
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
-                              onPressed: () {},
+                              onPressed: () {
+                                final tournament = widget.tournament;
+                                final text = '${tournament.name} - ${tournament.category ?? tournament.sport}';
+                                final url = 'https://giaidau.vnvar.com/tournaments/${tournament.id}';
+                                SharePlus.instance.share(ShareParams(text: '$text\n\n$url'));
+                              },
                               icon: const Icon(Icons.share, size: 12),
                               label: const Text(
                                 "Chia sẻ",
@@ -265,18 +271,12 @@ class _TournamentBannerState extends State<TournamentBanner> {
                 ],
               ),
               const SizedBox(height: 16),
-              _buildActionButton(colors),
-              const SizedBox(height: 12),
               Divider(color: colors.border, height: 1.0),
             ],
           ),
         ),
       ],
     );
-  }
-
-  Widget _buildActionButton(AppColorsExtension colors) {
-    return const SizedBox.shrink();
   }
 
   String _formatDateRange(DateTime? start, DateTime? end) {
