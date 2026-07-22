@@ -416,7 +416,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     );
   }
 
-  String _matchFilter = 'all';
   int _selectedRound = 0;
 
   Widget _roundChip(int roundValue, String label) {
