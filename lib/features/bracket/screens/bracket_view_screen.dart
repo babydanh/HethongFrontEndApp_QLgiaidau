@@ -941,8 +941,15 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Row(
                 children: [
-                  Text('Bảng Xếp Hạng Vòng Tròn (${groupsList.length} Bảng đấu)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.colors.textPrimary)),
-                  const Spacer(),
+                  Expanded(
+                    child: Text(
+                      'Bảng Xếp Hạng Vòng Tròn (${groupsList.length} Bảng)',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: context.colors.textPrimary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primary,
@@ -1038,8 +1045,8 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                         },
                       );
                     },
-                    icon: const Icon(Icons.fullscreen_rounded, size: 16),
-                    label: const Text('Phóng to xoay ngang', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                    icon: const Icon(Icons.screen_rotation_rounded, size: 15),
+                    label: const Text('Xoay ngang', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
