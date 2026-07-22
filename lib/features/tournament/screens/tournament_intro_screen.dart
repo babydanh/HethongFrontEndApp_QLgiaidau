@@ -135,9 +135,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _buildContent(Tournament tournament, UserRole? role) {
-    if (_selectedDivisionId == null && tournament.divisions.isNotEmpty) {
+    if (_selectedDivisionId == null && _selectedDivision != "Tất cả" && tournament.divisions.isNotEmpty) {
       _selectedDivisionId = tournament.divisions.first.id;
-      _selectedDivision = tournament.divisions.first.name;
     }
     final teamsAsync = ref.watch(teamsProvider(widget.tournamentId));
     final viewerCountAsync = ref.watch(
@@ -342,9 +341,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   setState(() {
                     _selectedDivision = val;
                     if (val == "Tất cả") {
-                      _selectedDivisionId = tournament.divisions.isNotEmpty
-                          ? tournament.divisions.first.id
-                          : tournament.id;
+                      _selectedDivisionId = null;
                     } else {
                       final matched = tournament.divisions.firstWhere(
                         (d) => d.name == val,

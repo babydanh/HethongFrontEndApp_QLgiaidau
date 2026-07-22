@@ -368,16 +368,17 @@ class ApiTournamentRepository implements ITournamentRepository {
       final allMatches = <MatchModel>[];
 
       if (stages.isNotEmpty) {
-        final stage = stages.last;
-        final groups = stage['groups'] as List<dynamic>? ?? [];
-        for (final group in groups) {
-          final rawMatches = group['matches'] as List<dynamic>? ?? [];
-          for (final json in rawMatches) {
-            if (json is! Map<String, dynamic>) continue;
-            try {
-              allMatches.add(_parseBracketMatch(json));
-            } catch (e) {
-              _log.warning('Failed to parse bracket match: $e');
+        for (final stage in stages) {
+          final groups = stage['groups'] as List<dynamic>? ?? [];
+          for (final group in groups) {
+            final rawMatches = group['matches'] as List<dynamic>? ?? [];
+            for (final json in rawMatches) {
+              if (json is! Map<String, dynamic>) continue;
+              try {
+                allMatches.add(_parseBracketMatch(json));
+              } catch (e) {
+                _log.warning('Failed to parse bracket match: $e');
+              }
             }
           }
         }
