@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -47,10 +48,10 @@ class _TournamentBannerState extends State<TournamentBanner> {
               width: double.infinity,
               color: colors.bgCard,
               child: images.isEmpty
-                  ? Image.network(
+                  ? SvgPicture.network(
                       "https://giaidau.vnvar.com/vndcsport.svg",
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                      fit: BoxFit.contain,
+                      placeholderBuilder: (_) => Container(
                         color: const Color(0xFF1E293B),
                         child: const Center(
                           child: Text(
@@ -81,10 +82,10 @@ class _TournamentBannerState extends State<TournamentBanner> {
                           imgUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
-                            return Image.network(
+                            return SvgPicture.network(
                               "https://giaidau.vnvar.com/vndcsport.svg",
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
+                              fit: BoxFit.contain,
+                              placeholderBuilder: (_) => Container(
                                 color: const Color(0xFF1E293B),
                                 child: const Center(
                                   child: Text(
@@ -167,8 +168,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(11),
-                      child:
-                          widget.tournament.logoUrl != null &&
+                      child: widget.tournament.logoUrl != null &&
                               widget.tournament.logoUrl!.isNotEmpty
                           ? Image.network(
                               widget.tournament.logoUrl!.startsWith("http")
@@ -176,26 +176,22 @@ class _TournamentBannerState extends State<TournamentBanner> {
                                   : "https://qlgiaidau.esports.vn${widget.tournament.logoUrl!}",
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
-                                  Image.network(
-                                    widget.tournament.creatorAvatarUrl != null && widget.tournament.creatorAvatarUrl!.isNotEmpty
-                                        ? widget.tournament.creatorAvatarUrl!
-                                        : "https://giaidau.vnvar.com/vndcsport.svg",
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            const Icon(
-                                              Icons.emoji_events,
-                                              size: 28,
-                                            ),
-                                  ),
+                                  SvgPicture.network(
+                                "https://giaidau.vnvar.com/vndcsport.svg",
+                                fit: BoxFit.contain,
+                                placeholderBuilder: (_) => const Icon(
+                                  Icons.emoji_events,
+                                  size: 28,
+                                ),
+                              ),
                             )
-                          : Image.network(
-                              widget.tournament.creatorAvatarUrl != null && widget.tournament.creatorAvatarUrl!.isNotEmpty
-                                  ? widget.tournament.creatorAvatarUrl!
-                                  : "https://giaidau.vnvar.com/vndcsport.svg",
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.emoji_events, size: 28),
+                          : SvgPicture.network(
+                              "https://giaidau.vnvar.com/vndcsport.svg",
+                              fit: BoxFit.contain,
+                              placeholderBuilder: (_) => const Icon(
+                                Icons.emoji_events,
+                                size: 28,
+                              ),
                             ),
                     ),
                   ),
