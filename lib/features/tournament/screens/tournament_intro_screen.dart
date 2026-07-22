@@ -41,7 +41,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _checkFollowing();
   }
 
@@ -1722,7 +1722,6 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
               Tab(text: "Giới thiệu"),
               Tab(text: "Danh sách đội"),
               Tab(text: "Bảng thi đấu"),
-              Tab(text: "Bảng xếp hạng"),
               Tab(text: "Gallery"),
             ],
           ),
