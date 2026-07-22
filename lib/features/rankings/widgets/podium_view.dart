@@ -13,8 +13,11 @@ class PodiumView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (rankings.length < 3) return const SizedBox.shrink();
     final colors = context.colors;
+
+    final p1 = rankings.isNotEmpty ? rankings[0] : null;
+    final p2 = rankings.length >= 2 ? rankings[1] : null;
+    final p3 = rankings.length >= 3 ? rankings[2] : null;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -63,9 +66,9 @@ class PodiumView extends StatelessWidget {
               // Hạng 2
               Expanded(
                 child: _PodiumSlot(
-                  ranking: rankings[1],
+                  ranking: p2,
                   rankNumber: '2',
-                  tier: TierPalette.matchTier(rankings[1].eloPoints, tiers),
+                  tier: p2 != null ? TierPalette.matchTier(p2.eloPoints, tiers) : null,
                   podiumHeight: 52,
                   podiumColor: const Color(0xFF94A3B8),
                   avatarBg: const Color(0xFF94A3B8),
@@ -75,9 +78,9 @@ class PodiumView extends StatelessWidget {
               // Hạng 1
               Expanded(
                 child: _PodiumSlot(
-                  ranking: rankings[0],
+                  ranking: p1,
                   rankNumber: '1',
-                  tier: TierPalette.matchTier(rankings[0].eloPoints, tiers),
+                  tier: p1 != null ? TierPalette.matchTier(p1.eloPoints, tiers) : null,
                   podiumHeight: 82,
                   podiumColor: const Color(0xFFF59E0B),
                   avatarBg: const Color(0xFFF59E0B),
@@ -88,9 +91,9 @@ class PodiumView extends StatelessWidget {
               // Hạng 3
               Expanded(
                 child: _PodiumSlot(
-                  ranking: rankings[2],
+                  ranking: p3,
                   rankNumber: '3',
-                  tier: TierPalette.matchTier(rankings[2].eloPoints, tiers),
+                  tier: p3 != null ? TierPalette.matchTier(p3.eloPoints, tiers) : null,
                   podiumHeight: 44,
                   podiumColor: const Color(0xFFF97316),
                   avatarBg: const Color(0xFFF97316),
@@ -105,7 +108,7 @@ class PodiumView extends StatelessWidget {
 }
 
 class _PodiumSlot extends StatelessWidget {
-  final PlayerRanking ranking;
+  final PlayerRanking? ranking;
   final String rankNumber;
   final EloTier? tier;
   final double podiumHeight;
@@ -126,6 +129,9 @@ class _PodiumSlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final name = ranking?.fullName ?? 'Chưa xếp hạng';
+    final eloStr = ranking != null ? '${ranking!.eloPoints} ELO' : '-- ELO';
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -140,21 +146,23 @@ class _PodiumSlot extends StatelessWidget {
           width: isKing ? 58 : 50,
           height: isKing ? 58 : 50,
           decoration: BoxDecoration(
-            color: avatarBg,
+            color: ranking != null ? avatarBg : colors.border.withValues(alpha: 0.5),
             shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: avatarBg.withValues(alpha: 0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            boxShadow: ranking != null
+                ? [
+                    BoxShadow(
+                      color: avatarBg.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
           ),
           child: Center(
             child: Text(
-              _initials(ranking.fullName),
+              ranking != null ? _initials(name) : '?',
               style: TextStyle(
-                color: Colors.white,
+                color: ranking != null ? Colors.white : colors.textMuted,
                 fontSize: isKing ? 18 : 15,
                 fontWeight: FontWeight.w900,
               ),
@@ -163,23 +171,23 @@ class _PodiumSlot extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          ranking.fullName,
+          name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: colors.textPrimary,
+            fontWeight: ranking != null ? FontWeight.w800 : FontWeight.w600,
+            color: ranking != null ? colors.textPrimary : colors.textMuted,
           ),
         ),
         const SizedBox(height: 2),
         Text(
-          '${ranking.eloPoints} ELO',
-          style: const TextStyle(
+          eloStr,
+          style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF2563EB),
+            color: ranking != null ? const Color(0xFF2563EB) : colors.textMuted,
           ),
         ),
         const SizedBox(height: 8),
@@ -188,7 +196,7 @@ class _PodiumSlot extends StatelessWidget {
           height: podiumHeight,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: podiumColor,
+            color: ranking != null ? podiumColor : podiumColor.withValues(alpha: 0.35),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Center(

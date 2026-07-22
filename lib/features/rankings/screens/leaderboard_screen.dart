@@ -15,7 +15,8 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/user_stats_card.dar
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
-  const LeaderboardScreen({super.key});
+  final String selectedSport;
+  const LeaderboardScreen({super.key, this.selectedSport = 'all'});
 
   @override
   ConsumerState<LeaderboardScreen> createState() => _LeaderboardScreenState();
@@ -29,6 +30,22 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
   String _query = '';
   final ScrollController _scrollCtrl = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategory = widget.selectedSport;
+  }
+
+  @override
+  void didUpdateWidget(covariant LeaderboardScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedSport != widget.selectedSport) {
+      setState(() {
+        _selectedCategory = widget.selectedSport;
+      });
+    }
+  }
 
   RankingQuery get _rankingQuery => (
     categoryId: _selectedCategory,
@@ -84,42 +101,50 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               );
             }
 
-            // Đặt mặc định category đầu tiên.
-            if (_selectedCategory == 'all' ||
-                !categories.any((c) => c.id == _selectedCategory)) {
-              final defaultId = categories.first.id;
-              Future.microtask(() {
-                if (mounted) setState(() => _selectedCategory = defaultId);
-              });
+            // Xử lý xác định categoryId thực tế
+            String effectiveCategoryId = _selectedCategory;
+            if (effectiveCategoryId == 'all' || effectiveCategoryId.isEmpty) {
+              effectiveCategoryId = categories.first.id;
+            } else {
+              final found = categories.firstWhere(
+                (c) => c.id == effectiveCategoryId || c.slug.toLowerCase() == effectiveCategoryId.toLowerCase(),
+                orElse: () => categories.first,
+              );
+              effectiveCategoryId = found.id;
             }
 
-            final rankingsAsync = _selectedCategory == 'all'
-                ? const AsyncValue<List<PlayerRanking>>.loading()
-                : ref.watch(rankingsProvider(_rankingQuery));
-            final tiersAsync = ref.watch(eloTiersProvider(_selectedCategory));
+            final query = (
+              categoryId: effectiveCategoryId,
+              matchType: _selectedMatchType,
+              genderRestriction: _selectedGender,
+              provinceCode: _selectedProvince,
+            );
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 104),
-                const SizedBox(height: 10),
-                _buildRankingFilters(colors),
-                const SizedBox(height: 10),
-                _buildProvinceFilter(colors),
-                const SizedBox(height: 12),
-                tiersAsync.when(
-                  data: (tiers) {
-                    final myElo = rankingsAsync.asData?.value
-                        .where((r) => r.userId == currentUserId)
-                        .firstOrNull?.eloPoints;
-                    return TierLegendView(tiers: tiers, highlightElo: myElo);
-                  },
-                  loading: () => const SizedBox(height: 52),
-                  error: (context, error) => const SizedBox(height: 52),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: rankingsAsync.when(
+            final rankingsAsync = ref.watch(rankingsProvider(query));
+            final tiersAsync = ref.watch(eloTiersProvider(effectiveCategoryId));
+
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 148),
+                  _buildRankingFilters(colors),
+                  const SizedBox(height: 10),
+                  _buildProvinceFilter(colors),
+                  const SizedBox(height: 12),
+                  tiersAsync.when(
+                    data: (tiers) {
+                      final myElo = rankingsAsync.asData?.value
+                          .where((r) => r.userId == currentUserId)
+                          .firstOrNull?.eloPoints;
+                      return TierLegendView(tiers: tiers, highlightElo: myElo);
+                    },
+                    loading: () => const SizedBox(height: 52),
+                    error: (context, error) => const SizedBox(height: 52),
+                  ),
+                  const SizedBox(height: 8),
+                  rankingsAsync.when(
                     data: (rankings) => _buildRankingsList(
                       rankings,
                       tiersAsync.asData?.value ?? <EloTier>[],
@@ -127,7 +152,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       isAuth,
                       currentUserId,
                     ),
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () => const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
                     error: (e, _) => _emptyState(
                       context,
                       icon: Icons.cloud_off_rounded,
@@ -136,8 +164,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       onRetry: () => ref.refresh(rankingsProvider(_rankingQuery)),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -444,79 +472,63 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       );
     }
 
-    // Không tìm kiếm: podium + list từ hạng 4.
-    final hasPodium = rankings.length >= 3;
-    final rest = hasPodium ? rankings.sublist(3) : rankings;
+    final hasPodium = rankings.isNotEmpty;
+    final rest = rankings.length > 3 ? rankings.sublist(3) : <PlayerRanking>[];
 
-    return Stack(
+    return Column(
       children: [
-        ListView.builder(
-          controller: _scrollCtrl,
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 120),
-          itemCount: 1 + rest.length + (isAuth ? 1 : 0),
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              if (hasPodium) {
-                return Column(
-                  children: [
-                    PodiumView(rankings: rankings, tiers: tierList),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Toàn bộ xếp hạng',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              color: colors.textPrimary,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          Text(
-                            'Cập nhật vừa rồi',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: colors.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }
-              return const SizedBox(height: 8);
-            }
-            if (isAuth && currentUserId != null && index == 1 + rest.length) {
-              final myRank = rankings.where((r) => r.userId == currentUserId).firstOrNull;
-              if (myRank != null) {
-                return UserStatsCard(ranking: myRank, tiers: tierList);
-              }
-              return const SizedBox.shrink();
-            }
-            final restIndex = index - 1;
-            if (restIndex >= rest.length) return const SizedBox.shrink();
-            final r = rest[restIndex];
-            return RankingRow(
+        PodiumView(rankings: rankings, tiers: tierList),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Toàn bộ xếp hạng',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: colors.textPrimary,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              Text(
+                'Cập nhật vừa rồi',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: colors.textMuted,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (rest.isNotEmpty)
+          ...rest.map(
+            (r) => RankingRow(
               ranking: r,
               tiers: tierList,
               isMe: isAuth && r.userId == currentUserId,
               onTap: () => context.go('/profile/user/${r.userId}'),
-            );
-          },
-        ),
-        // Card "Bạn" dán đáy khi không tìm kiếm.
-        if (isAuth && currentUserId != null)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _buildStickyMeCard(rankings, tierList, colors, currentUserId),
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+            child: Column(
+              children: [
+                Icon(Icons.emoji_events_outlined, size: 36, color: colors.textMuted),
+                const SizedBox(height: 8),
+                Text(
+                  'Chưa có thêm vận động viên',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.textMuted),
+                ),
+              ],
+            ),
           ),
+        if (isAuth && currentUserId != null)
+          _buildStickyMeCard(rankings, tierList, colors, currentUserId),
+        const SizedBox(height: 100),
       ],
     );
   }

@@ -491,7 +491,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       default:
         return KeyedSubtree(
           key: const ValueKey('ranking'),
-          child: const LeaderboardScreen(),
+          child: LeaderboardScreen(selectedSport: _selectedSport),
         );
     }
   }
