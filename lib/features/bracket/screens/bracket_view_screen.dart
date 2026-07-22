@@ -919,8 +919,96 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Row(
                 children: [
-                  Text('Bảng Xếp Hạng', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: context.colors.textPrimary)),
+                  Text('Bảng Xếp Hạng Vòng Tròn', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.colors.textPrimary)),
                   const Spacer(),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      minimumSize: const Size(0, 32),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) {
+                          SystemChrome.setPreferredOrientations([
+                            DeviceOrientation.landscapeLeft,
+                            DeviceOrientation.landscapeRight,
+                          ]);
+                          return Dialog.fullscreen(
+                            backgroundColor: context.colors.bgDark,
+                            child: Scaffold(
+                              backgroundColor: context.colors.bgDark,
+                              appBar: AppBar(
+                                backgroundColor: context.colors.bgDark,
+                                elevation: 0,
+                                leading: IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () {
+                                    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+                                    Navigator.pop(ctx);
+                                  },
+                                ),
+                                title: const Text('Bảng Xếp Hạng Vòng Tròn (Toàn Màn Hình)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              ),
+                              body: InteractiveViewer(
+                                constrained: false,
+                                boundaryMargin: const EdgeInsets.all(20),
+                                minScale: 0.5,
+                                maxScale: 3.0,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: DataTable(
+                                    headingTextStyle: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: context.colors.textPrimary,
+                                    ),
+                                    dataTextStyle: TextStyle(color: context.colors.textSecondary),
+                                    columns: const [
+                                      DataColumn(label: Text('Hạng')),
+                                      DataColumn(label: Text('Đội VĐV')),
+                                      DataColumn(label: Text('Trận')),
+                                      DataColumn(label: Text('T')),
+                                      DataColumn(label: Text('B')),
+                                      DataColumn(label: Text('BT')),
+                                      DataColumn(label: Text('BB')),
+                                      DataColumn(label: Text('HS')),
+                                      DataColumn(label: Text('Điểm')),
+                                    ],
+                                    rows: List.generate(standings.length, (index) {
+                                      final st = standings[index];
+                                      final isAdvancing = isGsknockout && index < advancingCount;
+                                      return DataRow(
+                                        color: isAdvancing
+                                            ? WidgetStateProperty.all(context.colors.success.withValues(alpha: 0.06))
+                                            : null,
+                                        cells: [
+                                          DataCell(Text('${index + 1}')),
+                                          DataCell(Text(st.teamName, style: const TextStyle(fontWeight: FontWeight.bold))),
+                                          DataCell(Text('${st.played}')),
+                                          DataCell(Text('${st.won}')),
+                                          DataCell(Text('${st.lost}')),
+                                          DataCell(Text('${st.pointsFor}')),
+                                          DataCell(Text('${st.pointsAgainst}')),
+                                          DataCell(Text('${st.pointDifference > 0 ? '+' : ''}${st.pointDifference}')),
+                                          DataCell(Text('${st.totalPoints}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary))),
+                                        ],
+                                      );
+                                    }),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.fullscreen_rounded, size: 16),
+                    label: const Text('Phóng to xoay ngang', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(width: 6),
                   IconButton(
                     icon: Icon(Icons.info_outline, color: AppTheme.primary),
                     onPressed: () {
