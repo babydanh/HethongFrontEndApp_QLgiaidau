@@ -249,7 +249,11 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
       return m.round == 1 || m.team1Name != 'TBD' || m.team2Name != 'TBD';
     }).toList();
 
+    // Tách các vòng đấu thực tế có trong danh sách trận đấu
+    final availableRounds = validMatches.map((m) => m.round).toSet().toList()..sort();
+
     final filteredMatches = validMatches.where((m) {
+      if (_selectedRound != 0 && m.round != _selectedRound) return false;
       if (_matchFilter == 'live') return m.isLive;
       if (_matchFilter == 'scheduled') return m.isScheduled;
       if (_matchFilter == 'completed') return m.isCompleted;
@@ -329,12 +333,45 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
+          // ── BỘ LỌC VÒNG ĐẤU ──
+          if (availableRounds.length > 1) ...[
+            Text(
+              'BỘ LỌC VÒNG ĐẤU',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: colors.textMuted,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 6),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: [
+                  _roundChip(0, 'Tất cả các vòng (${validMatches.length})'),
+                  const SizedBox(width: 6),
+                  ...availableRounds.map((r) {
+                    final label = _getRoundName(r, totalRounds);
+                    final count = validMatches.where((m) => m.round == r).length;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: _roundChip(r, '$label ($count)'),
+                    );
+                  }),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          // ── BỘ LỌC TRẠNG THÁI ──
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _filterChip('all', 'Tất cả (${validMatches.length})'),
+                _filterChip('all', 'Tất cả trạng thái (${validMatches.length})'),
                 const SizedBox(width: 8),
                 _filterChip('live', 'Đang Live (${validMatches.where((m) => m.isLive).length})'),
                 const SizedBox(width: 8),
@@ -376,6 +413,39 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
           ),
         ],
       ),
+    );
+  }
+
+  String _matchFilter = 'all';
+  int _selectedRound = 0;
+
+  Widget _roundChip(int roundValue, String label) {
+    final colors = context.colors;
+    final isSelected = _selectedRound == roundValue;
+    return ChoiceChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : colors.textSecondary,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontSize: 12,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (selected) {
+        if (selected) {
+          setState(() {
+            _selectedRound = roundValue;
+          });
+        }
+      },
+      selectedColor: AppTheme.primary,
+      backgroundColor: colors.bgCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(100),
+        side: BorderSide(color: isSelected ? Colors.transparent : colors.border),
+      ),
+      showCheckmark: false,
     );
   }
 
