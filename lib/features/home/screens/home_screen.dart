@@ -613,31 +613,67 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         isLive: true,
                       ),
                     ),
-                    _TournamentSectionList(
-                      tournaments: live,
-                      filterStatus: 'live',
-                      emptyMessage: 'Chưa có trận đấu nào đang diễn ra',
-                    ),
+                    if (live.isNotEmpty)
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => LiveTournamentWithMatchesCard(
+                              tournament: live[index],
+                              filterStatus: 'live',
+                            ),
+                            childCount: live.length,
+                          ),
+                        ),
+                      )
+                    else
+                      _buildSectionEmptyCard('Chưa có trận đấu nào đang diễn ra'),
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
                         title: 'Kết quả trận đấu vừa qua',
                       ),
                     ),
-                    _TournamentSectionList(
-                      tournaments: finished,
-                      filterStatus: 'completed',
-                      emptyMessage: 'Chưa có trận đấu nào đã kết thúc',
-                    ),
+                    if (finished.isNotEmpty)
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            final tournament = finished[index];
+                            return LiveTournamentWithMatchesCard(
+                              tournament: tournament,
+                              filterStatus: 'completed',
+                            );
+                          }, childCount: finished.length),
+                        ),
+                      )
+                    else
+                      _buildSectionEmptyCard('Chưa có trận đấu nào đã kết thúc'),
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
                         title: 'Lịch thi đấu sắp diễn ra',
                       ),
                     ),
-                    _TournamentSectionList(
-                      tournaments: safeUpcoming,
-                      filterStatus: 'scheduled',
-                      emptyMessage: 'Chưa có lịch thi đấu sắp diễn ra',
-                    ),
+                    if (safeUpcoming.isNotEmpty)
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            final tournament = safeUpcoming[index];
+                            return LiveTournamentWithMatchesCard(
+                              tournament: tournament,
+                              filterStatus: 'scheduled',
+                            );
+                          }, childCount: safeUpcoming.length),
+                        ),
+                      )
+                    else
+                      _buildSectionEmptyCard('Chưa có lịch thi đấu sắp diễn ra'),
                     // ── Section 5: Cộng đồng câu lạc bộ ──
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(

@@ -65,7 +65,7 @@ class _LiveTournamentWithMatchesCardState
           if (isT1Tbd && isT2Tbd) return false;
 
           if (widget.filterStatus == 'live') return m.isLive;
-          if (widget.filterStatus == 'completed') return m.isCompleted;
+          if (widget.filterStatus == 'completed') return m.isCompleted || m.isByeMatch || m.isBye;
           if (widget.filterStatus == 'scheduled') return m.isScheduled || (!m.isLive && !m.isCompleted);
           return true;
         }).toList();
