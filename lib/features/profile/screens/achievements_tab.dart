@@ -16,17 +16,9 @@ class AchievementsTab extends ConsumerWidget {
       return a.sportId == selectedSport;
     }).toList();
 
-    final wins = filteredAchievements.where((a) => a.achievementLabel == 'Vô địch').length;
-    final totalMatches = filteredAchievements.length * 7;
-    final totalEloGain = filteredAchievements.fold<int>(0, (sum, a) => sum + a.eloNumber);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ─── Stats Row (Compact) ──────────────────────────────────────────
-        _buildStatsRow(context, wins: wins, matches: totalMatches, eloGain: totalEloGain),
-        const SizedBox(height: 20),
-
         // ─── Section Title ──────────────────────────────────────────
         _buildSectionTitle(colors, 'Thành tích gần đây'),
         const SizedBox(height: 10),
@@ -51,73 +43,6 @@ class AchievementsTab extends ConsumerWidget {
             (a) => _AchievementCard(achievement: a),
           ),
       ],
-    );
-  }
-
-  // ─── STATS ROW (Compact Height) ──────────────────────────────────
-  Widget _buildStatsRow(
-    BuildContext context, {
-    required int wins,
-    required int matches,
-    required int eloGain,
-  }) {
-    final stats = [
-      _StatItem(icon: Icons.emoji_events_rounded, label: 'Giải thắng', value: '$wins'),
-      _StatItem(icon: Icons.sports_score_rounded, label: 'Trận đã đấu', value: '$matches'),
-      _StatItem(icon: Icons.trending_up_rounded, label: 'ELO tăng', value: '+$eloGain'),
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF2563EB).withValues(alpha: 0.22),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: stats.map((stat) {
-            return Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(stat.icon, color: Colors.white70, size: 18),
-                  const SizedBox(height: 4),
-                  Text(
-                    stat.value,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      height: 1,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    stat.label,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ),
     );
   }
 
@@ -148,17 +73,6 @@ class AchievementsTab extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _StatItem {
-  final IconData icon;
-  final String label;
-  final String value;
-  const _StatItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
 }
 
 class _AchievementData {
