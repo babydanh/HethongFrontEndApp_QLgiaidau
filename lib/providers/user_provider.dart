@@ -33,14 +33,18 @@ final provincesProvider = FutureProvider<List<Province>>((ref) async {
 final userProfileProvider = FutureProvider<UserProfile>((ref) async {
   final authState = ref.watch(authProvider);
   if (!authState.isAuthenticated) {
-    return UserProfile(id: '', fullName: 'Người dùng', email: '');
+    return UserProfile(id: '', fullName: 'Khách', email: '');
   }
 
   try {
     final repo = ref.read(userRepositoryProvider);
     return await repo.getProfile();
   } catch (e) {
-    return UserProfile(id: '', fullName: 'Người dùng', email: '');
+    final errStr = e.toString().toLowerCase();
+    if (errStr.contains('401') || errStr.contains('unauthorized')) {
+      ref.read(authProvider.notifier).signOut(reason: 'Phiên đăng nhập hết hạn');
+    }
+    rethrow;
   }
 });
 
