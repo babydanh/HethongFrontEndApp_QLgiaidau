@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
@@ -9,11 +11,13 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart
 class TournamentHeaderView extends StatefulWidget {
   final Tournament tournament;
   final AppColorsExtension colors;
+  final bool compact;
 
   const TournamentHeaderView({
     super.key,
     required this.tournament,
     required this.colors,
+    this.compact = false,
   });
 
   @override
@@ -34,67 +38,94 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
   Widget build(BuildContext context) {
     final colors = widget.colors;
     final images = _collectImages(widget.tournament);
+    final compact = widget.compact;
 
-    return Column(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      color: colors.bgDark,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Banner trên cùng đầy đủ (không bị che, không co giãn từ từ lề mề)
-        SizedBox(
-          height: 200,
-          child: _BannerCarousel(
-            images: images,
-            pageController: _pageController,
-            currentPage: _currentPage,
-            onPageChanged: (index) {
-              setState(() => _currentPage = index);
-            },
+        ClipRect(
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              height: compact ? 0 : 200,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 160),
+                opacity: compact ? 0 : 1,
+                child: _BannerCarousel(
+                  images: images,
+                  pageController: _pageController,
+                  currentPage: _currentPage,
+                  onPageChanged: (index) {
+                    setState(() => _currentPage = index);
+                  },
+                ),
+              ),
+            ),
           ),
         ),
-        // Thông tin giải đấu nằm NGOÀI banner, tràn lan tự nhiên trên nền trang
         Container(
           color: colors.bgDark,
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.fromLTRB(16, compact ? 10 : 14, 16, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _HeaderBadges(tournament: widget.tournament),
-              const SizedBox(height: 12),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topLeft,
+                child: compact
+                    ? const SizedBox.shrink()
+                    : Column(
+                        children: [
+                          _HeaderBadges(tournament: widget.tournament),
+                          const SizedBox(height: 12),
+                        ],
+                      ),
+              ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _TournamentLogo(
                     tournament: widget.tournament,
-                    size: 52,
+                    size: compact ? 86 : 52,
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: compact ? 14 : 12),
                   Expanded(
                     child: _HeaderInfo(
                       tournament: widget.tournament,
-                      compact: false,
+                      compact: compact,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: compact ? 10 : 14),
               _HeaderMeta(tournament: widget.tournament),
               const SizedBox(height: 8),
+              Divider(color: colors.border, height: 1),
             ],
           ),
         ),
       ],
+      ),
     );
   }
+}
 
-  List<String> _collectImages(Tournament tournament) {
-    final images = <String>[];
-    if (tournament.bannerUrl != null && tournament.bannerUrl!.isNotEmpty) {
-      images.add(tournament.bannerUrl!);
-    }
-    if (tournament.galleryImages.isNotEmpty) {
-      images.addAll(tournament.galleryImages);
-    }
-    return images;
+List<String> _collectImages(Tournament tournament) {
+  final images = <String>[];
+  if (tournament.bannerUrl != null && tournament.bannerUrl!.isNotEmpty) {
+    images.add(tournament.bannerUrl!);
   }
+  if (tournament.galleryImages.isNotEmpty) {
+    images.addAll(tournament.galleryImages);
+  }
+  return images;
 }
 
 class _BannerCarousel extends StatelessWidget {
@@ -249,43 +280,88 @@ class _HeaderInfo extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        Wrap(
-          spacing: 7,
-          runSpacing: 7,
-          children: [
-            _HeaderTag("ĐĂNG KÝ"),
-            _HeaderTag(
-              "VÒNG TRÒN",
-              icon: Icons.loop_rounded,
-              iconColor: const Color(0xFFD97706),
-            ),
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                minimumSize: const Size(0, 26),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                foregroundColor: colors.textSecondary,
-                side: BorderSide(color: colors.border),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(7),
-                ),
-              ),
-              onPressed: () {
-                final text = '${tournament.name} - ${tournament.category ?? tournament.sport}';
-                final url = 'https://giaidau.vnvar.com/tournaments/${tournament.id}';
-                SharePlus.instance.share(ShareParams(text: '$text\n\n$url'));
-              },
-              icon: const Icon(Icons.share, size: 13),
-              label: const Text(
-                "Chia sẻ",
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
-              ),
-            ),
-          ],
-        ),
+        _HeaderActionTags(tournament: tournament),
       ],
     );
   }
+}
+
+class _HeaderActionTags extends StatelessWidget {
+  final Tournament tournament;
+
+  const _HeaderActionTags({required this.tournament});
+
+  @override
+  Widget build(BuildContext context) {
+    final primaryAction = _resolvePrimaryActionTag(context, tournament);
+    final bracketLabel = AppConstants.bracketTypeNames[tournament.bracketType] ??
+        tournament.bracketType.replaceAll('_', ' ').toUpperCase();
+
+    return Wrap(
+      spacing: 7,
+      runSpacing: 7,
+      children: [
+        _HeaderTag(
+          primaryAction.label,
+          icon: primaryAction.icon,
+          iconColor: primaryAction.iconColor,
+        ),
+        _HeaderTag(
+          bracketLabel.toUpperCase(),
+          icon: Icons.loop_rounded,
+          iconColor: const Color(0xFFD97706),
+        ),
+        _ShareTag(tournament: tournament),
+      ],
+    );
+  }
+}
+
+class _PrimaryActionTag {
+  final String label;
+  final IconData? icon;
+  final Color? iconColor;
+
+  const _PrimaryActionTag({
+    required this.label,
+    this.icon,
+    this.iconColor,
+  });
+}
+
+_PrimaryActionTag _resolvePrimaryActionTag(
+  BuildContext context,
+  Tournament tournament,
+) {
+  if (StatusHelper.isTournamentInProgress(tournament.status)) {
+    return _PrimaryActionTag(
+      label: 'TRỰC TIẾP',
+      icon: Icons.play_arrow_rounded,
+      iconColor: context.colors.success,
+    );
+  }
+
+  if (StatusHelper.isTournamentCompleted(tournament.status)) {
+    return _PrimaryActionTag(
+      label: 'KẾT QUẢ',
+      icon: Icons.emoji_events_rounded,
+      iconColor: const Color(0xFFD97706),
+    );
+  }
+
+  if (StatusHelper.isTournamentCancelled(tournament.status)) {
+    return _PrimaryActionTag(
+      label: 'ĐÃ HỦY',
+      icon: Icons.block_rounded,
+      iconColor: context.colors.error,
+    );
+  }
+
+  return const _PrimaryActionTag(
+    label: 'ĐĂNG KÝ',
+    icon: Icons.person_add_alt_1_rounded,
+    iconColor: AppTheme.primary,
+  );
 }
 
 class _HeaderMeta extends StatelessWidget {
@@ -363,6 +439,39 @@ class _HeaderTag extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ShareTag extends StatelessWidget {
+  final Tournament tournament;
+
+  const _ShareTag({required this.tournament});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        minimumSize: const Size(0, 26),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        foregroundColor: colors.textSecondary,
+        side: BorderSide(color: colors.border),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(7),
+        ),
+      ),
+      onPressed: () {
+        final text = '${tournament.name} - ${tournament.category ?? tournament.sport}';
+        final url = 'https://giaidau.vnvar.com/tournaments/${tournament.id}';
+        SharePlus.instance.share(ShareParams(text: '$text\n\n$url'));
+      },
+      icon: const Icon(Icons.share, size: 13),
+      label: const Text(
+        "Chia sẻ",
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
       ),
     );
   }
