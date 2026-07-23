@@ -551,20 +551,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       (q.isEmpty || t.name.toLowerCase().contains(q));
                 }).toList();
 
-                final live = allTournaments
-                    .where((t) => t.status == 'in_progress')
-                    .toList();
-                final upcoming = allTournaments
-                    .where(
-                      (t) =>
-                          t.status == 'draft' ||
-                          t.status == 'registration' ||
-                          t.status == 'upcoming',
-                    )
-                    .toList();
-                final finished = allTournaments
-                    .where((t) => t.status == 'completed')
-                    .toList();
+                final live = allTournaments.where((t) {
+                  final s = t.status.toLowerCase();
+                  return s == 'in_progress' || s == 'ongoing' || s == 'live';
+                }).toList();
+
+                final upcoming = allTournaments.where((t) {
+                  final s = t.status.toLowerCase();
+                  return s == 'draft' || s == 'registration' || s == 'upcoming' || s == 'scheduled';
+                }).toList();
+
+                final finished = allTournaments.where((t) {
+                  final s = t.status.toLowerCase();
+                  return s == 'completed' || s == 'finished';
+                }).toList();
+
+                final remaining = allTournaments.where((t) {
+                  return !live.contains(t) && !upcoming.contains(t) && !finished.contains(t);
+                }).toList();
+
+                final safeUpcoming = [...upcoming, ...remaining];
 
                 return CustomScrollView(
                   controller: _scrollController,
@@ -579,7 +585,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             : (_maxHeaderHeight + 8.0),
                       ),
                     ),
-                    if (live.isNotEmpty || upcoming.isNotEmpty) ...[
+                    if (allTournaments.isNotEmpty) ...[
                       SliverToBoxAdapter(
                         child: _buildSectionTitle(
                           title: 'Giải đấu nổi bật',
@@ -592,10 +598,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           duration: const Duration(milliseconds: 200),
                           child: KeyedSubtree(
                             key: ValueKey("featured_$_selectedSport"),
-                            child: _buildTournamentCarousel([
-                              ...live,
-                              ...upcoming,
-                            ]),
+                            child: _buildTournamentCarousel(allTournaments),
                           ),
                         ),
                       ),
@@ -646,12 +649,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                       ),
-                    if (finished.isNotEmpty) ...[
-                      SliverToBoxAdapter(
-                        child: _buildSectionTitle(
-                          title: 'Kết quả trận đấu vừa qua',
-                        ),
+                    SliverToBoxAdapter(
+                      child: _buildSectionTitle(
+                        title: 'Kết quả trận đấu vừa qua',
                       ),
+                    ),
+                    if (finished.isNotEmpty)
                       SliverPadding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         sliver: SliverList(
@@ -666,14 +669,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             );
                           }, childCount: finished.length),
                         ),
-                      ),
-                    ],
-                    if (upcoming.isNotEmpty) ...[
-                      SliverToBoxAdapter(
-                        child: _buildSectionTitle(
-                          title: 'Lịch thi đấu sắp diễn ra',
+                      )
+                    else
+                      const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(16, 4, 16, 16),
+                          child: Text(
+                            'Chưa có trận đấu đã kết thúc',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF64748B),
+                              fontWeight: FontWeight.w500,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                         ),
                       ),
+                    SliverToBoxAdapter(
+                      child: _buildSectionTitle(
+                        title: 'Lịch thi đấu sắp diễn ra',
+                      ),
+                    ),
+                    if (safeUpcoming.isNotEmpty)
                       SliverPadding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         sliver: SliverList(
@@ -681,16 +698,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             context,
                             index,
                           ) {
-                            final tournament = upcoming[index];
+                            final tournament = safeUpcoming[index];
                             return LiveTournamentWithMatchesCard(
                               tournament: tournament,
                               filterStatus: 'scheduled',
                             );
-                          }, childCount: upcoming.length),
+                          }, childCount: safeUpcoming.length),
+                        ),
+                      )
+                    else
+                      const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(16, 4, 16, 16),
+                          child: Text(
+                            'Chưa có lịch thi đấu sắp diễn ra',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF64748B),
+                              fontWeight: FontWeight.w500,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                         ),
                       ),
-                    ],
-                    // ── Section 5: Cộng đồng câu lạc bộ (Dữ liệu thật từ API) ──
+                    // ── Section 5: Cộng đồng câu lạc bộ ──
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
                         title: 'Cộng đồng câu lạc bộ',
@@ -703,6 +734,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     if (allTournaments.isEmpty)
                       SliverFillRemaining(child: _buildEmpty()),
+                    const SliverToBoxAdapter(child: SizedBox(height: 120)),
                     const SliverToBoxAdapter(child: SizedBox(height: 120)),
                   ],
                 );
