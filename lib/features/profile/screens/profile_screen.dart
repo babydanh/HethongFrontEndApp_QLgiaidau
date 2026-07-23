@@ -283,10 +283,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     child: _buildTabButton(0, "Thông tin", Icons.person_outline_rounded),
                   ),
                   Expanded(
-                    child: _buildTabButton(1, "Theo dõi", Icons.group_outlined),
-                  ),
-                  Expanded(
-                    child: _buildTabButton(2, "Thành tích", Icons.emoji_events_outlined),
+                    child: _buildTabButton(1, "Tài khoản & Cài đặt", Icons.settings_outlined),
                   ),
                 ],
               ),
@@ -310,6 +307,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _buildSectionTitle(colors, 'Giải đấu của tôi'),
             const SizedBox(height: 10),
             _buildMyTournamentsSection(context),
+            const SizedBox(height: 32),
+          ] else ...[
+            // Tab 1: Thành tích & Cài đặt
+            _buildSectionTitle(colors, 'Thành tích & Danh hiệu'),
+            const SizedBox(height: 10),
+            const AchievementsTab(),
+            const SizedBox(height: 24),
+
+            _buildSectionTitle(colors, 'Giải đấu đang theo dõi'),
+            const SizedBox(height: 10),
+            _buildFollowedTournamentsSection(context),
             const SizedBox(height: 24),
 
             // Account Section
@@ -319,18 +327,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 20),
 
             // Other Section
-            _buildSectionTitle(colors, 'Tuỳ chọn hệ thống'),
+            _buildSectionTitle(colors, 'Tùy chọn hệ thống'),
             const SizedBox(height: 10),
             _buildOtherMenu(context, isDark),
-            const SizedBox(height: 32),
-          ] else if (_activeTab == 1) ...[
-            _buildSectionTitle(colors, 'Giải đấu đang theo dõi'),
-            const SizedBox(height: 10),
-            _buildFollowedTournamentsSection(context),
-            const SizedBox(height: 32),
-          ] else ...[
-            // Tab 2: Thành tích
-            const AchievementsTab(),
             const SizedBox(height: 32),
           ],
         ],
