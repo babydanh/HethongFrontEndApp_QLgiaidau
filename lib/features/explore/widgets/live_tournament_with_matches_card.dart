@@ -434,79 +434,93 @@ class _LiveTournamentWithMatchesCardState
 
           const SizedBox(height: 14),
 
-          // ── Team 1 Row ──
+          // ── Teams & Score Section (Exact Web Layout matching screenshot) ──
           GestureDetector(
             onTap: () => context.push('/intro/${widget.tournament.id}'),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  _DoubleAvatarWidget(
-                    initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'NM',
-                    initial2: t1Initials.length > 1 ? t1Initials[1] : '',
-                    color: const Color(0xFF0284C7),
-                  ),
-                  const SizedBox(width: 10),
+                  // Left: Team 1 + vs + Team 2
                   Expanded(
-                    child: Text(
-                      match.team1Name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Team 1 Row
+                        Row(
+                          children: [
+                            _DoubleAvatarWidget(
+                              initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'NM',
+                              initial2: t1Initials.length > 1 ? t1Initials[1] : '',
+                              color: const Color(0xFF0284C7),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                match.team1Name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // VS Label
+                        const Padding(
+                          padding: EdgeInsets.only(left: 44, top: 4, bottom: 4),
+                          child: Text(
+                            'vs',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF2563EB),
+                            ),
+                          ),
+                        ),
+
+                        // Team 2 Row
+                        Row(
+                          children: [
+                            _DoubleAvatarWidget(
+                              initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'VQ',
+                              initial2: t2Initials.length > 1 ? t2Initials[1] : '',
+                              color: const Color(0xFF16A34A),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                match.team2Name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
+
                   const SizedBox(width: 12),
+
+                  // Right: Big Horizontal Score Display (8 - 11) matching Web spec
                   Text(
-                    '${match.score1}',
+                    '${match.score1}  -  ${match.score2}',
                     style: const TextStyle(
-                      fontSize: 22,
+                      fontSize: 26,
                       fontWeight: FontWeight.w900,
                       color: Color(0xFF0F172A),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // ── Team 2 Row ──
-          GestureDetector(
-            onTap: () => context.push('/intro/${widget.tournament.id}'),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  _DoubleAvatarWidget(
-                    initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'VQ',
-                    initial2: t2Initials.length > 1 ? t2Initials[1] : '',
-                    color: const Color(0xFF16A34A),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      match.team2Name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${match.score2}',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF0F172A),
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
