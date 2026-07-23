@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,7 +17,6 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 
@@ -282,13 +280,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: _buildTabButton(0, "Thông tin & Tiện ích"),
+                    child: _buildTabButton(0, "Thông tin", Icons.person_outline_rounded),
                   ),
                   Expanded(
-                    child: _buildTabButton(1, "Theo dõi & NC"),
+                    child: _buildTabButton(1, "Theo dõi", Icons.group_outlined),
                   ),
                   Expanded(
-                    child: _buildTabButton(2, "Thành tích"),
+                    child: _buildTabButton(2, "Thành tích", Icons.emoji_events_outlined),
                   ),
                 ],
               ),
@@ -340,7 +338,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildTabButton(int index, String label) {
+  Widget _buildTabButton(int index, String label, IconData icon) {
     final colors = context.colors;
     final isSelected = _activeTab == index;
     return GestureDetector(
@@ -352,13 +350,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           color: isSelected ? AppTheme.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.white : colors.textSecondary,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 15,
+              color: isSelected ? Colors.white : colors.textSecondary,
+            ),
+            const SizedBox(width: 5),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : colors.textSecondary,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -595,6 +609,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   // ─── PROFILE RANK SNAPSHOT ─────────────────────────────────────────
+  // ─── PROFILE RANK SNAPSHOT ─────────────────────────────────────────
+  Color _getTierColor(String tierName) {
+    final name = tierName.toUpperCase();
+    if (name.contains('GRANDMASTER') || name.contains('MASTER')) {
+      return const Color(0xFFA855F7);
+    } else if (name.contains('DIAMOND')) {
+      return const Color(0xFF3B82F6);
+    } else if (name.contains('PLATINUM')) {
+      return const Color(0xFF06B6D4);
+    } else if (name.contains('GOLD')) {
+      return const Color(0xFFEAB308);
+    } else if (name.contains('SILVER')) {
+      return const Color(0xFF94A3B8);
+    } else if (name.contains('BRONZE')) {
+      return const Color(0xFFD97706);
+    } else if (name.contains('RANK A') || name == 'A') {
+      return const Color(0xFFF97316);
+    } else if (name.contains('RANK B') || name == 'B') {
+      return const Color(0xFF3B82F6);
+    } else if (name.contains('RANK C') || name == 'C') {
+      return const Color(0xFF10B981);
+    } else if (name.contains('RANK D') || name == 'D') {
+      return const Color(0xFF8B5CF6);
+    }
+    return const Color(0xFF94A3B8);
+  }
+
   Widget _buildRankingsSection(BuildContext context) {
     final colors = context.colors;
     final rankingsAsync = ref.watch(userRankingsProvider);
@@ -605,9 +646,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
 
         if (playedRankings.isEmpty) {
+          const unranked = PlayerRanking(
+            id: '',
+            userId: '',
+            fullName: '',
+            eloPoints: 0,
+            tierName: 'Chưa xếp hạng',
+            matchesPlayed: 0,
+            matchesWon: 0,
+          );
+
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: _buildUnrankedCard(context),
+            child: _buildRankDonutSummary(
+              context,
+              ranking: unranked,
+              losses: 0,
+              winRate: 0,
+              eloProgress: 0.0,
+              nextLabel: '',
+            ),
           );
         }
 
@@ -621,44 +679,48 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ? null
             : EloHelpers.thresholds[progress.nextIndex!];
         final nextLabel = nextThreshold?.name ?? ranking.tierName;
-        final eloNeed = nextThreshold != null ? (nextThreshold.minElo - ranking.eloPoints).clamp(0, 99999) : 0;
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              _buildRankDonutSummary(
-                context,
-                ranking: ranking,
-                losses: losses,
-                winRate: winRate,
-              ),
-              const SizedBox(height: 16),
-              _buildEloProgressSummary(
-                context,
-                ranking: ranking,
-                progress: progress.percent / 100.0,
-                nextLabel: nextLabel,
-                eloNeed: eloNeed,
-              ),
-            ],
+          child: _buildRankDonutSummary(
+            context,
+            ranking: ranking,
+            losses: losses,
+            winRate: winRate,
+            eloProgress: progress.percent / 100.0,
+            nextLabel: nextLabel,
           ),
         );
       },
       loading: () => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Container(
-          height: 220,
+          height: 180,
           decoration: BoxDecoration(
             color: colors.bgCard,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(color: colors.border),
           ),
         ),
       ),
-      error: (_, __) => Padding(
+      error: (_, stackTrace) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: _buildUnrankedCard(context),
+        child: _buildRankDonutSummary(
+          context,
+          ranking: const PlayerRanking(
+            id: '',
+            userId: '',
+            fullName: '',
+            eloPoints: 0,
+            tierName: 'Chưa xếp hạng',
+            matchesPlayed: 0,
+            matchesWon: 0,
+          ),
+          losses: 0,
+          winRate: 0,
+          eloProgress: 0.0,
+          nextLabel: '',
+        ),
       ),
     );
   }
@@ -668,85 +730,89 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required PlayerRanking ranking,
     required int losses,
     required double winRate,
+    required double eloProgress,
+    required String nextLabel,
   }) {
     final colors = context.colors;
-    final rankLetter = _rankLetter(ranking.tierName);
-    final rankLabel = ranking.tierName.isNotEmpty ? ranking.tierName : 'Chưa xếp hạng';
-    const winColor = Color(0xFF2F9B57);
-    const lossColor = Color(0xFFD36B2C);
-    const goldColor = Color(0xFFD9A441);
+    final isUnranked = ranking.matchesPlayed == 0 ||
+        ranking.tierName == 'Chưa xếp hạng' ||
+        ranking.tierName.toUpperCase().contains('UNRANKED');
+
+    final tierColor = isUnranked ? const Color(0xFF94A3B8) : _getTierColor(ranking.tierName);
+    final fmt = NumberFormat('#,###');
+    const winColor = Color(0xFF22C55E);
+    const lossColor = Color(0xFFEF4444);
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
       decoration: BoxDecoration(
         color: colors.bgCard,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: colors.border),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.08),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
             blurRadius: 18,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _buildWinLossStat(
                 context,
                 label: 'Thắng',
                 value: ranking.matchesWon,
-                icon: Icons.emoji_events_outlined,
                 color: winColor,
               ),
               SizedBox(
-                width: 132,
-                height: 132,
+                width: 140,
+                height: 140,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     CustomPaint(
-                      size: const Size.square(132),
-                      painter: _RankDonutPainter(
-                        winRate: winRate,
-                        winColor: winColor,
-                        lossColor: lossColor,
-                        trackColor: colors.border.withValues(alpha: 0.5),
+                      size: const Size.square(140),
+                      painter: _EloRingPainter(
+                        progress: isUnranked ? 0.0 : eloProgress,
+                        activeColor: tierColor,
+                        trackColor: tierColor.withValues(alpha: 0.15),
                       ),
                     ),
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'RANK',
+                          isUnranked ? 'TRẠNG THÁI' : 'RANK',
                           style: TextStyle(
-                            color: colors.textPrimary,
+                            color: colors.textMuted,
                             fontSize: 10,
                             fontWeight: FontWeight.w800,
-                            letterSpacing: 1.1,
+                            letterSpacing: 1.2,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
-                          rankLetter,
-                          style: const TextStyle(
-                            color: goldColor,
-                            fontSize: 38,
-                            height: 0.95,
+                          isUnranked ? '-' : _rankLetter(ranking.tierName),
+                          style: TextStyle(
+                            color: tierColor,
+                            fontSize: isUnranked ? 28 : 34,
+                            height: 1.0,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
-                          rankLabel.toUpperCase(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: goldColor,
-                            fontSize: 9,
+                          isUnranked ? 'Chưa có rank' : '${fmt.format(ranking.eloPoints)} ELO',
+                          style: TextStyle(
+                            color: isUnranked ? colors.textMuted : tierColor,
+                            fontSize: 10,
                             fontWeight: FontWeight.w800,
-                            letterSpacing: 0.8,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
@@ -758,26 +824,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 context,
                 label: 'Thua',
                 value: losses,
-                icon: Icons.heart_broken_outlined,
                 color: lossColor,
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          RichText(
-            text: TextSpan(
-              style: TextStyle(color: colors.textSecondary, fontSize: 13),
-              children: [
-                const TextSpan(text: 'Tỷ lệ thắng '),
-                TextSpan(
-                  text: '${(winRate * 100).toStringAsFixed(1)}%',
-                  style: const TextStyle(
-                    color: winColor,
-                    fontWeight: FontWeight.w800,
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Tỷ lệ thắng ',
+                style: TextStyle(color: colors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+              Text(
+                '${(winRate * 100).toStringAsFixed(1)}%',
+                style: const TextStyle(
+                  color: winColor,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                ),
+              ),
+              if (!isUnranked && nextLabel.isNotEmpty) ...[
+                Text(
+                  ' • ',
+                  style: TextStyle(color: colors.textMuted, fontSize: 13),
+                ),
+                Text(
+                  'Tiến tới $nextLabel (${(eloProgress * 100).toStringAsFixed(1)}%)',
+                  style: TextStyle(
+                    color: tierColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
                   ),
                 ),
               ],
-            ),
+            ],
           ),
         ],
       ),
@@ -788,159 +869,44 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     BuildContext context, {
     required String label,
     required int value,
-    required IconData icon,
     required Color color,
   }) {
     final colors = context.colors;
-    return SizedBox(
-      width: 72,
-      child: Column(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 20),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
           ),
-          const SizedBox(height: 8),
-          Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 2),
-          Text('$value', style: TextStyle(color: color, fontSize: 24, height: 1, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 2),
-          Text('trận', style: TextStyle(color: colors.textMuted, fontSize: 10)),
-        ],
-      ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '$value',
+          style: TextStyle(
+            color: color,
+            fontSize: 26,
+            height: 1,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          'trận',
+          style: TextStyle(
+            color: colors.textMuted,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildEloProgressSummary(
-    BuildContext context, {
-    required PlayerRanking ranking,
-    required double progress,
-    required String nextLabel,
-    required int eloNeed,
-  }) {
-    final colors = context.colors;
-    final fmt = NumberFormat('#,###');
-    const goldColor = Color(0xFFD9A441);
-    final nextElo = ranking.eloPoints + eloNeed;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border),
-        boxShadow: [BoxShadow(color: const Color(0xFF0F172A).withValues(alpha: 0.07), blurRadius: 18, offset: const Offset(0, 8))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text('TIẾN TRÌNH ELO', style: TextStyle(color: colors.textPrimary, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.8)),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: goldColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: goldColor.withValues(alpha: 0.35)),
-                ),
-                child: Text('RANK ${_rankLetter(ranking.tierName)}', style: const TextStyle(color: goldColor, fontSize: 11, fontWeight: FontWeight.w900)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(color: goldColor.withValues(alpha: 0.12), shape: BoxShape.circle),
-                child: const Icon(Icons.emoji_events_outlined, color: goldColor, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(fmt.format(ranking.eloPoints), style: TextStyle(color: colors.textPrimary, fontSize: 26, height: 1, fontWeight: FontWeight.w900)),
-                    const SizedBox(height: 4),
-                    Text(nextLabel.isNotEmpty ? 'Tiến gần hơn đến $nextLabel' : 'Tiếp tục tích lũy điểm ELO', style: TextStyle(color: colors.textMuted, fontSize: 12, fontWeight: FontWeight.w500)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(value: progress.clamp(0.0, 1.0), minHeight: 10, backgroundColor: colors.border.withValues(alpha: 0.65), color: goldColor),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(fmt.format(ranking.eloPoints), style: TextStyle(color: colors.textMuted, fontSize: 11)),
-              Text(fmt.format(nextElo), style: TextStyle(color: colors.textMuted, fontSize: 11)),
-            ],
-          ),
-          if (eloNeed > 0) ...[
-            const SizedBox(height: 12),
-            RichText(
-              text: TextSpan(
-                style: TextStyle(color: colors.textSecondary, fontSize: 12),
-                children: [
-                  const TextSpan(text: 'Cần thêm '),
-                  TextSpan(text: fmt.format(eloNeed), style: const TextStyle(color: goldColor, fontWeight: FontWeight.w900)),
-                  TextSpan(text: ' ELO để đạt $nextLabel'),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUnrankedCard(BuildContext context) {
-    final colors = context.colors;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border),
-        boxShadow: [BoxShadow(color: const Color(0xFF0F172A).withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 7))],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(color: colors.textMuted.withValues(alpha: 0.1), shape: BoxShape.circle),
-            child: Icon(Icons.shield_outlined, color: colors.textMuted, size: 24),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Chưa xếp hạng', style: TextStyle(color: colors.textPrimary, fontSize: 15, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 4),
-                Text('Tham gia thêm các trận đấu xếp hạng để được xếp hạng chính thức trên hệ thống.', style: TextStyle(color: colors.textMuted, fontSize: 12, height: 1.35)),
-              ],
-            ),
-          ),
-          Icon(Icons.chevron_right_rounded, color: colors.textMuted, size: 22),
-        ],
-      ),
-    );
-  }
 
   String _rankLetter(String tierName) {
     final upper = tierName.trim().toUpperCase();
@@ -951,66 +917,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (upper.contains('C')) return 'C';
     if (upper.contains('D')) return 'D';
     return upper.characters.first;
-  }
-
-  // ─── ELO PROGRESS CHART SECTION ─────────────────────────────────────
-  Widget _buildEloChartSection(BuildContext context) {
-    final rankingsAsync = ref.watch(userRankingsProvider);
-
-    return rankingsAsync.when(
-      data: (rankings) {
-        final playedRankings = rankings.where((r) => r.matchesPlayed > 0).toList();
-        PlayerRanking? bestRank;
-        if (playedRankings.isNotEmpty) {
-          playedRankings.sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
-          bestRank = playedRankings.first;
-        }
-
-        final currentElo = bestRank?.eloPoints ?? 1000;
-        final tierName = bestRank?.tierName;
-
-        // Generate mock ELO history from current ELO
-        // TODO: Replace with real API data from GET /api/v1/players/:id/elo-history when available
-        final eloHistory = generateMockEloHistory(currentElo);
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: EloProgressChart(
-            data: eloHistory,
-            currentElo: currentElo,
-            tierName: tierName,
-          ),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (e, _) => const SizedBox.shrink(),
-    );
-  }
-
-  Widget _buildRankStatItem(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.75),
-            fontSize: 9,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.2,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ],
-    );
   }
 
   // ─── INFO CARD ──────────────────────────────────────────────────────
@@ -1777,68 +1683,50 @@ class ProfileShimmerLoading extends StatelessWidget {
 }
 
 
-class _RankDonutPainter extends CustomPainter {
-  final double winRate;
-  final Color winColor;
-  final Color lossColor;
+class _EloRingPainter extends CustomPainter {
+  final double progress; // 0.0 to 1.0
+  final Color activeColor;
   final Color trackColor;
 
-  const _RankDonutPainter({
-    required this.winRate,
-    required this.winColor,
-    required this.lossColor,
+  const _EloRingPainter({
+    required this.progress,
+    required this.activeColor,
     required this.trackColor,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.shortestSide - 12) / 2;
+    final radius = (size.shortestSide - 14) / 2;
     final rect = Rect.fromCircle(center: center, radius: radius);
-    const strokeWidth = 9.0;
-    const start = -1.57079632679;
-    const gap = 0.06;
-    final safeWinRate = winRate.clamp(0.0, 1.0);
-    final winSweep = (6.28318530718 * safeWinRate) - gap;
-    final lossSweep = (6.28318530718 * (1 - safeWinRate)) - gap;
+    const strokeWidth = 10.0;
+    const startAngle = -1.57079632679; // Top 12 o'clock
 
-    final basePaint = Paint()
+    final trackPaint = Paint()
       ..color = trackColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
-    canvas.drawCircle(center, radius, basePaint);
 
-    if (safeWinRate > 0) {
-      final winPaint = Paint()
-        ..color = winColor
+    canvas.drawCircle(center, radius, trackPaint);
+
+    final safeProgress = progress.clamp(0.0, 1.0);
+    if (safeProgress > 0) {
+      final activePaint = Paint()
+        ..color = activeColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.round;
-      canvas.drawArc(rect, start, winSweep.clamp(0.0, 6.28318530718), false, winPaint);
-    }
 
-    if (safeWinRate < 1) {
-      final lossPaint = Paint()
-        ..color = lossColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
-      canvas.drawArc(
-        rect,
-        start + (6.28318530718 * safeWinRate) + gap,
-        lossSweep.clamp(0.0, 6.28318530718),
-        false,
-        lossPaint,
-      );
+      final sweepAngle = 6.28318530718 * safeProgress;
+      canvas.drawArc(rect, startAngle, sweepAngle, false, activePaint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _RankDonutPainter oldDelegate) {
-    return oldDelegate.winRate != winRate ||
-        oldDelegate.winColor != winColor ||
-        oldDelegate.lossColor != lossColor ||
+  bool shouldRepaint(covariant _EloRingPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.activeColor != activeColor ||
         oldDelegate.trackColor != trackColor;
   }
 }
