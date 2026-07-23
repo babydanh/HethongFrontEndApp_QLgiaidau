@@ -29,7 +29,7 @@ class AchievementsTab extends ConsumerWidget {
 
     final List<_AchievementData> apiAchievements = [];
 
-    // Map real API tournaments to achievements with real avatar/banner logos
+    // Map real API tournaments to achievements with real logoUrl / bannerUrl from backend
     final combinedTournaments = {...realTournaments, ...followedTournaments}.toList();
     for (int i = 0; i < combinedTournaments.length; i++) {
       final t = combinedTournaments[i];
@@ -43,20 +43,20 @@ class AchievementsTab extends ConsumerWidget {
 
       final dateStr = t.startDate != null
           ? DateFormat('dd/MM/yyyy').format(t.startDate!)
-          : '15/06/2026';
+          : DateFormat('dd/MM/yyyy').format(t.createdAt);
 
       apiAchievements.add(_AchievementData(
         sportId: sport.isEmpty ? 'pickleball' : sport,
-        icon: Icons.emoji_events_rounded,
+        icon: _getSportIcon(sport),
         cardColor: _getCardColorForLabel(label),
         tournamentName: t.name.isNotEmpty ? t.name : 'Giải đấu',
         date: dateStr,
         achievementLabel: label,
-        logoUrl: t.bannerUrl,
+        logoUrl: (t.logoUrl != null && t.logoUrl!.isNotEmpty) ? t.logoUrl : t.bannerUrl,
       ));
     }
 
-    final achievementsList = apiAchievements.isNotEmpty ? apiAchievements : _sampleAchievements;
+    final achievementsList = apiAchievements;
 
     final filteredAchievements = achievementsList.where((a) {
       if (selectedSport == 'all') return true;
@@ -104,6 +104,15 @@ class AchievementsTab extends ConsumerWidget {
     if (l.contains('á quân')) return const Color(0xFF94A3B8);
     if (l.contains('hạng ba')) return const Color(0xFFCD7F32);
     return const Color(0xFF8B5CF6);
+  }
+
+  static IconData _getSportIcon(String sport) {
+    final s = sport.toLowerCase();
+    if (s.contains('pickle') || s.contains('padd')) return Icons.sports_tennis_rounded;
+    if (s.contains('badminton') || s.contains('cầu')) return Icons.sports_tennis_outlined;
+    if (s.contains('foot') || s.contains('socc') || s.contains('bóng')) return Icons.sports_soccer_rounded;
+    if (s.contains('tennis')) return Icons.sports_baseball_rounded;
+    return Icons.emoji_events_rounded;
   }
 
   Widget _buildSectionTitle(AppColorsExtension colors, String title) {
@@ -155,64 +164,7 @@ class _AchievementData {
   });
 }
 
-const _sampleAchievements = <_AchievementData>[
-  _AchievementData(
-    sportId: 'football',
-    icon: Icons.emoji_events_rounded,
-    cardColor: Color(0xFFF59E0B),
-    tournamentName: 'Giải Vô Địch Bóng Đá Mùa Xuân 2026',
-    date: '15/06/2026',
-    achievementLabel: 'Vô địch',
-  ),
-  _AchievementData(
-    sportId: 'pickleball',
-    icon: Icons.emoji_events_rounded,
-    cardColor: Color(0xFFF59E0B),
-    tournamentName: 'Giải Pickleball Mở Rộng 2026',
-    date: '02/06/2026',
-    achievementLabel: 'Vô địch',
-  ),
-  _AchievementData(
-    sportId: 'badminton',
-    icon: Icons.shield_rounded,
-    cardColor: Color(0xFF94A3B8),
-    tournamentName: 'Cúp Các CLB Thể Thao 2026',
-    date: '20/05/2026',
-    achievementLabel: 'Á quân',
-  ),
-  _AchievementData(
-    sportId: 'football',
-    icon: Icons.military_tech_rounded,
-    cardColor: Color(0xFFCD7F32),
-    tournamentName: 'Giải Bóng Đá Thanh Niên 2026',
-    date: '10/04/2026',
-    achievementLabel: 'Hạng Ba',
-  ),
-  _AchievementData(
-    sportId: 'pickleball',
-    icon: Icons.workspace_premium_rounded,
-    cardColor: Color(0xFF8B5CF6),
-    tournamentName: 'Giải Pickleball Tranh Cúp 2026',
-    date: '15/03/2026',
-    achievementLabel: 'Hạng 4',
-  ),
-  _AchievementData(
-    sportId: 'badminton',
-    icon: Icons.workspace_premium_rounded,
-    cardColor: Color(0xFF8B5CF6),
-    tournamentName: 'Giải Cầu Lông Đôi Nam 2026',
-    date: '01/02/2026',
-    achievementLabel: 'Top 8',
-  ),
-  _AchievementData(
-    sportId: 'tennis',
-    icon: Icons.star_rounded,
-    cardColor: Color(0xFF3B82F6),
-    tournamentName: 'Giải Tennis Mở Rộng 2025',
-    date: '22/12/2025',
-    achievementLabel: 'Cầu thủ xuất sắc',
-  ),
-];
+
 
 class _BadgeStyle {
   final Color bg;
