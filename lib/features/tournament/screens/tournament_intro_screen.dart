@@ -16,6 +16,8 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/about_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/gallery_tab.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
 
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -59,23 +61,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           }
           return _buildContent(tournament, authRole);
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppTheme.primary),
-        ),
-        error: (err, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('Lỗi: $err', style: TextStyle(color: context.colors.error)),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () =>
-                    ref.invalidate(tournamentProvider(widget.tournamentId)),
-                child: const Text('Thử lại'),
-              ),
-            ],
-          ),
-        ),
+        loading: () => _buildLoadingState(),
+        error: (err, stack) => _buildErrorState(err),
       ),
       extendBody: true,
       bottomNavigationBar: FloatingBottomNav(
@@ -90,6 +77,116 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         onProfileTap: () => context.go('/profile'),
       ),
     );
+  }
+
+  Widget _buildLoadingState() {
+    final colors = context.colors;
+    return SafeArea(
+      child: Stack(
+        children: [
+          Positioned(
+            left: 12,
+            top: 8,
+            child: _backButton(colors),
+          ),
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(color: AppTheme.primary),
+                const SizedBox(height: 12),
+                Text(
+                  'Đang tải giải đấu...',
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(Object err) {
+    final colors = context.colors;
+    return SafeArea(
+      child: Stack(
+        children: [
+          Positioned(
+            left: 12,
+            top: 8,
+            child: _backButton(colors),
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline_rounded, color: colors.error, size: 42),
+                const SizedBox(height: 12),
+                Text(
+                  'Không tải được giải đấu',
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    '$err',
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: colors.textSecondary),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () =>
+                      ref.invalidate(tournamentProvider(widget.tournamentId)),
+                  child: const Text('Thử lại'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _backButton(AppColorsExtension colors) {
+    return IconButton(
+      icon: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: colors.bgCard.withValues(alpha: 0.88),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          Icons.arrow_back_rounded,
+          color: colors.textPrimary,
+          size: 20,
+        ),
+      ),
+      onPressed: _goBack,
+    );
+  }
+
+  void _goBack() {
+    final auth = ref.read(authProvider);
+    if (auth.tokenCode != null && auth.tokenCode != 'SESSION') {
+      ref.read(authProvider.notifier).signOut();
+    }
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/home');
+    }
   }
 
   Widget _buildContent(Tournament tournament, UserRole? role) {
@@ -128,70 +225,17 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   size: 20,
                 ),
               ),
-              onPressed: () {
-                final auth = ref.read(authProvider);
-                if (auth.tokenCode != null && auth.tokenCode != 'SESSION') {
-                  ref.read(authProvider.notifier).signOut();
-                }
-                if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/home');
-                }
-              },
+              onPressed: _goBack,
             ),
-            title: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: innerBoxIsScrolled
-                  ? Row(
-                      key: const ValueKey("collapsed_header"),
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: colors.border),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: tournament.logoUrl != null && tournament.logoUrl!.isNotEmpty
-                                ? Image.network(
-                                    _resolveImageUrl(tournament.logoUrl!),
-                                    fit: BoxFit.cover,
-                                  )
-                                : const Icon(Icons.emoji_events, size: 16),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            tournament.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: colors.textPrimary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : Text(
-                      tournament.name,
-                      key: const ValueKey("expanded_header"),
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-            ),
-            centerTitle: !innerBoxIsScrolled,
+            title: SportPill(sportKey: tournament.sport),
+            centerTitle: true,
             actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Center(
+                  child: StatusBadge(statusKey: tournament.status),
+                ),
+              ),
               // Share button
               IconButton(
                 icon: Icon(Icons.share_rounded, color: colors.textPrimary, size: 20),
@@ -330,22 +374,34 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               TabBarView(
                 controller: _tabController,
                 children: [
-                  AboutTab(
-                    tournament: tournament,
-                    teamCount: teams.length,
-                    resolveImageUrl: _resolveImageUrl,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: AboutTab(
+                      tournament: tournament,
+                      teamCount: teams.length,
+                      resolveImageUrl: _resolveImageUrl,
+                    ),
                   ),
-                  TeamsTab(
-                    teams: teams,
-                    selectedDivision: _selectedDivision,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: TeamsTab(
+                      teams: teams,
+                      selectedDivision: _selectedDivision,
+                    ),
                   ),
-                  BracketTab(
-                    tournamentId: widget.tournamentId,
-                    selectedDivisionId: _selectedDivisionId,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: BracketTab(
+                      tournamentId: widget.tournamentId,
+                      selectedDivisionId: _selectedDivisionId,
+                    ),
                   ),
-                  GalleryTab(
-                    galleryImages: tournament.galleryImages,
-                    resolveImageUrl: _resolveImageUrl,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: GalleryTab(
+                      galleryImages: tournament.galleryImages,
+                      resolveImageUrl: _resolveImageUrl,
+                    ),
                   ),
                 ],
               ),
@@ -544,10 +600,10 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 48;
+  double get maxExtent => 56;
 
   @override
-  double get minExtent => 48;
+  double get minExtent => 56;
 
   @override
   bool shouldRebuild(_TabBarDelegate oldDelegate) => false;
