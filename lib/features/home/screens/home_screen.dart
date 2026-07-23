@@ -544,8 +544,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: tournamentsAsync.when(
               data: (tournamentsList) {
                 final allTournaments = tournamentsList.where((t) {
-                  final sportMatch =
-                      _selectedSport == 'all' || t.sport == _selectedSport;
+                  final tSport = t.sport.toLowerCase().replaceAll('_', '').replaceAll(' ', '');
+                  final selSport = _selectedSport.toLowerCase().replaceAll('_', '').replaceAll(' ', '');
+                  final sportMatch = selSport == 'all' ||
+                      tSport == selSport ||
+                      tSport.contains(selSport) ||
+                      selSport.contains(tSport);
                   final q = _searchQuery.toLowerCase();
                   return sportMatch &&
                       (q.isEmpty || t.name.toLowerCase().contains(q));
