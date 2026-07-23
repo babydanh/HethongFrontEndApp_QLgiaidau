@@ -139,6 +139,26 @@ const _sampleAchievements = <_AchievementData>[
     achievementLabel: 'Hạng Ba',
   ),
   _AchievementData(
+    sportId: 'pickleball',
+    icon: Icons.workspace_premium_rounded,
+    cardColor: Color(0xFF8B5CF6),
+    tournamentName: 'Giải Pickleball Tranh Cúp 2026',
+    date: '15/03/2026',
+    eloNumber: 10,
+    eloBoost: '+10 ELO',
+    achievementLabel: 'Hạng 4',
+  ),
+  _AchievementData(
+    sportId: 'badminton',
+    icon: Icons.workspace_premium_rounded,
+    cardColor: Color(0xFF8B5CF6),
+    tournamentName: 'Giải Cầu Lông Đôi Nam 2026',
+    date: '01/02/2026',
+    eloNumber: 8,
+    eloBoost: '+8 ELO',
+    achievementLabel: 'Top 8',
+  ),
+  _AchievementData(
     sportId: 'tennis',
     icon: Icons.star_rounded,
     cardColor: Color(0xFF3B82F6),
@@ -150,6 +170,48 @@ const _sampleAchievements = <_AchievementData>[
   ),
 ];
 
+class _BadgeStyle {
+  final Color bg;
+  final Color text;
+  final Color border;
+  const _BadgeStyle({required this.bg, required this.text, required this.border});
+}
+
+_BadgeStyle _getBadgeStyle(String label) {
+  final l = label.toLowerCase();
+  if (l.contains('vô địch') || l.contains('quán quân') || l.contains('hạng 1')) {
+    return const _BadgeStyle(
+      bg: Color(0xFFFEF3C7),
+      text: Color(0xFFB45309),
+      border: Color(0xFFFDE68A),
+    );
+  } else if (l.contains('á quân') || l.contains('hạng 2')) {
+    return const _BadgeStyle(
+      bg: Color(0xFFF1F5F9),
+      text: Color(0xFF475569),
+      border: Color(0xFFE2E8F0),
+    );
+  } else if (l.contains('hạng ba') || l.contains('hạng 3') || l.contains('đồng')) {
+    return const _BadgeStyle(
+      bg: Color(0xFFFFEDD5),
+      text: Color(0xFFC2410C),
+      border: Color(0xFFFED7AA),
+    );
+  } else if (l.contains('xuất sắc') || l.contains('mvp')) {
+    return const _BadgeStyle(
+      bg: Color(0xFFEFF6FF),
+      text: Color(0xFF1D4ED8),
+      border: Color(0xFFBFDBFE),
+    );
+  } else {
+    return const _BadgeStyle(
+      bg: Color(0xFFF5F3FF),
+      text: Color(0xFF6D28D9),
+      border: Color(0xFFDDD6FE),
+    );
+  }
+}
+
 // ─── COMPACT LOW-HEIGHT ACHIEVEMENT CARD ────────────────────────────
 class _AchievementCard extends StatelessWidget {
   final _AchievementData achievement;
@@ -158,6 +220,7 @@ class _AchievementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final badgeStyle = _getBadgeStyle(achievement.achievementLabel);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
@@ -241,20 +304,18 @@ class _AchievementCard extends StatelessWidget {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
             decoration: BoxDecoration(
-              color: achievement.cardColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: achievement.cardColor.withValues(alpha: 0.25),
-              ),
+              color: badgeStyle.bg,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: badgeStyle.border),
             ),
             child: Text(
               achievement.achievementLabel,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
-                color: achievement.cardColor,
+                color: badgeStyle.text,
               ),
             ),
           ),
