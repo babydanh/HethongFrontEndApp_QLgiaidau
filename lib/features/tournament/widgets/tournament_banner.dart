@@ -53,7 +53,7 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
             curve: Curves.easeOutCubic,
             alignment: Alignment.topCenter,
             child: SizedBox(
-              height: compact ? 0 : 125,
+              height: compact ? 0 : 185,
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 160),
                 opacity: compact ? 0 : 1,
