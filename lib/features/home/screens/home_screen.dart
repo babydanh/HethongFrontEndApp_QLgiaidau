@@ -604,21 +604,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ],
                     SliverToBoxAdapter(
-                      child: Row(
-                        children: [
-                          _buildSectionTitle(
-                            title: 'Trận đấu đang diễn ra',
-                          ),
-                          Container(
-                            width: 8,
-                            height: 8,
-                            margin: const EdgeInsets.only(left: 2, top: 12),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFEF4444),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ],
+                      child: _buildSectionTitle(
+                        title: 'Trận đấu đang diễn ra',
+                        isLive: true,
                       ),
                     ),
                     if (live.isNotEmpty)
@@ -1273,6 +1261,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     IconData? icon,
     Color? color,
     required String title,
+    bool isLive = false,
     String? badge,
     String? actionLabel,
     VoidCallback? onAction,
@@ -1291,6 +1280,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               letterSpacing: -0.3,
             ),
           ),
+          if (isLive) ...[
+            const SizedBox(width: 6),
+            Container(
+              width: 8,
+              height: 8,
+              decoration: const BoxDecoration(
+                color: Color(0xFFEF4444),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ],
           if (badge != null) ...[
             const SizedBox(width: 8),
             Container(
