@@ -141,7 +141,7 @@ class _LiveTournamentWithMatchesCardState
             ),
           ),
 
-          // ── Matches Content Area (Hiển thị tối đa 4 trận/trang) ──
+          // ── Matches Content Area (Smooth Animated Page Transition & Animated Size) ──
           matchesAsync.when(
             data: (matches) {
               final validMatches = matches.where((m) {
@@ -185,80 +185,120 @@ class _LiveTournamentWithMatchesCardState
 
               return Column(
                 children: [
-                  // Render 4 matches of current page
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Column(
-                      children: currentPageMatches.map((match) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: _buildMatchCard(context, match),
+                  // Smooth AnimatedSize and AnimatedSwitcher for matches transition
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeInOutCubic,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (Widget child, Animation<double> animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0.04, 0.0),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          ),
                         );
-                      }).toList(),
+                      },
+                      child: Container(
+                        key: ValueKey<int>(safePageIndex),
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        child: Column(
+                          key: ValueKey<String>('matches_page_${safePageIndex}_${currentPageMatches.length}'),
+                          children: currentPageMatches.map((match) {
+                            return Padding(
+                              key: ValueKey<String>(match.id),
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: _buildMatchCard(context, match),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ),
                   ),
 
-                  // ── Pagination Controls & Dots Indicator (Chỉ hiển thị khi số trận > 4) ──
-                  if (totalPages > 1) ...[
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          InkWell(
-                            onTap: safePageIndex > 0
-                                ? () => setState(() => _currentMatchIndex--)
-                                : null,
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              width: 32,
-                              height: 32,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFF1F5F9),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.chevron_left_rounded, size: 18, color: Color(0xFF475569)),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: List.generate(totalPages, (idx) {
-                              final isSelected = idx == safePageIndex;
-                              return AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                margin: const EdgeInsets.symmetric(horizontal: 3),
-                                width: isSelected ? 16 : 7,
-                                height: 7,
-                                decoration: BoxDecoration(
-                                  color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFCBD5E1),
-                                  borderRadius: BorderRadius.circular(4),
+                  // ── Pagination Controls & Dots Indicator (Mượt mà với AnimatedSwitcher) ──
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: totalPages > 1
+                        ? Column(
+                            key: const ValueKey('pagination_visible'),
+                            children: [
+                              const SizedBox(height: 4),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    InkWell(
+                                      onTap: safePageIndex > 0
+                                          ? () => setState(() => _currentMatchIndex--)
+                                          : null,
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: AnimatedOpacity(
+                                        duration: const Duration(milliseconds: 200),
+                                        opacity: safePageIndex > 0 ? 1.0 : 0.4,
+                                        child: Container(
+                                          width: 32,
+                                          height: 32,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFFF1F5F9),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(Icons.chevron_left_rounded, size: 18, color: Color(0xFF475569)),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: List.generate(totalPages, (idx) {
+                                        final isSelected = idx == safePageIndex;
+                                        return AnimatedContainer(
+                                          duration: const Duration(milliseconds: 250),
+                                          curve: Curves.easeOutCubic,
+                                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                                          width: isSelected ? 16 : 7,
+                                          height: 7,
+                                          decoration: BoxDecoration(
+                                            color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFCBD5E1),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                        );
+                                      }),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    InkWell(
+                                      onTap: safePageIndex < totalPages - 1
+                                          ? () => setState(() => _currentMatchIndex++)
+                                          : null,
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: AnimatedOpacity(
+                                        duration: const Duration(milliseconds: 200),
+                                        opacity: safePageIndex < totalPages - 1 ? 1.0 : 0.4,
+                                        child: Container(
+                                          width: 32,
+                                          height: 32,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFFF1F5F9),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF475569)),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              );
-                            }),
-                          ),
-                          const SizedBox(width: 12),
-                          InkWell(
-                            onTap: safePageIndex < totalPages - 1
-                                ? () => setState(() => _currentMatchIndex++)
-                                : null,
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              width: 32,
-                              height: 32,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFF1F5F9),
-                                shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF475569)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ] else
-                    const SizedBox(height: 6),
+                            ],
+                          )
+                        : const SizedBox(key: ValueKey('pagination_hidden'), height: 6),
+                  ),
                 ],
               );
             },
