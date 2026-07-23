@@ -716,7 +716,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final communitiesAsync = ref.watch(communitiesProvider(null));
     return communitiesAsync.when(
       data: (clubs) {
-        if (clubs.isEmpty) return const SizedBox.shrink();
+        if (clubs.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF94A3B8)),
+                  SizedBox(width: 8),
+                  Text(
+                    'Chưa có câu lạc bộ nào',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
         return SizedBox(
           height: 145,
           child: ListView.builder(
