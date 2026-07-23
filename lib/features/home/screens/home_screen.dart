@@ -613,67 +613,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         isLive: true,
                       ),
                     ),
-                    if (live.isNotEmpty)
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) => LiveTournamentWithMatchesCard(
-                              tournament: live[index],
-                              filterStatus: 'live',
-                            ),
-                            childCount: live.length,
-                          ),
-                        ),
-                      )
-                    else
-                      _buildSectionEmptyCard('Chưa có'),
+                    _TournamentSectionList(
+                      tournaments: live,
+                      filterStatus: 'live',
+                      emptyMessage: 'Chưa có trận đấu nào đang diễn ra',
+                    ),
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
                         title: 'Kết quả trận đấu vừa qua',
                       ),
                     ),
-                    if (finished.isNotEmpty)
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate((
-                            context,
-                            index,
-                          ) {
-                            final tournament = finished[index];
-                            return LiveTournamentWithMatchesCard(
-                              tournament: tournament,
-                              filterStatus: 'completed',
-                            );
-                          }, childCount: finished.length),
-                        ),
-                      )
-                    else
-                      _buildSectionEmptyCard('Chưa có'),
+                    _TournamentSectionList(
+                      tournaments: finished,
+                      filterStatus: 'completed',
+                      emptyMessage: 'Chưa có trận đấu nào đã kết thúc',
+                    ),
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
                         title: 'Lịch thi đấu sắp diễn ra',
                       ),
                     ),
-                    if (safeUpcoming.isNotEmpty)
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate((
-                            context,
-                            index,
-                          ) {
-                            final tournament = safeUpcoming[index];
-                            return LiveTournamentWithMatchesCard(
-                              tournament: tournament,
-                              filterStatus: 'scheduled',
-                            );
-                          }, childCount: safeUpcoming.length),
-                        ),
-                      )
-                    else
-                      _buildSectionEmptyCard('Chưa có'),
+                    _TournamentSectionList(
+                      tournaments: safeUpcoming,
+                      filterStatus: 'scheduled',
+                      emptyMessage: 'Chưa có lịch thi đấu sắp diễn ra',
+                    ),
                     // ── Section 5: Cộng đồng câu lạc bộ ──
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
@@ -722,13 +686,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       data: (clubs) {
         if (clubs.isEmpty) {
           return const Padding(
-            padding: EdgeInsets.fromLTRB(16, 2, 16, 14),
-            child: Text(
-              'Chưa có',
-              style: TextStyle(
-                fontSize: 13,
-                color: Color(0xFF64748B),
-                fontWeight: FontWeight.w500,
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Center(
+              child: Text(
+                'Chưa có câu lạc bộ nào',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF94A3B8),
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
           );
@@ -2673,5 +2640,90 @@ class _StatusFilterDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant _StatusFilterDelegate oldDelegate) {
     return child != oldDelegate.child;
+  }
+}
+
+class _TournamentSectionList extends ConsumerWidget {
+  final List<Tournament> tournaments;
+  final String filterStatus;
+  final String emptyMessage;
+
+  const _TournamentSectionList({
+    required this.tournaments,
+    required this.filterStatus,
+    required this.emptyMessage,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (tournaments.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Center(
+            child: Text(
+              emptyMessage,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF94A3B8),
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
+    bool hasAnyMatch = false;
+    for (final t in tournaments) {
+      final matchesAsync = ref.watch(matchesProvider(t.id));
+      matchesAsync.whenData((matches) {
+        final valid = matches.where((m) {
+          final t1 = m.team1Name.trim().toUpperCase();
+          final t2 = m.team2Name.trim().toUpperCase();
+          if ((t1.isEmpty || t1 == 'TBD' || t1 == 'BYE') &&
+              (t2.isEmpty || t2 == 'TBD' || t2 == 'BYE')) return false;
+
+          if (filterStatus == 'live') return m.isLive;
+          if (filterStatus == 'completed') return m.isCompleted;
+          if (filterStatus == 'scheduled') return m.isScheduled || (!m.isLive && !m.isCompleted);
+          return true;
+        });
+        if (valid.isNotEmpty) hasAnyMatch = true;
+      });
+    }
+
+    if (!hasAnyMatch) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Center(
+            child: Text(
+              emptyMessage,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF94A3B8),
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => LiveTournamentWithMatchesCard(
+            tournament: tournaments[index],
+            filterStatus: filterStatus,
+          ),
+          childCount: tournaments.length,
+        ),
+      ),
+    );
   }
 }
