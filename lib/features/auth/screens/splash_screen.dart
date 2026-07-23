@@ -94,22 +94,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     Hero(
                       tag: "vnsport_logo",
                       child: SizedBox(
-                        width: 200,
-                        height: 64,
+                        width: 280,
+                        height: 95,
                         child: SvgPicture.asset(
                           "assets/images/vndcsport.svg",
                           fit: BoxFit.contain,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
 
                     // Tagline
                     Text(
                       'Tổ chức giải đấu chuyên nghiệp',
                       style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: context.colors.textSecondary,
                         letterSpacing: 1.5,
                       ),
                     ),

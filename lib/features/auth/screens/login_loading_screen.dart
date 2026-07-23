@@ -58,7 +58,7 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                   Hero(
                     tag: "vnsport_logo",
                     child: SizedBox(
-                      height: 75,
+                      height: 95,
                       child: SvgPicture.asset(
                         "assets/images/vndcsport.svg",
                         fit: BoxFit.contain,
