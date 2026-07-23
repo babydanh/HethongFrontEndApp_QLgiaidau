@@ -171,17 +171,18 @@ class TierLegendView extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        width: 28,
+                        height: 28,
                         decoration: BoxDecoration(
                           color: palette.badgeBg,
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Center(
                           child: Text(
-                            palette.fullLabel,
+                            palette.label,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 9,
+                              fontSize: 11,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
