@@ -82,16 +82,16 @@ class _LiveTournamentWithMatchesCardState
         final currentPageMatches = displayMatches.sublist(startIndex, endIndex);
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 20),
+          margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.05),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
+                color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -106,8 +106,8 @@ class _LiveTournamentWithMatchesCardState
                   child: Row(
                     children: [
                       Container(
-                        width: 44,
-                        height: 44,
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
                           color: const Color(0xFF0F172A),
                           shape: BoxShape.circle,
@@ -222,7 +222,7 @@ class _LiveTournamentWithMatchesCardState
                                       onTap: safePageIndex > 0
                                           ? () => setState(() => _currentMatchIndex--)
                                           : null,
-                                      borderRadius: BorderRadius.circular(20),
+                                      borderRadius: BorderRadius.circular(16),
                                       child: AnimatedOpacity(
                                         duration: const Duration(milliseconds: 200),
                                         opacity: safePageIndex > 0 ? 1.0 : 0.4,
@@ -260,7 +260,7 @@ class _LiveTournamentWithMatchesCardState
                                       onTap: safePageIndex < totalPages - 1
                                           ? () => setState(() => _currentMatchIndex++)
                                           : null,
-                                      borderRadius: BorderRadius.circular(20),
+                                      borderRadius: BorderRadius.circular(16),
                                       child: AnimatedOpacity(
                                         duration: const Duration(milliseconds: 200),
                                         opacity: safePageIndex < totalPages - 1 ? 1.0 : 0.4,
@@ -293,10 +293,10 @@ class _LiveTournamentWithMatchesCardState
 
   Widget _buildMatchCard(BuildContext context, MatchModel match) {
     final statusText = match.isLive
-        ? 'ĐANG DIỄN RA • VÒNG ${match.round}'
+        ? 'ĐANG DIỄN RA'
         : match.isCompleted
-            ? 'ĐÃ HOÀN THÀNH • VÒNG ${match.round}'
-            : 'SẮP DIỄN RA • VÒNG ${match.round}';
+            ? 'ĐÃ HOÀN THÀNH'
+            : 'SẮP DIỄN RA';
     final bracketText = match.stageName ??
         (match.bracketPosition.bracket == 'losers'
             ? 'NHÁNH THUA'
@@ -326,83 +326,77 @@ class _LiveTournamentWithMatchesCardState
     final isCheered = cheerCount > 0;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFEFF6FF), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0052FF).withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: const Color(0xFF0052FF).withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Top Badges Row ──
+          // ── Top Badges Row (Sleek rectangular badges) ──
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Left Badge: SẮP DIỄN RA / ĐANG DIỄN RA
+              // Left Badge: SẮP DIỄN RA / ĐANG DIỄN RA (Rectangle + Red dot at the end)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: match.isLive
                       ? const Color(0xFFFEF2F2)
                       : const Color(0xFFE0F2FE),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      match.isLive ? Icons.sensors_rounded : Icons.access_time_rounded,
-                      size: 13,
-                      color: match.isLive ? const Color(0xFFDC2626) : const Color(0xFF0284C7),
-                    ),
-                    const SizedBox(width: 4),
                     Text(
                       statusText,
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 10.5,
                         fontWeight: FontWeight.w800,
                         color: match.isLive ? const Color(0xFFDC2626) : const Color(0xFF0284C7),
                         letterSpacing: 0.2,
                       ),
                     ),
+                    if (match.isLive) ...[
+                      const SizedBox(width: 5),
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFDC2626),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
 
-              // Right Badge: VÒNG KNOCKOUT / VÒNG BẢNG
+              // Right Badge: VÒNG KNOCKOUT / VÒNG BẢNG (Rectangle)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF3E8FF),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.emoji_events_rounded,
-                      size: 13,
-                      color: Color(0xFF9333EA),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      bracketText,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF9333EA),
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  bracketText,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF9333EA),
+                    letterSpacing: 0.2,
+                  ),
                 ),
               ),
             ],

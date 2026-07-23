@@ -600,12 +600,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                     ],
-                    if (live.isNotEmpty) ...[
-                      SliverToBoxAdapter(
-                        child: _buildSectionTitle(
-                          title: 'Trận đấu đang diễn ra',
-                        ),
+                    SliverToBoxAdapter(
+                      child: Row(
+                        children: [
+                          _buildSectionTitle(
+                            title: 'Trận đấu đang diễn ra',
+                          ),
+                          Container(
+                            width: 8,
+                            height: 8,
+                            margin: const EdgeInsets.only(left: 2, top: 12),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFEF4444),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                    if (live.isNotEmpty)
                       SliverPadding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         sliver: SliverList(
@@ -617,8 +630,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             childCount: live.length,
                           ),
                         ),
+                      )
+                    else
+                      const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(16, 4, 16, 16),
+                          child: Text(
+                            'Chưa có trận đấu đang diễn ra',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF64748B),
+                              fontWeight: FontWeight.w500,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
                       ),
-                    ],
                     if (finished.isNotEmpty) ...[
                       SliverToBoxAdapter(
                         child: _buildSectionTitle(
@@ -1232,18 +1259,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (icon != null && color != null) ...[
-            Container(
-              width: 34.0,
-              height: 34.0,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Icon(icon, color: color, size: 19.0),
-            ),
-            const SizedBox(width: 10),
-          ],
           Text(
             title,
             style: TextStyle(
