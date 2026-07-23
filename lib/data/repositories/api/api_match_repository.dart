@@ -145,15 +145,31 @@ class ApiMatchRepository implements IMatchRepository {
       return 0;
     }
 
-    // Match web frontend logic (MatchesTab.tsx / MatchCard.tsx):
-    // Display p1SetsWon vs p2SetsWon if available, else score1 vs score2
-    int score1 = json['p1SetsWon'] != null
-        ? parseNum(json['p1SetsWon'])
-        : parseNum(json['score1'] ?? json['participant1Score']);
+    int score1 = parseNum(json['score1'] ?? json['participant1Score']);
+    int score2 = parseNum(json['score2'] ?? json['participant2Score']);
 
-    int score2 = json['p2SetsWon'] != null
-        ? parseNum(json['p2SetsWon'])
-        : parseNum(json['score2'] ?? json['participant2Score']);
+    // Check scoreDetails.sets for point scores of the set
+    if (score1 == 0 && score2 == 0 && json['scoreDetails'] != null) {
+      try {
+        final details = json['scoreDetails'];
+        if (details is Map && details['sets'] is List) {
+          final sets = details['sets'] as List;
+          if (sets.isNotEmpty) {
+            final lastSet = sets.last;
+            if (lastSet is Map) {
+              score1 = parseNum(lastSet['score1'] ?? lastSet['p1'] ?? lastSet['team1Score']);
+              score2 = parseNum(lastSet['score2'] ?? lastSet['p2'] ?? lastSet['team2Score']);
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Only fallback to set count if point scores are 0-0
+    if (score1 == 0 && score2 == 0) {
+      score1 = parseNum(json['p1SetsWon']);
+      score2 = parseNum(json['p2SetsWon']);
+    }
 
     return MatchModel(
       id: json['id'] ?? '',
