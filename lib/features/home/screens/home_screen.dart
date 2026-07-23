@@ -204,6 +204,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  String _resolveImageUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    if (url.startsWith('http')) return url;
+
+    String apiBase = 'http://localhost:3000/api/v1';
+    try {
+      apiBase = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
+      if (!kIsWeb && Platform.isAndroid && apiBase.contains('localhost')) {
+        apiBase = apiBase.replaceAll('localhost', '10.0.2.2');
+      }
+    } catch (_) {}
+
+    final host = apiBase.replaceAll('/api/v1', '');
+    return '$host$url';
+  }
+
   @override
   void dispose() {
     _carouselTimer?.cancel();
@@ -588,7 +604,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       SliverToBoxAdapter(
                         child: _buildSectionTitle(
                           title: 'Trận đấu đang diễn ra',
-                          badge: 'LIVE',
                         ),
                       ),
                       SliverPadding(
@@ -603,12 +618,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                     ],
+                    if (finished.isNotEmpty) ...[
+                      SliverToBoxAdapter(
+                        child: _buildSectionTitle(
+                          icon: Icons.check_circle_outline_rounded,
+                          color: const Color(0xFF10B981),
+                          title: 'Kết quả trận đấu vừa qua',
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            final tournament = finished[index];
+                            return LiveTournamentWithMatchesCard(
+                              tournament: tournament,
+                            );
+                          }, childCount: finished.length),
+                        ),
+                      ),
+                    ],
                     if (upcoming.isNotEmpty) ...[
                       SliverToBoxAdapter(
                         child: _buildSectionTitle(
                           icon: Icons.calendar_today_rounded,
                           color: const Color(0xFF2979FF),
-                          title: 'Giải đấu sắp diễn ra',
+                          title: 'Lịch thi đấu sắp diễn ra',
                         ),
                       ),
                       SliverPadding(
@@ -628,29 +666,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                     ],
-                    if (finished.isNotEmpty) ...[
-                      SliverToBoxAdapter(
-                        child: _buildSectionTitle(
-                          icon: Icons.check_circle_outline_rounded,
-                          color: const Color(0xFF10B981),
-                          title: 'Giải đấu đã kết thúc',
-                        ),
+                    // ── Section 5: Cộng đồng câu lạc bộ (Dữ liệu thật từ API) ──
+                    SliverToBoxAdapter(
+                      child: _buildSectionTitle(
+                        icon: Icons.groups_rounded,
+                        color: const Color(0xFF8B5CF6),
+                        title: 'Cộng đồng câu lạc bộ',
+                        actionLabel: 'Xem tất cả',
+                        onAction: () => _switchTab(3),
                       ),
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate((
-                            context,
-                            index,
-                          ) {
-                            final tournament = finished[index];
-                            return LiveTournamentWithMatchesCard(
-                              tournament: tournament,
-                            );
-                          }, childCount: finished.length),
-                        ),
-                      ),
-                    ],
+                    ),
+                    SliverToBoxAdapter(
+                      child: _buildClubsHorizontalList(),
+                    ),
                     if (allTournaments.isEmpty)
                       SliverFillRemaining(child: _buildEmpty()),
                     const SliverToBoxAdapter(child: SizedBox(height: 120)),
@@ -679,6 +707,109 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildClubsHorizontalList() {
+    final communitiesAsync = ref.watch(communitiesProvider(null));
+    return communitiesAsync.when(
+      data: (clubs) {
+        if (clubs.isEmpty) return const SizedBox.shrink();
+        return SizedBox(
+          height: 145,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: clubs.length,
+            itemBuilder: (context, index) {
+              final club = clubs[index];
+              final resolvedLogo = _resolveImageUrl(club.logoUrl);
+              return Container(
+                width: 130,
+                margin: const EdgeInsets.only(right: 12),
+                child: InkWell(
+                  onTap: () => context.push('/club/${club.id}'),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFF1F5F9)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0F172A),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: ClipOval(
+                            child: resolvedLogo.isNotEmpty
+                                ? Image.network(
+                                    resolvedLogo,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => const Icon(
+                                      Icons.groups_rounded,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.groups_rounded,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          club.name,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0F172A),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${club.memberCount ?? 0} thành viên',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+      loading: () => const SizedBox(
+        height: 100,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 
