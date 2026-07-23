@@ -23,10 +23,10 @@ class DivisionFilterSegment extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(3),
         decoration: BoxDecoration(
           color: context.colors.bgCard,
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: context.colors.border),
         ),
         child: Row(
@@ -39,16 +39,16 @@ class DivisionFilterSegment extends StatelessWidget {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
                 curve: Curves.easeInOut,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
                 decoration: BoxDecoration(
                   color: isSelected ? const Color(0xFF2979FF) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(26),
+                  borderRadius: BorderRadius.circular(8),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
                             color: const Color(0xFF2979FF).withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                            blurRadius: 6,
+                            offset: const Offset(0, 1),
                           )
                         ]
                       : [],

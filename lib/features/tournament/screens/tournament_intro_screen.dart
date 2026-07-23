@@ -16,8 +16,6 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/about_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/gallery_tab.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
 
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -32,8 +30,14 @@ class TournamentIntroScreen extends ConsumerStatefulWidget {
 class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final List<ScrollController> _tabScrollControllers = List.generate(
+    4,
+    (_) => ScrollController(),
+  );
   String _selectedDivision = "Tất cả";
   String? _selectedDivisionId;
+  bool _isHeaderCompact = false;
+  bool _isFollowLoading = false;
 
   @override
   void initState() {
@@ -44,12 +48,15 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    for (final controller in _tabScrollControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final tournamentAsync = ref.watch(tournamentProvider(widget.tournamentId));
+    final tournamentAsync = ref.watch(tournamentIntroProvider(widget.tournamentId));
     final authRole = ref.watch(authProvider).role;
 
     return Scaffold(
@@ -151,7 +158,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () =>
-                      ref.invalidate(tournamentProvider(widget.tournamentId)),
+                      ref.invalidate(tournamentIntroProvider(widget.tournamentId)),
                   child: const Text('Thử lại'),
                 ),
               ],
@@ -196,79 +203,208 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     if (_selectedDivisionId == null && _selectedDivision != "Tất cả" && tournament.divisions.isNotEmpty) {
       _selectedDivisionId = tournament.divisions.first.id;
     }
-    final teamsAsync = ref.watch(teamsProvider(widget.tournamentId));
-    final viewerCountAsync = ref.watch(
-      presenceCountProvider((role: "intro", tournamentId: widget.tournamentId)),
-    );
+    final teamsAsync = ref.watch(introTeamsProvider(widget.tournamentId));
     final colors = context.colors;
 
-    return NestedScrollView(
-      headerSliverBuilder: (context, innerBoxIsScrolled) {
-        return [
-          SliverAppBar(
-            pinned: true,
-            elevation: innerBoxIsScrolled ? 2 : 0,
-            backgroundColor: innerBoxIsScrolled ? colors.bgCard : colors.bgDark,
-            leading: IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colors.bgCard.withValues(alpha: 0.8),
-                  shape: BoxShape.circle,
+    return NotificationListener<ScrollNotification>(
+      onNotification: _handleScrollNotification,
+      child: Column(
+        children: [
+          _buildTopBar(tournament, colors),
+          Expanded(
+            child: Column(
+              children: [
+                GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onVerticalDragUpdate: _handleHeaderDragUpdate,
+                  child: TournamentHeaderView(
+                    tournament: tournament,
+                    colors: colors,
+                    compact: _isHeaderCompact,
+                  ),
                 ),
-                child: Icon(
-                  Icons.arrow_back_rounded,
+                SizedBox(
+                  height: 56,
+                  child: _TabBarDelegate(
+                    tabController: _tabController,
+                    colors: colors,
+                  ).build(context, 0, false),
+                ),
+                Expanded(
+                  child: teamsAsync.when(
+                    data: (teams) => _buildTabContent(tournament, teams, role),
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(color: AppTheme.primary),
+                    ),
+                    error: (e, _) => _buildTabContent(tournament, [], role),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (notification.metrics.axis == Axis.vertical) {
+      final shouldCompact = notification.metrics.pixels > 24;
+      if (shouldCompact != _isHeaderCompact) {
+        setState(() => _isHeaderCompact = shouldCompact);
+      }
+    }
+    return false;
+  }
+
+  void _handleHeaderDragUpdate(DragUpdateDetails details) {
+    final index = _tabController.index.clamp(
+      0,
+      _tabScrollControllers.length - 1,
+    );
+    final controller = _tabScrollControllers[index];
+    if (!controller.hasClients) return;
+
+    final position = controller.position;
+    final nextOffset = (controller.offset - details.delta.dy).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    controller.jumpTo(nextOffset);
+  }
+
+  Widget _buildTopBar(
+    Tournament tournament,
+    AppColorsExtension colors,
+  ) {
+    final followedAsync = ref.watch(followedTournamentsProvider);
+    final isFollowing = followedAsync.maybeWhen(
+      data: (items) => items.any((t) => t.id == tournament.id),
+      orElse: () => false,
+    );
+
+    return Container(
+      color: colors.bgDark,
+      child: SafeArea(
+        bottom: false,
+        child: SizedBox(
+          height: kToolbarHeight,
+          child: Row(
+            children: [
+              IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colors.bgCard.withValues(alpha: 0.8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.arrow_back_rounded,
+                    color: colors.textPrimary,
+                    size: 20,
+                  ),
+                ),
+                onPressed: _goBack,
+              ),
+              Expanded(
+                child: Center(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: Text(
+                      tournament.name.toUpperCase(),
+                      key: ValueKey(tournament.name),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.1,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: _isFollowLoading
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppTheme.primary,
+                        ),
+                      )
+                    : Icon(
+                        isFollowing
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_border_rounded,
+                        color: isFollowing
+                            ? AppTheme.primary
+                            : colors.textPrimary,
+                        size: 22,
+                      ),
+                onPressed: _isFollowLoading
+                    ? null
+                    : () => _toggleFollow(tournament, isFollowing),
+                tooltip: isFollowing ? 'Bỏ theo dõi' : 'Theo dõi',
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.share_rounded,
                   color: colors.textPrimary,
                   size: 20,
                 ),
-              ),
-              onPressed: _goBack,
-            ),
-            title: SportPill(sportKey: tournament.sport),
-            centerTitle: true,
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: Center(
-                  child: StatusBadge(statusKey: tournament.status),
-                ),
-              ),
-              // Share button
-              IconButton(
-                icon: Icon(Icons.share_rounded, color: colors.textPrimary, size: 20),
                 onPressed: () => _shareTournament(tournament),
                 tooltip: 'Chia sẻ',
               ),
-              if (viewerCountAsync.hasValue &&
-                  viewerCountAsync.value != null &&
-                  viewerCountAsync.value! > 0)
-                _viewerBadge(viewerCountAsync.value!),
               const SizedBox(width: 8),
             ],
           ),
-          SliverToBoxAdapter(
-            child: TournamentHeaderView(
-              tournament: tournament,
-              colors: colors,
-            ),
-          ),
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _TabBarDelegate(
-              tabController: _tabController,
-              colors: colors,
-            ),
-          ),
-        ];
-      },
-      body: teamsAsync.when(
-        data: (teams) => _buildTabContent(tournament, teams, role),
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppTheme.primary),
         ),
-        error: (e, _) => _buildTabContent(tournament, [], role),
       ),
     );
+  }
+
+  Future<void> _toggleFollow(
+    Tournament tournament,
+    bool isFollowing,
+  ) async {
+    final auth = ref.read(authProvider);
+    if (!auth.isAuthenticated) {
+      context.go('/login');
+      return;
+    }
+    if (_isFollowLoading) return;
+
+    setState(() => _isFollowLoading = true);
+    try {
+      final repo = ref.read(tournamentRepositoryProvider);
+      if (isFollowing) {
+        await repo.unfollowTournament(tournament.id);
+      } else {
+        await repo.followTournament(tournament.id);
+      }
+      ref.invalidate(followedTournamentsProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isFollowing ? 'Đã bỏ theo dõi giải đấu' : 'Đã theo dõi giải đấu',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể cập nhật theo dõi: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isFollowLoading = false);
+      }
+    }
   }
 
   String _resolveImageUrl(String? url) {
@@ -283,41 +419,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final url = 'https://giaidau.vnvar.com/tournaments/${tournament.id}';
     await SharePlus.instance.share(
       ShareParams(text: '$text\n\n$url'),
-    );
-  }
-
-  Widget _viewerBadge(int count) {
-    final colors = context.colors;
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: colors.error.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colors.error.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colors.error,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            "$count",
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: colors.error,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -571,7 +672,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
             indicatorSize: TabBarIndicatorSize.tab,
             indicator: BoxDecoration(
               color: AppTheme.primary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: AppTheme.primary.withValues(alpha: 0.3),
               ),
@@ -581,17 +682,17 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
             unselectedLabelColor: colors.textSecondary,
             labelStyle: const TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 14,
+              fontSize: 13,
             ),
             unselectedLabelStyle: const TextStyle(
               fontWeight: FontWeight.normal,
-              fontSize: 14,
+              fontSize: 13,
             ),
             tabs: const [
-              Tab(text: "Giới thiệu"),
-              Tab(text: "Danh sách đội"),
-              Tab(text: "Bảng thi đấu"),
-              Tab(text: "Gallery"),
+              Tab(height: 36, text: "Giới thiệu"),
+              Tab(height: 36, text: "Danh sách đội"),
+              Tab(height: 36, text: "Bảng thi đấu"),
+              Tab(height: 36, text: "Thư viện"),
             ],
           ),
         ],
@@ -600,10 +701,10 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 56;
+  double get maxExtent => 44;
 
   @override
-  double get minExtent => 56;
+  double get minExtent => 44;
 
   @override
   bool shouldRebuild(_TabBarDelegate oldDelegate) => false;
