@@ -1106,11 +1106,17 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
   @override
   Widget build(BuildContext context) {
     final m = widget.match;
-    final statusText = m.isLive
-        ? 'ĐANG DIỄN RA • VÒNG ${m.round}'
-        : m.isCompleted
-            ? 'ĐÃ HOÀN THÀNH • VÒNG ${m.round}'
-            : 'SẮP DIỄN RA • VÒNG ${m.round}';
+    final isT1Tbd = m.team1Name.trim().toUpperCase() == 'TBD' || m.team1Name.trim().toUpperCase() == 'BYE';
+    final isT2Tbd = m.team2Name.trim().toUpperCase() == 'TBD' || m.team2Name.trim().toUpperCase() == 'BYE';
+    final isByeMatch = m.isBye || isT1Tbd || isT2Tbd;
+
+    final statusText = isByeMatch
+        ? 'VÔ THẲNG • VÒNG ${m.round}'
+        : (m.isLive
+            ? 'ĐANG DIỄN RA • VÒNG ${m.round}'
+            : m.isCompleted
+                ? 'ĐÃ HOÀN THÀNH • VÒNG ${m.round}'
+                : 'SẮP DIỄN RA • VÒNG ${m.round}');
     final bracketText = m.stageName ?? (m.bracketPosition.bracket == 'losers' ? 'NHÁNH THUA' : 'VÒNG KNOCKOUT');
     final sportText = AppConstants.sportNames[m.sportKey ?? widget.tournament?.sport] ?? m.sportKey ?? widget.tournament?.sport ?? 'Pickleball';
     final courtText = m.court.isNotEmpty ? m.court : 'Chưa xếp sân';
@@ -1148,22 +1154,28 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Left Badge: SẮP DIỄN RA / ĐANG DIỄN RA
+              // Left Badge
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: m.isLive
-                      ? const Color(0xFFFEF2F2)
-                      : const Color(0xFFE0F2FE),
+                  color: isByeMatch
+                      ? const Color(0xFFDCFCE7)
+                      : (m.isLive
+                          ? const Color(0xFFFEF2F2)
+                          : const Color(0xFFE0F2FE)),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      m.isLive ? Icons.sensors_rounded : Icons.access_time_rounded,
+                      isByeMatch
+                          ? Icons.check_circle_outline_rounded
+                          : (m.isLive ? Icons.sensors_rounded : Icons.access_time_rounded),
                       size: 13,
-                      color: m.isLive ? const Color(0xFFDC2626) : const Color(0xFF0284C7),
+                      color: isByeMatch
+                          ? const Color(0xFF16A34A)
+                          : (m.isLive ? const Color(0xFFDC2626) : const Color(0xFF0284C7)),
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -1171,7 +1183,9 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
-                        color: m.isLive ? const Color(0xFFDC2626) : const Color(0xFF0284C7),
+                        color: isByeMatch
+                            ? const Color(0xFF16A34A)
+                            : (m.isLive ? const Color(0xFFDC2626) : const Color(0xFF0284C7)),
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -1212,89 +1226,109 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
 
           const SizedBox(height: 16),
 
-          // ── Center Match Row (Avatars + Team Names vs Scores) ──
-          Row(
+          // ── Teams & Vertical Scores Row (No VS, no hyphen) ──
+          Column(
             children: [
-              // Left: Teams stacked vertically
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Team 1
-                    Row(
-                      children: [
-                        _DoubleAvatar(
-                          initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'NM',
-                          initial2: t1Initials.length > 1 ? t1Initials[1] : 'HD',
-                          color: const Color(0xFF0284C7),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            m.team1Name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 20),
-                      child: Text(
-                        'VS',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF2563EB),
-                        ),
+              // Team 1 Row
+              Row(
+                children: [
+                  _DoubleAvatar(
+                    initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'NM',
+                    initial2: t1Initials.length > 1 ? t1Initials[1] : 'HD',
+                    color: const Color(0xFF0284C7),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      m.team1Name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A),
                       ),
                     ),
-
-                    // Team 2
-                    Row(
-                      children: [
-                        _DoubleAvatar(
-                          initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'VQ',
-                          initial2: t2Initials.length > 1 ? t2Initials[1] : 'KL',
-                          color: const Color(0xFF16A34A),
+                  ),
+                  const SizedBox(width: 12),
+                  if (isByeMatch && isT2Tbd && !isT1Tbd)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDCFCE7),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'Vô thẳng',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF15803D),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            m.team2Name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
+                    )
+                  else
+                    Text(
+                      '${m.score1}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
                     ),
-                  ],
-                ),
+                ],
               ),
 
-              // Right: Score
-              Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: Text(
-                  '${m.score1} - ${m.score2}',
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
-                    letterSpacing: 1.5,
+              const SizedBox(height: 10),
+
+              // Team 2 Row
+              Row(
+                children: [
+                  _DoubleAvatar(
+                    initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'VQ',
+                    initial2: t2Initials.length > 1 ? t2Initials[1] : 'KL',
+                    color: const Color(0xFF16A34A),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      m.team2Name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  if (isByeMatch && isT1Tbd && !isT2Tbd)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDCFCE7),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'Vô thẳng',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF15803D),
+                        ),
+                      ),
+                    )
+                  else
+                    Text(
+                      '${m.score2}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
