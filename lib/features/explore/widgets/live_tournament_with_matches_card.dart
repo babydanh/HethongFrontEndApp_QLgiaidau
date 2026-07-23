@@ -282,19 +282,12 @@ class _LiveTournamentWithMatchesCardState
                           )
                         : const SizedBox(key: ValueKey('pagination_hidden'), height: 6),
                   ),
-                ],
-              );
-            },
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: CircularProgressIndicator(color: AppTheme.primary, strokeWidth: 2),
-              ),
-            ),
-            error: (e, st) => const SizedBox.shrink(),
+            ],
           ),
-        ],
-      ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 

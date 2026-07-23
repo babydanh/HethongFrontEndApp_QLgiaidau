@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,12 +16,11 @@ import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
-import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
-import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
+import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -299,10 +300,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           if (_activeTab == 0) ...[
             // Dynamic rankings card list based on actual ELO and category ranks
             _buildRankingsSection(context),
-            const SizedBox(height: 20),
-
-            // ELO Progress Chart
-            _buildEloChartSection(context),
             const SizedBox(height: 20),
 
             // Info Section
@@ -597,279 +594,363 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  // ─── DYNAMIC RANKINGS SECTION (WEB-INSPIRED) ─────────────────────────
+  // ─── PROFILE RANK SNAPSHOT ─────────────────────────────────────────
   Widget _buildRankingsSection(BuildContext context) {
     final colors = context.colors;
     final rankingsAsync = ref.watch(userRankingsProvider);
-    final categoriesAsync = ref.watch(categoriesProvider);
 
     return rankingsAsync.when(
       data: (rankings) {
-        final playedRankings = rankings.where((r) => r.matchesPlayed > 0).toList();
+        final playedRankings = rankings.where((r) => r.matchesPlayed > 0).toList()
+          ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
+
         if (playedRankings.isEmpty) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: colors.border),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: colors.textMuted.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.shield_outlined, color: colors.textMuted, size: 26),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Chưa xếp hạng',
-                          style: TextStyle(
-                            color: colors.textPrimary,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          'Tham gia các giải đấu để có điểm ELO & cấp khiên hạng!',
-                          style: TextStyle(color: colors.textMuted, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            child: _buildUnrankedCard(context),
           );
         }
 
-        final categories = categoriesAsync.asData?.value ?? [];
+        final ranking = playedRankings.first;
+        final losses = (ranking.matchesPlayed - ranking.matchesWon).clamp(0, 9999);
+        final winRate = ranking.matchesPlayed == 0
+            ? 0.0
+            : ranking.matchesWon / ranking.matchesPlayed;
+        final progress = EloHelpers.getEloProgressInfo(ranking.eloPoints);
+        final nextThreshold = progress.nextIndex == null
+            ? null
+            : EloHelpers.thresholds[progress.nextIndex!];
+        final nextLabel = nextThreshold?.name ?? ranking.tierName;
+        final eloNeed = nextThreshold != null ? (nextThreshold.minElo - ranking.eloPoints).clamp(0, 99999) : 0;
 
-        return Column(
-          children: playedRankings.map((ranking) {
-            final category = categories.firstWhere(
-              (c) => c.id == ranking.categoryId,
-              orElse: () => CategoryModel(id: '', name: 'Môn thể thao', slug: '', description: ''),
-            );
-            final categoryName = category.name.isNotEmpty ? category.name : 'Xếp hạng';
-            
-            final elo = ranking.eloPoints;
-            final winRate = ranking.winRate;
-            final matchesPlayed = ranking.matchesPlayed;
-            final matchesWon = ranking.matchesWon;
-            final matchesLost = ranking.matchesLost;
-
-            // Elo Progress calculation (Max 2500)
-            final double progressPercent = (elo / 2500.0).clamp(0.0, 1.0);
-            final int percentInt = (progressPercent * 100).toInt();
-
-            return Container(
-              margin: const EdgeInsets.only(left: 20, right: 20, bottom: 14),
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.3),
-                    blurRadius: 14,
-                    offset: const Offset(0, 5),
-                  )
-                ],
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              _buildRankDonutSummary(
+                context,
+                ranking: ranking,
+                losses: losses,
+                winRate: winRate,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Top Row: Category + Tier Badge + Elo Badge
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.shield_rounded, color: Color(0xFF60A5FA), size: 20),
-                          const SizedBox(width: 6),
-                          Text(
-                            categoryName.toUpperCase(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.6,
-                            ),
-                          ),
-                        ],
+              const SizedBox(height: 16),
+              _buildEloProgressSummary(
+                context,
+                ranking: ranking,
+                progress: progress.percent / 100.0,
+                nextLabel: nextLabel,
+                eloNeed: eloNeed,
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          height: 220,
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: colors.border),
+          ),
+        ),
+      ),
+      error: (_, __) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: _buildUnrankedCard(context),
+      ),
+    );
+  }
+
+  Widget _buildRankDonutSummary(
+    BuildContext context, {
+    required PlayerRanking ranking,
+    required int losses,
+    required double winRate,
+  }) {
+    final colors = context.colors;
+    final rankLetter = _rankLetter(ranking.tierName);
+    final rankLabel = ranking.tierName.isNotEmpty ? ranking.tierName : 'Chưa xếp hạng';
+    const winColor = Color(0xFF2F9B57);
+    const lossColor = Color(0xFFD36B2C);
+    const goldColor = Color(0xFFD9A441);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildWinLossStat(
+                context,
+                label: 'Thắng',
+                value: ranking.matchesWon,
+                icon: Icons.emoji_events_outlined,
+                color: winColor,
+              ),
+              SizedBox(
+                width: 132,
+                height: 132,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CustomPaint(
+                      size: const Size.square(132),
+                      painter: _RankDonutPainter(
+                        winRate: winRate,
+                        winColor: winColor,
+                        lossColor: lossColor,
+                        trackColor: colors.border.withValues(alpha: 0.5),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'RANK',
+                          style: TextStyle(
+                            color: colors.textPrimary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.1,
+                          ),
                         ),
-                        child: Text(
-                          '$elo ELO',
+                        Text(
+                          rankLetter,
                           style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
+                            color: goldColor,
+                            fontSize: 38,
+                            height: 0.95,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Middle Row: Donut Chart + Main Stats
-                  Row(
-                    children: [
-                      // Circular Donut Chart (Winrate)
-                      SizedBox(
-                        width: 64,
-                        height: 64,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              value: (winRate / 100.0).clamp(0.0, 1.0),
-                              strokeWidth: 6,
-                              backgroundColor: Colors.white.withValues(alpha: 0.15),
-                              color: const Color(0xFF34D399),
-                            ),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '${winRate.toStringAsFixed(0)}%',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                                const Text(
-                                  'THẮNG',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 18),
-
-                      // Rank & Match Details
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  ranking.tierName.isNotEmpty ? ranking.tierName : 'Tier D',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Hạng #${ranking.rank}',
-                                  style: const TextStyle(
-                                    color: Color(0xFF93C5FD),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Tổng $matchesPlayed trận · $matchesWon thắng / $matchesLost bại',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.8),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Bottom Bar: Progress Bar to Rank Up
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Tiến trình cấp hạng',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
+                        Text(
+                          rankLabel.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: goldColor,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.8,
                           ),
-                          Text(
-                            '$percentInt%',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: LinearProgressIndicator(
-                          value: progressPercent,
-                          minHeight: 7,
-                          backgroundColor: Colors.white.withValues(alpha: 0.15),
-                          color: const Color(0xFF60A5FA),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              _buildWinLossStat(
+                context,
+                label: 'Thua',
+                value: losses,
+                icon: Icons.heart_broken_outlined,
+                color: lossColor,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          RichText(
+            text: TextSpan(
+              style: TextStyle(color: colors.textSecondary, fontSize: 13),
+              children: [
+                const TextSpan(text: 'Tỷ lệ thắng '),
+                TextSpan(
+                  text: '${(winRate * 100).toStringAsFixed(1)}%',
+                  style: const TextStyle(
+                    color: winColor,
+                    fontWeight: FontWeight.w800,
                   ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWinLossStat(
+    BuildContext context, {
+    required String label,
+    required int value,
+    required IconData icon,
+    required Color color,
+  }) {
+    final colors = context.colors;
+    return SizedBox(
+      width: 72,
+      child: Column(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 2),
+          Text('$value', style: TextStyle(color: color, fontSize: 24, height: 1, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 2),
+          Text('trận', style: TextStyle(color: colors.textMuted, fontSize: 10)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEloProgressSummary(
+    BuildContext context, {
+    required PlayerRanking ranking,
+    required double progress,
+    required String nextLabel,
+    required int eloNeed,
+  }) {
+    final colors = context.colors;
+    final fmt = NumberFormat('#,###');
+    const goldColor = Color(0xFFD9A441);
+    final nextElo = ranking.eloPoints + eloNeed;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border),
+        boxShadow: [BoxShadow(color: const Color(0xFF0F172A).withValues(alpha: 0.07), blurRadius: 18, offset: const Offset(0, 8))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('TIẾN TRÌNH ELO', style: TextStyle(color: colors.textPrimary, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.8)),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: goldColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: goldColor.withValues(alpha: 0.35)),
+                ),
+                child: Text('RANK ${_rankLetter(ranking.tierName)}', style: const TextStyle(color: goldColor, fontSize: 11, fontWeight: FontWeight.w900)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(color: goldColor.withValues(alpha: 0.12), shape: BoxShape.circle),
+                child: const Icon(Icons.emoji_events_outlined, color: goldColor, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(fmt.format(ranking.eloPoints), style: TextStyle(color: colors.textPrimary, fontSize: 26, height: 1, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 4),
+                    Text(nextLabel.isNotEmpty ? 'Tiến gần hơn đến $nextLabel' : 'Tiếp tục tích lũy điểm ELO', style: TextStyle(color: colors.textMuted, fontSize: 12, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(value: progress.clamp(0.0, 1.0), minHeight: 10, backgroundColor: colors.border.withValues(alpha: 0.65), color: goldColor),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(fmt.format(ranking.eloPoints), style: TextStyle(color: colors.textMuted, fontSize: 11)),
+              Text(fmt.format(nextElo), style: TextStyle(color: colors.textMuted, fontSize: 11)),
+            ],
+          ),
+          if (eloNeed > 0) ...[
+            const SizedBox(height: 12),
+            RichText(
+              text: TextSpan(
+                style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                children: [
+                  const TextSpan(text: 'Cần thêm '),
+                  TextSpan(text: fmt.format(eloNeed), style: const TextStyle(color: goldColor, fontWeight: FontWeight.w900)),
+                  TextSpan(text: ' ELO để đạt $nextLabel'),
                 ],
               ),
-            );
-          }).toList(),
-        );
-      },
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        child: SizedBox(
-          height: 100,
-          child: Center(child: CircularProgressIndicator(color: AppTheme.primary)),
-        ),
+            ),
+          ],
+        ],
       ),
-      error: (e, _) => const SizedBox.shrink(),
     );
+  }
+
+  Widget _buildUnrankedCard(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border),
+        boxShadow: [BoxShadow(color: const Color(0xFF0F172A).withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 7))],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(color: colors.textMuted.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Icon(Icons.shield_outlined, color: colors.textMuted, size: 24),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Chưa xếp hạng', style: TextStyle(color: colors.textPrimary, fontSize: 15, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 4),
+                Text('Tham gia thêm các trận đấu xếp hạng để được xếp hạng chính thức trên hệ thống.', style: TextStyle(color: colors.textMuted, fontSize: 12, height: 1.35)),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded, color: colors.textMuted, size: 22),
+        ],
+      ),
+    );
+  }
+
+  String _rankLetter(String tierName) {
+    final upper = tierName.trim().toUpperCase();
+    if (upper.isEmpty) return '-';
+    if (upper.contains('S')) return 'S';
+    if (upper.contains('A')) return 'A';
+    if (upper.contains('B')) return 'B';
+    if (upper.contains('C')) return 'C';
+    if (upper.contains('D')) return 'D';
+    return upper.characters.first;
   }
 
   // ─── ELO PROGRESS CHART SECTION ─────────────────────────────────────
@@ -1692,5 +1773,72 @@ class ProfileShimmerLoading extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+
+class _RankDonutPainter extends CustomPainter {
+  final double winRate;
+  final Color winColor;
+  final Color lossColor;
+  final Color trackColor;
+
+  const _RankDonutPainter({
+    required this.winRate,
+    required this.winColor,
+    required this.lossColor,
+    required this.trackColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.shortestSide - 12) / 2;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    const strokeWidth = 9.0;
+    const start = -1.57079632679;
+    const gap = 0.06;
+    final safeWinRate = winRate.clamp(0.0, 1.0);
+    final winSweep = (6.28318530718 * safeWinRate) - gap;
+    final lossSweep = (6.28318530718 * (1 - safeWinRate)) - gap;
+
+    final basePaint = Paint()
+      ..color = trackColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+    canvas.drawCircle(center, radius, basePaint);
+
+    if (safeWinRate > 0) {
+      final winPaint = Paint()
+        ..color = winColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(rect, start, winSweep.clamp(0.0, 6.28318530718), false, winPaint);
+    }
+
+    if (safeWinRate < 1) {
+      final lossPaint = Paint()
+        ..color = lossColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(
+        rect,
+        start + (6.28318530718 * safeWinRate) + gap,
+        lossSweep.clamp(0.0, 6.28318530718),
+        false,
+        lossPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _RankDonutPainter oldDelegate) {
+    return oldDelegate.winRate != winRate ||
+        oldDelegate.winColor != winColor ||
+        oldDelegate.lossColor != lossColor ||
+        oldDelegate.trackColor != trackColor;
   }
 }
