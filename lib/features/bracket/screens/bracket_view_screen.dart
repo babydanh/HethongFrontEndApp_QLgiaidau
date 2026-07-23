@@ -80,7 +80,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
 
     return Scaffold(
       backgroundColor: context.colors.bgDark,
-      appBar: AppBar(
+      appBar: widget.isEmbedded ? null : AppBar(
         backgroundColor: context.colors.bgDark,
         elevation: 0,
         leading: widget.isEmbedded
@@ -100,7 +100,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
               ? tournament.name
               : 'Bảng thi đấu',
         ),
-        actions: (!widget.isEmbedded && auth.role != UserRole.admin)
+        actions: auth.role != UserRole.admin
             ? [
                 IconButton(
                   icon: Icon(
@@ -279,11 +279,12 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
       return true;
     }).toList();
 
-    return Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
+      physics: const BouncingScrollPhysics(
+        parent: AlwaysScrollableScrollPhysics(),
+      ),
+      children: [
           // ── Diagram Access Banner ──
           if (!isRoundRobin)
             Container(
@@ -514,46 +515,40 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
           const SizedBox(height: 6),
 
           // ── MATCHES LIST ──
-          Expanded(
-            child: filteredMatches.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_off_rounded,
-                          size: 40,
-                          color: colors.textMuted.withValues(alpha: 0.4),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Không tìm thấy trận đấu phù hợp',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: colors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: filteredMatches.length,
-                    itemBuilder: (context, index) {
-                      return MatchTableRow(
-                        match: filteredMatches[index],
-                        isReadOnly: isReadOnly,
-                        totalRounds: totalRounds,
-                        tournamentId: widget.tournamentId,
-                        isReferee: widget.isReferee,
-                      );
-                    },
+          if (filteredMatches.isEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.search_off_rounded,
+                    size: 40,
+                    color: colors.textMuted.withValues(alpha: 0.4),
                   ),
-          ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Không tìm thấy trận đấu phù hợp',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          for (final match in filteredMatches)
+            MatchTableRow(
+              match: match,
+              isReadOnly: isReadOnly,
+              totalRounds: totalRounds,
+              tournamentId: widget.tournamentId,
+              isReferee: widget.isReferee,
+            ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildFilterRow({
