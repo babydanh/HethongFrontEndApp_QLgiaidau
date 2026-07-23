@@ -53,7 +53,7 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
             curve: Curves.easeOutCubic,
             alignment: Alignment.topCenter,
             child: SizedBox(
-              height: compact ? 0 : 200,
+              height: compact ? 0 : 125,
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 160),
                 opacity: compact ? 0 : 1,
@@ -71,7 +71,7 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
         ),
         Container(
           color: colors.bgDark,
-          padding: EdgeInsets.fromLTRB(16, compact ? 10 : 14, 16, 8),
+          padding: EdgeInsets.fromLTRB(14, compact ? 6 : 8, 14, 6),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -84,7 +84,7 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
                     : Column(
                         children: [
                           _HeaderBadges(tournament: widget.tournament),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
                         ],
                       ),
               ),
@@ -93,9 +93,9 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
                 children: [
                   _TournamentLogo(
                     tournament: widget.tournament,
-                    size: compact ? 86 : 52,
+                    size: compact ? 38 : 54,
                   ),
-                  SizedBox(width: compact ? 14 : 12),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: _HeaderInfo(
                       tournament: widget.tournament,
@@ -104,9 +104,9 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
                   ),
                 ],
               ),
-              SizedBox(height: compact ? 10 : 14),
+              SizedBox(height: compact ? 6 : 8),
               _HeaderMeta(tournament: widget.tournament),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Divider(color: colors.border, height: 1),
             ],
           ),
@@ -267,11 +267,11 @@ class _HeaderInfo extends StatelessWidget {
           duration: const Duration(milliseconds: 140),
           curve: Curves.easeOut,
           style: TextStyle(
-            fontSize: compact ? 20 : 24,
+            fontSize: compact ? 15 : 18,
             fontWeight: FontWeight.w900,
             color: colors.textPrimary,
             height: 1.18,
-            letterSpacing: -0.45,
+            letterSpacing: -0.35,
           ),
           child: Text(
             tournament.name.toUpperCase(),
@@ -279,7 +279,7 @@ class _HeaderInfo extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
         _HeaderActionTags(tournament: tournament),
       ],
     );
