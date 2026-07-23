@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 
 String _resolveImageUrl(String? url) {
   if (url == null || url.isEmpty) return '';
@@ -20,6 +21,10 @@ class AchievementsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
 
+    // Get logged-in user profile ID
+    final profileAsync = ref.watch(userProfileProvider);
+    final currentUserId = profileAsync.asData?.value.id ?? '';
+
     // Fetch real tournaments from API
     final allTournamentsAsync = ref.watch(tournamentsProvider);
     final followedTournamentsAsync = ref.watch(followedTournamentsProvider);
@@ -29,10 +34,14 @@ class AchievementsTab extends ConsumerWidget {
 
     final List<_AchievementData> apiAchievements = [];
 
-    // Filter real API tournaments: ONLY COMPLETED TOURNAMENTS WITH ACHIEVEMENTS
-    final combinedTournaments = {...realTournaments, ...followedTournaments}.toList();
-    for (int i = 0; i < combinedTournaments.length; i++) {
-      final t = combinedTournaments[i];
+    // Filter real API tournaments: ONLY COMPLETED TOURNAMENTS WHERE LOGGED-IN USER PARTICIPATED OR CREATED
+    final userTournaments = [...realTournaments, ...followedTournaments].where((t) {
+      if (currentUserId.isEmpty) return false;
+      return t.creatorId == currentUserId;
+    }).toList();
+
+    for (int i = 0; i < userTournaments.length; i++) {
+      final t = userTournaments[i];
       final statusLower = t.status.toLowerCase();
       final isCompleted = statusLower == 'completed' || statusLower == 'finished';
 
