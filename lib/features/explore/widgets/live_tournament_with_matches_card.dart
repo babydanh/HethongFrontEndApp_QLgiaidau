@@ -51,7 +51,6 @@ class _LiveTournamentWithMatchesCardState
   Widget build(BuildContext context) {
     final matchesAsync = ref.watch(matchesProvider(widget.tournament.id));
     final teamsAsync = ref.watch(teamsProvider(widget.tournament.id));
-    final colors = context.colors;
     final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl);
 
     return Container(
