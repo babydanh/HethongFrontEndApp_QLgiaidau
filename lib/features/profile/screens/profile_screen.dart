@@ -31,6 +31,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _uploading = false;
   bool _uploadingCover = false;
   int _activeTab = 0;
+  String _selectedSport = 'all';
 
   Future<void> _pickImage(bool isCover) async {
     final colors = context.colors;
@@ -293,14 +294,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
           // Tab Content
           if (_activeTab == 0) ...[
+            // Category selector chips placed at the VERY TOP of Tab 0
+            _buildSportFilterChips(colors),
+            const SizedBox(height: 16),
+
             // Dynamic rankings card list based on actual ELO and category ranks
             _buildRankingsSection(context),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // Achievements & Trophies Section
-            _buildSectionTitle(colors, 'Thành tích & Danh hiệu'),
-            const SizedBox(height: 10),
-            const AchievementsTab(),
+            // Achievements & Stats (Compact & Filtered by selectedSport)
+            AchievementsTab(selectedSport: _selectedSport),
             const SizedBox(height: 24),
 
             // My Tournaments Section
@@ -333,6 +336,62 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 32),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildSportFilterChips(AppColorsExtension colors) {
+    final sports = const [
+      {'id': 'all', 'label': 'Tất cả'},
+      {'id': 'pickleball', 'label': '🏓 Pickleball'},
+      {'id': 'badminton', 'label': '🏸 Cầu lông'},
+      {'id': 'football', 'label': '⚽ Bóng đá'},
+      {'id': 'tennis', 'label': '🎾 Tennis'},
+    ];
+
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: sports.length,
+        separatorBuilder: (_, index) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final sport = sports[index];
+          final isSelected = _selectedSport == sport['id'];
+          return GestureDetector(
+            onTap: () => setState(() => _selectedSport = sport['id']!),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: isSelected ? AppTheme.primary : colors.bgCard,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSelected ? AppTheme.primary : colors.border,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: AppTheme.primary.withValues(alpha: 0.25),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        )
+                      ]
+                    : null,
+              ),
+              child: Text(
+                sport['label']!,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected ? Colors.white : colors.textSecondary,
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -3,32 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
 /// Tab hiển thị thành tích thi đấu của người dùng.
-/// Hỗ trợ lọc đa môn thể thao (Pickleball, Cầu lông, Bóng đá, Tennis...).
-class AchievementsTab extends ConsumerStatefulWidget {
-  const AchievementsTab({super.key});
+class AchievementsTab extends ConsumerWidget {
+  final String selectedSport;
+  const AchievementsTab({super.key, this.selectedSport = 'all'});
 
   @override
-  ConsumerState<AchievementsTab> createState() => _AchievementsTabState();
-}
-
-class _AchievementsTabState extends ConsumerState<AchievementsTab> {
-  String _selectedSport = 'all';
-
-  final List<Map<String, String>> _sports = const [
-    {'id': 'all', 'label': 'Tất cả'},
-    {'id': 'pickleball', 'label': '🏓 Pickleball'},
-    {'id': 'badminton', 'label': '🏸 Cầu lông'},
-    {'id': 'football', 'label': '⚽ Bóng đá'},
-    {'id': 'tennis', 'label': '🎾 Tennis'},
-  ];
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
 
     final filteredAchievements = _sampleAchievements.where((a) {
-      if (_selectedSport == 'all') return true;
-      return a.sportId == _selectedSport;
+      if (selectedSport == 'all') return true;
+      return a.sportId == selectedSport;
     }).toList();
 
     final wins = filteredAchievements.where((a) => a.achievementLabel == 'Vô địch').length;
@@ -38,67 +23,18 @@ class _AchievementsTabState extends ConsumerState<AchievementsTab> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ─── SPORT FILTER CHIPS ──────────────────────────────────────
-        SizedBox(
-          height: 38,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: _sports.length,
-            separatorBuilder: (_, index) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final sport = _sports[index];
-              final isSelected = _selectedSport == sport['id'];
-              return GestureDetector(
-                onTap: () => setState(() => _selectedSport = sport['id']!),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppTheme.primary : colors.bgCard,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected ? AppTheme.primary : colors.border,
-                    ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: AppTheme.primary.withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
-                            )
-                          ]
-                        : null,
-                  ),
-                  child: Text(
-                    sport['label']!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                      color: isSelected ? Colors.white : colors.textSecondary,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        // ─── STATS ROW ──────────────────────────────────────────────
+        // ─── Stats Row (Compact) ──────────────────────────────────────────
         _buildStatsRow(context, wins: wins, matches: totalMatches, eloGain: totalEloGain),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
 
-        // ─── SECTION TITLE ──────────────────────────────────────────
+        // ─── Section Title ──────────────────────────────────────────
         _buildSectionTitle(colors, 'Thành tích gần đây'),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
 
-        // ─── ACHIEVEMENT CARDS ──────────────────────────────────────
+        // ─── Achievement Cards ──────────────────────────────────────
         if (filteredAchievements.isEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             child: Center(
               child: Text(
                 'Chưa có thành tích cho môn thể thao này',
@@ -118,7 +54,7 @@ class _AchievementsTabState extends ConsumerState<AchievementsTab> {
     );
   }
 
-  // ─── STATS ROW ──────────────────────────────────────────────────
+  // ─── STATS ROW (Compact Height) ──────────────────────────────────
   Widget _buildStatsRow(
     BuildContext context, {
     required int wins,
@@ -134,19 +70,19 @@ class _AchievementsTabState extends ConsumerState<AchievementsTab> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF1E3A8A), Color(0xFF2563EB), Color(0xFF3B82F6)],
+            colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF2563EB).withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+              color: const Color(0xFF2563EB).withValues(alpha: 0.22),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -154,15 +90,17 @@ class _AchievementsTabState extends ConsumerState<AchievementsTab> {
           children: stats.map((stat) {
             return Expanded(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(stat.icon, color: Colors.white70, size: 20),
-                  const SizedBox(height: 6),
+                  Icon(stat.icon, color: Colors.white70, size: 18),
+                  const SizedBox(height: 4),
                   Text(
                     stat.value,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: FontWeight.w900,
+                      height: 1,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -170,7 +108,7 @@ class _AchievementsTabState extends ConsumerState<AchievementsTab> {
                     stat.label,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -190,20 +128,20 @@ class _AchievementsTabState extends ConsumerState<AchievementsTab> {
         children: [
           Container(
             width: 3,
-            height: 18,
+            height: 16,
             decoration: BoxDecoration(
               color: AppTheme.primary,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Text(
             title,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w800,
               color: colors.textSecondary,
-              letterSpacing: 0.3,
+              letterSpacing: 0.2,
             ),
           ),
         ],
@@ -298,6 +236,7 @@ const _sampleAchievements = <_AchievementData>[
   ),
 ];
 
+// ─── COMPACT LOW-HEIGHT ACHIEVEMENT CARD ────────────────────────────
 class _AchievementCard extends StatelessWidget {
   final _AchievementData achievement;
   const _AchievementCard({required this.achievement});
@@ -307,43 +246,36 @@ class _AchievementCard extends StatelessWidget {
     final colors = context.colors;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: colors.bgCard,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: colors.border),
       ),
       child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   achievement.cardColor,
-                  achievement.cardColor.withValues(alpha: 0.65),
+                  achievement.cardColor.withValues(alpha: 0.7),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: achievement.cardColor.withValues(alpha: 0.28),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               achievement.icon,
               color: Colors.white,
-              size: 24,
+              size: 20,
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,41 +283,41 @@ class _AchievementCard extends StatelessWidget {
                 Text(
                   achievement.tournamentName,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: colors.textPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Row(
                   children: [
                     Icon(
                       Icons.calendar_today_rounded,
-                      size: 12,
+                      size: 11,
                       color: colors.textMuted,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       achievement.date,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         color: colors.textSecondary,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Icon(
                       Icons.trending_up_rounded,
-                      size: 12,
+                      size: 11,
                       color: colors.success,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 3),
                     Text(
                       achievement.eloBoost,
                       style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
                         color: colors.success,
                       ),
                     ),
@@ -395,10 +327,10 @@ class _AchievementCard extends StatelessWidget {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(
               color: achievement.cardColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: achievement.cardColor.withValues(alpha: 0.25),
               ),
