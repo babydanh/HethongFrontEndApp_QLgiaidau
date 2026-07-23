@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
-/// Redesigned match card for knockout bracket views.
+/// Clean, compact schedule match card matching design spec.
 /// Features:
-/// - Card: borderRadius: 12, padding: 12, bgCard background
-/// - Round name, team1 vs team2, score
-/// - Winner: bold text + border-left accent
-/// - Live: red dot + pulsing border animation
+/// - Left: Double overlapping avatars, Team 1 & Team 2 names, Scores, VS badge with set scores
+/// - Right: LIVE badge, Scheduled Time, Court location, Group / Round info
 class MatchTableRow extends StatelessWidget {
   final MatchModel match;
   final bool isReadOnly;
@@ -38,347 +35,430 @@ class MatchTableRow extends StatelessWidget {
     return 'Vòng $round';
   }
 
+  String _getSingleInitials(String s) {
+    final parts = s.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts[parts.length - 2][0]}${parts[parts.length - 1][0]}'.toUpperCase();
+    }
+    return s.isNotEmpty ? s[0].toUpperCase() : '?';
+  }
+
+  List<String> _getInitials(String name) {
+    final parts = name.split('-').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    if (parts.length >= 2) {
+      return [_getSingleInitials(parts[0]), _getSingleInitials(parts[1])];
+    }
+    final words = name.trim().split(' ');
+    if (words.length >= 2) {
+      return [words[0][0].toUpperCase(), words[1][0].toUpperCase()];
+    }
+    return [name.isNotEmpty ? name[0].toUpperCase() : '?', '?'];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final isLive = match.isLive;
+    final isCompleted = match.isCompleted;
 
-    // Round name
-    final branch = match.bracketPosition.bracket;
-    final String roundName;
-    if (branch == 'grand_final' || branch == 'grand_final_reset') {
-      roundName = 'Chung kết tổng';
-    } else if (branch == 'losers') {
-      roundName = 'Nhánh thua Vòng ${match.round}';
+    final t1Initials = _getInitials(match.team1Name);
+    final t2Initials = _getInitials(match.team2Name);
+
+    // Calculate set score pill text based on match settings / sets
+    String setPillText = '';
+    if (match.sets.isNotEmpty) {
+      final p1Sets = match.sets.where((s) => s.score1 > s.score2).length;
+      final p2Sets = match.sets.where((s) => s.score2 > s.score1).length;
+      setPillText = '$p1Sets - $p2Sets';
     } else {
-      roundName = _getRoundName(match.round, totalRounds);
+      setPillText = '${match.score1} - ${match.score2}';
+    }
+
+    // Set details breakdown string if multiple sets exist (e.g. "11-7, 9-11, 11-8")
+    String setDetailsStr = '';
+    if (match.sets.length > 1) {
+      setDetailsStr = match.sets.map((s) => '${s.score1}-${s.score2}').join(', ');
+    }
+
+    // Round / Group / Match location label
+    final branch = match.bracketPosition.bracket;
+    final String roundLabel;
+    if (branch == 'grand_final' || branch == 'grand_final_reset') {
+      roundLabel = 'Chung kết tổng';
+    } else if (branch == 'losers') {
+      roundLabel = 'Nhánh thua Vòng ${match.round}';
+    } else if (match.groupName != null && match.groupName!.isNotEmpty) {
+      roundLabel = '${match.groupName} - Trận ${match.matchNumber}';
+    } else {
+      roundLabel = '${_getRoundName(match.round, totalRounds)} - Trận ${match.matchNumber}';
     }
 
     // Time string
-    final String timeStr;
-    if (match.scheduledTime != null) {
-      timeStr = DateFormat('HH:mm - dd/MM/yyyy').format(match.scheduledTime!.toLocal());
-    } else {
-      timeStr = 'Chưa xếp lịch';
-    }
+    final String timeStr = match.scheduledTime != null
+        ? DateFormat('HH:mm').format(match.scheduledTime!.toLocal())
+        : '--:--';
 
-    // Status colors
-    final bool isLive = match.isLive;
-    final bool isCompleted = match.isCompleted;
-
-    // Winner detection
-    final bool isT1Winner = isCompleted && match.winnerId == match.team1Id;
-    final bool isT2Winner = isCompleted && match.winnerId == match.team2Id;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-          border: Border(
-            left: BorderSide(
-              color: isT1Winner || isT2Winner
-                  ? colors.success
-                  : isLive
-                      ? colors.error
-                      : colors.border,
-              width: isLive ? 5 : (isT1Winner || isT2Winner ? 4 : 1),
-            ),
-            top: BorderSide(
-              color: isLive ? colors.error.withValues(alpha: 0.7) : colors.border,
-              width: isLive ? 1.5 : 1,
-            ),
-            right: BorderSide(
-              color: isLive ? colors.error.withValues(alpha: 0.7) : colors.border,
-              width: isLive ? 1.5 : 1,
-            ),
-            bottom: BorderSide(
-              color: isLive ? colors.error.withValues(alpha: 0.7) : colors.border,
-              width: isLive ? 1.5 : 1,
-            ),
-          ),
-          boxShadow: [
-            if (isLive)
-              BoxShadow(
-                color: colors.error.withValues(alpha: 0.15),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              )
-            else
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-          ],
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isLive ? const Color(0xFFFCA5A5) : const Color(0xFFF1F5F9),
+          width: isLive ? 1.5 : 1,
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppTheme.radiusXL - 1),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => context.push('/live/${match.id}'),
-              child: Padding(
-                padding: const EdgeInsets.all(AppTheme.spacingMD),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // ─── Top row: Round name + Status ───
-                    Row(
-                      children: [
-                        // Live indicator
-                        if (isLive) ...[
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: colors.error,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: colors.error.withValues(alpha: 0.6),
-                                  blurRadius: 6,
-                                  spreadRadius: 1,
+        boxShadow: [
+          BoxShadow(
+            color: isLive
+                ? const Color(0xFFEF4444).withValues(alpha: 0.08)
+                : const Color(0xFF0F172A).withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () => context.push('/live/${match.id}'),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                // ── Left Main Content (Teams & Scores) ──
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Team 1 Row
+                      Row(
+                        children: [
+                          _DoubleAvatarWidget(
+                            initial1: t1Initials[0],
+                            initial2: t1Initials[1],
+                            color: const Color(0xFF0284C7),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              match.team1Name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: match.winnerId == match.team1Id
+                                    ? FontWeight.w800
+                                    : FontWeight.w700,
+                                color: const Color(0xFF0F172A),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${match.score1}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Center VS & Sets Pill Row
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 52),
+                            const Text(
+                              'VS',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFF6FF),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFBFDBFE), width: 0.8),
+                              ),
+                              child: Text(
+                                setPillText,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF2563EB),
                                 ),
-                              ],
+                              ),
                             ),
+                            if (setDetailsStr.isNotEmpty) ...[
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  '($setDetailsStr)',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Color(0xFF64748B),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+
+                      // Team 2 Row
+                      Row(
+                        children: [
+                          _DoubleAvatarWidget(
+                            initial1: t2Initials[0],
+                            initial2: t2Initials[1],
+                            color: const Color(0xFF16A34A),
                           ),
                           const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              match.team2Name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: match.winnerId == match.team2Id
+                                    ? FontWeight.w800
+                                    : FontWeight.w700,
+                                color: const Color(0xFF0F172A),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
                           Text(
-                            'LIVE',
-                            style: TextStyle(
-                              fontSize: 10,
+                            '${match.score2}',
+                            style: const TextStyle(
+                              fontSize: 18,
                               fontWeight: FontWeight.w900,
-                              color: colors.error,
-                              letterSpacing: 1,
+                              color: Color(0xFF0F172A),
                             ),
                           ),
-                          const SizedBox(width: 10),
                         ],
-                        if (isCompleted) ...[
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: colors.success,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'KẾT THÚC',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                              color: colors.success,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                        ],
-                        if (!isLive && !isCompleted) ...[
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: colors.textMuted.withValues(alpha: 0.5),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'SẮP ĐẤU',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textMuted,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                        ],
-                        // Round pill
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Vertical Divider Line ──
+                Container(
+                  height: 70,
+                  width: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 12),
+                  color: const Color(0xFFF1F5F9),
+                ),
+
+                // ── Right Side Info Column (Status, Time, Court, Round) ──
+                SizedBox(
+                  width: 110,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Status Badge
+                      if (isLive)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppTheme.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
+                            color: const Color(0xFFFEF2F2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFFCA5A5)),
                           ),
-                          child: Text(
-                            roundName.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              color: AppTheme.primary,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // ─── Team 1 Row ───
-                    _buildTeamRow(
-                      name: match.team1Name,
-                      score: match.score1,
-                      match: match,
-                      isWinner: isT1Winner,
-                      isTeam1: true,
-                      colors: colors,
-                    ),
-                    const SizedBox(height: 6),
-
-                    // ─── VS Divider ───
-                    Row(
-                      children: [
-                        const Expanded(child: Divider()),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            'VS',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: colors.textMuted,
-                            ),
-                          ),
-                        ),
-                        const Expanded(child: Divider()),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-
-                    // ─── Team 2 Row ───
-                    _buildTeamRow(
-                      name: match.team2Name,
-                      score: match.score2,
-                      match: match,
-                      isWinner: isT2Winner,
-                      isTeam1: false,
-                      colors: colors,
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // ─── Footer: Time + Court + Referee action ───
-                    Row(
-                      children: [
-                        Icon(Icons.schedule_rounded, size: 12, color: colors.textMuted),
-                        const SizedBox(width: 4),
-                        Text(
-                          timeStr,
-                          style: TextStyle(fontSize: 10, color: colors.textMuted),
-                        ),
-                        const SizedBox(width: 12),
-                        Icon(Icons.location_on_rounded, size: 12, color: colors.textMuted),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            match.court.isNotEmpty ? match.court : 'Chưa xếp sân',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: colors.textMuted,
-                              fontStyle: match.court.isNotEmpty ? null : FontStyle.italic,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (isReferee && (match.isLive || match.isScheduled)) ...[
-                          const SizedBox(width: 8),
-                          Row(
+                          child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'Tính điểm',
+                                'LIVE',
                                 style: TextStyle(
                                   fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: match.isLive ? colors.error : AppTheme.primary,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFFDC2626),
                                 ),
                               ),
-                              const SizedBox(width: 2),
-                              Icon(
-                                Icons.arrow_forward_ios_rounded,
-                                size: 10,
-                                color: match.isLive ? colors.error : AppTheme.primary,
-                              ),
+                              SizedBox(width: 3),
+                              Icon(Icons.sensors, size: 10, color: Color(0xFFDC2626)),
                             ],
                           ),
+                        )
+                      else if (isCompleted)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0FDF4),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFF86EFAC)),
+                          ),
+                          child: const Text(
+                            'ĐÃ KẾT THÚC',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF16A34A),
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: const Text(
+                            'SẮP ĐẤU',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 6),
+
+                      // Time
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          const Icon(Icons.access_time_rounded, size: 11, color: Color(0xFF64748B)),
+                          const SizedBox(width: 4),
+                          Text(
+                            timeStr,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
                         ],
-                      ],
-                    ),
-                  ],
+                      ),
+
+                      const SizedBox(height: 3),
+
+                      // Court
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          const Icon(Icons.grid_view_rounded, size: 11, color: Color(0xFF64748B)),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              match.court.isNotEmpty ? match.court : 'Chưa xếp sân',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.end,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 3),
+
+                      // Group / Round
+                      Text(
+                        roundLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildTeamRow({
-    required String name,
-    required int score,
-    required MatchModel match,
-    required bool isWinner,
-    required bool isTeam1,
-    required AppColorsExtension colors,
-  }) {
-    return Row(
-      children: [
-        // Trophy icon for winner
-        if (isWinner)
-          Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: Icon(Icons.emoji_events_rounded, size: 14, color: AppTheme.accent),
-          ),
-        // Team name
-        Expanded(
-          child: Text(
-            name,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: isWinner ? FontWeight.w800 : FontWeight.w500,
-              color: isWinner ? colors.textPrimary : colors.textSecondary,
+class _DoubleAvatarWidget extends StatelessWidget {
+  final String initial1;
+  final String initial2;
+  final Color color;
+
+  const _DoubleAvatarWidget({
+    required this.initial1,
+    required this.initial2,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 44,
+      height: 26,
+      child: Stack(
+        children: [
+          Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(color: color, width: 1.5),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const SizedBox(width: 8),
-        // Score badge
-        Container(
-          constraints: const BoxConstraints(minWidth: 36),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: isWinner
-                ? colors.success.withValues(alpha: 0.15)
-                : (match.isLive ? colors.error.withValues(alpha: 0.1) : colors.bgSurface),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: isWinner
-                  ? colors.success.withValues(alpha: 0.3)
-                  : (match.isLive ? colors.error.withValues(alpha: 0.3) : colors.border),
-              width: 0.5,
+            child: Center(
+              child: Text(
+                initial1,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
             ),
           ),
-          child: Text(
-            score.toString(),
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: isWinner
-                  ? colors.success
-                  : (match.isLive ? colors.error : colors.textPrimary),
+          Positioned(
+            left: 16,
+            child: Container(
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: color, width: 1.5),
+              ),
+              child: Center(
+                child: Text(
+                  initial2,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ),
             ),
-            textAlign: TextAlign.center,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
