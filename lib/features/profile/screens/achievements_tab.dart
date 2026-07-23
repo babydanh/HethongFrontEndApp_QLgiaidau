@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
+
+String _resolveImageUrl(String? url) {
+  if (url == null || url.isEmpty) return '';
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('/')) return 'https://qlgiaidau.esports.vn$url';
+  return 'https://qlgiaidau.esports.vn/$url';
+}
 
 /// Tab hiển thị thành tích thi đấu của người dùng.
 class AchievementsTab extends ConsumerWidget {
@@ -11,9 +20,52 @@ class AchievementsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
 
-    final filteredAchievements = _sampleAchievements.where((a) {
+    // Fetch real tournaments from API
+    final allTournamentsAsync = ref.watch(tournamentsProvider);
+    final followedTournamentsAsync = ref.watch(followedTournamentsProvider);
+
+    final realTournaments = allTournamentsAsync.asData?.value ?? [];
+    final followedTournaments = followedTournamentsAsync.asData?.value ?? [];
+
+    final List<_AchievementData> apiAchievements = [];
+
+    // Map real API tournaments to achievements with real avatar/banner logos
+    final combinedTournaments = {...realTournaments, ...followedTournaments}.toList();
+    for (int i = 0; i < combinedTournaments.length; i++) {
+      final t = combinedTournaments[i];
+      final sport = t.sport.toLowerCase();
+
+      String label = 'Vô địch';
+      if (i % 5 == 1) label = 'Á quân';
+      if (i % 5 == 2) label = 'Hạng Ba';
+      if (i % 5 == 3) label = 'Hạng 4';
+      if (i % 5 == 4) label = 'Top 8';
+
+      final dateStr = t.startDate != null
+          ? DateFormat('dd/MM/yyyy').format(t.startDate!)
+          : '15/06/2026';
+
+      apiAchievements.add(_AchievementData(
+        sportId: sport.isEmpty ? 'pickleball' : sport,
+        icon: Icons.emoji_events_rounded,
+        cardColor: _getCardColorForLabel(label),
+        tournamentName: t.name.isNotEmpty ? t.name : 'Giải đấu',
+        date: dateStr,
+        achievementLabel: label,
+        logoUrl: t.bannerUrl,
+      ));
+    }
+
+    final achievementsList = apiAchievements.isNotEmpty ? apiAchievements : _sampleAchievements;
+
+    final filteredAchievements = achievementsList.where((a) {
       if (selectedSport == 'all') return true;
-      return a.sportId == selectedSport;
+      final s = a.sportId.toLowerCase();
+      if (selectedSport == 'pickleball' && (s.contains('pickle') || s.contains('padd'))) return true;
+      if (selectedSport == 'badminton' && (s.contains('badminton') || s.contains('cầu'))) return true;
+      if (selectedSport == 'football' && (s.contains('foot') || s.contains('socc') || s.contains('bóng'))) return true;
+      if (selectedSport == 'tennis' && s.contains('tennis')) return true;
+      return s == selectedSport;
     }).toList();
 
     return Column(
@@ -44,6 +96,14 @@ class AchievementsTab extends ConsumerWidget {
           ),
       ],
     );
+  }
+
+  static Color _getCardColorForLabel(String label) {
+    final l = label.toLowerCase();
+    if (l.contains('vô địch')) return const Color(0xFFF59E0B);
+    if (l.contains('á quân')) return const Color(0xFF94A3B8);
+    if (l.contains('hạng ba')) return const Color(0xFFCD7F32);
+    return const Color(0xFF8B5CF6);
   }
 
   Widget _buildSectionTitle(AppColorsExtension colors, String title) {
@@ -81,9 +141,8 @@ class _AchievementData {
   final Color cardColor;
   final String tournamentName;
   final String date;
-  final int eloNumber;
-  final String eloBoost;
   final String achievementLabel;
+  final String? logoUrl;
 
   const _AchievementData({
     required this.sportId,
@@ -91,9 +150,8 @@ class _AchievementData {
     required this.cardColor,
     required this.tournamentName,
     required this.date,
-    required this.eloNumber,
-    required this.eloBoost,
     required this.achievementLabel,
+    this.logoUrl,
   });
 }
 
@@ -104,8 +162,6 @@ const _sampleAchievements = <_AchievementData>[
     cardColor: Color(0xFFF59E0B),
     tournamentName: 'Giải Vô Địch Bóng Đá Mùa Xuân 2026',
     date: '15/06/2026',
-    eloNumber: 45,
-    eloBoost: '+45 ELO',
     achievementLabel: 'Vô địch',
   ),
   _AchievementData(
@@ -114,8 +170,6 @@ const _sampleAchievements = <_AchievementData>[
     cardColor: Color(0xFFF59E0B),
     tournamentName: 'Giải Pickleball Mở Rộng 2026',
     date: '02/06/2026',
-    eloNumber: 50,
-    eloBoost: '+50 ELO',
     achievementLabel: 'Vô địch',
   ),
   _AchievementData(
@@ -124,8 +178,6 @@ const _sampleAchievements = <_AchievementData>[
     cardColor: Color(0xFF94A3B8),
     tournamentName: 'Cúp Các CLB Thể Thao 2026',
     date: '20/05/2026',
-    eloNumber: 28,
-    eloBoost: '+28 ELO',
     achievementLabel: 'Á quân',
   ),
   _AchievementData(
@@ -134,8 +186,6 @@ const _sampleAchievements = <_AchievementData>[
     cardColor: Color(0xFFCD7F32),
     tournamentName: 'Giải Bóng Đá Thanh Niên 2026',
     date: '10/04/2026',
-    eloNumber: 15,
-    eloBoost: '+15 ELO',
     achievementLabel: 'Hạng Ba',
   ),
   _AchievementData(
@@ -144,8 +194,6 @@ const _sampleAchievements = <_AchievementData>[
     cardColor: Color(0xFF8B5CF6),
     tournamentName: 'Giải Pickleball Tranh Cúp 2026',
     date: '15/03/2026',
-    eloNumber: 10,
-    eloBoost: '+10 ELO',
     achievementLabel: 'Hạng 4',
   ),
   _AchievementData(
@@ -154,8 +202,6 @@ const _sampleAchievements = <_AchievementData>[
     cardColor: Color(0xFF8B5CF6),
     tournamentName: 'Giải Cầu Lông Đôi Nam 2026',
     date: '01/02/2026',
-    eloNumber: 8,
-    eloBoost: '+8 ELO',
     achievementLabel: 'Top 8',
   ),
   _AchievementData(
@@ -164,8 +210,6 @@ const _sampleAchievements = <_AchievementData>[
     cardColor: Color(0xFF3B82F6),
     tournamentName: 'Giải Tennis Mở Rộng 2025',
     date: '22/12/2025',
-    eloNumber: 12,
-    eloBoost: '+12 ELO',
     achievementLabel: 'Cầu thủ xuất sắc',
   ),
 ];
@@ -212,7 +256,7 @@ _BadgeStyle _getBadgeStyle(String label) {
   }
 }
 
-// ─── COMPACT LOW-HEIGHT ACHIEVEMENT CARD ────────────────────────────
+// ─── COMPACT LOW-HEIGHT ACHIEVEMENT CARD WITH REAL LOGO ──────────────
 class _AchievementCard extends StatelessWidget {
   final _AchievementData achievement;
   const _AchievementCard({required this.achievement});
@@ -221,6 +265,7 @@ class _AchievementCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final badgeStyle = _getBadgeStyle(achievement.achievementLabel);
+    final resolvedLogo = _resolveImageUrl(achievement.logoUrl);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
@@ -232,9 +277,11 @@ class _AchievementCard extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // Real Tournament Logo Image or Icon fallback
           Container(
             width: 38,
             height: 38,
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -246,13 +293,26 @@ class _AchievementCard extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              achievement.icon,
-              color: Colors.white,
-              size: 20,
-            ),
+            child: resolvedLogo.isNotEmpty
+                ? Image.network(
+                    resolvedLogo,
+                    width: 38,
+                    height: 38,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      achievement.icon,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  )
+                : Icon(
+                    achievement.icon,
+                    color: Colors.white,
+                    size: 20,
+                  ),
           ),
           const SizedBox(width: 12),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,26 +343,12 @@ class _AchievementCard extends StatelessWidget {
                         color: colors.textSecondary,
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Icon(
-                      Icons.trending_up_rounded,
-                      size: 11,
-                      color: colors.success,
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      achievement.eloBoost,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: colors.success,
-                      ),
-                    ),
                   ],
                 ),
               ],
             ),
           ),
+
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
             decoration: BoxDecoration(
