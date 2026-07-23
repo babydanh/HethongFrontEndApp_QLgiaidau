@@ -30,6 +30,7 @@ class _LiveTournamentWithMatchesCardState
     extends ConsumerState<LiveTournamentWithMatchesCard> {
   final Map<String, int> _cheerCounts = {};
   int _currentMatchIndex = 0;
+  static const int _pageSize = 4;
 
   String _resolveImageUrl(String? url) {
     if (url == null || url.isEmpty) return '';
@@ -140,7 +141,7 @@ class _LiveTournamentWithMatchesCardState
             ),
           ),
 
-          // ── Matches Content Area ──
+          // ── Matches Content Area (Hiển thị tối đa 4 trận/trang) ──
           matchesAsync.when(
             data: (matches) {
               final validMatches = matches.where((m) {
@@ -175,27 +176,38 @@ class _LiveTournamentWithMatchesCardState
                       ),
                     ];
 
+              // Calculate total pages (each page shows up to 4 matches)
+              final totalPages = (displayMatches.length / _pageSize).ceil();
+              final safePageIndex = _currentMatchIndex.clamp(0, totalPages - 1);
+              final startIndex = safePageIndex * _pageSize;
+              final endIndex = (startIndex + _pageSize).clamp(0, displayMatches.length);
+              final currentPageMatches = displayMatches.sublist(startIndex, endIndex);
+
               return Column(
                 children: [
-                  // Match Card inside outer wrapper
+                  // Render 4 matches of current page
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: _buildMatchCard(
-                      context,
-                      displayMatches[_currentMatchIndex.clamp(0, displayMatches.length - 1)],
+                    child: Column(
+                      children: currentPageMatches.map((match) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _buildMatchCard(context, match),
+                        );
+                      }).toList(),
                     ),
                   ),
 
-                  // ── Pagination Controls & Dots Indicator (Chấm số qua trang) ──
-                  if (displayMatches.length > 1) ...[
-                    const SizedBox(height: 12),
+                  // ── Pagination Controls & Dots Indicator (Chỉ hiển thị khi số trận > 4) ──
+                  if (totalPages > 1) ...[
+                    const SizedBox(height: 4),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           InkWell(
-                            onTap: _currentMatchIndex > 0
+                            onTap: safePageIndex > 0
                                 ? () => setState(() => _currentMatchIndex--)
                                 : null,
                             borderRadius: BorderRadius.circular(20),
@@ -212,8 +224,8 @@ class _LiveTournamentWithMatchesCardState
                           const SizedBox(width: 12),
                           Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: List.generate(displayMatches.length, (idx) {
-                              final isSelected = idx == _currentMatchIndex;
+                            children: List.generate(totalPages, (idx) {
+                              final isSelected = idx == safePageIndex;
                               return AnimatedContainer(
                                 duration: const Duration(milliseconds: 200),
                                 margin: const EdgeInsets.symmetric(horizontal: 3),
@@ -228,7 +240,7 @@ class _LiveTournamentWithMatchesCardState
                           ),
                           const SizedBox(width: 12),
                           InkWell(
-                            onTap: _currentMatchIndex < displayMatches.length - 1
+                            onTap: safePageIndex < totalPages - 1
                                 ? () => setState(() => _currentMatchIndex++)
                                 : null,
                             borderRadius: BorderRadius.circular(20),
@@ -246,7 +258,7 @@ class _LiveTournamentWithMatchesCardState
                       ),
                     ),
                   ] else
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 6),
                 ],
               );
             },
