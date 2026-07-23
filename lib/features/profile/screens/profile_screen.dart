@@ -283,7 +283,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     child: _buildTabButton(0, "Thông tin", Icons.person_outline_rounded),
                   ),
                   Expanded(
-                    child: _buildTabButton(1, "Tài khoản & Cài đặt", Icons.settings_outlined),
+                    child: _buildTabButton(1, "Cài đặt", Icons.settings_outlined),
                   ),
                 ],
               ),
@@ -295,38 +295,38 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           if (_activeTab == 0) ...[
             // Dynamic rankings card list based on actual ELO and category ranks
             _buildRankingsSection(context),
-            const SizedBox(height: 20),
-
-            // Info Section
-            _buildSectionTitle(colors, 'Thông tin cá nhân'),
-            const SizedBox(height: 10),
-            _buildInfoCard(context, profile),
             const SizedBox(height: 24),
 
-            // Tournament Section
-            _buildSectionTitle(colors, 'Giải đấu của tôi'),
-            const SizedBox(height: 10),
-            _buildMyTournamentsSection(context),
-            const SizedBox(height: 32),
-          ] else ...[
-            // Tab 1: Thành tích & Cài đặt
+            // Achievements & Trophies Section
             _buildSectionTitle(colors, 'Thành tích & Danh hiệu'),
             const SizedBox(height: 10),
             const AchievementsTab(),
             const SizedBox(height: 24),
 
+            // My Tournaments Section
+            _buildSectionTitle(colors, 'Giải đấu của tôi'),
+            const SizedBox(height: 10),
+            _buildMyTournamentsSection(context),
+            const SizedBox(height: 24),
+
+            // Followed Tournaments Section
             _buildSectionTitle(colors, 'Giải đấu đang theo dõi'),
             const SizedBox(height: 10),
             _buildFollowedTournamentsSection(context),
             const SizedBox(height: 24),
 
-            // Account Section
+            // Personal Info Section
+            _buildSectionTitle(colors, 'Thông tin cá nhân'),
+            const SizedBox(height: 10),
+            _buildInfoCard(context, profile),
+            const SizedBox(height: 32),
+          ] else ...[
+            // Tab 1: Cài đặt (Menu buttons)
             _buildSectionTitle(colors, 'Tài khoản & Thiết lập'),
             const SizedBox(height: 10),
             _buildAccountMenu(context),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            // Other Section
             _buildSectionTitle(colors, 'Tùy chọn hệ thống'),
             const SizedBox(height: 10),
             _buildOtherMenu(context, isDark),
