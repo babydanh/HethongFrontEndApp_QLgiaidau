@@ -717,7 +717,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         onAction: () => _switchTab(3),
                       ),
                     ),
-                    _buildClubsHorizontalList(),
+                    SliverToBoxAdapter(
+                      child: _buildClubsHorizontalList(),
+                    ),
                     if (allTournaments.isEmpty)
                       SliverFillRemaining(child: _buildEmpty()),
                     const SliverToBoxAdapter(child: SizedBox(height: 100)),

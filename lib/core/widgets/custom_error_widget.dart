@@ -47,20 +47,16 @@ class CustomErrorWidget extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Đội ngũ kỹ thuật đã được thông báo và sẽ xử lý sớm nhất có thể.',
+                details.exceptionAsString(),
                 style: TextStyle(
-                  fontSize: 13,
-                  color: context.colors.textSecondary,
+                  fontSize: 11,
+                  color: context.colors.error,
+                  fontWeight: FontWeight.w600,
                 ),
                 textAlign: TextAlign.center,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
               ),
-              // Trong Debug Mode có thể hiển thị thêm dòng chi tiết
-              // const SizedBox(height: 16),
-              // Text(
-              //   details.exceptionAsString(),
-              //   style: TextStyle(fontSize: 10, color: context.colors.textMuted),
-              //   textAlign: TextAlign.center,
-              // ),
             ],
           ),
         ),
