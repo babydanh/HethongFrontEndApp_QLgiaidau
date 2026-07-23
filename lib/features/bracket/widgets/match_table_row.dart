@@ -5,7 +5,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
 /// Clean, specs-driven schedule match card.
 /// Features:
-/// - Top: Team 1 & Team 2 with real API Set Score Columns (S1, S2, S3...) & Total score column (no VS text clutter)
+/// - Top: Team 1 & Team 2 with set score columns (S1, S2, S3...) matching tournament settings & Total sets won (TỔNG)
 /// - Bottom Footer: Status Badge, Scheduled Time, Court location, Group / Round info
 class MatchTableRow extends StatelessWidget {
   final MatchModel match;
@@ -81,8 +81,13 @@ class MatchTableRow extends StatelessWidget {
         ? DateFormat('HH:mm').format(match.scheduledTime!.toLocal())
         : '--:--';
 
-    // Calculate sets won & set columns
+    // Calculate set score columns based on tournament settings (default 3 sets: S1, S2, S3)
     final sets = match.sets;
+    final int maxSetColumns = (match.setsToWin != null && match.setsToWin! > 0)
+        ? (match.setsToWin! * 2 - 1)
+        : 3;
+    final int totalColumnsToShow = sets.length > maxSetColumns ? sets.length : maxSetColumns;
+
     int setsWon1 = 0;
     int setsWon2 = 0;
     if (sets.isNotEmpty) {
@@ -188,58 +193,60 @@ class MatchTableRow extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
 
-                    // ── SET SCORE COLUMNS ──
+                    // ── ALWAYS RENDER SET SCORE COLUMNS (S1, S2, S3...) ──
                     Row(
                       children: [
-                        if (sets.isNotEmpty)
-                          ...sets.asMap().entries.map((entry) {
-                            final idx = entry.key + 1;
-                            final s = entry.value;
-                            final isT1Win = s.score1 > s.score2;
-                            final isT2Win = s.score2 > s.score1;
+                        ...List.generate(totalColumnsToShow, (index) {
+                          final idx = index + 1;
+                          final hasSetData = index < sets.length;
+                          final s = hasSetData ? sets[index] : null;
+                          final score1Str = s != null ? '${s.score1}' : '-';
+                          final score2Str = s != null ? '${s.score2}' : '-';
+                          final isT1Win = s != null && s.score1 > s.score2;
+                          final isT2Win = s != null && s.score2 > s.score1;
 
-                            return Container(
-                              margin: const EdgeInsets.only(left: 6),
-                              width: 32,
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'S$idx',
-                                    style: const TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF94A3B8),
-                                    ),
+                          return Container(
+                            margin: const EdgeInsets.only(left: 4),
+                            width: 28,
+                            child: Column(
+                              children: [
+                                Text(
+                                  'S$idx',
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF94A3B8),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${s.score1}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: isT1Win ? FontWeight.w900 : FontWeight.w500,
-                                      color: isT1Win ? const Color(0xFF2563EB) : const Color(0xFF64748B),
-                                    ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  score1Str,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: isT1Win ? FontWeight.w900 : FontWeight.w500,
+                                    color: isT1Win ? const Color(0xFF2563EB) : const Color(0xFF64748B),
                                   ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    '${s.score2}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: isT2Win ? FontWeight.w900 : FontWeight.w500,
-                                      color: isT2Win ? const Color(0xFF2563EB) : const Color(0xFF64748B),
-                                    ),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  score2Str,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: isT2Win ? FontWeight.w900 : FontWeight.w500,
+                                    color: isT2Win ? const Color(0xFF2563EB) : const Color(0xFF64748B),
                                   ),
-                                ],
-                              ),
-                            );
-                          }),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
 
                         // Total Sets Column (TỔNG)
                         Container(
-                          margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          margin: const EdgeInsets.only(left: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(8),
@@ -258,7 +265,7 @@ class MatchTableRow extends StatelessWidget {
                               Text(
                                 '$setsWon1',
                                 style: TextStyle(
-                                  fontSize: 15,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w900,
                                   color: match.winnerId == match.team1Id || setsWon1 > setsWon2
                                       ? const Color(0xFF16A34A)
@@ -269,7 +276,7 @@ class MatchTableRow extends StatelessWidget {
                               Text(
                                 '$setsWon2',
                                 style: TextStyle(
-                                  fontSize: 15,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w900,
                                   color: match.winnerId == match.team2Id || setsWon2 > setsWon1
                                       ? const Color(0xFF16A34A)
