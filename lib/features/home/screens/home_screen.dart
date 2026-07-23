@@ -623,20 +623,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       )
                     else
-                      const SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(16, 4, 16, 16),
-                          child: Text(
-                            'Chưa có trận đấu đang diễn ra',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF64748B),
-                              fontWeight: FontWeight.w500,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                      ),
+                      _buildSectionEmptyCard('Chưa có trận đấu đang diễn ra'),
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
                         title: 'Kết quả trận đấu vừa qua',
@@ -659,20 +646,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       )
                     else
-                      const SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(16, 4, 16, 16),
-                          child: Text(
-                            'Chưa có trận đấu đã kết thúc',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF64748B),
-                              fontWeight: FontWeight.w500,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                      ),
+                      _buildSectionEmptyCard('Chưa có trận đấu đã kết thúc'),
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
                         title: 'Lịch thi đấu sắp diễn ra',
@@ -695,20 +669,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       )
                     else
-                      const SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(16, 4, 16, 16),
-                          child: Text(
-                            'Chưa có lịch thi đấu sắp diễn ra',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF64748B),
-                              fontWeight: FontWeight.w500,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                      ),
+                      _buildSectionEmptyCard('Chưa có lịch thi đấu sắp diễn ra'),
                     // ── Section 5: Cộng đồng câu lạc bộ ──
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
@@ -1338,6 +1299,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSectionEmptyCard(String text) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 2, 16, 14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFFF1F5F9)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF94A3B8)),
+              const SizedBox(width: 8),
+              Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

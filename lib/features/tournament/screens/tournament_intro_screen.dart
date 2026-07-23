@@ -199,12 +199,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
     final colors = context.colors;
 
-    const tabCount = 4;
-    if (_tabController.length != tabCount) {
-      _tabController.dispose();
-      _tabController = TabController(length: tabCount, vsync: this);
-    }
-
     return NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) {
         return [
