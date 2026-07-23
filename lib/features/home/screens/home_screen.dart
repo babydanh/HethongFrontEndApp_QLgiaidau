@@ -657,10 +657,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             index,
                           ) {
                             final tournament = upcoming[index];
-                            return TournamentCardWithBanner(
+                            return LiveTournamentWithMatchesCard(
                               tournament: tournament,
-                              onTap: () =>
-                                  context.push('/intro/${tournament.id}'),
                             );
                           }, childCount: upcoming.length),
                         ),
