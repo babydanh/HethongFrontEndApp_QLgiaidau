@@ -612,6 +612,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           delegate: SliverChildBuilderDelegate(
                             (context, index) => LiveTournamentWithMatchesCard(
                               tournament: live[index],
+                              filterStatus: 'live',
                             ),
                             childCount: live.length,
                           ),
@@ -636,6 +637,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             final tournament = finished[index];
                             return LiveTournamentWithMatchesCard(
                               tournament: tournament,
+                              filterStatus: 'completed',
                             );
                           }, childCount: finished.length),
                         ),
@@ -659,6 +661,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             final tournament = upcoming[index];
                             return LiveTournamentWithMatchesCard(
                               tournament: tournament,
+                              filterStatus: 'scheduled',
                             );
                           }, childCount: upcoming.length),
                         ),

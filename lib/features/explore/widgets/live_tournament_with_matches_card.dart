@@ -15,10 +15,12 @@ import 'package:app_quanly_giaidau/providers/query_providers.dart';
 
 class LiveTournamentWithMatchesCard extends ConsumerStatefulWidget {
   final Tournament tournament;
+  final String? filterStatus; // 'live', 'completed', 'scheduled'
 
   const LiveTournamentWithMatchesCard({
     super.key,
     required this.tournament,
+    this.filterStatus,
   });
 
   @override
@@ -51,176 +53,157 @@ class _LiveTournamentWithMatchesCardState
   @override
   Widget build(BuildContext context) {
     final matchesAsync = ref.watch(matchesProvider(widget.tournament.id));
-    final teamsAsync = ref.watch(teamsProvider(widget.tournament.id));
     final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+    return matchesAsync.when(
+      data: (matches) {
+        final validMatches = matches.where((m) {
+          final t1 = m.team1Name.trim().toUpperCase();
+          final t2 = m.team2Name.trim().toUpperCase();
+          final isT1Tbd = t1.isEmpty || t1 == 'TBD' || t1 == 'BYE';
+          final isT2Tbd = t2.isEmpty || t2 == 'TBD' || t2 == 'BYE';
+          if (isT1Tbd && isT2Tbd) return false;
+
+          if (widget.filterStatus == 'live') return m.isLive;
+          if (widget.filterStatus == 'completed') return m.isCompleted;
+          if (widget.filterStatus == 'scheduled') return m.isScheduled || (!m.isLive && !m.isCompleted);
+          return true;
+        }).toList();
+
+        if (validMatches.isEmpty) return const SizedBox.shrink();
+
+        final displayMatches = validMatches;
+
+        // Calculate total pages (each page shows up to 4 matches)
+        final totalPages = (displayMatches.length / _pageSize).ceil();
+        final safePageIndex = _currentMatchIndex.clamp(0, totalPages - 1);
+        final startIndex = safePageIndex * _pageSize;
+        final endIndex = (startIndex + _pageSize).clamp(0, displayMatches.length);
+        final currentPageMatches = displayMatches.sublist(startIndex, endIndex);
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Outer Header: Tournament Logo + Name + ELO Tag ──
-          GestureDetector(
-            onTap: () => context.push('/intro/${widget.tournament.id}'),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0F172A),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-                    ),
-                    child: ClipOval(
-                      child: resolvedLogoUrl.isNotEmpty
-                          ? Image.network(
-                              resolvedLogoUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: SvgPicture.asset(
-                                  "assets/images/vndcsport.svg",
-                                  fit: BoxFit.contain,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Outer Header: Tournament Logo + Name + ELO Tag ──
+              GestureDetector(
+                onTap: () => context.push('/intro/${widget.tournament.id}'),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F172A),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                        ),
+                        child: ClipOval(
+                          child: resolvedLogoUrl.isNotEmpty
+                              ? Image.network(
+                                  resolvedLogoUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: SvgPicture.asset(
+                                      "assets/images/vndcsport.svg",
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                )
+                              : Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: SvgPicture.asset(
+                                    "assets/images/vndcsport.svg",
+                                    fit: BoxFit.contain,
+                                  ),
                                 ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.tournament.name.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF0F172A),
+                                letterSpacing: 0.3,
                               ),
-                            )
-                          : Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: SvgPicture.asset(
-                                "assets/images/vndcsport.svg",
-                                fit: BoxFit.contain,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              widget.tournament.isRanked ? "Xếp hạng ELO" : "Giải đấu giao lưu",
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.tournament.name.toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
-                            letterSpacing: 0.3,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          ],
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          widget.tournament.isRanked ? "Xếp hạng ELO" : "Giải đấu giao lưu",
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF64748B),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
 
-          // ── Matches Content Area (Smooth Animated Page Transition & Animated Size) ──
-          matchesAsync.when(
-            data: (matches) {
-              final validMatches = matches.where((m) {
-                final t1 = m.team1Name.trim().toUpperCase();
-                final t2 = m.team2Name.trim().toUpperCase();
-                final isT1Tbd = t1.isEmpty || t1 == 'TBD' || t1 == 'BYE';
-                final isT2Tbd = t2.isEmpty || t2 == 'TBD' || t2 == 'BYE';
-                return !(isT1Tbd && isT2Tbd);
-              }).toList();
-
-              final displayMatches = validMatches.isNotEmpty
-                  ? validMatches
-                  : [
-                      MatchModel(
-                        id: 'match_${widget.tournament.id}',
-                        round: 1,
-                        matchNumber: 1,
-                        team1Name: (teamsAsync.value?.isNotEmpty ?? false)
-                            ? teamsAsync.value![0].name
-                            : 'Nguyễn Minh Danh - Phạm Hải Dũng',
-                        team2Name: ((teamsAsync.value?.length ?? 0) >= 2)
-                            ? teamsAsync.value![1].name
-                            : 'Vũ Quốc Phong - Đặng Khánh Linh',
-                        score1: 0,
-                        score2: 0,
-                        status: widget.tournament.status,
-                        bracketPosition: const BracketPosition(round: 1, position: 1),
-                        updatedAt: DateTime.now(),
-                        tournamentName: widget.tournament.name,
-                        sportKey: widget.tournament.sport,
-                        court: widget.tournament.locationAddress ?? 'Chưa xếp sân',
+              // ── Matches Content Area ──
+              AnimatedSize(
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeInOutCubic,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.04, 0.0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
                       ),
-                    ];
-
-              // Calculate total pages (each page shows up to 4 matches)
-              final totalPages = (displayMatches.length / _pageSize).ceil();
-              final safePageIndex = _currentMatchIndex.clamp(0, totalPages - 1);
-              final startIndex = safePageIndex * _pageSize;
-              final endIndex = (startIndex + _pageSize).clamp(0, displayMatches.length);
-              final currentPageMatches = displayMatches.sublist(startIndex, endIndex);
-
-              return Column(
-                children: [
-                  // Smooth AnimatedSize and AnimatedSwitcher for matches transition
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.easeInOutCubic,
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
-                      transitionBuilder: (Widget child, Animation<double> animation) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0.04, 0.0),
-                              end: Offset.zero,
-                            ).animate(animation),
-                            child: child,
-                          ),
+                    );
+                  },
+                  child: Container(
+                    key: ValueKey<int>(safePageIndex),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Column(
+                      key: ValueKey<String>('matches_page_${safePageIndex}_${currentPageMatches.length}'),
+                      children: currentPageMatches.map((match) {
+                        return Padding(
+                          key: ValueKey<String>(match.id),
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _buildMatchCard(context, match),
                         );
-                      },
-                      child: Container(
-                        key: ValueKey<int>(safePageIndex),
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        child: Column(
-                          key: ValueKey<String>('matches_page_${safePageIndex}_${currentPageMatches.length}'),
-                          children: currentPageMatches.map((match) {
-                            return Padding(
-                              key: ValueKey<String>(match.id),
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: _buildMatchCard(context, match),
-                            );
-                          }).toList(),
-                        ),
-                      ),
+                      }).toList(),
                     ),
                   ),
+                ),
+              ),
 
                   // ── Pagination Controls & Dots Indicator (Mượt mà với AnimatedSwitcher) ──
                   AnimatedSwitcher(
