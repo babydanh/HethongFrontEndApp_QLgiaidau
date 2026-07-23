@@ -4,8 +4,8 @@ import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 
 /// Thanh hiển thị các bậc ELO (tier) của môn thể thao đang chọn.
-/// Mỗi bậc hiển thị: badge chữ (S/A/B±/C±/D±) + tên tier + khoảng ELO.
-/// Người dùng cuộn ngang để xem toàn bộ bậc.
+/// Mỗi bậc hiển thị: badge chữ đầy đủ (TIER S / HIGH TIER A...) + dải ELO.
+/// Modal hiển thị theo đúng thứ tự & màu sắc của Web frontend (S -> A -> B -> C -> D).
 class TierLegendView extends StatelessWidget {
   final List<EloTier> tiers;
   final int? highlightElo;
@@ -20,6 +20,10 @@ class TierLegendView extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     if (tiers.isEmpty) return const SizedBox.shrink();
+
+    // Sắp xếp các tier từ cao nhất (Tier S: 1800+) xuống thấp nhất (Low Tier D: 0-1099) giống hệt Web
+    final sortedTiers = List<EloTier>.from(tiers)
+      ..sort((a, b) => b.minElo.compareTo(a.minElo));
 
     return SizedBox(
       height: 52,
@@ -71,45 +75,53 @@ class TierLegendView extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(height: 8),
                         Text(
                           'Điểm ELO tích lũy sau mỗi trận đấu chính thức sẽ xếp người chơi vào các Tier trình độ tương ứng. Chi tiết dải điểm:',
                           style: TextStyle(fontSize: 12, color: colors.textMuted, height: 1.4),
                         ),
                         const SizedBox(height: 16),
-                        ...tiers.map((t) {
+                        ...sortedTiers.map((t) {
                           final palette = TierPalette.from(t);
+                          final eloRangeText = (t.maxElo > 5000 || t.minElo >= 1800)
+                              ? '${t.minElo}+ ELO'
+                              : '${t.minElo} - ${t.maxElo} ELO';
+
                           return Container(
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                             decoration: BoxDecoration(
                               color: palette.soft,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: palette.color.withValues(alpha: 0.3)),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: palette.border, width: 1.2),
                             ),
                             child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    gradient: palette.gradient,
-                                    borderRadius: BorderRadius.circular(6),
+                                    color: palette.badgeBg,
+                                    borderRadius: BorderRadius.circular(5),
                                   ),
                                   child: Text(
-                                    t.shortLabel,
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                                    palette.fullLabel,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 10,
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    t.name,
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: palette.color),
-                                  ),
-                                ),
                                 Text(
-                                  '${t.minElo} - ${t.maxElo > 5000 ? '${t.minElo}+' : t.maxElo} ELO',
-                                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: colors.textPrimary),
+                                  eloRangeText,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12,
+                                    color: palette.color,
+                                  ),
                                 ),
                               ],
                             ),
@@ -136,10 +148,10 @@ class TierLegendView extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.only(right: 20),
-              itemCount: tiers.length,
+              itemCount: sortedTiers.length,
               separatorBuilder: (context, index) => const SizedBox(width: 8),
               itemBuilder: (_, i) {
-                final tier = tiers[i];
+                final tier = sortedTiers[i];
                 final palette = TierPalette.from(tier);
                 final isMine = highlightElo != null &&
                     highlightElo! >= tier.minElo &&
@@ -159,18 +171,17 @@ class TierLegendView extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 28,
-                        height: 28,
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
-                          gradient: palette.gradient,
-                          borderRadius: BorderRadius.circular(8),
+                          color: palette.badgeBg,
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Center(
                           child: Text(
-                            tier.shortLabel,
+                            palette.fullLabel,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 12,
+                              fontSize: 9,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
@@ -194,7 +205,7 @@ class TierLegendView extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '${tier.minElo}–${tier.maxElo}',
+                              '${tier.minElo}–${tier.maxElo > 5000 ? '${tier.minElo}+' : tier.maxElo}',
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w600,
