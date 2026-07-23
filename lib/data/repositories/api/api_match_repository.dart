@@ -92,8 +92,12 @@ class ApiMatchRepository implements IMatchRepository {
     switch (status?.toUpperCase()) {
       case 'ONGOING':
       case 'IN_PROGRESS':
+      case 'LIVE':
         return 'live';
       case 'COMPLETED':
+      case 'FINISHED':
+      case 'DONE':
+      case 'ENDED':
         return 'completed';
       case 'WALKOVER':
         return 'walkover';
