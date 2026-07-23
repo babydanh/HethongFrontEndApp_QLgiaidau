@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
@@ -28,6 +29,7 @@ class LiveTournamentWithMatchesCard extends ConsumerStatefulWidget {
 class _LiveTournamentWithMatchesCardState
     extends ConsumerState<LiveTournamentWithMatchesCard> {
   final Map<String, int> _cheerCounts = {};
+  int _currentMatchIndex = 0;
 
   String _resolveImageUrl(String? url) {
     if (url == null || url.isEmpty) return '';
@@ -53,57 +55,81 @@ class _LiveTournamentWithMatchesCardState
     final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tournament Title & Header (Nhấn vào Logo/Tên chuyển sang Chi tiết giải)
+          // ── Outer Header: Tournament Logo + Name + ELO Tag ──
           GestureDetector(
             onTap: () => context.push('/intro/${widget.tournament.id}'),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
               child: Row(
                 children: [
                   Container(
-                    width: 38,
-                    height: 38,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B),
+                      color: const Color(0xFF0F172A),
                       shape: BoxShape.circle,
-                      border: Border.all(color: colors.border, width: 1),
+                      border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
                     ),
                     child: ClipOval(
                       child: resolvedLogoUrl.isNotEmpty
                           ? Image.network(
                               resolvedLogoUrl,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 20),
+                              errorBuilder: (context, error, stackTrace) => Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: SvgPicture.asset(
+                                  "assets/images/vndcsport.svg",
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
                             )
-                          : const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 20),
+                          : Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: SvgPicture.asset(
+                                "assets/images/vndcsport.svg",
+                                fit: BoxFit.contain,
+                              ),
+                            ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           widget.tournament.name.toUpperCase(),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: colors.textPrimary,
+                            color: Color(0xFF0F172A),
                             letterSpacing: 0.3,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           widget.tournament.isRanked ? "Xếp hạng ELO" : "Giải đấu giao lưu",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
-                            color: colors.textMuted,
+                            color: Color(0xFF64748B),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -114,9 +140,8 @@ class _LiveTournamentWithMatchesCardState
               ),
             ),
           ),
-          const SizedBox(height: 4),
 
-          // Matches List
+          // ── Matches Content Area ──
           matchesAsync.when(
             data: (matches) {
               final validMatches = matches.where((m) {
@@ -127,35 +152,108 @@ class _LiveTournamentWithMatchesCardState
                 return !(isT1Tbd && isT2Tbd);
               }).toList();
 
-              if (validMatches.isEmpty) {
-                final teams = teamsAsync.value ?? [];
-                final t1 = teams.isNotEmpty ? teams[0].name : 'Nguyễn Minh Danh - Phạm Hải Dũng';
-                final t2 = teams.length >= 2 ? teams[1].name : 'Vũ Quốc Phong - Đặng Khánh Linh';
-                final fallbackMatch = MatchModel(
-                  id: 'match_${widget.tournament.id}',
-                  round: 1,
-                  matchNumber: 1,
-                  team1Name: t1,
-                  team2Name: t2,
-                  score1: 0,
-                  score2: 0,
-                  status: widget.tournament.status,
-                  bracketPosition: const BracketPosition(round: 1, position: 1),
-                  updatedAt: DateTime.now(),
-                  tournamentName: widget.tournament.name,
-                  sportKey: widget.tournament.sport,
-                  court: widget.tournament.locationAddress ?? 'Chưa xếp sân',
-                );
-                return _buildMatchCard(context, fallbackMatch);
-              }
+              final displayMatches = validMatches.isNotEmpty
+                  ? validMatches
+                  : [
+                      MatchModel(
+                        id: 'match_${widget.tournament.id}',
+                        round: 1,
+                        matchNumber: 1,
+                        team1Name: (teamsAsync.value?.isNotEmpty ?? false)
+                            ? teamsAsync.value![0].name
+                            : 'Nguyễn Minh Danh - Phạm Hải Dũng',
+                        team2Name: ((teamsAsync.value?.length ?? 0) >= 2)
+                            ? teamsAsync.value![1].name
+                            : 'Vũ Quốc Phong - Đặng Khánh Linh',
+                        score1: 0,
+                        score2: 0,
+                        status: widget.tournament.status,
+                        bracketPosition: const BracketPosition(round: 1, position: 1),
+                        updatedAt: DateTime.now(),
+                        tournamentName: widget.tournament.name,
+                        sportKey: widget.tournament.sport,
+                        court: widget.tournament.locationAddress ?? 'Chưa xếp sân',
+                      ),
+                    ];
 
               return Column(
-                children: validMatches.map((match) => _buildMatchCard(context, match)).toList(),
+                children: [
+                  // Match Card inside outer wrapper
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: _buildMatchCard(
+                      context,
+                      displayMatches[_currentMatchIndex.clamp(0, displayMatches.length - 1)],
+                    ),
+                  ),
+
+                  // ── Pagination Controls & Dots Indicator (Chấm số qua trang) ──
+                  if (displayMatches.length > 1) ...[
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          InkWell(
+                            onTap: _currentMatchIndex > 0
+                                ? () => setState(() => _currentMatchIndex--)
+                                : null,
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFF1F5F9),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.chevron_left_rounded, size: 18, color: Color(0xFF475569)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(displayMatches.length, (idx) {
+                              final isSelected = idx == _currentMatchIndex;
+                              return AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                margin: const EdgeInsets.symmetric(horizontal: 3),
+                                width: isSelected ? 16 : 7,
+                                height: 7,
+                                decoration: BoxDecoration(
+                                  color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFCBD5E1),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              );
+                            }),
+                          ),
+                          const SizedBox(width: 12),
+                          InkWell(
+                            onTap: _currentMatchIndex < displayMatches.length - 1
+                                ? () => setState(() => _currentMatchIndex++)
+                                : null,
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFF1F5F9),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF475569)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else
+                    const SizedBox(height: 14),
+                ],
               );
             },
             loading: () => const Center(
               child: Padding(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(24),
                 child: CircularProgressIndicator(color: AppTheme.primary, strokeWidth: 2),
               ),
             ),
@@ -201,7 +299,6 @@ class _LiveTournamentWithMatchesCardState
     final isCheered = cheerCount > 0;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -209,8 +306,8 @@ class _LiveTournamentWithMatchesCardState
         border: Border.all(color: const Color(0xFFEFF6FF), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0052FF).withValues(alpha: 0.05),
-            blurRadius: 16,
+            color: const Color(0xFF0052FF).withValues(alpha: 0.04),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -286,7 +383,7 @@ class _LiveTournamentWithMatchesCardState
 
           const SizedBox(height: 14),
 
-          // ── Team 1 Row (Nhấn Avatar/Tên chuyển sang Chi tiết giải) ──
+          // ── Team 1 Row ──
           GestureDetector(
             onTap: () => context.push('/intro/${widget.tournament.id}'),
             child: Padding(
@@ -295,7 +392,7 @@ class _LiveTournamentWithMatchesCardState
                 children: [
                   _DoubleAvatarWidget(
                     initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'NM',
-                    initial2: t1Initials.length > 1 ? t1Initials[1] : 'HD',
+                    initial2: t1Initials.length > 1 ? t1Initials[1] : '',
                     color: const Color(0xFF0284C7),
                   ),
                   const SizedBox(width: 10),
@@ -312,7 +409,6 @@ class _LiveTournamentWithMatchesCardState
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Tỉ số Đội 1 (Xếp DỌC, không chữ VS, không dấu -)
                   Text(
                     '${match.score1}',
                     style: const TextStyle(
@@ -328,7 +424,7 @@ class _LiveTournamentWithMatchesCardState
 
           const SizedBox(height: 8),
 
-          // ── Team 2 Row (Nhấn Avatar/Tên chuyển sang Chi tiết giải) ──
+          // ── Team 2 Row ──
           GestureDetector(
             onTap: () => context.push('/intro/${widget.tournament.id}'),
             child: Padding(
@@ -337,7 +433,7 @@ class _LiveTournamentWithMatchesCardState
                 children: [
                   _DoubleAvatarWidget(
                     initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'VQ',
-                    initial2: t2Initials.length > 1 ? t2Initials[1] : 'KL',
+                    initial2: t2Initials.length > 1 ? t2Initials[1] : '',
                     color: const Color(0xFF16A34A),
                   ),
                   const SizedBox(width: 10),
@@ -354,7 +450,6 @@ class _LiveTournamentWithMatchesCardState
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Tỉ số Đội 2 (Xếp DỌC, không chữ VS, không dấu -)
                   Text(
                     '${match.score2}',
                     style: const TextStyle(
