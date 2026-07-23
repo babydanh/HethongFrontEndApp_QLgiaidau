@@ -2,6 +2,70 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
 
+class _TierStyle {
+  final String label;
+  final Color bg;
+  final Color text;
+  final Color border;
+  const _TierStyle({
+    required this.label,
+    required this.bg,
+    required this.text,
+    required this.border,
+  });
+}
+
+_TierStyle _getTierStyle(Team team) {
+  final group = team.group.toLowerCase();
+  if (group.contains('sơ cấp') || group.contains('tập sự') || group.contains('hạng c')) {
+    return const _TierStyle(
+      label: 'Sơ cấp',
+      bg: Color(0xFFEFF6FF),
+      text: Color(0xFF1D4ED8),
+      border: Color(0xFFBFDBFE),
+    );
+  } else if (group.contains('nâng cao') || group.contains('hạng a') || group.contains('pro')) {
+    return const _TierStyle(
+      label: 'Nâng cao',
+      bg: Color(0xFF1E3A8A),
+      text: Colors.white,
+      border: Color(0xFF1E3A8A),
+    );
+  } else if (group.contains('chuyên nghiệp') || group.contains('master') || group.contains('gold')) {
+    return const _TierStyle(
+      label: 'Chuyên nghiệp',
+      bg: Color(0xFFFEF3C7),
+      text: Color(0xFFB45309),
+      border: Color(0xFFFDE68A),
+    );
+  } else {
+    final seedVal = (team.seed > 0) ? team.seed : team.name.length;
+    final idx = seedVal % 3;
+    if (idx == 0) {
+      return const _TierStyle(
+        label: 'Trung cấp',
+        bg: Color(0xFF2563EB),
+        text: Colors.white,
+        border: Color(0xFF1D4ED8),
+      );
+    } else if (idx == 1) {
+      return const _TierStyle(
+        label: 'Nâng cao',
+        bg: Color(0xFF1E3A8A),
+        text: Colors.white,
+        border: Color(0xFF1E3A8A),
+      );
+    } else {
+      return const _TierStyle(
+        label: 'Sơ cấp',
+        bg: Color(0xFFEFF6FF),
+        text: Color(0xFF1D4ED8),
+        border: Color(0xFFBFDBFE),
+      );
+    }
+  }
+}
+
 class TournamentTeamCard extends StatelessWidget {
   final Team team;
   final VoidCallback onTap;
@@ -15,112 +79,144 @@ class TournamentTeamCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final tierStyle = _getTierStyle(team);
+
+    final String clubSubtitle = team.group.isNotEmpty
+        ? 'CLB ${team.group}'
+        : (team.members.isNotEmpty ? team.members.join(' • ') : 'CLB Thể thao');
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: colors.bgCard,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              colors.bgCard,
-              colors.bgCard.withValues(alpha: 0.7),
-            ],
-          ),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colors.border.withValues(alpha: 0.6)),
+          border: Border.all(color: colors.border.withValues(alpha: 0.8)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             )
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
           children: [
+            // Circular Avatar Image
             Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2979FF).withValues(alpha: 0.2),
-                    blurRadius: 8,
-                    spreadRadius: 2,
-                  )
-                ],
+                border: Border.all(color: colors.border.withValues(alpha: 0.5), width: 1.5),
               ),
               child: CircleAvatar(
-                radius: 26,
-                backgroundColor: colors.bgSurface,
+                radius: 24,
+                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                 child: team.photoUrl.isNotEmpty
                     ? ClipOval(
                         child: Image.network(
                           team.photoUrl,
                           fit: BoxFit.cover,
-                          width: 52,
-                          height: 52,
-                          errorBuilder: (context, error, stackTrace) => Icon(
-                            Icons.person,
-                            size: 24,
-                            color: colors.textMuted,
+                          width: 48,
+                          height: 48,
+                          errorBuilder: (context, error, stackTrace) => Text(
+                            team.name.isNotEmpty ? team.name[0].toUpperCase() : 'VĐV',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primary,
+                            ),
                           ),
                         ),
                       )
-                    : const Icon(
-                        Icons.group,
-                        size: 24,
-                        color: Color(0xFF2979FF),
+                    : Text(
+                        team.name.isNotEmpty ? team.name[0].toUpperCase() : 'VĐV',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primary,
+                        ),
                       ),
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              team.name,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color: colors.textPrimary,
-                letterSpacing: -0.2,
+            const SizedBox(width: 14),
+
+            // Main Info: Name + Tier Badge + Subtitle
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          team.name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: colors.textPrimary,
+                            letterSpacing: -0.2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Tier Badge Pill (Matching Image 1)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: tierStyle.bg,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: tierStyle.border),
+                        ),
+                        child: Text(
+                          tierStyle.label,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: tierStyle.text,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+
+                  // Subtitle: Club icon + Name/Club
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.apartment_rounded,
+                        size: 13,
+                        color: colors.textMuted,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          clubSubtitle,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 4),
-            Text(
-              "${team.members.length} VĐV",
-              style: TextStyle(
-                fontSize: 12,
-                color: colors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: team.isApproved
-                    ? colors.success.withValues(alpha: 0.1)
-                    : colors.bgSurface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: team.isApproved
-                      ? colors.success.withValues(alpha: 0.2)
-                      : Colors.transparent,
-                ),
-              ),
-              child: Text(
-                team.approvalLabel,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: team.isApproved ? colors.success : colors.textMuted,
-                ),
-              ),
+
+            // Right Chevron Icon (Matching Image 1)
+            Icon(
+              Icons.chevron_right_rounded,
+              color: colors.textMuted,
+              size: 20,
             ),
           ],
         ),
