@@ -186,9 +186,13 @@ class _LiveTournamentWithMatchesCardState
     List<String> getInitials(String name) {
       final parts = name.split('-').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
       if (parts.length >= 2) {
-        return parts.map((p) => _getSingleInitials(p)).take(2).toList();
+        return [_getSingleInitials(parts[0]), _getSingleInitials(parts[1])];
       }
-      return [_getSingleInitials(name), _getSingleInitials(name)];
+      final words = name.trim().split(' ');
+      if (words.length >= 2) {
+        return ['${words[0][0]}${words[1][0]}'.toUpperCase(), ''];
+      }
+      return [name.isNotEmpty ? name[0].toUpperCase() : '?', ''];
     }
 
     final t1Initials = getInitials(match.team1Name);
@@ -527,6 +531,28 @@ class _DoubleAvatarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (initial2.isEmpty || initial2 == '?') {
+      return Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: color, width: 1.5),
+        ),
+        child: Center(
+          child: Text(
+            initial1,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ),
+      );
+    }
+
     return SizedBox(
       width: 48,
       height: 28,
