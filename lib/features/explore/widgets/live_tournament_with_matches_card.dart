@@ -296,13 +296,11 @@ class _LiveTournamentWithMatchesCardState
     final isT2Tbd = match.team2Name.trim().toUpperCase() == 'TBD' || match.team2Name.trim().toUpperCase() == 'BYE';
     final isByeMatch = match.isBye || isT1Tbd || isT2Tbd;
 
-    final statusText = isByeMatch
-        ? 'VÔ THẲNG'
-        : (match.isLive
-            ? 'ĐANG DIỄN RA'
-            : match.isCompleted
-                ? 'ĐÃ HOÀN THÀNH'
-                : 'SẮP DIỄN RA');
+    final statusText = match.isLive
+        ? 'ĐANG DIỄN RA'
+        : match.isCompleted
+            ? 'ĐÃ HOÀN THÀNH'
+            : 'SẮP DIỄN RA';
     final bracketText = match.stageName ??
         (match.bracketPosition.bracket == 'losers'
             ? 'NHÁNH THUA'
@@ -356,10 +354,10 @@ class _LiveTournamentWithMatchesCardState
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isByeMatch
-                      ? const Color(0xFFDCFCE7)
-                      : (match.isLive
-                          ? const Color(0xFFFEF2F2)
+                  color: match.isLive
+                      ? const Color(0xFFFEF2F2)
+                      : (match.isCompleted
+                          ? const Color(0xFFDCFCE7)
                           : const Color(0xFFE0F2FE)),
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -371,9 +369,11 @@ class _LiveTournamentWithMatchesCardState
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w800,
-                        color: isByeMatch
-                            ? const Color(0xFF16A34A)
-                            : (match.isLive ? const Color(0xFFDC2626) : const Color(0xFF0284C7)),
+                        color: match.isLive
+                            ? const Color(0xFFDC2626)
+                            : (match.isCompleted
+                                ? const Color(0xFF16A34A)
+                                : const Color(0xFF0284C7)),
                         letterSpacing: 0.2,
                       ),
                     ),

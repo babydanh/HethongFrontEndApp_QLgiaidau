@@ -1110,13 +1110,11 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
     final isT2Tbd = m.team2Name.trim().toUpperCase() == 'TBD' || m.team2Name.trim().toUpperCase() == 'BYE';
     final isByeMatch = m.isBye || isT1Tbd || isT2Tbd;
 
-    final statusText = isByeMatch
-        ? 'VÔ THẲNG • VÒNG ${m.round}'
-        : (m.isLive
-            ? 'ĐANG DIỄN RA • VÒNG ${m.round}'
-            : m.isCompleted
-                ? 'ĐÃ HOÀN THÀNH • VÒNG ${m.round}'
-                : 'SẮP DIỄN RA • VÒNG ${m.round}');
+    final statusText = m.isLive
+        ? 'ĐANG DIỄN RA • VÒNG ${m.round}'
+        : m.isCompleted
+            ? 'ĐÃ HOÀN THÀNH • VÒNG ${m.round}'
+            : 'SẮP DIỄN RA • VÒNG ${m.round}';
     final bracketText = m.stageName ?? (m.bracketPosition.bracket == 'losers' ? 'NHÁNH THUA' : 'VÒNG KNOCKOUT');
     final sportText = AppConstants.sportNames[m.sportKey ?? widget.tournament?.sport] ?? m.sportKey ?? widget.tournament?.sport ?? 'Pickleball';
     final courtText = m.court.isNotEmpty ? m.court : 'Chưa xếp sân';
@@ -1158,10 +1156,10 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isByeMatch
-                      ? const Color(0xFFDCFCE7)
-                      : (m.isLive
-                          ? const Color(0xFFFEF2F2)
+                  color: m.isLive
+                      ? const Color(0xFFFEF2F2)
+                      : (m.isCompleted
+                          ? const Color(0xFFDCFCE7)
                           : const Color(0xFFE0F2FE)),
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -1169,13 +1167,13 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      isByeMatch
-                          ? Icons.check_circle_outline_rounded
-                          : (m.isLive ? Icons.sensors_rounded : Icons.access_time_rounded),
+                      m.isLive
+                          ? Icons.sensors_rounded
+                          : (m.isCompleted ? Icons.check_circle_outline_rounded : Icons.access_time_rounded),
                       size: 13,
-                      color: isByeMatch
-                          ? const Color(0xFF16A34A)
-                          : (m.isLive ? const Color(0xFFDC2626) : const Color(0xFF0284C7)),
+                      color: m.isLive
+                          ? const Color(0xFFDC2626)
+                          : (m.isCompleted ? const Color(0xFF16A34A) : const Color(0xFF0284C7)),
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -1183,9 +1181,9 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
-                        color: isByeMatch
-                            ? const Color(0xFF16A34A)
-                            : (m.isLive ? const Color(0xFFDC2626) : const Color(0xFF0284C7)),
+                        color: m.isLive
+                            ? const Color(0xFFDC2626)
+                            : (m.isCompleted ? const Color(0xFF16A34A) : const Color(0xFF0284C7)),
                         letterSpacing: 0.2,
                       ),
                     ),
