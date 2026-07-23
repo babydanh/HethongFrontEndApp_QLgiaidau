@@ -7,6 +7,7 @@ import 'dart:io' show Platform;
 import 'package:share_plus/share_plus.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -399,13 +400,17 @@ class _LiveTournamentWithMatchesCardState
           // ── Action Buttons Row ──
           Row(
             children: [
-              // Button 1: Cổ vũ
+              // Button 1: Cổ vũ (Gọi thật API backend POST /matches/:id/cheer)
               Expanded(
                 child: InkWell(
-                  onTap: () {
+                  onTap: () async {
                     setState(() {
                       _cheerCounts[match.id] = (_cheerCounts[match.id] ?? 0) + 1;
                     });
+                    try {
+                      final dio = ref.read(dioClientProvider).dio;
+                      await dio.post('/matches/${match.id}/cheer');
+                    } catch (_) {}
                   },
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
@@ -441,10 +446,10 @@ class _LiveTournamentWithMatchesCardState
               ),
               const SizedBox(width: 8),
 
-              // Button 2: Chi tiết
+              // Button 2: Chi tiết (Mở trực tiếp trang Live Match Detail /live/:matchId)
               Expanded(
                 child: InkWell(
-                  onTap: () => context.push('/intro/${widget.tournament.id}'),
+                  onTap: () => context.push('/live/${match.id}'),
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 9),
