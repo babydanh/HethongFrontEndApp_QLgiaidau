@@ -81,9 +81,29 @@ class TournamentTeamCard extends StatelessWidget {
     final colors = context.colors;
     final tierStyle = _getTierStyle(team);
 
-    final String clubSubtitle = team.group.isNotEmpty
-        ? 'CLB ${team.group}'
-        : (team.members.isNotEmpty ? team.members.join(' • ') : 'CLB Thể thao');
+    final isDoubles = team.members.length > 1 || team.name.contains(' - ') || team.name.contains(' / ');
+
+    String? subtitleText;
+    IconData subtitleIcon = Icons.apartment_rounded;
+
+    if (isDoubles) {
+      final membersStr = team.members.isNotEmpty ? team.members.join(', ') : '';
+      if (membersStr.isNotEmpty && membersStr != team.name) {
+        subtitleText = 'VĐV: $membersStr';
+        subtitleIcon = Icons.people_outline_rounded;
+      } else if (team.group.isNotEmpty) {
+        subtitleText = 'CLB ${team.group}';
+        subtitleIcon = Icons.apartment_rounded;
+      }
+    } else {
+      // Đơn: Chỉ hiện CLB nếu có thông tin CLB thật, tuyệt đối không lặp lại tên VĐV
+      if (team.group.isNotEmpty &&
+          team.group.toLowerCase() != team.name.toLowerCase() &&
+          !team.group.toLowerCase().startsWith('bảng')) {
+        subtitleText = 'CLB ${team.group}';
+        subtitleIcon = Icons.apartment_rounded;
+      }
+    }
 
     return GestureDetector(
       onTap: onTap,
@@ -142,7 +162,7 @@ class TournamentTeamCard extends StatelessWidget {
             ),
             const SizedBox(width: 14),
 
-            // Main Info: Name + Tier Badge + Subtitle
+            // Main Info: Name + Tier Badge + Optional Subtitle
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,7 +184,7 @@ class TournamentTeamCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
 
-                      // Tier Badge Pill (Matching Image 1)
+                      // Tier Badge Pill
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                         decoration: BoxDecoration(
@@ -183,36 +203,38 @@ class TournamentTeamCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 5),
 
-                  // Subtitle: Club icon + Name/Club
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.apartment_rounded,
-                        size: 13,
-                        color: colors.textMuted,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          clubSubtitle,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                  // Optional Subtitle (Doubles members / Real Club)
+                  if (subtitleText != null && subtitleText.isNotEmpty) ...[
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        Icon(
+                          subtitleIcon,
+                          size: 13,
+                          color: colors.textMuted,
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            subtitleText,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
 
-            // Right Chevron Icon (Matching Image 1)
+            // Right Chevron Icon
             Icon(
               Icons.chevron_right_rounded,
               color: colors.textMuted,
