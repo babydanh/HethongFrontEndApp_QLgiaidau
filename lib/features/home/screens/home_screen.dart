@@ -649,8 +649,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     if (finished.isNotEmpty) ...[
                       SliverToBoxAdapter(
                         child: _buildSectionTitle(
-                          icon: Icons.check_circle_outline_rounded,
-                          color: const Color(0xFF10B981),
                           title: 'Kết quả trận đấu vừa qua',
                         ),
                       ),
@@ -673,8 +671,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     if (upcoming.isNotEmpty) ...[
                       SliverToBoxAdapter(
                         child: _buildSectionTitle(
-                          icon: Icons.calendar_today_rounded,
-                          color: const Color(0xFF2979FF),
                           title: 'Lịch thi đấu sắp diễn ra',
                         ),
                       ),
@@ -697,8 +693,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     // ── Section 5: Cộng đồng câu lạc bộ (Dữ liệu thật từ API) ──
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
-                        icon: Icons.groups_rounded,
-                        color: const Color(0xFF8B5CF6),
                         title: 'Cộng đồng câu lạc bộ',
                         actionLabel: 'Xem tất cả',
                         onAction: () => _switchTab(3),
