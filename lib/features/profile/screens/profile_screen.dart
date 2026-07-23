@@ -342,11 +342,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Widget _buildSportFilterChips(AppColorsExtension colors) {
     final sports = const [
-      {'id': 'all', 'label': 'Tất cả'},
-      {'id': 'pickleball', 'label': '🏓 Pickleball'},
-      {'id': 'badminton', 'label': '🏸 Cầu lông'},
-      {'id': 'football', 'label': '⚽ Bóng đá'},
-      {'id': 'tennis', 'label': '🎾 Tennis'},
+      {'id': 'all', 'label': 'Tất cả', 'icon': Icons.grid_view_rounded},
+      {'id': 'pickleball', 'label': 'Pickleball', 'icon': Icons.sports_tennis_rounded},
+      {'id': 'badminton', 'label': 'Cầu lông', 'icon': Icons.sports_tennis_outlined},
+      {'id': 'football', 'label': 'Bóng đá', 'icon': Icons.sports_soccer_rounded},
+      {'id': 'tennis', 'label': 'Tennis', 'icon': Icons.sports_baseball_rounded},
     ];
 
     return SizedBox(
@@ -360,8 +360,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         itemBuilder: (context, index) {
           final sport = sports[index];
           final isSelected = _selectedSport == sport['id'];
+          final icon = sport['icon'] as IconData;
           return GestureDetector(
-            onTap: () => setState(() => _selectedSport = sport['id']!),
+            onTap: () => setState(() => _selectedSport = sport['id'] as String),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
@@ -381,13 +382,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ]
                     : null,
               ),
-              child: Text(
-                sport['label']!,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected ? Colors.white : colors.textSecondary,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 14,
+                    color: isSelected ? Colors.white : colors.textSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    sport['label'] as String,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                      color: isSelected ? Colors.white : colors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
             ),
           );
