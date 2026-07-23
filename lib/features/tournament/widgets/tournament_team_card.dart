@@ -15,14 +15,22 @@ class _TierStyle {
   });
 }
 
-_TierStyle _getTierStyle(Team team) {
-  final group = team.group.toLowerCase();
+_TierStyle? _getTierStyle(Team team) {
+  final group = team.group.toLowerCase().trim();
+  
   if (group.contains('sơ cấp') || group.contains('tập sự') || group.contains('hạng c')) {
     return const _TierStyle(
       label: 'Sơ cấp',
       bg: Color(0xFFEFF6FF),
       text: Color(0xFF1D4ED8),
       border: Color(0xFFBFDBFE),
+    );
+  } else if (group.contains('trung cấp') || group.contains('hạng b')) {
+    return const _TierStyle(
+      label: 'Trung cấp',
+      bg: Color(0xFF2563EB),
+      text: Colors.white,
+      border: Color(0xFF1D4ED8),
     );
   } else if (group.contains('nâng cao') || group.contains('hạng a') || group.contains('pro')) {
     return const _TierStyle(
@@ -38,32 +46,17 @@ _TierStyle _getTierStyle(Team team) {
       text: Color(0xFFB45309),
       border: Color(0xFFFDE68A),
     );
-  } else {
-    final seedVal = (team.seed > 0) ? team.seed : team.name.length;
-    final idx = seedVal % 3;
-    if (idx == 0) {
-      return const _TierStyle(
-        label: 'Trung cấp',
-        bg: Color(0xFF2563EB),
-        text: Colors.white,
-        border: Color(0xFF1D4ED8),
-      );
-    } else if (idx == 1) {
-      return const _TierStyle(
-        label: 'Nâng cao',
-        bg: Color(0xFF1E3A8A),
-        text: Colors.white,
-        border: Color(0xFF1E3A8A),
-      );
-    } else {
-      return const _TierStyle(
-        label: 'Sơ cấp',
-        bg: Color(0xFFEFF6FF),
-        text: Color(0xFF1D4ED8),
-        border: Color(0xFFBFDBFE),
-      );
-    }
+  } else if (team.seed > 0) {
+    return _TierStyle(
+      label: 'Hạt giống #${team.seed}',
+      bg: const Color(0xFFF1F5F9),
+      text: const Color(0xFF475569),
+      border: const Color(0xFFE2E8F0),
+    );
   }
+
+  // Nếu API không cung cấp Rank/Tier/Seed thật -> Tuyệt đối không hiển thị badge fake!
+  return null;
 }
 
 class TournamentTeamCard extends StatelessWidget {
@@ -91,12 +84,12 @@ class TournamentTeamCard extends StatelessWidget {
       if (membersStr.isNotEmpty && membersStr != team.name) {
         subtitleText = 'VĐV: $membersStr';
         subtitleIcon = Icons.people_outline_rounded;
-      } else if (team.group.isNotEmpty) {
+      } else if (team.group.isNotEmpty && !team.group.toLowerCase().contains('sơ') && !team.group.toLowerCase().contains('nâng')) {
         subtitleText = 'CLB ${team.group}';
         subtitleIcon = Icons.apartment_rounded;
       }
     } else {
-      // Đơn: Chỉ hiện CLB nếu có thông tin CLB thật, tuyệt đối không lặp lại tên VĐV
+      // Đơn: Chỉ hiện CLB nếu có thông tin CLB thật, không lặp lại tên VĐV
       if (team.group.isNotEmpty &&
           team.group.toLowerCase() != team.name.toLowerCase() &&
           !team.group.toLowerCase().startsWith('bảng')) {
@@ -108,17 +101,17 @@ class TournamentTeamCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        margin: const EdgeInsets.symmetric(vertical: 2.5),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
           color: colors.bgCard,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: colors.border.withValues(alpha: 0.8)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 1.5),
             )
           ],
         ),
@@ -128,22 +121,22 @@ class TournamentTeamCard extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: colors.border.withValues(alpha: 0.5), width: 1.5),
+                border: Border.all(color: colors.border.withValues(alpha: 0.5), width: 1.2),
               ),
               child: CircleAvatar(
-                radius: 24,
+                radius: 19,
                 backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                 child: team.photoUrl.isNotEmpty
                     ? ClipOval(
                         child: Image.network(
                           team.photoUrl,
                           fit: BoxFit.cover,
-                          width: 48,
-                          height: 48,
+                          width: 38,
+                          height: 38,
                           errorBuilder: (context, error, stackTrace) => Text(
                             team.name.isNotEmpty ? team.name[0].toUpperCase() : 'VĐV',
                             style: const TextStyle(
-                              fontSize: 16,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.primary,
                             ),
@@ -153,19 +146,20 @@ class TournamentTeamCard extends StatelessWidget {
                     : Text(
                         team.name.isNotEmpty ? team.name[0].toUpperCase() : 'VĐV',
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.primary,
                         ),
                       ),
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 10),
 
-            // Main Info: Name + Tier Badge + Optional Subtitle
+            // Main Info: Name + Tier Badge (if real) + Subtitle
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
                     children: [
@@ -174,7 +168,7 @@ class TournamentTeamCard extends StatelessWidget {
                           team.name,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                            fontSize: 13,
                             color: colors.textPrimary,
                             letterSpacing: -0.2,
                           ),
@@ -182,44 +176,46 @@ class TournamentTeamCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 8),
 
-                      // Tier Badge Pill
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: tierStyle.bg,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: tierStyle.border),
-                        ),
-                        child: Text(
-                          tierStyle.label,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: tierStyle.text,
+                      // Tier Badge Pill (ONLY IF REAL API DATA EXISTS)
+                      if (tierStyle != null) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                          decoration: BoxDecoration(
+                            color: tierStyle.bg,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: tierStyle.border),
+                          ),
+                          child: Text(
+                            tierStyle.label,
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                              color: tierStyle.text,
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
 
                   // Optional Subtitle (Doubles members / Real Club)
                   if (subtitleText != null && subtitleText.isNotEmpty) ...[
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 3),
                     Row(
                       children: [
                         Icon(
                           subtitleIcon,
-                          size: 13,
+                          size: 12,
                           color: colors.textMuted,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 3),
                         Expanded(
                           child: Text(
                             subtitleText,
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               color: colors.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
@@ -238,7 +234,7 @@ class TournamentTeamCard extends StatelessWidget {
             Icon(
               Icons.chevron_right_rounded,
               color: colors.textMuted,
-              size: 20,
+              size: 18,
             ),
           ],
         ),

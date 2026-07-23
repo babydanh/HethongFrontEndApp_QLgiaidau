@@ -34,6 +34,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     4,
     (_) => ScrollController(),
   );
+  double _headerDragRemainder = 0;
   String _selectedDivision = "Tất cả";
   String? _selectedDivisionId;
   bool _isHeaderCompact = false;
@@ -216,6 +217,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               children: [
                 GestureDetector(
                   behavior: HitTestBehavior.translucent,
+                  onVerticalDragStart: (_) => _headerDragRemainder = 0,
+                  onVerticalDragEnd: (_) => _headerDragRemainder = 0,
+                  onVerticalDragCancel: () => _headerDragRemainder = 0,
                   onVerticalDragUpdate: _handleHeaderDragUpdate,
                   child: TournamentHeaderView(
                     tournament: tournament,
@@ -265,8 +269,18 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final controller = _tabScrollControllers[index];
     if (!controller.hasClients) return;
 
+    _headerDragRemainder += details.delta.dy;
+    const activationThreshold = 10.0;
+    if (_headerDragRemainder.abs() < activationThreshold) return;
+
     final position = controller.position;
-    final nextOffset = (controller.offset - details.delta.dy).clamp(
+    const dragDamping = 0.65;
+    final scrollDelta = (_headerDragRemainder -
+            activationThreshold * _headerDragRemainder.sign) *
+        dragDamping;
+    _headerDragRemainder = activationThreshold * _headerDragRemainder.sign;
+
+    final nextOffset = (controller.offset - scrollDelta).clamp(
       position.minScrollExtent,
       position.maxScrollExtent,
     );
@@ -444,7 +458,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               return const SizedBox.shrink(); // Hide filter on "About" tab
             }
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.only(top: 2, bottom: 4),
               child: DivisionFilterSegment(
                 divisions: divisions,
                 selectedDivision: _selectedDivision,
@@ -481,6 +495,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       tournament: tournament,
                       teamCount: teams.length,
                       resolveImageUrl: _resolveImageUrl,
+                      scrollController: _tabScrollControllers[0],
                     ),
                   ),
                   Padding(
@@ -488,6 +503,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     child: TeamsTab(
                       teams: teams,
                       selectedDivision: _selectedDivision,
+                      scrollController: _tabScrollControllers[1],
                     ),
                   ),
                   Padding(
@@ -495,6 +511,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     child: BracketTab(
                       tournamentId: widget.tournamentId,
                       selectedDivisionId: _selectedDivisionId,
+                      scrollController: _tabScrollControllers[2],
                     ),
                   ),
                   Padding(
@@ -502,6 +519,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     child: GalleryTab(
                       galleryImages: tournament.galleryImages,
                       resolveImageUrl: _resolveImageUrl,
+                      scrollController: _tabScrollControllers[3],
                     ),
                   ),
                 ],
