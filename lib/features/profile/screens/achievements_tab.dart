@@ -54,6 +54,10 @@ class AchievementsTab extends ConsumerWidget {
           label = 'Top 16'; // Loại ở Vòng 1/8 (Vòng 16)
         } else if (i < 32) {
           label = 'Top 32'; // Loại ở Vòng 1/16 (Vòng 32)
+        } else if (i < 64) {
+          label = 'Top 64'; // Loại ở Vòng 1/32 (Vòng 64)
+        } else if (i < 128) {
+          label = 'Top 128'; // Loại ở Vòng 1/64 (Vòng 128)
         } else {
           label = 'Top ${1 << (t.roundCount > 0 ? t.roundCount : 5)}';
         }
