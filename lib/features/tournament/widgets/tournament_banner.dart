@@ -16,10 +16,10 @@ class TournamentCollapsibleHeaderDelegate extends SliverPersistentHeaderDelegate
   });
 
   @override
-  double get maxExtent => 410;
+  double get maxExtent => 420;
 
   @override
-  double get minExtent => 100;
+  double get minExtent => 110;
 
   @override
   Widget build(
@@ -73,52 +73,54 @@ class _TournamentCollapsibleHeaderState
   Widget build(BuildContext context) {
     final colors = context.colors;
     final images = _collectImages(widget.tournament);
-    // Nấc 2: lướt nhẹ 1 phát dứt khoát chuyển sang Nấc thu gọn
-    final isCollapsed = widget.progress > 0.15;
+    // Switch dứt khoát sang Nấc 2 (Collapsing mode) khi cuộn nhẹ qua 0.4
+    final isCollapsed = widget.progress > 0.4;
 
-    return Material(
-      color: colors.bgDark,
-      elevation: isCollapsed ? 3 : 0,
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: isCollapsed ? colors.bgCard : colors.bgDark,
       child: SafeArea(
         top: false,
         bottom: false,
         child: ClipRect(
           child: isCollapsed
-              ? _buildCollapsedHeader(colors)
+              ? Align(
+                  alignment: Alignment.bottomCenter,
+                  child: _buildCollapsedHeader(colors),
+                )
               : _buildExpandedHeader(colors, images),
         ),
       ),
     );
   }
 
-  /// Nấc 1 (Ban đầu): Banner trên cùng, thông tin nằm dưới hoàn toàn (không che banner)
+  /// Nấc 1 (Ban đầu): Banner trên cùng, thông tin nằm dưới hoàn toàn (nằm ngoài banner)
   Widget _buildExpandedHeader(AppColorsExtension colors, List<String> images) {
-    return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Banner trên cùng đầy đủ
-          SizedBox(
-            height: 190,
-            child: _BannerCarousel(
-              images: images,
-              pageController: _pageController,
-              currentPage: _currentPage,
-              onPageChanged: (index) {
-                setState(() => _currentPage = index);
-              },
-            ),
+    return Column(
+      children: [
+        // Banner trên cùng đầy đủ
+        SizedBox(
+          height: 190,
+          child: _BannerCarousel(
+            images: images,
+            pageController: _pageController,
+            currentPage: _currentPage,
+            onPageChanged: (index) {
+              setState(() => _currentPage = index);
+            },
           ),
-          // Thông tin giải đấu nằm NGOÀI banner, tràn lan trên nền trang
-          Container(
+        ),
+        // Thông tin giải đấu nằm NGOÀI banner, nằm thoải mái trên nền trang
+        Expanded(
+          child: Container(
             color: colors.bgDark,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _HeaderBadges(tournament: widget.tournament),
-                const SizedBox(height: 10),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -136,20 +138,20 @@ class _TournamentCollapsibleHeaderState
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
                 _HeaderMeta(tournament: widget.tournament),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  /// Nấc 2 (Đã cuộn xuống): Banner ẩn đi, Logo tự thu lại to ra (60px), dọn gọn các dòng chữ
+  /// Nấc 2 (Đã cuộn xuống): Banner ẩn hẳn, Logo tự thu lại to ra (60px), dọn gọn các dòng chữ
   Widget _buildCollapsedHeader(AppColorsExtension colors) {
     return Container(
-      height: 100,
+      height: 110,
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: colors.bgCard,
