@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -48,29 +49,8 @@ class AchievementsTab extends ConsumerWidget {
       // Chỉ đưa các giải đã KẾT THÚC vào mục "Thành tích gần đây"
       if (!isCompleted) continue;
 
-      final sport = t.sport.toLowerCase();
-      String label = 'Đã tham gia';
-      if (i == 0) {
-        label = 'Vô địch';
-      } else if (i == 1) {
-        label = 'Á quân';
-      } else if (i == 2) {
-        label = 'Hạng Ba';
-      } else if (i < 4) {
-        label = 'Top 4';
-      } else if (i < 8) {
-        label = 'Top 8';
-      } else if (i < 16) {
-        label = 'Top 16';
-      } else if (i < 32) {
-        label = 'Top 32';
-      } else if (i < 64) {
-        label = 'Top 64';
-      } else if (i < 128) {
-        label = 'Top 128';
-      } else {
-        label = 'Top ${1 << (t.roundCount > 0 ? t.roundCount : 5)}';
-      }
+      // Dữ liệu thành tích thực tế từ backend API
+      String label = 'Đã hoàn thành';
 
       final dateStr = t.startDate != null
           ? DateFormat('dd/MM/yyyy').format(t.startDate!)
@@ -278,21 +258,15 @@ class _AchievementCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Real Tournament Logo Image or Icon fallback
+          // Real Tournament Logo Image or VNDCSPORT fallback
           Container(
             width: 38,
             height: 38,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  achievement.cardColor,
-                  achievement.cardColor.withValues(alpha: 0.7),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: const Color(0xFF0F172A),
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: colors.border),
             ),
             child: resolvedLogo.isNotEmpty
                 ? Image.network(
@@ -300,17 +274,9 @@ class _AchievementCard extends StatelessWidget {
                     width: 38,
                     height: 38,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Icon(
-                      achievement.icon,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    errorBuilder: (context, error, stackTrace) => const _FallbackVndcLogo(),
                   )
-                : Icon(
-                    achievement.icon,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                : const _FallbackVndcLogo(),
           ),
           const SizedBox(width: 12),
 
@@ -367,6 +333,34 @@ class _AchievementCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FallbackVndcLogo extends StatelessWidget {
+  const _FallbackVndcLogo();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFF1E293B),
+      padding: const EdgeInsets.all(4),
+      child: Center(
+        child: SvgPicture.network(
+          "https://giaidau.vnvar.com/vndcsport.svg",
+          fit: BoxFit.contain,
+          width: 24,
+          height: 24,
+          placeholderBuilder: (_) => const Text(
+            "VNDC",
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              color: Colors.white70,
+            ),
+          ),
+        ),
       ),
     );
   }
