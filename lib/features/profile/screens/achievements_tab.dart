@@ -29,46 +29,38 @@ class AchievementsTab extends ConsumerWidget {
 
     final List<_AchievementData> apiAchievements = [];
 
-    // Map real API tournaments to achievements with real logoUrl / bannerUrl from backend
+    // Filter real API tournaments: ONLY COMPLETED TOURNAMENTS WITH ACHIEVEMENTS
     final combinedTournaments = {...realTournaments, ...followedTournaments}.toList();
     for (int i = 0; i < combinedTournaments.length; i++) {
       final t = combinedTournaments[i];
+      final statusLower = t.status.toLowerCase();
+      final isCompleted = statusLower == 'completed' || statusLower == 'finished';
+
+      // Chỉ đưa các giải đã KẾT THÚC vào mục "Thành tích gần đây"
+      if (!isCompleted) continue;
+
       final sport = t.sport.toLowerCase();
-
-      // Tính toán Hạng danh hiệu chính xác dựa trên Vòng đấu / Kết quả Loại Trực Tiếp (Knockout)
       String label = 'Đã tham gia';
-      final isCompleted = t.status.toLowerCase() == 'completed' || t.status.toLowerCase() == 'finished';
-
-      if (isCompleted) {
-        if (i == 0) {
-          label = 'Vô địch';
-        } else if (i == 1) {
-          label = 'Á quân';
-        } else if (i == 2) {
-          label = 'Hạng Ba';
-        } else if (i < 4) {
-          label = 'Top 4';
-        } else if (i < 8) {
-          label = 'Top 8'; // Loại ở Tứ kết
-        } else if (i < 16) {
-          label = 'Top 16'; // Loại ở Vòng 1/8 (Vòng 16)
-        } else if (i < 32) {
-          label = 'Top 32'; // Loại ở Vòng 1/16 (Vòng 32)
-        } else if (i < 64) {
-          label = 'Top 64'; // Loại ở Vòng 1/32 (Vòng 64)
-        } else if (i < 128) {
-          label = 'Top 128'; // Loại ở Vòng 1/64 (Vòng 128)
-        } else {
-          label = 'Top ${1 << (t.roundCount > 0 ? t.roundCount : 5)}';
-        }
+      if (i == 0) {
+        label = 'Vô địch';
+      } else if (i == 1) {
+        label = 'Á quân';
+      } else if (i == 2) {
+        label = 'Hạng Ba';
+      } else if (i < 4) {
+        label = 'Top 4';
+      } else if (i < 8) {
+        label = 'Top 8';
+      } else if (i < 16) {
+        label = 'Top 16';
+      } else if (i < 32) {
+        label = 'Top 32';
+      } else if (i < 64) {
+        label = 'Top 64';
+      } else if (i < 128) {
+        label = 'Top 128';
       } else {
-        if (t.status.toLowerCase().contains('progress') || t.status.toLowerCase().contains('ongoing')) {
-          label = 'Đang diễn ra';
-        } else if (t.status.toLowerCase().contains('reg')) {
-          label = 'Mở đăng ký';
-        } else {
-          label = 'Sắp diễn ra';
-        }
+        label = 'Top ${1 << (t.roundCount > 0 ? t.roundCount : 5)}';
       }
 
       final dateStr = t.startDate != null
@@ -108,14 +100,32 @@ class AchievementsTab extends ConsumerWidget {
         // ─── Achievement Cards ──────────────────────────────────────
         if (filteredAchievements.isEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: Center(
-              child: Text(
-                'Chưa có thành tích cho môn thể thao này',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: colors.textMuted,
-                  fontWeight: FontWeight.w500,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: colors.bgCard,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: colors.border),
+              ),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.emoji_events_outlined,
+                      size: 36,
+                      color: colors.textMuted.withValues(alpha: 0.5),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Chưa có thành tích thi đấu nào',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
