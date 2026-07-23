@@ -108,107 +108,124 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       _tabController = TabController(length: tabCount, vsync: this);
     }
 
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        if (notification is ScrollEndNotification) {
-          final metrics = notification.metrics;
-          if (metrics.axis == Axis.vertical) {
-            final pixels = metrics.pixels;
-            const snapThreshold = 140.0;
-            const collapsedExtent = 310.0;
-            if (pixels > 0 && pixels < collapsedExtent) {
-              final target = pixels >= snapThreshold ? collapsedExtent : 0.0;
-              final controller = PrimaryScrollController.of(context);
-              if (controller.hasClients) {
-                controller.animateTo(
-                  target,
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                );
-              }
-            }
-          }
-        }
-        return false;
-      },
-      child: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverAppBar(
-              pinned: true,
-              elevation: 0,
-              backgroundColor: colors.bgDark,
-              leading: IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: colors.bgCard.withValues(alpha: 0.8),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.arrow_back_rounded,
-                    color: colors.textPrimary,
-                    size: 20,
-                  ),
+    return NestedScrollView(
+      headerSliverBuilder: (context, innerBoxIsScrolled) {
+        return [
+          SliverAppBar(
+            pinned: true,
+            elevation: innerBoxIsScrolled ? 2 : 0,
+            backgroundColor: innerBoxIsScrolled ? colors.bgCard : colors.bgDark,
+            leading: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colors.bgCard.withValues(alpha: 0.8),
+                  shape: BoxShape.circle,
                 ),
-                onPressed: () {
-                  final auth = ref.read(authProvider);
-                  if (auth.tokenCode != null && auth.tokenCode != 'SESSION') {
-                    ref.read(authProvider.notifier).signOut();
-                  }
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go('/home');
-                  }
-                },
-              ),
-              title: Text(
-                tournament.name,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                child: Icon(
+                  Icons.arrow_back_rounded,
                   color: colors.textPrimary,
+                  size: 20,
                 ),
               ),
-              centerTitle: true,
-              actions: [
-                // Share button
-                IconButton(
-                  icon: Icon(Icons.share_rounded, color: colors.textPrimary, size: 20),
-                  onPressed: () => _shareTournament(tournament),
-                  tooltip: 'Chia sẻ',
-                ),
-                if (viewerCountAsync.hasValue &&
-                    viewerCountAsync.value != null &&
-                    viewerCountAsync.value! > 0)
-                  _viewerBadge(viewerCountAsync.value!),
-                const SizedBox(width: 8),
-              ],
+              onPressed: () {
+                final auth = ref.read(authProvider);
+                if (auth.tokenCode != null && auth.tokenCode != 'SESSION') {
+                  ref.read(authProvider.notifier).signOut();
+                }
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/home');
+                }
+              },
             ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: TournamentCollapsibleHeaderDelegate(
-                tournament: tournament,
-                colors: colors,
+            title: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: innerBoxIsScrolled
+                  ? Row(
+                      key: const ValueKey("collapsed_header"),
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: colors.border),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: tournament.logoUrl != null && tournament.logoUrl!.isNotEmpty
+                                ? Image.network(
+                                    _resolveImageUrl(tournament.logoUrl!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : const Icon(Icons.emoji_events, size: 16),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            tournament.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Text(
+                      tournament.name,
+                      key: const ValueKey("expanded_header"),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+            ),
+            centerTitle: !innerBoxIsScrolled,
+            actions: [
+              // Share button
+              IconButton(
+                icon: Icon(Icons.share_rounded, color: colors.textPrimary, size: 20),
+                onPressed: () => _shareTournament(tournament),
+                tooltip: 'Chia sẻ',
               ),
-            ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _TabBarDelegate(
-                tabController: _tabController,
-                colors: colors,
-              ),
-            ),
-          ];
-        },
-        body: teamsAsync.when(
-          data: (teams) => _buildTabContent(tournament, teams, role),
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: AppTheme.primary),
+              if (viewerCountAsync.hasValue &&
+                  viewerCountAsync.value != null &&
+                  viewerCountAsync.value! > 0)
+                _viewerBadge(viewerCountAsync.value!),
+              const SizedBox(width: 8),
+            ],
           ),
-          error: (e, _) => _buildTabContent(tournament, [], role),
+          SliverToBoxAdapter(
+            child: TournamentHeaderView(
+              tournament: tournament,
+              colors: colors,
+            ),
+          ),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _TabBarDelegate(
+              tabController: _tabController,
+              colors: colors,
+            ),
+          ),
+        ];
+      },
+      body: teamsAsync.when(
+        data: (teams) => _buildTabContent(tournament, teams, role),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppTheme.primary),
         ),
+        error: (e, _) => _buildTabContent(tournament, [], role),
       ),
     );
   }

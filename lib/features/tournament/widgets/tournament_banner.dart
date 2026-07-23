@@ -6,60 +6,21 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
 
-class TournamentCollapsibleHeaderDelegate extends SliverPersistentHeaderDelegate {
+class TournamentHeaderView extends StatefulWidget {
   final Tournament tournament;
   final AppColorsExtension colors;
 
-  TournamentCollapsibleHeaderDelegate({
+  const TournamentHeaderView({
+    super.key,
     required this.tournament,
     required this.colors,
   });
 
   @override
-  double get maxExtent => 420;
-
-  @override
-  double get minExtent => 110;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final progress = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
-    return TournamentCollapsibleHeader(
-      tournament: tournament,
-      progress: progress,
-      overlapsContent: overlapsContent,
-    );
-  }
-
-  @override
-  bool shouldRebuild(TournamentCollapsibleHeaderDelegate oldDelegate) {
-    return oldDelegate.tournament != tournament || oldDelegate.colors != colors;
-  }
+  State<TournamentHeaderView> createState() => _TournamentHeaderViewState();
 }
 
-class TournamentCollapsibleHeader extends StatefulWidget {
-  final Tournament tournament;
-  final double progress;
-  final bool overlapsContent;
-
-  const TournamentCollapsibleHeader({
-    super.key,
-    required this.tournament,
-    required this.progress,
-    required this.overlapsContent,
-  });
-
-  @override
-  State<TournamentCollapsibleHeader> createState() =>
-      _TournamentCollapsibleHeaderState();
-}
-
-class _TournamentCollapsibleHeaderState
-    extends State<TournamentCollapsibleHeader> {
+class _TournamentHeaderViewState extends State<TournamentHeaderView> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -71,37 +32,15 @@ class _TournamentCollapsibleHeaderState
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final colors = widget.colors;
     final images = _collectImages(widget.tournament);
-    // Switch dứt khoát sang Nấc 2 (Collapsing mode) khi cuộn nhẹ qua 0.4
-    final isCollapsed = widget.progress > 0.4;
 
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      color: isCollapsed ? colors.bgCard : colors.bgDark,
-      child: SafeArea(
-        top: false,
-        bottom: false,
-        child: ClipRect(
-          child: isCollapsed
-              ? Align(
-                  alignment: Alignment.bottomCenter,
-                  child: _buildCollapsedHeader(colors),
-                )
-              : _buildExpandedHeader(colors, images),
-        ),
-      ),
-    );
-  }
-
-  /// Nấc 1 (Ban đầu): Banner trên cùng, thông tin nằm dưới hoàn toàn (nằm ngoài banner)
-  Widget _buildExpandedHeader(AppColorsExtension colors, List<String> images) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Banner trên cùng đầy đủ
+        // Banner trên cùng đầy đủ (không bị che, không co giãn từ từ lề mề)
         SizedBox(
-          height: 190,
+          height: 200,
           child: _BannerCarousel(
             images: images,
             pageController: _pageController,
@@ -111,90 +50,38 @@ class _TournamentCollapsibleHeaderState
             },
           ),
         ),
-        // Thông tin giải đấu nằm NGOÀI banner, nằm thoải mái trên nền trang
-        Expanded(
-          child: Container(
-            color: colors.bgDark,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _HeaderBadges(tournament: widget.tournament),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Logo nhỏ ban đầu (48px)
-                    _TournamentLogo(
+        // Thông tin giải đấu nằm NGOÀI banner, tràn lan tự nhiên trên nền trang
+        Container(
+          color: colors.bgDark,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _HeaderBadges(tournament: widget.tournament),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _TournamentLogo(
+                    tournament: widget.tournament,
+                    size: 52,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _HeaderInfo(
                       tournament: widget.tournament,
-                      size: 48,
+                      compact: false,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _HeaderInfo(
-                        tournament: widget.tournament,
-                        compact: false,
-                      ),
-                    ),
-                  ],
-                ),
-                _HeaderMeta(tournament: widget.tournament),
-              ],
-            ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              _HeaderMeta(tournament: widget.tournament),
+              const SizedBox(height: 8),
+            ],
           ),
         ),
       ],
-    );
-  }
-
-  /// Nấc 2 (Đã cuộn xuống): Banner ẩn hẳn, Logo tự thu lại to ra (60px), dọn gọn các dòng chữ
-  Widget _buildCollapsedHeader(AppColorsExtension colors) {
-    return Container(
-      height: 110,
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        border: Border(bottom: BorderSide(color: colors.border)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Logo to rõ hơn ở nấc thu gọn (60px)
-          _TournamentLogo(
-            tournament: widget.tournament,
-            size: 60,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    SportPill(sportKey: widget.tournament.sport),
-                    const SizedBox(width: 6),
-                    StatusBadge(statusKey: widget.tournament.status),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.tournament.name.toUpperCase(),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: colors.textPrimary,
-                    height: 1.2,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
