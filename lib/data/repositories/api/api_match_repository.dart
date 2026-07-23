@@ -145,30 +145,36 @@ class ApiMatchRepository implements IMatchRepository {
       return 0;
     }
 
-    int score1 = json['p1SetsWon'] != null ? parseNum(json['p1SetsWon']) : parseNum(json['score1']);
-    int score2 = json['p2SetsWon'] != null ? parseNum(json['p2SetsWon']) : parseNum(json['score2']);
+    int score1 = 0;
+    int score2 = 0;
 
-    if (score1 == 0 && score2 == 0 && json['scoreDetails'] != null) {
+    // 1. Prioritize latest set score from scoreDetails.sets
+    if (json['scoreDetails'] != null) {
       try {
         final details = json['scoreDetails'];
         if (details is Map && details['sets'] is List) {
           final sets = details['sets'] as List;
           if (sets.isNotEmpty) {
-            int win1 = 0;
-            int win2 = 0;
-            for (final st in sets) {
-              final sc1 = parseNum(st['score1'] ?? st['p1']);
-              final sc2 = parseNum(st['score2'] ?? st['p2']);
-              if (sc1 > sc2) win1++;
-              else if (sc2 > sc1) win2++;
-            }
-            if (win1 > 0 || win2 > 0) {
-              score1 = win1;
-              score2 = win2;
+            final lastSet = sets.last;
+            if (lastSet is Map) {
+              score1 = parseNum(lastSet['score1'] ?? lastSet['p1']);
+              score2 = parseNum(lastSet['score2'] ?? lastSet['p2']);
             }
           }
         }
       } catch (_) {}
+    }
+
+    // 2. Fallback to direct score1 / score2 fields
+    if (score1 == 0 && score2 == 0) {
+      score1 = parseNum(json['score1'] ?? json['participant1Score']);
+      score2 = parseNum(json['score2'] ?? json['participant2Score']);
+    }
+
+    // 3. Fallback to p1SetsWon / p2SetsWon
+    if (score1 == 0 && score2 == 0) {
+      score1 = parseNum(json['p1SetsWon']);
+      score2 = parseNum(json['p2SetsWon']);
     }
 
     return MatchModel(
