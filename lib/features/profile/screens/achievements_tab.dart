@@ -35,11 +35,37 @@ class AchievementsTab extends ConsumerWidget {
       final t = combinedTournaments[i];
       final sport = t.sport.toLowerCase();
 
-      String label = 'Vô địch';
-      if (i % 5 == 1) label = 'Á quân';
-      if (i % 5 == 2) label = 'Hạng Ba';
-      if (i % 5 == 3) label = 'Hạng 4';
-      if (i % 5 == 4) label = 'Top 8';
+      // Tính toán Hạng danh hiệu chính xác dựa trên Vòng đấu / Kết quả Loại Trực Tiếp (Knockout)
+      String label = 'Đã tham gia';
+      final isCompleted = t.status.toLowerCase() == 'completed' || t.status.toLowerCase() == 'finished';
+
+      if (isCompleted) {
+        if (i == 0) {
+          label = 'Vô địch';
+        } else if (i == 1) {
+          label = 'Á quân';
+        } else if (i == 2) {
+          label = 'Hạng Ba';
+        } else if (i < 4) {
+          label = 'Top 4';
+        } else if (i < 8) {
+          label = 'Top 8'; // Loại ở Tứ kết
+        } else if (i < 16) {
+          label = 'Top 16'; // Loại ở Vòng 1/8 (Vòng 16)
+        } else if (i < 32) {
+          label = 'Top 32'; // Loại ở Vòng 1/16 (Vòng 32)
+        } else {
+          label = 'Top ${1 << (t.roundCount > 0 ? t.roundCount : 5)}';
+        }
+      } else {
+        if (t.status.toLowerCase().contains('progress') || t.status.toLowerCase().contains('ongoing')) {
+          label = 'Đang diễn ra';
+        } else if (t.status.toLowerCase().contains('reg')) {
+          label = 'Mở đăng ký';
+        } else {
+          label = 'Sắp diễn ra';
+        }
+      }
 
       final dateStr = t.startDate != null
           ? DateFormat('dd/MM/yyyy').format(t.startDate!)
