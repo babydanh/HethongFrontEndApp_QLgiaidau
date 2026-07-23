@@ -19,7 +19,7 @@ class TournamentCollapsibleHeaderDelegate extends SliverPersistentHeaderDelegate
   double get maxExtent => 410;
 
   @override
-  double get minExtent => 130;
+  double get minExtent => 100;
 
   @override
   Widget build(
@@ -73,8 +73,8 @@ class _TournamentCollapsibleHeaderState
   Widget build(BuildContext context) {
     final colors = context.colors;
     final images = _collectImages(widget.tournament);
-    // Nấc 2 khi cuộn qua threshold 0.35 dứt khoát
-    final isCollapsed = widget.progress > 0.35;
+    // Nấc 2: lướt nhẹ 1 phát dứt khoát chuyển sang Nấc thu gọn
+    final isCollapsed = widget.progress > 0.15;
 
     return Material(
       color: colors.bgDark,
@@ -82,39 +82,43 @@ class _TournamentCollapsibleHeaderState
       child: SafeArea(
         top: false,
         bottom: false,
-        child: isCollapsed
-            ? _buildCollapsedHeader(colors)
-            : _buildExpandedHeader(colors, images),
+        child: ClipRect(
+          child: isCollapsed
+              ? _buildCollapsedHeader(colors)
+              : _buildExpandedHeader(colors, images),
+        ),
       ),
     );
   }
 
-  /// Nấc 1 (Ban đầu): Banner trên cùng, thông tin nằm dưới hoàn toàn (không nằm trong card che banner)
+  /// Nấc 1 (Ban đầu): Banner trên cùng, thông tin nằm dưới hoàn toàn (không che banner)
   Widget _buildExpandedHeader(AppColorsExtension colors, List<String> images) {
-    return Column(
-      children: [
-        // Banner trên cùng đầy đủ
-        SizedBox(
-          height: 190,
-          child: _BannerCarousel(
-            images: images,
-            pageController: _pageController,
-            currentPage: _currentPage,
-            onPageChanged: (index) {
-              setState(() => _currentPage = index);
-            },
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Banner trên cùng đầy đủ
+          SizedBox(
+            height: 190,
+            child: _BannerCarousel(
+              images: images,
+              pageController: _pageController,
+              currentPage: _currentPage,
+              onPageChanged: (index) {
+                setState(() => _currentPage = index);
+              },
+            ),
           ),
-        ),
-        // Thông tin giải đấu nằm NGOÀI banner, tràn lan thoải mái trên nền trang
-        Expanded(
-          child: Container(
+          // Thông tin giải đấu nằm NGOÀI banner, tràn lan trên nền trang
+          Container(
             color: colors.bgDark,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _HeaderBadges(tournament: widget.tournament),
+                const SizedBox(height: 10),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -132,19 +136,20 @@ class _TournamentCollapsibleHeaderState
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
                 _HeaderMeta(tournament: widget.tournament),
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   /// Nấc 2 (Đã cuộn xuống): Banner ẩn đi, Logo tự thu lại to ra (60px), dọn gọn các dòng chữ
   Widget _buildCollapsedHeader(AppColorsExtension colors) {
     return Container(
-      color: colors.bgCard,
+      height: 100,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: colors.bgCard,
