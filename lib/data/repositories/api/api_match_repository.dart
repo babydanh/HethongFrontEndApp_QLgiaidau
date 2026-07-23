@@ -139,6 +139,38 @@ class ApiMatchRepository implements IMatchRepository {
     final rosters2 = json['participant2']?['rosters'] as List<dynamic>?;
     final team2Members = rosters2?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
 
+    int parseNum(dynamic val) {
+      if (val is num) return val.toInt();
+      if (val is String) return int.tryParse(val) ?? 0;
+      return 0;
+    }
+
+    int score1 = json['p1SetsWon'] != null ? parseNum(json['p1SetsWon']) : parseNum(json['score1']);
+    int score2 = json['p2SetsWon'] != null ? parseNum(json['p2SetsWon']) : parseNum(json['score2']);
+
+    if (score1 == 0 && score2 == 0 && json['scoreDetails'] != null) {
+      try {
+        final details = json['scoreDetails'];
+        if (details is Map && details['sets'] is List) {
+          final sets = details['sets'] as List;
+          if (sets.isNotEmpty) {
+            int win1 = 0;
+            int win2 = 0;
+            for (final st in sets) {
+              final sc1 = parseNum(st['score1'] ?? st['p1']);
+              final sc2 = parseNum(st['score2'] ?? st['p2']);
+              if (sc1 > sc2) win1++;
+              else if (sc2 > sc1) win2++;
+            }
+            if (win1 > 0 || win2 > 0) {
+              score1 = win1;
+              score2 = win2;
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
     return MatchModel(
       id: json['id'] ?? '',
       round: json['roundNumber'] ?? 1,
@@ -147,8 +179,8 @@ class ApiMatchRepository implements IMatchRepository {
       team1Name: team1Name,
       team2Id: json['team2Id'] ?? '',
       team2Name: team2Name,
-      score1: json['score1'] ?? 0,
-      score2: json['score2'] ?? 0,
+      score1: score1,
+      score2: score2,
       status: _mapMatchStatus(json['status'] as String?),
       bracketPosition: json['bracketBranch'] != null
           ? BracketPosition(
@@ -384,46 +416,7 @@ class ApiMatchRepository implements IMatchRepository {
       final response = await _dioClient.dio.get('/matches', queryParameters: queryParameters);
       if (response.statusCode == 200) {
         final List<dynamic> list = response.data['data'] ?? response.data ?? [];
-        return list.map((json) {
-          final String id = json['id'] ?? '';
-          final team1Name = json['participant1']?['teamName'] ?? json['team1Name'] ?? 'TBD';
-          final team2Name = json['participant2']?['teamName'] ?? json['team2Name'] ?? 'TBD';
-          final rosters1 = json['participant1']?['rosters'] as List<dynamic>?;
-          final team1Members = rosters1?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
-          final rosters2 = json['participant2']?['rosters'] as List<dynamic>?;
-          final team2Members = rosters2?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
-
-          return MatchModel(
-            id: id,
-            round: json['roundNumber'] ?? 1,
-            matchNumber: json['matchOrder'] ?? json['matchNumber'] ?? 1,
-            team1Id: json['team1Id'] ?? '',
-            team1Name: team1Name,
-            team2Id: json['team2Id'] ?? '',
-            team2Name: team2Name,
-            score1: json['score1'] ?? 0,
-            score2: json['score2'] ?? 0,
-            status: _mapMatchStatus(json['status'] as String?),
-            bracketPosition: json['bracketBranch'] != null
-                ? BracketPosition(
-                    bracket: _mapBracketBranch(json['bracketBranch'] as String?),
-                    round: json['roundNumber'] ?? 1,
-                    position: json['matchOrder'] ?? json['matchNumber'] ?? 0,
-                  )
-                : const BracketPosition(round: 1, position: 0),
-            nextMatchId: json['nextMatchId'] ?? '',
-            loserNextMatchId: json['loserNextMatchId'] ?? '',
-            winnerId: json['winnerId'] ?? '',
-            isBye: json['isBye'] ?? json['is_bye'] ?? false,
-            court: json['court'] ?? '',
-            updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
-            // Sport rules từ tournament setting
-            sportRules: _readSportRules(json),
-            setsToWin: json['setsToWin'] as int?,
-            team1Members: team1Members,
-            team2Members: team2Members,
-          );
-        }).toList();
+        return list.map((json) => _parseMatch(Map<String, dynamic>.from(json))).toList();
       }
       return [];
     } catch (e, stack) {
@@ -447,46 +440,7 @@ class ApiMatchRepository implements IMatchRepository {
       final response = await _dioClient.dio.get('/matches', queryParameters: queryParams);
       if (response.statusCode == 200) {
         final List<dynamic> list = response.data['data'] ?? response.data ?? [];
-        return list.map((json) {
-          final String id = json['id'] ?? '';
-          final team1Name = json['participant1']?['teamName'] ?? json['team1Name'] ?? 'TBD';
-          final team2Name = json['participant2']?['teamName'] ?? json['team2Name'] ?? 'TBD';
-          final rosters1 = json['participant1']?['rosters'] as List<dynamic>?;
-          final team1Members = rosters1?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
-          final rosters2 = json['participant2']?['rosters'] as List<dynamic>?;
-          final team2Members = rosters2?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
-
-          return MatchModel(
-            id: id,
-            round: json['roundNumber'] ?? 1,
-            matchNumber: json['matchOrder'] ?? json['matchNumber'] ?? 1,
-            team1Id: json['team1Id'] ?? '',
-            team1Name: team1Name,
-            team2Id: json['team2Id'] ?? '',
-            team2Name: team2Name,
-            score1: json['score1'] ?? 0,
-            score2: json['score2'] ?? 0,
-            status: _mapMatchStatus(json['status'] as String?),
-            bracketPosition: json['bracketBranch'] != null
-                ? BracketPosition(
-                    bracket: _mapBracketBranch(json['bracketBranch'] as String?),
-                    round: json['roundNumber'] ?? 1,
-                    position: json['matchOrder'] ?? json['matchNumber'] ?? 0,
-                  )
-                : const BracketPosition(round: 1, position: 0),
-            nextMatchId: json['nextMatchId'] ?? '',
-            loserNextMatchId: json['loserNextMatchId'] ?? '',
-            winnerId: json['winnerId'] ?? '',
-            isBye: json['isBye'] ?? json['is_bye'] ?? false,
-            court: json['court'] ?? '',
-            updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
-            // Sport rules từ tournament setting
-            sportRules: _readSportRules(json),
-            setsToWin: json['setsToWin'] as int?,
-            team1Members: team1Members,
-            team2Members: team2Members,
-          );
-        }).toList();
+        return list.map((json) => _parseMatch(Map<String, dynamic>.from(json))).toList();
       }
       return [];
     } catch (e, stack) {
