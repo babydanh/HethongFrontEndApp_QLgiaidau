@@ -42,11 +42,27 @@ class ApiMatchRepository implements IMatchRepository {
     throw UnimplementedError('Mobile app cannot batch create matches directly.');
   }
 
+  final Map<String, List<MatchModel>> _matchesCache = {};
+
   @override
   Stream<List<MatchModel>> watchByTournament(String tournamentId, {String? divisionId}) async* {
-    yield await getAllByTournament(tournamentId, divisionId: divisionId);
-    yield* Stream.periodic(const Duration(seconds: 10))
-        .asyncMap((_) => getAllByTournament(tournamentId, divisionId: divisionId));
+    final cacheKey = '$tournamentId-${divisionId ?? 'all'}';
+    final initial = await getAllByTournament(tournamentId, divisionId: divisionId);
+    if (initial.isNotEmpty) {
+      _matchesCache[cacheKey] = initial;
+      yield initial;
+    } else {
+      yield _matchesCache[cacheKey] ?? [];
+    }
+
+    yield* Stream.periodic(const Duration(seconds: 10)).asyncMap((_) async {
+      final updated = await getAllByTournament(tournamentId, divisionId: divisionId);
+      if (updated.isNotEmpty) {
+        _matchesCache[cacheKey] = updated;
+        return updated;
+      }
+      return _matchesCache[cacheKey] ?? [];
+    });
   }
 
   @override

@@ -298,17 +298,20 @@ class ApiTournamentRepository implements ITournamentRepository {
 
   @override
   Stream<List<Tournament>> watchAll() async* {
+    List<Tournament> cache = [];
     try {
       final response = await _dioClient.dio.get('/tournaments/public');
       if (response.statusCode == 200) {
         final raw = response.data['data'];
-        yield _parseTournamentList(raw);
+        final parsed = _parseTournamentList(raw);
+        if (parsed.isNotEmpty) cache = parsed;
+        yield cache;
       } else {
-        yield <Tournament>[];
+        yield cache;
       }
     } catch (e, stack) {
       _log.error('Error fetching initial public tournaments', e, stack);
-      yield <Tournament>[];
+      yield cache;
     }
 
     yield* Stream.periodic(const Duration(seconds: 15))
@@ -317,12 +320,16 @@ class ApiTournamentRepository implements ITournamentRepository {
             final response = await _dioClient.dio.get('/tournaments/public');
             if (response.statusCode == 200) {
               final raw = response.data['data'];
-              return _parseTournamentList(raw);
+              final parsed = _parseTournamentList(raw);
+              if (parsed.isNotEmpty) {
+                cache = parsed;
+              }
+              return cache;
             }
           } catch (e, stack) {
             _log.error('Error polling public tournaments', e, stack);
           }
-          return <Tournament>[];
+          return cache;
         });
   }
 
@@ -381,10 +388,13 @@ class ApiTournamentRepository implements ITournamentRepository {
   /// đầy đủ roundNumber, matchOrder, bracketBranch, isBye, nextMatchId.
   /// Đây là endpoint ĐÚNG để render bracket diagram (khác với /matches flat list).
   @override
-  Future<List<MatchModel>> getBracketMatches(String tournamentId) async {
-    _log.debug('Fetching bracket matches for tournament $tournamentId');
+  Future<List<MatchModel>> getBracketMatches(String tournamentId, {String? divisionId}) async {
+    _log.debug('Fetching bracket matches for tournament $tournamentId (division: $divisionId)');
     try {
-      final response = await _dioClient.dio.get('/tournaments/$tournamentId/bracket');
+      final response = await _dioClient.dio.get(
+        '/tournaments/$tournamentId/bracket',
+        queryParameters: divisionId != null ? {'divisionId': divisionId} : null,
+      );
       if (response.statusCode != 200) return [];
       final data = response.data['data'];
       if (data == null) return [];
@@ -426,10 +436,10 @@ class ApiTournamentRepository implements ITournamentRepository {
   }
 
   @override
-  Stream<List<MatchModel>> watchBracketMatches(String tournamentId) async* {
-    yield await getBracketMatches(tournamentId);
+  Stream<List<MatchModel>> watchBracketMatches(String tournamentId, {String? divisionId}) async* {
+    yield await getBracketMatches(tournamentId, divisionId: divisionId);
     yield* Stream.periodic(const Duration(seconds: 10))
-        .asyncMap((_) => getBracketMatches(tournamentId));
+        .asyncMap((_) => getBracketMatches(tournamentId, divisionId: divisionId));
   }
 
   static String _mapBracketMatchStatus(String? status) {
