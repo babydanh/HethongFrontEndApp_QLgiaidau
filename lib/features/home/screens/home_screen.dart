@@ -627,7 +627,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       )
                     else
-                      _buildSectionEmptyCard('Chưa có trận đấu đang diễn ra'),
+                      _buildSectionEmptyCard('Chưa có'),
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
                         title: 'Kết quả trận đấu vừa qua',
@@ -650,7 +650,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       )
                     else
-                      _buildSectionEmptyCard('Chưa có trận đấu đã kết thúc'),
+                      _buildSectionEmptyCard('Chưa có'),
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
                         title: 'Lịch thi đấu sắp diễn ra',
@@ -673,7 +673,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       )
                     else
-                      _buildSectionEmptyCard('Chưa có lịch thi đấu sắp diễn ra'),
+                      _buildSectionEmptyCard('Chưa có'),
                     // ── Section 5: Cộng đồng câu lạc bộ ──
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
@@ -721,28 +721,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return communitiesAsync.when(
       data: (clubs) {
         if (clubs.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFF1F5F9)),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF94A3B8)),
-                  SizedBox(width: 8),
-                  Text(
-                    'Chưa có câu lạc bộ nào',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: Color(0xFF64748B),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+          return const Padding(
+            padding: EdgeInsets.fromLTRB(16, 2, 16, 14),
+            child: Text(
+              'Chưa có',
+              style: TextStyle(
+                fontSize: 13,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w500,
               ),
             ),
           );
@@ -1337,26 +1323,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 2, 16, 14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFFF1F5F9)),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF94A3B8)),
-              const SizedBox(width: 8),
-              Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: Color(0xFF64748B),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 13,
+            color: Color(0xFF64748B),
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),

@@ -70,40 +70,7 @@ class _LiveTournamentWithMatchesCardState
           return true;
         }).toList();
 
-        if (validMatches.isEmpty) {
-          final statusLabel = widget.filterStatus == 'live'
-              ? 'đang diễn ra'
-              : widget.filterStatus == 'completed'
-                  ? 'đã kết thúc'
-                  : 'sắp diễn ra';
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFF1F5F9)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF94A3B8)),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '${widget.tournament.name}: Hiện chưa có trận đấu nào $statusLabel',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF64748B),
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
+        if (validMatches.isEmpty) return const SizedBox.shrink();
 
         final displayMatches = validMatches;
 
