@@ -54,15 +54,18 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
     return Scaffold(
       backgroundColor: context.colors.bgDark,
-      body: tournamentAsync.when(
-        data: (tournament) {
-          if (tournament == null) {
-            return NotFoundView(onGoHome: () => context.go('/home'));
-          }
-          return _buildContent(tournament, authRole);
-        },
-        loading: () => _buildLoadingState(),
-        error: (err, stack) => _buildErrorState(err),
+      body: ColoredBox(
+        color: context.colors.bgDark,
+        child: tournamentAsync.when(
+          data: (tournament) {
+            if (tournament == null) {
+              return NotFoundView(onGoHome: () => context.go('/home'));
+            }
+            return _buildContent(tournament, authRole);
+          },
+          loading: () => _buildLoadingState(),
+          error: (err, stack) => _buildErrorState(err),
+        ),
       ),
       extendBody: true,
       bottomNavigationBar: FloatingBottomNav(
@@ -350,11 +353,14 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     if (val == "Tất cả") {
                       _selectedDivisionId = null;
                     } else {
-                      final matched = tournament.divisions.firstWhere(
-                        (d) => d.name == val,
-                        orElse: () => tournament.divisions.first,
-                      );
-                      _selectedDivisionId = matched.id;
+                      final matchedList = tournament.divisions.where((d) => d.name == val);
+                      if (matchedList.isNotEmpty) {
+                        _selectedDivisionId = matchedList.first.id;
+                      } else if (tournament.divisions.isNotEmpty) {
+                        _selectedDivisionId = tournament.divisions.first.id;
+                      } else {
+                        _selectedDivisionId = null;
+                      }
                     }
                   });
                 },
