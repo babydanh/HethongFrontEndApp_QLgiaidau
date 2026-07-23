@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
@@ -17,7 +16,6 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/about_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/gallery_tab.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/leaderboard_prize_tab.dart';
 
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -32,53 +30,13 @@ class TournamentIntroScreen extends ConsumerStatefulWidget {
 class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  bool _isRoundRobin = false;
   String _selectedDivision = "Tất cả";
   String? _selectedDivisionId;
-  bool _isFollowing = false;
-  bool _isFollowLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
-    _checkFollowing();
-  }
-
-  Future<void> _checkFollowing() async {
-    try {
-      final repo = ref.read(tournamentRepositoryProvider);
-      final following = await repo.isFollowing(widget.tournamentId);
-      if (mounted) setState(() => _isFollowing = following);
-    } catch (_) {}
-  }
-
-  Future<void> _toggleFollow() async {
-    setState(() => _isFollowLoading = true);
-    try {
-      final repo = ref.read(tournamentRepositoryProvider);
-      if (_isFollowing) {
-        await repo.unfollowTournament(widget.tournamentId);
-        setState(() => _isFollowing = false);
-      } else {
-        await repo.followTournament(widget.tournamentId);
-        setState(() => _isFollowing = true);
-      }
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _isFollowing ? 'Đã theo dõi giải đấu' : 'Đã bỏ theo dõi',
-            ),
-            backgroundColor: context.colors.success,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (_) {
-    } finally {
-      if (mounted) setState(() => _isFollowLoading = false);
-    }
+    _tabController = TabController(length: 4, vsync: this); // default 4, updated dynamically
   }
 
   @override
@@ -144,9 +102,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
     final colors = context.colors;
 
-    // Dynamic tabs based on bracket type
-    _isRoundRobin = tournament.bracketType == AppConstants.bracketRoundRobin;
-    final tabCount = _isRoundRobin ? 5 : 4;
+    const tabCount = 4;
     if (_tabController.length != tabCount) {
       _tabController.dispose();
       _tabController = TabController(length: tabCount, vsync: this);
@@ -200,25 +156,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 onPressed: () => _shareTournament(tournament),
                 tooltip: 'Chia sẻ',
               ),
-              // Follow button
-              _isFollowLoading
-                  ? const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : IconButton(
-                      icon: Icon(
-                        _isFollowing ? Icons.favorite : Icons.favorite_border,
-                        color: _isFollowing ? colors.error : colors.textPrimary,
-                        size: 20,
-                      ),
-                      onPressed: _toggleFollow,
-                      tooltip: _isFollowing ? 'Bỏ theo dõi' : 'Theo dõi',
-                    ),
               if (viewerCountAsync.hasValue &&
                   viewerCountAsync.value != null &&
                   viewerCountAsync.value! > 0)
@@ -226,15 +163,18 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               const SizedBox(width: 8),
             ],
           ),
-          SliverToBoxAdapter(
-            child: Column(children: [TournamentBanner(tournament: tournament)]),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: TournamentCollapsibleHeaderDelegate(
+              tournament: tournament,
+              colors: colors,
+            ),
           ),
           SliverPersistentHeader(
             pinned: true,
             delegate: _TabBarDelegate(
               tabController: _tabController,
               colors: colors,
-              isRoundRobin: _isRoundRobin,
             ),
           ),
         ];
@@ -366,11 +306,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     galleryImages: tournament.galleryImages,
                     resolveImageUrl: _resolveImageUrl,
                   ),
-                  if (_isRoundRobin)
-                    LeaderboardTab(
-                      tournamentId: widget.tournamentId,
-                      selectedDivision: _selectedDivision,
-                    ),
                 ],
               ),
               if (!isLive)
@@ -387,7 +322,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _buildBottomBar(Tournament tournament, UserRole? role) {
-    final hasRole = role != null;
     final isLive = StatusHelper.isTournamentInProgress(tournament.status);
     final isRegistration =
         StatusHelper.isTournamentRegistration(tournament.status) ||
@@ -395,23 +329,15 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         StatusHelper.isTournamentUpcoming(tournament.status);
     final isCompleted = StatusHelper.isTournamentCompleted(tournament.status);
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Nút theo dõi
-        _followButton(),
-        const SizedBox(width: 8),
-        if (hasRole) _enterButton(role),
-        if (hasRole && isLive) const SizedBox(width: 12),
-        if (isLive) _liveButton(role, tournament.id),
-        if (!hasRole && !isLive && isRegistration)
-          _registrationButton(tournament),
-        if (!hasRole && !isLive && !isRegistration)
-          isCompleted
-              ? _viewBracketButton("Xem kết quả")
-              : _viewBracketButton("Xem lịch thi đấu"),
-      ],
-    );
+    if (isLive) {
+      return _liveButton(role, tournament.id);
+    }
+    if (isRegistration) {
+      return _registrationButton(tournament);
+    }
+    return isCompleted
+        ? _viewBracketButton("Xem kết quả")
+        : _viewBracketButton("Xem lịch thi đấu");
   }
 
   Widget _viewBracketButton(String label) {
@@ -471,40 +397,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  Widget _enterButton(UserRole? role) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: FilledButton.icon(
-        style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
-          ),
-        ),
-        onPressed: () {
-          if (role == UserRole.admin) {
-            context.go('/admin/tournament/${widget.tournamentId}');
-          } else {
-            _tabController.animateTo(2);
-          }
-        },
-        icon: const Icon(Icons.login_rounded, size: 22),
-        label: Text(
-          role == UserRole.admin ? "Vào bảng quản trị" : "Xem sơ đồ thi đấu",
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-
   Widget _liveButton(UserRole? role, String tournamentId) {
     return Container(
       decoration: BoxDecoration(
@@ -542,84 +434,15 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       ),
     );
   }
-
-  Widget _followButton() {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: _isFollowing
-          ? OutlinedButton.icon(
-              onPressed: _isFollowLoading ? null : _toggleFollow,
-              icon: _isFollowLoading
-                  ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.bookmark_rounded, size: 16),
-              label: const Text(
-                "Đang theo dõi",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.primary,
-                side: const BorderSide(color: AppTheme.primary),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100),
-                ),
-              ),
-            )
-          : FilledButton.icon(
-              onPressed: _isFollowLoading ? null : _toggleFollow,
-              icon: _isFollowLoading
-                  ? SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.colors.bgCard,
-                      ),
-                    )
-                  : const Icon(Icons.bookmark_border_rounded, size: 16),
-              label: const Text(
-                "Theo dõi",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100),
-                ),
-              ),
-            ),
-    );
-  }
 }
 
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabController tabController;
   final AppColorsExtension colors;
-  final bool isRoundRobin;
 
   _TabBarDelegate({
     required this.tabController,
     required this.colors,
-    required this.isRoundRobin,
   });
 
   @override
@@ -667,20 +490,12 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
               fontWeight: FontWeight.normal,
               fontSize: 14,
             ),
-            tabs: isRoundRobin
-                ? const [
-                    Tab(text: "Giới thiệu"),
-                    Tab(text: "Danh sách đội"),
-                    Tab(text: "Bảng thi đấu"),
-                    Tab(text: "Gallery"),
-                    Tab(text: "Bảng xếp hạng"),
-                  ]
-                : const [
-                    Tab(text: "Giới thiệu"),
-                    Tab(text: "Danh sách đội"),
-                    Tab(text: "Bảng thi đấu"),
-                    Tab(text: "Gallery"),
-                  ],
+            tabs: const [
+              Tab(text: "Giới thiệu"),
+              Tab(text: "Danh sách đội"),
+              Tab(text: "Bảng thi đấu"),
+              Tab(text: "Gallery"),
+            ],
           ),
         ],
       ),
@@ -694,6 +509,5 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   double get minExtent => 48;
 
   @override
-  bool shouldRebuild(_TabBarDelegate oldDelegate) =>
-      oldDelegate.isRoundRobin != isRoundRobin;
+  bool shouldRebuild(_TabBarDelegate oldDelegate) => false;
 }
