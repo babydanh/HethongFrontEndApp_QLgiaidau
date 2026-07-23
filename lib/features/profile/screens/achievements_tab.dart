@@ -50,6 +50,7 @@ class AchievementsTab extends ConsumerWidget {
       if (!isCompleted) continue;
 
       // Dữ liệu thành tích thực tế từ backend API
+      final sport = t.sport.toLowerCase();
       String label = 'Đã hoàn thành';
 
       final dateStr = t.startDate != null
