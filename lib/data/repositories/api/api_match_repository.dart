@@ -145,37 +145,15 @@ class ApiMatchRepository implements IMatchRepository {
       return 0;
     }
 
-    int score1 = 0;
-    int score2 = 0;
+    // Match web frontend logic (MatchesTab.tsx / MatchCard.tsx):
+    // Display p1SetsWon vs p2SetsWon if available, else score1 vs score2
+    int score1 = json['p1SetsWon'] != null
+        ? parseNum(json['p1SetsWon'])
+        : parseNum(json['score1'] ?? json['participant1Score']);
 
-    // 1. Prioritize latest set score from scoreDetails.sets
-    if (json['scoreDetails'] != null) {
-      try {
-        final details = json['scoreDetails'];
-        if (details is Map && details['sets'] is List) {
-          final sets = details['sets'] as List;
-          if (sets.isNotEmpty) {
-            final lastSet = sets.last;
-            if (lastSet is Map) {
-              score1 = parseNum(lastSet['score1'] ?? lastSet['p1']);
-              score2 = parseNum(lastSet['score2'] ?? lastSet['p2']);
-            }
-          }
-        }
-      } catch (_) {}
-    }
-
-    // 2. Fallback to direct score1 / score2 fields
-    if (score1 == 0 && score2 == 0) {
-      score1 = parseNum(json['score1'] ?? json['participant1Score']);
-      score2 = parseNum(json['score2'] ?? json['participant2Score']);
-    }
-
-    // 3. Fallback to p1SetsWon / p2SetsWon
-    if (score1 == 0 && score2 == 0) {
-      score1 = parseNum(json['p1SetsWon']);
-      score2 = parseNum(json['p2SetsWon']);
-    }
+    int score2 = json['p2SetsWon'] != null
+        ? parseNum(json['p2SetsWon'])
+        : parseNum(json['score2'] ?? json['participant2Score']);
 
     return MatchModel(
       id: json['id'] ?? '',
