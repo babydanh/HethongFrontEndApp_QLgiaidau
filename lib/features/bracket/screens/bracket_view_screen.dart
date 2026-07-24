@@ -20,6 +20,7 @@ class BracketViewScreen extends ConsumerStatefulWidget {
   final String? divisionId;
   final bool isReferee;
   final bool isEmbedded;
+  final ScrollController? scrollController;
 
   const BracketViewScreen({
     super.key,
@@ -27,6 +28,7 @@ class BracketViewScreen extends ConsumerStatefulWidget {
     this.divisionId,
     this.isReferee = false,
     this.isEmbedded = false,
+    this.scrollController,
   });
 
   @override
