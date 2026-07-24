@@ -558,7 +558,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
     final authRole = ref.watch(authProvider).role;
     final canOpenScoring =
-        !widget.isViewer || authRole == UserRole.admin || authRole == UserRole.referee;
+        authRole == UserRole.admin || authRole == UserRole.referee;
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
@@ -679,8 +679,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 );
               }
 
-              if (widget.isViewer) {
-                return _buildLiveState(match, canOpenScoring: canOpenScoring);
+              if (widget.isViewer || !canOpenScoring) {
+                if (match.isCompleted) {
+                  return _buildCompletedState(match, authRole);
+                }
+                return _buildLiveState(match, canOpenScoring: false);
               }
 
               if (match.isScheduled) {
