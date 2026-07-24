@@ -40,9 +40,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   int _selectedRound = 0;
-  String _matchFilter = 'all';
-  String _selectedBranch = 'all';
-  String _selectedGroup = 'all';
+  String _matchFilter = '';
+  String _selectedBranch = '';
+  String _selectedGroup = '';
 
   @override
   void initState() {
@@ -264,25 +264,22 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
         if (!t1.contains(_searchQuery) && !t2.contains(_searchQuery)) return false;
       }
       // Branch filter
-      if (_selectedBranch != 'all') {
-        if (_selectedBranch == 'winners' && m.bracketPosition.bracket != 'winners') return false;
+      if (_selectedBranch.isNotEmpty && _selectedBranch != 'all') {
+        if (_selectedBranch == 'winners' && m.bracketPosition.bracket != 'winners' && m.bracketPosition.bracket != 'grand_final') return false;
         if (_selectedBranch == 'losers' && m.bracketPosition.bracket != 'losers') return false;
-        if (_selectedBranch == 'grand_final' &&
-            m.bracketPosition.bracket != 'grand_final' &&
-            m.bracketPosition.bracket != 'grand_final_reset') {
-          return false;
-        }
         if (_selectedBranch == 'group_stage' && (m.stageName != null && m.stageName!.contains('Knockout'))) return false;
         if (_selectedBranch == 'knockout' && (m.stageName != null && m.stageName!.contains('Bảng'))) return false;
       }
       // Group filter
-      if (_selectedGroup != 'all' && m.groupName != _selectedGroup) return false;
+      if (_selectedGroup.isNotEmpty && _selectedGroup != 'all' && m.groupName != _selectedGroup) return false;
       // Round filter
       if (_selectedRound != 0 && m.round != _selectedRound) return false;
       // Status filter
-      if (_matchFilter == 'live' && !m.isLive) return false;
-      if (_matchFilter == 'scheduled' && !m.isScheduled) return false;
-      if (_matchFilter == 'completed' && !m.isCompleted) return false;
+      if (_matchFilter.isNotEmpty && _matchFilter != 'all') {
+        if (_matchFilter == 'live' && !m.isLive) return false;
+        if (_matchFilter == 'scheduled' && !m.isScheduled) return false;
+        if (_matchFilter == 'completed' && !m.isCompleted) return false;
+      }
 
       return true;
     }).toList();
@@ -384,7 +381,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
               ),
             ),
 
-          // ── Search Input Field (Matching Image 1) ──
+          // ── Search Input Field ──
           Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
@@ -407,61 +404,45 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             ),
           ),
 
-          // ── ROW 1: TRẠNG THÁI (Matching Image 1 - NO EMOJIS!) ──
+          // ── ROW 1: TRẠNG THÁI (Toggle Filter) ──
           _buildFilterRow(
             title: 'TRẠNG THÁI:',
             children: [
               RoundFilterPill(
-                isSelected: _matchFilter == 'all',
-                label: 'Tất cả',
-                count: validMatches.length,
-                onTap: () => setState(() => _matchFilter = 'all'),
-              ),
-              RoundFilterPill(
                 isSelected: _matchFilter == 'live',
                 label: 'Trực tiếp',
                 count: liveCount,
-                onTap: () => setState(() => _matchFilter = 'live'),
+                onTap: () => setState(() => _matchFilter = _matchFilter == 'live' ? '' : 'live'),
               ),
               RoundFilterPill(
                 isSelected: _matchFilter == 'scheduled',
                 label: 'Chưa đấu',
                 count: scheduledCount,
-                onTap: () => setState(() => _matchFilter = 'scheduled'),
+                onTap: () => setState(() => _matchFilter = _matchFilter == 'scheduled' ? '' : 'scheduled'),
               ),
               RoundFilterPill(
                 isSelected: _matchFilter == 'completed',
                 label: 'Đã xong',
                 count: completedCount,
-                onTap: () => setState(() => _matchFilter = 'completed'),
+                onTap: () => setState(() => _matchFilter = _matchFilter == 'completed' ? '' : 'completed'),
               ),
             ],
           ),
 
-          // ── ROW 2: NHÁNH THI ĐẤU (Double Elimination) / GIAI ĐOẠN ──
+          // ── ROW 2: NHÁNH THI ĐẤU (Double Elimination: Nhánh thắng / Nhánh thua Toggle) ──
           if (isDoubleElimination)
             _buildFilterRow(
               title: 'NHÁNH THI ĐẤU:',
               children: [
                 RoundFilterPill(
-                  isSelected: _selectedBranch == 'all',
-                  label: 'Tất cả',
-                  onTap: () => setState(() => _selectedBranch = 'all'),
-                ),
-                RoundFilterPill(
                   isSelected: _selectedBranch == 'winners',
                   label: 'Nhánh thắng',
-                  onTap: () => setState(() => _selectedBranch = 'winners'),
+                  onTap: () => setState(() => _selectedBranch = _selectedBranch == 'winners' ? '' : 'winners'),
                 ),
                 RoundFilterPill(
                   isSelected: _selectedBranch == 'losers',
                   label: 'Nhánh thua',
-                  onTap: () => setState(() => _selectedBranch = 'losers'),
-                ),
-                RoundFilterPill(
-                  isSelected: _selectedBranch == 'grand_final',
-                  label: 'Chung kết tổng',
-                  onTap: () => setState(() => _selectedBranch = 'grand_final'),
+                  onTap: () => setState(() => _selectedBranch = _selectedBranch == 'losers' ? '' : 'losers'),
                 ),
               ],
             ),
@@ -471,19 +452,14 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
               title: 'GIAI ĐOẠN:',
               children: [
                 RoundFilterPill(
-                  isSelected: _selectedBranch == 'all',
-                  label: 'Tất cả',
-                  onTap: () => setState(() => _selectedBranch = 'all'),
-                ),
-                RoundFilterPill(
                   isSelected: _selectedBranch == 'group_stage',
                   label: 'Vòng bảng',
-                  onTap: () => setState(() => _selectedBranch = 'group_stage'),
+                  onTap: () => setState(() => _selectedBranch = _selectedBranch == 'group_stage' ? '' : 'group_stage'),
                 ),
                 RoundFilterPill(
                   isSelected: _selectedBranch == 'knockout',
                   label: 'Vòng Knockout',
-                  onTap: () => setState(() => _selectedBranch = 'knockout'),
+                  onTap: () => setState(() => _selectedBranch = _selectedBranch == 'knockout' ? '' : 'knockout'),
                 ),
               ],
             ),
@@ -503,45 +479,31 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
 
               return _buildFilterRow(
                 title: 'BẢNG ĐẤU:',
-                children: [
-                  RoundFilterPill(
-                    isSelected: _selectedGroup == 'all',
-                    label: 'Tất cả',
-                    onTap: () => setState(() => _selectedGroup = 'all'),
+                children: cleanGroups.map(
+                  (group) => RoundFilterPill(
+                    isSelected: _selectedGroup == group,
+                    label: group,
+                    onTap: () => setState(() => _selectedGroup = _selectedGroup == group ? '' : group),
                   ),
-                  ...cleanGroups.map(
-                    (group) => RoundFilterPill(
-                      isSelected: _selectedGroup == group,
-                      label: group,
-                      onTap: () => setState(() => _selectedGroup = group),
-                    ),
-                  ),
-                ],
+                ).toList(),
               );
             },
           ),
 
-          // ── ROW 4: VÒNG ĐẤU ──
+          // ── ROW 4: VÒNG ĐẤU (Toggle Filter) ──
           if (availableRounds.length > 1)
             _buildFilterRow(
               title: 'VÒNG ĐẤU:',
-              children: [
-                RoundFilterPill(
-                  isSelected: _selectedRound == 0,
-                  label: 'Tất cả',
-                  onTap: () => setState(() => _selectedRound = 0),
-                ),
-                ...availableRounds.map((r) {
-                  final label = isRoundRobin ? 'Vòng $r' : _getRoundName(r, totalRounds);
-                  final count = validMatches.where((m) => m.round == r).length;
-                  return RoundFilterPill(
-                    isSelected: _selectedRound == r,
-                    label: label,
-                    count: count,
-                    onTap: () => setState(() => _selectedRound = r),
-                  );
-                }),
-              ],
+              children: availableRounds.map((r) {
+                final label = isRoundRobin ? 'Vòng $r' : _getRoundName(r, totalRounds);
+                final count = validMatches.where((m) => m.round == r).length;
+                return RoundFilterPill(
+                  isSelected: _selectedRound == r,
+                  label: label,
+                  count: count,
+                  onTap: () => setState(() => _selectedRound = _selectedRound == r ? 0 : r),
+                );
+              }).toList(),
             ),
 
           const SizedBox(height: 6),
