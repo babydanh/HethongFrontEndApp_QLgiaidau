@@ -50,15 +50,13 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     final valid = widget.matches.where((m) {
       if (m.status == 'cancelled') return false;
       if (m.isFullByeMatch) return false;
-      final isGroupStage = (m.stageName != null && m.stageName!.contains('Bảng')) ||
+      final isGroupStage = (m.stageName != null && (m.stageName!.contains('Bảng') || m.stageName!.toUpperCase().contains('GROUP'))) ||
           (m.bracketPosition.bracket == 'group_stage') ||
           (m.groupName != null &&
               m.groupName!.isNotEmpty &&
-              !m.groupName!.contains('Knockout') &&
-              !m.groupName!.contains('Playoff'));
-      if (isGroupStage && widget.matches.any((other) => other.stageName != null && (other.stageName!.contains('Knockout') || other.stageName!.contains('Playoff')))) {
-        return false;
-      }
+              !m.groupName!.toUpperCase().contains('KNOCKOUT') &&
+              !m.groupName!.toUpperCase().contains('PLAYOFF'));
+      if (isGroupStage) return false;
       return true;
     }).toList();
 

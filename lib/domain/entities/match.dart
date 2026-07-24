@@ -300,6 +300,13 @@ class MatchModel {
       team2Members: team2MemberInfos.map((m) => m.fullName).toList(),
       team1MemberInfos: team1MemberInfos,
       team2MemberInfos: team2MemberInfos,
+      groupName: json['groupName']?.toString() ??
+          json['group_name']?.toString() ??
+          (json['group'] is Map ? json['group']['name']?.toString() : json['group']?.toString()),
+      stageName: json['stageName']?.toString() ??
+          json['stage_name']?.toString() ??
+          json['stage']?.toString() ??
+          json['stageType']?.toString(),
       isBye: json['isBye'] ?? json['is_bye'] ?? false,
     );
   }

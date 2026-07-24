@@ -108,6 +108,27 @@ class ApiMatchRepository implements IMatchRepository {
     }
   }
 
+  /// Chuẩn hóa status UI (live/completed/scheduled) sang backend enum
+  /// (ONGOING/COMPLETED/SCHEDULED) cho PATCH /matches/:id/status.
+  static String _normalizeStatusToBackend(String status) {
+    switch (status.toUpperCase()) {
+      case 'LIVE':
+      case 'IN_PROGRESS':
+      case 'ONGOING':
+        return 'ONGOING';
+      case 'COMPLETED':
+      case 'FINISHED':
+      case 'DONE':
+      case 'ENDED':
+        return 'COMPLETED';
+      case 'SCHEDULED':
+      case 'PENDING':
+        return 'SCHEDULED';
+      default:
+        return status.toUpperCase();
+    }
+  }
+
   // ── Bracket branch mapping ────────────────────────────────────────────────
   static String _mapBracketBranch(String? branch) {
     switch (branch?.toUpperCase()) {
@@ -175,9 +196,33 @@ class ApiMatchRepository implements IMatchRepository {
       score2 = parseNum(json['p2SetsWon']);
     }
 
+    final rawGroup = json['groupName'] ??
+        json['group_name'] ??
+        (json['group'] is Map ? json['group']['name'] : json['group']);
+    final groupName = rawGroup?.toString();
+
+    final rawStage = json['stageName'] ??
+        json['stage_name'] ??
+        json['stage'] ??
+        json['stageType'];
+    final stageName = rawStage?.toString();
+
+    String bracketName = 'winners';
+    if (json['bracketBranch'] != null) {
+      bracketName = _mapBracketBranch(json['bracketBranch'] as String?);
+    } else if ((stageName != null && stageName.toUpperCase().contains('GROUP')) ||
+        (json['stage']?.toString().toUpperCase() == 'GROUP_STAGE')) {
+      bracketName = 'group_stage';
+    } else if (groupName != null &&
+        groupName.isNotEmpty &&
+        !groupName.toUpperCase().contains('KNOCKOUT') &&
+        !groupName.toUpperCase().contains('PLAYOFF')) {
+      bracketName = 'group_stage';
+    }
+
     return MatchModel(
       id: json['id'] ?? '',
-      round: json['roundNumber'] ?? 1,
+      round: json['roundNumber'] ?? json['round'] ?? 1,
       matchNumber: json['matchOrder'] ?? json['matchNumber'] ?? 1,
       team1Id: json['team1Id'] ?? '',
       team1Name: team1Name,
@@ -186,13 +231,11 @@ class ApiMatchRepository implements IMatchRepository {
       score1: score1,
       score2: score2,
       status: _mapMatchStatus(json['status'] as String?),
-      bracketPosition: json['bracketBranch'] != null
-          ? BracketPosition(
-              bracket: _mapBracketBranch(json['bracketBranch'] as String?),
-              round: json['roundNumber'] ?? 1,
-              position: json['matchOrder'] ?? json['matchNumber'] ?? 0,
-            )
-          : const BracketPosition(round: 1, position: 0),
+      bracketPosition: BracketPosition(
+        bracket: bracketName,
+        round: json['roundNumber'] ?? json['round'] ?? 1,
+        position: json['matchOrder'] ?? json['matchNumber'] ?? 0,
+      ),
       nextMatchId: json['nextMatchId'] ?? '',
       loserNextMatchId: json['loserNextMatchId'] ?? '',
       winnerId: json['winnerId'] ?? '',
@@ -211,6 +254,8 @@ class ApiMatchRepository implements IMatchRepository {
       setsToWin: json['setsToWin'] as int?,
       team1Members: team1Members,
       team2Members: team2Members,
+      groupName: groupName,
+      stageName: stageName,
     );
   }
 
@@ -271,20 +316,6 @@ class ApiMatchRepository implements IMatchRepository {
     return controller.stream;
   }
 
-  @override
-  Future<void> updateScore(
-    String tournamentId,
-    String matchId, {
-    required int score1,
-    required int score2,
-  }) async {
-    _log.info('Updating match score via API: $matchId → $score1-$score2');
-    await _dioClient.dio.patch('/matches/$matchId/score', data: {
-      'score1': score1,
-      'score2': score2,
-      'isCompleted': false,
-    });
-  }
 
   @override
   Future<void> updateLiveState(
@@ -301,12 +332,48 @@ class ApiMatchRepository implements IMatchRepository {
     List<Penalty>? penalties,
   }) async {
     _log.info('Updating match live state: $matchId');
-    final payload = <String, dynamic>{};
-    if (score1 != null) payload['score1'] = score1;
-    if (score2 != null) payload['score2'] = score2;
-    if (status != null) payload['status'] = status;
 
-    await _dioClient.dio.patch('/matches/$matchId/score', data: payload);
+    final hasScore = score1 != null || score2 != null;
+    final hasStatus = status != null;
+    final hasConfig =
+        maxScore != null || winByTwo != null || timeLimitMinutes != null || refereeName != null;
+
+    // Status-only (không có score flat) → PATCH /matches/:id/status
+    if (hasStatus && !hasScore) {
+      final backendStatus = _normalizeStatusToBackend(status);
+      _log.info('Status update for $matchId via /status: $status -> $backendStatus');
+      await _dioClient.dio.patch('/matches/$matchId/status', data: {
+        'status': backendStatus,
+      });
+      return;
+    }
+
+    // Score có mặt nhưng không có set data → backend /score không chấp nhận
+    if (hasScore) {
+      _log.warning(
+        'updateLiveState gửi score1/score2 (flat) không được backend PATCH /matches/:id/score hỗ trợ. '
+        'Sử dụng updateScoreDetails() với p1SetsWon/p2SetsWon/scoreDetails.',
+      );
+      throw UnsupportedError(
+        'Flat score1/score2 không được backend PATCH /matches/:id/score hỗ trợ. '
+        'Sử dụng updateScoreDetails() với p1SetsWon/p2SetsWon/scoreDetails.',
+      );
+    }
+
+    // Config-only params (maxScore/winByTwo/timeLimitMinutes/refereeName) — không có endpoint backend
+    if (hasConfig) {
+      _log.warning(
+        'updateLiveState config-only params không có endpoint backend phù hợp. '
+        'Các tham số maxScore/winByTwo/timeLimitMinutes/refereeName không thể cập nhật sau khi trận đấu bắt đầu.',
+      );
+      throw UnsupportedError(
+        'Backend không hỗ trợ cập nhật cấu hình trận đấu (maxScore/winByTwo/timeLimitMinutes/refereeName) sau khi bắt đầu. '
+        'Thiết lập các tham số này qua startMatch().',
+      );
+    }
+
+    // Events/penalties only — không có endpoint
+    _log.warning('updateLiveState chỉ gồm events/penalties — không có endpoint backend, bỏ qua');
   }
 
   @override
@@ -332,31 +399,16 @@ class ApiMatchRepository implements IMatchRepository {
     required int finalScore1,
     required int finalScore2,
   }) async {
-    _log.info('Completing match $matchId via API: winner=$winnerId');
-    await _dioClient.dio.patch('/matches/$matchId/score', data: {
-      'score1': finalScore1,
-      'score2': finalScore2,
-      'isCompleted': true,
-      'winnerId': winnerId,
-    });
+    _log.warning(
+      'completeMatch không được backend /score hỗ trợ — cần p1SetsWon/p2SetsWon/scoreDetails. '
+      'Sử dụng updateScoreDetails() hoặc completeMatchWithDetails() thay thế.',
+    );
+    throw UnsupportedError(
+      'Backend PATCH /matches/:id/score yêu cầu p1SetsWon/p2SetsWon/scoreDetails. '
+      'Sử dụng updateScoreDetails() thay vì completeMatch().',
+    );
   }
 
-  @override
-  Future<void> updateSets(
-    String tournamentId,
-    String matchId,
-    List<SetScore> sets,
-  ) async {
-    _log.info('Updating sets for match $matchId via API');
-    final setDetails = sets.map((s) => {
-      'score1': s.score1,
-      'score2': s.score2,
-    }).toList();
-
-    await _dioClient.dio.patch('/matches/$matchId/score', data: {
-      'setDetails': setDetails,
-    });
-  }
 
   @override
   Future<void> updateScoreDetails(
@@ -391,20 +443,6 @@ class ApiMatchRepository implements IMatchRepository {
     required bool isTeam1,
   }) async {
     throw UnimplementedError('Handled automatically by backend completion workflow.');
-  }
-
-  @override
-  Future<void> walkover(
-    String tournamentId,
-    String matchId, {
-    required String winnerId,
-    required String loserId,
-  }) async {
-    _log.info('Applying walkover to match $matchId via API');
-    await _dioClient.dio.patch('/matches/$matchId/status', data: {
-      'status': 'WALKOVER',
-      'winnerId': winnerId,
-    });
   }
 
   @override
@@ -451,5 +489,63 @@ class ApiMatchRepository implements IMatchRepository {
       _log.error('Error fetching global matches from API', e, stack);
       return [];
     }
+  }
+
+  // ── Cheer ──────────────────────────────────────────────────────────────────
+
+  @override
+  Future<void> cheerMatch(String matchId) async {
+    _log.info('Sending cheer for match $matchId');
+    await _dioClient.dio.post('/matches/$matchId/cheer');
+  }
+
+  @override
+  Future<int> getCheerCount(String matchId) async {
+    try {
+      final response = await _dioClient.dio.get('/matches/$matchId/cheer-count');
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        if (data is int) return data;
+        if (data is Map) return (data['count'] ?? data['cheerCount'] ?? 0) as int;
+      }
+    } catch (e) {
+      _log.error('Error fetching cheer count for match $matchId', e);
+    }
+    return 0;
+  }
+
+  // ── Match Operation ─────────────────────────────────────────────────────────
+
+  @override
+  Future<void> matchOperation(
+    String matchId, {
+    required String action,
+    required String reason,
+    String? winnerId,
+  }) async {
+    _log.info('Match operation: $action for match $matchId');
+    final payload = <String, dynamic>{
+      'action': action,
+      'reason': reason,
+    };
+    if (winnerId != null) payload['winnerId'] = winnerId;
+
+    await _dioClient.dio.patch('/matches/$matchId/operation', data: payload);
+  }
+
+  @override
+  Future<void> walkover(
+    String tournamentId,
+    String matchId, {
+    required String winnerId,
+    required String loserId,
+  }) async {
+    _log.info('Applying walkover to match $matchId via operation endpoint');
+    await matchOperation(
+      matchId,
+      action: 'WALKOVER',
+      reason: 'Đội đối thủ bỏ cuộc',
+      winnerId: winnerId,
+    );
   }
 }
