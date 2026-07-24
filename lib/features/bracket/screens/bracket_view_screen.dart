@@ -318,8 +318,12 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                       children: [
                         Text(
                           isGroupStageKnockout || bracketType == 'group_stage_knockout'
-                              ? 'Sơ đồ thi đấu Playoff'
-                              : 'Sơ đồ phân nhánh thi đấu',
+                              ? 'Sơ đồ Vòng Knockout (Playoffs)'
+                              : isDoubleElimination || bracketType == 'double_elimination'
+                                  ? 'Sơ đồ Đấu loại kép'
+                                  : isRoundRobin || bracketType == 'round_robin'
+                                      ? 'Sơ đồ Vòng tròn tính điểm'
+                                      : 'Sơ đồ Loại trực tiếp',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
@@ -328,8 +332,12 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                         ),
                         Text(
                           isGroupStageKnockout || bracketType == 'group_stage_knockout'
-                              ? 'Xem cây sơ đồ vòng Playoff & nhánh loại trực tiếp'
-                              : 'Xem cây nhánh thắng, nhánh thua & vòng loại trực tiếp',
+                              ? 'Xem nhánh đấu loại trực tiếp các đội vượt qua vòng bảng'
+                              : isDoubleElimination || bracketType == 'double_elimination'
+                                  ? 'Xem phân nhánh thắng & nhánh thua (Double Elimination)'
+                                  : isRoundRobin || bracketType == 'round_robin'
+                                      ? 'Xem sơ đồ thi đấu các lượt trận vòng tròn'
+                                      : 'Xem phân nhánh đấu loại trực tiếp (Single Elimination)',
                           style: TextStyle(
                             fontSize: 10,
                             color: colors.textMuted,
@@ -363,8 +371,12 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                     icon: const Icon(Icons.account_tree_rounded, size: 14),
                     label: Text(
                       isGroupStageKnockout || bracketType == 'group_stage_knockout'
-                          ? 'Sơ đồ Playoff'
-                          : 'Sơ đồ',
+                          ? 'Sơ đồ Knockout'
+                          : isDoubleElimination || bracketType == 'double_elimination'
+                              ? 'Sơ đồ loại kép'
+                              : isRoundRobin || bracketType == 'round_robin'
+                                  ? 'Sơ đồ Vòng tròn'
+                                  : 'Sơ đồ Knockout',
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                   ),
