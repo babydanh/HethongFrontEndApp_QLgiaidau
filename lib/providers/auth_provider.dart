@@ -75,14 +75,10 @@ class AuthNotifier extends Notifier<AuthState> {
   static UserRole parseRole(String? roleStr) {
     if (roleStr == null || roleStr.trim().isEmpty) return UserRole.viewer;
     final r = roleStr.trim().toLowerCase();
-    if (r == 'admin' ||
-        r == 'organizer' ||
-        r == 'organizer_lite' ||
-        r == 'creator' ||
-        r == 'host') {
+    if (r == 'admin' || r == 'organizer') {
       return UserRole.admin;
     }
-    if (r == 'referee' || r == 'judge' || r == 'umpire') {
+    if (r == 'referee') {
       return UserRole.referee;
     }
     return UserRole.viewer;
