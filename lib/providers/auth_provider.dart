@@ -72,16 +72,29 @@ class AuthNotifier extends Notifier<AuthState> {
     return const AuthState();
   }
 
+  static UserRole parseRole(String? roleStr) {
+    if (roleStr == null || roleStr.trim().isEmpty) return UserRole.viewer;
+    final r = roleStr.trim().toLowerCase();
+    if (r == 'admin' ||
+        r == 'organizer' ||
+        r == 'organizer_lite' ||
+        r == 'creator' ||
+        r == 'host') {
+      return UserRole.admin;
+    }
+    if (r == 'referee' || r == 'judge' || r == 'umpire') {
+      return UserRole.referee;
+    }
+    return UserRole.viewer;
+  }
+
   /// Khởi tạo: Kiểm tra JWT token hoặc token đã lưu
   Future<void> init() async {
     final tokenManager = ref.read(tokenManagerProvider);
     final hasJwt = await tokenManager.hasValidToken();
     if (hasJwt) {
       final roleStr = await tokenManager.getRole();
-      final restoredRole = UserRole.values.firstWhere(
-        (r) => r.name == roleStr,
-        orElse: () => UserRole.viewer,
-      );
+      final restoredRole = parseRole(roleStr);
       _log.success("Khôi phục phiên đăng nhập từ JWT token. Role: ${restoredRole.name}");
       state = AuthState(
         status: AuthStatus.authenticated,
@@ -116,20 +129,7 @@ class AuthNotifier extends Notifier<AuthState> {
       }
 
       // Xác định role
-      final role = switch (token.role) {
-        'admin' => UserRole.admin,
-        'referee' => UserRole.referee,
-        'viewer' => UserRole.viewer,
-        _ => null,
-      };
-
-      if (role == null) {
-        state = AuthState(
-          status: AuthStatus.invalid,
-          errorMessage: 'Vai trò không xác định',
-        );
-        return false;
-      }
+      final role = parseRole(token.role);
 
       await ref.read(saveInviteTokenUseCaseProvider).call(tokenCode);
       
