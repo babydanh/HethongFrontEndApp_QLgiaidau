@@ -330,12 +330,21 @@ class _BracketConnectorPainter extends CustomPainter {
         canvas.drawPath(childPath, paint);
       }
 
-      final ys = [...childCenters.map((p) => p.dy), parentCenter.dy]..sort();
-      final spine = Path()
-        ..moveTo(midX, ys.first)
-        ..lineTo(midX, ys.last)
+      final allY = [...childCenters.map((p) => p.dy), parentCenter.dy];
+      final minY = allY.reduce((a, b) => a < b ? a : b);
+      final maxY = allY.reduce((a, b) => a > b ? a : b);
+
+      if (minY != maxY) {
+        final spine = Path()
+          ..moveTo(midX, minY)
+          ..lineTo(midX, maxY);
+        canvas.drawPath(spine, paint);
+      }
+
+      final parentPath = Path()
+        ..moveTo(midX, parentCenter.dy)
         ..lineTo(parentCenter.dx, parentCenter.dy);
-      canvas.drawPath(spine, paint);
+      canvas.drawPath(parentPath, paint);
     }
   }
 
