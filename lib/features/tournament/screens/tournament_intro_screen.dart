@@ -17,6 +17,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/gallery_tab.dart';
 
+
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
 
@@ -43,7 +44,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this); // default 4, updated dynamically
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -228,7 +229,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   ),
                 ),
                 SizedBox(
-                  height: 56,
+                  height: 38,
                   child: _TabBarDelegate(
                     tabController: _tabController,
                     colors: colors,
@@ -458,7 +459,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               return const SizedBox.shrink(); // Hide filter on "About" tab
             }
             return Padding(
-              padding: const EdgeInsets.only(top: 2, bottom: 4),
+              padding: const EdgeInsets.symmetric(vertical: 2),
               child: DivisionFilterSegment(
                 divisions: divisions,
                 selectedDivision: _selectedDivision,
@@ -707,10 +708,10 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
               fontSize: 13,
             ),
             tabs: const [
-              Tab(height: 36, text: "Giới thiệu"),
-              Tab(height: 36, text: "Danh sách đội"),
-              Tab(height: 36, text: "Bảng thi đấu"),
-              Tab(height: 36, text: "Thư viện"),
+              Tab(height: 32, text: "Giới thiệu"),
+              Tab(height: 32, text: "Danh sách đội"),
+              Tab(height: 32, text: "Bảng thi đấu"),
+              Tab(height: 32, text: "Thư viện"),
             ],
           ),
         ],
@@ -719,10 +720,10 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 44;
+  double get maxExtent => 38;
 
   @override
-  double get minExtent => 44;
+  double get minExtent => 38;
 
   @override
   bool shouldRebuild(_TabBarDelegate oldDelegate) => false;

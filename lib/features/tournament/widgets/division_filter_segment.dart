@@ -39,7 +39,7 @@ class DivisionFilterSegment extends StatelessWidget {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
                 curve: Curves.easeInOut,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
                 decoration: BoxDecoration(
                   color: isSelected ? const Color(0xFF2979FF) : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),

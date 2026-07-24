@@ -158,16 +158,22 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
           if (isRoundRobin || isGroupStageKnockout) {
             return Column(
               children: [
-                TabBar(
-                  controller: _tabController,
-                  labelColor: AppTheme.primary,
-                  unselectedLabelColor: context.colors.textSecondary,
-                  indicatorColor: AppTheme.primary,
-                  tabs: const [
-                    Tab(text: 'Lịch thi đấu'),
-                    Tab(text: 'Bảng xếp hạng'),
-                    Tab(text: 'Bảng chéo'),
-                  ],
+                SizedBox(
+                  height: 34,
+                  child: TabBar(
+                    controller: _tabController,
+                    labelColor: AppTheme.primary,
+                    unselectedLabelColor: context.colors.textSecondary,
+                    indicatorColor: AppTheme.primary,
+                    indicatorWeight: 2,
+                    labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                    unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.normal),
+                    tabs: const [
+                      Tab(height: 30, text: 'Lịch thi đấu'),
+                      Tab(height: 30, text: 'Bảng xếp hạng'),
+                      Tab(height: 30, text: 'Bảng chéo'),
+                    ],
+                  ),
                 ),
                 Expanded(
                   child: TabBarView(
