@@ -1927,27 +1927,28 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
-  String _memberEloLabel(MatchMemberInfo member) {
+  String _memberEloLabel(MatchMemberInfo member, bool isDoubles) {
     final name = member.fullName.trim();
     final elo = member.eloPoints;
-    final tier = member.tierName?.trim();
-    if (elo == null) return '$name • Chưa có ELO';
-    if (tier != null && tier.isNotEmpty) return '$name • ELO $elo • $tier';
-    return '$name • ELO $elo';
+    final typeLabel = isDoubles ? 'ELO Đôi' : 'ELO Đơn';
+    if (elo == null) return '$name • $typeLabel: Chưa có';
+    return '$name • $typeLabel: $elo';
   }
 
   String _teamMemberSummary(
     List<MatchMemberInfo> memberInfos,
     List<String> displayList,
   ) {
+    final bool isDoubles = displayList.length >= 2 || memberInfos.length >= 2;
     final realMembers = memberInfos
         .where((member) => member.fullName.trim().isNotEmpty)
         .toList();
     if (realMembers.isNotEmpty) {
-      return realMembers.map(_memberEloLabel).join('\n');
+      return realMembers.map((m) => _memberEloLabel(m, isDoubles)).join('\n');
     }
-    if (displayList.length == 1) return '${displayList.first} • Chưa có ELO';
-    return displayList.join(' & ');
+    final label = isDoubles ? 'ELO Đôi' : 'ELO Đơn';
+    if (displayList.length == 1) return '${displayList.first} • $label: Chưa có';
+    return displayList.map((n) => '$n • $label: Chưa có').join('\n');
   }
 
   Widget _teamMemberSummaryWidget(
@@ -1955,6 +1956,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     List<String> displayList,
     TextStyle style,
   ) {
+    final bool isDoubles = displayList.length >= 2 || memberInfos.length >= 2;
     final realMembers = memberInfos
         .where((member) => member.fullName.trim().isNotEmpty)
         .toList();
@@ -1968,7 +1970,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     return Column(
       children: realMembers.map((member) {
         final userId = member.userId?.trim();
-        final label = _memberEloLabel(member);
+        final label = _memberEloLabel(member, isDoubles);
         if (userId == null || userId.isEmpty) {
           return Text(label, style: style, textAlign: TextAlign.center);
         }
@@ -1985,6 +1987,80 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildTeamAvatarWidget(
+    String teamName,
+    List<String> displayList,
+    Color color,
+  ) {
+    final bool isDoubles = displayList.length >= 2 ||
+        teamName.contains('&') ||
+        teamName.contains(' - ') ||
+        teamName.toLowerCase().contains('đôi');
+
+    if (isDoubles) {
+      final name1 = displayList.isNotEmpty ? displayList[0].trim() : 'VĐV 1';
+      final name2 = displayList.length > 1 ? displayList[1].trim() : 'VĐV 2';
+      final initial1 = name1.isNotEmpty ? name1[0].toUpperCase() : '1';
+      final initial2 = name2.isNotEmpty ? name2[0].toUpperCase() : '2';
+
+      return SizedBox(
+        width: 68,
+        height: 48,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Positioned(
+              left: 4,
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: color.withValues(alpha: 0.25),
+                child: Text(
+                  initial1,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: color,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 4,
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: color.withValues(alpha: 0.45),
+                child: Text(
+                  initial2,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: color,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Singles
+    final name1 = displayList.isNotEmpty ? displayList[0].trim() : teamName.trim();
+    final initial = name1.isNotEmpty ? name1[0].toUpperCase() : 'V';
+    return CircleAvatar(
+      radius: 26,
+      backgroundColor: color.withValues(alpha: 0.15),
+      child: Text(
+        initial,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w900,
+          color: color,
+        ),
+      ),
     );
   }
 
@@ -2166,16 +2242,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     Expanded(
                       child: Column(
                         children: [
-                          CircleAvatar(
-                            radius: 28,
-                            backgroundColor: const Color(
-                              0xFF2979FF,
-                            ).withValues(alpha: 0.1),
-                            child: const Icon(
-                              Icons.sports_tennis_rounded,
-                              size: 28,
-                              color: Color(0xFF2979FF),
-                            ),
+                          _buildTeamAvatarWidget(
+                            match.team1Name,
+                            t1DisplayList,
+                            const Color(0xFF2979FF),
                           ),
                           const SizedBox(height: 12),
                           Text(
@@ -2305,16 +2375,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     Expanded(
                       child: Column(
                         children: [
-                          CircleAvatar(
-                            radius: 28,
-                            backgroundColor: const Color(
-                              0xFFEF4444,
-                            ).withValues(alpha: 0.1),
-                            child: const Icon(
-                              Icons.sports_tennis_rounded,
-                              size: 28,
-                              color: Color(0xFFEF4444),
-                            ),
+                          _buildTeamAvatarWidget(
+                            match.team2Name,
+                            t2DisplayList,
+                            const Color(0xFFEF4444),
                           ),
                           const SizedBox(height: 12),
                           Text(
