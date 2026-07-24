@@ -1551,7 +1551,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     if (match.isScheduled) {
                       await controller.startMatch();
                     }
-                    if (context.mounted) {
+                    if (mounted) {
                       showOfficialScoreModal(
                         context,
                         tournamentId: widget.tournamentId,
