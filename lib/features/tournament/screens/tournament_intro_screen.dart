@@ -36,7 +36,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     (_) => ScrollController(),
   );
   double _headerDragRemainder = 0;
-  String _selectedDivision = "Tất cả";
+  String _selectedDivision = "";
   String? _selectedDivisionId;
   bool _isHeaderCompact = false;
   bool _isFollowLoading = false;
@@ -202,10 +202,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _buildContent(Tournament tournament, UserRole? role) {
-    if (tournament.divisions.length == 1 && _selectedDivisionId == null) {
+    if ((_selectedDivisionId == null || _selectedDivision.isEmpty) && tournament.divisions.isNotEmpty) {
       _selectedDivision = tournament.divisions.first.name;
-      _selectedDivisionId = tournament.divisions.first.id;
-    } else if (_selectedDivisionId == null && _selectedDivision != "Tất cả" && tournament.divisions.isNotEmpty) {
       _selectedDivisionId = tournament.divisions.first.id;
     }
     final teamsAsync = ref.watch(introTeamsProvider(widget.tournamentId));
@@ -446,11 +444,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     UserRole? role,
   ) {
     final isLive = StatusHelper.isTournamentInProgress(tournament.status);
-    final divisionsSet = tournament.divisions
+    final divisions = tournament.divisions
         .map((d) => d.name)
         .toSet()
         .toList();
-    final divisions = ["Tất cả", ...divisionsSet];
 
     return Column(
       children: [
@@ -458,8 +455,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         AnimatedBuilder(
           animation: _tabController,
           builder: (context, _) {
-            if (_tabController.index == 0) {
-              return const SizedBox.shrink(); // Hide filter on "About" tab
+            if (_tabController.index == 0 || divisions.isEmpty) {
+              return const SizedBox.shrink(); // Hide filter on "About" tab or if no divisions
             }
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 2),
@@ -469,17 +466,11 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 onDivisionChanged: (val) {
                   setState(() {
                     _selectedDivision = val;
-                    if (val == "Tất cả") {
-                      _selectedDivisionId = null;
-                    } else {
-                      final matchedList = tournament.divisions.where((d) => d.name == val);
-                      if (matchedList.isNotEmpty) {
-                        _selectedDivisionId = matchedList.first.id;
-                      } else if (tournament.divisions.isNotEmpty) {
-                        _selectedDivisionId = tournament.divisions.first.id;
-                      } else {
-                        _selectedDivisionId = null;
-                      }
+                    final matchedList = tournament.divisions.where((d) => d.name == val);
+                    if (matchedList.isNotEmpty) {
+                      _selectedDivisionId = matchedList.first.id;
+                    } else if (tournament.divisions.isNotEmpty) {
+                      _selectedDivisionId = tournament.divisions.first.id;
                     }
                   });
                 },
