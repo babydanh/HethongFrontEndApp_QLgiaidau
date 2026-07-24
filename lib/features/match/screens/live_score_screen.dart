@@ -558,7 +558,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
     final authRole = ref.watch(authProvider).role;
     final canOpenScoring =
-        authRole == UserRole.admin || authRole == UserRole.referee;
+        !widget.isViewer || authRole == UserRole.admin || authRole == UserRole.referee;
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
@@ -617,7 +617,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           if (canOpenScoring)
             matchAsync.when(
               data: (match) {
-                if (match == null || match.isCompleted || match.isScheduled) {
+                if (match == null) {
                   return const SizedBox.shrink();
                 }
                 return Padding(
@@ -634,6 +634,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     icon: const Icon(Icons.scoreboard_rounded, size: 18),
                     label: const Text('Tính điểm'),
                     style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
                       visualDensity: VisualDensity.compact,
                     ),
                   ),
