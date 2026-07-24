@@ -169,6 +169,55 @@ class MatchCardDetail extends StatelessWidget {
                       'Trọng tài',
                       refereeText,
                     ),
+                    if (match.sets.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      _infoRow(
+                        context,
+                        Icons.sports_score_rounded,
+                        'Điểm theo Set',
+                        match.sets
+                            .asMap()
+                            .entries
+                            .map((e) => 'S${e.key + 1}: ${e.value.score1}-${e.value.score2}')
+                            .join('  |  '),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 42,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isLive ? context.colors.error : AppTheme.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          if (Navigator.canPop(context)) {
+                            Navigator.of(context).pop();
+                          }
+                          context.push('/live/${match.id}');
+                        },
+                        icon: Icon(
+                          isLive
+                              ? Icons.live_tv_rounded
+                              : (isReferee ? Icons.edit_note_rounded : Icons.sports_score_rounded),
+                          size: 18,
+                        ),
+                        label: Text(
+                          isLive
+                              ? 'Xem Trực Tiếp (LIVE)'
+                              : (isReferee ? 'Tính Điểm Trận Đấu' : 'Xem Trang Trực Tiếp & Tỷ Số'),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
