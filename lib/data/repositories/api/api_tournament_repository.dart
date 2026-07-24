@@ -223,16 +223,20 @@ class ApiTournamentRepository implements ITournamentRepository {
     String? inviteCode,
     String? partnerEmailOrPhone,
   }) async {
+    final queryParameters = <String, dynamic>{};
+    if (inviteCode != null && inviteCode.trim().isNotEmpty) {
+      queryParameters['invite'] = inviteCode.trim();
+    }
+
     final response = await _dioClient.dio.post(
       '/tournaments/$tournamentId/register',
       data: {
         'teamName': teamName.trim(),
         'divisionId': divisionId,
-        if (inviteCode != null && inviteCode.trim().isNotEmpty)
-          'inviteCode': inviteCode.trim(),
         if (partnerEmailOrPhone != null && partnerEmailOrPhone.trim().isNotEmpty)
           'partnerEmailOrPhone': partnerEmailOrPhone.trim(),
       },
+      queryParameters: queryParameters.isNotEmpty ? queryParameters : null,
     );
     final rawData = response.data['data'];
     if (rawData is! Map) {
@@ -254,10 +258,10 @@ class ApiTournamentRepository implements ITournamentRepository {
     final response = await _dioClient.dio.post(
       '/tournaments/$tournamentId/withdraw',
       data: {
-        if (bankName != null) 'bankName': bankName,
-        if (bankAccountNumber != null) 'bankAccountNumber': bankAccountNumber,
-        if (bankAccountName != null) 'bankAccountName': bankAccountName,
-        if (divisionId != null) 'tournamentDivisionId': divisionId,
+        'bankName': ?bankName,
+        'bankAccountNumber': ?bankAccountNumber,
+        'bankAccountName': ?bankAccountName,
+        'tournamentDivisionId': ?divisionId,
       },
     );
     return (response.data is Map) ? response.data as Map<String, dynamic> : {};
@@ -393,42 +397,68 @@ class ApiTournamentRepository implements ITournamentRepository {
     try {
       final response = await _dioClient.dio.get(
         '/tournaments/$tournamentId/bracket',
-        queryParameters: divisionId != null ? {'divisionId': divisionId} : null,
+        queryParameters: divisionId != null && divisionId.isNotEmpty ? {'divisionId': divisionId} : null,
       );
-      if (response.statusCode != 200) return [];
-      final data = response.data['data'];
-      if (data == null) return [];
+      if (response.statusCode == 200 && response.data['data'] != null) {
+        final data = response.data['data'];
+        final stages = data['stages'] as List<dynamic>? ?? [];
+        final allMatches = <MatchModel>[];
 
-      final stages = data['stages'] as List<dynamic>? ?? [];
-      final allMatches = <MatchModel>[];
-
-      if (stages.isNotEmpty) {
-        for (final stage in stages) {
-          final stageName = stage['name']?.toString();
-          final groups = stage['groups'] as List<dynamic>? ?? [];
-          for (final group in groups) {
-            final groupName = group['name']?.toString();
-            final rawMatches = group['matches'] as List<dynamic>? ?? [];
-            for (final json in rawMatches) {
-              if (json is! Map<String, dynamic>) continue;
-              try {
-                allMatches.add(_parseBracketMatch(json, groupName: groupName, stageName: stageName));
-              } catch (e) {
-                _log.warning('Failed to parse bracket match: $e');
+        if (stages.isNotEmpty) {
+          for (final stage in stages) {
+            final stageName = stage['name']?.toString();
+            final groups = stage['groups'] as List<dynamic>? ?? [];
+            for (final group in groups) {
+              final groupName = group['name']?.toString();
+              final rawMatches = group['matches'] as List<dynamic>? ?? [];
+              for (final json in rawMatches) {
+                if (json is! Map<String, dynamic>) continue;
+                try {
+                  allMatches.add(_parseBracketMatch(json, groupName: groupName, stageName: stageName));
+                } catch (e) {
+                  _log.warning('Failed to parse bracket match: $e');
+                }
               }
             }
           }
         }
+
+        if (allMatches.isNotEmpty) {
+          allMatches.sort((a, b) {
+            final r = a.round.compareTo(b.round);
+            return r != 0 ? r : a.matchNumber.compareTo(b.matchNumber);
+          });
+          _log.info('Bracket: ${allMatches.length} matches loaded for $tournamentId');
+          return allMatches;
+        }
       }
 
-      // Sort: round ascending, then matchOrder ascending
-      allMatches.sort((a, b) {
-        final r = a.round.compareTo(b.round);
-        return r != 0 ? r : a.matchNumber.compareTo(b.matchNumber);
-      });
+      // Fallback for "Tất cả" (divisionId == null): Query all divisions & aggregate matches
+      if (divisionId == null || divisionId.isEmpty) {
+        final divOptions = await getDivisions(tournamentId);
+        if (divOptions.isNotEmpty) {
+          final aggregatedMatches = <MatchModel>[];
+          final matchIds = <String>{};
+          for (final div in divOptions) {
+            final divMatches = await getBracketMatches(tournamentId, divisionId: div.id);
+            for (final m in divMatches) {
+              if (matchIds.add(m.id)) {
+                aggregatedMatches.add(m);
+              }
+            }
+          }
+          if (aggregatedMatches.isNotEmpty) {
+            aggregatedMatches.sort((a, b) {
+              final r = a.round.compareTo(b.round);
+              return r != 0 ? r : a.matchNumber.compareTo(b.matchNumber);
+            });
+            _log.info('Bracket fallback "Tất cả": ${aggregatedMatches.length} matches aggregated for $tournamentId');
+            return aggregatedMatches;
+          }
+        }
+      }
 
-      _log.info('Bracket: ${allMatches.length} matches loaded for $tournamentId');
-      return allMatches;
+      return [];
     } catch (e, stack) {
       _log.error('Error fetching bracket matches', e, stack);
       return [];
@@ -461,11 +491,14 @@ class ApiTournamentRepository implements ITournamentRepository {
   static String _mapBracketBranch(String? branch) {
     switch (branch?.toUpperCase()) {
       case 'MAIN':
+      case 'WINNERS':
         return 'winners';
       case 'LOSERS':
         return 'losers';
       case 'GRAND_FINALS':
         return 'grand_final';
+      case 'PLAYOFF':
+        return 'playoff';
       default:
         return 'winners';
     }
