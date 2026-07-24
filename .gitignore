@@ -95,3 +95,9 @@ lib/firebase_options.dart
 .vscode/
 .idea/
 *.iml
+node_modules/
+package-lock.json
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
