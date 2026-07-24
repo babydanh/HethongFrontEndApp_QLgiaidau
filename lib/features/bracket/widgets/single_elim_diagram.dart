@@ -47,18 +47,28 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
   // ── Build structured layout ───────────────────────────────────────────────
   Map<int, List<MatchModel>> _buildRoundMap() {
     // Only valid matches — exclude full BYE-vs-BYE (both slots are BYE/unset)
-    final valid = widget.matches.where((m) {
+    final playoffMatches = widget.matches.where((m) {
       if (m.status == 'cancelled') return false;
       if (m.isFullByeMatch) return false;
-      final isGroupStage = (m.stageName != null && (m.stageName!.contains('Bảng') || m.stageName!.toUpperCase().contains('GROUP'))) ||
-          (m.bracketPosition.bracket == 'group_stage') ||
+
+      final hasNextMatch = m.nextMatchId.isNotEmpty || m.loserNextMatchId.isNotEmpty;
+      final isGroupStage = (m.bracketPosition.bracket == 'group_stage') ||
+          (m.stageName != null && (m.stageName!.contains('Bảng') || m.stageName!.toUpperCase().contains('GROUP'))) ||
           (m.groupName != null &&
               m.groupName!.isNotEmpty &&
               !m.groupName!.toUpperCase().contains('KNOCKOUT') &&
               !m.groupName!.toUpperCase().contains('PLAYOFF'));
-      if (isGroupStage) return false;
-      return true;
+
+      if (hasNextMatch) return true;
+      if (!isGroupStage) return true;
+      return false;
     }).toList();
+
+    final valid = playoffMatches.isNotEmpty
+        ? playoffMatches
+        : widget.matches
+            .where((m) => m.status != 'cancelled' && !m.isFullByeMatch)
+            .toList();
 
     final map = <int, List<MatchModel>>{};
     for (final m in valid) {

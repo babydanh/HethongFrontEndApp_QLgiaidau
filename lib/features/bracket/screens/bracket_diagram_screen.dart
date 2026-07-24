@@ -138,12 +138,15 @@ class _BracketDiagramScreenState extends State<BracketDiagramScreen> {
 
     if (isGroupStageKnockout) {
       final knockoutMatches = widget.matches.where((m) {
-        final isGroupStage = (m.stageName != null && m.stageName!.contains('Bảng')) ||
-            (m.bracketPosition.bracket == 'group_stage') ||
+        final hasNextMatch = m.nextMatchId.isNotEmpty || m.loserNextMatchId.isNotEmpty;
+        if (hasNextMatch) return true;
+
+        final isGroupStage = (m.bracketPosition.bracket == 'group_stage') ||
+            (m.stageName != null && (m.stageName!.contains('Bảng') || m.stageName!.toUpperCase().contains('GROUP'))) ||
             (m.groupName != null &&
                 m.groupName!.isNotEmpty &&
-                !m.groupName!.contains('Knockout') &&
-                !m.groupName!.contains('Playoff'));
+                !m.groupName!.toUpperCase().contains('KNOCKOUT') &&
+                !m.groupName!.toUpperCase().contains('PLAYOFF'));
         return !isGroupStage;
       }).toList();
 

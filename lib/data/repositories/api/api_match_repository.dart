@@ -207,9 +207,15 @@ class ApiMatchRepository implements IMatchRepository {
         json['stageType'];
     final stageName = rawStage?.toString();
 
+    final nextMatchId = (json['nextMatchId'] ?? '').toString();
+    final loserNextMatchId = (json['loserNextMatchId'] ?? '').toString();
+    final hasBracketChain = nextMatchId.isNotEmpty || loserNextMatchId.isNotEmpty;
+
     String bracketName = 'winners';
     if (json['bracketBranch'] != null) {
       bracketName = _mapBracketBranch(json['bracketBranch'] as String?);
+    } else if (hasBracketChain) {
+      bracketName = 'winners';
     } else if ((stageName != null && stageName.toUpperCase().contains('GROUP')) ||
         (json['stage']?.toString().toUpperCase() == 'GROUP_STAGE')) {
       bracketName = 'group_stage';
