@@ -317,7 +317,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Sơ đồ phân nhánh thi đấu',
+                          isGroupStageKnockout || bracketType == 'group_stage_knockout'
+                              ? 'Sơ đồ thi đấu Playoff'
+                              : 'Sơ đồ phân nhánh thi đấu',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
@@ -325,7 +327,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                           ),
                         ),
                         Text(
-                          'Xem nhánh thắng/thua & hình cây giải đấu',
+                          isGroupStageKnockout || bracketType == 'group_stage_knockout'
+                              ? 'Xem cây sơ đồ vòng Playoff & nhánh loại trực tiếp'
+                              : 'Xem cây nhánh thắng, nhánh thua & vòng loại trực tiếp',
                           style: TextStyle(
                             fontSize: 10,
                             color: colors.textMuted,
@@ -357,9 +361,11 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                       );
                     },
                     icon: const Icon(Icons.account_tree_rounded, size: 14),
-                    label: const Text(
-                      'Sơ đồ',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                    label: Text(
+                      isGroupStageKnockout || bracketType == 'group_stage_knockout'
+                          ? 'Sơ đồ Playoff'
+                          : 'Sơ đồ',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                   ),
                 ],
