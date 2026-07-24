@@ -61,6 +61,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   final List<Map<String, dynamic>> _comments = [];
   bool _isLoadingComments = false;
   StreamSubscription? _commentSub;
+  StreamSubscription? _cheerSub;
   final _commentTextController = TextEditingController();
   bool _isSubmittingComment = false;
 
@@ -119,6 +120,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     });
   }
 
+  Future<void> _handleCheer() async {
+    _spawnHeart();
+    try {
+      await ref.read(matchRepositoryProvider).cheerMatch(widget.matchId);
+    } catch (_) {}
+  }
+
   @override
   void initState() {
     super.initState();
@@ -133,10 +141,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       end: 1.0,
     ).animate(CurvedAnimation(parent: _livePulseCtrl, curve: Curves.easeInOut));
 
-    if (widget.isViewer) {
-      _fetchComments();
-      _setupSocketComments();
-    }
+    // Fetch comments and connect WebSocket for all users
+    _fetchComments();
+    _setupSocketComments();
   }
 
   @override
@@ -146,6 +153,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     _refereeController.dispose();
     _tabController.dispose();
     _commentSub?.cancel();
+    _cheerSub?.cancel();
+    try {
+      ref.read(matchSocketServiceProvider).leave(widget.matchId);
+    } catch (_) {}
     _commentTextController.dispose();
     _livePulseCtrl.dispose();
     _heartTimer?.cancel();
@@ -177,14 +188,22 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
 
   void _setupSocketComments() {
     final socket = ref.read(matchSocketServiceProvider);
+    socket.connect(widget.matchId);
+
     _commentSub = socket.onCommentNew.listen((data) {
-      if (data['matchId'] == widget.matchId) {
+      if (data['matchId'] == widget.matchId || data['matchId'] == null) {
+        if (!mounted) return;
         setState(() {
           if (!_comments.any((c) => c['id'] == data['id'])) {
             _comments.insert(0, data);
           }
         });
       }
+    });
+
+    _cheerSub = socket.onCheerUpdate.listen((data) {
+      if (!mounted) return;
+      _spawnHeart();
     });
   }
 
@@ -3234,7 +3253,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     Icons.favorite_rounded,
                     color: Color(0xFFE11D48),
                   ),
-                  onPressed: _spawnHeart,
+                  onPressed: _handleCheer,
                 ),
                 if (!isAuth)
                   TextButton(
