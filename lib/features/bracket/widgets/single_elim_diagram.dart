@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/team_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_match_card.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -36,8 +35,8 @@ class SingleElimDiagram extends StatefulWidget {
 }
 
 class _SingleElimDiagramState extends State<SingleElimDiagram> {
-  final TransformationController _tc =
-      TransformationController(Matrix4.identity()..scale(0.72));
+  final TransformationController _tc = TransformationController();
+  bool _didCenterInitialView = false;
 
   @override
   void dispose() {
@@ -50,8 +49,16 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     // Only valid matches — exclude full BYE-vs-BYE (both slots are BYE/unset)
     final valid = widget.matches.where((m) {
       if (m.status == 'cancelled') return false;
-      // Hide matches where both sides are BYE (no real participant at all)
       if (m.isFullByeMatch) return false;
+      final isGroupStage = (m.stageName != null && m.stageName!.contains('Bảng')) ||
+          (m.bracketPosition.bracket == 'group_stage') ||
+          (m.groupName != null &&
+              m.groupName!.isNotEmpty &&
+              !m.groupName!.contains('Knockout') &&
+              !m.groupName!.contains('Playoff'));
+      if (isGroupStage && widget.matches.any((other) => other.stageName != null && (other.stageName!.contains('Knockout') || other.stageName!.contains('Playoff')))) {
+        return false;
+      }
       return true;
     }).toList();
 
@@ -82,9 +89,11 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
       }
     }
 
-    // Phase 2: vertically align parent nodes to the midpoint of their children
-    // Process rounds from latest (final) backwards
-    for (int ci = sortedRounds.length - 1; ci >= 1; ci--) {
+    // Phase 2: vertically align parent nodes to the midpoint of their children.
+    // Process earliest → latest so every parent uses already-stabilized child
+    // positions. Running this backwards makes Final align before Semi/Quarter
+    // have moved, which visually shifts the whole tree off-center.
+    for (int ci = 1; ci < sortedRounds.length; ci++) {
       final round = sortedRounds[ci];
       final prevRound = sortedRounds[ci - 1];
       final prevMatches = roundMap[prevRound]!;
@@ -121,6 +130,21 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     return positions;
   }
 
+  void _centerInitialView(Size viewport, Size canvas, double scale) {
+    if (_didCenterInitialView || viewport.width <= 0 || viewport.height <= 0) {
+      return;
+    }
+    _didCenterInitialView = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final dx = ((viewport.width - canvas.width * scale) / 2).clamp(16.0, double.infinity);
+      final dy = ((viewport.height - canvas.height * scale) / 2).clamp(16.0, double.infinity);
+      _tc.value = Matrix4.identity()
+        ..translate(dx, dy)
+        ..scale(scale);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -144,20 +168,29 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     final canvasW = maxX + 80;
     final canvasH = maxY + 80;
 
-    return InteractiveViewer(
-      transformationController: _tc,
-      constrained: false,
-      boundaryMargin: const EdgeInsets.all(800),
-      minScale: 0.25,
-      maxScale: 2.5,
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: SizedBox(
-          width: canvasW,
-          height: canvasH,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final canvasSize = Size(canvasW + 80, canvasH + 80);
+        _centerInitialView(
+          Size(constraints.maxWidth, constraints.maxHeight),
+          canvasSize,
+          0.72,
+        );
+
+        return InteractiveViewer(
+          transformationController: _tc,
+          constrained: false,
+          boundaryMargin: const EdgeInsets.all(800),
+          minScale: 0.25,
+          maxScale: 2.5,
+          child: Padding(
+            padding: const EdgeInsets.all(40),
+            child: SizedBox(
+              width: canvasW,
+              height: canvasH,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
               // ── Connector lines (drawn behind cards) ──
               Positioned.fill(
                 child: CustomPaint(
@@ -202,10 +235,12 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
                   ),
                 );
               }),
-            ],
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -249,39 +284,59 @@ class _BracketConnectorPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
+    final childrenByParent = <String, List<MatchModel>>{};
     for (final match in matches) {
       if (match.nextMatchId.isEmpty) continue;
       final from = positions[match.id];
       final to = positions[match.nextMatchId];
       if (from == null || to == null) continue;
 
-      // Start point: right-center of current card
-      final start = Offset(from.dx + cardW, from.dy + cardH / 2);
-      // End point: left-center of parent card
-      final end = Offset(to.dx, to.dy + cardH / 2);
+      // Single-elim tree connectors should only join adjacent columns.
+      // Skip non-forward or skip-round links so stray placement/final links do not
+      // draw long crossing lines through the diagram.
+      final dx = to.dx - from.dx;
+      final expectedDx = cardW + colGap;
+      if (dx <= 0 || dx > expectedDx * 1.35) continue;
 
-      // Mid-X (where horizontal lines meet vertically)
-      final midX = start.dx + colGap / 2;
+      childrenByParent.putIfAbsent(match.nextMatchId, () => []).add(match);
+    }
 
-      final path = Path()
-        ..moveTo(start.dx, start.dy)
-        ..lineTo(midX, start.dy)
-        ..lineTo(midX, end.dy)
-        ..lineTo(end.dx, end.dy);
+    for (final entry in childrenByParent.entries) {
+      final parentPos = positions[entry.key];
+      if (parentPos == null) continue;
 
-      canvas.drawPath(path, paint);
+      final childCenters = entry.value
+          .map((child) => positions[child.id])
+          .whereType<Offset>()
+          .map((pos) => Offset(pos.dx + cardW, pos.dy + cardH / 2))
+          .toList();
+      if (childCenters.isEmpty) continue;
 
-      // Small dot at junction
-      canvas.drawCircle(
-        Offset(midX, start.dy),
-        3,
-        Paint()..color = lineColor.withAlpha(180),
-      );
+      final parentCenter = Offset(parentPos.dx, parentPos.dy + cardH / 2);
+      final midX = childCenters.first.dx + colGap / 2;
+
+      for (final childCenter in childCenters) {
+        final childPath = Path()
+          ..moveTo(childCenter.dx, childCenter.dy)
+          ..lineTo(midX, childCenter.dy);
+        canvas.drawPath(childPath, paint);
+      }
+
+      final ys = [...childCenters.map((p) => p.dy), parentCenter.dy]..sort();
+      final spine = Path()
+        ..moveTo(midX, ys.first)
+        ..lineTo(midX, ys.last)
+        ..lineTo(parentCenter.dx, parentCenter.dy);
+      canvas.drawPath(spine, paint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _BracketConnectorPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _BracketConnectorPainter oldDelegate) {
+    return oldDelegate.matches != matches ||
+        oldDelegate.positions != positions ||
+        oldDelegate.lineColor != lineColor;
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════

@@ -137,9 +137,18 @@ class _BracketDiagramScreenState extends State<BracketDiagramScreen> {
     }
 
     if (isGroupStageKnockout) {
-      // Group stage knockout — show SE diagram (knockout stage only)
+      final knockoutMatches = widget.matches.where((m) {
+        final isGroupStage = (m.stageName != null && m.stageName!.contains('Bảng')) ||
+            (m.bracketPosition.bracket == 'group_stage') ||
+            (m.groupName != null &&
+                m.groupName!.isNotEmpty &&
+                !m.groupName!.contains('Knockout') &&
+                !m.groupName!.contains('Playoff'));
+        return !isGroupStage;
+      }).toList();
+
       return SingleElimDiagram(
-        matches: widget.matches,
+        matches: knockoutMatches.isNotEmpty ? knockoutMatches : widget.matches,
         tournamentId: widget.tournamentId,
         isReferee: widget.isReferee,
         isReadOnly: widget.isReadOnly,
