@@ -1152,8 +1152,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     if (widget.isViewer || canOpenScoring) {
       return _buildViewerState(
         match,
-        canOpenScoring:
-            canOpenScoring && !match.isScheduled && !match.isCompleted,
+        canOpenScoring: canOpenScoring,
       );
     }
 
@@ -1463,24 +1462,43 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         if (canOpenScoring)
           Container(
             margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: context.colors.bgCard,
+              gradient: LinearGradient(
+                colors: [
+                  match.isScheduled
+                      ? const Color(0xFF16A34A).withValues(alpha: 0.15)
+                      : const Color(0xFF2563EB).withValues(alpha: 0.15),
+                  context.colors.bgCard,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: context.colors.border),
+              border: Border.all(
+                color: match.isScheduled
+                    ? const Color(0xFF16A34A).withValues(alpha: 0.4)
+                    : const Color(0xFF2563EB).withValues(alpha: 0.4),
+                width: 1.5,
+              ),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    color: AppTheme.refereeColor.withValues(alpha: 0.14),
+                    color: match.isScheduled
+                        ? const Color(0xFF16A34A)
+                        : const Color(0xFF2563EB),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
-                    Icons.gavel_rounded,
-                    color: AppTheme.refereeColor,
+                  child: Icon(
+                    match.isScheduled
+                        ? Icons.play_arrow_rounded
+                        : Icons.gavel_rounded,
+                    color: Colors.white,
+                    size: 24,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1489,18 +1507,21 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Bảng điều khiển tại sân',
+                        match.isScheduled
+                            ? 'BÀN TRỌNG TÀI - CHƯA BẮT ĐẦU'
+                            : 'BÀN TRỌNG TÀI - ĐANG THI ĐẤU',
                         style: TextStyle(
                           fontSize: 13,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w900,
                           color: context.colors.textPrimary,
+                          letterSpacing: 0.3,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         match.isScheduled
-                            ? 'Trận chưa bắt đầu. Thiết lập và mở bàn chấm điểm khi sẵn sàng.'
-                            : 'Mở modal chấm điểm theo môn để cập nhật tỉ số, set và xử lý tại sân.',
+                            ? 'Bấm nút để bắt đầu trận đấu & mở bàn chấm điểm'
+                            : 'Mở bàn chấm điểm để ghi nhận tỉ số & thẻ phạt',
                         style: TextStyle(
                           fontSize: 11,
                           color: context.colors.textSecondary,
@@ -1510,18 +1531,50 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                FilledButton.icon(
-                  onPressed: () => showOfficialScoreModal(
-                    context,
-                    tournamentId: widget.tournamentId,
-                    matchId: widget.matchId,
-                    match: match,
-                    onRecordPenalty: () => _showFoulSelectionDialog(match),
-                    onForceWin: () => _showForceWinDialog(match),
+                const SizedBox(width: 10),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: match.isScheduled
+                        ? const Color(0xFF16A34A)
+                        : const Color(0xFF2563EB),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  icon: const Icon(Icons.scoreboard_rounded, size: 18),
-                  label: const Text('Tính điểm'),
+                  onPressed: () async {
+                    final controller = ref.read(matchControllerProvider(params));
+                    if (match.isScheduled) {
+                      await controller.startMatch();
+                    }
+                    if (context.mounted) {
+                      showOfficialScoreModal(
+                        context,
+                        tournamentId: widget.tournamentId,
+                        matchId: widget.matchId,
+                        match: match,
+                        onRecordPenalty: () => _showFoulSelectionDialog(match),
+                        onForceWin: () => _showForceWinDialog(match),
+                      );
+                    }
+                  },
+                  icon: Icon(
+                    match.isScheduled
+                        ? Icons.play_arrow_rounded
+                        : Icons.scoreboard_rounded,
+                    size: 18,
+                  ),
+                  label: Text(
+                    match.isScheduled ? '🚀 BẮT ĐẦU' : '⚡ TÍNH ĐIỂM',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                    ),
+                  ),
                 ),
               ],
             ),
