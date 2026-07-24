@@ -438,10 +438,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             ],
           ),
 
-          // ── ROW 2: NHÁNH THẮNG / GIAI ĐOẠN ──
-          if (isDoubleElimination) ...[
+          // ── ROW 2: NHÁNH THI ĐẤU (Double Elimination) / GIAI ĐOẠN ──
+          if (isDoubleElimination)
             _buildFilterRow(
-              title: 'NHÁNH THẮNG:',
+              title: 'NHÁNH THI ĐẤU:',
               children: [
                 RoundFilterPill(
                   isSelected: _selectedBranch == 'all',
@@ -454,25 +454,19 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                   onTap: () => setState(() => _selectedBranch = 'winners'),
                 ),
                 RoundFilterPill(
+                  isSelected: _selectedBranch == 'losers',
+                  label: 'Nhánh thua',
+                  onTap: () => setState(() => _selectedBranch = 'losers'),
+                ),
+                RoundFilterPill(
                   isSelected: _selectedBranch == 'grand_final',
                   label: 'Chung kết tổng',
                   onTap: () => setState(() => _selectedBranch = 'grand_final'),
                 ),
               ],
             ),
-            _buildFilterRow(
-              title: 'NHÁNH THUA:',
-              children: [
-                RoundFilterPill(
-                  isSelected: _selectedBranch == 'losers',
-                  label: 'Nhánh thua',
-                  onTap: () => setState(() => _selectedBranch = 'losers'),
-                ),
-              ],
-            ),
-          ],
 
-          if (isGroupStageKnockout) ...[
+          if (isGroupStageKnockout)
             _buildFilterRow(
               title: 'GIAI ĐOẠN:',
               children: [
@@ -493,27 +487,39 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                 ),
               ],
             ),
-          ],
 
-          // ── ROW 3: BẢNG ĐẤU ──
-          if (availableGroups.length > 1)
-            _buildFilterRow(
-              title: 'BẢNG ĐẤU:',
-              children: [
-                RoundFilterPill(
-                  isSelected: _selectedGroup == 'all',
-                  label: 'Tất cả',
-                  onTap: () => setState(() => _selectedGroup = 'all'),
-                ),
-                ...availableGroups.map(
-                  (group) => RoundFilterPill(
-                    isSelected: _selectedGroup == group,
-                    label: group,
-                    onTap: () => setState(() => _selectedGroup = group),
+          // ── ROW 3: BẢNG ĐẤU (Group Stage only - filter out duplicate branch names) ──
+          Builder(
+            builder: (context) {
+              final cleanGroups = availableGroups.where((g) {
+                final lower = g.toLowerCase();
+                return !lower.contains('winners') &&
+                    !lower.contains('losers') &&
+                    !lower.contains('grand') &&
+                    !lower.contains('bracket');
+              }).toList();
+
+              if (cleanGroups.length <= 1) return const SizedBox.shrink();
+
+              return _buildFilterRow(
+                title: 'BẢNG ĐẤU:',
+                children: [
+                  RoundFilterPill(
+                    isSelected: _selectedGroup == 'all',
+                    label: 'Tất cả',
+                    onTap: () => setState(() => _selectedGroup = 'all'),
                   ),
-                ),
-              ],
-            ),
+                  ...cleanGroups.map(
+                    (group) => RoundFilterPill(
+                      isSelected: _selectedGroup == group,
+                      label: group,
+                      onTap: () => setState(() => _selectedGroup = group),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
 
           // ── ROW 4: VÒNG ĐẤU ──
           if (availableRounds.length > 1)
