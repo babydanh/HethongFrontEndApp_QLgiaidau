@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/filter_chips.dart' show RoundFilterPill;
 
@@ -155,7 +156,72 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
           final isGroupStageKnockout =
               bracketType == AppConstants.bracketGroupStageKnockout;
 
-          if (isRoundRobin || isGroupStageKnockout) {
+          final targetLength = isGroupStageKnockout ? 4 : (isRoundRobin ? 3 : 1);
+          if (_tabController.length != targetLength) {
+            _tabController.dispose();
+            _tabController = TabController(length: targetLength, vsync: this);
+          }
+
+          if (isGroupStageKnockout) {
+            return Column(
+              children: [
+                SizedBox(
+                  height: 34,
+                  child: TabBar(
+                    controller: _tabController,
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    labelColor: AppTheme.primary,
+                    unselectedLabelColor: context.colors.textSecondary,
+                    indicatorColor: AppTheme.primary,
+                    indicatorWeight: 2,
+                    labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                    unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.normal),
+                    tabs: const [
+                      Tab(height: 30, text: 'Sơ đồ Playoff'),
+                      Tab(height: 30, text: 'Lịch thi đấu'),
+                      Tab(height: 30, text: 'Bảng xếp hạng'),
+                      Tab(height: 30, text: 'Bảng chéo'),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      SingleElimDiagram(
+                        matches: matches,
+                        tournamentId: widget.tournamentId,
+                        isReferee: widget.isReferee,
+                        isReadOnly: auth.role == UserRole.viewer,
+                      ),
+                      _buildKnockoutMatchTable(
+                        matches,
+                        bracketType,
+                        auth.role == UserRole.viewer,
+                        auth.role == UserRole.admin || widget.isReferee,
+                      ),
+                      StandingsView(
+                        matches: matches,
+                        tournamentId: widget.tournamentId,
+                        divisionId: widget.divisionId,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: CrossTableView(
+                          matches: matches,
+                          tournamentId: widget.tournamentId,
+                          divisionId: widget.divisionId,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          }
+
+          if (isRoundRobin) {
             return Column(
               children: [
                 SizedBox(
