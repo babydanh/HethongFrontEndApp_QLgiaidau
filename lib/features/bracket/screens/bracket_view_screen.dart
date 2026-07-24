@@ -235,7 +235,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     final validMatches = matches.where((m) {
       final t1 = m.team1Name.trim().toUpperCase();
       final t2 = m.team2Name.trim().toUpperCase();
-      return !(t1 == 'TBD' && t2 == 'TBD' && !m.isLive && !m.isCompleted && m.round > 1);
+      return !(t1 == 'TBD' && t2 == 'TBD' && !m.isLive && !m.isCompleted);
     }).toList();
 
     // Status counts

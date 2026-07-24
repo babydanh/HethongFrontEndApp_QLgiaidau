@@ -1,9 +1,11 @@
 import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
 
 class Team {
   final String id;
   final String name;
   final List<String> members;
+  final List<MatchMemberInfo> memberInfos;
   final int seed;
   final String group;
   final String photoUrl;
@@ -16,6 +18,7 @@ class Team {
     required this.id,
     required this.name,
     this.members = const [],
+    this.memberInfos = const [],
     this.seed = 0,
     this.group = '',
     this.photoUrl = '',
@@ -26,10 +29,41 @@ class Team {
   });
 
   factory Team.fromJson(Map<String, dynamic> json, String id) {
+    final rawMembers = json['members'];
+    List<String> parsedMembers = [];
+    List<MatchMemberInfo> parsedMemberInfos = [];
+
+    if (rawMembers is List) {
+      for (final m in rawMembers) {
+        if (m is Map<String, dynamic>) {
+          final info = MatchMemberInfo.fromJson(m);
+          parsedMemberInfos.add(info);
+          if (info.fullName.isNotEmpty) parsedMembers.add(info.fullName);
+        } else if (m != null) {
+          parsedMembers.add(m.toString());
+        }
+      }
+    }
+
+    if (json['memberDetails'] is List) {
+      for (final m in json['memberDetails']) {
+        if (m is Map<String, dynamic>) {
+          parsedMemberInfos.add(MatchMemberInfo.fromJson(m));
+        }
+      }
+    } else if (json['players'] is List) {
+      for (final m in json['players']) {
+        if (m is Map<String, dynamic>) {
+          parsedMemberInfos.add(MatchMemberInfo.fromJson(m));
+        }
+      }
+    }
+
     return Team(
       id: id,
       name: json['name'] ?? '',
-      members: List<String>.from(json['members'] ?? []),
+      members: parsedMembers,
+      memberInfos: parsedMemberInfos,
       seed: json['seed'] ?? 0,
       group: json['group'] ?? '',
       photoUrl: json['photoUrl'] ?? '',

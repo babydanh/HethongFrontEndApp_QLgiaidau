@@ -242,50 +242,6 @@ class MatchTableRow extends StatelessWidget {
                             ),
                           );
                         }),
-
-                        // Total Sets Column (TỔNG)
-                        Container(
-                          margin: const EdgeInsets.only(left: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            children: [
-                              const Text(
-                                'TỔNG',
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF64748B),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '$setsWon1',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                  color: match.winnerId == match.team1Id || setsWon1 > setsWon2
-                                      ? const Color(0xFF16A34A)
-                                      : const Color(0xFF0F172A),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '$setsWon2',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                  color: match.winnerId == match.team2Id || setsWon2 > setsWon1
-                                      ? const Color(0xFF16A34A)
-                                      : const Color(0xFF0F172A),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       ],
                     ),
                   ],
@@ -299,7 +255,24 @@ class MatchTableRow extends StatelessWidget {
                 Row(
                   children: [
                     // Status Badge
-                    if (isLive)
+                    if (match.isBye || match.team1Name.toUpperCase() == 'BYE' || match.team2Name.toUpperCase() == 'BYE')
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF86EFAC)),
+                        ),
+                        child: const Text(
+                          'VÀO THẲNG',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF16A34A),
+                          ),
+                        ),
+                      )
+                    else if (isLive)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
