@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -16,14 +15,12 @@ import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/core/widgets/vnsport_header.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_banner_card.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
-import 'package:app_quanly_giaidau/core/widgets/sport_filter_chips.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/token_input_sheet.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
-import 'dart:math' as math;
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:ui';
@@ -35,84 +32,7 @@ import 'dart:io' show Platform;
 //  Sóng lượn: trái 75% thấp hơn phải 85%, đỉnh giữa 100%
 //  Giống clip-path: polygon(0% 0%, 100% 0%, 100% 85%, 50% 100%, 0% 75%)
 // ═══════════════════════════════════════════════════════
-class _WavePainter extends CustomPainter {
-  final double animValue;
-  _WavePainter(this.animValue);
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Gradient xanh nhạt → xanh trung → trắng
-    final gradient = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: const [
-        Color(0xFF2979FF),
-        Color(0xFF448AFF),
-        Color(0xFF82B1FF),
-        Color(0xFFE3EEFF),
-      ],
-      stops: const [0.0, 0.4, 0.75, 1.0],
-    );
-
-    final paint = Paint()
-      ..shader = gradient.createShader(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-      )
-      ..style = PaintingStyle.fill;
-
-    // Sóng nhẹ theo animation
-    final waveAnim = math.sin(animValue * 2 * math.pi) * 4;
-
-    final path = Path();
-    path.moveTo(0, 0);
-    path.lineTo(size.width, 0);
-
-    // Phải cao hơn: 85%
-    path.lineTo(size.width, size.height * 0.85);
-
-    // Sóng cong mượt: dùng cubic bezier
-    // control point 1: từ phải 85% → đỉnh giữa 100%
-    path.cubicTo(
-      size.width * 0.75,
-      size.height * (0.85 + waveAnim / size.height),
-      size.width * 0.6,
-      size.height * (1.0 + waveAnim / size.height),
-      size.width * 0.5,
-      size.height * 1.0, // đỉnh 100%
-    );
-    // control point 2: đỉnh giữa 100% → trái 75%
-    path.cubicTo(
-      size.width * 0.35,
-      size.height * (1.0 - waveAnim / size.height),
-      size.width * 0.18,
-      size.height * 0.78,
-      0,
-      size.height * 0.75, // trái thấp nhất
-    );
-    path.close();
-
-    canvas.drawPath(path, paint);
-
-    // Lớp shimmer nhẹ
-    final shimmerPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.07)
-      ..style = PaintingStyle.fill;
-    final shimmerPath = Path();
-    shimmerPath.moveTo(0, 0);
-    shimmerPath.lineTo(size.width * 0.5, 0);
-    shimmerPath.quadraticBezierTo(
-      size.width * 0.3,
-      size.height * 0.4,
-      0,
-      size.height * 0.5,
-    );
-    shimmerPath.close();
-    canvas.drawPath(shimmerPath, shimmerPaint);
-  }
-
-  @override
-  bool shouldRepaint(_WavePainter old) => old.animValue != animValue;
-}
 
 // ═══════════════════════════════════════════════════════
 //  HOME SCREEN — Full Redesign
@@ -517,25 +437,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   //  TAB 0: KHÁM PHÁ (Explore)
   // ═══════════════════════════════════════════════════════
   Widget _buildExploreTab(AsyncValue<List<Tournament>> tournamentsAsync) {
-    final screenSize = MediaQuery.of(context).size;
-    final double safeAreaTop = MediaQuery.of(context).padding.top;
-    final double p = _headerScrollProgress;
-    final double currentHeaderHeight = lerpDouble(
-      _maxHeaderHeight,
-      _minHeaderHeight,
-      p,
-    )!;
-    final double logoW = lerpDouble(260.0, 160.0, p)!;
-    final double logoH = lerpDouble(82.0, 50.0, p)!;
-    final double iconsTop = lerpDouble(
-      safeAreaTop + 4.0,
-      safeAreaTop + 16.0,
-      p,
-    )!;
-    final double subtitleOpacity = (1.0 - p).clamp(0.0, 1.0);
-    final double headerDetailsY = lerpDouble(76.0, 16.0, p)!;
-    final double searchOpacity = p;
-
     return Stack(
       children: [
         Positioned.fill(
