@@ -1105,6 +1105,7 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final m = widget.match;
     final isT1Tbd = m.team1Name.trim().toUpperCase() == 'TBD' || m.team1Name.trim().toUpperCase() == 'BYE';
     final isT2Tbd = m.team2Name.trim().toUpperCase() == 'TBD' || m.team2Name.trim().toUpperCase() == 'BYE';
@@ -1134,12 +1135,12 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEFF6FF), width: 1.5),
+        border: Border.all(color: colors.border.withValues(alpha: 0.7), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0052FF).withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -1224,7 +1225,7 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
 
           const SizedBox(height: 16),
 
-          // ── Teams & Vertical Scores Row (No VS, no hyphen) ──
+          // ── Teams & Vertical Scores Row ──
           Column(
             children: [
               // Team 1 Row
@@ -1241,10 +1242,10 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
                       m.team1Name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
+                        color: colors.textPrimary,
                       ),
                     ),
                   ),
@@ -1268,10 +1269,10 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
                   else
                     Text(
                       '${m.score1}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                        color: colors.textPrimary,
                       ),
                     ),
                 ],
@@ -1293,10 +1294,10 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
                       m.team2Name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
+                        color: colors.textPrimary,
                       ),
                     ),
                   ),
@@ -1320,10 +1321,10 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
                   else
                     Text(
                       '${m.score2}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                        color: colors.textPrimary,
                       ),
                     ),
                 ],
@@ -1332,31 +1333,31 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
           ),
 
           const SizedBox(height: 14),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
           const SizedBox(height: 10),
 
           // ── Sub-info Row: Sport & Court ──
           Row(
             children: [
-              const Icon(Icons.sports_handball_rounded, size: 14, color: Color(0xFF475569)),
+              Icon(Icons.sports_handball_rounded, size: 14, color: colors.textSecondary),
               const SizedBox(width: 4),
               Text(
                 sportText,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF475569),
+                  color: colors.textSecondary,
                 ),
               ),
               const SizedBox(width: 16),
-              const Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF64748B)),
+              Icon(Icons.location_on_outlined, size: 14, color: colors.textMuted),
               const SizedBox(width: 4),
               Text(
                 courtText,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF64748B),
+                  color: colors.textMuted,
                 ),
               ),
             ],
@@ -1384,10 +1385,10 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
-                      color: isCheered ? const Color(0xFFFEF2F2) : const Color(0xFFF8FAFC),
+                      color: isCheered ? const Color(0xFFFEF2F2) : colors.bgSurface,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: isCheered ? const Color(0xFFFECACA) : const Color(0xFFE2E8F0),
+                        color: isCheered ? const Color(0xFFFECACA) : colors.border,
                       ),
                     ),
                     child: Row(
@@ -1404,7 +1405,7 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: isCheered ? const Color(0xFFDC2626) : const Color(0xFF0F172A),
+                            color: isCheered ? const Color(0xFFDC2626) : colors.textPrimary,
                           ),
                         ),
                       ],
@@ -1426,21 +1427,21 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF0F9FF),
+                      color: colors.bgSurface,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFBAE6FD)),
+                      border: Border.all(color: colors.border),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.list_alt_rounded, size: 15, color: Color(0xFF0284C7)),
-                        SizedBox(width: 6),
+                        Icon(Icons.list_alt_rounded, size: 15, color: colors.info),
+                        const SizedBox(width: 6),
                         Text(
                           'Chi tiết',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF0284C7),
+                            color: colors.info,
                           ),
                         ),
                       ],
@@ -1461,21 +1462,21 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF0F9FF),
+                      color: colors.bgSurface,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFBAE6FD)),
+                      border: Border.all(color: colors.border),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.reply_rounded, size: 15, color: Color(0xFF0284C7)),
-                        SizedBox(width: 6),
+                        Icon(Icons.reply_rounded, size: 15, color: colors.info),
+                        const SizedBox(width: 6),
                         Text(
                           'Chia sẻ',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF0284C7),
+                            color: colors.info,
                           ),
                         ),
                       ],
@@ -1521,7 +1522,7 @@ class _DoubleAvatar extends StatelessWidget {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.colors.bgCard,
               shape: BoxShape.circle,
               border: Border.all(color: color, width: 1.5),
             ),
@@ -1542,7 +1543,7 @@ class _DoubleAvatar extends StatelessWidget {
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.bgCard,
                 shape: BoxShape.circle,
                 border: Border.all(color: color, width: 1.5),
               ),
