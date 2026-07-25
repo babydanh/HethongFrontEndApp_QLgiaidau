@@ -115,19 +115,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                 )
               else
                 _FallbackBanner(colors: colors),
-              if (!hideText) ...[
-                Positioned(
-                  left: 12,
-                  right: 12,
-                  top: 10,
-                  child: Row(
-                    children: [
-                      _GlassPill(label: _sportLabel(), icon: Icons.sports_tennis_rounded),
-                      const Spacer(),
-                      _StatusPill(label: _statusLabel(), color: _statusColor()),
-                    ],
-                  ),
-                ),
+              if (!hideText)
                 Positioned(
                   left: 14,
                   right: 14,
@@ -155,12 +143,23 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       Wrap(
                         spacing: 6,
                         runSpacing: 4,
                         children: [
-                          _MetaChip(icon: Icons.calendar_today_rounded, label: _dateRange()),
+                          _MetaChip(
+                            icon: Icons.sports_tennis_rounded,
+                            label: _sportLabel(),
+                          ),
+                          _StatusMetaChip(
+                            label: _statusLabel(),
+                            color: _statusColor(),
+                          ),
+                          _MetaChip(
+                            icon: Icons.calendar_today_rounded,
+                            label: _dateRange(),
+                          ),
                           _MetaChip(
                             icon: Icons.people_alt_rounded,
                             label: '${tournament.maxTeams} đội',
@@ -175,7 +174,6 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                     ],
                   ),
                 ),
-              ],
             ],
           ),
         ),
@@ -204,60 +202,26 @@ class _FallbackBanner extends StatelessWidget {
   }
 }
 
-class _GlassPill extends StatelessWidget {
-  final String label;
-  final IconData icon;
-
-  const _GlassPill({required this.label, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.86),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.32)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: AppTheme.primary),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF0F172A),
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusPill extends StatelessWidget {
+class _StatusMetaChip extends StatelessWidget {
   final String label;
   final Color color;
 
-  const _StatusPill({required this.label, required this.color});
+  const _StatusMetaChip({required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.92),
+        color: color.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         label,
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.w900,
+          fontSize: 9.5,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );
