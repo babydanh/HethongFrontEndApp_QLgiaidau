@@ -255,9 +255,22 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
   bool _handleScrollNotification(ScrollNotification notification) {
     if (notification.metrics.axis == Axis.vertical) {
-      final shouldCompact = notification.metrics.pixels > 24;
-      if (shouldCompact != _isHeaderCompact) {
-        setState(() => _isHeaderCompact = shouldCompact);
+      final metrics = notification.metrics;
+
+      // Không tự động thu gọn nếu danh sách quá ngắn (maxScrollExtent < 60px)
+      if (metrics.maxScrollExtent < 60) {
+        if (_isHeaderCompact) {
+          setState(() => _isHeaderCompact = false);
+        }
+        return false;
+      }
+
+      final pixels = metrics.pixels;
+      // Dùng hysteresis đệm 2 chiều: cuộn xuống qua 60px mới thu nhỏ, cuộn lên < 10px mới mở to
+      if (!_isHeaderCompact && pixels > 60) {
+        setState(() => _isHeaderCompact = true);
+      } else if (_isHeaderCompact && pixels < 10) {
+        setState(() => _isHeaderCompact = false);
       }
     }
     return false;
