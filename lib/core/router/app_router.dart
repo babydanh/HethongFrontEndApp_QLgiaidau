@@ -50,6 +50,7 @@ import 'package:app_quanly_giaidau/features/register/screens/tournament_register
 import 'package:app_quanly_giaidau/features/register/screens/doubles_registration_screen.dart';
 import 'package:app_quanly_giaidau/features/register/screens/join_invite_screen.dart';
 import 'package:app_quanly_giaidau/features/register/screens/join_team_screen.dart';
+import 'package:app_quanly_giaidau/features/lite/screens/lite_join_screen.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/features/dashboard/screens/dashboard_screen.dart';
 import 'package:app_quanly_giaidau/features/dashboard/screens/organizer_lite_screen.dart';
@@ -447,6 +448,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             participantId: extra?['participantId'] ?? '',
             token: extra?['token'] ?? '',
           );
+        },
+      ),
+      GoRoute(
+        path: '/lite-join/:inviteCode',
+        builder: (context, state) {
+          final inviteCode = state.pathParameters['inviteCode']!;
+          return LiteJoinScreen(inviteCode: inviteCode);
         },
       ),
 

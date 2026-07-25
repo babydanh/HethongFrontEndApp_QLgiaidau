@@ -725,26 +725,45 @@ class _TournamentRegisterScreenState
                   ),
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _nameCtrl,
-                  style: TextStyle(color: context.colors.textPrimary),
-                  decoration: InputDecoration(
-                    labelText: 'Tên đội / VĐV',
-                    hintText: 'Nhập tên đội',
-                    prefixIcon: Icon(
-                      Icons.group_rounded,
-                      color: context.colors.textMuted,
-                    ),
-                    filled: true,
-                    fillColor: context.colors.bgDark,
-                    border: OutlineInputBorder(
+                if (_selectedDivision?.matchType == 'SINGLES')
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
                     ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Tên thi đấu', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.textMuted)),
+                        const SizedBox(height: 4),
+                        Text(
+                          user?.fullName ?? 'Chưa cập nhật',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
+                        ),
+                        const SizedBox(height: 2),
+                        Text('Tên sẽ được lấy từ tài khoản của bạn', style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
+                      ],
+                    ),
+                  )
+                else
+                  TextFormField(
+                    controller: _nameCtrl,
+                    style: TextStyle(color: context.colors.textPrimary),
+                    decoration: InputDecoration(
+                      labelText: 'Tên đội',
+                      hintText: 'Nhập tên đội',
+                      prefixIcon: Icon(Icons.group_rounded, color: context.colors.textMuted),
+                      filled: true,
+                      fillColor: context.colors.bgDark,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    validator: (v) => (v == null || v.trim().length < 3)
+                        ? 'Tối thiểu 3 ký tự'
+                        : null,
                   ),
-                  validator: (v) => (v == null || v.trim().length < 3)
-                      ? 'Tối thiểu 3 ký tự'
-                      : null,
-                ),
                 const SizedBox(height: 16),
                 divAsync.when(
                   data: (divs) {
