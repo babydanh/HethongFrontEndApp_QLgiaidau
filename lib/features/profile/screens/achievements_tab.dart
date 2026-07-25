@@ -27,10 +27,7 @@ class AchievementsTab extends ConsumerWidget {
     final currentUserId = profileAsync.asData?.value.id ?? '';
 
     // Fetch real tournaments from API
-    final allTournamentsAsync = ref.watch(tournamentsProvider);
     final followedTournamentsAsync = ref.watch(followedTournamentsProvider);
-
-    final realTournaments = allTournamentsAsync.asData?.value ?? [];
     final followedTournaments = followedTournamentsAsync.asData?.value ?? [];
 
     final List<_AchievementData> apiAchievements = [];
