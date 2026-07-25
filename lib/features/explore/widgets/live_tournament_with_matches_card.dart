@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -52,6 +53,7 @@ class _LiveTournamentWithMatchesCardState
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final matchesAsync = ref.watch(matchesProvider(widget.tournament.id));
     final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl);
 
@@ -84,12 +86,12 @@ class _LiveTournamentWithMatchesCardState
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.bgCard,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+            border: Border.all(color: colors.border.withValues(alpha: 0.7), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 12,
                 offset: const Offset(0, 3),
               ),
@@ -109,9 +111,9 @@ class _LiveTournamentWithMatchesCardState
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0F172A),
+                          color: colors.bgSurface,
                           shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                          border: Border.all(color: colors.border, width: 1),
                         ),
                         child: ClipOval(
                           child: resolvedLogoUrl.isNotEmpty
@@ -142,10 +144,10 @@ class _LiveTournamentWithMatchesCardState
                           children: [
                             Text(
                               widget.tournament.name.toUpperCase(),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F172A),
+                                color: colors.textPrimary,
                                 letterSpacing: 0.3,
                               ),
                               maxLines: 1,
@@ -154,9 +156,9 @@ class _LiveTournamentWithMatchesCardState
                             const SizedBox(height: 2),
                             Text(
                               widget.tournament.isRanked ? "Xếp hạng ELO" : "Giải đấu giao lưu",
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
-                                color: Color(0xFF64748B),
+                                color: colors.textMuted,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -292,6 +294,7 @@ class _LiveTournamentWithMatchesCardState
   }
 
   Widget _buildMatchCard(BuildContext context, MatchModel match) {
+    final colors = context.colors;
     final isT1Tbd = match.team1Name.trim().toUpperCase() == 'TBD' || match.team1Name.trim().toUpperCase() == 'BYE';
     final isT2Tbd = match.team2Name.trim().toUpperCase() == 'TBD' || match.team2Name.trim().toUpperCase() == 'BYE';
     final isByeMatch = match.isBye || isT1Tbd || isT2Tbd;
@@ -332,12 +335,12 @@ class _LiveTournamentWithMatchesCardState
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFEFF6FF), width: 1.5),
+        border: Border.all(color: colors.border.withValues(alpha: 0.6), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0052FF).withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -346,7 +349,7 @@ class _LiveTournamentWithMatchesCardState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Top Badges Row (Sleek rectangular badges) ──
+          // ── Top Badges Row ──
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -414,7 +417,7 @@ class _LiveTournamentWithMatchesCardState
 
           const SizedBox(height: 14),
 
-          // ── Teams & Vertical Scores Section (No vs, no hyphen) ──
+          // ── Teams & Vertical Scores Section ──
           GestureDetector(
             onTap: () => context.push('/intro/${widget.tournament.id}'),
             child: Padding(
@@ -435,10 +438,10 @@ class _LiveTournamentWithMatchesCardState
                           match.team1Name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF0F172A),
+                            color: colors.textPrimary,
                           ),
                         ),
                       ),
@@ -462,10 +465,10 @@ class _LiveTournamentWithMatchesCardState
                       else
                         Text(
                           '${match.score1}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
+                            color: colors.textPrimary,
                           ),
                         ),
                     ],
@@ -487,10 +490,10 @@ class _LiveTournamentWithMatchesCardState
                           match.team2Name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF0F172A),
+                            color: colors.textPrimary,
                           ),
                         ),
                       ),
@@ -514,10 +517,10 @@ class _LiveTournamentWithMatchesCardState
                       else
                         Text(
                           '${match.score2}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
+                            color: colors.textPrimary,
                           ),
                         ),
                     ],
@@ -528,31 +531,31 @@ class _LiveTournamentWithMatchesCardState
           ),
 
           const SizedBox(height: 12),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
           const SizedBox(height: 10),
 
           // ── Sub-info Row: Sport & Court ──
           Row(
             children: [
-              const Icon(Icons.sports_handball_rounded, size: 14, color: Color(0xFF475569)),
+              Icon(Icons.sports_handball_rounded, size: 14, color: colors.textSecondary),
               const SizedBox(width: 4),
               Text(
                 sportText,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF475569),
+                  color: colors.textSecondary,
                 ),
               ),
               const SizedBox(width: 16),
-              const Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF64748B)),
+              Icon(Icons.location_on_outlined, size: 14, color: colors.textMuted),
               const SizedBox(width: 4),
               Text(
                 courtText,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF64748B),
+                  color: colors.textMuted,
                 ),
               ),
             ],
@@ -563,7 +566,7 @@ class _LiveTournamentWithMatchesCardState
           // ── Action Buttons Row ──
           Row(
             children: [
-              // Button 1: Cổ vũ (Gọi repository)
+              // Button 1: Cổ vũ
               Expanded(
                 child: InkWell(
                   onTap: () async {
@@ -578,10 +581,10 @@ class _LiveTournamentWithMatchesCardState
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 9),
                     decoration: BoxDecoration(
-                      color: isCheered ? const Color(0xFFFEF2F2) : const Color(0xFFF8FAFC),
+                      color: isCheered ? const Color(0xFFFEF2F2) : colors.bgSurface,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: isCheered ? const Color(0xFFFECACA) : const Color(0xFFE2E8F0),
+                        color: isCheered ? const Color(0xFFFECACA) : colors.border,
                       ),
                     ),
                     child: Row(
@@ -598,7 +601,7 @@ class _LiveTournamentWithMatchesCardState
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: isCheered ? const Color(0xFFDC2626) : const Color(0xFF0F172A),
+                            color: isCheered ? const Color(0xFFDC2626) : colors.textPrimary,
                           ),
                         ),
                       ],
@@ -608,7 +611,7 @@ class _LiveTournamentWithMatchesCardState
               ),
               const SizedBox(width: 8),
 
-              // Button 2: Chi tiết (Mở trực tiếp trang Live Match Detail /live/:matchId)
+              // Button 2: Chi tiết
               Expanded(
                 child: InkWell(
                   onTap: () => context.push('/live/${match.id}'),
@@ -616,21 +619,21 @@ class _LiveTournamentWithMatchesCardState
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 9),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF0F9FF),
+                      color: colors.bgSurface,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFBAE6FD)),
+                      border: Border.all(color: colors.border),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.list_alt_rounded, size: 15, color: Color(0xFF0284C7)),
-                        SizedBox(width: 6),
+                        Icon(Icons.list_alt_rounded, size: 15, color: colors.info),
+                        const SizedBox(width: 6),
                         Text(
                           'Chi tiết',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF0284C7),
+                            color: colors.info,
                           ),
                         ),
                       ],
@@ -640,7 +643,7 @@ class _LiveTournamentWithMatchesCardState
               ),
               const SizedBox(width: 8),
 
-              // Button 3: Nút Chia sẻ CHỈ CÓ ICON (Không có chữ "Chia sẻ")
+              // Button 3: Nút Chia sẻ CHỈ CÓ ICON
               InkWell(
                 onTap: () {
                   final text = '${match.team1Name} vs ${match.team2Name} - ${widget.tournament.name}';
@@ -651,12 +654,12 @@ class _LiveTournamentWithMatchesCardState
                   width: 42,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF0F9FF),
+                    color: colors.bgSurface,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFBAE6FD)),
+                    border: Border.all(color: colors.border),
                   ),
-                  child: const Center(
-                    child: Icon(Icons.share_rounded, size: 16, color: Color(0xFF0284C7)),
+                  child: Center(
+                    child: Icon(Icons.share_rounded, size: 16, color: colors.info),
                   ),
                 ),
               ),
@@ -689,12 +692,13 @@ class _DoubleAvatarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     if (initial2.isEmpty || initial2 == '?') {
       return Container(
         width: 28,
         height: 28,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.bgCard,
           shape: BoxShape.circle,
           border: Border.all(color: color, width: 1.5),
         ),
@@ -720,7 +724,7 @@ class _DoubleAvatarWidget extends StatelessWidget {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: colors.bgCard,
               shape: BoxShape.circle,
               border: Border.all(color: color, width: 1.5),
             ),
@@ -741,7 +745,7 @@ class _DoubleAvatarWidget extends StatelessWidget {
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colors.bgCard,
                 shape: BoxShape.circle,
                 border: Border.all(color: color, width: 1.5),
               ),
