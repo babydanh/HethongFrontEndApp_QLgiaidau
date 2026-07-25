@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
 /// A clean rectangular filter button matching Image 1 spec.
 /// Styled with borderRadius: 8, padding: 7,14, fontSize: 12, fontWeight: w600.
 /// Active state: solid blue #2563EB + white text.
-/// Inactive state: white bg + border #CBD5E1 + dark slate text + muted count (N).
+/// Inactive state: dynamic bgSurface + border + primary text + muted count (N).
 class RoundFilterPill extends StatelessWidget {
   final bool isSelected;
   final String label;
@@ -20,16 +21,18 @@ class RoundFilterPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF2563EB) : Colors.white,
+          color: isSelected ? const Color(0xFF2563EB) : colors.bgSurface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFCBD5E1),
+            color: isSelected ? const Color(0xFF2563EB) : colors.border,
             width: 1,
           ),
           boxShadow: isSelected
@@ -50,7 +53,7 @@ class RoundFilterPill extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                color: isSelected ? Colors.white : const Color(0xFF334155),
+                color: isSelected ? Colors.white : colors.textPrimary,
               ),
             ),
             if (count != null) ...[
@@ -62,7 +65,7 @@ class RoundFilterPill extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                   color: isSelected
                       ? Colors.white.withValues(alpha: 0.9)
-                      : const Color(0xFF94A3B8),
+                      : colors.textMuted,
                 ),
               ),
             ],

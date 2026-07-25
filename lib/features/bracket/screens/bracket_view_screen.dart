@@ -309,6 +309,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     }).toList();
 
     return ListView(
+      controller: widget.scrollController,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
       physics: const BouncingScrollPhysics(
         parent: AlwaysScrollableScrollPhysics(),
@@ -412,20 +413,20 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
           Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: colors.bgCard,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: colors.border),
             ),
             child: TextField(
               controller: _searchController,
               onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
-              style: const TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
-              decoration: const InputDecoration(
+              style: TextStyle(fontSize: 13, color: colors.textPrimary),
+              decoration: InputDecoration(
                 hintText: 'Tìm kiếm theo tên người chơi hoặc tên đội...',
-                hintStyle: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-                prefixIcon: Icon(Icons.search_rounded, size: 18, color: Color(0xFF94A3B8)),
+                hintStyle: TextStyle(fontSize: 12, color: colors.textMuted),
+                prefixIcon: Icon(Icons.search_rounded, size: 18, color: colors.textMuted),
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
                 isDense: true,
               ),
             ),
@@ -601,10 +602,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             width: 90,
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF64748B),
+                color: context.colors.textMuted,
                 letterSpacing: 0.5,
               ),
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
 /// Clean, specs-driven schedule match card.
@@ -57,6 +58,7 @@ class MatchTableRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final isLive = match.isLive;
     final isCompleted = match.isCompleted;
 
@@ -103,17 +105,17 @@ class MatchTableRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isLive ? const Color(0xFFFCA5A5) : const Color(0xFFE2E8F0),
+          color: isLive ? const Color(0xFFFCA5A5) : colors.border.withValues(alpha: 0.6),
           width: isLive ? 1.5 : 1,
         ),
         boxShadow: [
           BoxShadow(
             color: isLive
                 ? const Color(0xFFEF4444).withValues(alpha: 0.08)
-                : const Color(0xFF0F172A).withValues(alpha: 0.03),
+                : colors.border.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -157,7 +159,7 @@ class MatchTableRow extends StatelessWidget {
                                     fontWeight: match.winnerId == match.team1Id || setsWon1 > setsWon2
                                         ? FontWeight.w800
                                         : FontWeight.w600,
-                                    color: const Color(0xFF0F172A),
+                                    color: colors.textPrimary,
                                   ),
                                 ),
                               ),
@@ -184,7 +186,7 @@ class MatchTableRow extends StatelessWidget {
                                     fontWeight: match.winnerId == match.team2Id || setsWon2 > setsWon1
                                         ? FontWeight.w800
                                         : FontWeight.w600,
-                                    color: const Color(0xFF0F172A),
+                                    color: colors.textPrimary,
                                   ),
                                 ),
                               ),
@@ -214,10 +216,10 @@ class MatchTableRow extends StatelessWidget {
                               children: [
                                 Text(
                                   'S$idx',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF94A3B8),
+                                    color: colors.textMuted,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -226,7 +228,7 @@ class MatchTableRow extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: isT1Win ? FontWeight.w900 : FontWeight.w500,
-                                    color: isT1Win ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+                                    color: isT1Win ? const Color(0xFF3B82F6) : colors.textSecondary,
                                   ),
                                 ),
                                 const SizedBox(height: 10),
@@ -235,7 +237,7 @@ class MatchTableRow extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: isT2Win ? FontWeight.w900 : FontWeight.w500,
-                                    color: isT2Win ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+                                    color: isT2Win ? const Color(0xFF3B82F6) : colors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -248,7 +250,7 @@ class MatchTableRow extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 12),
-                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
                 const SizedBox(height: 8),
 
                 // ── BOTTOM FOOTER: STATUS, TIME, COURT & ROUND ──
@@ -259,16 +261,16 @@ class MatchTableRow extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF0FDF4),
+                          color: const Color(0xFF16A34A).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF86EFAC)),
+                          border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.4)),
                         ),
                         child: const Text(
                           'VÀO THẲNG',
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF16A34A),
+                            color: Color(0xFF22C55E),
                           ),
                         ),
                       )
@@ -276,9 +278,9 @@ class MatchTableRow extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFEF2F2),
+                          color: const Color(0xFFDC2626).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFFCA5A5)),
+                          border: Border.all(color: const Color(0xFFDC2626).withValues(alpha: 0.4)),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
@@ -288,11 +290,11 @@ class MatchTableRow extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w900,
-                                color: Color(0xFFDC2626),
+                                color: Color(0xFFEF4444),
                               ),
                             ),
                             SizedBox(width: 3),
-                            Icon(Icons.sensors, size: 10, color: Color(0xFFDC2626)),
+                            Icon(Icons.sensors, size: 10, color: Color(0xFFEF4444)),
                           ],
                         ),
                       )
@@ -300,16 +302,16 @@ class MatchTableRow extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF0FDF4),
+                          color: const Color(0xFF16A34A).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF86EFAC)),
+                          border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.4)),
                         ),
                         child: const Text(
                           'ĐÃ KẾT THÚC',
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF16A34A),
+                            color: Color(0xFF22C55E),
                           ),
                         ),
                       )
@@ -317,43 +319,43 @@ class MatchTableRow extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: colors.bgSurface,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: colors.border),
                         ),
-                        child: const Text(
+                        child: Text(
                           'SẮP ĐẤU',
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF64748B),
+                            color: colors.textSecondary,
                           ),
                         ),
                       ),
                     const SizedBox(width: 8),
 
                     // Time
-                    const Icon(Icons.access_time_rounded, size: 11, color: Color(0xFF64748B)),
+                    Icon(Icons.access_time_rounded, size: 11, color: colors.textMuted),
                     const SizedBox(width: 3),
                     Text(
                       timeStr,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF64748B),
+                        color: colors.textSecondary,
                       ),
                     ),
                     const SizedBox(width: 8),
 
                     // Court
-                    const Icon(Icons.grid_view_rounded, size: 11, color: Color(0xFF64748B)),
+                    Icon(Icons.grid_view_rounded, size: 11, color: colors.textMuted),
                     const SizedBox(width: 3),
                     Text(
                       match.court.isNotEmpty ? match.court : 'Chưa xếp sân',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF64748B),
+                        color: colors.textSecondary,
                       ),
                     ),
 
@@ -362,10 +364,10 @@ class MatchTableRow extends StatelessWidget {
                     // Round / Match Number
                     Text(
                       roundLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF94A3B8),
+                        color: colors.textMuted,
                       ),
                     ),
                   ],
@@ -392,6 +394,7 @@ class _DoubleAvatarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return SizedBox(
       width: 44,
       height: 26,
@@ -401,7 +404,7 @@ class _DoubleAvatarWidget extends StatelessWidget {
             width: 26,
             height: 26,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: colors.bgCard,
               shape: BoxShape.circle,
               border: Border.all(color: color, width: 1.5),
             ),
@@ -422,7 +425,7 @@ class _DoubleAvatarWidget extends StatelessWidget {
               width: 26,
               height: 26,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colors.bgCard,
                 shape: BoxShape.circle,
                 border: Border.all(color: color, width: 1.5),
               ),
