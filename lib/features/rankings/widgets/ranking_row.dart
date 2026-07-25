@@ -26,8 +26,6 @@ class RankingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final wr = ranking.winRate;
-    final bool isTop10 = ranking.rank >= 4 && ranking.rank <= 10;
 
     // Fixed color for avatar initial based on rank or name
     final List<Color> avatarColors = [
