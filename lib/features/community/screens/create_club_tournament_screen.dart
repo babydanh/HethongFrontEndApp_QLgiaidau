@@ -207,38 +207,6 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
                 ),
               ),
-              const SizedBox(height: 20),
-
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: colors.bgCard,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: colors.border),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 36, height: 36,
-                      decoration: BoxDecoration(
-                        color: colors.bgSurface,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.lock_rounded, size: 18, color: Color(0xFFF97316)),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Giải Lite cộng đồng', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
-                          Text('Giải tạo nhanh sẽ có link mời để chia sẻ, thành viên CLB có thể xem và tham gia theo cài đặt đăng ký.', style: TextStyle(fontSize: 11, color: colors.textMuted)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(height: 32),
 
               // ─── Nút Submit ───

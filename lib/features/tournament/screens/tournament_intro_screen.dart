@@ -473,51 +473,14 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
+  // ─── Bottom bar: chỉ hiện nút Đăng ký khi giải đang nhận đăng ký ───
   Widget _buildBottomBar(Tournament tournament, UserRole? role) {
-    final isLive = StatusHelper.isTournamentInProgress(tournament.status);
-    final isRegistration =
-        StatusHelper.isTournamentRegistration(tournament.status) ||
+    if (StatusHelper.isTournamentRegistration(tournament.status) ||
         StatusHelper.isTournamentDraft(tournament.status) ||
-        StatusHelper.isTournamentUpcoming(tournament.status);
-    final isCompleted = StatusHelper.isTournamentCompleted(tournament.status);
-
-    if (isLive) {
-      return _liveButton(role, tournament.id);
-    }
-    if (isRegistration) {
+        StatusHelper.isTournamentUpcoming(tournament.status)) {
       return _registrationButton(tournament);
     }
-    return isCompleted
-        ? _viewBracketButton("Xem kết quả")
-        : _viewBracketButton("Xem lịch thi đấu");
-  }
-
-  Widget _viewBracketButton(String label) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: FilledButton.icon(
-        style: FilledButton.styleFrom(
-          backgroundColor: AppTheme.primary,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
-          ),
-        ),
-        onPressed: () {
-          _tabController.animateTo(2);
-        },
-        icon: const Icon(Icons.account_tree_rounded, size: 20),
-        label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-      ),
-    );
+    return const SizedBox.shrink();
   }
 
   Widget _registrationButton(Tournament tournament) {
@@ -543,44 +506,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         icon: const Icon(Icons.edit_note_rounded, size: 22),
         label: const Text(
           "Đăng ký tham gia",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-
-  Widget _liveButton(UserRole? role, String tournamentId) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.error.withValues(alpha: 0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: FilledButton.icon(
-        style: FilledButton.styleFrom(
-          backgroundColor: context.colors.error,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
-          ),
-        ),
-        onPressed: () {
-          context.go('/live-matches/$tournamentId');
-        },
-        icon: Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: context.colors.bgCard,
-          ),
-        ),
-        label: const Text(
-          "Xem trực tiếp",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
