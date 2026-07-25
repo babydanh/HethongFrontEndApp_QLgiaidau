@@ -206,16 +206,30 @@ class _PodiumSlot extends StatelessWidget {
           height: podiumHeight,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: ranking != null ? podiumColor : podiumColor.withValues(alpha: 0.35),
-            borderRadius: BorderRadius.circular(10),
+            color: podiumColor,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: podiumColor.withValues(alpha: 0.35),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Center(
             child: Text(
               rankNumber,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 22,
+                fontSize: 24,
                 fontWeight: FontWeight.w900,
+                shadows: [
+                  Shadow(
+                    color: Colors.black26,
+                    offset: Offset(0, 1),
+                    blurRadius: 2,
+                  ),
+                ],
               ),
             ),
           ),

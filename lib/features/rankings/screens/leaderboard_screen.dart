@@ -356,33 +356,33 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           tiers: tierList,
           formatLabel: formatStr,
         ),
-        // Section: Top 4 - 10
-        if (top4_10.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Top 4 - 10 • $formatStr',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    color: colors.textPrimary,
-                    letterSpacing: -0.3,
-                  ),
+        // Section 2: Top 4 - 10
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Top 4 - 10 • $formatStr',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: colors.textPrimary,
+                  letterSpacing: -0.3,
                 ),
-                Text(
-                  'Xuất sắc',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textMuted,
-                  ),
+              ),
+              Text(
+                'Xuất sắc',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textMuted,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
+        if (top4_10.isNotEmpty)
           ...top4_10.map(
             (r) => RankingRow(
               ranking: r,
@@ -391,9 +391,31 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               formatLabel: formatStr,
               onTap: () => context.go('/profile/user/${r.userId}'),
             ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              decoration: BoxDecoration(
+                color: colors.bgCard,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: colors.border.withValues(alpha: 0.6)),
+              ),
+              child: Text(
+                'Chưa có vận động viên ở Top 4 - 10',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textMuted,
+                ),
+              ),
+            ),
           ),
-        ],
-        // Section: Hạng 11 - 100
+
+        // Section 3: Hạng 11 - 100
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
           child: Row(
@@ -429,19 +451,25 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               onTap: () => context.go('/profile/user/${r.userId}'),
             ),
           )
-        else if (top4_10.isEmpty)
+        else
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(Icons.emoji_events_outlined, size: 36, color: colors.textMuted),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Chưa có thêm vận động viên trong danh sách',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.textMuted),
-                  ),
-                ],
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              decoration: BoxDecoration(
+                color: colors.bgCard,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: colors.border.withValues(alpha: 0.6)),
+              ),
+              child: Text(
+                'Chưa có vận động viên ở Hạng 11 - 100',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textMuted,
+                ),
               ),
             ),
           ),
