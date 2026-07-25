@@ -341,52 +341,95 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       );
     }
 
-    final rest = rankings.length > 3 ? rankings.sublist(3) : <PlayerRanking>[];
-
     final formatStr = _formatLabel(_selectedMatchType, _selectedGender);
+    final top4_10 = rankings.length > 3
+        ? rankings.sublist(3, rankings.length < 10 ? rankings.length : 10)
+        : <PlayerRanking>[];
+    final top11_100 = rankings.length > 10 ? rankings.sublist(10) : <PlayerRanking>[];
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Bục vinh danh Top 1 - 3
         PodiumView(
           rankings: rankings,
           tiers: tierList,
           formatLabel: formatStr,
         ),
+        // Section: Top 4 - 10
+        if (top4_10.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Top 4 - 10 • $formatStr',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: colors.textPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                Text(
+                  'Xuất sắc',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ...top4_10.map(
+            (r) => RankingRow(
+              ranking: r,
+              tiers: tierList,
+              isMe: isAuth && r.userId == currentUserId,
+              formatLabel: formatStr,
+              onTap: () => context.go('/profile/user/${r.userId}'),
+            ),
+          ),
+        ],
+        // Section: Hạng 11 - 100
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Top 100 • $formatStr',
+                'Hạng 11 - 100 • $formatStr',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.w900,
                   color: colors.textPrimary,
                   letterSpacing: -0.3,
                 ),
               ),
               Text(
-                'Cập nhật vừa rồi',
+                'Toàn quốc',
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: colors.textMuted,
                 ),
               ),
             ],
           ),
         ),
-        if (rest.isNotEmpty)
-          ...rest.map(
+        if (top11_100.isNotEmpty)
+          ...top11_100.map(
             (r) => RankingRow(
               ranking: r,
               tiers: tierList,
               isMe: isAuth && r.userId == currentUserId,
+              formatLabel: formatStr,
               onTap: () => context.go('/profile/user/${r.userId}'),
             ),
           )
-        else
+        else if (top4_10.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
             child: Column(
@@ -394,10 +437,18 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 Icon(Icons.emoji_events_outlined, size: 36, color: colors.textMuted),
                 const SizedBox(height: 8),
                 Text(
-                  'Chưa có thêm vận động viên',
+                  'Chưa có thêm vận động viên trong danh sách',
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.textMuted),
                 ),
               ],
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+            child: Text(
+              'Danh sách kết thúc ở Top 10.',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: colors.textMuted),
             ),
           ),
         if (isAuth && currentUserId != null)

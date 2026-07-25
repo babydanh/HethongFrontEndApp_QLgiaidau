@@ -10,6 +10,7 @@ class RankingRow extends StatelessWidget {
   final List<EloTier> tiers;
   final bool isMe;
   final bool highlight;
+  final String? formatLabel;
   final VoidCallback? onTap;
 
   const RankingRow({
@@ -18,6 +19,7 @@ class RankingRow extends StatelessWidget {
     this.tiers = const [],
     this.isMe = false,
     this.highlight = false,
+    this.formatLabel,
     this.onTap,
   });
 
@@ -25,6 +27,7 @@ class RankingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final wr = ranking.winRate;
+    final bool isTop10 = ranking.rank >= 4 && ranking.rank <= 10;
 
     // Fixed color for avatar initial based on rank or name
     final List<Color> avatarColors = [
@@ -44,15 +47,23 @@ class RankingRow extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isMe ? const Color(0xFF1E40AF) : colors.bgCard,
+          color: isMe
+              ? const Color(0xFF1E40AF)
+              : (isTop10 ? colors.bgCard : colors.bgCard),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isMe ? const Color(0xFF1E40AF) : colors.border.withValues(alpha: 0.8),
-            width: isMe ? 1.5 : 1,
+            color: isMe
+                ? const Color(0xFF1E40AF)
+                : (isTop10
+                    ? const Color(0xFF2563EB).withValues(alpha: 0.3)
+                    : colors.border.withValues(alpha: 0.8)),
+            width: isMe || isTop10 ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
+              color: isTop10
+                  ? const Color(0xFF2563EB).withValues(alpha: 0.05)
+                  : Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -61,19 +72,29 @@ class RankingRow extends StatelessWidget {
         child: Row(
           children: [
             // Số hạng
-            SizedBox(
-              width: 32,
+            Container(
+              width: 34,
+              height: 28,
+              alignment: Alignment.center,
+              decoration: isTop10
+                  ? BoxDecoration(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    )
+                  : null,
               child: Text(
-                '${ranking.rank}',
-                textAlign: TextAlign.start,
+                '#${ranking.rank}',
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: isTop10 ? 13 : 13,
                   fontWeight: FontWeight.w900,
-                  color: isMe ? Colors.white : colors.textSecondary,
+                  color: isMe
+                      ? Colors.white
+                      : (isTop10 ? const Color(0xFF2563EB) : colors.textSecondary),
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             // Avatar tròn chữ cái
             Container(
               width: 40,
@@ -113,6 +134,27 @@ class RankingRow extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (formatLabel != null && formatLabel!.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: isMe
+                                ? Colors.white.withValues(alpha: 0.2)
+                                : const Color(0xFF0284C7).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Text(
+                            formatLabel!.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              color: isMe ? Colors.white : const Color(0xFF0284C7),
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
+                      ],
                       if (isMe) ...[
                         const SizedBox(width: 6),
                         Container(
@@ -147,9 +189,9 @@ class RankingRow extends StatelessWidget {
             ),
             // ELO Score
             Text(
-              '${ranking.eloPoints}',
+              '${ranking.eloPoints} ELO',
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: FontWeight.w900,
                 color: isMe ? Colors.white : const Color(0xFF1E40AF),
               ),
