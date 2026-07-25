@@ -187,11 +187,13 @@ class RankingRow extends StatelessWidget {
 
   Widget _buildAvatarWidget(BuildContext context, dynamic colors, Color avatarColor) {
     final nameParts = ranking.fullName.split('/');
-    final isDoublesTeam = nameParts.length >= 2;
+    final isDoublesFormat = (formatLabel != null && formatLabel!.toLowerCase().contains('đôi')) ||
+        (ranking.matchType != null && ranking.matchType!.toLowerCase().contains('double')) ||
+        nameParts.length >= 2;
 
-    if (isDoublesTeam) {
-      final name1 = nameParts[0].trim();
-      final name2 = nameParts[1].trim();
+    if (isDoublesFormat) {
+      final name1 = nameParts.isNotEmpty ? nameParts[0].trim() : '';
+      final name2 = nameParts.length >= 2 ? nameParts[1].trim() : '';
       return SizedBox(
         width: 54,
         height: 40,
@@ -231,7 +233,7 @@ class RankingRow extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    _initials(name2),
+                    name2.isNotEmpty ? _initials(name2) : '+1',
                     style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white),
                   ),
                 ),

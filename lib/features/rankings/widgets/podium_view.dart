@@ -214,13 +214,14 @@ class _PodiumSlot extends StatelessWidget {
 
   Widget _buildPodiumAvatar(dynamic colors, String name) {
     final nameParts = name.split('/');
-    final isDoublesTeam = ranking != null && nameParts.length >= 2;
+    final isDoublesFormat = (formatLabel != null && formatLabel!.toLowerCase().contains('đôi')) ||
+        (ranking?.matchType != null && ranking!.matchType!.toLowerCase().contains('double'));
     final size = isKing ? 58.0 : 50.0;
+    final subSize = size * 0.75;
 
-    if (isDoublesTeam) {
-      final name1 = nameParts[0].trim();
-      final name2 = nameParts[1].trim();
-      final subSize = size * 0.75;
+    if (isDoublesFormat) {
+      final name1 = nameParts.isNotEmpty ? nameParts[0].trim() : '';
+      final name2 = nameParts.length >= 2 ? nameParts[1].trim() : '';
 
       return SizedBox(
         width: size * 1.3,
@@ -234,17 +235,17 @@ class _PodiumSlot extends StatelessWidget {
                 width: subSize,
                 height: subSize,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB),
+                  color: ranking != null ? const Color(0xFF2563EB) : colors.border.withValues(alpha: 0.6),
                   shape: BoxShape.circle,
                   border: Border.all(color: colors.bgCard, width: 2),
                 ),
                 child: Center(
                   child: Text(
-                    _initials(name1),
+                    ranking != null ? _initials(name1) : '?',
                     style: TextStyle(
                       fontSize: isKing ? 13 : 11,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
+                      color: ranking != null ? Colors.white : colors.textMuted,
                     ),
                   ),
                 ),
@@ -257,17 +258,17 @@ class _PodiumSlot extends StatelessWidget {
                 width: subSize,
                 height: subSize,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981),
+                  color: ranking != null ? const Color(0xFF10B981) : colors.border.withValues(alpha: 0.6),
                   shape: BoxShape.circle,
                   border: Border.all(color: colors.bgCard, width: 2),
                 ),
                 child: Center(
                   child: Text(
-                    _initials(name2),
+                    ranking != null ? (name2.isNotEmpty ? _initials(name2) : '+1') : '?',
                     style: TextStyle(
                       fontSize: isKing ? 13 : 11,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
+                      color: ranking != null ? Colors.white : colors.textMuted,
                     ),
                   ),
                 ),
