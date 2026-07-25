@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/core/widgets/vnsport_header.dart';
+import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_banner_card.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_filter_chips.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
@@ -555,26 +556,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       (q.isEmpty || t.name.toLowerCase().contains(q));
                 }).toList();
 
-                final live = allTournaments.where((t) {
+                final now = DateTime.now();
+                final featuredTournaments = allTournaments.where((t) {
                   final s = t.status.toLowerCase();
-                  return s == 'in_progress' || s == 'ongoing' || s == 'live';
+                  if (s == 'completed' || s == 'finished') {
+                    final endedDate = t.endDate ?? t.updatedAt;
+                    return now.difference(endedDate).inDays <= 14;
+                  }
+                  return true;
                 }).toList();
-
-                final upcoming = allTournaments.where((t) {
-                  final s = t.status.toLowerCase();
-                  return s == 'draft' || s == 'registration' || s == 'upcoming' || s == 'scheduled';
-                }).toList();
-
-                final finished = allTournaments.where((t) {
-                  final s = t.status.toLowerCase();
-                  return s == 'completed' || s == 'finished';
-                }).toList();
-
-                final remaining = allTournaments.where((t) {
-                  return !live.contains(t) && !upcoming.contains(t) && !finished.contains(t);
-                }).toList();
-
-                final safeUpcoming = [...upcoming, ...remaining];
 
                 return CustomScrollView(
                   controller: _scrollController,
@@ -589,7 +579,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             : (_maxHeaderHeight + 8.0),
                       ),
                     ),
-                    if (allTournaments.isNotEmpty) ...[
+                    if (featuredTournaments.isNotEmpty) ...[
                       SliverToBoxAdapter(
                         child: _buildSectionTitle(
                           title: 'Giải đấu nổi bật',
@@ -602,7 +592,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           duration: const Duration(milliseconds: 200),
                           child: KeyedSubtree(
                             key: ValueKey("featured_$_selectedSport"),
-                            child: _buildTournamentCarousel(allTournaments),
+                            child: _buildTournamentCarousel(featuredTournaments),
                           ),
                         ),
                       ),
@@ -617,16 +607,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       tournaments: allTournaments,
                       filterStatus: 'live',
                       emptyMessage: 'Chưa có trận đấu nào đang diễn ra',
-                    ),
-                    SliverToBoxAdapter(
-                      child: _buildSectionTitle(
-                        title: 'Kết quả trận đấu vừa qua',
-                      ),
-                    ),
-                    _TournamentSectionList(
-                      tournaments: allTournaments,
-                      filterStatus: 'completed',
-                      emptyMessage: 'Chưa có trận đấu nào đã kết thúc',
                     ),
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
@@ -1315,7 +1295,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       children: [
         SizedBox(
-          height: 265.0,
+          height: 220.0,
           child: PageView.builder(
             controller: _carouselController,
             physics: const BouncingScrollPhysics(),
@@ -1329,10 +1309,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Align(
                 alignment: Alignment.topCenter,
-                child: TournamentCardWithBanner(
+                child: FeaturedTournamentBannerCard(
                   tournament: items[i],
                   onTap: () => context.push("/intro/${items[i].id}"),
-                  margin: EdgeInsets.zero,
                 ),
               ),
             ),
