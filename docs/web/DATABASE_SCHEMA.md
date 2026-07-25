@@ -96,6 +96,7 @@ Bảng lưu trữ thông tin tài khoản cơ bản.
 * **email**: `varchar(255)` (Unique, Not Null) - Địa chỉ email đăng nhập chính.
 * **passwordHash**: `text` (Nullable) - Mật khẩu đã hash (null nếu dùng login social).
 * **isEmailVerified**: `boolean` (Default: `false`) - Trạng thái xác minh email.
+* **isPhoneVerified**: `boolean` (Default: `false`) - Trạng thái xác minh số điện thoại.
 * **isMock**: `boolean` (Default: `false`) - Đánh dấu tài khoản giả lập được tạo để test/fill bracket.
 * **acceptedTosAt**: `timestamp with time zone` (Nullable) - Thời gian đồng ý Điều khoản Dịch vụ.
 * **createdAt**: `timestamp with time zone` (Default: `now()`)
@@ -112,10 +113,14 @@ Bảng lưu trữ thông tin cá nhân mở rộng của người dùng.
 * **phoneNumber**: `varchar(20)` (Nullable) - Số điện thoại liên lạc.
 * **dateOfBirth**: `date` (Nullable) - Ngày sinh.
 * **gender**: `varchar(20)` (Nullable) - Giới tính (`MALE`, `FEMALE`, `OTHER`).
+* **isGenderLocked**: `boolean` (Default: `false`) - Khóa giới tính, không cho phép thay đổi sau khi đã xác nhận.
 * **address**: `text` (Nullable) - Địa chỉ.
 * **bio**: `text` (Nullable) - Tiểu sử cá nhân.
 * **provinceCode**: `varchar(20)` (FK -> `provinces.code`, onDelete: `set null`) - Mã tỉnh/thành.
 * **isVerified**: `boolean` (Default: `false`) - Người dùng đã được định danh/xác minh (tích xanh).
+* **bankName**: `varchar(100)` (Nullable) - Tên ngân hàng thụ hưởng.
+* **bankAccountNumber**: `varchar(50)` (Nullable) - Số tài khoản ngân hàng.
+* **bankAccountName**: `varchar(255)` (Nullable) - Tên chủ tài khoản ngân hàng.
 * **updatedAt**: `timestamp with time zone` (Default: `now()`)
 
 #### Bảng `auth_providers`
@@ -852,3 +857,67 @@ async function registerDoublesTeamTransaction({
   });
 }
 ```
+
+---
+
+## Cập nhật gần đây
+
+### `tournament_participants`
+| Column | Type | Default | Mô tả |
+|--------|------|---------|-------|
+| `is_wildcard` | `boolean` | `false` | Đánh dấu suất đặc cách (wildcard) |
+
+### `tournament_stages.roundConfig`
+Cấu trúc JSONB mở rộng:
+
+```typescript
+{
+  scoring?: { winPoints: number; drawPoints: number; lossPoints: number },
+  tiebreakerRules?: { primary: 'H2H_POINTS' | 'SET_DIFF' | 'POINT_DIFF'; secondary: string[] },
+  maxGroupSize?: number,
+  roundsToPlay?: number,
+  advanceConfig?: {
+    teamsAdvancing: number;
+    allowWildcardThird: boolean;
+    wildcardTeamsAdvancing: number;
+  },
+  advanceMapping?: { groupIndex: number; groupRank: number; matchId: string }[]
+}
+```
+
+### Bracket types
+- **`GROUP_STAGE_KNOCKOUT`**: Kết hợp vòng bảng Round Robin → loại trực tiếp (Single hoặc Double Elimination)
+
+### `tournament_config` (JSONB)
+```
+{
+  bracketType: 'SINGLE_ELIMINATION' | 'DOUBLE_ELIMINATION' | 'ROUND_ROBIN' | 'GROUP_STAGE_KNOCKOUT',
+  seedingMethod: 'ELO' | 'RANDOM' | 'MANUAL',
+  thirdPlaceMatch?: boolean,
+  roundRobinGroupSize?: number,
+  minElo?: number,
+  maxElo?: number
+}
+```
+
+---
+
+## Indexes
+
+Khuyến nghị index cho các query thường gặp:
+
+| Bảng | Column(s) | Loại | Lý do |
+|------|-----------|------|-------|
+| tournaments | (status, visibility) | Composite | Lọc giải public đang mở đăng ký |
+| tournaments | created_by | Single | Query giải của user |
+| tournament_participants | (tournament_id, team_status) | Composite | Lọc participant theo trạng thái |
+| tournament_participants | tournament_id | Single | JOIN với tournaments |
+| tournament_stages | (tournament_id, tournament_division_id) | Composite | Query bracket theo division |
+| tournament_groups | stage_id | Single | JOIN stages → groups |
+| matches | (group_id, round_number, match_order) | Composite | Sắp xếp lịch thi đấu |
+| matches | (tournament_id, status) | Composite | Lọc live match |
+| matches | next_match_id | Single | Tra cứu bracket tree |
+| group_standings | group_id | Single | Bảng xếp hạng |
+| tournament_rosters | participant_id | Single | Thành viên đội |
+| user_ranks | (user_id, category_id, match_type) | Composite | ELO ranking |
+| notifications | (receiver_id, read) | Composite | Notification inbox |

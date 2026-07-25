@@ -4,8 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 /// Tạo giải đấu Lite trong câu lạc bộ
 /// Gọi POST /tournaments/lite — đơn giản, không cần categoryId UUID
@@ -68,17 +72,17 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
       _log.info('Tạo giải Lite trong CLB: ${body['name']}');
       final response = await dio.post('/tournaments/lite', data: body);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        _log.success('Tạo giải Lite thành công');
-      }
-
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tạo giải đấu thành công!'), backgroundColor: Color(0xFF059669)),
-        );
+        final raw = response.data;
+        final dataJson = raw is Map<String, dynamic>
+            ? (raw['data'] as Map<String, dynamic>? ?? raw)
+            : <String, dynamic>{};
+        final result = LiteTournamentCreateResult.fromJson(dataJson);
+
         ref.invalidate(communityTournamentsProvider(widget.clubId));
         ref.invalidate(communityDetailProvider(widget.clubId));
-        context.pop();
+
+        _showSuccessSheet(result);
       }
     } catch (e, stack) {
       _log.error('Lỗi tạo giải đấu trong CLB', e, stack);
@@ -93,6 +97,25 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showSuccessSheet(LiteTournamentCreateResult result) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _LiteSuccessSheet(
+        result: result,
+        onManage: () {
+          context.pop();
+          context.push('/organizer-lite/${result.id}');
+        },
+        onClose: () {
+          context.pop();
+          context.pop();
+        },
+      ),
+    );
   }
 
   @override
@@ -161,7 +184,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                 keyboardType: TextInputType.number,
                 validator: (v) {
                   final n = int.tryParse(v ?? '');
-                  if (n == null || n < 2 || n > 128) return 'Từ 2-128 đội';
+                  if (n == null || n < 2 || n > 32) return 'Từ 2-32 đội';
                   return null;
                 },
                 style: TextStyle(color: colors.textPrimary),
@@ -208,8 +231,8 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Giải đóng mặc định', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
-                          Text('Giải CLB tạo từ app sẽ mặc định ở chế độ PRIVATE, chỉ người có quyền hoặc có mã mời mới vào được.', style: TextStyle(fontSize: 11, color: colors.textMuted)),
+                          Text('Giải Lite cộng đồng', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                          Text('Giải tạo nhanh sẽ có link mời để chia sẻ, thành viên CLB có thể xem và tham gia theo cài đặt đăng ký.', style: TextStyle(fontSize: 11, color: colors.textMuted)),
                         ],
                       ),
                     ),
@@ -359,6 +382,205 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+/// Bottom sheet hiển thị sau khi tạo giải Lite thành công
+/// Gồm QR, link mời, các nút Sao chép / Chia sẻ / Vào quản lý nhanh
+class _LiteSuccessSheet extends StatelessWidget {
+  const _LiteSuccessSheet({
+    required this.result,
+    required this.onManage,
+    required this.onClose,
+  });
+
+  final LiteTournamentCreateResult result;
+  final VoidCallback onManage;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final link = result.joinUrl ?? '/lite/tournaments/join/${result.inviteCode ?? result.id}';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ─── Drag handle ───
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: colors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              // ─── Success icon ───
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: colors.success.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.check_circle_rounded, color: colors.success, size: 32),
+              ),
+              const SizedBox(height: 14),
+
+              // ─── Title ───
+              Text(
+                'Tạo giải thành công!',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                result.name,
+                style: TextStyle(fontSize: 13, color: colors.textMuted),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 20),
+
+              // ─── QR Code ───
+              if (result.qrPayload != null || result.joinUrl != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: QrImageView(
+                    data: result.qrPayload ?? link,
+                    version: QrVersions.auto,
+                    size: 160,
+                    backgroundColor: Colors.white,
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+              if (result.qrPayload != null || result.joinUrl != null)
+                const SizedBox(height: 16),
+
+              // ─── Link ───
+              if (link.isNotEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: colors.bgSurface,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    link,
+                    style: TextStyle(fontSize: 12, color: colors.textMuted),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              if (link.isNotEmpty)
+                const SizedBox(height: 20),
+
+              // ─── Buttons ───
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: link));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Đã sao chép link mời!'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.copy_rounded, size: 18),
+                      label: const Text('Sao chép link', style: TextStyle(fontSize: 13)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        SharePlus.instance.share(
+                          ShareParams(text: 'Tham gia giải ${result.name}: $link'),
+                        );
+                      },
+                      icon: const Icon(Icons.share_rounded, size: 18),
+                      label: const Text('Chia sẻ', style: TextStyle(fontSize: 13)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // ─── Vào quản lý nhanh ───
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: onManage,
+                  icon: const Icon(Icons.speed_rounded, size: 20),
+                  label: const Text(
+                    'Vào quản lý nhanh',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                  ),
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // ─── Đóng ───
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: onClose,
+                  child: Text(
+                    'Đóng',
+                    style: TextStyle(color: colors.textMuted, fontSize: 14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

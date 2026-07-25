@@ -360,18 +360,49 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           formatLabel: formatStr,
         ),
 
-        // Section: Rank 4 Featured Card (DẪN ĐẦU NHÓM)
-        if (rank4 != null)
-          RankingRow(
-            ranking: rank4,
-            tiers: tierList,
-            isMe: isAuth && rank4.userId == currentUserId,
-            formatLabel: formatStr,
-            onTap: () => context.go('/profile/user/${rank4.userId}'),
-          ),
-
-        // Section: Divider HẠNG 5 — 10
-        if (ranks5_10.isNotEmpty) ...[
+        // Section 2: Hạng 4 - 10
+        if (top4_10.isNotEmpty) ...[
+          if (rank4 != null)
+            RankingRow(
+              ranking: rank4,
+              tiers: tierList,
+              isMe: isAuth && rank4.userId == currentUserId,
+              formatLabel: formatStr,
+              onTap: () => context.go('/profile/user/${rank4.userId}'),
+            ),
+          if (ranks5_10.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+              child: Row(
+                children: [
+                  Expanded(child: Divider(color: colors.border.withValues(alpha: 0.6), thickness: 1)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'HẠNG 5 — 10',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: colors.textMuted,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: colors.border.withValues(alpha: 0.6), thickness: 1)),
+                ],
+              ),
+            ),
+            ...ranks5_10.map(
+              (r) => RankingRow(
+                ranking: r,
+                tiers: tierList,
+                isMe: isAuth && r.userId == currentUserId,
+                formatLabel: formatStr,
+                onTap: () => context.go('/profile/user/${r.userId}'),
+              ),
+            ),
+          ],
+        ] else ...[
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
             child: Row(
@@ -380,7 +411,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Text(
-                    'HẠNG 5 — 10',
+                    'HẠNG 4 — 10',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
@@ -393,13 +424,23 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               ],
             ),
           ),
-          ...ranks5_10.map(
-            (r) => RankingRow(
-              ranking: r,
-              tiers: tierList,
-              isMe: isAuth && r.userId == currentUserId,
-              formatLabel: formatStr,
-              onTap: () => context.go('/profile/user/${r.userId}'),
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+            ),
+            child: Text(
+              'Chưa có vận động viên ở Hạng 4 – 10',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: colors.textMuted,
+              ),
             ),
           ),
         ],
@@ -482,16 +523,37 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         ),
 
         // Expanded Hạng 11 - 100 list
-        if (_isTop11_100Expanded && top11_100.isNotEmpty)
-          ...top11_100.map(
-            (r) => RankingRow(
-              ranking: r,
-              tiers: tierList,
-              isMe: isAuth && r.userId == currentUserId,
-              formatLabel: formatStr,
-              onTap: () => context.go('/profile/user/${r.userId}'),
+        if (_isTop11_100Expanded)
+          if (top11_100.isNotEmpty)
+            ...top11_100.map(
+              (r) => RankingRow(
+                ranking: r,
+                tiers: tierList,
+                isMe: isAuth && r.userId == currentUserId,
+                formatLabel: formatStr,
+                onTap: () => context.go('/profile/user/${r.userId}'),
+              ),
+            )
+          else
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              decoration: BoxDecoration(
+                color: colors.bgCard,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+              ),
+              child: Text(
+                'Chưa có vận động viên ở Hạng 11 – 100',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textMuted,
+                ),
+              ),
             ),
-          ),
         if (isAuth && currentUserId != null)
           _buildStickyMeCard(rankings, tierList, colors, currentUserId),
         const SizedBox(height: 100),

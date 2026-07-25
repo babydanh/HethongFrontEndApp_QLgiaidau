@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { width: 1024px; height: 500px; overflow: hidden; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+.container {
+  width: 1024px; height: 500px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 80px; position: relative; overflow: hidden;
+}
+/* Decorative elements */
+.bg-circle1 { position: absolute; width: 400px; height: 400px; border-radius: 50%; background: rgba(59, 130, 246, 0.08); top: -100px; right: -50px; }
+.bg-circle2 { position: absolute; width: 300px; height: 300px; border-radius: 50%; background: rgba(139, 92, 246, 0.08); bottom: -80px; left: 100px; }
+.bg-circle3 { position: absolute; width: 200px; height: 200px; border-radius: 50%; background: rgba(34, 197, 94, 0.06); top: 50px; left: 400px; }
+.bg-grid { position: absolute; inset: 0; background-image: 
+  linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px; }
+.left { position: relative; z-index: 2; max-width: 550px; }
+.logo { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.logo-icon { width: 56px; height: 56px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+.logo-icon svg { width: 32px; height: 32px; }
+.logo-text { font-size: 32px; font-weight: 800; color: white; letter-spacing: -0.5px; }
+.logo-text span { color: #3b82f6; }
+.title { font-size: 48px; font-weight: 800; color: white; line-height: 1.1; margin-bottom: 16px; letter-spacing: -1px; }
+.title .highlight { background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.subtitle { font-size: 18px; color: #94a3b8; line-height: 1.5; margin-bottom: 32px; }
+.tags { display: flex; gap: 10px; flex-wrap: wrap; }
+.tag { padding: 8px 16px; border-radius: 100px; font-size: 13px; font-weight: 600; color: white; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); }
+.tag.blue { border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+.tag.purple { border-color: rgba(139, 92, 246, 0.3); background: rgba(139, 92, 246, 0.1); color: #a78bfa; }
+.tag.green { border-color: rgba(34, 197, 94, 0.3); background: rgba(34, 197, 94, 0.1); color: #4ade80; }
+.right { position: relative; z-index: 2; }
+.phone-mockup { width: 220px; height: 420px; background: #1e293b; border-radius: 28px; border: 3px solid #334155; padding: 12px; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+.phone-screen { width: 100%; height: 100%; background: linear-gradient(180deg, #0f172a, #1e293b); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; }
+.phone-header { padding: 16px 12px 8px; text-align: center; }
+.phone-logo { font-size: 14px; font-weight: 800; color: #3b82f6; }
+.phone-tabs { display: flex; gap: 4px; padding: 0 8px; margin-top: 8px; }
+.phone-tab { flex: 1; padding: 4px; text-align: center; font-size: 8px; color: #64748b; border-radius: 4px; }
+.phone-tab.active { background: rgba(59,130,246,0.2); color: #60a5fa; }
+.phone-card { margin: 8px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }
+.phone-card-title { font-size: 9px; font-weight: 700; color: white; margin-bottom: 4px; }
+.phone-card-sub { font-size: 7px; color: #64748b; }
+.phone-score { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px; margin: 8px; background: rgba(59,130,246,0.1); border-radius: 10px; }
+.phone-score-num { font-size: 24px; font-weight: 800; color: white; }
+.phone-score-vs { font-size: 10px; color: #64748b; font-weight: 600; }
+.phone-items { flex: 1; padding: 4px 8px; }
+.phone-item { display: flex; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.phone-item-dot { width: 6px; height: 6px; border-radius: 50%; }
+.phone-item-text { font-size: 7px; color: #94a3b8; }
+.phone-item-badge { font-size: 6px; padding: 2px 4px; border-radius: 3px; margin-left: auto; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="bg-circle1"></div>
+  <div class="bg-circle2"></div>
+  <div class="bg-circle3"></div>
+  <div class="bg-grid"></div>
+  
+  <div class="left">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      </div>
+      <div class="logo-text">VN<span>SPORT</span></div>
+    </div>
+    <div class="title">
+      Quản lý <span class="highlight">giải đấu</span><br>thể thao
+    </div>
+    <div class="subtitle">
+      Cầu lông • Pickleball • Tennis<br>
+      Thi đấu, xếp hạng ELO, cổ vũ trực tiếp
+    </div>
+    <div class="tags">
+      <div class="tag blue">🏸 Cầu lông</div>
+      <div class="tag purple">🏓 Pickleball</div>
+      <div class="tag green">🎾 Tennis</div>
+    </div>
+  </div>
+  
+  <div class="right">
+    <div class="phone-mockup">
+      <div class="phone-screen">
+        <div class="phone-header">
+          <div class="phone-logo">VNSPORT</div>
+          <div class="phone-tabs">
+            <div class="phone-tab active">Giải đấu</div>
+            <div class="phone-tab">Trận đấu</div>
+            <div class="phone-tab">Bảng xếp hạng</div>
+          </div>
+        </div>
+        <div class="phone-score">
+          <div class="phone-score-num">21</div>
+          <div class="phone-score-vs">VS</div>
+          <div class="phone-score-num">18</div>
+        </div>
+        <div class="phone-items">
+          <div class="phone-item">
+            <div class="phone-item-dot" style="background:#3b82f6"></div>
+            <div class="phone-item-text">Giải Cầu lông Q4</div>
+            <div class="phone-item-badge" style="background:rgba(34,197,94,0.2);color:#4ade80">Đang diễn ra</div>
+          </div>
+          <div class="phone-item">
+            <div class="phone-item-dot" style="background:#8b5cf6"></div>
+            <div class="phone-item-text">Open Pickleball 2026</div>
+            <div class="phone-item-badge" style="background:rgba(59,130,246,0.2);color:#60a5fa">Sắp diễn ra</div>
+          </div>
+          <div class="phone-item">
+            <div class="phone-item-dot" style="background:#22c55e"></div>
+            <div class="phone-item-text">Tennis Championship</div>
+            <div class="phone-item-badge" style="background:rgba(251,191,36,0.2);color:#fbbf24">Đăng ký</div>
+          </div>
+          <div class="phone-item">
+            <div class="phone-item-dot" style="background:#f59e0b"></div>
+            <div class="phone-item-text">ELO: 1250 - Tier C</div>
+            <div class="phone-item-badge" style="background:rgba(139,92,246,0.2);color:#a78bfa">⭐ Cao</div>
+          </div>
+        </div>
+        <div class="phone-card" style="margin: 4px 8px 8px;">
+          <div class="phone-card-title" style="color:#4ade80">♥ 25 cổ vũ</div>
+          <div class="phone-card-sub">Trận Finals đang hot!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
