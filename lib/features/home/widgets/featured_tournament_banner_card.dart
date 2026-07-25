@@ -89,17 +89,17 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AspectRatio(
-        aspectRatio: 16 / 9,
+        aspectRatio: 16 / 8.5,
         child: Container(
           decoration: BoxDecoration(
             color: colors.bgCard,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colors.border.withValues(alpha: 0.75)),
+            border: Border.all(color: colors.border.withValues(alpha: 0.6)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 12,
-                offset: const Offset(0, 6),
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -116,20 +116,6 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
               else
                 _FallbackBanner(colors: colors),
               if (!hideText) ...[
-                const DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color(0x44000000),
-                        Color(0x10000000),
-                        Color(0xAA000000),
-                      ],
-                      stops: [0, 0.42, 1],
-                    ),
-                  ),
-                ),
                 Positioned(
                   left: 12,
                   right: 12,
@@ -156,13 +142,13 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
-                          height: 1.1,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                          height: 1.2,
+                          fontWeight: FontWeight.w800,
                           letterSpacing: -0.2,
                           shadows: [
                             Shadow(
-                              color: Color(0xAA000000),
+                              color: Color(0xCC000000),
                               blurRadius: 8,
                               offset: Offset(0, 2),
                             ),

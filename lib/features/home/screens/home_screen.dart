@@ -1295,7 +1295,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       children: [
         SizedBox(
-          height: 220.0,
+          height: 225.0,
           child: PageView.builder(
             controller: _carouselController,
             physics: const BouncingScrollPhysics(),
