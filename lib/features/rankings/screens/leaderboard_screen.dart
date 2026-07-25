@@ -454,66 +454,67 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
             decoration: BoxDecoration(
-              color: const Color(0xFFEFF6FF),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFBFDBFE)),
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colors.border.withValues(alpha: 0.8)),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 36,
-                  height: 36,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF2563EB),
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: colors.info.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     _isTop11_100Expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_right_rounded,
-                    color: Colors.white,
-                    size: 22,
+                    color: colors.info,
+                    size: 20,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         'Xem Hạng 11 – 100',
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF1E3A8A),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 1),
                       Text(
                         'Bảng đầy đủ vận động viên trên toàn quốc',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF3B82F6),
+                          color: colors.textMuted,
                         ),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2563EB),
-                    borderRadius: BorderRadius.circular(12),
+                    color: colors.info.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: colors.info.withValues(alpha: 0.3)),
                   ),
-                  child: const Text(
+                  child: Text(
                     'TOÀN QUỐC',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 9.5,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
+                      color: colors.info,
+                      letterSpacing: 0.4,
                     ),
                   ),
                 ),
@@ -568,9 +569,40 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     String currentUserId,
   ) {
     final myRank = rankings.where((r) => r.userId == currentUserId).firstOrNull;
-    if (myRank == null) {
-      // Người dùng chưa có rank trong top 100 → hiện card mời thi đấu.
-      return Container(
+    if (myRank != null) {
+      return UserStatsCard(ranking: myRank, tiers: tiers);
+    }
+
+    final userRankingsAsync = ref.watch(userRankingsProvider);
+    return userRankingsAsync.when(
+      data: (myRankings) {
+        if (myRankings.isNotEmpty) {
+          return UserStatsCard(ranking: myRankings.first, tiers: tiers);
+        }
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.emoji_events_outlined, color: colors.textMuted, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Bạn chưa có hạng trong Top 100. Tham gia giải đấu để nâng hạng!',
+                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (e, st) => Container(
         margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -590,9 +622,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             ),
           ],
         ),
-      );
-    }
-    return UserStatsCard(ranking: myRank, tiers: tiers);
+      ),
+    );
   }
 
   // ─── Empty / error state ───────────────────────────────────────────────
