@@ -204,30 +204,30 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       children: [
         _buildTopBar(tournament, colors),
         Expanded(
-          child: Column(
-            children: [
-              TournamentHeaderView(
-                tournament: tournament,
-                colors: colors,
-                compact: false,
+          child: NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) => [
+              SliverToBoxAdapter(
+                child: TournamentHeaderView(
+                  tournament: tournament,
+                  colors: colors,
+                  compact: false,
+                ),
               ),
-              SizedBox(
-                height: 38,
-                child: _TabBarDelegate(
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _TabBarDelegate(
                   tabController: _tabController,
                   colors: colors,
-                ).build(context, 0, false),
-              ),
-              Expanded(
-                child: teamsAsync.when(
-                  data: (teams) => _buildTabContent(tournament, teams, role),
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(color: AppTheme.primary),
-                  ),
-                  error: (e, _) => _buildTabContent(tournament, [], role),
                 ),
               ),
             ],
+            body: teamsAsync.when(
+              data: (teams) => _buildTabContent(tournament, teams, role),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppTheme.primary),
+              ),
+              error: (e, _) => _buildTabContent(tournament, [], role),
+            ),
           ),
         ),
       ],
