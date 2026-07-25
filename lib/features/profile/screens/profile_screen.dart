@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
@@ -188,185 +189,150 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildLoginPrompt(BuildContext context) {
-    final colors = context.colors;
     return Scaffold(
-      backgroundColor: colors.bgDark,
+      backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => context.go('/home'),
         ),
-        title: Text(
+        title: const Text(
           'Hồ sơ',
           style: TextStyle(
-            color: colors.textPrimary,
+            color: Colors.white,
             fontWeight: FontWeight.w900,
             fontSize: 20,
           ),
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-            // ── Hero Glassmorphic Card ──
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      body: Center(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // ── Hero Glass Card with Official VNDC Sport SVG Logo ──
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E293B),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFF334155)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFF334155)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  // Glowing Avatar Ring
-                  Container(
-                    width: 90,
-                    height: 90,
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [AppTheme.primary, Color(0xFF38BDF8)],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primary.withValues(alpha: 0.35),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFF0F172A),
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.emoji_events_rounded,
-                          size: 42,
-                          color: Color(0xFF38BDF8),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Xin chào!',
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Đăng nhập để xem hồ sơ cá nhân, theo dõi các giải đấu yêu thích và kết nối cùng cộng đồng thể thao.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      color: Color(0xFF94A3B8),
-                      height: 1.45,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  // Bento Feature Chips
-                  const Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _GuestFeatureChip(
-                        icon: Icons.emoji_events_outlined,
-                        label: 'Theo dõi giải đấu',
-                      ),
-                      _GuestFeatureChip(
-                        icon: Icons.leaderboard_rounded,
-                        label: 'Bảng xếp hạng ELO',
-                      ),
-                      _GuestFeatureChip(
-                        icon: Icons.bolt_rounded,
-                        label: 'Tỉ số trực tiếp',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 28),
-                  // Primary Login Button
-                  Container(
-                    width: double.infinity,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF2563EB).withValues(alpha: 0.4),
-                          blurRadius: 14,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => context.go('/login'),
+                child: Column(
+                  children: [
+                    // Official VNDC Sport SVG Logo
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F172A),
                         borderRadius: BorderRadius.circular(16),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.login_rounded, size: 20, color: Colors.white),
-                            SizedBox(width: 8),
-                            Text(
-                              'Đăng nhập ngay',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
+                        border: Border.all(color: const Color(0xFF334155)),
+                        gradient: RadialGradient(
+                          center: Alignment.center,
+                          radius: 0.9,
+                          colors: [
+                            AppTheme.primary.withValues(alpha: 0.2),
+                            const Color(0xFF0F172A),
                           ],
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  TextButton(
-                    onPressed: () => context.go('/login'),
-                    child: const Text(
-                      'Chưa có tài khoản? Đăng ký ngay',
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        color: Color(0xFF38BDF8),
-                        fontWeight: FontWeight.w700,
+                      child: SvgPicture.asset(
+                        'assets/images/vndcsport.svg',
+                        width: 170,
+                        fit: BoxFit.contain,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Xin chào!',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Đăng nhập để xem hồ sơ cá nhân, theo dõi các giải đấu yêu thích và kết nối cùng cộng đồng thể thao.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        color: Color(0xFF94A3B8),
+                        height: 1.45,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    // Primary Login Button
+                    Container(
+                      width: double.infinity,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => context.go('/login'),
+                          borderRadius: BorderRadius.circular(14),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.login_rounded, size: 20, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(
+                                'Đăng nhập ngay',
+                                style: TextStyle(
+                                  fontSize: 15.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () => context.go('/login'),
+                      child: const Text(
+                        'Chưa có tài khoản? Đăng ký ngay',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          color: Color(0xFF38BDF8),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 40),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: FloatingBottomNav(
@@ -1925,39 +1891,5 @@ class _EloRingPainter extends CustomPainter {
     return oldDelegate.progress != progress ||
         oldDelegate.activeColor != activeColor ||
         oldDelegate.trackColor != trackColor;
-  }
-}
-
-class _GuestFeatureChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _GuestFeatureChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: const Color(0xFF38BDF8)),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
