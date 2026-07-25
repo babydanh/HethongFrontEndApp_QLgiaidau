@@ -92,7 +92,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
         aspectRatio: 16 / 8.5,
         child: Container(
           decoration: BoxDecoration(
-            color: colors.bgCard,
+            color: const Color(0xFF0F172A),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: colors.border.withValues(alpha: 0.6)),
             boxShadow: [
@@ -192,7 +192,7 @@ class _FallbackBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: colors.bgCard,
+      color: const Color(0xFF0F172A),
       child: Center(
         child: SvgPicture.asset(
           'assets/images/vndcsport.svg',
