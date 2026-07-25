@@ -451,7 +451,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       ],
     );
   }
-  }
 
   Widget _buildStickyMeCard(
     List<PlayerRanking> rankings,
