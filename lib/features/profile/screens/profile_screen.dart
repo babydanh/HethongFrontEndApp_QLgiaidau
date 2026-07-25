@@ -330,7 +330,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onPressed: () => context.go('/login'),
+                        onTap: () => context.go('/login'),
                         borderRadius: BorderRadius.circular(16),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
