@@ -17,6 +17,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/gallery_tab.dart';
 
+
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
 
@@ -57,9 +58,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
   @override
   Widget build(BuildContext context) {
-    final tournamentAsync = ref.watch(
-      tournamentIntroProvider(widget.tournamentId),
-    );
+    final tournamentAsync = ref.watch(tournamentIntroProvider(widget.tournamentId));
     final authRole = ref.watch(authProvider).role;
 
     return Scaffold(
@@ -97,7 +96,11 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     return SafeArea(
       child: Stack(
         children: [
-          Positioned(left: 12, top: 8, child: _backButton(colors)),
+          Positioned(
+            left: 12,
+            top: 8,
+            child: _backButton(colors),
+          ),
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -124,16 +127,16 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     return SafeArea(
       child: Stack(
         children: [
-          Positioned(left: 12, top: 8, child: _backButton(colors)),
+          Positioned(
+            left: 12,
+            top: 8,
+            child: _backButton(colors),
+          ),
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.error_outline_rounded,
-                  color: colors.error,
-                  size: 42,
-                ),
+                Icon(Icons.error_outline_rounded, color: colors.error, size: 42),
                 const SizedBox(height: 12),
                 Text(
                   'Không tải được giải đấu',
@@ -156,9 +159,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => ref.invalidate(
-                    tournamentIntroProvider(widget.tournamentId),
-                  ),
+                  onPressed: () =>
+                      ref.invalidate(tournamentIntroProvider(widget.tournamentId)),
                   child: const Text('Thử lại'),
                 ),
               ],
@@ -200,8 +202,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _buildContent(Tournament tournament, UserRole? role) {
-    if ((_selectedDivisionId == null || _selectedDivision.isEmpty) &&
-        tournament.divisions.isNotEmpty) {
+    if ((_selectedDivisionId == null || _selectedDivision.isEmpty) && tournament.divisions.isNotEmpty) {
       _selectedDivision = tournament.divisions.first.name;
       _selectedDivisionId = tournament.divisions.first.id;
     }
@@ -253,6 +254,12 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   bool _handleScrollNotification(ScrollNotification notification) {
+    if (notification.metrics.axis == Axis.vertical) {
+      final shouldCompact = notification.metrics.pixels > 24;
+      if (shouldCompact != _isHeaderCompact) {
+        setState(() => _isHeaderCompact = shouldCompact);
+      }
+    }
     return false;
   }
 
@@ -270,8 +277,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
     final position = controller.position;
     const dragDamping = 0.65;
-    final scrollDelta =
-        (_headerDragRemainder -
+    final scrollDelta = (_headerDragRemainder -
             activationThreshold * _headerDragRemainder.sign) *
         dragDamping;
     _headerDragRemainder = activationThreshold * _headerDragRemainder.sign;
@@ -283,7 +289,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     controller.jumpTo(nextOffset);
   }
 
-  Widget _buildTopBar(Tournament tournament, AppColorsExtension colors) {
+  Widget _buildTopBar(
+    Tournament tournament,
+    AppColorsExtension colors,
+  ) {
     final followedAsync = ref.watch(followedTournamentsProvider);
     final isFollowing = followedAsync.maybeWhen(
       data: (items) => items.any((t) => t.id == tournament.id),
@@ -374,7 +383,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  Future<void> _toggleFollow(Tournament tournament, bool isFollowing) async {
+  Future<void> _toggleFollow(
+    Tournament tournament,
+    bool isFollowing,
+  ) async {
     final auth = ref.read(authProvider);
     if (!auth.isAuthenticated) {
       context.go('/login');
@@ -421,7 +433,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final text =
         '${tournament.name} - ${tournament.category ?? tournament.sport}';
     final url = 'https://giaidau.vnvar.com/tournaments/${tournament.id}';
-    await SharePlus.instance.share(ShareParams(text: '$text\n\n$url'));
+    await SharePlus.instance.share(
+      ShareParams(text: '$text\n\n$url'),
+    );
   }
 
   Widget _buildTabContent(
@@ -430,7 +444,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     UserRole? role,
   ) {
     final isLive = StatusHelper.isTournamentInProgress(tournament.status);
-    final divisions = tournament.divisions.map((d) => d.name).toSet().toList();
+    final divisions = tournament.divisions
+        .map((d) => d.name)
+        .toSet()
+        .toList();
 
     return Column(
       children: [
@@ -449,9 +466,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 onDivisionChanged: (val) {
                   setState(() {
                     _selectedDivision = val;
-                    final matchedList = tournament.divisions.where(
-                      (d) => d.name == val,
-                    );
+                    final matchedList = tournament.divisions.where((d) => d.name == val);
                     if (matchedList.isNotEmpty) {
                       _selectedDivisionId = matchedList.first.id;
                     } else if (tournament.divisions.isNotEmpty) {
@@ -636,7 +651,10 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabController tabController;
   final AppColorsExtension colors;
 
-  _TabBarDelegate({required this.tabController, required this.colors});
+  _TabBarDelegate({
+    required this.tabController,
+    required this.colors,
+  });
 
   @override
   Widget build(

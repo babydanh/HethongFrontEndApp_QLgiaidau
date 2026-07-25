@@ -309,7 +309,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     }).toList();
 
     return ListView(
-      controller: widget.scrollController ?? PrimaryScrollController.of(context),
+      controller: widget.scrollController,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
       physics: const BouncingScrollPhysics(
         parent: AlwaysScrollableScrollPhysics(),
