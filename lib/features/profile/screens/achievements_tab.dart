@@ -35,10 +35,10 @@ class AchievementsTab extends ConsumerWidget {
 
     final List<_AchievementData> apiAchievements = [];
 
-    // Filter real API tournaments: ONLY COMPLETED TOURNAMENTS WHERE LOGGED-IN USER PARTICIPATED OR CREATED
-    final userTournaments = [...realTournaments, ...followedTournaments].where((t) {
+    // Filter real API tournaments: ONLY COMPLETED TOURNAMENTS WHERE LOGGED-IN USER PARTICIPATED AS A COMPETITOR/PLAYER
+    final userTournaments = followedTournaments.where((t) {
       if (currentUserId.isEmpty) return false;
-      return t.creatorId == currentUserId;
+      return true;
     }).toList();
 
     for (int i = 0; i < userTournaments.length; i++) {
@@ -259,21 +259,21 @@ class _AchievementCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Real Tournament Logo Image or VNDCSPORT fallback
+          // Real Tournament Logo Image or VNDCSPORT fallback (Circular Logo)
           Container(
-            width: 38,
-            height: 38,
+            width: 40,
+            height: 40,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: const Color(0xFF0F172A),
-              borderRadius: BorderRadius.circular(10),
+              shape: BoxShape.circle,
               border: Border.all(color: colors.border),
             ),
             child: resolvedLogo.isNotEmpty
                 ? Image.network(
                     resolvedLogo,
-                    width: 38,
-                    height: 38,
+                    width: 40,
+                    height: 40,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => const _FallbackVndcLogo(),
                   )
