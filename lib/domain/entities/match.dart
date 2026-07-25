@@ -155,6 +155,7 @@ class MatchModel {
 
   final String? groupName;
   final String? stageName;
+  final String? stageType;
 
   /// True nếu đây là trận BYE (miễn đấu) do backend đánh dấu
   final bool isBye;
@@ -200,6 +201,7 @@ class MatchModel {
     this.team2MemberInfos = const [],
     this.groupName,
     this.stageName,
+    this.stageType,
     this.isBye = false,
   });
 
@@ -307,6 +309,9 @@ class MatchModel {
           json['stage_name']?.toString() ??
           json['stage']?.toString() ??
           json['stageType']?.toString(),
+      stageType: json['stageType']?.toString() ??
+          json['stage_type']?.toString() ??
+          (json['stage'] is Map ? json['stage']['type']?.toString() : null),
       isBye: json['isBye'] ?? json['is_bye'] ?? false,
     );
   }
@@ -347,6 +352,9 @@ class MatchModel {
       'team2Members': team2Members,
       'team1MemberInfos': team1MemberInfos.map((m) => m.toJson()).toList(),
       'team2MemberInfos': team2MemberInfos.map((m) => m.toJson()).toList(),
+      if (groupName != null) 'groupName': groupName,
+      if (stageName != null) 'stageName': stageName,
+      if (stageType != null) 'stageType': stageType,
       'isBye': isBye,
     };
   }
@@ -390,6 +398,9 @@ class MatchModel {
     List<String>? team2Members,
     List<MatchMemberInfo>? team1MemberInfos,
     List<MatchMemberInfo>? team2MemberInfos,
+    String? groupName,
+    String? stageName,
+    String? stageType,
     bool? isBye,
   }) {
     return MatchModel(
@@ -431,6 +442,9 @@ class MatchModel {
       team2Members: team2Members ?? this.team2Members,
       team1MemberInfos: team1MemberInfos ?? this.team1MemberInfos,
       team2MemberInfos: team2MemberInfos ?? this.team2MemberInfos,
+      groupName: groupName ?? this.groupName,
+      stageName: stageName ?? this.stageName,
+      stageType: stageType ?? this.stageType,
       isBye: isBye ?? this.isBye,
     );
   }

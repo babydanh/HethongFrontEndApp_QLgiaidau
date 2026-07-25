@@ -2,20 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_match_card.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  LAYOUT CONSTANTS
-// ══════════════════════════════════════════════════════════════════════════════
 const _kCardW = 240.0;
 const _kCardH = 88.0;
-const _kColGap = 80.0;  // horizontal gap between columns (where connectors run)
-const _kRowGap = 36.0;  // minimum vertical gap between cards in same column
+const _kColGap = 80.0;
+const _kRowGap = 36.0;
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  SingleElimDiagram
-//  Accepts a flat list of MatchModel with nextMatchId chains.
-//  Renders a classic tournament tree with connecting lines.
-// ══════════════════════════════════════════════════════════════════════════════
 class SingleElimDiagram extends StatefulWidget {
   final List<MatchModel> matches;
   final String tournamentId;
@@ -44,98 +37,87 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     super.dispose();
   }
 
-  // ── Build structured layout ───────────────────────────────────────────────
   Map<int, List<MatchModel>> _buildRoundMap() {
-    // Only valid matches — exclude full BYE-vs-BYE (both slots are BYE/unset)
-    final playoffMatches = widget.matches.where((m) {
-      if (m.status == 'cancelled') return false;
-      if (m.isFullByeMatch) return false;
-
-      final hasNextMatch = m.nextMatchId.isNotEmpty || m.loserNextMatchId.isNotEmpty;
-      final isGroupStage = (m.bracketPosition.bracket == 'group_stage') ||
-          (m.stageName != null && (m.stageName!.contains('Bảng') || m.stageName!.toUpperCase().contains('GROUP'))) ||
-          (m.groupName != null &&
-              m.groupName!.isNotEmpty &&
-              !m.groupName!.toUpperCase().contains('KNOCKOUT') &&
-              !m.groupName!.toUpperCase().contains('PLAYOFF'));
-
-      if (hasNextMatch) return true;
-      if (!isGroupStage) return true;
-      return false;
-    }).toList();
-
-    final valid = playoffMatches.isNotEmpty
-        ? playoffMatches
-        : widget.matches
-            .where((m) => m.status != 'cancelled' && !m.isFullByeMatch)
-            .toList();
+    final valid = widget.matches
+        .where((m) =>
+            m.status != 'cancelled' &&
+            !m.isFullByeMatch &&
+            isKnockoutMatch(m))
+        .toList();
 
     final map = <int, List<MatchModel>>{};
-    for (final m in valid) {
-      map.putIfAbsent(m.round, () => []).add(m);
+    for (final match in valid) {
+      map.putIfAbsent(match.round, () => []).add(match);
     }
     for (final key in map.keys) {
-      map[key]!.sort((a, b) => a.bracketPosition.position.compareTo(b.bracketPosition.position));
+      map[key]!.sort(
+        (a, b) => a.bracketPosition.position.compareTo(
+          b.bracketPosition.position,
+        ),
+      );
     }
     return map;
   }
 
-  // ── Compute canvas positions for each match ───────────────────────────────
   Map<String, Offset> _computePositions(
     Map<int, List<MatchModel>> roundMap,
     List<int> sortedRounds,
   ) {
     final positions = <String, Offset>{};
-    // The last round (e.g. Final) has only 1 card. We compute from it outward.
-    // Phase 1: compute column X
-    for (int ci = 0; ci < sortedRounds.length; ci++) {
+
+    for (var ci = 0; ci < sortedRounds.length; ci++) {
       final colX = ci * (_kCardW + _kColGap);
       final matches = roundMap[sortedRounds[ci]]!;
-      for (int mi = 0; mi < matches.length; mi++) {
-        final y = mi * (_kCardH + _kRowGap);
-        positions[matches[mi].id] = Offset(colX, y);
+      for (var mi = 0; mi < matches.length; mi++) {
+        positions[matches[mi].id] = Offset(colX, mi * (_kCardH + _kRowGap));
       }
     }
 
-    // Phase 2: vertically align parent nodes to the midpoint of their children.
-    // Process earliest → latest so every parent uses already-stabilized child
-    // positions. Running this backwards makes Final align before Semi/Quarter
-    // have moved, which visually shifts the whole tree off-center.
-    for (int ci = 1; ci < sortedRounds.length; ci++) {
+    for (var ci = 1; ci < sortedRounds.length; ci++) {
       final round = sortedRounds[ci];
       final prevRound = sortedRounds[ci - 1];
       final prevMatches = roundMap[prevRound]!;
 
-      // Group prev-round matches by their nextMatchId (parent)
       final childrenOf = <String, List<String>>{};
-      for (final m in prevMatches) {
-        if (m.nextMatchId.isNotEmpty) {
-          childrenOf.putIfAbsent(m.nextMatchId, () => []).add(m.id);
+      for (final match in prevMatches) {
+        if (match.nextMatchId.isNotEmpty) {
+          childrenOf.putIfAbsent(match.nextMatchId, () => []).add(match.id);
         }
       }
 
-      // For each match in current round, adjust Y to midpoint of children
-      for (final m in roundMap[round]!) {
-        final children = childrenOf[m.id];
-        if (children != null && children.isNotEmpty) {
-          double totalY = 0;
-          int count = 0;
-          for (final c in children) {
-            final pos = positions[c];
-            if (pos != null) {
-              totalY += pos.dy + _kCardH / 2;
-              count++;
-            }
-          }
-          if (count > 0) {
-            final centerY = totalY / count - _kCardH / 2;
-            positions[m.id] = Offset(positions[m.id]!.dx, centerY);
-          }
+      for (final match in roundMap[round]!) {
+        final children = childrenOf[match.id];
+        if (children == null || children.isEmpty) continue;
+
+        var totalY = 0.0;
+        var count = 0;
+        for (final childId in children) {
+          final pos = positions[childId];
+          if (pos == null) continue;
+          totalY += pos.dy + _kCardH / 2;
+          count++;
         }
+        if (count == 0) continue;
+
+        final centerY = totalY / count - _kCardH / 2;
+        positions[match.id] = Offset(positions[match.id]!.dx, centerY);
       }
     }
 
     return positions;
+  }
+
+  String? _findFinalMatchId(List<MatchModel> matches) {
+    final terminalMatches = matches
+        .where((match) => match.nextMatchId.isEmpty && match.loserNextMatchId.isEmpty)
+        .toList()
+      ..sort((a, b) {
+        final roundCompare = b.round.compareTo(a.round);
+        if (roundCompare != 0) return roundCompare;
+        return a.matchNumber.compareTo(b.matchNumber);
+      });
+
+    return terminalMatches.isEmpty ? null : terminalMatches.first.id;
   }
 
   void _centerInitialView(Size viewport, Size canvas, double scale) {
@@ -145,11 +127,19 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     _didCenterInitialView = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final dx = ((viewport.width - canvas.width * scale) / 2).clamp(16.0, double.infinity);
-      final dy = ((viewport.height - canvas.height * scale) / 2).clamp(16.0, double.infinity);
+      final dx = ((viewport.width - canvas.width * scale) / 2).clamp(
+        16.0,
+        double.infinity,
+      );
+      final dy = ((viewport.height - canvas.height * scale) / 2).clamp(
+        16.0,
+        double.infinity,
+      );
       _tc.value = Matrix4.identity()
-        ..translate(dx, dy)
-        ..scale(scale);
+        ..setEntry(0, 0, scale)
+        ..setEntry(1, 1, scale)
+        ..setEntry(0, 3, dx)
+        ..setEntry(1, 3, dy);
     });
   }
 
@@ -165,10 +155,14 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
 
     final sortedRounds = roundMap.keys.toList()..sort();
     final totalRounds = sortedRounds.length;
+    final diagramMatches = [
+      for (final round in sortedRounds) ...roundMap[round]!,
+    ];
+    final finalMatchId = _findFinalMatchId(diagramMatches);
     final positions = _computePositions(roundMap, sortedRounds);
 
-    // Compute canvas size
-    double maxX = 0, maxY = 0;
+    var maxX = 0.0;
+    var maxY = 0.0;
     for (final pos in positions.values) {
       if (pos.dx + _kCardW > maxX) maxX = pos.dx + _kCardW;
       if (pos.dy + _kCardH > maxY) maxY = pos.dy + _kCardH;
@@ -199,50 +193,46 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-              // ── Connector lines (drawn behind cards) ──
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _BracketConnectorPainter(
-                    matches: widget.matches,
-                    positions: positions,
-                    lineColor: colors.border.withValues(alpha: 0.8),
-                    cardW: _kCardW,
-                    cardH: _kCardH,
-                    colGap: _kColGap,
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _BracketConnectorPainter(
+                        matches: diagramMatches,
+                        positions: positions,
+                        lineColor: colors.border.withValues(alpha: 0.8),
+                        cardW: _kCardW,
+                        cardH: _kCardH,
+                        colGap: _kColGap,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              // ── Round header labels ──
-              ...sortedRounds.asMap().entries.map((entry) {
-                final ci = entry.key;
-                final round = entry.value;
-                final colX = ci * (_kCardW + _kColGap);
-                final roundName = _getRoundLabel(round, totalRounds);
-                return Positioned(
-                  left: colX,
-                  top: -42,
-                  width: _kCardW,
-                  child: _RoundHeader(label: roundName),
-                );
-              }),
-              // ── Match cards ──
-              ...widget.matches.map((match) {
-                final pos = positions[match.id];
-                if (pos == null) return const SizedBox.shrink();
-                return Positioned(
-                  left: pos.dx,
-                  top: pos.dy,
-                  width: _kCardW,
-                  height: _kCardH,
-                  child: BracketMatchCard(
-                    match: match,
-                    tournamentId: widget.tournamentId,
-                    isReferee: widget.isReferee,
-                    isReadOnly: widget.isReadOnly,
-                    isGrandFinal: match.nextMatchId.isEmpty,
-                  ),
-                );
-              }),
+                  ...sortedRounds.asMap().entries.map((entry) {
+                    final columnIndex = entry.key;
+                    final colX = columnIndex * (_kCardW + _kColGap);
+                    final roundName = _getRoundLabel(columnIndex, totalRounds);
+                    return Positioned(
+                      left: colX,
+                      top: -42,
+                      width: _kCardW,
+                      child: _RoundHeader(label: roundName),
+                    );
+                  }),
+                  ...diagramMatches.map((match) {
+                    final pos = positions[match.id];
+                    if (pos == null) return const SizedBox.shrink();
+                    return Positioned(
+                      left: pos.dx,
+                      top: pos.dy,
+                      width: _kCardW,
+                      height: _kCardH,
+                      child: BracketMatchCard(
+                        match: match,
+                        tournamentId: widget.tournamentId,
+                        isReferee: widget.isReferee,
+                        isReadOnly: widget.isReadOnly,
+                        isGrandFinal: match.id == finalMatchId,
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
@@ -252,8 +242,8 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     );
   }
 
-  String _getRoundLabel(int round, int total) {
-    final fromEnd = total - round;
+  String _getRoundLabel(int columnIndex, int totalColumns) {
+    final fromEnd = totalColumns - 1 - columnIndex;
     if (fromEnd == 0) return 'CHUNG KẾT';
     if (fromEnd == 1) return 'BÁN KẾT';
     if (fromEnd == 2) return 'TỨ KẾT';
@@ -264,9 +254,6 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  Connector CustomPainter
-// ══════════════════════════════════════════════════════════════════════════════
 class _BracketConnectorPainter extends CustomPainter {
   final List<MatchModel> matches;
   final Map<String, Offset> positions;
@@ -299,9 +286,6 @@ class _BracketConnectorPainter extends CustomPainter {
       final to = positions[match.nextMatchId];
       if (from == null || to == null) continue;
 
-      // Single-elim tree connectors should only join adjacent columns.
-      // Skip non-forward or skip-round links so stray placement/final links do not
-      // draw long crossing lines through the diagram.
       final dx = to.dx - from.dx;
       final expectedDx = cardW + colGap;
       if (dx <= 0 || dx > expectedDx * 1.35) continue;
@@ -356,11 +340,9 @@ class _BracketConnectorPainter extends CustomPainter {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  Round Header Label
-// ══════════════════════════════════════════════════════════════════════════════
 class _RoundHeader extends StatelessWidget {
   final String label;
+
   const _RoundHeader({required this.label});
 
   @override
@@ -385,5 +367,3 @@ class _RoundHeader extends StatelessWidget {
     );
   }
 }
-
-

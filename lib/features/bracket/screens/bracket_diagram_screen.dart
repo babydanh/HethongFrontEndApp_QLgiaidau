@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 
 /// Full-screen bracket diagram for all 3 format types.
 /// Navigated to from the "Xem sơ đồ" button in BracketViewScreen.
@@ -138,6 +139,9 @@ class _BracketDiagramScreenState extends State<BracketDiagramScreen> {
 
     if (isGroupStageKnockout) {
       final knockoutMatches = widget.matches.where((m) {
+        return isKnockoutMatch(m);
+      }).toList();
+/*
         final hasNextMatch = m.nextMatchId.isNotEmpty || m.loserNextMatchId.isNotEmpty;
         if (hasNextMatch) return true;
 
@@ -149,9 +153,10 @@ class _BracketDiagramScreenState extends State<BracketDiagramScreen> {
                 !m.groupName!.toUpperCase().contains('PLAYOFF'));
         return !isGroupStage;
       }).toList();
+*/
 
       return SingleElimDiagram(
-        matches: knockoutMatches.isNotEmpty ? knockoutMatches : widget.matches,
+        matches: knockoutMatches,
         tournamentId: widget.tournamentId,
         isReferee: widget.isReferee,
         isReadOnly: widget.isReadOnly,

@@ -133,11 +133,14 @@ class ApiMatchRepository implements IMatchRepository {
   static String _mapBracketBranch(String? branch) {
     switch (branch?.toUpperCase()) {
       case 'MAIN':
+      case 'WINNERS':
         return 'winners';
       case 'LOSERS':
         return 'losers';
       case 'GRAND_FINALS':
         return 'grand_final';
+      case 'PLAYOFF':
+        return 'playoff';
       default:
         return 'winners';
     }

@@ -39,6 +39,8 @@ class Tournament {
   final Map<String, dynamic>? contactInfo;
   final List<TournamentDivision> divisions;
   final bool isRanked;
+  final String? registrationMode;
+  final bool hideFeaturedCardText;
 
   const Tournament({
     required this.id,
@@ -74,6 +76,8 @@ class Tournament {
     this.contactInfo,
     this.divisions = const [],
     this.isRanked = false,
+    this.registrationMode,
+    this.hideFeaturedCardText = false,
   });
 
   factory Tournament.fromJson(Map<String, dynamic> json, String id) {
@@ -100,14 +104,23 @@ class Tournament {
       final mt = json['matchType'].toString().toLowerCase();
       final gender = json['genderRestriction']?.toString().toLowerCase() ?? '';
       if (mt == 'doubles' || mt == 'double') {
-        if (gender == 'female') formatVal = AppConstants.categoryWomenDoubles;
-        else if (gender == 'male') formatVal = AppConstants.categoryMenDoubles;
-        else if (gender == 'mixed') formatVal = AppConstants.categoryMixedDoubles;
-        else formatVal = AppConstants.formatDoubles;
+        if (gender == 'female') {
+          formatVal = AppConstants.categoryWomenDoubles;
+        } else if (gender == 'male') {
+          formatVal = AppConstants.categoryMenDoubles;
+        } else if (gender == 'mixed') {
+          formatVal = AppConstants.categoryMixedDoubles;
+        } else {
+          formatVal = AppConstants.formatDoubles;
+        }
       } else {
-        if (gender == 'female') formatVal = AppConstants.categoryWomenSingles;
-        else if (gender == 'male') formatVal = AppConstants.categoryMenSingles;
-        else formatVal = AppConstants.formatSingles;
+        if (gender == 'female') {
+          formatVal = AppConstants.categoryWomenSingles;
+        } else if (gender == 'male') {
+          formatVal = AppConstants.categoryMenSingles;
+        } else {
+          formatVal = AppConstants.formatSingles;
+        }
       }
     } else if (json['format'] != null) {
       formatVal = json['format'].toString();
@@ -189,6 +202,8 @@ class Tournament {
       contactInfo: parsedContactInfo,
       divisions: parsedDivisions,
       isRanked: json['isRanked'] == true || json['is_ranked'] == true,
+      registrationMode: config['registrationMode']?.toString(),
+      hideFeaturedCardText: config['hideFeaturedCardText'] == true,
     );
   }
 
@@ -208,6 +223,13 @@ class Tournament {
       'format': format,
       if (category != null) 'category': category,
       'bracketType': bracketType,
+      'tournamentConfig': {
+        'bracketType': bracketType,
+        'maxTeams': maxTeams,
+        'roundRobinLegs': roundCount,
+        if (registrationMode != null) 'registrationMode': registrationMode,
+        'hideFeaturedCardText': hideFeaturedCardText,
+      },
       'status': status,
       'visibility': visibility,
       'adminToken': adminToken,
@@ -235,6 +257,7 @@ class Tournament {
       if (contactInfo != null) 'contactInfo': contactInfo,
       'divisions': divisions.map((e) => e.toJson()).toList(),
       'isRanked': isRanked,
+      if (registrationMode != null) 'registrationMode': registrationMode,
     };
   }
 
@@ -272,6 +295,8 @@ class Tournament {
     Map<String, dynamic>? contactInfo,
     List<TournamentDivision>? divisions,
     bool? isRanked,
+    String? registrationMode,
+    bool? hideFeaturedCardText,
   }) {
     return Tournament(
       id: id ?? this.id,
@@ -307,6 +332,8 @@ class Tournament {
       contactInfo: contactInfo ?? this.contactInfo,
       divisions: divisions ?? this.divisions,
       isRanked: isRanked ?? this.isRanked,
+      registrationMode: registrationMode ?? this.registrationMode,
+      hideFeaturedCardText: hideFeaturedCardText ?? this.hideFeaturedCardText,
     );
   }
 

@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:app_quanly_giaidau/data/models/team_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Redesigned cross-table view for round-robin bracket.
-/// Displays a styled grid with:
-/// - Header row: team names
-/// - Cells: score with colored background (win=green, loss=red, draw=amber)
-/// - Responsive horizontal scroll
 class CrossTableView extends ConsumerWidget {
   final List<MatchModel> matches;
   final String tournamentId;
+  final String? divisionId;
 
   const CrossTableView({
     super.key,
     required this.matches,
     required this.tournamentId,
+    this.divisionId,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final standingsAsync = ref.watch(standingsProvider(tournamentId));
+    final standingsAsync = ref.watch(standingsWithDivisionProvider((
+      tournamentId: tournamentId,
+      divisionId: divisionId,
+    )));
 
     return standingsAsync.when(
       data: (standings) {
@@ -30,219 +30,26 @@ class CrossTableView extends ConsumerWidget {
           return _buildEmptyState(context, 'Chưa có dữ liệu đội thi đấu');
         }
 
-        final teams = standings
-            .map((s) => Team(id: s.id, name: s.teamName, createdAt: DateTime.now()))
-            .toList();
+        final groupedStandings = _groupStandings(standings);
+        final groupNames = groupedStandings.keys.toList()..sort();
 
-        // Build score lookup: "team1Id_team2Id" -> score string
-        final scores = <String, String>{};
-        final scoreStatus = <String, String>{}; // 'win', 'loss', 'draw'
-        for (final match in matches) {
-          if (match.status == 'completed' || match.status == 'walkover') {
-            final key1 = '${match.team1Id}_${match.team2Id}';
-            final key2 = '${match.team2Id}_${match.team1Id}';
-            scores[key1] = '${match.score1} - ${match.score2}';
-            scores[key2] = '${match.score2} - ${match.score1}';
-            // Determine status relative to row team
-            if (match.score1 > match.score2) {
-              scoreStatus[key1] = 'win';
-              scoreStatus[key2] = 'loss';
-            } else if (match.score1 < match.score2) {
-              scoreStatus[key1] = 'loss';
-              scoreStatus[key2] = 'win';
-            } else {
-              scoreStatus[key1] = 'draw';
-              scoreStatus[key2] = 'draw';
-            }
-          }
-        }
+        return ListView.builder(
+          padding: const EdgeInsets.only(bottom: 16),
+          itemCount: groupNames.length,
+          itemBuilder: (context, index) {
+            final groupName = groupNames[index];
+            final groupRows = groupedStandings[groupName]!;
+            final groupMatches = _matchesForGroup(groupRows, groupName);
 
-        const double cellWidth = 90;
-        const double rowLabelWidth = 140;
-
-        return SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ─── Header Row ───
-                Row(
-                  children: [
-                    // Top-left corner cell
-                    Container(
-                      width: rowLabelWidth,
-                      height: 44,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: context.colors.bgSurface,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(AppTheme.radiusXL),
-                        ),
-                        border: Border(
-                          right: BorderSide(color: context.colors.border),
-                          bottom: BorderSide(color: context.colors.border),
-                        ),
-                      ),
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Đội',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: context.colors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    ...teams.map((team) => Container(
-                      width: cellWidth,
-                      height: 44,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        color: context.colors.bgSurface,
-                        border: Border(
-                          right: BorderSide(color: context.colors.border),
-                          bottom: BorderSide(color: context.colors.border),
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        team.name,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: context.colors.textPrimary,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-                    )),
-                  ],
-                ),
-                // ─── Data Rows ───
-                ...teams.asMap().entries.map((rowEntry) {
-                  final rowIdx = rowEntry.key;
-                  final rowTeam = rowEntry.value;
-                  final isLastRow = rowIdx == teams.length - 1;
-                  return Row(
-                    children: [
-                      // Row label (team name)
-                      Container(
-                        width: rowLabelWidth,
-                        height: 44,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: context.colors.bgCard,
-                          border: Border(
-                            right: BorderSide(color: context.colors.border),
-                            bottom: isLastRow
-                                ? BorderSide(color: context.colors.border)
-                                : BorderSide.none,
-                          ),
-                        ),
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          rowTeam.name,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: context.colors.textPrimary,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      // Score cells
-                      ...teams.asMap().entries.map((colEntry) {
-                        final colIdx = colEntry.key;
-                        final colTeam = colEntry.value;
-                        final isSelf = rowTeam.id == colTeam.id;
-
-                        // Corner radius for bottom-right
-                        final isLastCol = colIdx == teams.length - 1;
-
-                        if (isSelf) {
-                          // Diagonal - self cell
-                          return Container(
-                            width: cellWidth,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: context.colors.bgSurface.withValues(alpha: 0.5),
-                              border: Border(
-                                right: BorderSide(color: context.colors.border),
-                                bottom: isLastRow
-                                    ? BorderSide(color: context.colors.border)
-                                    : BorderSide.none,
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Icon(
-                              Icons.minimize_rounded,
-                              size: 16,
-                              color: context.colors.textMuted.withValues(alpha: 0.5),
-                            ),
-                          );
-                        }
-
-                        final scoreKey = '${rowTeam.id}_${colTeam.id}';
-                        final score = scores[scoreKey];
-                        final status = scoreStatus[scoreKey];
-
-                        Color? bgColor;
-                        Color textColor;
-                        if (status == 'win') {
-                          bgColor = context.colors.success.withValues(alpha: 0.12);
-                          textColor = context.colors.success;
-                        } else if (status == 'loss') {
-                          bgColor = context.colors.error.withValues(alpha: 0.10);
-                          textColor = context.colors.error;
-                        } else if (status == 'draw') {
-                          bgColor = context.colors.warning.withValues(alpha: 0.12);
-                          textColor = context.colors.warning;
-                        } else {
-                          bgColor = Colors.transparent;
-                          textColor = context.colors.textMuted;
-                        }
-
-                        BorderRadiusGeometry? borderRadius;
-                        if (isLastRow && isLastCol) {
-                          borderRadius = const BorderRadius.only(
-                            bottomRight: Radius.circular(AppTheme.radiusXL),
-                          );
-                        }
-
-                        return Container(
-                          width: cellWidth,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: bgColor,
-                            borderRadius: borderRadius,
-                            border: Border(
-                              right: BorderSide(color: context.colors.border),
-                              bottom: isLastRow
-                                  ? BorderSide(color: context.colors.border)
-                                  : BorderSide.none,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            score ?? '-',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: score != null ? FontWeight.w700 : FontWeight.w400,
-                              color: textColor,
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
-                  );
-                }),
-              ],
-            ),
-          ),
+            return Padding(
+              padding: EdgeInsets.only(bottom: index == groupNames.length - 1 ? 0 : 20),
+              child: _GroupCrossTable(
+                title: groupName,
+                standings: groupRows,
+                matches: groupMatches,
+              ),
+            );
+          },
         );
       },
       loading: () => const Center(
@@ -262,6 +69,34 @@ class CrossTableView extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Map<String, List<Standing>> _groupStandings(List<Standing> standings) {
+    final grouped = <String, List<Standing>>{};
+    for (final standing in standings) {
+      final groupName = standing.group.trim().isNotEmpty ? standing.group.trim() : 'Bảng A';
+      grouped.putIfAbsent(groupName, () => []).add(standing);
+    }
+    return grouped;
+  }
+
+  List<MatchModel> _matchesForGroup(List<Standing> standings, String groupName) {
+    final participantIds = standings.map((s) => s.id).toSet();
+    final normalizedGroupName = groupName.trim().toLowerCase();
+
+    return matches.where((match) {
+      if (match.isBye) return false;
+
+      final sameGroupByName = (match.groupName ?? '').trim().toLowerCase() == normalizedGroupName;
+      final sameGroupByParticipant =
+          participantIds.contains(match.team1Id) && participantIds.contains(match.team2Id);
+
+      return sameGroupByName || sameGroupByParticipant;
+    }).toList()
+      ..sort((a, b) {
+        final roundCompare = a.round.compareTo(b.round);
+        return roundCompare != 0 ? roundCompare : a.matchNumber.compareTo(b.matchNumber);
+      });
   }
 
   Widget _buildEmptyState(BuildContext context, String message) {
@@ -287,3 +122,300 @@ class CrossTableView extends ConsumerWidget {
     );
   }
 }
+
+class _GroupCrossTable extends StatelessWidget {
+  final String title;
+  final List<Standing> standings;
+  final List<MatchModel> matches;
+
+  const _GroupCrossTable({
+    required this.title,
+    required this.standings,
+    required this.matches,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final scoreCells = _buildScoreCells(matches);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.08),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(15),
+                topRight: Radius.circular(15),
+              ),
+              border: Border(bottom: BorderSide(color: colors.border)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.grid_on_rounded, size: 18, color: AppTheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: colors.textPrimary,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${standings.length} đội',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: colors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: _buildGrid(context, scoreCells),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGrid(BuildContext context, Map<String, _ScoreCell> scoreCells) {
+    const cellWidth = 92.0;
+    const rowLabelWidth = 150.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            _buildHeaderCell(context, 'Đội', rowLabelWidth, alignLeft: true),
+            ...standings.map((team) => _buildHeaderCell(context, team.teamName, cellWidth)),
+          ],
+        ),
+        ...standings.asMap().entries.map((rowEntry) {
+          final rowIdx = rowEntry.key;
+          final rowTeam = rowEntry.value;
+          final isLastRow = rowIdx == standings.length - 1;
+
+          return Row(
+            children: [
+              _buildTeamCell(context, rowTeam.teamName, rowLabelWidth, isLastRow),
+              ...standings.asMap().entries.map((colEntry) {
+                final colIdx = colEntry.key;
+                final colTeam = colEntry.value;
+                final isLastCol = colIdx == standings.length - 1;
+                final isSelf = rowTeam.id == colTeam.id;
+
+                if (isSelf) {
+                  return _buildSelfCell(context, cellWidth, isLastRow, isLastCol);
+                }
+
+                final score = scoreCells['${rowTeam.id}_${colTeam.id}'];
+                return _buildScoreCell(
+                  context,
+                  score,
+                  cellWidth,
+                  isLastRow,
+                  isLastCol,
+                );
+              }),
+            ],
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildHeaderCell(
+    BuildContext context,
+    String label,
+    double width, {
+    bool alignLeft = false,
+  }) {
+    return Container(
+      width: width,
+      height: 46,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: context.colors.bgSurface,
+        border: Border(
+          right: BorderSide(color: context.colors.border),
+          bottom: BorderSide(color: context.colors.border),
+        ),
+      ),
+      alignment: alignLeft ? Alignment.centerLeft : Alignment.center,
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: context.colors.textPrimary,
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        textAlign: alignLeft ? TextAlign.left : TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _buildTeamCell(BuildContext context, String label, double width, bool isLastRow) {
+    return Container(
+      width: width,
+      height: 46,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: context.colors.bgCard,
+        border: Border(
+          right: BorderSide(color: context.colors.border),
+          bottom: BorderSide(color: isLastRow ? context.colors.border : Colors.transparent),
+        ),
+      ),
+      alignment: Alignment.centerLeft,
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: context.colors.textPrimary,
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
+  Widget _buildSelfCell(BuildContext context, double width, bool isLastRow, bool isLastCol) {
+    return Container(
+      width: width,
+      height: 46,
+      decoration: BoxDecoration(
+        color: context.colors.bgSurface.withValues(alpha: 0.55),
+        borderRadius: isLastRow && isLastCol
+            ? const BorderRadius.only(bottomRight: Radius.circular(AppTheme.radiusXL))
+            : null,
+        border: Border(
+          right: BorderSide(color: context.colors.border),
+          bottom: BorderSide(color: isLastRow ? context.colors.border : Colors.transparent),
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.remove_rounded,
+        size: 16,
+        color: context.colors.textMuted.withValues(alpha: 0.55),
+      ),
+    );
+  }
+
+  Widget _buildScoreCell(
+    BuildContext context,
+    _ScoreCell? score,
+    double width,
+    bool isLastRow,
+    bool isLastCol,
+  ) {
+    final colors = context.colors;
+    final bgColor = switch (score?.result) {
+      _MatchResult.win => colors.success.withValues(alpha: 0.12),
+      _MatchResult.loss => colors.error.withValues(alpha: 0.10),
+      _MatchResult.draw => colors.warning.withValues(alpha: 0.12),
+      null => Colors.transparent,
+    };
+    final textColor = switch (score?.result) {
+      _MatchResult.win => colors.success,
+      _MatchResult.loss => colors.error,
+      _MatchResult.draw => colors.warning,
+      null => colors.textMuted,
+    };
+
+    return Container(
+      width: width,
+      height: 46,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: isLastRow && isLastCol
+            ? const BorderRadius.only(bottomRight: Radius.circular(AppTheme.radiusXL))
+            : null,
+        border: Border(
+          right: BorderSide(color: colors.border),
+          bottom: BorderSide(color: isLastRow ? colors.border : Colors.transparent),
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        score?.label ?? '-',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: score == null ? FontWeight.w500 : FontWeight.w800,
+          color: textColor,
+        ),
+      ),
+    );
+  }
+
+  Map<String, _ScoreCell> _buildScoreCells(List<MatchModel> matches) {
+    final cells = <String, _ScoreCell>{};
+
+    for (final match in matches) {
+      if (!(match.status == 'completed' || match.status == 'walkover')) continue;
+      if (match.team1Id.isEmpty || match.team2Id.isEmpty) continue;
+
+      final p1Result = _resultFor(match, match.team1Id);
+      final p2Result = _resultFor(match, match.team2Id);
+      final p1Label = '${match.score1}-${match.score2}';
+      final p2Label = '${match.score2}-${match.score1}';
+
+      cells['${match.team1Id}_${match.team2Id}'] = _ScoreCell(p1Label, p1Result);
+      cells['${match.team2Id}_${match.team1Id}'] = _ScoreCell(p2Label, p2Result);
+    }
+
+    return cells;
+  }
+
+  _MatchResult _resultFor(MatchModel match, String participantId) {
+    if (match.winnerId.isNotEmpty) {
+      return match.winnerId == participantId ? _MatchResult.win : _MatchResult.loss;
+    }
+    if (match.score1 == match.score2) {
+      return _MatchResult.draw;
+    }
+    final isTeam1 = participantId == match.team1Id;
+    final participantScore = isTeam1 ? match.score1 : match.score2;
+    final opponentScore = isTeam1 ? match.score2 : match.score1;
+    return participantScore > opponentScore ? _MatchResult.win : _MatchResult.loss;
+  }
+}
+
+class _ScoreCell {
+  final String label;
+  final _MatchResult result;
+
+  const _ScoreCell(this.label, this.result);
+}
+
+enum _MatchResult { win, loss, draw }

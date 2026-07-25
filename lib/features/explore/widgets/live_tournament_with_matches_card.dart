@@ -6,12 +6,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
-import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 
 class LiveTournamentWithMatchesCard extends ConsumerStatefulWidget {
   final Tournament tournament;
@@ -287,7 +287,7 @@ class _LiveTournamentWithMatchesCardState
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, stackTrace) => const SizedBox.shrink(),
     );
   }
 
@@ -563,7 +563,7 @@ class _LiveTournamentWithMatchesCardState
           // ── Action Buttons Row ──
           Row(
             children: [
-              // Button 1: Cổ vũ (Gọi thật API backend POST /matches/:id/cheer)
+              // Button 1: Cổ vũ (Gọi repository)
               Expanded(
                 child: InkWell(
                   onTap: () async {
@@ -571,8 +571,7 @@ class _LiveTournamentWithMatchesCardState
                       _cheerCounts[match.id] = (_cheerCounts[match.id] ?? 0) + 1;
                     });
                     try {
-                      final dio = ref.read(dioClientProvider).dio;
-                      await dio.post('/matches/${match.id}/cheer');
+                      await ref.read(matchRepositoryProvider).cheerMatch(match.id);
                     } catch (_) {}
                   },
                   borderRadius: BorderRadius.circular(10),

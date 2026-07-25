@@ -3,13 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io' show Platform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
-import 'package:app_quanly_giaidau/providers/auth_provider.dart';
-import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -30,53 +26,6 @@ class TournamentCardWithBanner extends ConsumerStatefulWidget {
 }
 
 class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBanner> {
-  bool _isFollowLoading = false;
-
-  Future<void> _toggleFollow(BuildContext context) async {
-    final auth = ref.read(authProvider);
-    if (!auth.isAuthenticated) {
-      if (context.mounted) {
-        context.go('/login');
-      }
-      return;
-    }
-
-    if (_isFollowLoading) return;
-
-    final repo = ref.read(tournamentRepositoryProvider);
-    final followedAsync = ref.read(followedTournamentsProvider);
-    final currentlyFollowing = followedAsync.maybeWhen(
-      data: (items) => items.any((t) => t.id == widget.tournament.id),
-      orElse: () => false,
-    );
-
-    setState(() => _isFollowLoading = true);
-    try {
-      if (currentlyFollowing) {
-        await repo.unfollowTournament(widget.tournament.id);
-      } else {
-        await repo.followTournament(widget.tournament.id);
-      }
-      ref.invalidate(followedTournamentsProvider);
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            currentlyFollowing ? 'Đã bỏ theo dõi giải đấu' : 'Đã theo dõi giải đấu',
-          ),
-        ),
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không thể cập nhật theo dõi: $e')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isFollowLoading = false);
-      }
-    }
-  }
 
   String _resolveImageUrl(String? url) {
     if (url == null || url.isEmpty) return "";
@@ -226,11 +175,6 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
     final resolvedBannerUrl = _resolveImageUrl(widget.tournament.bannerUrl);
     final hasBanner = resolvedBannerUrl.isNotEmpty;
     final categoryChips = _getCategoryChips(widget.tournament);
-    final followedAsync = ref.watch(followedTournamentsProvider);
-    final isFollowing = followedAsync.maybeWhen(
-      data: (items) => items.any((t) => t.id == widget.tournament.id),
-      orElse: () => false,
-    );
 
     return GestureDetector(
       onTap: widget.onTap,

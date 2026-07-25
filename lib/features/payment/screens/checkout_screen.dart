@@ -47,8 +47,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         CreatePaymentDto(
           tournamentId: widget.tournamentId,
           participantId: widget.participantId,
-          amount: widget.amount,
-          paymentGateway: _selectedGateway,
         ),
       );
 

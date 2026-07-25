@@ -754,10 +754,181 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   // ═══════════════════════════════════════════════════════════
   //  SETUP STATE — Cấu hình trận đấu
   // ═══════════════════════════════════════════════════════════
+  Widget _buildLiteSetupState(
+    MatchModel match,
+    SportRuleKind kind,
+    SportConfig config,
+  ) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Container(
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: context.colors.bgCard,
+            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+            border: Border.all(color: context.colors.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Icon(Icons.sports_score_rounded, color: context.colors.info, size: 42),
+              const SizedBox(height: 12),
+              Text(
+                'Thông tin trận đấu',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: context.colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${match.team1Name} vs ${match.team2Name}',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: context.colors.info,
+                ),
+              ),
+              const SizedBox(height: 22),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: context.colors.bgDark,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: context.colors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Luật giải đang áp dụng',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        color: context.colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Các thông số được lấy từ cấu hình của ban tổ chức. App chỉ mở bảng chấm điểm theo luật này.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.colors.textSecondary,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildSetupChip('Môn', _setupSportLabel(kind)),
+                        _buildSetupChip('Format', 'BO${config.bestOf}'),
+                        _buildSetupChip('Thắng', '${config.setsToWin} set'),
+                        _buildSetupChip(
+                          'Mốc set',
+                          kind == SportRuleKind.tennis
+                              ? '${config.pointsPerSet} game'
+                              : '${config.pointsPerSet} điểm',
+                        ),
+                        _buildSetupChip(
+                          'Luật',
+                          config.mustWinByTwo ? 'Cách biệt 2' : 'Không cách biệt 2',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              TextField(
+                controller: _refereeController,
+                style: TextStyle(fontSize: 15, color: context.colors.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'Tên trọng tài hoặc ghi chú nhanh',
+                  helperText: 'Không bắt buộc. Chỉ hiển thị trong app nếu có.',
+                  prefixIcon: Icon(Icons.person_outline_rounded, color: context.colors.textMuted),
+                  filled: true,
+                  fillColor: context.colors.bgDark,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: context.colors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: context.colors.border),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final controller = ref.read(
+                      matchControllerProvider((
+                        tournamentId: widget.tournamentId,
+                        matchId: widget.matchId,
+                      )),
+                    );
+                    await controller.startMatch(
+                      refereeName: _refereeController.text.trim(),
+                    );
+                    if (!mounted) return;
+                    showOfficialScoreModal(
+                      context,
+                      tournamentId: widget.tournamentId,
+                      matchId: widget.matchId,
+                      match: match.copyWith(
+                        status: 'live',
+                        refereeName: _refereeController.text.trim().isEmpty
+                            ? match.refereeName
+                            : _refereeController.text.trim(),
+                      ),
+                      onRecordPenalty: () => _showFoulSelectionDialog(match),
+                      onForceWin: () => _showForceWinDialog(match),
+                    );
+                  },
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  label: const Text(
+                    'MỞ BẢNG CHẤM ĐIỂM',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.colors.success,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).animate().fade(duration: 220.ms).scale(begin: const Offset(0.98, 0.98));
+  }
+
   Widget _buildSetupState(MatchModel match) {
     final kind = SportRuleKind.fromString(match.sportKey);
     final config = resolveSportConfig(match.sportRules, kind);
     _ensureSetupControlsSeeded(match, config);
+    if (match.id.isNotEmpty || match.id.isEmpty) {
+      return _buildLiteSetupState(match, kind, config);
+    }
     final scoreLabel = _setupScoreLabel(kind, config);
 
     return Center(

@@ -30,9 +30,11 @@ class TennisScorePanel extends ConsumerWidget {
         t.team2GamePoints >= 3 &&
         t.team1GamePoints == t.team2GamePoints;
 
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < 620;
+        final compact = !isLandscape && constraints.maxWidth < 620;
         return Column(
           children: [
             if (t.isTiebreak)

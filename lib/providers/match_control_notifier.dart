@@ -3,8 +3,6 @@ import 'package:uuid/uuid.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_event_model.dart';
-import 'package:app_quanly_giaidau/data/models/penalty_model.dart';
-import 'package:app_quanly_giaidau/core/services/penalty_service.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
@@ -23,15 +21,13 @@ class MatchController {
   MatchModel? get match => ref.read(singleMatchProvider((tournamentId: tournamentId, matchId: matchId))).value;
 
   Future<void> updateConfig({int? maxScore, bool? winByTwo, int? timeLimitMinutes}) async {
-    final m = match;
-    if (m == null) return;
-    
-    await ref.read(matchRepositoryProvider).updateLiveState(
-      tournamentId, 
-      matchId,
-      maxScore: maxScore,
-      winByTwo: winByTwo,
-      timeLimitMinutes: timeLimitMinutes,
+    _log.warning(
+      'updateConfig: Không có endpoint backend cho cập nhật cấu hình (maxScore/winByTwo/timeLimitMinutes). '
+      'Các tham số này chỉ được thiết lập khi bắt đầu trận qua startMatch().',
+    );
+    throw UnsupportedError(
+      'Backend không hỗ trợ cập nhật cấu hình trận đấu sau khi bắt đầu. '
+      'Vui lòng thiết lập maxScore/timeLimitMinutes qua startMatch().',
     );
   }
 
@@ -49,25 +45,14 @@ class MatchController {
     final m = match;
     if (m == null) return;
 
-    final newScore1 = m.score1 + (isTeam1 ? points : 0);
-    final newScore2 = m.score2 + (!isTeam1 ? points : 0);
-
-    final event = MatchEvent(
-      id: const Uuid().v4(),
-      timestamp: DateTime.now(),
-      teamId: isTeam1 ? m.team1Id : m.team2Id,
-      type: MatchEventType.score,
-      pointsChange: points,
+    _log.warning(
+      'addScore: Chỉ có score1/score2 flat (không có scoreDetails) — '
+      'backend PATCH /matches/:id/score yêu cầu p1SetsWon/p2SetsWon/scoreDetails. '
+      'Sử dụng updateSetsWithDetails() với SetScoreData.',
     );
-
-    final updatedEvents = List<MatchEvent>.from(m.events)..add(event);
-
-    await ref.read(matchRepositoryProvider).updateLiveState(
-      tournamentId,
-      matchId,
-      score1: newScore1 < 0 ? 0 : newScore1,
-      score2: newScore2 < 0 ? 0 : newScore2,
-      events: updatedEvents,
+    throw UnsupportedError(
+      'addScore() không được backend hỗ trợ. '
+      'Sử dụng updateSetsWithDetails() với thông tin set đầy đủ.',
     );
   }
 
@@ -96,47 +81,13 @@ class MatchController {
     final m = match;
     if (m == null) return;
 
-    final teamId = isTeam1 ? m.team1Id : m.team2Id;
-    final description = '[$penaltyName] $reason';
-
-    final penalty = Penalty(
-      teamId: teamId,
-      type: penaltyId,
-      reason: reason,
-      timestamp: DateTime.now(),
+    _log.warning(
+      'addPenalty: Chỉ có score1/score2 flat (không có scoreDetails) — '
+      'backend yêu cầu p1SetsWon/p2SetsWon/scoreDetails.',
     );
-
-    final event = MatchEvent(
-      id: const Uuid().v4(),
-      timestamp: DateTime.now(),
-      teamId: teamId,
-      type: MatchEventType.penalty,
-      description: description,
-    );
-
-    final updatedPenalties = List<Penalty>.from(m.penalties)..add(penalty);
-    final updatedEvents = List<MatchEvent>.from(m.events)..add(event);
-
-    int newScore1 = m.score1;
-    int newScore2 = m.score2;
-
-    // Tính toán điểm phạt cho ĐỐI PHƯƠNG
-    final opponentPoints = PenaltyService.calculateOpponentPoints(sportType, penaltyId);
-    if (opponentPoints > 0) {
-      if (isTeam1) {
-        newScore2 += opponentPoints;
-      } else {
-        newScore1 += opponentPoints;
-      }
-    }
-
-    await ref.read(matchRepositoryProvider).updateLiveState(
-      tournamentId,
-      matchId,
-      score1: newScore1,
-      score2: newScore2,
-      events: updatedEvents,
-      penalties: updatedPenalties,
+    throw UnsupportedError(
+      'addPenalty() không được backend hỗ trợ. '
+      'Gửi penalty kèm scoreDetails đầy đủ qua updateSetsWithDetails().',
     );
   }
 
@@ -144,26 +95,13 @@ class MatchController {
     final m = match;
     if (m == null || m.events.isEmpty) return;
 
-    final lastEvent = m.events.last;
-    final updatedEvents = List<MatchEvent>.from(m.events)..removeLast();
-
-    int score1 = m.score1;
-    int score2 = m.score2;
-
-    if (lastEvent.type == MatchEventType.score) {
-      if (lastEvent.teamId == m.team1Id) {
-        score1 -= lastEvent.pointsChange;
-      } else if (lastEvent.teamId == m.team2Id) {
-        score2 -= lastEvent.pointsChange;
-      }
-    }
-
-    await ref.read(matchRepositoryProvider).updateLiveState(
-      tournamentId,
-      matchId,
-      score1: score1 < 0 ? 0 : score1,
-      score2: score2 < 0 ? 0 : score2,
-      events: updatedEvents,
+    _log.warning(
+      'undoLastEvent: Chỉ có score1/score2 flat (không có scoreDetails) — '
+      'backend yêu cầu p1SetsWon/p2SetsWon/scoreDetails.',
+    );
+    throw UnsupportedError(
+      'undoLastEvent() không được backend hỗ trợ. '
+      'Cập nhật điểm qua scoreDetails đầy đủ.',
     );
   }
 
@@ -171,13 +109,13 @@ class MatchController {
     final m = match;
     if (m == null) return;
 
-    await ref.read(matchRepositoryProvider).completeMatch(
-      tournamentId,
-      matchId,
-      winnerId: winnerId,
-      loserId: loserId,
-      finalScore1: m.score1,
-      finalScore2: m.score2,
+    _log.warning(
+      'endMatch: Không có scoreDetails — backend yêu cầu p1SetsWon/p2SetsWon/scoreDetails. '
+      'Sử dụng completeMatchWithDetails() thay thế.',
+    );
+    throw UnsupportedError(
+      'endMatch() không được backend hỗ trợ. '
+      'Sử dụng completeMatchWithDetails() với danh sách set đầy đủ.',
     );
   }
 
@@ -202,7 +140,7 @@ class MatchController {
   }
 
   /// Kết thúc trận kèm scoreDetails đầy đủ (sets).
-  /// Gọi updateScoreDetails + completeMatch.
+  /// Chỉ gửi updateScoreDetails kèm winnerId để backend finalize.
   Future<void> completeMatchWithDetails({
     required String winnerId,
     required String loserId,
@@ -212,7 +150,9 @@ class MatchController {
     _log.info('completeMatchWithDetails: winner=$winnerId, ${finalSets.length} sets');
     final (p1Sets, p2Sets) = computeMatchSetsWon(finalSets);
 
-    // 1. Gửi scoreDetails
+    // Gửi scoreDetails kèm winnerId. Backend sẽ tự finalize trận,
+    // advance bracket và cập nhật ELO trong cùng workflow.
+    // Không gọi legacy completion thêm lần nữa để tránh double update.
     await updateSetsWithDetails(
       p1SetsWon: p1Sets,
       p2SetsWon: p2Sets,
@@ -220,19 +160,6 @@ class MatchController {
       winnerId: winnerId,
       overrideReason: overrideReason,
     );
-
-    // 2. Complete match
-    final m = match;
-    if (m != null) {
-      await ref.read(matchRepositoryProvider).completeMatch(
-        tournamentId,
-        matchId,
-        winnerId: winnerId,
-        loserId: loserId,
-        finalScore1: finalSets.isNotEmpty ? finalSets.last.score1 : 0,
-        finalScore2: finalSets.isNotEmpty ? finalSets.last.score2 : 0,
-      );
-    }
   }
 
   Future<void> advanceWinner({
@@ -263,22 +190,29 @@ class MatchController {
       'ADMIN OVERRIDE: Admin đang sửa kết quả trận $matchId từ ${m.score1}-${m.score2} thành $score1-$score2, Người thắng: $winnerId',
     );
 
-    // First update the live state scores
-    await ref.read(matchRepositoryProvider).updateLiveState(
-      tournamentId,
-      matchId,
-      score1: score1,
-      score2: score2,
+    _log.warning(
+      'updateMatchResultByAdmin: Admin override chỉ có score1/score2 flat (không có scoreDetails) — '
+      'backend yêu cầu p1SetsWon/p2SetsWon/scoreDetails. Chuyển sang applyOperation(action: OVERRIDE_RESULT) hoặc updateSetsWithDetails().',
     );
+    throw UnsupportedError(
+      'updateMatchResultByAdmin() không được backend hỗ trợ với flat score. '
+      'Sử dụng updateSetsWithDetails() hoặc applyOperation(action: OVERRIDE_RESULT).',
+    );
+  }
 
-    // Then update the completed state
-    await ref.read(matchRepositoryProvider).completeMatch(
-      tournamentId,
+  /// Áp dụng thao tác đặc biệt lên trận đấu qua PATCH /matches/:id/operation.
+  /// action: WALKOVER | RETIREMENT | DISQUALIFICATION | OVERRIDE_RESULT
+  Future<void> applyOperation({
+    required String action,
+    required String reason,
+    String? winnerId,
+  }) async {
+    _log.info('Applying operation $action to match $matchId');
+    await ref.read(matchRepositoryProvider).matchOperation(
       matchId,
+      action: action,
+      reason: reason,
       winnerId: winnerId,
-      loserId: loserId,
-      finalScore1: score1,
-      finalScore2: score2,
     );
   }
 }

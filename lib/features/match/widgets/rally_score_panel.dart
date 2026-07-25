@@ -37,47 +37,51 @@ class RallyScorePanel extends ConsumerWidget {
     final team1Name = matchAsync.value?.team1Name ?? 'Đội 1';
     final team2Name = matchAsync.value?.team2Name ?? 'Đội 2';
 
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+
     return SizedBox(
-      height: 520,
+      height: isLandscape ? double.infinity : 520,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final compact = constraints.maxWidth < 620;
+          final compact = !isLandscape && constraints.maxWidth < 620;
           final maxLivePoint = r.currentP1 > r.currentP2
               ? r.currentP1
               : r.currentP2;
           final nearSetPoint = maxLivePoint >= ts.tiebreakAt;
 
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Column(
               children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: nearSetPoint
-                        ? colors.warning.withValues(alpha: 0.12)
-                        : colors.bgSurface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
+                if (!isLandscape) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
                       color: nearSetPoint
-                          ? colors.warning.withValues(alpha: 0.3)
-                          : colors.border,
+                          ? colors.warning.withValues(alpha: 0.12)
+                          : colors.bgSurface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: nearSetPoint
+                            ? colors.warning.withValues(alpha: 0.3)
+                            : colors.border,
+                      ),
+                    ),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        _topPill('${ts.pointsPerSet} điểm/set'),
+                        _topPill(ts.bestOf > 1 ? 'BO${ts.bestOf}' : '1 set'),
+                        if (ts.mustWinByTwo) _topPill('Thắng cách 2'),
+                        if (nearSetPoint) _topPill('Đang gần điểm chốt set'),
+                      ],
                     ),
                   ),
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.center,
-                    children: [
-                      _topPill('${ts.pointsPerSet} điểm/set'),
-                      _topPill(ts.bestOf > 1 ? 'BO${ts.bestOf}' : '1 set'),
-                      if (ts.mustWinByTwo) _topPill('Thắng cách 2'),
-                      if (nearSetPoint) _topPill('Đang gần điểm chốt set'),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 8),
+                ],
                 Expanded(
                   child: compact
                       ? Column(
@@ -177,8 +181,8 @@ class RallyScorePanel extends ConsumerWidget {
     final distance = targetPoint - score;
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: compact ? 0 : 4),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.symmetric(vertical: compact ? 0 : 2),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -188,7 +192,7 @@ class RallyScorePanel extends ConsumerWidget {
             color.withValues(alpha: 0.05),
           ],
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.18)),
       ),
       child: Column(
@@ -202,12 +206,12 @@ class RallyScorePanel extends ConsumerWidget {
               color: colors.textPrimary,
             ),
             textAlign: TextAlign.center,
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
               color: colors.bgCard,
               borderRadius: BorderRadius.circular(999),
@@ -228,7 +232,7 @@ class RallyScorePanel extends ConsumerWidget {
               child: Text(
                 '$score',
                 style: TextStyle(
-                  fontSize: compact ? 64 : 74,
+                  fontSize: compact ? 54 : 64,
                   fontWeight: FontWeight.w900,
                   color: color,
                 ),
@@ -237,15 +241,14 @@ class RallyScorePanel extends ConsumerWidget {
             ),
           ),
           if (!isReadOnly) ...[
-            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 GestureDetector(
                   onTap: onDecrement,
                   child: Container(
-                    width: 52,
-                    height: 52,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                       color: colors.bgCard,
                       shape: BoxShape.circle,
@@ -253,29 +256,29 @@ class RallyScorePanel extends ConsumerWidget {
                     ),
                     child: Icon(
                       Icons.remove_rounded,
-                      size: 24,
+                      size: 20,
                       color: colors.textSecondary,
                     ),
                   ),
                 ),
-                const SizedBox(width: 18),
+                const SizedBox(width: 14),
                 GestureDetector(
                   onTap: onIncrement,
                   child: Container(
-                    width: 58,
-                    height: 58,
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.16),
                       shape: BoxShape.circle,
                       border: Border.all(color: color.withValues(alpha: 0.3)),
                     ),
-                    child: Icon(Icons.add_rounded, size: 28, color: color),
+                    child: Icon(Icons.add_rounded, size: 24, color: color),
                   ),
                 ),
               ],
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
         ],
       ),
     );

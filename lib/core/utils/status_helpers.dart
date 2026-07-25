@@ -58,7 +58,7 @@ class StatusHelper {
     return switch (status) {
       AppConstants.matchScheduled => 'Chưa thi đấu',
       AppConstants.matchLive => 'Đang thi đấu',
-      AppConstants.matchCompleted => 'Hoàn thành',
+      AppConstants.matchCompleted => 'Đã kết thúc',
       AppConstants.matchWalkover => 'Walkover',
       _ => status,
     };

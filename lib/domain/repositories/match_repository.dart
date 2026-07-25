@@ -10,12 +10,6 @@ abstract class IMatchRepository {
   Stream<List<MatchModel>> watchLive(String tournamentId);
   Stream<MatchModel?> watchMatch(String tournamentId, String matchId);
 
-  Future<void> updateScore(
-    String tournamentId,
-    String matchId, {
-    required int score1,
-    required int score2,
-  });
 
   Future<void> updateLiveState(
     String tournamentId,
@@ -48,11 +42,6 @@ abstract class IMatchRepository {
     required int finalScore2,
   });
 
-  Future<void> updateSets(
-    String tournamentId,
-    String matchId,
-    List<SetScore> sets,
-  );
 
   /// Cập nhật scoreDetails theo đúng backend DTO.
   /// Gửi p1SetsWon, p2SetsWon, scoreDetails.sets, winnerId, overrideReason.
@@ -84,4 +73,21 @@ abstract class IMatchRepository {
   Future<List<MatchModel>> getAllByTournament(String tournamentId, {String? divisionId});
   Future<void> deleteAll(String tournamentId);
   Future<List<MatchModel>> getMatches({String? status, bool? publicOnly});
+
+  /// Gửi cheer (cổ vũ) cho trận đấu — POST /matches/:id/cheer.
+  /// Guest cheer là public, không yêu cầu fake UUID.
+  Future<void> cheerMatch(String matchId);
+
+  /// Lấy số lượng cheer hiện tại — GET /matches/:id/cheer-count.
+  Future<int> getCheerCount(String matchId);
+
+  /// Thao tác đặc biệt lên trận đấu — PATCH /matches/:id/operation.
+  /// action: WALKOVER | RETIREMENT | DISQUALIFICATION | OVERRIDE_RESULT.
+  /// Backend yêu cầu reason tối thiểu 5 ký tự.
+  Future<void> matchOperation(
+    String matchId, {
+    required String action,
+    required String reason,
+    String? winnerId,
+  });
 }

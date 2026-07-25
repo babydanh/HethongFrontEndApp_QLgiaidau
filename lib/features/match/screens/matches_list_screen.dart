@@ -28,25 +28,12 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   String? _error;
 
   // Status filters
-  static const _statusOptions = [
-    '',
-    'scheduled',
-    'live',
-    'completed',
-    'walkover',
-  ];
   static const _statusLabels = {
     '': 'Tất cả',
     'scheduled': 'Sắp diễn ra',
     'live': 'Đang thi đấu',
     'completed': 'Hoàn thành',
     'walkover': 'Bỏ cuộc',
-  };
-  static const _statusColors = {
-    'scheduled': Color(0xFF64748B),
-    'live': Color(0xFF2979FF),
-    'completed': Color(0xFF10B981),
-    'walkover': Color(0xFFEF4444),
   };
 
   @override
@@ -455,51 +442,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
     );
   }
 
-  void _showStatusPicker(AppColorsExtension colors) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: colors.bgCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Chọn trạng thái', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: colors.textPrimary)),
-            const SizedBox(height: 16),
-            ..._statusOptions.map((s) {
-              final isSelected = _selectedStatus == s;
-              return ListTile(
-                leading: Icon(
-                  s.isEmpty ? Icons.all_inclusive_rounded : Icons.flag_rounded,
-                  color: isSelected
-                      ? (s.isEmpty ? colors.info : _statusColors[s])
-                      : colors.textMuted,
-                ),
-                title: Text(
-                  _statusLabels[s] ?? '',
-                  style: TextStyle(
-                    color: isSelected
-                        ? (s.isEmpty ? colors.info : _statusColors[s])
-                        : colors.textPrimary,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  ),
-                ),
-                trailing: isSelected ? Icon(Icons.check_rounded, color: colors.info) : null,
-                onTap: () {
-                  setState(() { _selectedStatus = s; _applyFilters(); });
-                  Navigator.pop(ctx);
-                },
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   void _showLocationInput(AppColorsExtension colors) {
     final controller = TextEditingController(text: _selectedLocation);

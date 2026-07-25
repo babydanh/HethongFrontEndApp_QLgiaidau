@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
@@ -49,6 +50,11 @@ class _TournamentRegisterScreenState
   String? _inviteError;
   String? _localInviteCode;
   double? _registeredEntryFee;
+
+  String _getSubmitLabel(Tournament? t) {
+    if (t?.registrationMode == 'APPROVAL') return 'Gửi yêu cầu tham gia';
+    return 'Xác nhận đăng ký';
+  }
 
   @override
   void dispose() {
@@ -214,8 +220,9 @@ class _TournamentRegisterScreenState
     if (selectedDiv != null &&
         (selectedDiv.matchType == 'DOUBLES' ||
             selectedDiv.matchType == 'MIXED_DOUBLES')) {
+      final inviteCode = _localInviteCode ?? widget.inviteCode ?? '';
       context.push(
-        '/register/${widget.tournamentId}/doubles?divisionId=$divisionId&invite=${widget.inviteCode ?? ''}',
+        '/register/${widget.tournamentId}/doubles?divisionId=$divisionId&invite=$inviteCode',
         extra: selectedDiv,
       );
       return;
@@ -249,11 +256,57 @@ class _TournamentRegisterScreenState
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+        ).showSnackBar(
+          SnackBar(
+            content: Text(
+              ErrorParser.parse(e, 'Không thể đăng ký. Vui lòng thử lại.'),
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  String _divisionTypeLabel(TournamentDivisionOption d) {
+    final gender = switch ((d.genderRestriction ?? '').toUpperCase()) {
+      'MALE' => 'Nam',
+      'FEMALE' => 'Nữ',
+      'MIXED' => 'Nam nữ',
+      _ => '',
+    };
+    final type = switch ((d.matchType ?? '').toUpperCase()) {
+      'SINGLES' => 'Đơn',
+      'DOUBLES' => 'Đôi',
+      'MIXED_DOUBLES' => 'Đôi nam nữ',
+      _ => 'Nội dung',
+    };
+    if (type == 'Đôi nam nữ' || gender.isEmpty) return type;
+    return '$type $gender';
+  }
+
+  List<String> _divisionMeta(TournamentDivisionOption d) {
+    final items = <String>[_divisionTypeLabel(d)];
+    if (d.minElo != null || d.maxElo != null) {
+      final min = d.minElo?.toInt().toString() ?? '0';
+      final max = d.maxElo?.toInt().toString() ?? '∞';
+      items.add('ELO $min-$max');
+    }
+    if (d.maxParticipants != null) {
+      items.add('Tối đa ${d.maxParticipants} đội');
+    }
+    if (d.entryFee != null && d.entryFee! > 0) {
+      items.add('${NumberFormat('#,###', 'vi_VN').format(d.entryFee!.ceil())}đ');
+    } else {
+      items.add('Miễn phí');
+    }
+    return items;
+  }
+
+  String _getRegistrationCta(Tournament? t) {
+    if (t?.registrationMode == 'APPROVAL') return 'Gửi yêu cầu tham gia';
+    return 'Đăng ký';
   }
 
   @override
@@ -268,7 +321,10 @@ class _TournamentRegisterScreenState
     }
     return Scaffold(
       backgroundColor: context.colors.bgDark,
-      appBar: AppBar(title: const Text('Đăng ký'), centerTitle: true),
+      appBar: AppBar(
+        title: Text(_getRegistrationCta(tAsync.asData?.value)),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16),
@@ -280,7 +336,8 @@ class _TournamentRegisterScreenState
             if (!isAuth) return _buildLoginPrompt(t);
             // Invite gate: nếu là PRIVATE và chưa có mã mời
             final needsInvite =
-                t.visibility == 'PRIVATE' &&
+                (t.visibility == 'PRIVATE' ||
+                    t.registrationMode == 'INVITE_ONLY') &&
                 widget.inviteCode == null &&
                 _localInviteCode == null;
             if (needsInvite) return _buildInviteGate(t);
@@ -291,6 +348,11 @@ class _TournamentRegisterScreenState
         ),
       ),
     );
+  }
+
+  String _getSuccessTitle(Tournament? t) {
+    if (t?.registrationMode == 'APPROVAL') return 'Gửi yêu cầu thành công!';
+    return 'Đăng ký thành công!';
   }
 
   Widget _buildSuccess(Tournament? t) => Scaffold(
@@ -315,8 +377,8 @@ class _TournamentRegisterScreenState
               ),
             ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
             const SizedBox(height: 24),
-            const Text(
-              'Đăng ký thành công!',
+            Text(
+              _getSuccessTitle(t),
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
@@ -687,6 +749,13 @@ class _TournamentRegisterScreenState
                 divAsync.when(
                   data: (divs) {
                     if (divs.isEmpty) return const SizedBox.shrink();
+                    if (divs.length == 1 && _selectedDiv == null) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted && _selectedDiv == null) {
+                          _onDivisionSelected(divs.first.id, divs);
+                        }
+                      });
+                    }
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -703,6 +772,7 @@ class _TournamentRegisterScreenState
                           final id = d.id;
                           final name = d.name;
                           final sel = _selectedDiv == id;
+                          final meta = _divisionMeta(d);
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: GestureDetector(
@@ -722,13 +792,67 @@ class _TournamentRegisterScreenState
                                 child: Row(
                                   children: [
                                     Expanded(
-                                      child: Text(
-                                        name,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: context.colors.textPrimary,
-                                        ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            name,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w800,
+                                              color: context.colors.textPrimary,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Wrap(
+                                            spacing: 6,
+                                            runSpacing: 6,
+                                            children: meta
+                                                .map(
+                                                  (label) => Container(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color: sel
+                                                          ? AppTheme.primary
+                                                              .withValues(
+                                                                  alpha: 0.10)
+                                                          : context
+                                                              .colors.bgCard,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                        999,
+                                                      ),
+                                                      border: Border.all(
+                                                        color: sel
+                                                            ? AppTheme.primary
+                                                                .withValues(
+                                                                    alpha: 0.24)
+                                                            : context
+                                                                .colors.border,
+                                                      ),
+                                                    ),
+                                                    child: Text(
+                                                      label,
+                                                      style: TextStyle(
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        color: sel
+                                                            ? AppTheme.primary
+                                                            : context.colors
+                                                                .textSecondary,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                )
+                                                .toList(),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                     Container(
@@ -906,7 +1030,7 @@ class _TournamentRegisterScreenState
                           )
                         : const Icon(Icons.check_circle_outline_rounded),
                     label: Text(
-                      _submitting ? 'Đang xử lý...' : 'Xác nhận đăng ký',
+                      _submitting ? 'Đang xử lý...' : _getSubmitLabel(t),
                     ),
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(

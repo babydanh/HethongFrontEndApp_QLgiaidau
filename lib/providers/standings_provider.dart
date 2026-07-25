@@ -1,79 +1,151 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
-import 'package:app_quanly_giaidau/data/models/standing_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 
-/// Provider lấy bảng xếp hạng (standings) cho 1 giải đấu.
-/// 
-/// Ưu tiên gọi API: GET /api/v1/tournaments/:id/standings
-/// Nếu API fail, fallback về tính client-side từ teams + matches.
-final standingsProvider = FutureProvider.family<List<Standing>, String>((ref, tournamentId) async {
-  // 1. Thử gọi API trước
+final standingsProvider =
+    FutureProvider.family<List<Standing>, String>((ref, tournamentId) {
+  return ref.watch(standingsWithDivisionProvider((
+    tournamentId: tournamentId,
+    divisionId: null,
+  )).future);
+});
+
+final standingsWithDivisionProvider = FutureProvider.family<
+    List<Standing>, ({String tournamentId, String? divisionId})>((ref, params) async {
+  final apiStandings = await _fetchApiStandings(
+    ref,
+    params.tournamentId,
+    divisionId: params.divisionId,
+  );
+  if (apiStandings.isNotEmpty) {
+    return apiStandings;
+  }
+
+  return _calculateClientStandings(
+    ref,
+    params.tournamentId,
+    divisionId: params.divisionId,
+  );
+});
+
+Future<List<Standing>> _fetchApiStandings(
+  Ref ref,
+  String tournamentId, {
+  String? divisionId,
+}) async {
   final dio = ref.read(dioProvider);
   try {
-    final response = await dio.get('/tournaments/$tournamentId/standings');
-    if (response.statusCode == 200) {
-      final rawData = response.data;
-      final dataList = rawData['data'] as List<dynamic>?;
+    final response = await dio.get(
+      '/tournaments/$tournamentId/standings',
+      queryParameters: divisionId != null ? {'divisionId': divisionId} : null,
+    );
+    if (response.statusCode != 200) return const [];
 
-      if (dataList != null && dataList.isNotEmpty) {
-        final List<Standing> standings = [];
+    final rawData = response.data;
+    final data = rawData is Map<String, dynamic> ? rawData['data'] : null;
 
-        for (final groupEntry in dataList) {
-          final groupEntryMap = groupEntry as Map<String, dynamic>;
-          final groupName = groupEntryMap['groupName'] as String? ?? '';
-          final groupStandings = groupEntryMap['standings'] as List<dynamic>? ?? [];
+    if (data is List<dynamic>) {
+      return _parseLegacyGroupedStandings(data);
+    }
 
-          for (final standingData in groupStandings) {
-            final s = standingData as Map<String, dynamic>;
-            standings.add(Standing(
-              id: s['teamId'] as String? ?? '',
-              teamName: s['teamName'] as String? ?? '',
-              group: groupName,
-              played: s['played'] as int? ?? 0,
-              won: s['won'] as int? ?? 0,
-              lost: s['lost'] as int? ?? 0,
-              drawn: s['drawn'] as int? ?? 0,
-              pointsFor: s['pointsFor'] as int? ?? 0,
-              pointsAgainst: s['pointsAgainst'] as int? ?? 0,
-              pointDifference: s['pointDifference'] as int? ?? 0,
-              totalPoints: s['totalPoints'] as int? ?? (s['points'] as int? ?? 0),
-            ));
-          }
-        }
-
-        if (standings.isNotEmpty) {
-          return standings;
-        }
-      }
+    if (data is Map<String, dynamic>) {
+      return _parseBracketStandings(data);
     }
   } catch (_) {
-    // API fail → fallback sang client-side
+    // Fallback to client-side calculation below.
+  }
+  return const [];
+}
+
+List<Standing> _parseLegacyGroupedStandings(List<dynamic> dataList) {
+  final standings = <Standing>[];
+  for (final groupEntry in dataList) {
+    if (groupEntry is! Map<String, dynamic>) continue;
+    final groupName = groupEntry['groupName'] as String? ?? '';
+    final groupStandings = groupEntry['standings'] as List<dynamic>? ?? [];
+
+    for (final standingData in groupStandings) {
+      if (standingData is! Map<String, dynamic>) continue;
+      standings.add(_standingFromApi(standingData, groupName: groupName));
+    }
+  }
+  return standings;
+}
+
+List<Standing> _parseBracketStandings(Map<String, dynamic> data) {
+  final groups = data['groups'] as List<dynamic>? ?? [];
+  final groupNamesById = <String, String>{};
+  for (final group in groups) {
+    if (group is! Map<String, dynamic>) continue;
+    final id = group['id']?.toString();
+    if (id == null || id.isEmpty) continue;
+    groupNamesById[id] = group['name']?.toString() ?? '';
   }
 
-  // 2. Fallback: tính client-side từ teams + matches
-  final teams = await ref.read(teamsProvider(tournamentId).future);
-  final matches = await ref.read(matchesProvider(tournamentId).future);
+  final standingsData = data['standings'] as List<dynamic>? ?? [];
+  return standingsData.whereType<Map<String, dynamic>>().map((s) {
+    final groupId = s['groupId']?.toString() ?? '';
+    return _standingFromApi(
+      s,
+      groupName: groupNamesById[groupId] ?? '',
+    );
+  }).toList();
+}
 
-  // Initialize standings map
-  final Map<String, Standing> standingsMap = {};
+Standing _standingFromApi(
+  Map<String, dynamic> s, {
+  required String groupName,
+}) {
+  final pointsFor = _asInt(s['pointsFor']);
+  final pointsAgainst = _asInt(s['pointsAgainst']);
+  return Standing(
+    id: (s['teamId'] ?? s['participantId'] ?? s['id'])?.toString() ?? '',
+    teamName: s['teamName']?.toString() ?? '',
+    group: groupName,
+    played: _asInt(s['played']),
+    won: _asInt(s['won']),
+    lost: _asInt(s['lost']),
+    drawn: _asInt(s['drawn'] ?? s['draws']),
+    pointsFor: pointsFor,
+    pointsAgainst: pointsAgainst,
+    pointDifference: _asInt(
+      s['pointDifference'],
+      fallback: pointsFor - pointsAgainst,
+    ),
+    totalPoints: _asInt(s['totalPoints'] ?? s['points']),
+  );
+}
+
+int _asInt(Object? value, {int fallback = 0}) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? fallback;
+}
+
+Future<List<Standing>> _calculateClientStandings(
+  Ref ref,
+  String tournamentId, {
+  String? divisionId,
+}) async {
+  final teams = await ref.read(teamsProvider(tournamentId).future);
+  final matches = await ref.read(matchesWithDivisionProvider((
+    tournamentId: tournamentId,
+    divisionId: divisionId,
+  )).future);
+
+  final standingsMap = <String, Standing>{};
   for (final team in teams) {
     if (team.id != 'BYE') {
-      standingsMap[team.id] = Standing(
-        id: team.id,
-        teamName: team.name,
-      );
+      standingsMap[team.id] = Standing(id: team.id, teamName: team.name);
     }
   }
 
-  // Calculate stats from completed matches
   for (final match in matches) {
     if (StatusHelper.isCompleted(match.status)) {
       final isDraw = match.score1 == match.score2 && match.winnerId.isEmpty;
 
-      // Update Team 1
       if (standingsMap.containsKey(match.team1Id)) {
         final current = standingsMap[match.team1Id]!;
         final isWin = match.winnerId == match.team1Id;
@@ -86,12 +158,12 @@ final standingsProvider = FutureProvider.family<List<Standing>, String>((ref, to
           drawn: current.drawn + (isDraw ? 1 : 0),
           pointsFor: current.pointsFor + match.score1,
           pointsAgainst: current.pointsAgainst + match.score2,
-          pointDifference: (current.pointsFor + match.score1) - (current.pointsAgainst + match.score2),
+          pointDifference: (current.pointsFor + match.score1) -
+              (current.pointsAgainst + match.score2),
           totalPoints: current.totalPoints + (isWin ? 3 : (isDraw ? 1 : 0)),
         );
       }
 
-      // Update Team 2
       if (standingsMap.containsKey(match.team2Id)) {
         final current = standingsMap[match.team2Id]!;
         final isWin = match.winnerId == match.team2Id;
@@ -104,7 +176,8 @@ final standingsProvider = FutureProvider.family<List<Standing>, String>((ref, to
           drawn: current.drawn + (isDraw ? 1 : 0),
           pointsFor: current.pointsFor + match.score2,
           pointsAgainst: current.pointsAgainst + match.score1,
-          pointDifference: (current.pointsFor + match.score2) - (current.pointsAgainst + match.score1),
+          pointDifference: (current.pointsFor + match.score2) -
+              (current.pointsAgainst + match.score1),
           totalPoints: current.totalPoints + (isWin ? 3 : (isDraw ? 1 : 0)),
         );
       }
@@ -120,7 +193,9 @@ final standingsProvider = FutureProvider.family<List<Standing>, String>((ref, to
       }
 
       final loserId = match.loserId;
-      if (loserId.isNotEmpty && loserId != 'BYE' && standingsMap.containsKey(loserId)) {
+      if (loserId.isNotEmpty &&
+          loserId != 'BYE' &&
+          standingsMap.containsKey(loserId)) {
         final current = standingsMap[loserId]!;
         standingsMap[loserId] = current.copyWith(
           played: current.played + 1,
@@ -130,7 +205,6 @@ final standingsProvider = FutureProvider.family<List<Standing>, String>((ref, to
     }
   }
 
-  // Convert to list and sort
   final standingsList = standingsMap.values.toList();
   standingsList.sort((a, b) {
     if (a.totalPoints != b.totalPoints) {
@@ -143,4 +217,4 @@ final standingsProvider = FutureProvider.family<List<Standing>, String>((ref, to
   });
 
   return standingsList;
-});
+}

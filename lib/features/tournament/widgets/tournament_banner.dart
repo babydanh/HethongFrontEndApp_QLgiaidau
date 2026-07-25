@@ -39,6 +39,7 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
     final colors = widget.colors;
     final images = _collectImages(widget.tournament);
     final compact = widget.compact;
+    final showBannerOverlay = !widget.tournament.hideFeaturedCardText;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
@@ -64,6 +65,7 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
                   onPageChanged: (index) {
                     setState(() => _currentPage = index);
                   },
+                  showOverlay: showBannerOverlay,
                 ),
               ),
             ),
@@ -133,12 +135,14 @@ class _BannerCarousel extends StatelessWidget {
   final PageController pageController;
   final int currentPage;
   final ValueChanged<int> onPageChanged;
+  final bool showOverlay;
 
   const _BannerCarousel({
     required this.images,
     required this.pageController,
     required this.currentPage,
     required this.onPageChanged,
+    required this.showOverlay,
   });
 
   @override
@@ -166,18 +170,19 @@ class _BannerCarousel extends StatelessWidget {
                   },
                 ),
         ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.black.withValues(alpha: 0.08),
-                Colors.black.withValues(alpha: 0.45),
-              ],
+        if (showOverlay)
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.08),
+                  Colors.black.withValues(alpha: 0.45),
+                ],
+              ),
             ),
           ),
-        ),
         if (images.length > 1)
           Positioned(
             bottom: 34,

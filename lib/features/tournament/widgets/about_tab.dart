@@ -11,12 +11,14 @@ class AboutTab extends StatelessWidget {
   final Tournament tournament;
   final int teamCount;
   final String Function(String? url) resolveImageUrl;
+  final ScrollController? scrollController;
 
   const AboutTab({
     super.key,
     required this.tournament,
     required this.teamCount,
     required this.resolveImageUrl,
+    this.scrollController,
   });
 
   @override
@@ -26,6 +28,7 @@ class AboutTab extends StatelessWidget {
     final creatorName = tournament.creatorFullName ?? "Ban Tổ Chức";
 
     return SingleChildScrollView(
+      controller: scrollController,
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 100),
       child: Column(
         children: [
@@ -291,22 +294,27 @@ class AboutTab extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 13,
-                  color: colors.textSecondary,
+                  fontSize: 12,
+                  color: colors.textMuted,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
+              const SizedBox(height: 3),
               Text(
                 value,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: colors.textPrimary,
+                  height: 1.25,
                 ),
               ),
             ],

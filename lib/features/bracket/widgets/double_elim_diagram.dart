@@ -3,7 +3,6 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/layout/double_elim_layout.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/team_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_match_card.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -39,13 +38,28 @@ class DoubleElimDiagram extends StatefulWidget {
 }
 
 class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
-  final TransformationController _tc =
-      TransformationController(Matrix4.diagonal3Values(0.6, 0.6, 1));
+  final TransformationController _tc = TransformationController();
+  bool _didCenterInitialView = false;
 
   @override
   void dispose() {
     _tc.dispose();
     super.dispose();
+  }
+
+  void _centerInitialView(Size viewport, Size canvas, double scale) {
+    if (_didCenterInitialView || viewport.width <= 0 || viewport.height <= 0) {
+      return;
+    }
+    _didCenterInitialView = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final dx = ((viewport.width - canvas.width * scale) / 2).clamp(16.0, double.infinity);
+      final dy = ((viewport.height - canvas.height * scale) / 2).clamp(16.0, double.infinity);
+      _tc.value = Matrix4.identity()
+        ..translate(dx, dy)
+        ..scale(scale);
+    });
   }
 
   // ── Separate matches into bands ───────────────────────────────────────────
@@ -111,20 +125,29 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
     );
     final positions = layout.positions;
 
-    return InteractiveViewer(
-      transformationController: _tc,
-      constrained: false,
-      boundaryMargin: const EdgeInsets.all(800),
-      minScale: 0.2,
-      maxScale: 2.5,
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: SizedBox(
-          width: layout.width,
-          height: layout.height,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final canvasSize = Size(layout.width + 80, layout.height + 80);
+        _centerInitialView(
+          Size(constraints.maxWidth, constraints.maxHeight),
+          canvasSize,
+          0.6,
+        );
+
+        return InteractiveViewer(
+          transformationController: _tc,
+          constrained: false,
+          boundaryMargin: const EdgeInsets.all(800),
+          minScale: 0.2,
+          maxScale: 2.5,
+          child: Padding(
+            padding: const EdgeInsets.all(40),
+            child: SizedBox(
+              width: layout.width,
+              height: layout.height,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
               // ── Band background labels ──
               if (wRounds.isNotEmpty)
                 Positioned(
@@ -132,7 +155,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                   top: layout.winnersTop - 80,
                   child: _DeBandLabel(
                     title: '▲ NHÁNH THẮNG (Winners)',
-                    subtitle: 'Đội thắng đi tiếp — Đội thua xuống nhánh thua',
+                    subtitle: 'Đội thắng đi tiếp - Đội thua xuống nhánh thua',
                     color: const Color(0xFF0284C7),
                     width: layout.winnersBandWidth,
                   ),
@@ -143,7 +166,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                   top: layout.losersTop - 80,
                   child: _DeBandLabel(
                     title: '▼ NHÁNH THUA (Losers)',
-                    subtitle: 'Đội thua lần đầu — Thua nữa là bị loại',
+                    subtitle: 'Đội thua lần đầu - Thua nữa là bị loại',
                     color: colors.textSecondary,
                     width: layout.losersBandWidth,
                   ),
@@ -230,10 +253,12 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                   ),
                 );
               }),
-            ],
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -347,25 +372,12 @@ class _DoubleElimPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    final losPaint = Paint()
-      ..color = loserColor
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
     for (final match in matches) {
       if (match.nextMatchId.isNotEmpty) {
         final from = positions[match.id];
         final to = positions[match.nextMatchId];
         if (from != null && to != null) {
           _drawConnector(canvas, from, to, winPaint);
-        }
-      }
-      if (match.loserNextMatchId.isNotEmpty) {
-        final from = positions[match.id];
-        final to = positions[match.loserNextMatchId];
-        if (from != null && to != null) {
-          _drawConnector(canvas, from, to, losPaint);
         }
       }
     }
@@ -383,8 +395,14 @@ class _DoubleElimPainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
+
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _DoubleElimPainter oldDelegate) {
+    return oldDelegate.matches != matches ||
+        oldDelegate.positions != positions ||
+        oldDelegate.primaryColor != primaryColor ||
+        oldDelegate.loserColor != loserColor;
+  }
 }
 
 // ── Internal data class ───────────────────────────────────────────────────────

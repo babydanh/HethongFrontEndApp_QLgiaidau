@@ -18,63 +18,54 @@ class PickleballPanel extends ConsumerWidget {
     final state = notifier.state;
     final pb = state.pickleball ?? const PickleballServeState();
     final colors = context.colors;
-    final ts = state.config;
 
     // Fetch team names
     final matchAsync = ref.watch(singleMatchProvider((tournamentId: params.tournamentId, matchId: params.matchId)));
     final team1Name = matchAsync.value?.team1Name ?? 'Đội 1';
     final team2Name = matchAsync.value?.team2Name ?? 'Đội 2';
 
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < 620;
+        final compact = !isLandscape && constraints.maxWidth < 620;
         return Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
             children: [
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFA500).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFFFA500).withValues(alpha: 0.25)),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.volunteer_activism_rounded, size: 18, color: Color(0xFFFFA500)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Đội giao bóng: ${pb.isTeam1Serving ? team1Name : team2Name}',
-                            style: const TextStyle(color: Color(0xFFFFA500), fontSize: 13, fontWeight: FontWeight.w800),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            'Lượt #${pb.serverNumber}',
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFFB45309)),
-                          ),
-                        ),
-                      ],
+                    const Icon(Icons.volunteer_activism_rounded, size: 18, color: Color(0xFFFFA500)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Đội giao bóng: ${pb.isTeam1Serving ? team1Name : team2Name}',
+                        style: const TextStyle(color: Color(0xFFFFA500), fontSize: 13, fontWeight: FontWeight.w800),
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Side-out · chạm ${ts.pointsPerSet} · ${ts.mustWinByTwo ? 'thắng cách 2' : 'không cần cách 2'} · chỉ bên giao bóng mới ghi điểm',
-                      style: TextStyle(fontSize: 11, color: colors.textSecondary, height: 1.35),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Lượt #${pb.serverNumber}',
+                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFFB45309)),
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 8),
               Expanded(
                 child: compact
                     ? Column(
@@ -146,8 +137,8 @@ class PickleballPanel extends ConsumerWidget {
 
     return Expanded(
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: compact ? 0 : 4),
-        padding: const EdgeInsets.all(16),
+        margin: EdgeInsets.symmetric(vertical: compact ? 0 : 2),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -157,7 +148,7 @@ class PickleballPanel extends ConsumerWidget {
               color.withValues(alpha: 0.04),
             ],
           ),
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isServing ? const Color(0xFFFFA500).withValues(alpha: 0.7) : color.withValues(alpha: 0.16),
             width: isServing ? 1.6 : 1,
@@ -177,40 +168,40 @@ class PickleballPanel extends ConsumerWidget {
                     teamName,
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.textPrimary),
                     textAlign: TextAlign.center,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text('$score', style: TextStyle(fontSize: compact ? 58 : 64, fontWeight: FontWeight.w900, color: color, height: 0.95)),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
+            Text('$score', style: TextStyle(fontSize: compact ? 48 : 56, fontWeight: FontWeight.w900, color: color, height: 0.95)),
+            const SizedBox(height: 4),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: isServing ? const Color(0xFFFFA500).withValues(alpha: 0.16) : colors.bgCard,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 isServing ? 'Đang giao · có quyền ghi điểm' : 'Đang đỡ · chưa được ghi điểm',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isServing ? const Color(0xFFFFA500) : colors.textMuted),
+                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: isServing ? const Color(0xFFFFA500) : colors.textMuted),
                 textAlign: TextAlign.center,
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 6),
             if (!isReadOnly)
               GestureDetector(
                 onTap: () => notifier.pickleballAwardPoint(isTeam1),
                 child: Container(
-                  width: 62,
-                  height: 62,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
                     color: isServing ? color.withValues(alpha: 0.18) : colors.bgSurface,
                     shape: BoxShape.circle,
                     border: Border.all(color: isServing ? color.withValues(alpha: 0.32) : colors.border),
                   ),
-                  child: Icon(Icons.add_rounded, size: 30, color: isServing ? color : colors.textMuted),
+                  child: Icon(Icons.add_rounded, size: 26, color: isServing ? color : colors.textMuted),
                 ),
               ),
           ],

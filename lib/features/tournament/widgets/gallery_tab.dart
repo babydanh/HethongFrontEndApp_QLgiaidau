@@ -4,11 +4,13 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 class GalleryTab extends StatelessWidget {
   final List<String> galleryImages;
   final String Function(String? url) resolveImageUrl;
+  final ScrollController? scrollController;
 
   const GalleryTab({
     super.key,
     required this.galleryImages,
     required this.resolveImageUrl,
+    this.scrollController,
   });
 
   @override
@@ -32,6 +34,7 @@ class GalleryTab extends StatelessWidget {
     }
 
     return GridView.builder(
+      controller: scrollController,
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,

@@ -12,16 +12,21 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 class StandingsView extends ConsumerWidget {
   final List<MatchModel> matches;
   final String tournamentId;
+  final String? divisionId;
 
   const StandingsView({
     super.key,
     required this.matches,
     required this.tournamentId,
+    this.divisionId,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final standingsAsync = ref.watch(standingsProvider(tournamentId));
+    final standingsAsync = ref.watch(standingsWithDivisionProvider((
+      tournamentId: tournamentId,
+      divisionId: divisionId,
+    )));
     final tournamentAsync = ref.watch(tournamentProvider(tournamentId));
     final tournament = tournamentAsync.value;
     final isGsknockout = tournament?.bracketType == AppConstants.bracketGroupStageKnockout;

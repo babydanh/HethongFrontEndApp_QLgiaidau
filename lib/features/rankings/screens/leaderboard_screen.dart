@@ -28,7 +28,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   String? _selectedGender = 'MALE';
   String? _selectedProvince;
   final TextEditingController _searchCtrl = TextEditingController();
-  String _query = '';
+  final String _query = '';
   final ScrollController _scrollCtrl = ScrollController();
 
   @override
@@ -61,21 +61,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     super.dispose();
   }
 
-  IconData _getSportIcon(String slug) {
-    switch (slug.toLowerCase()) {
-      case 'badminton':
-        return Icons.sports_kabaddi;
-      case 'tennis':
-        return Icons.sports_tennis;
-      case 'pickleball':
-        return Icons.sports_handball;
-      case 'table-tennis':
-      case 'table_tennis':
-        return Icons.sports_baseball_outlined;
-      default:
-        return Icons.sports_rounded;
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -181,100 +167,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     );
   }
 
-  // ─── Header ────────────────────────────────────────────────────────────
-  Widget _buildHeader(AppColorsExtension colors) {
-    final formatLabel = _formatLabel(_selectedMatchType, _selectedGender);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-      child: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Bảng xếp hạng',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: colors.textPrimary,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              Text(
-                'Top 100 · $formatLabel',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: colors.textMuted,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
-  String _formatLabel(String matchType, String? gender) {
-    if (matchType == 'SINGLES' && gender == 'MALE') return 'Đơn nam';
-    if (matchType == 'SINGLES' && gender == 'FEMALE') return 'Đơn nữ';
-    if (matchType == 'DOUBLES' && gender == 'MALE') return 'Đôi nam';
-    if (matchType == 'DOUBLES' && gender == 'FEMALE') return 'Đôi nữ';
-    if (matchType == 'MIXED_DOUBLES') return 'Đôi nam nữ';
-    return 'ELO toàn quốc';
-  }
-
-  // ─── Sport chips ───────────────────────────────────────────────────────
-  Widget _buildSportChips(List categories, AppColorsExtension colors) {
-    return SizedBox(
-      height: 38,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: categories.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
-        itemBuilder: (context, i) {
-          final c = categories[i];
-          final selected = _selectedCategory == c.id;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedCategory = c.id),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: selected ? AppTheme.primary : colors.bgCard,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: selected ? AppTheme.primary : colors.border,
-                  width: 1.5,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _getSportIcon(c.slug),
-                    size: 13,
-                    color: selected ? Colors.white : colors.textMuted,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    c.name,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: selected ? Colors.white : colors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
 
   Widget _buildRankingFilters(AppColorsExtension colors) {
     const formats = [
@@ -371,40 +264,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     );
   }
 
-  // ─── Search bar ────────────────────────────────────────────────────────
-  Widget _buildSearchBar(AppColorsExtension colors) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.border),
-        ),
-        child: TextField(
-          controller: _searchCtrl,
-          onChanged: (v) => setState(() => _query = v.trim()),
-          style: TextStyle(color: colors.textPrimary, fontSize: 14),
-          decoration: InputDecoration(
-            hintText: 'Tìm tên, Gmail hoặc SĐT...',
-            hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
-            prefixIcon: Icon(Icons.search_rounded, color: colors.textMuted, size: 20),
-            suffixIcon: _query.isNotEmpty
-                ? IconButton(
-                    icon: Icon(Icons.close_rounded, color: colors.textMuted, size: 18),
-                    onPressed: () {
-                      _searchCtrl.clear();
-                      setState(() => _query = '');
-                    },
-                  )
-                : null,
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-          ),
-        ),
-      ),
-    );
-  }
+
 
   // ─── Rankings list ─────────────────────────────────────────────────────
   Widget _buildRankingsList(
@@ -472,7 +332,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       );
     }
 
-    final hasPodium = rankings.isNotEmpty;
     final rest = rankings.length > 3 ? rankings.sublist(3) : <PlayerRanking>[];
 
     return Column(

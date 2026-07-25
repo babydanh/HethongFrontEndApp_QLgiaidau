@@ -7,11 +7,13 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_team_s
 class TeamsTab extends StatelessWidget {
   final List<Team> teams;
   final String selectedDivision;
+  final ScrollController? scrollController;
 
   const TeamsTab({
     super.key,
     required this.teams,
     required this.selectedDivision,
+    this.scrollController,
   });
 
   @override
@@ -57,6 +59,7 @@ class TeamsTab extends StatelessWidget {
     }
 
     return ListView(
+      controller: scrollController,
       padding: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
       children: sortedDivisions.map((division) {
         final teamsInDiv = grouped[division]!;

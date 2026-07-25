@@ -46,8 +46,20 @@ class TournamentRegistrationResult {
   final double entryFee;
 
   factory TournamentRegistrationResult.fromJson(Map<String, dynamic> json) {
+    // Backend trả participantId trong participant.id, fallback top-level id
+    String extractId(Map<String, dynamic> j) {
+      final participant = j['participant'];
+      if (participant is Map) {
+        final pid = participant['id']?.toString();
+        if (pid != null && pid.isNotEmpty) return pid;
+      }
+      final tid = j['id']?.toString();
+      if (tid != null && tid.isNotEmpty) return tid;
+      return '';
+    }
+
     return TournamentRegistrationResult(
-      participantId: json['id']?.toString() ?? '',
+      participantId: extractId(json),
       entryFee: (json['entryFee'] as num?)?.toDouble() ?? 0,
     );
   }

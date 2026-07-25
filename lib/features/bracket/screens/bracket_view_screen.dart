@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_scre
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/filter_chips.dart' show RoundFilterPill;
+import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 
 class BracketViewScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -245,9 +246,32 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     final scheduledCount = validMatches.where((m) => m.isScheduled).length;
     final completedCount = validMatches.where((m) => m.isCompleted).length;
 
-    // Available branches/groups/rounds
-    final availableRounds = validMatches.map((m) => m.round).toSet().toList()..sort();
-    final availableGroups = validMatches
+    final stageScopedMatches = validMatches.where((m) {
+      if (isGroupStageKnockout) {
+        if (_selectedBranch == 'group_stage') return isGroupStageMatch(m);
+        if (_selectedBranch == 'knockout') return isKnockoutMatch(m);
+      }
+      if (isDoubleElimination) {
+        if (_selectedBranch == 'winners') {
+          return m.bracketPosition.bracket == 'winners' ||
+              m.bracketPosition.bracket == 'grand_final';
+        }
+        if (_selectedBranch == 'losers') {
+          return m.bracketPosition.bracket == 'losers';
+        }
+      }
+      return true;
+    }).toList();
+
+    final groupScopedMatches =
+        isGroupStageKnockout && _selectedGroup.isNotEmpty && _selectedGroup != 'all'
+            ? stageScopedMatches.where((m) => m.groupName == _selectedGroup).toList()
+            : stageScopedMatches;
+
+    final availableRounds = groupScopedMatches.map((m) => m.round).toSet().toList()
+      ..sort();
+    final availableGroups = stageScopedMatches
+        .where(isGroupStageMatch)
         .map((m) => m.groupName)
         .where((g) => g != null && g.isNotEmpty)
         .cast<String>()
@@ -256,7 +280,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
       ..sort();
 
     // Filter logic
-    final filteredMatches = validMatches.where((m) {
+    final filteredMatches = stageScopedMatches.where((m) {
       // Search query filter
       if (_searchQuery.isNotEmpty) {
         final t1 = m.team1Name.toLowerCase();
@@ -267,11 +291,11 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
       if (_selectedBranch.isNotEmpty && _selectedBranch != 'all') {
         if (_selectedBranch == 'winners' && m.bracketPosition.bracket != 'winners' && m.bracketPosition.bracket != 'grand_final') return false;
         if (_selectedBranch == 'losers' && m.bracketPosition.bracket != 'losers') return false;
-        if (_selectedBranch == 'group_stage' && (m.stageName != null && m.stageName!.contains('Knockout'))) return false;
-        if (_selectedBranch == 'knockout' && (m.stageName != null && m.stageName!.contains('Bảng'))) return false;
+        if (_selectedBranch == 'group_stage' && !isGroupStageMatch(m)) return false;
+        if (_selectedBranch == 'knockout' && !isKnockoutMatch(m)) return false;
       }
       // Group filter
-      if (_selectedGroup.isNotEmpty && _selectedGroup != 'all' && m.groupName != _selectedGroup) return false;
+      if (_selectedGroup.isNotEmpty && _selectedGroup != 'all' && _selectedBranch != 'knockout' && m.groupName != _selectedGroup) return false;
       // Round filter
       if (_selectedRound != 0 && m.round != _selectedRound) return false;
       // Status filter
@@ -353,10 +377,13 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                       minimumSize: Size.zero,
                     ),
                     onPressed: () {
+                      final diagramMatches = isGroupStageKnockout
+                          ? matches.where(isKnockoutMatch).toList()
+                          : matches;
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => BracketDiagramScreen(
-                            matches: matches,
+                            matches: diagramMatches,
                             tournamentId: widget.tournamentId,
                             bracketType: bracketType,
                             isReferee: widget.isReferee,
@@ -437,12 +464,18 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                 RoundFilterPill(
                   isSelected: _selectedBranch == 'winners',
                   label: 'Nhánh thắng',
-                  onTap: () => setState(() => _selectedBranch = _selectedBranch == 'winners' ? '' : 'winners'),
+                  onTap: () => setState(() {
+                    _selectedBranch = _selectedBranch == 'winners' ? '' : 'winners';
+                    _selectedRound = 0;
+                  }),
                 ),
                 RoundFilterPill(
                   isSelected: _selectedBranch == 'losers',
                   label: 'Nhánh thua',
-                  onTap: () => setState(() => _selectedBranch = _selectedBranch == 'losers' ? '' : 'losers'),
+                  onTap: () => setState(() {
+                    _selectedBranch = _selectedBranch == 'losers' ? '' : 'losers';
+                    _selectedRound = 0;
+                  }),
                 ),
               ],
             ),
@@ -454,12 +487,19 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                 RoundFilterPill(
                   isSelected: _selectedBranch == 'group_stage',
                   label: 'Vòng bảng',
-                  onTap: () => setState(() => _selectedBranch = _selectedBranch == 'group_stage' ? '' : 'group_stage'),
+                  onTap: () => setState(() {
+                    _selectedBranch = _selectedBranch == 'group_stage' ? '' : 'group_stage';
+                    _selectedRound = 0;
+                  }),
                 ),
                 RoundFilterPill(
                   isSelected: _selectedBranch == 'knockout',
                   label: 'Vòng Knockout',
-                  onTap: () => setState(() => _selectedBranch = _selectedBranch == 'knockout' ? '' : 'knockout'),
+                  onTap: () => setState(() {
+                    _selectedBranch = _selectedBranch == 'knockout' ? '' : 'knockout';
+                    _selectedGroup = '';
+                    _selectedRound = 0;
+                  }),
                 ),
               ],
             ),
@@ -475,7 +515,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                     !lower.contains('bracket');
               }).toList();
 
-              if (cleanGroups.length <= 1) return const SizedBox.shrink();
+              if (cleanGroups.length <= 1 || _selectedBranch == 'knockout') return const SizedBox.shrink();
 
               return _buildFilterRow(
                 title: 'BẢNG ĐẤU:',
@@ -483,7 +523,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                   (group) => RoundFilterPill(
                     isSelected: _selectedGroup == group,
                     label: group,
-                    onTap: () => setState(() => _selectedGroup = _selectedGroup == group ? '' : group),
+                    onTap: () => setState(() {
+                      _selectedGroup = _selectedGroup == group ? '' : group;
+                      _selectedRound = 0;
+                    }),
                   ),
                 ).toList(),
               );
@@ -496,7 +539,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
               title: 'VÒNG ĐẤU:',
               children: availableRounds.map((r) {
                 final label = isRoundRobin ? 'Vòng $r' : _getRoundName(r, totalRounds);
-                final count = validMatches.where((m) => m.round == r).length;
+                final count = groupScopedMatches.where((m) => m.round == r).length;
                 return RoundFilterPill(
                   isSelected: _selectedRound == r,
                   label: label,

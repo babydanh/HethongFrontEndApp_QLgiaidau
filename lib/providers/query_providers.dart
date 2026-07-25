@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
@@ -31,7 +33,23 @@ final followedTournamentsProvider = FutureProvider<List<Tournament>>((ref) async
 });
 
 final tournamentProvider = StreamProvider.family<Tournament?, String>((ref, id) {
-  return ref.watch(tournamentRepositoryProvider).watch(id);
+  final repo = ref.watch(tournamentRepositoryProvider);
+  return repo.watch(id).timeout(
+        const Duration(seconds: 8),
+        onTimeout: (sink) {
+          sink.addError(
+            TimeoutException('Quá thời gian tải thông tin giải đấu.'),
+          );
+        },
+      );
+});
+
+final tournamentIntroProvider =
+    FutureProvider.family<Tournament?, String>((ref, id) async {
+  return ref
+      .watch(tournamentRepositoryProvider)
+      .getById(id)
+      .timeout(const Duration(seconds: 8));
 });
 
 final presenceCountProvider =
@@ -44,6 +62,14 @@ final presenceCountProvider =
 final teamsProvider =
     StreamProvider.family<List<Team>, String>((ref, tournamentId) {
   return ref.watch(teamRepositoryProvider).watchByTournament(tournamentId);
+});
+
+final introTeamsProvider =
+    FutureProvider.family<List<Team>, String>((ref, tournamentId) async {
+  return ref
+      .watch(teamRepositoryProvider)
+      .getAllByTournament(tournamentId)
+      .timeout(const Duration(seconds: 8));
 });
 
 final matchesProvider =
@@ -79,6 +105,21 @@ final bracketMatchesProvider =
     yield* repo.watchBracketMatches(tournamentId);
   } else {
     yield* ref.watch(matchRepositoryProvider).watchByTournament(tournamentId);
+  }
+});
+
+final bracketMatchesWithDivisionProvider =
+    StreamProvider.family<List<MatchModel>, ({String tournamentId, String? divisionId})>((ref, params) async* {
+  final repo = ref.watch(tournamentRepositoryProvider);
+  final bracketMatches = await repo.getBracketMatches(params.tournamentId, divisionId: params.divisionId);
+  if (bracketMatches.isNotEmpty) {
+    yield bracketMatches;
+    yield* repo.watchBracketMatches(params.tournamentId, divisionId: params.divisionId);
+  } else {
+    yield* ref.watch(matchRepositoryProvider).watchByTournament(
+          params.tournamentId,
+          divisionId: params.divisionId,
+        );
   }
 });
 

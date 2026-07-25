@@ -407,6 +407,7 @@ class ApiTournamentRepository implements ITournamentRepository {
         if (stages.isNotEmpty) {
           for (final stage in stages) {
             final stageName = stage['name']?.toString();
+            final stageType = stage['type']?.toString();
             final groups = stage['groups'] as List<dynamic>? ?? [];
             for (final group in groups) {
               final groupName = group['name']?.toString();
@@ -414,7 +415,12 @@ class ApiTournamentRepository implements ITournamentRepository {
               for (final json in rawMatches) {
                 if (json is! Map<String, dynamic>) continue;
                 try {
-                  allMatches.add(_parseBracketMatch(json, groupName: groupName, stageName: stageName));
+                  allMatches.add(_parseBracketMatch(
+                    json,
+                    groupName: groupName,
+                    stageName: stageName,
+                    stageType: stageType,
+                  ));
                 } catch (e) {
                   _log.warning('Failed to parse bracket match: $e');
                 }
@@ -521,11 +527,18 @@ class ApiTournamentRepository implements ITournamentRepository {
     Map<String, dynamic> json, {
     String? groupName,
     String? stageName,
+    String? stageType,
   }) {
     final p1 = json['participant1'] as Map<String, dynamic>?;
     final p2 = json['participant2'] as Map<String, dynamic>?;
-    final team1Name = p1?['teamName']?.toString() ?? '';
-    final team2Name = p2?['teamName']?.toString() ?? '';
+    final team1Name = p1?['teamName']?.toString() ??
+        json['team1Name']?.toString() ??
+        json['participant1Name']?.toString() ??
+        '';
+    final team2Name = p2?['teamName']?.toString() ??
+        json['team2Name']?.toString() ??
+        json['participant2Name']?.toString() ??
+        '';
     final rosters1 = (p1?['members'] ?? p1?['rosters']) as List<dynamic>?;
     final team1Members = rosters1?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
     final rosters2 = (p2?['members'] ?? p2?['rosters']) as List<dynamic>?;
@@ -539,14 +552,16 @@ class ApiTournamentRepository implements ITournamentRepository {
     final resolvedGroupName = groupName ?? rawGroup?['name']?.toString();
     final rawStage = rawGroup?['stage'] as Map<String, dynamic>?;
     final resolvedStageName = stageName ?? rawStage?['name']?.toString();
+    final resolvedStageType =
+        stageType ?? rawStage?['type']?.toString() ?? json['stageType']?.toString();
 
     return MatchModel(
       id: json['id']?.toString() ?? '',
       round: roundNumber,
       matchNumber: matchOrder,
-      team1Id: p1?['id']?.toString() ?? '',
+      team1Id: p1?['id']?.toString() ?? json['participant1Id']?.toString() ?? '',
       team1Name: team1Name.isNotEmpty ? team1Name : 'TBD',
-      team2Id: p2?['id']?.toString() ?? '',
+      team2Id: p2?['id']?.toString() ?? json['participant2Id']?.toString() ?? '',
       team2Name: team2Name.isNotEmpty ? team2Name : 'TBD',
       score1: (json['p1SetsWon'] as int?) ?? 0,
       score2: (json['p2SetsWon'] as int?) ?? 0,
@@ -575,6 +590,7 @@ class ApiTournamentRepository implements ITournamentRepository {
       team2Members: team2Members,
       groupName: resolvedGroupName,
       stageName: resolvedStageName,
+      stageType: resolvedStageType,
     );
   }
 

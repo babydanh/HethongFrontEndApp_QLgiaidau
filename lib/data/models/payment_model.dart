@@ -88,20 +88,15 @@ class PaymentModel {
 class CreatePaymentDto {
   final String tournamentId;
   final String participantId;
-  final double amount;
-  final String paymentGateway;
 
   const CreatePaymentDto({
     required this.tournamentId,
     required this.participantId,
-    required this.amount,
-    required this.paymentGateway,
   });
 
   Map<String, dynamic> toJson() => {
     'tournamentId': tournamentId,
     'participantId': participantId,
-    'amount': amount,
-    'paymentGateway': paymentGateway,
+    'purpose': 'REGISTRATION_FEE',
   };
 }

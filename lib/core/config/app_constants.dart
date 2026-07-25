@@ -93,7 +93,7 @@ class AppConstants {
     statusRegistration: 'Đang đăng ký',
     statusDrawing: 'Bốc thăm',
     statusInProgress: 'Đang thi đấu',
-    statusCompleted: 'Hoàn thành',
+    statusCompleted: 'Đã kết thúc',
     statusCancelled: 'Đã hủy',
   };
 

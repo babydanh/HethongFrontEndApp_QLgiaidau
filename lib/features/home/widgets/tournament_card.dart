@@ -10,7 +10,7 @@ import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/saved_tournaments_provider.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/token_input_sheet.dart';
-import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
+
 import 'package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
@@ -55,11 +55,7 @@ class TournamentCard extends ConsumerWidget {
             .firstOrNull;
 
         if (auth.isAuthenticated && auth.tournamentId == tournament.id) {
-          final route = NavigationHelper.getTournamentRoute(
-            auth.role,
-            auth.tournamentId!,
-          );
-          context.go(route);
+          context.go('/intro/${tournament.id}');
         } else if (savedItem != null) {
           // Tự động đăng nhập bằng token đã lưu
           final roleEnum = switch (savedItem.role) {
@@ -78,12 +74,7 @@ class TournamentCard extends ConsumerWidget {
               );
 
           if (context.mounted) {
-            final route = switch (roleEnum) {
-              UserRole.admin => '/admin/tournament/${tournament.id}',
-              UserRole.referee => '/intro/${tournament.id}',
-              UserRole.viewer => '/intro/${tournament.id}',
-            };
-            context.go(route);
+            context.go('/intro/${tournament.id}');
           }
         } else if (isCreator) {
           // Tự động đăng nhập với tư cách admin vì họ là người tạo
@@ -95,7 +86,7 @@ class TournamentCard extends ConsumerWidget {
                 tournamentId: tournament.id,
               );
           if (context.mounted) {
-            context.go('/admin/tournament/${tournament.id}');
+            context.go('/intro/${tournament.id}');
           }
         } else {
           _showTokenSheet(context);

@@ -2,7 +2,6 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 
 abstract class ITournamentRepository {
   Future<Tournament> create(Tournament tournament);
@@ -47,6 +46,6 @@ abstract class ITournamentRepository {
   });
 
   // Bracket
-  Future<List<MatchModel>> getBracketMatches(String tournamentId);
-  Stream<List<MatchModel>> watchBracketMatches(String tournamentId);
+  Future<List<MatchModel>> getBracketMatches(String tournamentId, {String? divisionId});
+  Stream<List<MatchModel>> watchBracketMatches(String tournamentId, {String? divisionId});
 }
