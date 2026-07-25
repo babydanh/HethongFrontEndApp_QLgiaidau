@@ -255,9 +255,24 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
   bool _handleScrollNotification(ScrollNotification notification) {
     if (notification.metrics.axis == Axis.vertical) {
-      final shouldCompact = notification.metrics.pixels > 24;
-      if (shouldCompact != _isHeaderCompact) {
-        setState(() => _isHeaderCompact = shouldCompact);
+      final metrics = notification.metrics;
+
+      // Không tự động thu nhỏ nếu danh sách quá ngắn (maxScrollExtent < 80px)
+      if (metrics.maxScrollExtent < 80) {
+        if (_isHeaderCompact) {
+          setState(() => _isHeaderCompact = false);
+        }
+        return false;
+      }
+
+      final pixels = metrics.pixels;
+      // Chỉ thu nhỏ khi cuộn xuống qua 80px
+      if (!_isHeaderCompact && pixels > 80) {
+        setState(() => _isHeaderCompact = true);
+      }
+      // Chỉ mở to lại khi cuộn hẳn về đỉnh trên cùng (pixels <= 0)
+      else if (_isHeaderCompact && pixels <= 0) {
+        setState(() => _isHeaderCompact = false);
       }
     }
     return false;
@@ -268,15 +283,25 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       0,
       _tabScrollControllers.length - 1,
     );
-    final controller = _tabScrollControllers[index];
+
+    // Tìm controller có client khả dụng (ưu tiên tab hiện tại, fallback sang tab khác nếu có)
+    ScrollController? controller = _tabScrollControllers[index];
+    if (!controller.hasClients) {
+      controller = _tabScrollControllers.firstWhere(
+        (c) => c.hasClients,
+        orElse: () => controller!,
+      );
+    }
     if (!controller.hasClients) return;
 
+    final position = controller.position;
+    if (position.maxScrollExtent < 10) return;
+
     _headerDragRemainder += details.delta.dy;
-    const activationThreshold = 10.0;
+    const activationThreshold = 6.0;
     if (_headerDragRemainder.abs() < activationThreshold) return;
 
-    final position = controller.position;
-    const dragDamping = 0.65;
+    const dragDamping = 0.75;
     final scrollDelta = (_headerDragRemainder -
             activationThreshold * _headerDragRemainder.sign) *
         dragDamping;
