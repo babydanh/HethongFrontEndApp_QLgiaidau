@@ -255,21 +255,15 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
   bool _handleScrollNotification(ScrollNotification notification) {
     if (notification.metrics.axis == Axis.vertical) {
-      final metrics = notification.metrics;
+      final pixels = notification.metrics.pixels;
 
-      // Không tự động thu gọn nếu danh sách quá ngắn (maxScrollExtent < 60px)
-      if (metrics.maxScrollExtent < 60) {
-        if (_isHeaderCompact) {
-          setState(() => _isHeaderCompact = false);
-        }
-        return false;
-      }
-
-      final pixels = metrics.pixels;
-      // Dùng hysteresis đệm 2 chiều: cuộn xuống qua 60px mới thu nhỏ, cuộn lên < 10px mới mở to
-      if (!_isHeaderCompact && pixels > 60) {
+      // Quy tắc Latch khóa trạng thái:
+      // 1. Chỉ thu nhỏ Banner khi người dùng cuộn xuống qua 80px
+      if (!_isHeaderCompact && pixels > 80) {
         setState(() => _isHeaderCompact = true);
-      } else if (_isHeaderCompact && pixels < 10) {
+      }
+      // 2. Chỉ mở to lại khi người dùng cuộn hẳn về đỉnh trên cùng (pixels <= 0)
+      else if (_isHeaderCompact && pixels <= 0) {
         setState(() => _isHeaderCompact = false);
       }
     }
