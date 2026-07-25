@@ -362,21 +362,35 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Top 4 - 10 • $formatStr',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  color: colors.textPrimary,
-                  letterSpacing: -0.3,
-                ),
+              Row(
+                children: [
+                  const Icon(Icons.stars_rounded, size: 18, color: Color(0xFFF59E0B)),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Top 4 - 10 • $formatStr',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: colors.textPrimary,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                'Xuất sắc',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textMuted,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+                ),
+                child: const Text(
+                  'Xuất sắc',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFFD97706),
+                  ),
                 ),
               ),
             ],
@@ -393,25 +407,44 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             ),
           )
         else
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: colors.border.withValues(alpha: 0.6)),
-              ),
-              child: Text(
-                'Chưa có vận động viên ở Top 4 - 10',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textMuted,
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.stars_rounded, color: Color(0xFFF59E0B), size: 22),
                 ),
-              ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Top 4 - 10 đang chờ đón',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: colors.textPrimary),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Thi đấu và tích lũy ELO để bước vào nhóm Xuất sắc!',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: colors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -421,21 +454,35 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Hạng 11 - 100 • $formatStr',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  color: colors.textPrimary,
-                  letterSpacing: -0.3,
-                ),
+              Row(
+                children: [
+                  const Icon(Icons.public_rounded, size: 18, color: Color(0xFF2563EB)),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Hạng 11 - 100 • $formatStr',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: colors.textPrimary,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                'Toàn quốc',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textMuted,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.3)),
+                ),
+                child: const Text(
+                  'Toàn quốc',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF2563EB),
+                  ),
                 ),
               ),
             ],
@@ -452,25 +499,44 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             ),
           )
         else
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: colors.border.withValues(alpha: 0.6)),
-              ),
-              child: Text(
-                'Chưa có vận động viên ở Hạng 11 - 100',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textMuted,
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.shield_outlined, color: Color(0xFF2563EB), size: 22),
                 ),
-              ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Danh sách Hạng 11 - 100',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: colors.textPrimary),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Chưa có thêm vận động viên ở phân khu này.',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: colors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         if (isAuth && currentUserId != null)
