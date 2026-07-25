@@ -115,7 +115,25 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                 )
               else
                 _FallbackBanner(colors: colors),
-              if (!hideText)
+              if (!hideText) ...[
+                Positioned(
+                  left: 10,
+                  right: 10,
+                  top: 8,
+                  child: Row(
+                    children: [
+                      _CompactTopSportBadge(
+                        label: _sportLabel(),
+                        icon: Icons.sports_tennis_rounded,
+                      ),
+                      const Spacer(),
+                      _CompactTopStatusBadge(
+                        label: _statusLabel(),
+                        color: _statusColor(),
+                      ),
+                    ],
+                  ),
+                ),
                 Positioned(
                   left: 14,
                   right: 14,
@@ -143,19 +161,11 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Wrap(
                         spacing: 6,
                         runSpacing: 4,
                         children: [
-                          _MetaChip(
-                            icon: Icons.sports_tennis_rounded,
-                            label: _sportLabel(),
-                          ),
-                          _StatusMetaChip(
-                            label: _statusLabel(),
-                            color: _statusColor(),
-                          ),
                           _MetaChip(
                             icon: Icons.calendar_today_rounded,
                             label: _dateRange(),
@@ -174,6 +184,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                     ],
                   ),
                 ),
+              ],
             ],
           ),
         ),
@@ -190,30 +201,77 @@ class _FallbackBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF0F172A),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        gradient: RadialGradient(
+          center: Alignment.center,
+          radius: 0.85,
+          colors: [
+            AppTheme.primary.withValues(alpha: 0.22),
+            const Color(0xFF0F172A),
+          ],
+        ),
+      ),
       child: Center(
-        child: SvgPicture.asset(
-          'assets/images/vndcsport.svg',
-          width: 140,
-          fit: BoxFit.contain,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 26),
+          child: SvgPicture.asset(
+            'assets/images/vndcsport.svg',
+            width: 160,
+            fit: BoxFit.contain,
+          ),
         ),
       ),
     );
   }
 }
 
-class _StatusMetaChip extends StatelessWidget {
+class _CompactTopSportBadge extends StatelessWidget {
   final String label;
-  final Color color;
+  final IconData icon;
 
-  const _StatusMetaChip({required this.label, required this.color});
+  const _CompactTopSportBadge({required this.label, required this.icon});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.88),
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: Colors.white.withValues(alpha: 0.9)),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactTopStatusBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _CompactTopStatusBadge({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
