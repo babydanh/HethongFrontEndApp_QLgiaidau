@@ -341,7 +341,28 @@ class _TournamentRegisterScreenState
                 widget.inviteCode == null &&
                 _localInviteCode == null;
             if (needsInvite) return _buildInviteGate(t);
-            return _buildForm(t, divAsync);
+            // Don't show form until divisions loaded
+            return divAsync.when(
+              data: (divs) {
+                if (divs.isEmpty) return Center(child: Text('Giải này chưa có nội dung thi đấu', style: TextStyle(color: context.colors.textMuted)));
+                return _buildForm(t, divAsync);
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.error_outline, color: context.colors.error, size: 32),
+                    const SizedBox(height: 8),
+                    Text('Không thể tải nội dung thi đấu', style: TextStyle(color: context.colors.textPrimary, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    Text('Hãy thử lại', style: TextStyle(color: context.colors.textMuted, fontSize: 13)),
+                    const SizedBox(height: 12),
+                    ElevatedButton(onPressed: () => ref.invalidate(_divisionsProvider(widget.tournamentId)), child: const Text('Thử lại')),
+                  ],
+                ),
+              ),
+            );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('Lỗi: $e')),
@@ -725,45 +746,47 @@ class _TournamentRegisterScreenState
                   ),
                 ),
                 const SizedBox(height: 16),
-                if (_selectedDivision?.matchType == 'SINGLES')
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                // Only show name input after division selected
+                if (_selectedDivision != null)
+                  if (_selectedDivision?.matchType == 'SINGLES')
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Tên thi đấu', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.textMuted)),
+                          const SizedBox(height: 4),
+                          Text(
+                            user?.fullName ?? 'Chưa cập nhật',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
+                          ),
+                          const SizedBox(height: 2),
+                          Text('Tên sẽ được lấy từ tài khoản của bạn', style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
+                        ],
+                      ),
+                    )
+                  else
+                    TextFormField(
+                      controller: _nameCtrl,
+                      style: TextStyle(color: context.colors.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Tên đội',
+                        hintText: 'Nhập tên đội',
+                        prefixIcon: Icon(Icons.group_rounded, color: context.colors.textMuted),
+                        filled: true,
+                        fillColor: context.colors.bgDark,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      validator: (v) => (v == null || v.trim().length < 3)
+                          ? 'Tối thiểu 3 ký tự'
+                          : null,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Tên thi đấu', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.textMuted)),
-                        const SizedBox(height: 4),
-                        Text(
-                          user?.fullName ?? 'Chưa cập nhật',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
-                        ),
-                        const SizedBox(height: 2),
-                        Text('Tên sẽ được lấy từ tài khoản của bạn', style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
-                      ],
-                    ),
-                  )
-                else
-                  TextFormField(
-                    controller: _nameCtrl,
-                    style: TextStyle(color: context.colors.textPrimary),
-                    decoration: InputDecoration(
-                      labelText: 'Tên đội',
-                      hintText: 'Nhập tên đội',
-                      prefixIcon: Icon(Icons.group_rounded, color: context.colors.textMuted),
-                      filled: true,
-                      fillColor: context.colors.bgDark,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    validator: (v) => (v == null || v.trim().length < 3)
-                        ? 'Tối thiểu 3 ký tự'
-                        : null,
-                  ),
                 const SizedBox(height: 16),
                 divAsync.when(
                   data: (divs) {
