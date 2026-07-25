@@ -169,6 +169,15 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
 
 
+  String _formatLabel(String matchType, String? gender) {
+    if (matchType == 'SINGLES' && gender == 'MALE') return 'Đơn nam';
+    if (matchType == 'SINGLES' && gender == 'FEMALE') return 'Đơn nữ';
+    if (matchType == 'DOUBLES' && gender == 'MALE') return 'Đôi nam';
+    if (matchType == 'DOUBLES' && gender == 'FEMALE') return 'Đôi nữ';
+    if (matchType == 'MIXED_DOUBLES') return 'Đôi nam nữ';
+    return 'ELO toàn quốc';
+  }
+
   Widget _buildRankingFilters(AppColorsExtension colors) {
     const formats = [
       ('SINGLES', 'MALE', 'Đơn nam'),
@@ -334,16 +343,22 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
     final rest = rankings.length > 3 ? rankings.sublist(3) : <PlayerRanking>[];
 
+    final formatStr = _formatLabel(_selectedMatchType, _selectedGender);
+
     return Column(
       children: [
-        PodiumView(rankings: rankings, tiers: tierList),
+        PodiumView(
+          rankings: rankings,
+          tiers: tierList,
+          formatLabel: formatStr,
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Toàn bộ xếp hạng',
+                'Top 100 • $formatStr',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w900,

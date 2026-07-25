@@ -8,8 +8,14 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 class PodiumView extends StatelessWidget {
   final List<PlayerRanking> rankings;
   final List<EloTier> tiers;
+  final String? formatLabel;
 
-  const PodiumView({super.key, required this.rankings, this.tiers = const []});
+  const PodiumView({
+    super.key,
+    required this.rankings,
+    this.tiers = const [],
+    this.formatLabel,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +24,10 @@ class PodiumView extends StatelessWidget {
     final p1 = rankings.isNotEmpty ? rankings[0] : null;
     final p2 = rankings.length >= 2 ? rankings[1] : null;
     final p3 = rankings.length >= 3 ? rankings[2] : null;
+
+    final subtitleText = (formatLabel != null && formatLabel!.isNotEmpty)
+        ? '$formatLabel • Mùa 2026'
+        : 'Mùa giải 2026';
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -40,7 +50,7 @@ class PodiumView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Top vận động viên',
+                'Top 100 Vận động viên',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
@@ -49,7 +59,7 @@ class PodiumView extends StatelessWidget {
                 ),
               ),
               Text(
-                'Mùa giải 2026',
+                subtitleText,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
