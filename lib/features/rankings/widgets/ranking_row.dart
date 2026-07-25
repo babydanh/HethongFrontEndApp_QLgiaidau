@@ -39,145 +39,235 @@ class RankingRow extends StatelessWidget {
       const Color(0xFF3B82F6), // Blue
     ];
     final avatarColor = avatarColors[ranking.rank % avatarColors.length];
+    final isRank4 = ranking.rank == 4;
+
+    if (isRank4) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFDF5),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFFDE68A), width: 1.8),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // Rank 4 Crown Badge
+              Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '4',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: -10,
+                    child: const Icon(
+                      Icons.emoji_events_rounded,
+                      size: 16,
+                      color: Color(0xFFF59E0B),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 14),
+              // Name + Subtitle + Tags
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'DẪN ĐẦU NHÓM',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFFD97706),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      ranking.fullName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      formatLabel != null && formatLabel!.isNotEmpty
+                          ? formatLabel!
+                          : 'Vận động viên xuất sắc',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // ELO Points
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${ranking.eloPoints}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFFB45309),
+                    ),
+                  ),
+                  const Text(
+                    'ELO',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFFD97706),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isMe
-              ? const Color(0xFF1E40AF)
-              : (isTop10 ? colors.bgCard : colors.bgCard),
-          borderRadius: BorderRadius.circular(16),
+          color: isMe ? const Color(0xFF1E40AF) : colors.bgCard,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isMe
                 ? const Color(0xFF1E40AF)
-                : (isTop10
-                    ? const Color(0xFF2563EB).withValues(alpha: 0.3)
-                    : colors.border.withValues(alpha: 0.8)),
-            width: isMe || isTop10 ? 1.5 : 1,
+                : colors.border.withValues(alpha: 0.7),
+            width: isMe ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: isTop10
-                  ? const Color(0xFF2563EB).withValues(alpha: 0.05)
-                  : Colors.black.withValues(alpha: 0.02),
-              blurRadius: 10,
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
           children: [
-            // Số hạng
+            // Số hạng dạng circle badge xám nhạt
             Container(
-              width: 34,
-              height: 28,
+              width: 32,
+              height: 32,
               alignment: Alignment.center,
-              decoration: isTop10
-                  ? BoxDecoration(
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    )
-                  : null,
+              decoration: BoxDecoration(
+                color: isMe
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : colors.border.withValues(alpha: 0.3),
+                shape: BoxShape.circle,
+              ),
               child: Text(
-                '#${ranking.rank}',
+                '${ranking.rank}',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: isTop10 ? 13 : 13,
+                  fontSize: 13,
                   fontWeight: FontWeight.w900,
-                  color: isMe
-                      ? Colors.white
-                      : (isTop10 ? const Color(0xFF2563EB) : colors.textSecondary),
+                  color: isMe ? Colors.white : colors.textPrimary,
                 ),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             // Avatar (Single or Stacked Dual for Doubles)
             _buildAvatarWidget(context, colors, avatarColor),
             const SizedBox(width: 14),
-            // Tên + Tỉnh thành & Winrate
+            // Tên VĐV
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          ranking.fullName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: isMe ? Colors.white : colors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      if (formatLabel != null && formatLabel!.isNotEmpty) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                          decoration: BoxDecoration(
-                            color: isMe
-                                ? Colors.white.withValues(alpha: 0.2)
-                                : const Color(0xFF0284C7).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            formatLabel!.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: isMe ? Colors.white : const Color(0xFF0284C7),
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ),
-                      ],
-                      if (isMe) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.25),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Text(
-                            'Bạn',
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 3),
                   Text(
-                    'Việt Nam · ${wr.toStringAsFixed(0)}% thắng',
+                    ranking.fullName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 11,
-                      color: isMe ? Colors.white.withValues(alpha: 0.8) : colors.textMuted,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: isMe ? Colors.white : colors.textPrimary,
                     ),
                   ),
+                  if (formatLabel != null && formatLabel!.isNotEmpty)
+                    Text(
+                      formatLabel!,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isMe ? Colors.white70 : colors.textMuted,
+                      ),
+                    ),
                 ],
               ),
             ),
-            // ELO Score
-            Text(
-              '${ranking.eloPoints} ELO',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-                color: isMe ? Colors.white : const Color(0xFF1E40AF),
-              ),
+            // ELO Points
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${ranking.eloPoints}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        color: isMe ? Colors.white : colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      'ELO',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: isMe ? Colors.white70 : colors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),

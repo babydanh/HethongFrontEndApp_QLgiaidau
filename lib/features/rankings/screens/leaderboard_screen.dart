@@ -30,6 +30,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
   final String _query = '';
   final ScrollController _scrollCtrl = ScrollController();
+  bool _isTop11_100Expanded = false;
 
   @override
   void initState() {
@@ -346,6 +347,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         ? rankings.sublist(3, rankings.length < 10 ? rankings.length : 10)
         : <PlayerRanking>[];
     final top11_100 = rankings.length > 10 ? rankings.sublist(10) : <PlayerRanking>[];
+    final rank4 = top4_10.isNotEmpty ? top4_10[0] : null;
+    final ranks5_10 = top4_10.length > 1 ? top4_10.sublist(1) : <PlayerRanking>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,48 +359,41 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           tiers: tierList,
           formatLabel: formatStr,
         ),
-        // Section 2: Top 4 - 10
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.stars_rounded, size: 18, color: Color(0xFFF59E0B)),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Top 4 - 10 • $formatStr',
+
+        // Section: Rank 4 Featured Card (DẪN ĐẦU NHÓM)
+        if (rank4 != null)
+          RankingRow(
+            ranking: rank4,
+            tiers: tierList,
+            isMe: isAuth && rank4.userId == currentUserId,
+            formatLabel: formatStr,
+            onTap: () => context.go('/profile/user/${rank4.userId}'),
+          ),
+
+        // Section: Divider HẠNG 5 — 10
+        if (ranks5_10.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+            child: Row(
+              children: [
+                Expanded(child: Divider(color: colors.border.withValues(alpha: 0.6), thickness: 1)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(
+                    'HẠNG 5 — 10',
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 11,
                       fontWeight: FontWeight.w900,
-                      color: colors.textPrimary,
-                      letterSpacing: -0.3,
+                      color: colors.textMuted,
+                      letterSpacing: 1.2,
                     ),
                   ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
                 ),
-                child: const Text(
-                  'Xuất sắc',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFFD97706),
-                  ),
-                ),
-              ),
-            ],
+                Expanded(child: Divider(color: colors.border.withValues(alpha: 0.6), thickness: 1)),
+              ],
+            ),
           ),
-        ),
-        if (top4_10.isNotEmpty)
-          ...top4_10.map(
+          ...ranks5_10.map(
             (r) => RankingRow(
               ranking: r,
               tiers: tierList,
@@ -405,90 +401,88 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               formatLabel: formatStr,
               onTap: () => context.go('/profile/user/${r.userId}'),
             ),
-          )
-        else
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+          ),
+        ],
+
+        // Section 3: Xem Hạng 11 - 100 Card Button
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _isTop11_100Expanded = !_isTop11_100Expanded;
+            });
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFBFDBFE)),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                  width: 36,
+                  height: 36,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF2563EB),
+                    shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.stars_rounded, color: Color(0xFFF59E0B), size: 22),
+                  child: Icon(
+                    _isTop11_100Expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_right_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: const [
                       Text(
-                        'Top 4 - 10 đang chờ đón',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: colors.textPrimary),
+                        'Xem Hạng 11 – 100',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF1E3A8A),
+                        ),
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
-                        'Thi đấu và tích lũy ELO để bước vào nhóm Xuất sắc!',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: colors.textMuted),
+                        'Bảng đầy đủ vận động viên trên toàn quốc',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF3B82F6),
+                        ),
                       ),
                     ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'TOÀN QUỐC',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-
-        // Section 3: Hạng 11 - 100
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.public_rounded, size: 18, color: Color(0xFF2563EB)),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Hạng 11 - 100 • $formatStr',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
-                      color: colors.textPrimary,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.3)),
-                ),
-                child: const Text(
-                  'Toàn quốc',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF2563EB),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
-        if (top11_100.isNotEmpty)
+
+        // Expanded Hạng 11 - 100 list
+        if (_isTop11_100Expanded && top11_100.isNotEmpty)
           ...top11_100.map(
             (r) => RankingRow(
               ranking: r,
@@ -496,47 +490,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               isMe: isAuth && r.userId == currentUserId,
               formatLabel: formatStr,
               onTap: () => context.go('/profile/user/${r.userId}'),
-            ),
-          )
-        else
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: colors.border.withValues(alpha: 0.8)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.shield_outlined, color: Color(0xFF2563EB), size: 22),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Danh sách Hạng 11 - 100',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: colors.textPrimary),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Chưa có thêm vận động viên ở phân khu này.',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: colors.textMuted),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
             ),
           ),
         if (isAuth && currentUserId != null)
