@@ -31,14 +31,8 @@ class TournamentIntroScreen extends ConsumerStatefulWidget {
 class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final List<ScrollController> _tabScrollControllers = List.generate(
-    4,
-    (_) => ScrollController(),
-  );
-  double _headerDragRemainder = 0;
   String _selectedDivision = "";
   String? _selectedDivisionId;
-  bool _isHeaderCompact = false;
   bool _isFollowLoading = false;
 
   @override
@@ -50,9 +44,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   @override
   void dispose() {
     _tabController.dispose();
-    for (final controller in _tabScrollControllers) {
-      controller.dispose();
-    }
     super.dispose();
   }
 
@@ -209,109 +200,38 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final teamsAsync = ref.watch(introTeamsProvider(widget.tournamentId));
     final colors = context.colors;
 
-    return NotificationListener<ScrollNotification>(
-      onNotification: _handleScrollNotification,
-      child: Column(
-        children: [
-          _buildTopBar(tournament, colors),
-          Expanded(
-            child: Column(
-              children: [
-                GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onVerticalDragStart: (_) => _headerDragRemainder = 0,
-                  onVerticalDragEnd: (_) => _headerDragRemainder = 0,
-                  onVerticalDragCancel: () => _headerDragRemainder = 0,
-                  onVerticalDragUpdate: _handleHeaderDragUpdate,
-                  child: TournamentHeaderView(
-                    tournament: tournament,
-                    colors: colors,
-                    compact: _isHeaderCompact,
+    return Column(
+      children: [
+        _buildTopBar(tournament, colors),
+        Expanded(
+          child: Column(
+            children: [
+              TournamentHeaderView(
+                tournament: tournament,
+                colors: colors,
+                compact: false,
+              ),
+              SizedBox(
+                height: 38,
+                child: _TabBarDelegate(
+                  tabController: _tabController,
+                  colors: colors,
+                ).build(context, 0, false),
+              ),
+              Expanded(
+                child: teamsAsync.when(
+                  data: (teams) => _buildTabContent(tournament, teams, role),
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(color: AppTheme.primary),
                   ),
+                  error: (e, _) => _buildTabContent(tournament, [], role),
                 ),
-                SizedBox(
-                  height: 38,
-                  child: _TabBarDelegate(
-                    tabController: _tabController,
-                    colors: colors,
-                  ).build(context, 0, false),
-                ),
-                Expanded(
-                  child: teamsAsync.when(
-                    data: (teams) => _buildTabContent(tournament, teams, role),
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(color: AppTheme.primary),
-                    ),
-                    error: (e, _) => _buildTabContent(tournament, [], role),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
-  }
-
-  bool _handleScrollNotification(ScrollNotification notification) {
-    if (notification.metrics.axis == Axis.vertical) {
-      final metrics = notification.metrics;
-
-      // Không tự động thu nhỏ nếu danh sách quá ngắn (maxScrollExtent < 80px)
-      if (metrics.maxScrollExtent < 80) {
-        if (_isHeaderCompact) {
-          setState(() => _isHeaderCompact = false);
-        }
-        return false;
-      }
-
-      final pixels = metrics.pixels;
-      // Chỉ thu nhỏ khi cuộn xuống qua 80px
-      if (!_isHeaderCompact && pixels > 80) {
-        setState(() => _isHeaderCompact = true);
-      }
-      // Chỉ mở to lại khi cuộn hẳn về đỉnh trên cùng (pixels <= 0)
-      else if (_isHeaderCompact && pixels <= 0) {
-        setState(() => _isHeaderCompact = false);
-      }
-    }
-    return false;
-  }
-
-  void _handleHeaderDragUpdate(DragUpdateDetails details) {
-    final index = _tabController.index.clamp(
-      0,
-      _tabScrollControllers.length - 1,
-    );
-
-    // Tìm controller có client khả dụng (ưu tiên tab hiện tại, fallback sang tab khác nếu có)
-    ScrollController? controller = _tabScrollControllers[index];
-    if (!controller.hasClients) {
-      controller = _tabScrollControllers.firstWhere(
-        (c) => c.hasClients,
-        orElse: () => controller!,
-      );
-    }
-    if (!controller.hasClients) return;
-
-    final position = controller.position;
-    if (position.maxScrollExtent < 10) return;
-
-    _headerDragRemainder += details.delta.dy;
-    const activationThreshold = 6.0;
-    if (_headerDragRemainder.abs() < activationThreshold) return;
-
-    const dragDamping = 0.75;
-    final scrollDelta = (_headerDragRemainder -
-            activationThreshold * _headerDragRemainder.sign) *
-        dragDamping;
-    _headerDragRemainder = activationThreshold * _headerDragRemainder.sign;
-
-    final nextOffset = (controller.offset - scrollDelta).clamp(
-      position.minScrollExtent,
-      position.maxScrollExtent,
-    );
-    controller.jumpTo(nextOffset);
   }
 
   Widget _buildTopBar(
@@ -515,7 +435,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       tournament: tournament,
                       teamCount: teams.length,
                       resolveImageUrl: _resolveImageUrl,
-                      scrollController: _tabScrollControllers[0],
                     ),
                   ),
                   Padding(
@@ -523,7 +442,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     child: TeamsTab(
                       teams: teams,
                       selectedDivision: _selectedDivision,
-                      scrollController: _tabScrollControllers[1],
                     ),
                   ),
                   Padding(
@@ -531,7 +449,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     child: BracketTab(
                       tournamentId: widget.tournamentId,
                       selectedDivisionId: _selectedDivisionId,
-                      scrollController: _tabScrollControllers[2],
                     ),
                   ),
                   Padding(
@@ -539,7 +456,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     child: GalleryTab(
                       galleryImages: tournament.galleryImages,
                       resolveImageUrl: _resolveImageUrl,
-                      scrollController: _tabScrollControllers[3],
                     ),
                   ),
                 ],

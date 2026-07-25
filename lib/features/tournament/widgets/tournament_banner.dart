@@ -38,7 +38,6 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
   Widget build(BuildContext context) {
     final colors = widget.colors;
     final images = _collectImages(widget.tournament);
-    final compact = widget.compact;
     final showBannerOverlay = !widget.tournament.hideFeaturedCardText;
 
     return Container(
@@ -46,46 +45,43 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!compact)
-            SizedBox(
-              height: 185,
-              child: _BannerCarousel(
-                images: images,
-                pageController: _pageController,
-                currentPage: _currentPage,
-                onPageChanged: (index) {
-                  setState(() => _currentPage = index);
-                },
-                showOverlay: showBannerOverlay,
-              ),
+          SizedBox(
+            height: 185,
+            child: _BannerCarousel(
+              images: images,
+              pageController: _pageController,
+              currentPage: _currentPage,
+              onPageChanged: (index) {
+                setState(() => _currentPage = index);
+              },
+              showOverlay: showBannerOverlay,
             ),
+          ),
           Container(
             color: colors.bgDark,
-            padding: EdgeInsets.fromLTRB(14, compact ? 6 : 8, 14, 6),
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (!compact) ...[
-                  _HeaderBadges(tournament: widget.tournament),
-                  const SizedBox(height: 8),
-                ],
+                _HeaderBadges(tournament: widget.tournament),
+                const SizedBox(height: 8),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _TournamentLogo(
                       tournament: widget.tournament,
-                      size: compact ? 38 : 54,
+                      size: 54,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: _HeaderInfo(
                         tournament: widget.tournament,
-                        compact: compact,
+                        compact: false,
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: compact ? 6 : 8),
+                const SizedBox(height: 8),
                 _HeaderMeta(tournament: widget.tournament),
                 const SizedBox(height: 6),
                 Divider(color: colors.border, height: 1),
@@ -247,16 +243,20 @@ class _HeaderInfo extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          tournament.name.toUpperCase(),
-          maxLines: compact ? 2 : 3,
-          overflow: TextOverflow.ellipsis,
+        AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 140),
+          curve: Curves.easeOut,
           style: TextStyle(
             fontSize: compact ? 15 : 18,
             fontWeight: FontWeight.w900,
             color: colors.textPrimary,
             height: 1.18,
             letterSpacing: -0.35,
+          ),
+          child: Text(
+            tournament.name.toUpperCase(),
+            maxLines: compact ? 2 : 3,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         const SizedBox(height: 6),
@@ -505,7 +505,9 @@ class _TournamentLogo extends StatelessWidget {
     final colors = context.colors;
     final logoUrl = tournament.logoUrl;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 140),
+      curve: Curves.easeOut,
       width: size,
       height: size,
       padding: const EdgeInsets.all(3),
