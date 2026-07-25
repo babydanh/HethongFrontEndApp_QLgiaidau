@@ -95,25 +95,8 @@ class RankingRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            // Avatar tròn chữ cái
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isMe ? Colors.white.withValues(alpha: 0.2) : avatarColor,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  _initials(ranking.fullName),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
+            // Avatar (Single or Stacked Dual for Doubles)
+            _buildAvatarWidget(context, colors, avatarColor),
             const SizedBox(width: 14),
             // Tên + Tỉnh thành & Winrate
             Expanded(
@@ -197,6 +180,83 @@ class RankingRow extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarWidget(BuildContext context, dynamic colors, Color avatarColor) {
+    final nameParts = ranking.fullName.split('/');
+    final isDoublesTeam = nameParts.length >= 2;
+
+    if (isDoublesTeam) {
+      final name1 = nameParts[0].trim();
+      final name2 = nameParts[1].trim();
+      return SizedBox(
+        width: 54,
+        height: 40,
+        child: Stack(
+          children: [
+            // Player 1 Avatar
+            Positioned(
+              left: 0,
+              top: 2,
+              child: Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2563EB),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: isMe ? const Color(0xFF1E40AF) : colors.bgCard, width: 2),
+                ),
+                child: Center(
+                  child: Text(
+                    _initials(name1),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+            // Player 2 Avatar (Overlapping)
+            Positioned(
+              left: 18,
+              top: 2,
+              child: Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: isMe ? const Color(0xFF1E40AF) : colors.bgCard, width: 2),
+                ),
+                child: Center(
+                  child: Text(
+                    _initials(name2),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: isMe ? Colors.white.withValues(alpha: 0.2) : avatarColor,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          _initials(ranking.fullName),
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+          ),
         ),
       ),
     );

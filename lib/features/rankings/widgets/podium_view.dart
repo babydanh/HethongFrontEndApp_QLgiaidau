@@ -152,33 +152,7 @@ class _PodiumSlot extends StatelessWidget {
           )
         else
           const SizedBox(height: 28),
-        Container(
-          width: isKing ? 58 : 50,
-          height: isKing ? 58 : 50,
-          decoration: BoxDecoration(
-            color: ranking != null ? avatarBg : colors.border.withValues(alpha: 0.5),
-            shape: BoxShape.circle,
-            boxShadow: ranking != null
-                ? [
-                    BoxShadow(
-                      color: avatarBg.withValues(alpha: 0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Center(
-            child: Text(
-              ranking != null ? _initials(name) : '?',
-              style: TextStyle(
-                color: ranking != null ? Colors.white : colors.textMuted,
-                fontSize: isKing ? 18 : 15,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-        ),
+        _buildPodiumAvatar(colors, name),
         const SizedBox(height: 8),
         Text(
           name,
@@ -235,6 +209,101 @@ class _PodiumSlot extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPodiumAvatar(dynamic colors, String name) {
+    final nameParts = name.split('/');
+    final isDoublesTeam = ranking != null && nameParts.length >= 2;
+    final size = isKing ? 58.0 : 50.0;
+
+    if (isDoublesTeam) {
+      final name1 = nameParts[0].trim();
+      final name2 = nameParts[1].trim();
+      final subSize = size * 0.75;
+
+      return SizedBox(
+        width: size * 1.3,
+        height: size,
+        child: Stack(
+          children: [
+            Positioned(
+              left: 0,
+              top: (size - subSize) / 2,
+              child: Container(
+                width: subSize,
+                height: subSize,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2563EB),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: colors.bgCard, width: 2),
+                ),
+                child: Center(
+                  child: Text(
+                    _initials(name1),
+                    style: TextStyle(
+                      fontSize: isKing ? 13 : 11,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: subSize * 0.55,
+              top: (size - subSize) / 2,
+              child: Container(
+                width: subSize,
+                height: subSize,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: colors.bgCard, width: 2),
+                ),
+                child: Center(
+                  child: Text(
+                    _initials(name2),
+                    style: TextStyle(
+                      fontSize: isKing ? 13 : 11,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: ranking != null ? avatarBg : colors.border.withValues(alpha: 0.5),
+        shape: BoxShape.circle,
+        boxShadow: ranking != null
+            ? [
+                BoxShadow(
+                  color: avatarBg.withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
+      ),
+      child: Center(
+        child: Text(
+          ranking != null ? _initials(name) : '?',
+          style: TextStyle(
+            color: ranking != null ? Colors.white : colors.textMuted,
+            fontSize: isKing ? 18 : 15,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
     );
   }
 
