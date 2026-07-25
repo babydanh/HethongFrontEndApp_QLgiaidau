@@ -1,174 +1,177 @@
 import 'package:flutter/material.dart';
-
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 
-/// Card "Bạn" hiển thị vị trí + ELO + tier của người dùng hiện tại.
-/// Dạng premium gradient, dán dưới cùng bảng xếp hạng.
+/// Card "Bạn" hiển thị vị trí + ELO của người dùng hiện tại.
+/// Dạng compact 1-line gọn gàng, dán dưới cùng bảng xếp hạng.
 class UserStatsCard extends StatelessWidget {
   final PlayerRanking ranking;
   final List<EloTier> tiers;
 
-  const UserStatsCard({super.key, required this.ranking, this.tiers = const []});
+  const UserStatsCard({
+    super.key,
+    required this.ranking,
+    this.tiers = const [],
+  });
 
   @override
   Widget build(BuildContext context) {
-    final wr = ranking.winRate;
+    final colors = context.colors;
     final tier = TierPalette.matchTier(ranking.eloPoints, tiers);
-    final palette = TierPalette.from(tier);
+    final isUnranked = ranking.rank <= 0;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: BoxDecoration(
-        gradient: palette.gradient,
-        borderRadius: BorderRadius.circular(20),
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colors.info.withValues(alpha: 0.6),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: palette.color.withValues(alpha: 0.35),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
+            color: colors.info.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.22),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 2),
-                ),
-                child: Center(
-                  child: Text(
-                    _initials(ranking.fullName),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+          // Rank Badge
+          Container(
+            width: 32,
+            height: 32,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: colors.info.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              isUnranked ? '-' : '${ranking.rank}',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                color: colors.info,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+
+          // Avatar Initials
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: colors.info.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: colors.info.withValues(alpha: 0.4),
+                width: 1.5,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                _initials(ranking.fullName),
+                style: TextStyle(
+                  color: colors.info,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+          ),
+          const SizedBox(width: 10),
+
+          // Name + Badge "BẠN"
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            ranking.fullName.isNotEmpty ? ranking.fullName : 'Bạn',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    Flexible(
+                      child: Text(
+                        ranking.fullName.isNotEmpty ? ranking.fullName : 'Bạn',
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w800,
                         ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.25),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            tier?.shortLabel ?? '?',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      ranking.rank > 0
-                          ? 'Hạng #${ranking.rank} · ${tier?.name ?? 'Chưa xếp hạng'}'
-                          : 'Chưa xếp hạng · ${tier?.name ?? ''}',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.8),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.info,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: const Text(
+                        'BẠN',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.3,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Text('ELO', style: TextStyle(color: Colors.white54, fontSize: 9)),
-                  Text(
-                    '${ranking.eloPoints}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                    ),
+                const SizedBox(height: 2),
+                Text(
+                  isUnranked
+                      ? 'Chưa xếp hạng · ${tier?.name ?? 'Tân thủ'}'
+                      : 'Hạng #${ranking.rank} · ${tier?.name ?? 'Kỳ thủ'}',
+                  style: TextStyle(
+                    color: colors.textMuted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+
+          // ELO Points
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${ranking.eloPoints}',
+                style: TextStyle(
+                  color: colors.info,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Text(
+                'ELO',
+                style: TextStyle(
+                  color: colors.textMuted,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              _stat('Thắng', '${ranking.matchesWon}'),
-              _stat('Thua', '${ranking.matchesLost}'),
-              _stat('Tỉ lệ', '${wr.round()}%'),
-              _stat('Tổng', '${ranking.matchesPlayed}'),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: (wr / 100).clamp(0.0, 1.0),
-              minHeight: 6,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4ADE80)),
-            ),
           ),
         ],
       ),
     );
   }
-
-  Widget _stat(String label, String value) => Expanded(
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.65),
-                fontSize: 9,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      );
 
   String _initials(String name) {
     final p = name.trim().split(' ');
