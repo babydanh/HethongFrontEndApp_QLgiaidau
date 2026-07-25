@@ -198,48 +198,175 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
           onPressed: () => context.go('/home'),
         ),
-        title: Text('Hồ sơ', style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w900, fontSize: 20)),
+        title: Text(
+          'Hồ sơ',
+          style: TextStyle(
+            color: colors.textPrimary,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+          ),
+        ),
         centerTitle: true,
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.08), shape: BoxShape.circle),
-                child: const Icon(Icons.person_rounded, size: 48, color: AppTheme.primary),
-              ),
-              const SizedBox(height: 24),
-              Text('Xin chào!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: colors.textPrimary)),
-              const SizedBox(height: 12),
-              Text(
-                'Đăng nhập để xem hồ sơ, theo dõi giải đấu và kết nối với cộng đồng thể thao.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: colors.textSecondary, height: 1.4),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: FilledButton.icon(
-                  onPressed: () => context.go('/login'),
-                  icon: const Icon(Icons.login_rounded, size: 20),
-                  label: const Text('Đăng nhập', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            // ── Hero Glassmorphic Card ──
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xFF334155)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => context.go('/login'),
-                child: const Text('Chưa có tài khoản? Đăng ký ngay',
-                    style: TextStyle(fontSize: 13, color: AppTheme.primary, fontWeight: FontWeight.w600)),
+              child: Column(
+                children: [
+                  // Glowing Avatar Ring
+                  Container(
+                    width: 90,
+                    height: 90,
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [AppTheme.primary, Color(0xFF38BDF8)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primary.withValues(alpha: 0.35),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xFF0F172A),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.emoji_events_rounded,
+                          size: 42,
+                          color: Color(0xFF38BDF8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Xin chào!',
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Đăng nhập để xem hồ sơ cá nhân, theo dõi các giải đấu yêu thích và kết nối cùng cộng đồng thể thao.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      color: Color(0xFF94A3B8),
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Bento Feature Chips
+                  const Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _GuestFeatureChip(
+                        icon: Icons.emoji_events_outlined,
+                        label: 'Theo dõi giải đấu',
+                      ),
+                      _GuestFeatureChip(
+                        icon: Icons.leaderboard_rounded,
+                        label: 'Bảng xếp hạng ELO',
+                      ),
+                      _GuestFeatureChip(
+                        icon: Icons.bolt_rounded,
+                        label: 'Tỉ số trực tiếp',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+                  // Primary Login Button
+                  Container(
+                    width: double.infinity,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF2563EB).withValues(alpha: 0.4),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onPressed: () => context.go('/login'),
+                        borderRadius: BorderRadius.circular(16),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.login_rounded, size: 20, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text(
+                              'Đăng nhập ngay',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextButton(
+                    onPressed: () => context.go('/login'),
+                    child: const Text(
+                      'Chưa có tài khoản? Đăng ký ngay',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        color: Color(0xFF38BDF8),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 40),
+          ],
         ),
       ),
       bottomNavigationBar: FloatingBottomNav(
@@ -1798,5 +1925,39 @@ class _EloRingPainter extends CustomPainter {
     return oldDelegate.progress != progress ||
         oldDelegate.activeColor != activeColor ||
         oldDelegate.trackColor != trackColor;
+  }
+}
+
+class _GuestFeatureChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _GuestFeatureChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: const Color(0xFF38BDF8)),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
