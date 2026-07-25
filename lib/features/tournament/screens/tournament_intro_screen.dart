@@ -17,7 +17,6 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/gallery_tab.dart';
 
-
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
 
@@ -31,8 +30,14 @@ class TournamentIntroScreen extends ConsumerStatefulWidget {
 class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final List<ScrollController> _tabScrollControllers = List.generate(
+    4,
+    (_) => ScrollController(),
+  );
+  double _headerDragRemainder = 0;
   String _selectedDivision = "";
   String? _selectedDivisionId;
+  bool _isHeaderCompact = false;
   bool _isFollowLoading = false;
 
   @override
@@ -44,12 +49,17 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    for (final controller in _tabScrollControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final tournamentAsync = ref.watch(tournamentIntroProvider(widget.tournamentId));
+    final tournamentAsync = ref.watch(
+      tournamentIntroProvider(widget.tournamentId),
+    );
     final authRole = ref.watch(authProvider).role;
 
     return Scaffold(
@@ -87,11 +97,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     return SafeArea(
       child: Stack(
         children: [
-          Positioned(
-            left: 12,
-            top: 8,
-            child: _backButton(colors),
-          ),
+          Positioned(left: 12, top: 8, child: _backButton(colors)),
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -118,16 +124,16 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     return SafeArea(
       child: Stack(
         children: [
-          Positioned(
-            left: 12,
-            top: 8,
-            child: _backButton(colors),
-          ),
+          Positioned(left: 12, top: 8, child: _backButton(colors)),
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline_rounded, color: colors.error, size: 42),
+                Icon(
+                  Icons.error_outline_rounded,
+                  color: colors.error,
+                  size: 42,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'Không tải được giải đấu',
@@ -150,8 +156,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () =>
-                      ref.invalidate(tournamentIntroProvider(widget.tournamentId)),
+                  onPressed: () => ref.invalidate(
+                    tournamentIntroProvider(widget.tournamentId),
+                  ),
                   child: const Text('Thử lại'),
                 ),
               ],
@@ -193,51 +200,90 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _buildContent(Tournament tournament, UserRole? role) {
-    if ((_selectedDivisionId == null || _selectedDivision.isEmpty) && tournament.divisions.isNotEmpty) {
+    if ((_selectedDivisionId == null || _selectedDivision.isEmpty) &&
+        tournament.divisions.isNotEmpty) {
       _selectedDivision = tournament.divisions.first.name;
       _selectedDivisionId = tournament.divisions.first.id;
     }
     final teamsAsync = ref.watch(introTeamsProvider(widget.tournamentId));
     final colors = context.colors;
 
-    return Column(
-      children: [
-        _buildTopBar(tournament, colors),
-        Expanded(
-          child: NestedScrollView(
-            headerSliverBuilder: (context, innerBoxIsScrolled) => [
-              SliverToBoxAdapter(
-                child: TournamentHeaderView(
-                  tournament: tournament,
-                  colors: colors,
-                  compact: false,
+    return NotificationListener<ScrollNotification>(
+      onNotification: _handleScrollNotification,
+      child: Column(
+        children: [
+          _buildTopBar(tournament, colors),
+          Expanded(
+            child: Column(
+              children: [
+                GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onVerticalDragStart: (_) => _headerDragRemainder = 0,
+                  onVerticalDragEnd: (_) => _headerDragRemainder = 0,
+                  onVerticalDragCancel: () => _headerDragRemainder = 0,
+                  onVerticalDragUpdate: _handleHeaderDragUpdate,
+                  child: TournamentHeaderView(
+                    tournament: tournament,
+                    colors: colors,
+                    compact: _isHeaderCompact,
+                  ),
                 ),
-              ),
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _TabBarDelegate(
-                  tabController: _tabController,
-                  colors: colors,
+                SizedBox(
+                  height: 38,
+                  child: _TabBarDelegate(
+                    tabController: _tabController,
+                    colors: colors,
+                  ).build(context, 0, false),
                 ),
-              ),
-            ],
-            body: teamsAsync.when(
-              data: (teams) => _buildTabContent(tournament, teams, role),
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: AppTheme.primary),
-              ),
-              error: (e, _) => _buildTabContent(tournament, [], role),
+                Expanded(
+                  child: teamsAsync.when(
+                    data: (teams) => _buildTabContent(tournament, teams, role),
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(color: AppTheme.primary),
+                    ),
+                    error: (e, _) => _buildTabContent(tournament, [], role),
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildTopBar(
-    Tournament tournament,
-    AppColorsExtension colors,
-  ) {
+  bool _handleScrollNotification(ScrollNotification notification) {
+    return false;
+  }
+
+  void _handleHeaderDragUpdate(DragUpdateDetails details) {
+    final index = _tabController.index.clamp(
+      0,
+      _tabScrollControllers.length - 1,
+    );
+    final controller = _tabScrollControllers[index];
+    if (!controller.hasClients) return;
+
+    _headerDragRemainder += details.delta.dy;
+    const activationThreshold = 10.0;
+    if (_headerDragRemainder.abs() < activationThreshold) return;
+
+    final position = controller.position;
+    const dragDamping = 0.65;
+    final scrollDelta =
+        (_headerDragRemainder -
+            activationThreshold * _headerDragRemainder.sign) *
+        dragDamping;
+    _headerDragRemainder = activationThreshold * _headerDragRemainder.sign;
+
+    final nextOffset = (controller.offset - scrollDelta).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    controller.jumpTo(nextOffset);
+  }
+
+  Widget _buildTopBar(Tournament tournament, AppColorsExtension colors) {
     final followedAsync = ref.watch(followedTournamentsProvider);
     final isFollowing = followedAsync.maybeWhen(
       data: (items) => items.any((t) => t.id == tournament.id),
@@ -328,10 +374,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  Future<void> _toggleFollow(
-    Tournament tournament,
-    bool isFollowing,
-  ) async {
+  Future<void> _toggleFollow(Tournament tournament, bool isFollowing) async {
     final auth = ref.read(authProvider);
     if (!auth.isAuthenticated) {
       context.go('/login');
@@ -378,9 +421,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final text =
         '${tournament.name} - ${tournament.category ?? tournament.sport}';
     final url = 'https://giaidau.vnvar.com/tournaments/${tournament.id}';
-    await SharePlus.instance.share(
-      ShareParams(text: '$text\n\n$url'),
-    );
+    await SharePlus.instance.share(ShareParams(text: '$text\n\n$url'));
   }
 
   Widget _buildTabContent(
@@ -389,10 +430,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     UserRole? role,
   ) {
     final isLive = StatusHelper.isTournamentInProgress(tournament.status);
-    final divisions = tournament.divisions
-        .map((d) => d.name)
-        .toSet()
-        .toList();
+    final divisions = tournament.divisions.map((d) => d.name).toSet().toList();
 
     return Column(
       children: [
@@ -411,7 +449,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 onDivisionChanged: (val) {
                   setState(() {
                     _selectedDivision = val;
-                    final matchedList = tournament.divisions.where((d) => d.name == val);
+                    final matchedList = tournament.divisions.where(
+                      (d) => d.name == val,
+                    );
                     if (matchedList.isNotEmpty) {
                       _selectedDivisionId = matchedList.first.id;
                     } else if (tournament.divisions.isNotEmpty) {
@@ -435,6 +475,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       tournament: tournament,
                       teamCount: teams.length,
                       resolveImageUrl: _resolveImageUrl,
+                      scrollController: _tabScrollControllers[0],
                     ),
                   ),
                   Padding(
@@ -442,6 +483,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     child: TeamsTab(
                       teams: teams,
                       selectedDivision: _selectedDivision,
+                      scrollController: _tabScrollControllers[1],
                     ),
                   ),
                   Padding(
@@ -449,6 +491,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     child: BracketTab(
                       tournamentId: widget.tournamentId,
                       selectedDivisionId: _selectedDivisionId,
+                      scrollController: _tabScrollControllers[2],
                     ),
                   ),
                   Padding(
@@ -456,6 +499,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     child: GalleryTab(
                       galleryImages: tournament.galleryImages,
                       resolveImageUrl: _resolveImageUrl,
+                      scrollController: _tabScrollControllers[3],
                     ),
                   ),
                 ],
@@ -592,10 +636,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabController tabController;
   final AppColorsExtension colors;
 
-  _TabBarDelegate({
-    required this.tabController,
-    required this.colors,
-  });
+  _TabBarDelegate({required this.tabController, required this.colors});
 
   @override
   Widget build(
