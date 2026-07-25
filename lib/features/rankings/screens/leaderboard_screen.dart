@@ -576,8 +576,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     final userRankingsAsync = ref.watch(userRankingsProvider);
     return userRankingsAsync.when(
       data: (myRankings) {
-        if (myRankings.isNotEmpty) {
-          return UserStatsCard(ranking: myRankings.first, tiers: tiers);
+        final validRank = myRankings.where((r) => r.rank > 0).firstOrNull;
+        if (validRank != null) {
+          return UserStatsCard(ranking: validRank, tiers: tiers);
         }
         return Container(
           margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -593,7 +594,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Bạn chưa có hạng trong Top 100. Tham gia giải đấu để nâng hạng!',
+                  'Bạn chưa có hạng trong Top 100. Tham gia giải đấu để được xếp hạng!',
                   style: TextStyle(fontSize: 12, color: colors.textSecondary),
                 ),
               ),

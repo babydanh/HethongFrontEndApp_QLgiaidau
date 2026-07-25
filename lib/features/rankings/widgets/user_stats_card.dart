@@ -65,7 +65,7 @@ class UserStatsCard extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            ranking.fullName,
+                            ranking.fullName.isNotEmpty ? ranking.fullName : 'Bạn',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -95,7 +95,9 @@ class UserStatsCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Hạng #${ranking.rank} · ${tier?.name ?? 'Chưa xếp hạng'}',
+                      ranking.rank > 0
+                          ? 'Hạng #${ranking.rank} · ${tier?.name ?? 'Chưa xếp hạng'}'
+                          : 'Chưa xếp hạng · ${tier?.name ?? ''}',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 12,
