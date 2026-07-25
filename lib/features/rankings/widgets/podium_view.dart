@@ -82,6 +82,7 @@ class PodiumView extends StatelessWidget {
                   podiumHeight: 52,
                   podiumColor: const Color(0xFF94A3B8),
                   avatarBg: const Color(0xFF94A3B8),
+                  formatLabel: formatLabel,
                 ),
               ),
               const SizedBox(width: 8),
@@ -95,6 +96,7 @@ class PodiumView extends StatelessWidget {
                   podiumColor: const Color(0xFFF59E0B),
                   avatarBg: const Color(0xFFF59E0B),
                   isKing: true,
+                  formatLabel: formatLabel,
                 ),
               ),
               const SizedBox(width: 8),
@@ -107,6 +109,7 @@ class PodiumView extends StatelessWidget {
                   podiumHeight: 44,
                   podiumColor: const Color(0xFFF97316),
                   avatarBg: const Color(0xFFF97316),
+                  formatLabel: formatLabel,
                 ),
               ),
             ],
@@ -125,6 +128,7 @@ class _PodiumSlot extends StatelessWidget {
   final Color podiumColor;
   final Color avatarBg;
   final bool isKing;
+  final String? formatLabel;
 
   const _PodiumSlot({
     required this.ranking,
@@ -134,6 +138,7 @@ class _PodiumSlot extends StatelessWidget {
     required this.podiumColor,
     required this.avatarBg,
     this.isKing = false,
+    this.formatLabel,
   });
 
   @override
