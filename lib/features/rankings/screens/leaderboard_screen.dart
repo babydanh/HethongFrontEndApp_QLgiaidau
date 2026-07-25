@@ -343,45 +343,18 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     }
 
     final formatStr = _formatLabel(_selectedMatchType, _selectedGender);
-    
-    // Ensure display list has items for 4-10 and 11-100 so user can preview full ranking design
-    final List<PlayerRanking> displayRankings = List.of(rankings);
-    if (displayRankings.length < 15) {
-      final demoItems = [
-        const PlayerRanking(id: 'd-4', userId: 'demo-4', fullName: 'Trần Văn Hoàng', eloPoints: 1480, rank: 4, matchesPlayed: 28, matchesWon: 20),
-        const PlayerRanking(id: 'd-5', userId: 'demo-5', fullName: 'Lê Minh Tuấn', eloPoints: 1450, rank: 5, matchesPlayed: 25, matchesWon: 17),
-        const PlayerRanking(id: 'd-6', userId: 'demo-6', fullName: 'Phạm Đức Anh', eloPoints: 1420, rank: 6, matchesPlayed: 22, matchesWon: 15),
-        const PlayerRanking(id: 'd-7', userId: 'demo-7', fullName: 'Đặng Quang Huy', eloPoints: 1390, rank: 7, matchesPlayed: 20, matchesWon: 13),
-        const PlayerRanking(id: 'd-8', userId: 'demo-8', fullName: 'Vũ Thanh Sơn', eloPoints: 1360, rank: 8, matchesPlayed: 18, matchesWon: 11),
-        const PlayerRanking(id: 'd-9', userId: 'demo-9', fullName: 'Bùi Bảo Nam', eloPoints: 1330, rank: 9, matchesPlayed: 16, matchesWon: 10),
-        const PlayerRanking(id: 'd-10', userId: 'demo-10', fullName: 'Hoàng Quốc Việt', eloPoints: 1300, rank: 10, matchesPlayed: 15, matchesWon: 9),
-        const PlayerRanking(id: 'd-11', userId: 'demo-11', fullName: 'Ngô Tấn Tài', eloPoints: 1270, rank: 11, matchesPlayed: 14, matchesWon: 8),
-        const PlayerRanking(id: 'd-12', userId: 'demo-12', fullName: 'Đỗ Hùng Dũng', eloPoints: 1240, rank: 12, matchesPlayed: 12, matchesWon: 7),
-        const PlayerRanking(id: 'd-13', userId: 'demo-13', fullName: 'Nguyễn Văn Quyết', eloPoints: 1210, rank: 13, matchesPlayed: 10, matchesWon: 6),
-        const PlayerRanking(id: 'd-14', userId: 'demo-14', fullName: 'Phạm Tuấn Hải', eloPoints: 1180, rank: 14, matchesPlayed: 8, matchesWon: 5),
-        const PlayerRanking(id: 'd-15', userId: 'demo-15', fullName: 'Nguyễn Tiến Linh', eloPoints: 1150, rank: 15, matchesPlayed: 6, matchesWon: 4),
-      ];
-      for (final item in demoItems) {
-        if (!displayRankings.any((r) => r.rank == item.rank)) {
-          displayRankings.add(item);
-        }
-      }
-      displayRankings.sort((a, b) => a.rank.compareTo(b.rank));
-    }
+    final top4_10 = rankings.where((r) => r.rank >= 4 && r.rank <= 10).toList();
+    final top11_100 = rankings.where((r) => r.rank >= 11).toList();
 
-    final top4_10 = displayRankings.length > 3
-        ? displayRankings.sublist(3, displayRankings.length < 10 ? displayRankings.length : 10)
-        : <PlayerRanking>[];
-    final top11_100 = displayRankings.length > 10 ? displayRankings.sublist(10) : <PlayerRanking>[];
-    final rank4 = top4_10.isNotEmpty ? top4_10[0] : null;
-    final ranks5_10 = top4_10.length > 1 ? top4_10.sublist(1) : <PlayerRanking>[];
+    final rank4 = top4_10.where((r) => r.rank == 4).firstOrNull ?? (top4_10.isNotEmpty ? top4_10.first : null);
+    final ranks5_10 = rank4 != null ? top4_10.where((r) => r != rank4).toList() : top4_10;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Bục vinh danh Top 1 - 3 (luôn hiện bục vinh danh)
         PodiumView(
-          rankings: displayRankings,
+          rankings: rankings,
           tiers: tierList,
           formatLabel: formatStr,
         ),
@@ -581,7 +554,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 ),
               ),
             ),
-        _buildStickyMeCard(displayRankings, tierList, colors, currentUserId ?? 'me'),
+        if (isAuth && currentUserId != null)
+          _buildStickyMeCard(rankings, tierList, colors, currentUserId),
         const SizedBox(height: 100),
       ],
     );
@@ -605,30 +579,50 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         if (validRank != null) {
           return UserStatsCard(ranking: validRank, tiers: tiers);
         }
-        const fallbackMe = PlayerRanking(
-          id: 'fallback-me',
-          userId: 'me',
-          fullName: 'Nguyễn Minh Danh (Bạn)',
-          eloPoints: 1240,
-          rank: 12,
-          matchesPlayed: 15,
-          matchesWon: 10,
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.emoji_events_outlined, color: colors.textMuted, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Bạn chưa có hạng trong Top 100. Tham gia giải đấu để được xếp hạng!',
+                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                ),
+              ),
+            ],
+          ),
         );
-        return UserStatsCard(ranking: fallbackMe, tiers: tiers);
       },
       loading: () => const SizedBox.shrink(),
-      error: (e, st) {
-        const fallbackMe = PlayerRanking(
-          id: 'fallback-me',
-          userId: 'me',
-          fullName: 'Nguyễn Minh Danh (Bạn)',
-          eloPoints: 1240,
-          rank: 12,
-          matchesPlayed: 15,
-          matchesWon: 10,
-        );
-        return UserStatsCard(ranking: fallbackMe, tiers: tiers);
-      },
+      error: (e, st) => Container(
+        margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.emoji_events_outlined, color: colors.textMuted, size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Bạn chưa có hạng trong Top 100. Tham gia giải đấu để được xếp hạng!',
+                style: TextStyle(fontSize: 12, color: colors.textSecondary),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
