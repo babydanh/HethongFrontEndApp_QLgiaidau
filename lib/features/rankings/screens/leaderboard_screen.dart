@@ -114,7 +114,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 148),
+                  const SizedBox(height: 160),
                   _buildRankingFilters(colors),
                   const SizedBox(height: 10),
                   _buildProvinceFilter(colors),
@@ -342,6 +342,56 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     }
 
     final formatStr = _formatLabel(_selectedMatchType, _selectedGender);
+
+    if (rankings.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.emoji_events_outlined,
+                  size: 32,
+                  color: AppTheme.primary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Chưa có xếp hạng • $formatStr',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Chưa có vận động viên nào có điểm ELO thuộc thể thức $formatStr.',
+                style: TextStyle(fontSize: 13, color: colors.textMuted, height: 1.4),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final top4_10 = rankings.length > 3
         ? rankings.sublist(3, rankings.length < 10 ? rankings.length : 10)
         : <PlayerRanking>[];
@@ -394,32 +444,32 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           ),
         ],
         // Section: Hạng 11 - 100
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Hạng 11 - 100 • $formatStr',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  color: colors.textPrimary,
-                  letterSpacing: -0.3,
+        if (top11_100.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Hạng 11 - 100 • $formatStr',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: colors.textPrimary,
+                    letterSpacing: -0.3,
+                  ),
                 ),
-              ),
-              Text(
-                'Toàn quốc',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textMuted,
+                Text(
+                  'Toàn quốc',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textMuted,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        if (top11_100.isNotEmpty)
           ...top11_100.map(
             (r) => RankingRow(
               ranking: r,
@@ -428,29 +478,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               formatLabel: formatStr,
               onTap: () => context.go('/profile/user/${r.userId}'),
             ),
-          )
-        else if (top4_10.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-            child: Column(
-              children: [
-                Icon(Icons.emoji_events_outlined, size: 36, color: colors.textMuted),
-                const SizedBox(height: 8),
-                Text(
-                  'Chưa có thêm vận động viên trong danh sách',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.textMuted),
-                ),
-              ],
-            ),
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-            child: Text(
-              'Danh sách kết thúc ở Top 10.',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: colors.textMuted),
-            ),
           ),
+        ],
         if (isAuth && currentUserId != null)
           _buildStickyMeCard(rankings, tierList, colors, currentUserId),
         const SizedBox(height: 100),
