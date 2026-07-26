@@ -27,8 +27,7 @@ class AboutTab extends StatelessWidget {
     final resolvedAvatar = resolveImageUrl(tournament.creatorAvatarUrl);
     final creatorName = tournament.creatorFullName ?? "Ban Tổ Chức";
 
-    return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
+    return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 100),
       child: Column(
         children: [

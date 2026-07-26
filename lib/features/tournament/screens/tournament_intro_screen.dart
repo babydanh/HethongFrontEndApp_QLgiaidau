@@ -39,6 +39,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -200,35 +203,42 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final teamsAsync = ref.watch(introTeamsProvider(widget.tournamentId));
     final colors = context.colors;
 
-    return Column(
+    return Stack(
       children: [
-        _buildTopBar(tournament, colors),
-        Expanded(
-          child: NestedScrollView(
-            headerSliverBuilder: (context, innerBoxIsScrolled) => [
-              SliverToBoxAdapter(
-                child: TournamentHeaderView(
-                  tournament: tournament,
-                  colors: colors,
-                  compact: false,
-                ),
+        SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            children: [
+              _buildTopBar(tournament, colors),
+              TournamentHeaderView(
+                tournament: tournament,
+                colors: colors,
+                compact: false,
               ),
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _TabBarDelegate(
+              SizedBox(
+                height: 38,
+                child: _TabBarDelegate(
                   tabController: _tabController,
                   colors: colors,
+                ).build(context, 0, false),
+              ),
+              teamsAsync.when(
+                data: (teams) => _buildTabContent(tournament, teams, role),
+                loading: () => const Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppTheme.primary),
+                  ),
                 ),
+                error: (e, _) => _buildTabContent(tournament, [], role),
               ),
             ],
-            body: teamsAsync.when(
-              data: (teams) => _buildTabContent(tournament, teams, role),
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: AppTheme.primary),
-              ),
-              error: (e, _) => _buildTabContent(tournament, [], role),
-            ),
           ),
+        ),
+        Positioned(
+          right: 16,
+          bottom: 96,
+          child: _buildBottomBar(tournament, role),
         ),
       ],
     );
@@ -388,7 +398,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     List<Team> teams,
     UserRole? role,
   ) {
-    final isLive = StatusHelper.isTournamentInProgress(tournament.status);
     final divisions = tournament.divisions
         .map((d) => d.name)
         .toSet()
@@ -423,51 +432,47 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             );
           },
         ),
-        Expanded(
-          child: Stack(
-            children: [
-              TabBarView(
-                controller: _tabController,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: AboutTab(
-                      tournament: tournament,
-                      teamCount: teams.length,
-                      resolveImageUrl: _resolveImageUrl,
-                    ),
+        AnimatedBuilder(
+          animation: _tabController,
+          builder: (context, _) {
+            switch (_tabController.index) {
+              case 0:
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: AboutTab(
+                    tournament: tournament,
+                    teamCount: teams.length,
+                    resolveImageUrl: _resolveImageUrl,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: TeamsTab(
-                      teams: teams,
-                      selectedDivision: _selectedDivision,
-                    ),
+                );
+              case 1:
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: TeamsTab(
+                    teams: teams,
+                    selectedDivision: _selectedDivision,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: BracketTab(
-                      tournamentId: widget.tournamentId,
-                      selectedDivisionId: _selectedDivisionId,
-                    ),
+                );
+              case 2:
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: BracketTab(
+                    tournamentId: widget.tournamentId,
+                    selectedDivisionId: _selectedDivisionId,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: GalleryTab(
-                      galleryImages: tournament.galleryImages,
-                      resolveImageUrl: _resolveImageUrl,
-                    ),
+                );
+              case 3:
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: GalleryTab(
+                    galleryImages: tournament.galleryImages,
+                    resolveImageUrl: _resolveImageUrl,
                   ),
-                ],
-              ),
-              if (!isLive)
-                Positioned(
-                  right: 16,
-                  bottom: 120,
-                  child: _buildBottomBar(tournament, role),
-                ),
-            ],
-          ),
+                );
+              default:
+                return const SizedBox.shrink();
+            }
+          },
         ),
       ],
     );
