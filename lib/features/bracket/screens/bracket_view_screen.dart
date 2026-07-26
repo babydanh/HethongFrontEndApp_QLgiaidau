@@ -84,49 +84,14 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     final tournament = tournamentAsync.value;
     final auth = ref.watch(authProvider);
 
-    return Scaffold(
-      backgroundColor: context.colors.bgDark,
-      appBar: widget.isEmbedded ? null : AppBar(
-        backgroundColor: context.colors.bgDark,
-        elevation: 0,
-        leading: widget.isEmbedded
-            ? const SizedBox.shrink()
-            : IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
-                onPressed: () {
-                  if (auth.role == UserRole.admin) {
-                    context.go('/admin/tournament/${widget.tournamentId}');
-                  } else {
-                    context.go('/home');
-                  }
-                },
-              ),
-        title: Text(
-          tournament?.name != null && tournament!.name.isNotEmpty
-              ? tournament.name
-              : 'Bảng thi đấu',
-        ),
-        actions: auth.role != UserRole.admin
-            ? [
-                IconButton(
-                  icon: Icon(
-                    Icons.logout_rounded,
-                    color: context.colors.textSecondary,
-                  ),
-                  onPressed: () {
-                    ref.read(authProvider.notifier).signOut();
-                    context.go('/home');
-                  },
-                ),
-              ]
-            : null,
-      ),
-      body: matchesAsync.when(
-        data: (matches) {
-          if (matches.isEmpty) {
-            return Center(
+    final bodyContent = matchesAsync.when(
+      data: (matches) {
+        if (matches.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 16),
+            child: Center(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     Icons.account_tree_outlined,
@@ -151,75 +116,21 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                   ),
                 ],
               ),
-            );
-          }
+            ),
+          );
+        }
 
-          final bracketType =
-              tournamentAsync.value?.bracketType ??
-              AppConstants.bracketSingleElimination;
-          final isRoundRobin = bracketType == AppConstants.bracketRoundRobin;
-          final isGroupStageKnockout =
-              bracketType == AppConstants.bracketGroupStageKnockout;
+        final bracketType =
+            tournamentAsync.value?.bracketType ??
+            AppConstants.bracketSingleElimination;
+        final isRoundRobin = bracketType == AppConstants.bracketRoundRobin;
+        final isGroupStageKnockout =
+            bracketType == AppConstants.bracketGroupStageKnockout;
 
-          if (isRoundRobin || isGroupStageKnockout) {
-            if (widget.isEmbedded) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    height: 34,
-                    child: TabBar(
-                      controller: _tabController,
-                      labelColor: AppTheme.primary,
-                      unselectedLabelColor: context.colors.textSecondary,
-                      indicatorColor: AppTheme.primary,
-                      indicatorWeight: 2,
-                      labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                      unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.normal),
-                      tabs: const [
-                        Tab(height: 30, text: 'Lịch thi đấu'),
-                        Tab(height: 30, text: 'Bảng xếp hạng'),
-                        Tab(height: 30, text: 'Bảng chéo'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  AnimatedBuilder(
-                    animation: _tabController,
-                    builder: (context, _) {
-                      switch (_tabController.index) {
-                        case 0:
-                          return _buildKnockoutMatchTable(
-                            matches,
-                            bracketType,
-                            auth.role == UserRole.viewer,
-                            auth.role == UserRole.admin || widget.isReferee,
-                          );
-                        case 1:
-                          return StandingsView(
-                            matches: matches,
-                            tournamentId: widget.tournamentId,
-                            divisionId: widget.divisionId,
-                          );
-                        case 2:
-                          return Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: CrossTableView(
-                              matches: matches,
-                              tournamentId: widget.tournamentId,
-                              divisionId: widget.divisionId,
-                            ),
-                          );
-                        default:
-                          return const SizedBox.shrink();
-                      }
-                    },
-                  ),
-                ],
-              );
-            }
-
+        if (isRoundRobin || isGroupStageKnockout) {
+          if (widget.isEmbedded) {
             return Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
                   height: 34,
@@ -238,46 +149,142 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                     ],
                   ),
                 ),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildKnockoutMatchTable(
-                        matches,
-                        bracketType,
-                        auth.role == UserRole.viewer,
-                        auth.role == UserRole.admin || widget.isReferee,
-                      ),
-                      StandingsView(
+                const SizedBox(height: 8),
+                AnimatedBuilder(
+                  animation: _tabController,
+                  builder: (context, _) {
+                    switch (_tabController.index) {
+                      case 0:
+                        return _buildKnockoutMatchTable(
+                          matches,
+                          bracketType,
+                          auth.role == UserRole.viewer,
+                          auth.role == UserRole.admin || widget.isReferee,
+                        );
+                      case 1:
+                        return StandingsView(
+                          matches: matches,
+                          tournamentId: widget.tournamentId,
+                          divisionId: widget.divisionId,
+                        );
+                      case 2:
+                        return Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: CrossTableView(
+                            matches: matches,
+                            tournamentId: widget.tournamentId,
+                            divisionId: widget.divisionId,
+                          ),
+                        );
+                      default:
+                        return const SizedBox.shrink();
+                    }
+                  },
+                ),
+              ],
+            );
+          }
+
+          return Column(
+            children: [
+              SizedBox(
+                height: 34,
+                child: TabBar(
+                  controller: _tabController,
+                  labelColor: AppTheme.primary,
+                  unselectedLabelColor: context.colors.textSecondary,
+                  indicatorColor: AppTheme.primary,
+                  indicatorWeight: 2,
+                  labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.normal),
+                  tabs: const [
+                    Tab(height: 30, text: 'Lịch thi đấu'),
+                    Tab(height: 30, text: 'Bảng xếp hạng'),
+                    Tab(height: 30, text: 'Bảng chéo'),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildKnockoutMatchTable(
+                      matches,
+                      bracketType,
+                      auth.role == UserRole.viewer,
+                      auth.role == UserRole.admin || widget.isReferee,
+                    ),
+                    StandingsView(
+                      matches: matches,
+                      tournamentId: widget.tournamentId,
+                      divisionId: widget.divisionId,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: CrossTableView(
                         matches: matches,
                         tournamentId: widget.tournamentId,
                         divisionId: widget.divisionId,
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: CrossTableView(
-                          matches: matches,
-                          tournamentId: widget.tournamentId,
-                          divisionId: widget.divisionId,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            );
-          } else {
-            return _buildKnockoutMatchTable(
-              matches,
-              bracketType,
-              auth.role == UserRole.viewer,
-              auth.role == UserRole.admin || widget.isReferee,
-            );
-          }
-        },
-        loading: () => const _BracketShimmerLoading(),
-        error: (e, st) => Center(child: Text('Lỗi: $e')),
+              ),
+            ],
+          );
+        } else {
+          return _buildKnockoutMatchTable(
+            matches,
+            bracketType,
+            auth.role == UserRole.viewer,
+            auth.role == UserRole.admin || widget.isReferee,
+          );
+        }
+      },
+      loading: () => const _BracketShimmerLoading(),
+      error: (e, st) => Center(child: Text('Lỗi: $e')),
+    );
+
+    if (widget.isEmbedded) {
+      return bodyContent;
+    }
+
+    return Scaffold(
+      backgroundColor: context.colors.bgDark,
+      appBar: AppBar(
+        backgroundColor: context.colors.bgDark,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () {
+            if (auth.role == UserRole.admin) {
+              context.go('/admin/tournament/${widget.tournamentId}');
+            } else {
+              context.go('/home');
+            }
+          },
+        ),
+        title: Text(
+          tournament?.name != null && tournament!.name.isNotEmpty
+              ? tournament.name
+              : 'Bảng thi đấu',
+        ),
+        actions: auth.role != UserRole.admin
+            ? [
+                IconButton(
+                  icon: Icon(
+                    Icons.logout_rounded,
+                    color: context.colors.textSecondary,
+                  ),
+                  onPressed: () {
+                    ref.read(authProvider.notifier).signOut();
+                    context.go('/home');
+                  },
+                ),
+              ]
+            : null,
       ),
+      body: bodyContent,
     );
   }
 
