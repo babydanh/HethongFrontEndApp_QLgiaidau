@@ -479,11 +479,19 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _buildBottomBar(Tournament tournament, UserRole? role) {
-    final isCompleted = StatusHelper.isTournamentCompleted(tournament.status);
-    if (isCompleted) {
-      return _viewBracketButton("Xem kết quả");
+    if (StatusHelper.isTournamentInProgress(tournament.status)) {
+      return _viewBracketButton("Xem lịch & Tỷ số trực tiếp");
     }
-    return _registrationButton(tournament);
+    if (StatusHelper.isTournamentCompleted(tournament.status)) {
+      return _viewBracketButton("Xem kết quả giải đấu");
+    }
+    if (StatusHelper.isTournamentRegistration(tournament.status) ||
+        tournament.status.toUpperCase() == 'OPEN' ||
+        tournament.status.toUpperCase() == 'PUBLISHED' ||
+        tournament.status.toUpperCase() == 'UPCOMING') {
+      return _registrationButton(tournament);
+    }
+    return _viewBracketButton("Xem bảng thi đấu");
   }
 
   Widget _viewBracketButton(String label) {

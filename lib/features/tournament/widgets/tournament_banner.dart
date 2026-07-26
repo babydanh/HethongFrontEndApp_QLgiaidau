@@ -298,25 +298,27 @@ class _HeaderActionTags extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryAction = _resolvePrimaryActionTag(context, tournament);
     final bracketLabel = AppConstants.bracketTypeNames[tournament.bracketType] ??
         tournament.bracketType.replaceAll('_', ' ').toUpperCase();
+
+    final showPrimaryAction = !StatusHelper.isTournamentInProgress(tournament.status);
+    final primaryAction = showPrimaryAction ? _resolvePrimaryActionTag(context, tournament) : null;
 
     return Wrap(
       spacing: 7,
       runSpacing: 7,
       children: [
-        _HeaderTag(
-          primaryAction.label,
-          icon: primaryAction.icon,
-          iconColor: primaryAction.iconColor,
-        ),
+        if (primaryAction != null)
+          _HeaderTag(
+            primaryAction.label,
+            icon: primaryAction.icon,
+            iconColor: primaryAction.iconColor,
+          ),
         _HeaderTag(
           bracketLabel.toUpperCase(),
           icon: Icons.loop_rounded,
           iconColor: const Color(0xFFD97706),
         ),
-        _ShareTag(tournament: tournament),
       ],
     );
   }
@@ -449,38 +451,7 @@ class _HeaderTag extends StatelessWidget {
   }
 }
 
-class _ShareTag extends StatelessWidget {
-  final Tournament tournament;
 
-  const _ShareTag({required this.tournament});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return OutlinedButton.icon(
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-        minimumSize: const Size(0, 26),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        foregroundColor: colors.textSecondary,
-        side: BorderSide(color: colors.border),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(7),
-        ),
-      ),
-      onPressed: () {
-        final text = '${tournament.name} - ${tournament.category ?? tournament.sport}';
-        final url = 'https://giaidau.vnvar.com/tournaments/${tournament.id}';
-        SharePlus.instance.share(ShareParams(text: '$text\n\n$url'));
-      },
-      icon: const Icon(Icons.share, size: 13),
-      label: const Text(
-        "Chia sẻ",
-        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
-      ),
-    );
-  }
-}
 
 class _HeaderIconText extends StatelessWidget {
   final IconData icon;
