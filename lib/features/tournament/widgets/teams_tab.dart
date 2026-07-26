@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_team_card.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_team_sheet.dart';
 
 class TeamsTab extends StatelessWidget {
   final List<Team> teams;
@@ -119,29 +119,23 @@ class TeamsTab extends StatelessWidget {
                 ],
               ),
             ),
-            // Grid of team cards
+            // Cards with inline expansion for Doubles and direct tap for Singles
             ...teamsInDiv.map((team) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: TournamentTeamCard(
                 team: team,
-                onTap: () => _showTeamSheet(context, team),
+                onMemberTap: (userId, memberName) {
+                  if (userId != null && userId.isNotEmpty) {
+                    context.push('/profile/user/$userId');
+                  } else {
+                    context.push('/profile');
+                  }
+                },
               ),
             )),
           ],
         );
       }).toList(),
-    );
-  }
-
-  void _showTeamSheet(BuildContext context, Team team) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: context.colors.bgDark,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => TournamentTeamSheet(team: team),
     );
   }
 }
