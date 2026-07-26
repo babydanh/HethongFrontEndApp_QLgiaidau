@@ -183,10 +183,11 @@ class StandingsView extends ConsumerWidget {
                 ],
               ),
             ),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                itemCount: groupsList.length,
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: groupsList.length,
                 itemBuilder: (context, gIdx) {
                   final gName = groupsList[gIdx];
                   final gStandings = groupedStandings[gName]!;
@@ -332,7 +333,6 @@ class StandingsView extends ConsumerWidget {
                   );
                 },
               ),
-            ),
           ],
         );
       },

@@ -34,6 +34,8 @@ class CrossTableView extends ConsumerWidget {
         final groupNames = groupedStandings.keys.toList()..sort();
 
         return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 16),
           itemCount: groupNames.length,
           itemBuilder: (context, index) {
