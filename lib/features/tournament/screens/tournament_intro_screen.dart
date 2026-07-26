@@ -39,6 +39,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -476,22 +479,11 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _buildBottomBar(Tournament tournament, UserRole? role) {
-    final isLive = StatusHelper.isTournamentInProgress(tournament.status);
-    final isRegistration =
-        StatusHelper.isTournamentRegistration(tournament.status) ||
-        StatusHelper.isTournamentDraft(tournament.status) ||
-        StatusHelper.isTournamentUpcoming(tournament.status);
     final isCompleted = StatusHelper.isTournamentCompleted(tournament.status);
-
-    if (isLive) {
-      return _liveButton(role, tournament.id);
+    if (isCompleted) {
+      return _viewBracketButton("Xem kết quả");
     }
-    if (isRegistration) {
-      return _registrationButton(tournament);
-    }
-    return isCompleted
-        ? _viewBracketButton("Xem kết quả")
-        : _viewBracketButton("Xem lịch thi đấu");
+    return _registrationButton(tournament);
   }
 
   Widget _viewBracketButton(String label) {
@@ -545,44 +537,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         icon: const Icon(Icons.edit_note_rounded, size: 22),
         label: const Text(
           "Đăng ký tham gia",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-
-  Widget _liveButton(UserRole? role, String tournamentId) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.error.withValues(alpha: 0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: FilledButton.icon(
-        style: FilledButton.styleFrom(
-          backgroundColor: context.colors.error,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
-          ),
-        ),
-        onPressed: () {
-          context.go('/live-matches/$tournamentId');
-        },
-        icon: Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: context.colors.bgCard,
-          ),
-        ),
-        label: const Text(
-          "Xem trực tiếp",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
