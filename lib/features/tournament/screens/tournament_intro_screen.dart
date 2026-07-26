@@ -237,7 +237,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         ),
         Positioned(
           right: 16,
-          bottom: 24,
+          bottom: 96,
           child: _buildBottomBar(tournament, role),
         ),
       ],
