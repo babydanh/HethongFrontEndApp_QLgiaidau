@@ -309,11 +309,12 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     }).toList();
 
     return ListView(
-      controller: widget.scrollController,
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
-      physics: const BouncingScrollPhysics(
-        parent: AlwaysScrollableScrollPhysics(),
-      ),
+      physics: widget.isEmbedded
+          ? const NeverScrollableScrollPhysics()
+          : const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+      shrinkWrap: widget.isEmbedded,
       children: [
           // ── Diagram Access Banner ──
           if (!isRoundRobin)

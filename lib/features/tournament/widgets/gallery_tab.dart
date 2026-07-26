@@ -34,7 +34,8 @@ class GalleryTab extends StatelessWidget {
     }
 
     return GridView.builder(
-      controller: scrollController,
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,

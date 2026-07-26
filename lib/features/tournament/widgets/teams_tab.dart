@@ -59,7 +59,8 @@ class TeamsTab extends StatelessWidget {
     }
 
     return ListView(
-      controller: scrollController,
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
       padding: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
       children: sortedDivisions.map((division) {
         final teamsInDiv = grouped[division]!;
