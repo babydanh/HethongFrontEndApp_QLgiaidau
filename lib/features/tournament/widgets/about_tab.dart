@@ -484,21 +484,20 @@ class AboutTab extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: FilledButton.icon(
+                child: FilledButton(
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 14),
+                        horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(100),
                     ),
                   ),
                   onPressed: () =>
                       context.push('/register/${tournament.id}'),
-                  icon: const Icon(Icons.edit_note_rounded, size: 22),
-                  label: const Text(
-                    "Đăng ký tham gia",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  child: const Text(
+                    "Đăng ký",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                 ),
               ),

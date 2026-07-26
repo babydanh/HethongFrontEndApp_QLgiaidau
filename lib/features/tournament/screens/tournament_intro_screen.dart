@@ -519,25 +519,24 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: AppTheme.primary.withValues(alpha: 0.25),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: FilledButton.icon(
+      child: FilledButton(
         style: FilledButton.styleFrom(
           backgroundColor: AppTheme.primary,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(100),
           ),
         ),
         onPressed: () => context.push('/register/${tournament.id}'),
-        icon: const Icon(Icons.edit_note_rounded, size: 22),
-        label: const Text(
-          "Đăng ký tham gia",
-          style: TextStyle(fontWeight: FontWeight.bold),
+        child: const Text(
+          "Đăng ký",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         ),
       ),
     );

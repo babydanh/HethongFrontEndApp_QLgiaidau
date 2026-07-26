@@ -38,9 +38,10 @@ class TeamsTab extends StatelessWidget {
 
     String getDivision(Team t) => t.group.isNotEmpty ? t.group : "Khác";
 
-    final filteredTeams = selectedDivision == "Tất cả"
+    final matched = teams.where((t) => getDivision(t) == selectedDivision).toList();
+    final filteredTeams = (selectedDivision == "Tất cả" || selectedDivision == "all" || selectedDivision.isEmpty)
         ? teams
-        : teams.where((t) => getDivision(t) == selectedDivision).toList();
+        : (matched.isEmpty ? teams : matched);
 
     final grouped = <String, List<Team>>{};
     for (var t in filteredTeams) {
