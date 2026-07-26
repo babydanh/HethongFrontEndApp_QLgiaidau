@@ -38,57 +38,82 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
   Widget build(BuildContext context) {
     final colors = widget.colors;
     final images = _collectImages(widget.tournament);
+    final compact = widget.compact;
     final showBannerOverlay = !widget.tournament.hideFeaturedCardText;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
       color: colors.bgDark,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: 185,
-            child: _BannerCarousel(
-              images: images,
-              pageController: _pageController,
-              currentPage: _currentPage,
-              onPageChanged: (index) {
-                setState(() => _currentPage = index);
-              },
-              showOverlay: showBannerOverlay,
-            ),
-          ),
-          Container(
-            color: colors.bgDark,
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _HeaderBadges(tournament: widget.tournament),
-                const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _TournamentLogo(
-                      tournament: widget.tournament,
-                      size: 54,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _HeaderInfo(
-                        tournament: widget.tournament,
-                        compact: false,
-                      ),
-                    ),
-                  ],
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRect(
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              height: compact ? 0 : 185,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 160),
+                opacity: compact ? 0 : 1,
+                child: _BannerCarousel(
+                  images: images,
+                  pageController: _pageController,
+                  currentPage: _currentPage,
+                  onPageChanged: (index) {
+                    setState(() => _currentPage = index);
+                  },
+                  showOverlay: showBannerOverlay,
                 ),
-                const SizedBox(height: 8),
-                _HeaderMeta(tournament: widget.tournament),
-                const SizedBox(height: 6),
-                Divider(color: colors.border, height: 1),
-              ],
+              ),
             ),
           ),
-        ],
+        ),
+        Container(
+          color: colors.bgDark,
+          padding: EdgeInsets.fromLTRB(14, compact ? 6 : 8, 14, 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AnimatedSize(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topLeft,
+                child: compact
+                    ? const SizedBox.shrink()
+                    : Column(
+                        children: [
+                          _HeaderBadges(tournament: widget.tournament),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _TournamentLogo(
+                    tournament: widget.tournament,
+                    size: compact ? 38 : 54,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _HeaderInfo(
+                      tournament: widget.tournament,
+                      compact: compact,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: compact ? 6 : 8),
+              _HeaderMeta(tournament: widget.tournament),
+              const SizedBox(height: 6),
+              Divider(color: colors.border, height: 1),
+            ],
+          ),
+        ),
+      ],
       ),
     );
   }
