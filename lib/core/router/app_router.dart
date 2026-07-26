@@ -464,9 +464,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           final inviteCode = state.uri.queryParameters['invite'];
+          final divisionId = state.uri.queryParameters['divisionId'];
           return TournamentRegisterScreen(
             tournamentId: id,
             inviteCode: inviteCode,
+            divisionId: divisionId,
           );
         },
       ),

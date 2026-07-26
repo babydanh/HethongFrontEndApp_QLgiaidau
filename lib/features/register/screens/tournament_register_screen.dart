@@ -23,10 +23,12 @@ final _divisionsProvider =
 class TournamentRegisterScreen extends ConsumerStatefulWidget {
   final String tournamentId;
   final String? inviteCode;
+  final String? divisionId;
   const TournamentRegisterScreen({
     super.key,
     required this.tournamentId,
     this.inviteCode,
+    this.divisionId,
   });
 
   @override
@@ -40,6 +42,14 @@ class _TournamentRegisterScreenState
   final _nameCtrl = TextEditingController();
   final _inviteCtrl = TextEditingController();
   String? _selectedDiv;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.divisionId != null && widget.divisionId!.isNotEmpty) {
+      _selectedDiv = widget.divisionId;
+    }
+  }
   String? _divisionError;
   bool _submitting = false;
   bool _success = false;
@@ -797,6 +807,22 @@ class _TournamentRegisterScreenState
                           _onDivisionSelected(divs.first.id, divs);
                         }
                       });
+                    }
+                    if (_selectedDiv != null && widget.divisionId != null) {
+                      final preDiv = divs.where((d) => d.id == _selectedDiv).firstOrNull;
+                      if (preDiv != null &&
+                          (preDiv.matchType == 'DOUBLES' ||
+                              preDiv.matchType == 'MIXED_DOUBLES')) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) {
+                            final inviteCode = _localInviteCode ?? widget.inviteCode ?? '';
+                            context.pushReplacement(
+                              '/register/${widget.tournamentId}/doubles?divisionId=${preDiv.id}&invite=$inviteCode',
+                              extra: preDiv,
+                            );
+                          }
+                        });
+                      }
                     }
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

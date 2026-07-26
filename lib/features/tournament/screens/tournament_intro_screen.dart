@@ -533,7 +533,12 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             borderRadius: BorderRadius.circular(100),
           ),
         ),
-        onPressed: () => context.push('/register/${tournament.id}'),
+        onPressed: () {
+          final query = _selectedDivisionId != null && _selectedDivisionId!.isNotEmpty
+              ? '?divisionId=$_selectedDivisionId'
+              : '';
+          context.push('/register/${tournament.id}$query');
+        },
         child: const Text(
           "Đăng ký",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
