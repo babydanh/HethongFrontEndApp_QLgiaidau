@@ -10,6 +10,7 @@ class CommunityTournamentModel {
   final String? startDate;
   final String? locationAddress;
   final String? bannerUrl;
+  final bool isLite;
 
   const CommunityTournamentModel({
     required this.id,
@@ -22,6 +23,7 @@ class CommunityTournamentModel {
     this.startDate,
     this.locationAddress,
     this.bannerUrl,
+    this.isLite = false,
   });
 
   factory CommunityTournamentModel.fromJson(Map<String, dynamic> json) {
@@ -46,6 +48,12 @@ class CommunityTournamentModel {
       if (count != null) teamCount = int.tryParse(count.toString()) ?? 0;
     }
 
+    final bool isLite = json['isLite'] == true ||
+        json['isQuick'] == true ||
+        json['type'] == 'LITE' ||
+        json['isClubLite'] == true ||
+        (json['inviteCode'] != null && json['inviteCode'].toString().isNotEmpty);
+
     return CommunityTournamentModel(
       id: json['id']?.toString() ?? '',
       name: json['name'] ?? '',
@@ -57,6 +65,7 @@ class CommunityTournamentModel {
       startDate: json['startDate']?.toString(),
       locationAddress: json['locationAddress']?.toString() ?? json['venue']?['locationAddress']?.toString(),
       bannerUrl: json['bannerUrl']?.toString(),
+      isLite: isLite,
     );
   }
 }

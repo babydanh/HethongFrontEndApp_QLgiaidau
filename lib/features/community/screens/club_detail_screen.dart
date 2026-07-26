@@ -529,7 +529,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 Text("Chưa có giải đấu nào", style: TextStyle(color: colors.textSecondary, fontSize: 14)),
                 const SizedBox(height: 20),
                 FilledButton.icon(
-                  onPressed: () => context.push('/club/${widget.clubId}/create-tournament'),
+                  onPressed: () => _showCreateTournamentTypeSheet(),
                   icon: const Icon(Icons.add_rounded, size: 18),
                   label: const Text("Tạo giải đấu"),
                   style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
@@ -546,7 +546,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: FilledButton.icon(
-                  onPressed: () => context.push('/club/${widget.clubId}/create-tournament'),
+                  onPressed: () => _showCreateTournamentTypeSheet(),
                   icon: const Icon(Icons.add_rounded, size: 18),
                   label: const Text("Tạo giải đấu mới"),
                   style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
@@ -582,41 +582,256 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       context,
     );
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: colors.bgCard, borderRadius: BorderRadius.circular(14), border: Border.all(color: colors.border)),
-      child: Row(
-        children: [
-          Container(width: 44, height: 44, decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.emoji_events_rounded, color: AppTheme.primary, size: 22)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(t.name, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: colors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text("${t.teamCount}/${t.maxTeams} đội", style: TextStyle(fontSize: 11, color: colors.textSecondary)),
-                    if (t.startDate != null) ...[
-                      const SizedBox(width: 8),
-                      Container(width: 3, height: 3, decoration: BoxDecoration(color: colors.textMuted, shape: BoxShape.circle)),
-                      const SizedBox(width: 8),
-                      Text(t.startDate!, style: TextStyle(fontSize: 11, color: colors.textMuted)),
+    return InkWell(
+      onTap: () => context.push('/intro/${t.id}'),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: (t.isLite ? const Color(0xFFF59E0B) : AppTheme.primary).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                t.isLite ? Icons.bolt_rounded : Icons.emoji_events_rounded,
+                color: t.isLite ? const Color(0xFFF59E0B) : AppTheme.primary,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          t.name,
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: colors.textPrimary),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: t.isLite
+                              ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
+                              : const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: t.isLite
+                                ? const Color(0xFFF59E0B).withValues(alpha: 0.3)
+                                : const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              t.isLite ? Icons.bolt_rounded : Icons.workspace_premium_rounded,
+                              size: 10,
+                              color: t.isLite ? const Color(0xFFF59E0B) : const Color(0xFF3B82F6),
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              t.isLite ? 'Giải Nhanh' : 'Nâng Cao',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                color: t.isLite ? const Color(0xFFF59E0B) : const Color(0xFF3B82F6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Text("${t.teamCount}/${t.maxTeams} đội", style: TextStyle(fontSize: 11, color: colors.textSecondary)),
+                      if (t.startDate != null) ...[
+                        const SizedBox(width: 8),
+                        Container(width: 3, height: 3, decoration: BoxDecoration(color: colors.textMuted, shape: BoxShape.circle)),
+                        const SizedBox(width: 8),
+                        Text(t.startDate!, style: TextStyle(fontSize: 11, color: colors.textMuted)),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+              child: Text(statusLabel, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: statusColor)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCreateTournamentTypeSheet() {
+    final colors = context.colors;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36, height: 4,
+                decoration: BoxDecoration(color: colors.border, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Chọn loại giải đấu',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: colors.textPrimary),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Chọn hình thức tạo giải phù hợp cho câu lạc bộ của bạn',
+              style: TextStyle(fontSize: 12, color: colors.textMuted),
+            ),
+            const SizedBox(height: 20),
+
+            // Option 1: Giải Nhanh (Lite)
+            InkWell(
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/club/${widget.clubId}/create-tournament');
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44, height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.bolt_rounded, color: Color(0xFFF59E0B), size: 24),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Giải Nhanh (Lite)',
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.textPrimary),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF59E0B),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text(
+                                  '30s',
+                                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.black),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Tạo nhanh trong 30 giây. Sinh mã QR & Link mời chia sẻ trực tiếp cho các thành viên.',
+                            style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.3),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right_rounded, color: colors.textMuted),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
-            child: Text(statusLabel, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: statusColor)),
-          ),
-        ],
+            const SizedBox(height: 12),
+
+            // Option 2: Giải Nâng Cao (Full)
+            InkWell(
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/tournaments/create');
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44, height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.workspace_premium_rounded, color: Color(0xFF3B82F6), size: 24),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Giải Nâng Cao (Chuyên nghiệp)',
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.textPrimary),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Đầy đủ cấu hình: Thể thức Vòng bảng, Knockout, Lịch thi đấu, Phí tham gia & Giải thưởng.',
+                            style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.3),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

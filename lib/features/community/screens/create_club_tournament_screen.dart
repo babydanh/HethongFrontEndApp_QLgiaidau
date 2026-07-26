@@ -32,6 +32,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   String _selectedFormat = AppConstants.formatSingles;
   String _selectedBracket = AppConstants.bracketSingleElimination;
   bool _isLoading = false;
+  bool _isRanked = false;
 
   @override
   void dispose() {
@@ -67,6 +68,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         'bracketType': _selectedBracket,
         'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
         'description': _descCtrl.text.trim(),
+        'isRanked': _isRanked,
       };
 
       _log.info('Tạo giải Lite trong CLB: ${body['name']}');
@@ -208,6 +210,51 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                 ),
               ),
               const SizedBox(height: 32),
+
+              // ─── Xếp hạng ELO toggle ───
+              Container(
+                decoration: BoxDecoration(
+                  color: _isRanked
+                      ? AppTheme.primary.withValues(alpha: 0.08)
+                      : context.colors.bgSurface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _isRanked ? AppTheme.primary : context.colors.border,
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _isRanked ? 'Xếp hạng ELO' : 'Phong trào',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: _isRanked ? AppTheme.primary : context.colors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            _isRanked
+                                ? 'Kết quả ảnh hưởng đến điểm ELO'
+                                : 'Giải giao hữu, không tính xếp hạng',
+                            style: TextStyle(fontSize: 11, color: context.colors.textMuted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: _isRanked,
+                      onChanged: (v) => setState(() => _isRanked = v),
+                      activeTrackColor: AppTheme.primary,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
 
               // ─── Nút Submit ───
               SizedBox(
