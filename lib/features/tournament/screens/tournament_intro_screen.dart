@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_banner
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_filter_segment.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_state_views.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/about_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
@@ -478,6 +479,22 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _buildBottomBar(Tournament tournament, UserRole? role) {
+    final statusUpper = tournament.status.toUpperCase();
+
+    final isLiveOrEnded = StatusHelper.isTournamentInProgress(tournament.status) ||
+        StatusHelper.isTournamentCompleted(tournament.status) ||
+        statusUpper == 'ONGOING' ||
+        statusUpper == 'IN_PROGRESS' ||
+        statusUpper == 'LIVE' ||
+        statusUpper == 'COMPLETED' ||
+        statusUpper == 'FINISHED' ||
+        statusUpper == 'CLOSED' ||
+        statusUpper == 'CANCELLED';
+
+    if (isLiveOrEnded) {
+      return const SizedBox.shrink();
+    }
+
     return _registrationButton(tournament);
   }
 
