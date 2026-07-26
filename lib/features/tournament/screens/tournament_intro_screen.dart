@@ -231,6 +231,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 ),
                 error: (e, _) => _buildTabContent(tournament, [], role),
               ),
+              const SizedBox(height: 160),
             ],
           ),
         ),
