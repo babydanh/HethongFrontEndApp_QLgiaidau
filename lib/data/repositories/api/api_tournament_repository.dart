@@ -199,20 +199,46 @@ class ApiTournamentRepository implements ITournamentRepository {
   Future<List<TournamentDivisionOption>> getDivisions(
     String tournamentId,
   ) async {
-    final response = await _dioClient.dio.get(
-      '/tournaments/$tournamentId/divisions',
-    );
-    final rawData = response.data['data'];
-    if (rawData is! List) return const [];
-    return rawData
-        .whereType<Map>()
-        .map(
-          (item) => TournamentDivisionOption.fromJson(
-            Map<String, dynamic>.from(item),
+    try {
+      final response = await _dioClient.dio.get(
+        '/tournaments/$tournamentId/divisions',
+      );
+      final rawData = response.data['data'];
+      if (rawData is List && rawData.isNotEmpty) {
+        final list = rawData
+            .whereType<Map>()
+            .map(
+              (item) => TournamentDivisionOption.fromJson(
+                Map<String, dynamic>.from(item),
+              ),
+            )
+            .where((division) => division.id.isNotEmpty)
+            .toList();
+        if (list.isNotEmpty) return list;
+      }
+    } catch (e, stack) {
+      _log.warning('Failed to fetch divisions via API, creating fallback: $e');
+    }
+
+    // Fallback: return default division using tournament details
+    try {
+      final tournament = await getById(tournamentId);
+      if (tournament != null) {
+        final isDoubles = tournament.format.toLowerCase() == 'doubles' ||
+            tournament.name.toLowerCase().contains('đôi');
+        return [
+          TournamentDivisionOption(
+            id: 'default_$tournamentId',
+            name: tournament.name.isNotEmpty ? tournament.name : 'Nội dung chính',
+            matchType: isDoubles ? 'DOUBLES' : 'SINGLES',
+            entryFee: tournament.entryFee,
+            maxParticipants: tournament.maxTeams,
           ),
-        )
-        .where((division) => division.id.isNotEmpty)
-        .toList();
+        ];
+      }
+    } catch (_) {}
+
+    return const [];
   }
 
   @override

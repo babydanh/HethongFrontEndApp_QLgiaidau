@@ -351,27 +351,40 @@ class _TournamentRegisterScreenState
                 widget.inviteCode == null &&
                 _localInviteCode == null;
             if (needsInvite) return _buildInviteGate(t);
-            // Don't show form until divisions loaded
             return divAsync.when(
               data: (divs) {
-                if (divs.isEmpty) return Center(child: Text('Giải này chưa có nội dung thi đấu', style: TextStyle(color: context.colors.textMuted)));
-                return _buildForm(t, divAsync);
+                final effectiveDivs = divs.isNotEmpty
+                    ? divs
+                    : [
+                        TournamentDivisionOption(
+                          id: 'default_${t.id}',
+                          name: t.name.isNotEmpty ? t.name : 'Nội dung chính',
+                          matchType: t.format.toLowerCase() == 'doubles' ||
+                                  t.name.toLowerCase().contains('đôi')
+                              ? 'DOUBLES'
+                              : 'SINGLES',
+                          entryFee: t.entryFee,
+                          maxParticipants: t.maxTeams,
+                        )
+                      ];
+                return _buildForm(t, AsyncValue.data(effectiveDivs));
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.error_outline, color: context.colors.error, size: 32),
-                    const SizedBox(height: 8),
-                    Text('Không thể tải nội dung thi đấu', style: TextStyle(color: context.colors.textPrimary, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 4),
-                    Text('Hãy thử lại', style: TextStyle(color: context.colors.textMuted, fontSize: 13)),
-                    const SizedBox(height: 12),
-                    ElevatedButton(onPressed: () => ref.invalidate(_divisionsProvider(widget.tournamentId)), child: const Text('Thử lại')),
-                  ],
-                ),
-              ),
+              error: (e, _) {
+                final fallbackDivs = [
+                  TournamentDivisionOption(
+                    id: 'default_${t.id}',
+                    name: t.name.isNotEmpty ? t.name : 'Nội dung chính',
+                    matchType: t.format.toLowerCase() == 'doubles' ||
+                            t.name.toLowerCase().contains('đôi')
+                        ? 'DOUBLES'
+                        : 'SINGLES',
+                    entryFee: t.entryFee,
+                    maxParticipants: t.maxTeams,
+                  )
+                ];
+                return _buildForm(t, AsyncValue.data(fallbackDivs));
+              },
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
