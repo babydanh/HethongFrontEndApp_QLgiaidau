@@ -17,7 +17,6 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/gallery_tab.dart';
 
-
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
 
@@ -31,28 +30,22 @@ class TournamentIntroScreen extends ConsumerStatefulWidget {
 class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final List<ScrollController> _tabScrollControllers = List.generate(
-    4,
-    (_) => ScrollController(),
-  );
-  double _headerDragRemainder = 0;
   String _selectedDivision = "";
   String? _selectedDivisionId;
-  bool _isHeaderCompact = false;
   bool _isFollowLoading = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    for (final controller in _tabScrollControllers) {
-      controller.dispose();
-    }
     super.dispose();
   }
 
@@ -209,109 +202,45 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final teamsAsync = ref.watch(introTeamsProvider(widget.tournamentId));
     final colors = context.colors;
 
-    return NotificationListener<ScrollNotification>(
-      onNotification: _handleScrollNotification,
-      child: Column(
-        children: [
-          _buildTopBar(tournament, colors),
-          Expanded(
-            child: Column(
-              children: [
-                GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onVerticalDragStart: (_) => _headerDragRemainder = 0,
-                  onVerticalDragEnd: (_) => _headerDragRemainder = 0,
-                  onVerticalDragCancel: () => _headerDragRemainder = 0,
-                  onVerticalDragUpdate: _handleHeaderDragUpdate,
-                  child: TournamentHeaderView(
-                    tournament: tournament,
-                    colors: colors,
-                    compact: _isHeaderCompact,
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            children: [
+              _buildTopBar(tournament, colors),
+              TournamentHeaderView(
+                tournament: tournament,
+                colors: colors,
+                compact: false,
+              ),
+              SizedBox(
+                height: 38,
+                child: _TabBarDelegate(
+                  tabController: _tabController,
+                  colors: colors,
+                ).build(context, 0, false),
+              ),
+              teamsAsync.when(
+                data: (teams) => _buildTabContent(tournament, teams, role),
+                loading: () => const Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppTheme.primary),
                   ),
                 ),
-                SizedBox(
-                  height: 38,
-                  child: _TabBarDelegate(
-                    tabController: _tabController,
-                    colors: colors,
-                  ).build(context, 0, false),
-                ),
-                Expanded(
-                  child: teamsAsync.when(
-                    data: (teams) => _buildTabContent(tournament, teams, role),
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(color: AppTheme.primary),
-                    ),
-                    error: (e, _) => _buildTabContent(tournament, [], role),
-                  ),
-                ),
-              ],
-            ),
+                error: (e, _) => _buildTabContent(tournament, [], role),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        Positioned(
+          right: 16,
+          bottom: 96,
+          child: _buildBottomBar(tournament, role),
+        ),
+      ],
     );
-  }
-
-  bool _handleScrollNotification(ScrollNotification notification) {
-    if (notification.metrics.axis == Axis.vertical) {
-      final metrics = notification.metrics;
-
-      // Không tự động thu nhỏ nếu danh sách quá ngắn (maxScrollExtent < 80px)
-      if (metrics.maxScrollExtent < 80) {
-        if (_isHeaderCompact) {
-          setState(() => _isHeaderCompact = false);
-        }
-        return false;
-      }
-
-      final pixels = metrics.pixels;
-      // Chỉ thu nhỏ khi cuộn xuống qua 80px
-      if (!_isHeaderCompact && pixels > 80) {
-        setState(() => _isHeaderCompact = true);
-      }
-      // Chỉ mở to lại khi cuộn hẳn về đỉnh trên cùng (pixels <= 0)
-      else if (_isHeaderCompact && pixels <= 0) {
-        setState(() => _isHeaderCompact = false);
-      }
-    }
-    return false;
-  }
-
-  void _handleHeaderDragUpdate(DragUpdateDetails details) {
-    final index = _tabController.index.clamp(
-      0,
-      _tabScrollControllers.length - 1,
-    );
-
-    // Tìm controller có client khả dụng (ưu tiên tab hiện tại, fallback sang tab khác nếu có)
-    ScrollController? controller = _tabScrollControllers[index];
-    if (!controller.hasClients) {
-      controller = _tabScrollControllers.firstWhere(
-        (c) => c.hasClients,
-        orElse: () => controller!,
-      );
-    }
-    if (!controller.hasClients) return;
-
-    final position = controller.position;
-    if (position.maxScrollExtent < 10) return;
-
-    _headerDragRemainder += details.delta.dy;
-    const activationThreshold = 6.0;
-    if (_headerDragRemainder.abs() < activationThreshold) return;
-
-    const dragDamping = 0.75;
-    final scrollDelta = (_headerDragRemainder -
-            activationThreshold * _headerDragRemainder.sign) *
-        dragDamping;
-    _headerDragRemainder = activationThreshold * _headerDragRemainder.sign;
-
-    final nextOffset = (controller.offset - scrollDelta).clamp(
-      position.minScrollExtent,
-      position.maxScrollExtent,
-    );
-    controller.jumpTo(nextOffset);
   }
 
   Widget _buildTopBar(
@@ -468,7 +397,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     List<Team> teams,
     UserRole? role,
   ) {
-    final isLive = StatusHelper.isTournamentInProgress(tournament.status);
     final divisions = tournament.divisions
         .map((d) => d.name)
         .toSet()
@@ -481,7 +409,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           animation: _tabController,
           builder: (context, _) {
             if (_tabController.index == 0 || divisions.isEmpty) {
-              return const SizedBox.shrink(); // Hide filter on "About" tab or if no divisions
+              return const SizedBox.shrink();
             }
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 2),
@@ -503,77 +431,58 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             );
           },
         ),
-        Expanded(
-          child: Stack(
-            children: [
-              TabBarView(
-                controller: _tabController,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: AboutTab(
-                      tournament: tournament,
-                      teamCount: teams.length,
-                      resolveImageUrl: _resolveImageUrl,
-                      scrollController: _tabScrollControllers[0],
-                    ),
+        AnimatedBuilder(
+          animation: _tabController,
+          builder: (context, _) {
+            switch (_tabController.index) {
+              case 0:
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: AboutTab(
+                    tournament: tournament,
+                    teamCount: teams.length,
+                    resolveImageUrl: _resolveImageUrl,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: TeamsTab(
-                      teams: teams,
-                      selectedDivision: _selectedDivision,
-                      scrollController: _tabScrollControllers[1],
-                    ),
+                );
+              case 1:
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: TeamsTab(
+                    teams: teams,
+                    selectedDivision: _selectedDivision,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: BracketTab(
-                      tournamentId: widget.tournamentId,
-                      selectedDivisionId: _selectedDivisionId,
-                      scrollController: _tabScrollControllers[2],
-                    ),
+                );
+              case 2:
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: BracketTab(
+                    tournamentId: widget.tournamentId,
+                    selectedDivisionId: _selectedDivisionId,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: GalleryTab(
-                      galleryImages: tournament.galleryImages,
-                      resolveImageUrl: _resolveImageUrl,
-                      scrollController: _tabScrollControllers[3],
-                    ),
+                );
+              case 3:
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: GalleryTab(
+                    galleryImages: tournament.galleryImages,
+                    resolveImageUrl: _resolveImageUrl,
                   ),
-                ],
-              ),
-              if (!isLive)
-                Positioned(
-                  right: 16,
-                  bottom: 120,
-                  child: _buildBottomBar(tournament, role),
-                ),
-            ],
-          ),
+                );
+              default:
+                return const SizedBox.shrink();
+            }
+          },
         ),
       ],
     );
   }
 
   Widget _buildBottomBar(Tournament tournament, UserRole? role) {
-    final isLive = StatusHelper.isTournamentInProgress(tournament.status);
-    final isRegistration =
-        StatusHelper.isTournamentRegistration(tournament.status) ||
-        StatusHelper.isTournamentDraft(tournament.status) ||
-        StatusHelper.isTournamentUpcoming(tournament.status);
     final isCompleted = StatusHelper.isTournamentCompleted(tournament.status);
-
-    if (isLive) {
-      return _liveButton(role, tournament.id);
+    if (isCompleted) {
+      return _viewBracketButton("Xem kết quả");
     }
-    if (isRegistration) {
-      return _registrationButton(tournament);
-    }
-    return isCompleted
-        ? _viewBracketButton("Xem kết quả")
-        : _viewBracketButton("Xem lịch thi đấu");
+    return _registrationButton(tournament);
   }
 
   Widget _viewBracketButton(String label) {
@@ -609,63 +518,24 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: AppTheme.primary.withValues(alpha: 0.25),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: FilledButton.icon(
+      child: FilledButton(
         style: FilledButton.styleFrom(
           backgroundColor: AppTheme.primary,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(100),
           ),
         ),
         onPressed: () => context.push('/register/${tournament.id}'),
-        icon: const Icon(Icons.edit_note_rounded, size: 22),
-        label: const Text(
-          "Đăng ký tham gia",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-
-  Widget _liveButton(UserRole? role, String tournamentId) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.error.withValues(alpha: 0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: FilledButton.icon(
-        style: FilledButton.styleFrom(
-          backgroundColor: context.colors.error,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
-          ),
-        ),
-        onPressed: () {
-          context.go('/live-matches/$tournamentId');
-        },
-        icon: Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: context.colors.bgCard,
-          ),
-        ),
-        label: const Text(
-          "Xem trực tiếp",
-          style: TextStyle(fontWeight: FontWeight.bold),
+        child: const Text(
+          "Đăng ký",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         ),
       ),
     );
