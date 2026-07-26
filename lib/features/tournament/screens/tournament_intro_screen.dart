@@ -11,7 +11,6 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_banner
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_filter_segment.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_state_views.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
-import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/about_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
@@ -479,47 +478,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _buildBottomBar(Tournament tournament, UserRole? role) {
-    if (StatusHelper.isTournamentInProgress(tournament.status)) {
-      return _viewBracketButton("Xem lịch & Tỷ số trực tiếp");
-    }
-    if (StatusHelper.isTournamentCompleted(tournament.status)) {
-      return _viewBracketButton("Xem kết quả giải đấu");
-    }
-    if (StatusHelper.isTournamentRegistration(tournament.status) ||
-        tournament.status.toUpperCase() == 'OPEN' ||
-        tournament.status.toUpperCase() == 'PUBLISHED' ||
-        tournament.status.toUpperCase() == 'UPCOMING') {
-      return _registrationButton(tournament);
-    }
-    return _viewBracketButton("Xem bảng thi đấu");
-  }
-
-  Widget _viewBracketButton(String label) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: FilledButton.icon(
-        style: FilledButton.styleFrom(
-          backgroundColor: AppTheme.primary,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
-          ),
-        ),
-        onPressed: () {
-          _tabController.animateTo(2);
-        },
-        icon: const Icon(Icons.account_tree_rounded, size: 20),
-        label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-      ),
-    );
+    return _registrationButton(tournament);
   }
 
   Widget _registrationButton(Tournament tournament) {
