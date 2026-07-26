@@ -16,7 +16,8 @@ import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
   final String selectedSport;
-  const LeaderboardScreen({super.key, this.selectedSport = 'all'});
+  final String searchQuery;
+  const LeaderboardScreen({super.key, this.selectedSport = 'all', this.searchQuery = ''});
 
   @override
   ConsumerState<LeaderboardScreen> createState() => _LeaderboardScreenState();
@@ -27,8 +28,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   String _selectedMatchType = 'SINGLES';
   String? _selectedGender = 'MALE';
   String? _selectedProvince;
-  final TextEditingController _searchCtrl = TextEditingController();
-  final String _query = '';
   final ScrollController _scrollCtrl = ScrollController();
   bool _isTop11_100Expanded = true;
 
@@ -57,7 +56,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
   @override
   void dispose() {
-    _searchCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
   }
@@ -285,17 +283,19 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     String? currentUserId,
   ) {
     final tierList = tiers;
-    final lowerQuery = _query.toLowerCase();
+    final query = widget.searchQuery.toLowerCase().trim().replaceAll(RegExp(r'\s+'), ' ');
+
+    final lowerQuery = widget.searchQuery.toLowerCase();
 
     // Lọc theo từ khoá tìm kiếm.
-    final filtered = _query.isEmpty
+    final filtered = widget.searchQuery.isEmpty
         ? rankings
         : rankings
             .where((r) => r.fullName.toLowerCase().contains(lowerQuery))
             .toList();
 
     // Trường hợp đang tìm kiếm: hiện danh sách kết quả + nhãn "hạng X / top 100".
-    if (_query.isNotEmpty) {
+    if (widget.searchQuery.isNotEmpty) {
       if (filtered.isEmpty) {
         return Center(
           child: Padding(
@@ -306,7 +306,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 Icon(Icons.person_search_rounded, size: 48, color: colors.textMuted),
                 const SizedBox(height: 16),
                 Text(
-                  'Không tìm thấy "$_query"',
+                  'Không tìm thấy "$query"',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
