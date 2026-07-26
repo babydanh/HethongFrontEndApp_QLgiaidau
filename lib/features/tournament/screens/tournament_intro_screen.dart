@@ -39,9 +39,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _tabController.addListener(() {
-      if (mounted) setState(() {});
-    });
   }
 
   @override
@@ -203,42 +200,35 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final teamsAsync = ref.watch(introTeamsProvider(widget.tournamentId));
     final colors = context.colors;
 
-    return Stack(
+    return Column(
       children: [
-        SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            children: [
-              _buildTopBar(tournament, colors),
-              TournamentHeaderView(
-                tournament: tournament,
-                colors: colors,
-                compact: false,
+        _buildTopBar(tournament, colors),
+        Expanded(
+          child: NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) => [
+              SliverToBoxAdapter(
+                child: TournamentHeaderView(
+                  tournament: tournament,
+                  colors: colors,
+                  compact: false,
+                ),
               ),
-              SizedBox(
-                height: 38,
-                child: _TabBarDelegate(
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _TabBarDelegate(
                   tabController: _tabController,
                   colors: colors,
-                ).build(context, 0, false),
-              ),
-              teamsAsync.when(
-                data: (teams) => _buildTabContent(tournament, teams, role),
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Center(
-                    child: CircularProgressIndicator(color: AppTheme.primary),
-                  ),
                 ),
-                error: (e, _) => _buildTabContent(tournament, [], role),
               ),
             ],
+            body: teamsAsync.when(
+              data: (teams) => _buildTabContent(tournament, teams, role),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppTheme.primary),
+              ),
+              error: (e, _) => _buildTabContent(tournament, [], role),
+            ),
           ),
-        ),
-        Positioned(
-          right: 16,
-          bottom: 96,
-          child: _buildBottomBar(tournament, role),
         ),
       ],
     );
@@ -398,6 +388,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     List<Team> teams,
     UserRole? role,
   ) {
+    final isLive = StatusHelper.isTournamentInProgress(tournament.status);
     final divisions = tournament.divisions
         .map((d) => d.name)
         .toSet()
@@ -432,61 +423,67 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             );
           },
         ),
-        AnimatedBuilder(
-          animation: _tabController,
-          builder: (context, _) {
-            switch (_tabController.index) {
-              case 0:
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: AboutTab(
-                    tournament: tournament,
-                    teamCount: teams.length,
-                    resolveImageUrl: _resolveImageUrl,
+        Expanded(
+          child: Stack(
+            children: [
+              TabBarView(
+                controller: _tabController,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: AboutTab(
+                      tournament: tournament,
+                      teamCount: teams.length,
+                      resolveImageUrl: _resolveImageUrl,
+                    ),
                   ),
-                );
-              case 1:
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: TeamsTab(
-                    teams: teams,
-                    selectedDivision: _selectedDivision,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: TeamsTab(
+                      teams: teams,
+                      selectedDivision: _selectedDivision,
+                    ),
                   ),
-                );
-              case 2:
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: BracketTab(
-                    tournamentId: widget.tournamentId,
-                    selectedDivisionId: _selectedDivisionId,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: BracketTab(
+                      tournamentId: widget.tournamentId,
+                      selectedDivisionId: _selectedDivisionId,
+                    ),
                   ),
-                );
-              case 3:
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: GalleryTab(
-                    galleryImages: tournament.galleryImages,
-                    resolveImageUrl: _resolveImageUrl,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: GalleryTab(
+                      galleryImages: tournament.galleryImages,
+                      resolveImageUrl: _resolveImageUrl,
+                    ),
                   ),
-                );
-              default:
-                return const SizedBox.shrink();
-            }
-          },
+                ],
+              ),
+              if (!isLive)
+                Positioned(
+                  right: 16,
+                  bottom: 120,
+                  child: _buildBottomBar(tournament, role),
+                ),
+            ],
+          ),
         ),
       ],
     );
   }
 
+  // ─── Bottom bar: chỉ hiện nút Đăng ký khi giải đang nhận đăng ký ───
   Widget _buildBottomBar(Tournament tournament, UserRole? role) {
-    final isCompleted = StatusHelper.isTournamentCompleted(tournament.status);
-    if (isCompleted) {
-      return _viewBracketButton("Xem kết quả");
+    if (StatusHelper.isTournamentRegistration(tournament.status) ||
+        StatusHelper.isTournamentDraft(tournament.status) ||
+        StatusHelper.isTournamentUpcoming(tournament.status)) {
+      return _registrationButton(tournament);
     }
-    return _registrationButton(tournament);
+    return const SizedBox.shrink();
   }
 
-  Widget _viewBracketButton(String label) {
+  Widget _registrationButton(Tournament tournament) {
     return Container(
       decoration: BoxDecoration(
         boxShadow: [
@@ -505,38 +502,11 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             borderRadius: BorderRadius.circular(100),
           ),
         ),
-        onPressed: () {
-          _tabController.animateTo(2);
-        },
-        icon: const Icon(Icons.account_tree_rounded, size: 20),
-        label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-      ),
-    );
-  }
-
-  Widget _registrationButton(Tournament tournament) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.25),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: FilledButton(
-        style: FilledButton.styleFrom(
-          backgroundColor: AppTheme.primary,
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
-          ),
-        ),
         onPressed: () => context.push('/register/${tournament.id}'),
-        child: const Text(
-          "Đăng ký",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        icon: const Icon(Icons.edit_note_rounded, size: 22),
+        label: const Text(
+          "Đăng ký tham gia",
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
     );

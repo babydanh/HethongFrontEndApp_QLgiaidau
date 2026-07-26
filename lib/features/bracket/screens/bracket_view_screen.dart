@@ -49,9 +49,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      if (mounted) setState(() {});
-    });
 
     if (!widget.isEmbedded) {
       SystemChrome.setPreferredOrientations([
@@ -162,63 +159,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
               bracketType == AppConstants.bracketGroupStageKnockout;
 
           if (isRoundRobin || isGroupStageKnockout) {
-            if (widget.isEmbedded) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    height: 34,
-                    child: TabBar(
-                      controller: _tabController,
-                      labelColor: AppTheme.primary,
-                      unselectedLabelColor: context.colors.textSecondary,
-                      indicatorColor: AppTheme.primary,
-                      indicatorWeight: 2,
-                      labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                      unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.normal),
-                      tabs: const [
-                        Tab(height: 30, text: 'Lịch thi đấu'),
-                        Tab(height: 30, text: 'Bảng xếp hạng'),
-                        Tab(height: 30, text: 'Bảng chéo'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  AnimatedBuilder(
-                    animation: _tabController,
-                    builder: (context, _) {
-                      switch (_tabController.index) {
-                        case 0:
-                          return _buildKnockoutMatchTable(
-                            matches,
-                            bracketType,
-                            auth.role == UserRole.viewer,
-                            auth.role == UserRole.admin || widget.isReferee,
-                          );
-                        case 1:
-                          return StandingsView(
-                            matches: matches,
-                            tournamentId: widget.tournamentId,
-                            divisionId: widget.divisionId,
-                          );
-                        case 2:
-                          return Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: CrossTableView(
-                              matches: matches,
-                              tournamentId: widget.tournamentId,
-                              divisionId: widget.divisionId,
-                            ),
-                          );
-                        default:
-                          return const SizedBox.shrink();
-                      }
-                    },
-                  ),
-                ],
-              );
-            }
-
             return Column(
               children: [
                 SizedBox(
@@ -369,12 +309,11 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     }).toList();
 
     return ListView(
-      physics: widget.isEmbedded
-          ? const NeverScrollableScrollPhysics()
-          : const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-      shrinkWrap: widget.isEmbedded,
+      controller: widget.scrollController,
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
+      physics: const BouncingScrollPhysics(
+        parent: AlwaysScrollableScrollPhysics(),
+      ),
       children: [
           // ── Diagram Access Banner ──
           if (!isRoundRobin)

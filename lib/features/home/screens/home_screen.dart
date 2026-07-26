@@ -33,7 +33,6 @@ import 'dart:io' show Platform;
 //  Giống clip-path: polygon(0% 0%, 100% 0%, 100% 85%, 50% 100%, 0% 75%)
 // ═══════════════════════════════════════════════════════
 
-
 // ═══════════════════════════════════════════════════════
 //  HOME SCREEN — Full Redesign
 // ═══════════════════════════════════════════════════════
@@ -71,11 +70,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String _tournamentContent = 'all';
   String _tournamentBracket = 'all';
   String _tournamentRanked = 'all';
+  String _tournamentLocation = '';
   DateTime? _tournamentStartDate;
   DateTime? _tournamentEndDate;
 
   bool get _shouldShowSearchBar =>
-      _currentIndex == 0 || _currentIndex == 1 || _currentIndex == 3 || _currentIndex == 4;
+      _currentIndex == 0 ||
+      _currentIndex == 1 ||
+      _currentIndex == 3 ||
+      _currentIndex == 4;
 
   String get _activeSportFilter {
     return switch (_currentIndex) {
@@ -105,6 +108,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
     });
   }
+
   final ScrollController _scrollController = ScrollController();
   double _headerScrollProgress = 0.0;
   bool _isAnimatingToTop = false;
@@ -339,7 +343,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     Text(
                                       _activeSportFilter == 'all'
                                           ? 'Tất cả'
-                                          : AppConstants.sportNames[_activeSportFilter] ??
+                                          : AppConstants
+                                                    .sportNames[_activeSportFilter] ??
                                                 _activeSportFilter,
                                       style: const TextStyle(
                                         color: Colors.white,
@@ -366,10 +371,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 _currentIndex == 1
                                     ? 'Giải đấu'
                                     : _currentIndex == 3
-                                        ? 'Câu lạc bộ'
-                                        : _currentIndex == 4
-                                            ? 'Bảng xếp hạng ELO'
-                                            : 'VNSport',
+                                    ? 'Câu lạc bộ'
+                                    : _currentIndex == 4
+                                    ? 'Bảng xếp hạng ELO'
+                                    : 'VNSport',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w900,
@@ -422,7 +427,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             // Floating Sticky Search Bar pinned directly below collapsed Header
-            if (_shouldShowSearchBar && (!isHomeTab || _headerScrollProgress > 0.0))
+            if (_shouldShowSearchBar &&
+                (!isHomeTab || _headerScrollProgress > 0.0))
               Positioned(
                 top: currentHeaderHeight + 4.0,
                 left: 16.0,
@@ -498,9 +504,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: tournamentsAsync.when(
               data: (tournamentsList) {
                 final allTournaments = tournamentsList.where((t) {
-                  final tSport = t.sport.toLowerCase().replaceAll('_', '').replaceAll(' ', '');
-                  final selSport = _exploreSport.toLowerCase().replaceAll('_', '').replaceAll(' ', '');
-                  final sportMatch = selSport == 'all' ||
+                  final tSport = t.sport
+                      .toLowerCase()
+                      .replaceAll('_', '')
+                      .replaceAll(' ', '');
+                  final selSport = _exploreSport
+                      .toLowerCase()
+                      .replaceAll('_', '')
+                      .replaceAll(' ', '');
+                  final sportMatch =
+                      selSport == 'all' ||
                       tSport == selSport ||
                       tSport.contains(selSport) ||
                       selSport.contains(tSport);
@@ -545,7 +558,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           duration: const Duration(milliseconds: 200),
                           child: KeyedSubtree(
                             key: ValueKey("featured_$_exploreSport"),
-                            child: _buildTournamentCarousel(featuredTournaments),
+                            child: _buildTournamentCarousel(
+                              featuredTournaments,
+                            ),
                           ),
                         ),
                       ),
@@ -579,9 +594,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         onAction: () => _switchTab(3),
                       ),
                     ),
-                    SliverToBoxAdapter(
-                      child: _buildClubsHorizontalList(),
-                    ),
+                    SliverToBoxAdapter(child: _buildClubsHorizontalList()),
                     if (allTournaments.isEmpty)
                       SliverFillRemaining(child: _buildEmpty()),
                     const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -657,7 +670,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       border: Border.all(color: const Color(0xFFF1F5F9)),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                          color: const Color(
+                            0xFF0F172A,
+                          ).withValues(alpha: 0.04),
                           blurRadius: 10,
                           offset: const Offset(0, 3),
                         ),
@@ -783,7 +798,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   PopupMenuItem<String> _buildPopupMenuItem(String label, String key) {
     final activeSport = _activeSportFilter;
-    final isSelected = activeSport == key || (key == '' && activeSport == 'all');
+    final isSelected =
+        activeSport == key || (key == '' && activeSport == 'all');
     return PopupMenuItem<String>(
       value: key,
       child: Row(
@@ -1048,6 +1064,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             (_tournamentContent != 'all' ? 1 : 0) +
             (_tournamentBracket != 'all' ? 1 : 0) +
             (_tournamentRanked != 'all' ? 1 : 0) +
+            (_tournamentLocation.trim().isNotEmpty ? 1 : 0) +
             (_tournamentStartDate != null ? 1 : 0) +
             (_tournamentEndDate != null ? 1 : 0);
       case 3:
@@ -1305,6 +1322,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         String localContent = _tournamentContent;
         String localBracket = _tournamentBracket;
         String localRanked = _tournamentRanked;
+        String localLocation = _tournamentLocation;
         DateTime? localStartDate = _tournamentStartDate;
         DateTime? localEndDate = _tournamentEndDate;
         return StatefulBuilder(
@@ -1436,8 +1454,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
+                    'Địa điểm',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    initialValue: localLocation,
+                    onChanged: (v) => localLocation = v,
+                    decoration: InputDecoration(
+                      hintText: 'Nhập tỉnh/thành, quận/huyện...',
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
                     'Ngày thi đấu',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textSecondary),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -1455,8 +1498,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               setSheetState(() => localStartDate = picked);
                             }
                           },
-                          icon: const Icon(Icons.calendar_today_rounded, size: 16),
-                          label: Text(localStartDate == null ? 'Từ ngày' : DateFormat('dd/MM/yyyy').format(localStartDate!)),
+                          icon: const Icon(
+                            Icons.calendar_today_rounded,
+                            size: 16,
+                          ),
+                          label: Text(
+                            localStartDate == null
+                                ? 'Từ ngày'
+                                : DateFormat(
+                                    'dd/MM/yyyy',
+                                  ).format(localStartDate!),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -1465,7 +1517,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           onPressed: () async {
                             final picked = await showDatePicker(
                               context: ctx,
-                              initialDate: localEndDate ?? localStartDate ?? DateTime.now(),
+                              initialDate:
+                                  localEndDate ??
+                                  localStartDate ??
+                                  DateTime.now(),
                               firstDate: DateTime(2020),
                               lastDate: DateTime(2035),
                             );
@@ -1473,8 +1528,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               setSheetState(() => localEndDate = picked);
                             }
                           },
-                          icon: const Icon(Icons.event_available_rounded, size: 16),
-                          label: Text(localEndDate == null ? 'Đến ngày' : DateFormat('dd/MM/yyyy').format(localEndDate!)),
+                          icon: const Icon(
+                            Icons.event_available_rounded,
+                            size: 16,
+                          ),
+                          label: Text(
+                            localEndDate == null
+                                ? 'Đến ngày'
+                                : DateFormat(
+                                    'dd/MM/yyyy',
+                                  ).format(localEndDate!),
+                          ),
                         ),
                       ),
                     ],
@@ -1491,6 +1555,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               localContent = 'all';
                               localBracket = 'all';
                               localRanked = 'all';
+                              localLocation = '';
                               localStartDate = null;
                               localEndDate = null;
                             });
@@ -1519,6 +1584,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               _tournamentContent = localContent;
                               _tournamentBracket = localBracket;
                               _tournamentRanked = localRanked;
+                              _tournamentLocation = localLocation.trim();
                               _tournamentStartDate = localStartDate;
                               _tournamentEndDate = localEndDate;
                             });
@@ -1705,14 +1771,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => setSheetState(() => localSport = 'all'),
+                        onPressed: () =>
+                            setSheetState(() => localSport = 'all'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: context.colors.textSecondary,
                           side: BorderSide(color: context.colors.border),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        child: const Text('Đặt lại', style: TextStyle(fontWeight: FontWeight.w600)),
+                        child: const Text(
+                          'Đặt lại',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1724,10 +1796,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         },
                         style: FilledButton.styleFrom(
                           backgroundColor: const Color(0xFF2979FF),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        child: const Text('Áp dụng', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
+                        child: const Text(
+                          'Áp dụng',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -1756,14 +1836,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
             decoration: BoxDecoration(
-              color: isSel
-                  ? const Color(0xFF2979FF)
-                  : context.colors.bgCard,
+              color: isSel ? const Color(0xFF2979FF) : context.colors.bgCard,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isSel
-                    ? const Color(0xFF2979FF)
-                    : context.colors.border,
+                color: isSel ? const Color(0xFF2979FF) : context.colors.border,
               ),
             ),
             child: Text(
@@ -1977,16 +2053,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _matchesTournamentContent(Tournament t) {
     final format = t.format.toLowerCase();
     return switch (_tournamentContent) {
-      'SINGLE_MALE' => format.contains('đơn nam') ||
-          (format.contains('single') && format.contains('male')),
-      'SINGLE_FEMALE' => format.contains('đơn nữ') ||
-          (format.contains('single') && format.contains('female')),
-      'DOUBLE_MALE' => format.contains('đôi nam') ||
-          (format.contains('double') && format.contains('male')),
-      'DOUBLE_FEMALE' => format.contains('đôi nữ') ||
-          (format.contains('double') && format.contains('female')),
-      'DOUBLE_MIXED' => format.contains('nam nữ') ||
-          format.contains('mixed'),
+      'SINGLE_MALE' =>
+        format.contains('đơn nam') ||
+            (format.contains('single') && format.contains('male')),
+      'SINGLE_FEMALE' =>
+        format.contains('đơn nữ') ||
+            (format.contains('single') && format.contains('female')),
+      'DOUBLE_MALE' =>
+        format.contains('đôi nam') ||
+            (format.contains('double') && format.contains('male')),
+      'DOUBLE_FEMALE' =>
+        format.contains('đôi nữ') ||
+            (format.contains('double') && format.contains('female')),
+      'DOUBLE_MIXED' => format.contains('nam nữ') || format.contains('mixed'),
       _ => true,
     };
   }
@@ -2024,8 +2103,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (_tournamentRanked == 'unranked' && t.isRanked) {
         return false;
       }
+      if (_tournamentLocation.trim().isNotEmpty) {
+        final loc = (t.locationAddress ?? '').toLowerCase();
+        if (!loc.contains(_normalizedQuery(_tournamentLocation))) {
+          return false;
+        }
+      }
       if (_tournamentStartDate != null &&
-          (t.startDate == null || t.startDate!.isBefore(_tournamentStartDate!))) {
+          (t.startDate == null ||
+              t.startDate!.isBefore(_tournamentStartDate!))) {
         return false;
       }
       if (_tournamentEndDate != null &&
@@ -2052,9 +2138,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        SliverToBoxAdapter(
-          child: SizedBox(height: _minHeaderHeight + 58.0),
-        ),
+        SliverToBoxAdapter(child: SizedBox(height: _minHeaderHeight + 58.0)),
         SliverPersistentHeader(
           pinned: true,
           delegate: _StatusFilterDelegate(
@@ -2129,12 +2213,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        SliverToBoxAdapter(
-          child: SizedBox(height: _minHeaderHeight + 58.0),
-        ),
-        SliverToBoxAdapter(
-          child: const SizedBox(height: 8),
-        ),
+        SliverToBoxAdapter(child: SizedBox(height: _minHeaderHeight + 58.0)),
+        SliverToBoxAdapter(child: const SizedBox(height: 8)),
         communitiesAsync.when(
           data: (clubs) {
             final filtered = clubs.where((c) {
@@ -2148,8 +2228,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     return true;
                   if (_clubSport == 'tennis' && name.contains('tennis'))
                     return true;
-                  if (_clubSport == 'pickleball' &&
-                      name.contains('pickleball'))
+                  if (_clubSport == 'pickleball' && name.contains('pickleball'))
                     return true;
                   return name.contains(_clubSport);
                 });
@@ -2197,7 +2276,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const SizedBox(height: 6),
                       const Text(
                         "Thử thay đổi môn thể thao hoặc từ khoá tìm kiếm",
-                        style: TextStyle(fontSize: 13.0, color: Color(0xFF94A3B8)),
+                        style: TextStyle(
+                          fontSize: 13.0,
+                          color: Color(0xFF94A3B8),
+                        ),
                       ),
                       const SizedBox(height: 80),
                     ],
@@ -3185,7 +3267,11 @@ class _StatusFilterDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => 52.0;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return child;
   }
 
@@ -3240,8 +3326,10 @@ class _TournamentSectionList extends ConsumerWidget {
         if (isT1Tbd && isT2Tbd) return false;
 
         if (filterStatus == 'live') return m.isLive;
-        if (filterStatus == 'completed') return m.isCompleted || m.isByeMatch || m.isBye;
-        if (filterStatus == 'scheduled') return m.isScheduled || (!m.isLive && !m.isCompleted);
+        if (filterStatus == 'completed')
+          return m.isCompleted || m.isByeMatch || m.isBye;
+        if (filterStatus == 'scheduled')
+          return m.isScheduled || (!m.isLive && !m.isCompleted);
         return true;
       });
 

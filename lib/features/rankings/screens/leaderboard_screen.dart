@@ -17,7 +17,11 @@ import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 class LeaderboardScreen extends ConsumerStatefulWidget {
   final String selectedSport;
   final String searchQuery;
-  const LeaderboardScreen({super.key, this.selectedSport = 'all', this.searchQuery = ''});
+  const LeaderboardScreen({
+    super.key,
+    this.selectedSport = 'all',
+    this.searchQuery = '',
+  });
 
   @override
   ConsumerState<LeaderboardScreen> createState() => _LeaderboardScreenState();
@@ -60,8 +64,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     super.dispose();
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
@@ -92,7 +94,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               effectiveCategoryId = categories.first.id;
             } else {
               final found = categories.firstWhere(
-                (c) => c.id == effectiveCategoryId || c.slug.toLowerCase() == effectiveCategoryId.toLowerCase(),
+                (c) =>
+                    c.id == effectiveCategoryId ||
+                    c.slug.toLowerCase() == effectiveCategoryId.toLowerCase(),
                 orElse: () => categories.first,
               );
               effectiveCategoryId = found.id;
@@ -122,7 +126,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                     data: (tiers) {
                       final myElo = rankingsAsync.asData?.value
                           .where((r) => r.userId == currentUserId)
-                          .firstOrNull?.eloPoints;
+                          .firstOrNull
+                          ?.eloPoints;
                       return TierLegendView(tiers: tiers, highlightElo: myElo);
                     },
                     loading: () => const SizedBox(height: 52),
@@ -146,7 +151,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       icon: Icons.cloud_off_rounded,
                       title: 'Không thể tải bảng xếp hạng',
                       subtitle: '$e',
-                      onRetry: () => ref.refresh(rankingsProvider(_rankingQuery)),
+                      onRetry: () =>
+                          ref.refresh(rankingsProvider(_rankingQuery)),
                     ),
                   ),
                 ],
@@ -165,8 +171,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       ),
     );
   }
-
-
 
   String _formatLabel(String matchType, String? gender) {
     if (matchType == 'SINGLES' && gender == 'MALE') return 'Đơn nam';
@@ -195,8 +199,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final format = formats[index];
-          final selected = _selectedMatchType == format.$1 &&
-              _selectedGender == format.$2;
+          final selected =
+              _selectedMatchType == format.$1 && _selectedGender == format.$2;
           return ChoiceChip(
             label: Text(format.$3),
             selected: selected,
@@ -232,7 +236,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           const SizedBox(width: 8),
           Text(
             'Tỉnh/Thành:',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.textSecondary),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: colors.textSecondary,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -248,20 +256,36 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 child: DropdownButton<String>(
                   value: _selectedProvince,
                   isExpanded: true,
-                  hint: Text('Tất cả', style: TextStyle(fontSize: 13, color: colors.textSecondary)),
-                  icon: Icon(Icons.arrow_drop_down_rounded, size: 20, color: colors.textMuted),
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: colors.textPrimary),
+                  hint: Text(
+                    'Tất cả',
+                    style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                  ),
+                  icon: Icon(
+                    Icons.arrow_drop_down_rounded,
+                    size: 20,
+                    color: colors.textMuted,
+                  ),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: colors.textPrimary,
+                  ),
                   dropdownColor: colors.bgCard,
                   onChanged: (val) => setState(() => _selectedProvince = val),
                   items: [
                     DropdownMenuItem<String>(
                       value: null,
-                      child: Text('Tất cả', style: TextStyle(color: colors.textSecondary)),
+                      child: Text(
+                        'Tất cả',
+                        style: TextStyle(color: colors.textSecondary),
+                      ),
                     ),
-                    ...ProvinceData.all.map((p) => DropdownMenuItem<String>(
-                      value: p.code,
-                      child: Text(p.name),
-                    )),
+                    ...ProvinceData.all.map(
+                      (p) => DropdownMenuItem<String>(
+                        value: p.code,
+                        child: Text(p.name),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -272,8 +296,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     );
   }
 
-
-
   // ─── Rankings list ─────────────────────────────────────────────────────
   Widget _buildRankingsList(
     List<PlayerRanking> rankings,
@@ -283,19 +305,25 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     String? currentUserId,
   ) {
     final tierList = tiers;
-    final query = widget.searchQuery.toLowerCase().trim().replaceAll(RegExp(r'\s+'), ' ');
+    final query = widget.searchQuery.toLowerCase().trim().replaceAll(
+      RegExp(r'\s+'),
+      ' ',
+    );
 
-    final lowerQuery = widget.searchQuery.toLowerCase();
-
-    // Lọc theo từ khoá tìm kiếm.
-    final filtered = widget.searchQuery.isEmpty
+    // Lọc theo từ khoá tìm kiếm từ thanh search Home.
+    final filtered = query.isEmpty
         ? rankings
-        : rankings
-            .where((r) => r.fullName.toLowerCase().contains(lowerQuery))
-            .toList();
+        : rankings.where((r) {
+            final haystack = [
+              r.fullName,
+              r.categoryName ?? '',
+              r.tierName,
+            ].join(' ').toLowerCase();
+            return haystack.contains(query);
+          }).toList();
 
     // Trường hợp đang tìm kiếm: hiện danh sách kết quả + nhãn "hạng X / top 100".
-    if (widget.searchQuery.isNotEmpty) {
+    if (query.isNotEmpty) {
       if (filtered.isEmpty) {
         return Center(
           child: Padding(
@@ -303,7 +331,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.person_search_rounded, size: 48, color: colors.textMuted),
+                Icon(
+                  Icons.person_search_rounded,
+                  size: 48,
+                  color: colors.textMuted,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Không tìm thấy "$query"',
@@ -346,18 +378,18 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     final top4_10 = rankings.where((r) => r.rank >= 4 && r.rank <= 10).toList();
     final top11_100 = rankings.where((r) => r.rank >= 11).toList();
 
-    final rank4 = top4_10.where((r) => r.rank == 4).firstOrNull ?? (top4_10.isNotEmpty ? top4_10.first : null);
-    final ranks5_10 = rank4 != null ? top4_10.where((r) => r != rank4).toList() : top4_10;
+    final rank4 =
+        top4_10.where((r) => r.rank == 4).firstOrNull ??
+        (top4_10.isNotEmpty ? top4_10.first : null);
+    final ranks5_10 = rank4 != null
+        ? top4_10.where((r) => r != rank4).toList()
+        : top4_10;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Bục vinh danh Top 1 - 3 (luôn hiện bục vinh danh)
-        PodiumView(
-          rankings: rankings,
-          tiers: tierList,
-          formatLabel: formatStr,
-        ),
+        PodiumView(rankings: rankings, tiers: tierList, formatLabel: formatStr),
 
         // Section 2: Hạng 4 - 10
         if (top4_10.isNotEmpty) ...[
@@ -374,7 +406,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
               child: Row(
                 children: [
-                  Expanded(child: Divider(color: colors.border.withValues(alpha: 0.6), thickness: 1)),
+                  Expanded(
+                    child: Divider(
+                      color: colors.border.withValues(alpha: 0.6),
+                      thickness: 1,
+                    ),
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
@@ -387,7 +424,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       ),
                     ),
                   ),
-                  Expanded(child: Divider(color: colors.border.withValues(alpha: 0.6), thickness: 1)),
+                  Expanded(
+                    child: Divider(
+                      color: colors.border.withValues(alpha: 0.6),
+                      thickness: 1,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -406,7 +448,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
             child: Row(
               children: [
-                Expanded(child: Divider(color: colors.border.withValues(alpha: 0.6), thickness: 1)),
+                Expanded(
+                  child: Divider(
+                    color: colors.border.withValues(alpha: 0.6),
+                    thickness: 1,
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Text(
@@ -419,7 +466,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                     ),
                   ),
                 ),
-                Expanded(child: Divider(color: colors.border.withValues(alpha: 0.6), thickness: 1)),
+                Expanded(
+                  child: Divider(
+                    color: colors.border.withValues(alpha: 0.6),
+                    thickness: 1,
+                  ),
+                ),
               ],
             ),
           ),
@@ -470,7 +522,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    _isTop11_100Expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_right_rounded,
+                    _isTop11_100Expanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_right_rounded,
                     color: colors.info,
                     size: 20,
                   ),
@@ -501,11 +555,16 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.info.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: colors.info.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: colors.info.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     'TOÀN QUỐC',
@@ -567,7 +626,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     AppColorsExtension colors,
     String currentUserId,
   ) {
-    final myRank = rankings.where((r) => r.userId == currentUserId && r.rank > 0).firstOrNull;
+    final myRank = rankings
+        .where((r) => r.userId == currentUserId && r.rank > 0)
+        .firstOrNull;
     if (myRank != null) {
       return UserStatsCard(ranking: myRank, tiers: tiers);
     }
@@ -589,7 +650,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           ),
           child: Row(
             children: [
-              Icon(Icons.emoji_events_outlined, color: colors.textMuted, size: 22),
+              Icon(
+                Icons.emoji_events_outlined,
+                color: colors.textMuted,
+                size: 22,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -612,7 +677,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         ),
         child: Row(
           children: [
-            Icon(Icons.emoji_events_outlined, color: colors.textMuted, size: 22),
+            Icon(
+              Icons.emoji_events_outlined,
+              color: colors.textMuted,
+              size: 22,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
