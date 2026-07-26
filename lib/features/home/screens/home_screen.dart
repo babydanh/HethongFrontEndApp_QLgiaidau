@@ -1044,9 +1044,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             (_exploreStatus != 'all' ? 1 : 0);
       case 1:
         return (_tournamentSport != 'all' ? 1 : 0) +
-            (_tournamentStatus != 'all' ? 1 : 0);
+            (_tournamentStatus != 'all' ? 1 : 0) +
+            (_tournamentContent != 'all' ? 1 : 0) +
+            (_tournamentBracket != 'all' ? 1 : 0) +
+            (_tournamentRanked != 'all' ? 1 : 0) +
+            (_tournamentStartDate != null ? 1 : 0) +
+            (_tournamentEndDate != null ? 1 : 0);
       case 3:
         return _clubSport != 'all' ? 1 : 0;
+      case 4:
+        return _rankingsSport != 'all' ? 1 : 0;
       default:
         return 0;
     }
@@ -1287,6 +1294,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _showTournamentFilterSheet() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: context.colors.bgSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -1294,117 +1302,249 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (ctx) {
         String localSport = _tournamentSport;
         String localStatus = _tournamentStatus;
+        String localContent = _tournamentContent;
+        String localBracket = _tournamentBracket;
+        String localRanked = _tournamentRanked;
+        DateTime? localStartDate = _tournamentStartDate;
+        DateTime? localEndDate = _tournamentEndDate;
         return StatefulBuilder(
-          builder: (ctx, setSheetState) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Bộ lọc Giải đấu',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    color: context.colors.textPrimary,
+          builder: (ctx, setSheetState) => Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(ctx).size.height * 0.85,
+            ),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 20,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Bộ lọc Giải đấu',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: context.colors.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Môn thể thao',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: context.colors.textSecondary,
+                  const SizedBox(height: 20),
+                  Text(
+                    'Môn thể thao',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textSecondary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                _buildFilterChips(
-                  items: const [
-                    ('all', 'Tất cả'),
-                    ('pickleball', 'Pickleball'),
-                    ('tennis', 'Tennis'),
-                    ('badminton', 'Cầu lông'),
-                    ('table_tennis', 'Bóng bàn'),
-                  ],
-                  selected: localSport,
-                  onSelected: (v) => setSheetState(() => localSport = v),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Trạng thái',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: context.colors.textSecondary,
+                  const SizedBox(height: 8),
+                  _buildFilterChips(
+                    items: const [
+                      ('all', 'Tất cả'),
+                      ('pickleball', 'Pickleball'),
+                      ('tennis', 'Tennis'),
+                      ('badminton', 'Cầu lông'),
+                      ('table_tennis', 'Bóng bàn'),
+                    ],
+                    selected: localSport,
+                    onSelected: (v) => setSheetState(() => localSport = v),
                   ),
-                ),
-                const SizedBox(height: 8),
-                _buildFilterChips(
-                  items: const [
-                    ('all', 'Tất cả'),
-                    ('registration', 'Đăng ký'),
-                    ('in_progress', 'Thi đấu'),
-                    ('completed', 'Hoàn thành'),
-                  ],
-                  selected: localStatus,
-                  onSelected: (v) => setSheetState(() => localStatus = v),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          setSheetState(() {
-                            localSport = 'all';
-                            localStatus = 'all';
-                          });
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: context.colors.textSecondary,
-                          side: BorderSide(color: context.colors.border),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        child: const Text(
-                          'Đặt lại',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Trạng thái',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildFilterChips(
+                    items: const [
+                      ('all', 'Tất cả'),
+                      ('registration', 'Đăng ký'),
+                      ('in_progress', 'Thi đấu'),
+                      ('completed', 'Hoàn thành'),
+                    ],
+                    selected: localStatus,
+                    onSelected: (v) => setSheetState(() => localStatus = v),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Nội dung thi đấu',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildFilterChips(
+                    items: const [
+                      ('all', 'Tất cả'),
+                      ('SINGLE_MALE', 'Đơn nam'),
+                      ('SINGLE_FEMALE', 'Đơn nữ'),
+                      ('DOUBLE_MALE', 'Đôi nam'),
+                      ('DOUBLE_FEMALE', 'Đôi nữ'),
+                      ('DOUBLE_MIXED', 'Đôi nam nữ'),
+                    ],
+                    selected: localContent,
+                    onSelected: (v) => setSheetState(() => localContent = v),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Thể thức',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildFilterChips(
+                    items: const [
+                      ('all', 'Tất cả'),
+                      ('single_elimination', 'Loại trực tiếp'),
+                      ('double_elimination', 'Thắng/thua'),
+                      ('round_robin', 'Vòng tròn'),
+                      ('group_stage_knockout', 'Vòng bảng + playoff'),
+                    ],
+                    selected: localBracket,
+                    onSelected: (v) => setSheetState(() => localBracket = v),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Tính điểm',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildFilterChips(
+                    items: const [
+                      ('all', 'Tất cả'),
+                      ('ranked', 'Xếp hạng ELO'),
+                      ('unranked', 'Phong trào'),
+                    ],
+                    selected: localRanked,
+                    onSelected: (v) => setSheetState(() => localRanked = v),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Ngày thi đấu',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textSecondary),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            final picked = await showDatePicker(
+                              context: ctx,
+                              initialDate: localStartDate ?? DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2035),
+                            );
+                            if (picked != null) {
+                              setSheetState(() => localStartDate = picked);
+                            }
+                          },
+                          icon: const Icon(Icons.calendar_today_rounded, size: 16),
+                          label: Text(localStartDate == null ? 'Từ ngày' : DateFormat('dd/MM/yyyy').format(localStartDate!)),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () {
-                          setState(() {
-                            _tournamentSport = localSport;
-                            _tournamentStatus = localStatus;
-                          });
-                          Navigator.pop(ctx);
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF2979FF),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            final picked = await showDatePicker(
+                              context: ctx,
+                              initialDate: localEndDate ?? localStartDate ?? DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2035),
+                            );
+                            if (picked != null) {
+                              setSheetState(() => localEndDate = picked);
+                            }
+                          },
+                          icon: const Icon(Icons.event_available_rounded, size: 16),
+                          label: Text(localEndDate == null ? 'Đến ngày' : DateFormat('dd/MM/yyyy').format(localEndDate!)),
                         ),
-                        child: const Text(
-                          'Áp dụng',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            setSheetState(() {
+                              localSport = 'all';
+                              localStatus = 'all';
+                              localContent = 'all';
+                              localBracket = 'all';
+                              localRanked = 'all';
+                              localStartDate = null;
+                              localEndDate = null;
+                            });
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: context.colors.textSecondary,
+                            side: BorderSide(color: context.colors.border),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: const Text(
+                            'Đặt lại',
+                            style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () {
+                            setState(() {
+                              _tournamentSport = localSport;
+                              _tournamentStatus = localStatus;
+                              _tournamentContent = localContent;
+                              _tournamentBracket = localBracket;
+                              _tournamentRanked = localRanked;
+                              _tournamentStartDate = localStartDate;
+                              _tournamentEndDate = localEndDate;
+                            });
+                            Navigator.pop(ctx);
+                          },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF2979FF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: const Text(
+                            'Áp dụng',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
           ),
         );
@@ -1502,6 +1642,92 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             color: Colors.white,
                           ),
                         ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showRankingFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.colors.bgSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        String localSport = _rankingsSport;
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Bộ lọc Xếp hạng ELO',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: context.colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Môn thể thao',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: context.colors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildFilterChips(
+                  items: const [
+                    ('all', 'Tất cả'),
+                    ('pickleball', 'Pickleball'),
+                    ('tennis', 'Tennis'),
+                    ('badminton', 'Cầu lông'),
+                    ('table_tennis', 'Bóng bàn'),
+                  ],
+                  selected: localSport,
+                  onSelected: (v) => setSheetState(() => localSport = v),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => setSheetState(() => localSport = 'all'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: context.colors.textSecondary,
+                          side: BorderSide(color: context.colors.border),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text('Đặt lại', style: TextStyle(fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          setState(() => _rankingsSport = localSport);
+                          Navigator.pop(ctx);
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF2979FF),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text('Áp dụng', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
                       ),
                     ),
                   ],
@@ -1748,6 +1974,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  bool _matchesTournamentContent(Tournament t) {
+    final format = t.format.toLowerCase();
+    return switch (_tournamentContent) {
+      'SINGLE_MALE' => format.contains('đơn nam') ||
+          (format.contains('single') && format.contains('male')),
+      'SINGLE_FEMALE' => format.contains('đơn nữ') ||
+          (format.contains('single') && format.contains('female')),
+      'DOUBLE_MALE' => format.contains('đôi nam') ||
+          (format.contains('double') && format.contains('male')),
+      'DOUBLE_FEMALE' => format.contains('đôi nữ') ||
+          (format.contains('double') && format.contains('female')),
+      'DOUBLE_MIXED' => format.contains('nam nữ') ||
+          format.contains('mixed'),
+      _ => true,
+    };
+  }
+
   // ═══════════════════════════════════════════════════════
   //  TAB 1: GIẢI ĐẤU (Tournaments)
   // ═══════════════════════════════════════════════════════
@@ -1768,8 +2011,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (_tournamentStatus == "completed" && t.status != "completed") {
         return false;
       }
-      if (q.isNotEmpty && !t.name.toLowerCase().contains(q)) {
+      if (_tournamentContent != 'all' && !_matchesTournamentContent(t)) {
         return false;
+      }
+      if (_tournamentBracket != 'all' &&
+          t.bracketType.toLowerCase() != _tournamentBracket) {
+        return false;
+      }
+      if (_tournamentRanked == 'ranked' && !t.isRanked) {
+        return false;
+      }
+      if (_tournamentRanked == 'unranked' && t.isRanked) {
+        return false;
+      }
+      if (_tournamentStartDate != null &&
+          (t.startDate == null || t.startDate!.isBefore(_tournamentStartDate!))) {
+        return false;
+      }
+      if (_tournamentEndDate != null &&
+          (t.endDate == null || t.endDate!.isAfter(_tournamentEndDate!))) {
+        return false;
+      }
+      if (q.isNotEmpty) {
+        final haystack = [
+          t.name,
+          t.description,
+          t.sport,
+          t.format,
+          t.bracketType,
+          t.locationAddress ?? '',
+        ].join(' ').toLowerCase();
+        if (!haystack.contains(q)) {
+          return false;
+        }
       }
       return true;
     }).toList();
