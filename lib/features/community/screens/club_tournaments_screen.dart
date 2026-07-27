@@ -6,16 +6,23 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:intl/intl.dart';
 
-final _clubTournamentsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, clubId) async {
-  try {
-    final dio = ref.read(dioClientProvider).dio;
-    final response = await dio.get('/communities/$clubId/tournaments');
-    if (response.statusCode == 200) {
-      return ((response.data['data'] ?? []) as List).cast<Map<String, dynamic>>();
-    }
-    return [];
-  } catch (_) { return []; }
-});
+final _clubTournamentsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((
+      ref,
+      clubId,
+    ) async {
+      try {
+        final dio = ref.read(dioClientProvider).dio;
+        final response = await dio.get('/communities/$clubId/tournaments');
+        if (response.statusCode == 200) {
+          return ((response.data['data'] ?? []) as List)
+              .cast<Map<String, dynamic>>();
+        }
+        return [];
+      } catch (_) {
+        return [];
+      }
+    });
 
 class ClubTournamentsScreen extends ConsumerWidget {
   final String clubId;
@@ -40,7 +47,8 @@ class ClubTournamentsScreen extends ConsumerWidget {
         data: (list) {
           if (list.isEmpty) return _buildEmpty(context);
           return RefreshIndicator(
-            onRefresh: () async => ref.refresh(_clubTournamentsProvider(clubId)),
+            onRefresh: () async =>
+                ref.refresh(_clubTournamentsProvider(clubId)),
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: list.length,
@@ -59,12 +67,23 @@ class ClubTournamentsScreen extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          width: 80, height: 80,
-          decoration: BoxDecoration(color: context.colors.bgSurface, borderRadius: BorderRadius.circular(20)),
-          child: Icon(Icons.emoji_events_outlined, size: 40, color: context.colors.textMuted.withValues(alpha: 0.4)),
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: context.colors.bgSurface,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Icon(
+            Icons.emoji_events_outlined,
+            size: 40,
+            color: context.colors.textMuted.withValues(alpha: 0.4),
+          ),
         ),
         const SizedBox(height: 16),
-        const Text('Chưa có giải đấu', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+        const Text(
+          'Chưa có giải đấu',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
         const SizedBox(height: 24),
         ElevatedButton.icon(
           onPressed: () => _showTypeSheet(context, clubId),
@@ -78,10 +97,13 @@ class ClubTournamentsScreen extends ConsumerWidget {
   Widget _buildCard(BuildContext context, Map<String, dynamic> t) {
     final name = t['name'] ?? '';
     final status = t['status'] ?? '';
-    final date = t['startDate'] != null ? DateTime.tryParse(t['startDate']) : null;
+    final date = t['startDate'] != null
+        ? DateTime.tryParse(t['startDate'])
+        : null;
     final dateStr = date != null ? DateFormat('dd/MM/yyyy').format(date) : '';
     final isLive = StatusHelper.isTournamentInProgress(status);
-    final isLite = t['isLite'] == true ||
+    final isLite =
+        t['isLite'] == true ||
         t['isQuick'] == true ||
         t['type'] == 'LITE' ||
         t['isClubLite'] == true ||
@@ -93,10 +115,16 @@ class ClubTournamentsScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: context.colors.bgCard,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isLive ? context.colors.error.withValues(alpha: 0.3) : context.colors.border),
+        border: Border.all(
+          color: isLive
+              ? context.colors.error.withValues(alpha: 0.3)
+              : context.colors.border,
+        ),
       ),
       child: InkWell(
-        onTap: () => context.push('/intro/${t['id']}'),
+        onTap: () => context.push(
+          isLite ? '/lite-manage/${t['id']}' : '/intro/${t['id']}',
+        ),
         borderRadius: BorderRadius.circular(10),
         child: Row(
           children: [
@@ -104,12 +132,20 @@ class ClubTournamentsScreen extends ConsumerWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: (isLite ? const Color(0xFFF59E0B) : (isLive ? context.colors.error : context.colors.info)).withValues(alpha: 0.12),
+                color:
+                    (isLite
+                            ? const Color(0xFFF59E0B)
+                            : (isLive
+                                  ? context.colors.error
+                                  : context.colors.info))
+                        .withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 isLite ? Icons.bolt_rounded : Icons.emoji_events_rounded,
-                color: isLite ? const Color(0xFFF59E0B) : (isLive ? context.colors.error : context.colors.info),
+                color: isLite
+                    ? const Color(0xFFF59E0B)
+                    : (isLive ? context.colors.error : context.colors.info),
                 size: 22,
               ),
             ),
@@ -123,14 +159,21 @@ class ClubTournamentsScreen extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           name,
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: context.colors.textPrimary,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: isLite
                               ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
@@ -139,16 +182,22 @@ class ClubTournamentsScreen extends ConsumerWidget {
                           border: Border.all(
                             color: isLite
                                 ? const Color(0xFFF59E0B).withValues(alpha: 0.3)
-                                : const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                                : const Color(
+                                    0xFF3B82F6,
+                                  ).withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              isLite ? Icons.bolt_rounded : Icons.workspace_premium_rounded,
+                              isLite
+                                  ? Icons.bolt_rounded
+                                  : Icons.workspace_premium_rounded,
                               size: 10,
-                              color: isLite ? const Color(0xFFF59E0B) : const Color(0xFF3B82F6),
+                              color: isLite
+                                  ? const Color(0xFFF59E0B)
+                                  : const Color(0xFF3B82F6),
                             ),
                             const SizedBox(width: 2),
                             Text(
@@ -156,7 +205,9 @@ class ClubTournamentsScreen extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w900,
-                                color: isLite ? const Color(0xFFF59E0B) : const Color(0xFF3B82F6),
+                                color: isLite
+                                    ? const Color(0xFFF59E0B)
+                                    : const Color(0xFF3B82F6),
                               ),
                             ),
                           ],
@@ -167,7 +218,13 @@ class ClubTournamentsScreen extends ConsumerWidget {
                   if (dateStr.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
-                      child: Text(dateStr, style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
+                      child: Text(
+                        dateStr,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: context.colors.textMuted,
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -198,14 +255,22 @@ class ClubTournamentsScreen extends ConsumerWidget {
           children: [
             Center(
               child: Container(
-                width: 36, height: 4,
-                decoration: BoxDecoration(color: colors.border, borderRadius: BorderRadius.circular(2)),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
             const SizedBox(height: 16),
             Text(
               'Chọn loại giải đấu',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: colors.textPrimary),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: colors.textPrimary,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -226,17 +291,24 @@ class ClubTournamentsScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
                     Container(
-                      width: 44, height: 44,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
                         color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.bolt_rounded, color: Color(0xFFF59E0B), size: 24),
+                      child: const Icon(
+                        Icons.bolt_rounded,
+                        color: Color(0xFFF59E0B),
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -247,18 +319,29 @@ class ClubTournamentsScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 'Giải Nhanh (Lite)',
-                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.textPrimary),
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.textPrimary,
+                                ),
                               ),
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFF59E0B),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: const Text(
                                   '30s',
-                                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.black),
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.black,
+                                  ),
                                 ),
                               ),
                             ],
@@ -266,7 +349,11 @@ class ClubTournamentsScreen extends ConsumerWidget {
                           const SizedBox(height: 4),
                           Text(
                             'Tạo nhanh trong 30 giây. Sinh mã QR & Link mời chia sẻ trực tiếp cho các thành viên.',
-                            style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.3),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.textSecondary,
+                              height: 1.3,
+                            ),
                           ),
                         ],
                       ),
@@ -290,17 +377,24 @@ class ClubTournamentsScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
                     Container(
-                      width: 44, height: 44,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
                         color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.workspace_premium_rounded, color: Color(0xFF3B82F6), size: 24),
+                      child: const Icon(
+                        Icons.workspace_premium_rounded,
+                        color: Color(0xFF3B82F6),
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -309,12 +403,20 @@ class ClubTournamentsScreen extends ConsumerWidget {
                         children: [
                           Text(
                             'Giải Nâng Cao (Chuyên nghiệp)',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.textPrimary),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: colors.textPrimary,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'Đầy đủ cấu hình: Thể thức Vòng bảng, Knockout, Lịch thi đấu, Phí tham gia & Giải thưởng.',
-                            style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.3),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.textSecondary,
+                              height: 1.3,
+                            ),
                           ),
                         ],
                       ),

@@ -119,7 +119,7 @@ class _CreateClubTournamentScreenState
         result: result,
         onManage: () {
           context.pop();
-          context.push('/intro/${result.id}');
+          context.push('/lite-manage/${result.id}');
         },
         onClose: () {
           context.pop();

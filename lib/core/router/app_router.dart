@@ -52,6 +52,7 @@ import 'package:app_quanly_giaidau/features/register/screens/join_invite_screen.
 import 'package:app_quanly_giaidau/features/register/screens/join_team_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_join_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_pairing_screen.dart';
+import 'package:app_quanly_giaidau/features/lite/screens/lite_management_screen.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/features/dashboard/screens/dashboard_screen.dart';
 import 'package:app_quanly_giaidau/features/series/screens/series_screen.dart';
@@ -339,6 +340,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/club-create',
         builder: (context, state) => const CreateClubScreen(),
       ),
+      GoRoute(
+        path: '/club/create',
+        builder: (context, state) => const CreateClubScreen(),
+      ),
+
+      // ─── Create Tournament Standalone ───
+      GoRoute(
+        path: '/tournaments/create',
+        builder: (context, state) =>
+            const CreateClubTournamentScreen(clubId: ''),
+      ),
 
       // ─── Club Detail ───
       GoRoute(
@@ -543,6 +555,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return LitePairingScreen(tournamentId: id);
+        },
+      ),
+
+      GoRoute(
+        path: '/lite-manage/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return LiteManagementScreen(tournamentId: id);
         },
       ),
 
