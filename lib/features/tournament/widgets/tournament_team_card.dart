@@ -7,11 +7,7 @@ class TournamentTeamCard extends StatefulWidget {
   final Team team;
   final Function(String? userId, String memberName)? onMemberTap;
 
-  const TournamentTeamCard({
-    super.key,
-    required this.team,
-    this.onMemberTap,
-  });
+  const TournamentTeamCard({super.key, required this.team, this.onMemberTap});
 
   @override
   State<TournamentTeamCard> createState() => _TournamentTeamCardState();
@@ -34,26 +30,26 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
     final team = widget.team;
 
     // Check if Doubles
-    final isDoubles = team.members.length > 1 ||
+    final isDoubles =
+        team.members.length > 1 ||
         team.name.contains(' - ') ||
         team.name.contains(' / ') ||
         team.name.contains(' & ');
 
-    // Member names
-    final List<String> memberNames = team.members.isNotEmpty
-        ? team.members
-        : (isDoubles
-            ? team.name
-                .split(RegExp(r' - | / | & '))
-                .map((e) => e.trim())
-                .where((e) => e.isNotEmpty)
-                .toList()
-            : [team.name]);
+    // Member names: for Doubles always split from team name to get 2 players
+    final List<String> memberNames = isDoubles
+        ? team.name
+              .split(RegExp(r' - | / | & '))
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList()
+        : (team.members.isNotEmpty ? team.members : [team.name]);
 
     final memberInfos = team.memberInfos;
 
     // Seed or Tier badge
-    final realTierName = (team.group.isNotEmpty &&
+    final realTierName =
+        (team.group.isNotEmpty &&
             !team.group.toLowerCase().contains('sơ') &&
             !team.group.toLowerCase().contains('nâng') &&
             !team.group.toLowerCase().startsWith('bảng'))
@@ -64,7 +60,9 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
     if (!isDoubles) {
       // ── SINGLES (ĐƠN) LAYOUT: DIRECT PROFILE TAP, NO EXPANSION ──
       final singleInfo = memberInfos.isNotEmpty ? memberInfos.first : null;
-      final eloStr = singleInfo?.eloPoints != null ? 'Elo: ${singleInfo!.eloPoints}' : null;
+      final eloStr = singleInfo?.eloPoints != null
+          ? 'Elo: ${singleInfo!.eloPoints}'
+          : null;
 
       return Container(
         margin: const EdgeInsets.symmetric(vertical: 3),
@@ -77,7 +75,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
               color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 6,
               offset: const Offset(0, 1.5),
-            )
+            ),
           ],
         ),
         child: Material(
@@ -111,14 +109,15 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                                 fit: BoxFit.cover,
                                 width: 38,
                                 height: 38,
-                                errorBuilder: (context, error, stackTrace) => Text(
-                                  _getInitials(team.name),
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.primary,
-                                  ),
-                                ),
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Text(
+                                      _getInitials(team.name),
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.primary,
+                                      ),
+                                    ),
                               ),
                             )
                           : Text(
@@ -149,17 +148,24 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (eloStr != null || realTierName != null || seedLabel != null) ...[
+                        if (eloStr != null ||
+                            realTierName != null ||
+                            seedLabel != null) ...[
                           const SizedBox(height: 3),
                           Row(
                             children: [
                               if (eloStr != null) ...[
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 1.5,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFF0F9FF),
                                     borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: const Color(0xFFBAE6FD)),
+                                    border: Border.all(
+                                      color: const Color(0xFFBAE6FD),
+                                    ),
                                   ),
                                   child: Text(
                                     eloStr,
@@ -174,11 +180,16 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                               ],
                               if (realTierName != null || seedLabel != null)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 1.5,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFEFF6FF),
                                     borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: const Color(0xFFBFDBFE)),
+                                    border: Border.all(
+                                      color: const Color(0xFFBFDBFE),
+                                    ),
                                   ),
                                   child: Text(
                                     realTierName ?? seedLabel!,
@@ -222,7 +233,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
             color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 6,
             offset: const Offset(0, 1.5),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -237,7 +248,10 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
               },
               borderRadius: BorderRadius.circular(14),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 child: Row(
                   children: [
                     // Team Avatar / Double Initials
@@ -251,7 +265,9 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                       ),
                       child: CircleAvatar(
                         radius: 19,
-                        backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
+                        backgroundColor: AppTheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
                         child: team.photoUrl.isNotEmpty
                             ? ClipOval(
                                 child: Image.network(
@@ -259,14 +275,15 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                                   fit: BoxFit.cover,
                                   width: 38,
                                   height: 38,
-                                  errorBuilder: (context, error, stackTrace) => Text(
-                                    _getInitials(team.name),
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.primary,
-                                    ),
-                                  ),
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Text(
+                                        _getInitials(team.name),
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.primary,
+                                        ),
+                                      ),
                                 ),
                               )
                             : Text(
@@ -301,14 +318,20 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              if (realTierName != null || seedLabel != null) ...[
+                              if (realTierName != null ||
+                                  seedLabel != null) ...[
                                 const SizedBox(width: 6),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 1.5,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFEFF6FF),
                                     borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: const Color(0xFFBFDBFE)),
+                                    border: Border.all(
+                                      color: const Color(0xFFBFDBFE),
+                                    ),
                                   ),
                                   child: Text(
                                     realTierName ?? seedLabel!,
@@ -364,17 +387,22 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
           if (_isExpanded) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
+              child: Divider(
+                height: 1,
+                color: colors.border.withValues(alpha: 0.5),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
               child: Column(
                 children: List.generate(memberNames.length, (idx) {
                   final mName = memberNames[idx];
-                  final MatchMemberInfo? mInfo =
-                      idx < memberInfos.length ? memberInfos[idx] : null;
-                  final eloStr =
-                      mInfo?.eloPoints != null ? 'Elo: ${mInfo!.eloPoints}' : null;
+                  final MatchMemberInfo? mInfo = idx < memberInfos.length
+                      ? memberInfos[idx]
+                      : null;
+                  final eloStr = mInfo?.eloPoints != null
+                      ? 'Elo: ${mInfo!.eloPoints}'
+                      : null;
                   final tierStr = mInfo?.tierName;
                   final isCaptain = idx == 0;
 
@@ -383,7 +411,9 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                     decoration: BoxDecoration(
                       color: colors.bgSurface.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: colors.border.withValues(alpha: 0.4)),
+                      border: Border.all(
+                        color: colors.border.withValues(alpha: 0.4),
+                      ),
                     ),
                     child: Material(
                       color: Colors.transparent,
@@ -394,13 +424,18 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                         },
                         borderRadius: BorderRadius.circular(10),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                           child: Row(
                             children: [
                               // Member avatar
                               CircleAvatar(
                                 radius: 14,
-                                backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
+                                backgroundColor: AppTheme.primary.withValues(
+                                  alpha: 0.15,
+                                ),
                                 child: Text(
                                   _getInitials(mName),
                                   style: const TextStyle(
@@ -431,7 +466,9 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                                     const SizedBox(width: 6),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 1.5),
+                                        horizontal: 6,
+                                        vertical: 1.5,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: isCaptain
                                             ? const Color(0xFFFEF2F2)
@@ -444,7 +481,9 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                                         ),
                                       ),
                                       child: Text(
-                                        isCaptain ? 'Trưởng nhóm' : 'Thành viên',
+                                        isCaptain
+                                            ? 'Trưởng nhóm'
+                                            : 'Thành viên',
                                         style: TextStyle(
                                           fontSize: 9,
                                           fontWeight: FontWeight.bold,
@@ -462,11 +501,15 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                               if (eloStr != null) ...[
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 1.5),
+                                    horizontal: 6,
+                                    vertical: 1.5,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFF0F9FF),
                                     borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: const Color(0xFFBAE6FD)),
+                                    border: Border.all(
+                                      color: const Color(0xFFBAE6FD),
+                                    ),
                                   ),
                                   child: Text(
                                     eloStr,
@@ -484,11 +527,15 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                               if (tierStr != null && tierStr.isNotEmpty) ...[
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 1.5),
+                                    horizontal: 6,
+                                    vertical: 1.5,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFFEF3C7),
                                     borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: const Color(0xFFFDE68A)),
+                                    border: Border.all(
+                                      color: const Color(0xFFFDE68A),
+                                    ),
                                   ),
                                   child: Text(
                                     tierStr,

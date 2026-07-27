@@ -51,7 +51,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
   @override
   Widget build(BuildContext context) {
-    final tournamentAsync = ref.watch(tournamentIntroProvider(widget.tournamentId));
+    final tournamentAsync = ref.watch(
+      tournamentIntroProvider(widget.tournamentId),
+    );
     final authRole = ref.watch(authProvider).role;
 
     return Scaffold(
@@ -89,11 +91,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     return SafeArea(
       child: Stack(
         children: [
-          Positioned(
-            left: 12,
-            top: 8,
-            child: _backButton(colors),
-          ),
+          Positioned(left: 12, top: 8, child: _backButton(colors)),
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -120,16 +118,16 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     return SafeArea(
       child: Stack(
         children: [
-          Positioned(
-            left: 12,
-            top: 8,
-            child: _backButton(colors),
-          ),
+          Positioned(left: 12, top: 8, child: _backButton(colors)),
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline_rounded, color: colors.error, size: 42),
+                Icon(
+                  Icons.error_outline_rounded,
+                  color: colors.error,
+                  size: 42,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'Không tải được giải đấu',
@@ -152,8 +150,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () =>
-                      ref.invalidate(tournamentIntroProvider(widget.tournamentId)),
+                  onPressed: () => ref.invalidate(
+                    tournamentIntroProvider(widget.tournamentId),
+                  ),
                   child: const Text('Thử lại'),
                 ),
               ],
@@ -195,7 +194,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _buildContent(Tournament tournament, UserRole? role) {
-    if ((_selectedDivisionId == null || _selectedDivision.isEmpty) && tournament.divisions.isNotEmpty) {
+    if ((_selectedDivisionId == null || _selectedDivision.isEmpty) &&
+        tournament.divisions.isNotEmpty) {
       _selectedDivision = tournament.divisions.first.name;
       _selectedDivisionId = tournament.divisions.first.id;
     }
@@ -244,10 +244,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  Widget _buildTopBar(
-    Tournament tournament,
-    AppColorsExtension colors,
-  ) {
+  Widget _buildTopBar(Tournament tournament, AppColorsExtension colors) {
     final followedAsync = ref.watch(followedTournamentsProvider);
     final isFollowing = followedAsync.maybeWhen(
       data: (items) => items.any((t) => t.id == tournament.id),
@@ -338,10 +335,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  Future<void> _toggleFollow(
-    Tournament tournament,
-    bool isFollowing,
-  ) async {
+  Future<void> _toggleFollow(Tournament tournament, bool isFollowing) async {
     final auth = ref.read(authProvider);
     if (!auth.isAuthenticated) {
       context.go('/login');
@@ -388,9 +382,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final text =
         '${tournament.name} - ${tournament.category ?? tournament.sport}';
     final url = 'https://giaidau.vnvar.com/tournaments/${tournament.id}';
-    await SharePlus.instance.share(
-      ShareParams(text: '$text\n\n$url'),
-    );
+    await SharePlus.instance.share(ShareParams(text: '$text\n\n$url'));
   }
 
   Widget _buildTabContent(
@@ -398,40 +390,40 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     List<Team> teams,
     UserRole? role,
   ) {
-    final divisions = tournament.divisions
-        .map((d) => d.name)
-        .toSet()
-        .toList();
+    final divisions = tournament.divisions.map((d) => d.name).toSet().toList();
 
     return Column(
       children: [
         // Global Division Filter (Visible on Teams, Bracket, and Standings tabs)
-        AnimatedBuilder(
-          animation: _tabController,
-          builder: (context, _) {
-            if (_tabController.index == 0 || divisions.isEmpty) {
-              return const SizedBox.shrink();
-            }
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: DivisionFilterSegment(
-                divisions: divisions,
-                selectedDivision: _selectedDivision,
-                onDivisionChanged: (val) {
-                  setState(() {
-                    _selectedDivision = val;
-                    final matchedList = tournament.divisions.where((d) => d.name == val);
-                    if (matchedList.isNotEmpty) {
-                      _selectedDivisionId = matchedList.first.id;
-                    } else if (tournament.divisions.isNotEmpty) {
-                      _selectedDivisionId = tournament.divisions.first.id;
-                    }
-                  });
-                },
-              ),
-            );
-          },
-        ),
+        if (!tournament.isLite)
+          AnimatedBuilder(
+            animation: _tabController,
+            builder: (context, _) {
+              if (_tabController.index == 0 || divisions.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: DivisionFilterSegment(
+                  divisions: divisions,
+                  selectedDivision: _selectedDivision,
+                  onDivisionChanged: (val) {
+                    setState(() {
+                      _selectedDivision = val;
+                      final matchedList = tournament.divisions.where(
+                        (d) => d.name == val,
+                      );
+                      if (matchedList.isNotEmpty) {
+                        _selectedDivisionId = matchedList.first.id;
+                      } else if (tournament.divisions.isNotEmpty) {
+                        _selectedDivisionId = tournament.divisions.first.id;
+                      }
+                    });
+                  },
+                ),
+              );
+            },
+          ),
         AnimatedBuilder(
           animation: _tabController,
           builder: (context, _) {
@@ -446,6 +438,12 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   ),
                 );
               case 1:
+                if (tournament.isLite) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: _buildLiteTeamList(teams),
+                  );
+                }
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: TeamsTab(
@@ -478,10 +476,112 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
+  Widget _buildLiteTeamList(List<Team> teams) {
+    final colors = context.colors;
+    if (teams.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.group_outlined,
+              size: 64,
+              color: colors.textMuted.withValues(alpha: 0.4),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Chưa có người tham gia',
+              style: TextStyle(fontSize: 15, color: colors.textSecondary),
+            ),
+          ],
+        ),
+      );
+    }
+    return ListView(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+      children: teams
+          .map(
+            (team) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: colors.bgCard,
+                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                border: Border.all(color: colors.border),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                    child: Text(
+                      team.name.isNotEmpty ? team.name[0].toUpperCase() : '?',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          team.name,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        if (team.members.isNotEmpty)
+                          Text(
+                            team.members.join(', '),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colors.textMuted,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.success.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Đã tham gia',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: colors.success,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+
   Widget _buildBottomBar(Tournament tournament, UserRole? role) {
     final statusUpper = tournament.status.toUpperCase();
 
-    final isLiveOrEnded = StatusHelper.isTournamentInProgress(tournament.status) ||
+    final isLiveOrEnded =
+        StatusHelper.isTournamentInProgress(tournament.status) ||
         StatusHelper.isTournamentCompleted(tournament.status) ||
         statusUpper == 'ONGOING' ||
         statusUpper == 'IN_PROGRESS' ||
@@ -518,7 +618,14 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           ),
         ),
         onPressed: () {
-          final query = _selectedDivisionId != null && _selectedDivisionId!.isNotEmpty
+          if (tournament.isLite &&
+              tournament.inviteCode != null &&
+              tournament.inviteCode!.isNotEmpty) {
+            context.push('/lite-join/${tournament.inviteCode}');
+            return;
+          }
+          final query =
+              _selectedDivisionId != null && _selectedDivisionId!.isNotEmpty
               ? '?divisionId=$_selectedDivisionId'
               : '';
           context.push('/register/${tournament.id}$query');
@@ -536,10 +643,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabController tabController;
   final AppColorsExtension colors;
 
-  _TabBarDelegate({
-    required this.tabController,
-    required this.colors,
-  });
+  _TabBarDelegate({required this.tabController, required this.colors});
 
   @override
   Widget build(
