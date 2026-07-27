@@ -259,7 +259,7 @@ class _CreateClubTournamentScreenState
                           ),
                           Text(
                             _isRanked
-                                ? 'Kết quả ảnh hưởng đến điểm ELO'
+                                ? 'Kết quả ảnh hưởng đến điểm ELO trong câu lạc bộ'
                                 : 'Giải giao hữu, không tính xếp hạng',
                             style: TextStyle(
                               fontSize: 11,
