@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 
 class ClubRankingWidget extends ConsumerStatefulWidget {
@@ -18,6 +19,8 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   List<PlayerRanking>? _rankings;
   bool _loading = true;
   String? _error;
+  String _selectedMatchType = 'SINGLES';
+  String? _selectedCategoryId;
 
   @override
   void initState() {
@@ -32,14 +35,18 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     });
     try {
       final dio = ref.read(dioProvider);
+      final queryParams = <String, dynamic>{
+        'communityId': widget.clubId,
+        'scope': 'COMMUNITY',
+        'matchType': _selectedMatchType,
+        'limit': 10,
+      };
+      if (_selectedCategoryId != null && _selectedCategoryId!.isNotEmpty) {
+        queryParams['categoryId'] = _selectedCategoryId;
+      }
       final response = await dio.get(
         '/rankings/leaderboard',
-        queryParameters: {
-          'communityId': widget.clubId,
-          'scope': 'COMMUNITY',
-          'matchType': 'SINGLES',
-          'limit': 10,
-        },
+        queryParameters: queryParams,
       );
       final raw = response.data;
       final List<dynamic> dataList = raw is Map<String, dynamic>
@@ -112,32 +119,19 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                 letterSpacing: 0.3,
               ),
             ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-              ),
-              child: Text(
-                'Đơn',
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.primary,
-                ),
-              ),
-            ),
+            const Spacer(),
+            // Match type filter tabs
+            _buildMatchTypeFilter(),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
 
         // ── Podium Row (Top 3) ──
         if (rankings.isNotEmpty) _buildPodiumRow(rankings),
 
         // ── Ranks 4-10 List ──
         if (rankings.length > 3) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           ...List.generate(rankings.length - 3, (i) {
             final index = i + 3;
             final r = rankings[index];
@@ -148,29 +142,73 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     );
   }
 
+  // ─── Match Type Filter ───
+
+  Widget _buildMatchTypeFilter() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _matchTypeTab('Đơn', 'SINGLES'),
+          _matchTypeTab('Đôi', 'DOUBLES'),
+        ],
+      ),
+    );
+  }
+
+  Widget _matchTypeTab(String label, String value) {
+    final isActive = _selectedMatchType == value;
+    return GestureDetector(
+      onTap: () {
+        if (_selectedMatchType != value) {
+          setState(() => _selectedMatchType = value);
+          _fetchRankings();
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: isActive ? AppTheme.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSmall - 1),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: isActive ? Colors.white : AppTheme.primary,
+          ),
+        ),
+      ),
+    );
+  }
+
   // ─── Podium ───
 
   Widget _buildPodiumRow(List<PlayerRanking> rankings) {
-    // Arrange: silver (r2) | gold (r1) | bronze (r3)
     final rank1 = rankings[0];
     final rank2 = rankings.length > 1 ? rankings[1] : null;
     final rank3 = rankings.length > 2 ? rankings[2] : null;
 
     return SizedBox(
-      height: 150,
+      height: 136,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           // Silver (rank 2) - left
           if (rank2 != null)
             Expanded(child: _buildPodiumCard(rank2, 2, isCenter: false)),
-          if (rank2 != null) const SizedBox(width: 6),
+          if (rank2 != null) const SizedBox(width: 5),
 
           // Gold (rank 1) - center, tallest
           Expanded(flex: 12, child: _buildPodiumCard(rank1, 1, isCenter: true)),
 
           // Bronze (rank 3) - right
-          if (rank3 != null) const SizedBox(width: 6),
+          if (rank3 != null) const SizedBox(width: 5),
           if (rank3 != null)
             Expanded(child: _buildPodiumCard(rank3, 3, isCenter: false)),
         ],
@@ -185,15 +223,16 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   }) {
     final colors = context.colors;
     final medalColors = _medalColors(rank);
-    final avatarSize = isCenter ? 44.0 : 36.0;
+    final avatarSize = isCenter ? 42.0 : 34.0;
+    final tierInfo = _getEloTierInfo(player.eloPoints);
 
     return Container(
-      height: isCenter ? 140 : 124,
+      height: isCenter ? 128 : 112,
       padding: EdgeInsets.only(
-        top: 12,
-        left: 8,
-        right: 8,
-        bottom: isCenter ? 16 : 10,
+        top: 10,
+        left: 6,
+        right: 6,
+        bottom: isCenter ? 14 : 8,
       ),
       decoration: BoxDecoration(
         color: medalColors.bg.withValues(alpha: 0.06),
@@ -206,7 +245,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Rank badge + medal icon
+          // Rank badge
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -216,21 +255,21 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                     : rank == 2
                     ? Icons.military_tech_rounded
                     : Icons.workspace_premium_rounded,
-                size: isCenter ? 16 : 13,
+                size: isCenter ? 15 : 12,
                 color: medalColors.icon,
               ),
-              const SizedBox(width: 3),
+              const SizedBox(width: 2),
               Text(
                 '#$rank',
                 style: TextStyle(
-                  fontSize: isCenter ? 13 : 11,
+                  fontSize: isCenter ? 12 : 10,
                   fontWeight: FontWeight.w700,
                   color: medalColors.icon,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
 
           // Avatar
           CircleAvatar(
@@ -253,13 +292,13 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                   )
                 : null,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
 
           // Name
           Text(
             player.fullName,
             style: TextStyle(
-              fontSize: isCenter ? 12 : 11,
+              fontSize: isCenter ? 11 : 10,
               fontWeight: FontWeight.w600,
               color: colors.textPrimary,
             ),
@@ -267,16 +306,40 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 2),
 
-          // ELO
-          Text(
-            '${player.eloPoints}',
-            style: TextStyle(
-              fontSize: isCenter ? 15 : 13,
-              fontWeight: FontWeight.w700,
-              color: medalColors.elo,
-            ),
+          // ELO points + Tier badge
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${player.eloPoints}',
+                style: TextStyle(
+                  fontSize: isCenter ? 14 : 12,
+                  fontWeight: FontWeight.w700,
+                  color: medalColors.elo,
+                ),
+              ),
+              const SizedBox(width: 4),
+              // Tier badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: tierInfo.bgColor,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: tierInfo.borderColor, width: 0.5),
+                ),
+                child: Text(
+                  tierInfo.label,
+                  style: TextStyle(
+                    fontSize: 7,
+                    fontWeight: FontWeight.w700,
+                    color: tierInfo.textColor,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -293,10 +356,11 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     final winRate = player.matchesPlayed > 0
         ? (player.matchesWon / player.matchesPlayed) * 100
         : 0.0;
+    final tierInfo = _getEloTierInfo(player.eloPoints);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      margin: const EdgeInsets.only(bottom: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
@@ -306,7 +370,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         children: [
           // Rank number
           SizedBox(
-            width: 24,
+            width: 22,
             child: Text(
               '#$rank',
               style: TextStyle(
@@ -319,7 +383,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
 
           // Avatar
           CircleAvatar(
-            radius: 12,
+            radius: 11,
             backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
             backgroundImage:
                 player.avatarUrl != null && player.avatarUrl!.isNotEmpty
@@ -333,19 +397,19 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                     style: TextStyle(
                       color: AppTheme.primary,
                       fontWeight: FontWeight.w600,
-                      fontSize: 9,
+                      fontSize: 8,
                     ),
                   )
                 : null,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 7),
 
           // Name
           Expanded(
             child: Text(
               player.fullName,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: colors.textPrimary,
               ),
@@ -353,40 +417,65 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
 
-          // ELO points
+          // Win rate
+          Text(
+            '${winRate.toStringAsFixed(0)}%',
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              color: colors.textMuted,
+            ),
+          ),
+          const SizedBox(width: 6),
+
+          // ELO points + tier badge
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
             decoration: BoxDecoration(
               color: AppTheme.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             ),
-            child: Text(
-              '${player.eloPoints}',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.primary,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${player.eloPoints}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 3),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0.5),
+                  decoration: BoxDecoration(
+                    color: tierInfo.bgColor,
+                    borderRadius: BorderRadius.circular(3),
+                    border: Border.all(color: tierInfo.borderColor, width: 0.5),
+                  ),
+                  child: Text(
+                    tierInfo.label,
+                    style: TextStyle(
+                      fontSize: 6.5,
+                      fontWeight: FontWeight.w700,
+                      color: tierInfo.textColor,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
 
           // Win rate bar
           SizedBox(
-            width: 44,
+            width: 40,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  '${winRate.toStringAsFixed(0)}%',
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textMuted,
-                  ),
-                ),
                 const SizedBox(height: 2),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(2),
@@ -445,6 +534,76 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         );
     }
   }
+
+  _EloTierInfo _getEloTierInfo(int elo) {
+    final idx = EloHelpers.findTierIndex(elo);
+    // Determine colors based on tier level
+    switch (idx) {
+      case 8: // Tier S
+        return _EloTierInfo(
+          label: 'S',
+          bgColor: const Color(0xFFFEF3C7),
+          textColor: const Color(0xFF92400E),
+          borderColor: const Color(0xFFFCD34D),
+        );
+      case 7: // High A
+        return _EloTierInfo(
+          label: 'A+',
+          bgColor: const Color(0xFFFEE2E2),
+          textColor: const Color(0xFF991B1B),
+          borderColor: const Color(0xFFFCA5A5),
+        );
+      case 6: // Low A
+        return _EloTierInfo(
+          label: 'A-',
+          bgColor: const Color(0xFFFFF5F5),
+          textColor: const Color(0xFFB91C1C),
+          borderColor: const Color(0xFFFECACA),
+        );
+      case 5: // High B
+        return _EloTierInfo(
+          label: 'B+',
+          bgColor: const Color(0xFFDBEAFE),
+          textColor: const Color(0xFF1E40AF),
+          borderColor: const Color(0xFF93C5FD),
+        );
+      case 4: // Low B
+        return _EloTierInfo(
+          label: 'B-',
+          bgColor: const Color(0xFFEFF6FF),
+          textColor: const Color(0xFF1D4ED8),
+          borderColor: const Color(0xFFBFDBFE),
+        );
+      case 3: // High C
+        return _EloTierInfo(
+          label: 'C+',
+          bgColor: const Color(0xFFD1FAE5),
+          textColor: const Color(0xFF065F46),
+          borderColor: const Color(0xFF6EE7B7),
+        );
+      case 2: // Low C
+        return _EloTierInfo(
+          label: 'C-',
+          bgColor: const Color(0xFFECFDF5),
+          textColor: const Color(0xFF047857),
+          borderColor: const Color(0xFFA7F3D0),
+        );
+      case 1: // High D
+        return _EloTierInfo(
+          label: 'D+',
+          bgColor: const Color(0xFFF1F5F9),
+          textColor: const Color(0xFF1E293B),
+          borderColor: const Color(0xFFCBD5E1),
+        );
+      default: // Low D (index 0)
+        return _EloTierInfo(
+          label: 'D',
+          bgColor: const Color(0xFFF5F5F4),
+          textColor: const Color(0xFF44403C),
+          borderColor: const Color(0xFFD6D3D1),
+        );
+    }
+  }
 }
 
 class _MedalColors {
@@ -458,5 +617,19 @@ class _MedalColors {
     required this.border,
     required this.icon,
     required this.elo,
+  });
+}
+
+class _EloTierInfo {
+  final String label;
+  final Color bgColor;
+  final Color textColor;
+  final Color borderColor;
+
+  const _EloTierInfo({
+    required this.label,
+    required this.bgColor,
+    required this.textColor,
+    required this.borderColor,
   });
 }
