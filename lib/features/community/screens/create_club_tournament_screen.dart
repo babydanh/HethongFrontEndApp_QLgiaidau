@@ -119,7 +119,7 @@ class _CreateClubTournamentScreenState
         result: result,
         onManage: () {
           context.pop();
-          context.push('/lite-pairing/${result.id}');
+          context.push('/intro/${result.id}');
         },
         onClose: () {
           context.pop();

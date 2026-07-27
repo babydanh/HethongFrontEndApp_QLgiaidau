@@ -54,7 +54,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
         ).showSnackBar(const SnackBar(content: Text('Tham gia thành công!')));
         final tournamentId = _status?['tournament']?['id']?.toString();
         if (tournamentId != null && tournamentId.isNotEmpty) {
-          context.go('/tournament/$tournamentId');
+          context.go('/intro/$tournamentId');
         }
       }
     } catch (e) {
