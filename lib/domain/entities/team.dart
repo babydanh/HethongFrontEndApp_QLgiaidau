@@ -14,6 +14,8 @@ class Team {
   final String contactEmail;
   final DateTime createdAt;
 
+  final int? eloPoints;
+
   const Team({
     required this.id,
     required this.name,
@@ -25,6 +27,7 @@ class Team {
     this.qrCode = '',
     this.approvalStatus = 'PENDING_APPROVAL',
     this.contactEmail = '',
+    this.eloPoints,
     required this.createdAt,
   });
 
@@ -32,6 +35,26 @@ class Team {
     final rawMembers = json['members'];
     List<String> parsedMembers = [];
     List<MatchMemberInfo> parsedMemberInfos = [];
+
+    int? parseInt(dynamic value) {
+      if (value is int) return value;
+      if (value is num) return value.round();
+      if (value is String) return int.tryParse(value);
+      return null;
+    }
+
+    final topElo = parseInt(
+      json['eloPoints'] ??
+          json['elo'] ??
+          json['elo_points'] ??
+          json['initialElo'] ??
+          json['rating'] ??
+          json['user']?['eloPoints'] ??
+          json['user']?['elo'] ??
+          json['user']?['rating'] ??
+          json['captain']?['eloPoints'] ??
+          json['captain']?['elo'],
+    );
 
     if (rawMembers is List) {
       for (final m in rawMembers) {
@@ -73,6 +96,7 @@ class Team {
           json['status']?.toString().toUpperCase() ??
           'PENDING_APPROVAL',
       contactEmail: json['contactEmail'] ?? '',
+      eloPoints: topElo,
       createdAt: DateParser.parseDate(json['createdAt']),
     );
   }

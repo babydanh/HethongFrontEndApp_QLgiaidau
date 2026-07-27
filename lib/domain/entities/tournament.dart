@@ -41,6 +41,8 @@ class Tournament {
   final bool isRanked;
   final String? registrationMode;
   final bool hideFeaturedCardText;
+  final String? inviteCode;
+  final bool isLite;
 
   const Tournament({
     required this.id,
@@ -78,6 +80,8 @@ class Tournament {
     this.isRanked = false,
     this.registrationMode,
     this.hideFeaturedCardText = false,
+    this.inviteCode,
+    this.isLite = false,
   });
 
   factory Tournament.fromJson(Map<String, dynamic> json, String id) {
@@ -131,15 +135,24 @@ class Tournament {
     if (json['tournamentConfig'] != null && json['tournamentConfig'] is Map) {
       config = json['tournamentConfig'] as Map<String, dynamic>;
     }
+    final configMode = config['mode']?.toString().toUpperCase();
 
-    String bracketTypeVal = (config['bracketType']?.toString() ?? json['bracketType']?.toString() ?? '').toLowerCase();
+    String bracketTypeVal =
+        (config['bracketType']?.toString() ??
+                json['bracketType']?.toString() ??
+                '')
+            .toLowerCase();
     int maxTeamsVal = _toInt(config['maxTeams']) ?? json['maxTeams'] ?? 16;
-    int roundCountVal = _toInt(config['roundRobinLegs']) ?? json['roundCount'] ?? 1;
+    int roundCountVal =
+        _toInt(config['roundRobinLegs']) ?? json['roundCount'] ?? 1;
 
-    final mappedStatus =
-        StatusHelper.normalizeTournamentStatus(json['status']?.toString());
+    final mappedStatus = StatusHelper.normalizeTournamentStatus(
+      json['status']?.toString(),
+    );
 
-    final parsedVisibility = (json['visibility'] ?? 'PUBLIC').toString().toUpperCase();
+    final parsedVisibility = (json['visibility'] ?? 'PUBLIC')
+        .toString()
+        .toUpperCase();
 
     double? parsedEntryFee;
     if (json['entryFee'] != null) {
@@ -155,14 +168,18 @@ class Tournament {
     if (json['divisions'] != null && json['divisions'] is List) {
       for (var div in json['divisions']) {
         if (div is Map) {
-          parsedDivisions.add(TournamentDivision.fromJson(Map<String, dynamic>.from(div)));
+          parsedDivisions.add(
+            TournamentDivision.fromJson(Map<String, dynamic>.from(div)),
+          );
         } else {
           // If the element is a string directly
-          parsedDivisions.add(TournamentDivision(
-            id: '',
-            name: div.toString(),
-            matchType: 'SINGLES',
-          ));
+          parsedDivisions.add(
+            TournamentDivision(
+              id: '',
+              name: div.toString(),
+              matchType: 'SINGLES',
+            ),
+          );
         }
       }
     }
@@ -179,9 +196,16 @@ class Tournament {
       adminToken: json['adminToken'] ?? json['inviteCode'] ?? '',
       refereeToken: json['refereeToken'] ?? json['inviteCode'] ?? '',
       viewerToken: json['viewerToken'] ?? json['inviteCode'] ?? '',
-      creatorId: json['creatorId'] ?? json['createdBy'] ?? json['creator']?['id'] ?? json['organizer']?['id'] ?? '',
-      creatorFullName: json['creator']?['fullName'] ?? json['organizer']?['fullName'],
-      creatorAvatarUrl: json['creator']?['avatarUrl'] ?? json['organizer']?['avatarUrl'],
+      creatorId:
+          json['creatorId'] ??
+          json['createdBy'] ??
+          json['creator']?['id'] ??
+          json['organizer']?['id'] ??
+          '',
+      creatorFullName:
+          json['creator']?['fullName'] ?? json['organizer']?['fullName'],
+      creatorAvatarUrl:
+          json['creator']?['avatarUrl'] ?? json['organizer']?['avatarUrl'],
       maxTeams: maxTeamsVal,
       maxPlayersPerTeam: json['maxPlayersPerTeam'],
       description: json['description'] ?? '',
@@ -191,12 +215,24 @@ class Tournament {
       entryFee: parsedEntryFee,
       logoUrl: json['logoUrl'] ?? json['logo_url'],
       bannerUrl: json['bannerUrl'] ?? json['banner_url'],
-      galleryImages: (json['galleryImages'] as List<dynamic>? ?? json['gallery_images'] as List<dynamic>?)
-          ?.map((e) => e.toString()).toList() ?? [],
-      startDate: json['startDate'] != null ? DateParser.parseDate(json['startDate']) : null,
-      endDate: json['endDate'] != null ? DateParser.parseDate(json['endDate']) : null,
-      registrationStartDate: json['registrationStartDate'] != null ? DateParser.parseDate(json['registrationStartDate']) : null,
-      registrationEndDate: json['registrationEndDate'] != null ? DateParser.parseDate(json['registrationEndDate']) : null,
+      galleryImages:
+          (json['galleryImages'] as List<dynamic>? ??
+                  json['gallery_images'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      startDate: json['startDate'] != null
+          ? DateParser.parseDate(json['startDate'])
+          : null,
+      endDate: json['endDate'] != null
+          ? DateParser.parseDate(json['endDate'])
+          : null,
+      registrationStartDate: json['registrationStartDate'] != null
+          ? DateParser.parseDate(json['registrationStartDate'])
+          : null,
+      registrationEndDate: json['registrationEndDate'] != null
+          ? DateParser.parseDate(json['registrationEndDate'])
+          : null,
       locationAddress: json['locationAddress'] ?? json['location_address'],
       prizeDescription: json['prizeDescription'] ?? json['prize_description'],
       contactInfo: parsedContactInfo,
@@ -204,6 +240,8 @@ class Tournament {
       isRanked: json['isRanked'] == true || json['is_ranked'] == true,
       registrationMode: config['registrationMode']?.toString(),
       hideFeaturedCardText: config['hideFeaturedCardText'] == true,
+      inviteCode: json['inviteCode']?.toString(),
+      isLite: configMode == 'LITE',
     );
   }
 
@@ -229,6 +267,7 @@ class Tournament {
         'roundRobinLegs': roundCount,
         if (registrationMode != null) 'registrationMode': registrationMode,
         'hideFeaturedCardText': hideFeaturedCardText,
+        if (isLite) 'mode': 'LITE',
       },
       'status': status,
       'visibility': visibility,
@@ -250,14 +289,17 @@ class Tournament {
       if (galleryImages.isNotEmpty) 'galleryImages': galleryImages,
       if (startDate != null) 'startDate': startDate?.toIso8601String(),
       if (endDate != null) 'endDate': endDate?.toIso8601String(),
-      if (registrationStartDate != null) 'registrationStartDate': registrationStartDate?.toIso8601String(),
-      if (registrationEndDate != null) 'registrationEndDate': registrationEndDate?.toIso8601String(),
+      if (registrationStartDate != null)
+        'registrationStartDate': registrationStartDate?.toIso8601String(),
+      if (registrationEndDate != null)
+        'registrationEndDate': registrationEndDate?.toIso8601String(),
       if (locationAddress != null) 'locationAddress': locationAddress,
       if (prizeDescription != null) 'prizeDescription': prizeDescription,
       if (contactInfo != null) 'contactInfo': contactInfo,
       'divisions': divisions.map((e) => e.toJson()).toList(),
       'isRanked': isRanked,
       if (registrationMode != null) 'registrationMode': registrationMode,
+      if (inviteCode != null) 'inviteCode': inviteCode,
     };
   }
 
@@ -297,6 +339,8 @@ class Tournament {
     bool? isRanked,
     String? registrationMode,
     bool? hideFeaturedCardText,
+    String? inviteCode,
+    bool? isLite,
   }) {
     return Tournament(
       id: id ?? this.id,
@@ -325,7 +369,8 @@ class Tournament {
       galleryImages: galleryImages ?? this.galleryImages,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
-      registrationStartDate: registrationStartDate ?? this.registrationStartDate,
+      registrationStartDate:
+          registrationStartDate ?? this.registrationStartDate,
       registrationEndDate: registrationEndDate ?? this.registrationEndDate,
       locationAddress: locationAddress ?? this.locationAddress,
       prizeDescription: prizeDescription ?? this.prizeDescription,
@@ -334,6 +379,8 @@ class Tournament {
       isRanked: isRanked ?? this.isRanked,
       registrationMode: registrationMode ?? this.registrationMode,
       hideFeaturedCardText: hideFeaturedCardText ?? this.hideFeaturedCardText,
+      inviteCode: inviteCode ?? this.inviteCode,
+      isLite: isLite ?? this.isLite,
     );
   }
 
@@ -360,19 +407,29 @@ class TournamentDivision {
 
   factory TournamentDivision.fromJson(Map<String, dynamic> json) {
     int parsedCount = 0;
-    if (json['_count'] != null && json['_count'] is Map && json['_count']['participants'] != null) {
-      parsedCount = int.tryParse(json['_count']['participants'].toString()) ?? 0;
+    if (json['_count'] != null &&
+        json['_count'] is Map &&
+        json['_count']['participants'] != null) {
+      parsedCount =
+          int.tryParse(json['_count']['participants'].toString()) ?? 0;
     }
     return TournamentDivision(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
-      matchType: json['matchType']?.toString() ?? json['match_type']?.toString() ?? 'SINGLES',
-      genderRestriction: json['genderRestriction']?.toString() ?? json['gender_restriction']?.toString(),
-      maxParticipants: json['maxParticipants'] != null ? int.tryParse(json['maxParticipants'].toString()) : null,
+      matchType:
+          json['matchType']?.toString() ??
+          json['match_type']?.toString() ??
+          'SINGLES',
+      genderRestriction:
+          json['genderRestriction']?.toString() ??
+          json['gender_restriction']?.toString(),
+      maxParticipants: json['maxParticipants'] != null
+          ? int.tryParse(json['maxParticipants'].toString())
+          : null,
       participantCount: parsedCount,
     );
   }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
