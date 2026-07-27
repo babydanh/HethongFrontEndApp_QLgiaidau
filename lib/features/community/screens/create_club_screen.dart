@@ -214,8 +214,9 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   Widget _buildSportSelector() {
     final sports = [
       (AppConstants.sportBadminton, 'Cầu lông', '🏸'),
-      (AppConstants.sportTennis, 'Tennis', '🎾'),
       (AppConstants.sportPickleball, 'Pickleball', '🏓'),
+      (AppConstants.sportTennis, 'Tennis', '🎾'),
+      (AppConstants.sportTableTennis, 'Bóng bàn', '🏓'),
     ];
     return Row(
       children: sports.map((s) {
