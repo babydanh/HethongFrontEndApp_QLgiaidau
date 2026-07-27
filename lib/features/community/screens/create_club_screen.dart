@@ -61,7 +61,10 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
       _log.success('Tạo CLB thành công: $clubId');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tạo câu lạc bộ thành công!'), backgroundColor: Color(0xFF059669)),
+          SnackBar(
+            content: Text('Tạo câu lạc bộ thành công!'),
+            backgroundColor: context.colors.success,
+          ),
         );
         ref.invalidate(communitiesProvider);
         context.go('/club/$clubId');
@@ -70,7 +73,10 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
       _log.error('Lỗi tạo CLB', e, stack);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: context.colors.error,
+          ),
         );
       }
     } finally {
@@ -91,7 +97,14 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
           icon: Icon(Icons.close_rounded, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: Text('Tạo câu lạc bộ', style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w800, fontSize: 17)),
+        title: Text(
+          'Tạo câu lạc bộ',
+          style: TextStyle(
+            color: colors.textPrimary,
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+          ),
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -105,9 +118,14 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               const SizedBox(height: 6),
               TextFormField(
                 controller: _nameCtrl,
-                validator: (v) => (v == null || v.trim().length < 3) ? 'Tên phải ít nhất 3 ký tự' : null,
+                validator: (v) => (v == null || v.trim().length < 3)
+                    ? 'Tên phải ít nhất 3 ký tự'
+                    : null,
                 style: TextStyle(color: colors.textPrimary),
-                decoration: InputDecoration(hintText: 'VD: CLB Cầu lông ABC', hintStyle: TextStyle(color: colors.textMuted, fontSize: 13)),
+                decoration: InputDecoration(
+                  hintText: 'VD: CLB Cầu lông ABC',
+                  hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -122,7 +140,10 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                 controller: _descCtrl,
                 maxLines: 3,
                 style: TextStyle(color: colors.textPrimary),
-                decoration: InputDecoration(hintText: 'Giới thiệu về câu lạc bộ...', hintStyle: TextStyle(color: colors.textMuted, fontSize: 13)),
+                decoration: InputDecoration(
+                  hintText: 'Giới thiệu về câu lạc bộ...',
+                  hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -131,7 +152,10 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               TextFormField(
                 controller: _locationCtrl,
                 style: TextStyle(color: colors.textPrimary),
-                decoration: InputDecoration(hintText: 'VD: Hà Nội, TP. Hồ Chí Minh...', hintStyle: TextStyle(color: colors.textMuted, fontSize: 13)),
+                decoration: InputDecoration(
+                  hintText: 'VD: Hà Nội, TP. Hồ Chí Minh...',
+                  hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -146,10 +170,27 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                 child: FilledButton.icon(
                   onPressed: _isLoading ? null : _submit,
                   icon: _isLoading
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : const Icon(Icons.add_rounded),
-                  label: Text(_isLoading ? 'Đang tạo...' : 'Tạo câu lạc bộ', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-                  style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                  label: Text(
+                    _isLoading ? 'Đang tạo...' : 'Tạo câu lạc bộ',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
+                  ),
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -160,7 +201,14 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   }
 
   Widget _label(String text, AppColorsExtension colors) {
-    return Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.textSecondary));
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: colors.textSecondary,
+      ),
+    );
   }
 
   Widget _buildSportSelector() {
@@ -180,15 +228,31 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: selected ? AppTheme.primary.withValues(alpha: 0.1) : context.colors.bgSurface,
+                  color: selected
+                      ? AppTheme.primary.withValues(alpha: 0.1)
+                      : context.colors.bgSurface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: selected ? AppTheme.primary : context.colors.border, width: selected ? 1.5 : 1),
+                  border: Border.all(
+                    color: selected ? AppTheme.primary : context.colors.border,
+                    width: selected ? 1.5 : 1,
+                  ),
                 ),
-                child: Column(children: [
-                  Text(s.$3, style: const TextStyle(fontSize: 20)),
-                  const SizedBox(height: 4),
-                  Text(s.$2, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: selected ? AppTheme.primary : context.colors.textSecondary)),
-                ]),
+                child: Column(
+                  children: [
+                    Text(s.$3, style: const TextStyle(fontSize: 20)),
+                    const SizedBox(height: 4),
+                    Text(
+                      s.$2,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: selected
+                            ? AppTheme.primary
+                            : context.colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -213,18 +277,53 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: selected ? AppTheme.primary.withValues(alpha: 0.08) : context.colors.bgSurface,
+                color: selected
+                    ? AppTheme.primary.withValues(alpha: 0.08)
+                    : context.colors.bgSurface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: selected ? AppTheme.primary : context.colors.border, width: selected ? 1.5 : 1),
+                border: Border.all(
+                  color: selected ? AppTheme.primary : context.colors.border,
+                  width: selected ? 1.5 : 1,
+                ),
               ),
-              child: Row(children: [
-                Icon(selected ? Icons.check_circle_rounded : Icons.circle_outlined, color: selected ? AppTheme.primary : context.colors.textMuted, size: 20),
-                const SizedBox(width: 12),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(m.$2, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: selected ? AppTheme.primary : context.colors.textPrimary)),
-                  Text(m.$3, style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
-                ])),
-              ]),
+              child: Row(
+                children: [
+                  Icon(
+                    selected
+                        ? Icons.check_circle_rounded
+                        : Icons.circle_outlined,
+                    color: selected
+                        ? AppTheme.primary
+                        : context.colors.textMuted,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          m.$2,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: selected
+                                ? AppTheme.primary
+                                : context.colors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          m.$3,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: context.colors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
