@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/providers/notification_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/app_notification.dart';
-import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {
   const NotificationScreen({super.key});
@@ -14,7 +12,6 @@ class NotificationScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationScreenState extends ConsumerState<NotificationScreen> {
-  static const _log = AppLogger('NotificationScreen');
   final _scrollController = ScrollController();
   bool _isLoadingMore = false;
 
@@ -25,7 +22,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    Future.microtask(() => ref.read(notificationStateProvider.notifier).loadPage(1));
+    Future.microtask(
+      () => ref.read(notificationStateProvider.notifier).loadPage(1),
+    );
   }
 
   @override
@@ -45,8 +44,8 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             .read(notificationStateProvider.notifier)
             .loadPage(s.currentPage + 1)
             .then((_) {
-          if (mounted) setState(() => _isLoadingMore = false);
-        });
+              if (mounted) setState(() => _isLoadingMore = false);
+            });
       }
     }
   }
@@ -62,32 +61,67 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     }
   }
 
-  Future<void> _handleInviteAction(
-      AppNotification notif, bool accept) async {
-    try {
-      final dio = ref.read(dioClientProvider).dio;
-      final endpoint = accept ? '/notifications/${notif.id}/accept' : '/notifications/${notif.id}/decline';
-      await dio.patch(endpoint);
-      await ref.read(notificationStateProvider.notifier).markAsRead(notif.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(accept ? 'Đã chấp nhận lời mời' : 'Đã từ chối lời mời'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e, stack) {
-      _log.error('Lỗi xử lý lời mời', e, stack);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(accept ? 'Không thể chấp nhận lời mời' : 'Không thể từ chối lời mời'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+  bool _isSupportedAppRoute(String path) {
+    return path == '/home' ||
+        path == '/profile' ||
+        path == '/notifications' ||
+        path == '/club-invites' ||
+        path == '/dashboard' ||
+        path == '/profile/settings' ||
+        path == '/profile/elo' ||
+        path.startsWith('/tournaments/') ||
+        path.startsWith('/matches/') ||
+        path.startsWith('/communities/') ||
+        path.startsWith('/lite/');
+  }
+
+  Future<void> _openNotification(AppNotification notif) async {
+    if (!notif.isRead) {
+      try {
+        await ref.read(notificationStateProvider.notifier).markAsRead(notif.id);
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Không thể cập nhật trạng thái thông báo.'),
+            ),
+          );
+        }
+        return;
       }
     }
+
+    final target = notif.redirectUrl?.trim();
+    if (target == null || target.isEmpty) return;
+
+    if (!target.startsWith('/')) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Tính năng này đang mở trên Web, vui lòng thử trên trình duyệt.',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (!_isSupportedAppRoute(target)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Thông báo đã được đánh dấu đã đọc. Tính năng này hiện mở tốt nhất trên Web.',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    context.go(target);
   }
 
   @override
@@ -138,13 +172,14 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
           Expanded(
             child: stateNotif.notifications.isEmpty && stateNotif.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : stateNotif.notifications.isEmpty && stateNotif.errorMessage != null
-                    ? _buildError(stateNotif.errorMessage!, colors)
-                    : stateNotif.notifications.isEmpty
-                        ? _buildEmpty(colors)
-                        : displayedNotifications.isEmpty
-                            ? _buildFilteredEmpty(colors)
-                            : _buildList(displayedNotifications, colors),
+                : stateNotif.notifications.isEmpty &&
+                      stateNotif.errorMessage != null
+                ? _buildError(stateNotif.errorMessage!, colors)
+                : stateNotif.notifications.isEmpty
+                ? _buildEmpty(colors)
+                : displayedNotifications.isEmpty
+                ? _buildFilteredEmpty(colors)
+                : _buildList(displayedNotifications, colors),
           ),
         ],
       ),
@@ -181,73 +216,87 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   }
 
   Widget _buildEmpty(AppColorsExtension colors) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.notifications_none_rounded,
-                size: 64, color: colors.textMuted),
-            const SizedBox(height: 16),
-            Text(
-              'Chưa có thông báo nào',
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: colors.textPrimary),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Các thông báo sẽ hiển thị tại đây',
-              style: TextStyle(fontSize: 13, color: colors.textSecondary),
-            ),
-          ],
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.notifications_none_rounded,
+          size: 64,
+          color: colors.textMuted,
         ),
-      );
-
-  Widget _buildFilteredEmpty(AppColorsExtension colors) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.done_all_rounded, size: 48, color: colors.success.withValues(alpha: 0.5)),
-            const SizedBox(height: 12),
-            Text(
-              'Không có thông báo chưa đọc',
-              style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textSecondary),
-            ),
-            const SizedBox(height: 4),
-            TextButton(
-              onPressed: () => setState(() => _unreadOnly = false),
-              child: const Text('Xem tất cả thông báo'),
-            ),
-          ],
-        ),
-      );
-
-  Widget _buildError(String message, AppColorsExtension colors) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
-              const SizedBox(height: 12),
-              Text(message,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: colors.textSecondary)),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () =>
-                    ref.read(notificationStateProvider.notifier).loadPage(1),
-                child: const Text('Thử lại'),
-              ),
-            ],
+        const SizedBox(height: 16),
+        Text(
+          'Chưa có thông báo nào',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: colors.textPrimary,
           ),
         ),
-      );
+        const SizedBox(height: 8),
+        Text(
+          'Các thông báo sẽ hiển thị tại đây',
+          style: TextStyle(fontSize: 13, color: colors.textSecondary),
+        ),
+      ],
+    ),
+  );
 
-  Widget _buildList(List<AppNotification> notifications, AppColorsExtension colors) {
+  Widget _buildFilteredEmpty(AppColorsExtension colors) => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.done_all_rounded,
+          size: 48,
+          color: colors.success.withValues(alpha: 0.5),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Không có thông báo chưa đọc',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: colors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        TextButton(
+          onPressed: () => setState(() => _unreadOnly = false),
+          child: const Text('Xem tất cả thông báo'),
+        ),
+      ],
+    ),
+  );
+
+  Widget _buildError(String message, AppColorsExtension colors) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: colors.textSecondary),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () =>
+                ref.read(notificationStateProvider.notifier).loadPage(1),
+            child: const Text('Thử lại'),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _buildList(
+    List<AppNotification> notifications,
+    AppColorsExtension colors,
+  ) {
     final grouped = <String, List<AppNotification>>{};
     final now = DateTime.now();
     for (final n in notifications) {
@@ -255,10 +304,10 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       final key = diff.inDays == 0
           ? 'Hôm nay'
           : diff.inDays == 1
-              ? 'Hôm qua'
-              : diff.inDays < 7
-                  ? 'Tuần này'
-                  : '${n.createdAt.day}/${n.createdAt.month}/${n.createdAt.year}';
+          ? 'Hôm qua'
+          : diff.inDays < 7
+          ? 'Tuần này'
+          : '${n.createdAt.day}/${n.createdAt.month}/${n.createdAt.year}';
       grouped.putIfAbsent(key, () => []).add(n);
     }
 
@@ -283,7 +332,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                 ? const Padding(
                     padding: EdgeInsets.all(16),
                     child: Center(
-                        child: CircularProgressIndicator(strokeWidth: 2)))
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
                 : const SizedBox.shrink();
           }
           final entryKey = orderedKeys[index];
@@ -311,32 +362,8 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   }
 
   Widget _buildCard(AppNotification notif, AppColorsExtension colors) {
-    final isInvite = notif.type == 'TOURNAMENT_REGISTER_PENDING' ||
-        notif.type == 'CLUB_INVITE' ||
-        notif.type == 'INVITE';
-
     return GestureDetector(
-      onTap: () async {
-        if (!notif.isRead) {
-          try {
-            await ref
-                .read(notificationStateProvider.notifier)
-                .markAsRead(notif.id);
-          } catch (_) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content:
-                        Text('Không thể cập nhật trạng thái thông báo.')),
-              );
-            }
-          }
-        }
-        if (!mounted) return;
-        if (notif.redirectUrl != null && notif.redirectUrl!.isNotEmpty) {
-          context.go(notif.redirectUrl!);
-        }
-      },
+      onTap: () => _openNotification(notif),
       child: Container(
         margin: const EdgeInsets.only(bottom: 6),
         padding: const EdgeInsets.all(14),
@@ -392,67 +419,28 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                             ),
                         ],
                       ),
-                      if (notif.body != null && notif.body!.isNotEmpty)
-                        ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            notif.body!,
-                            style: TextStyle(
-                                fontSize: 12, color: colors.textSecondary),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
+                      if (notif.body != null && notif.body!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          notif.body!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textSecondary,
                           ),
-                        ],
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                       const SizedBox(height: 4),
                       Text(
                         notif.timeAgo,
-                        style: TextStyle(
-                            fontSize: 11, color: colors.textMuted),
+                        style: TextStyle(fontSize: 11, color: colors.textMuted),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            // Inline accept/decline buttons for invites
-            if (isInvite) ...[
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => _handleInviteAction(notif, false),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: colors.textMuted,
-                      side: BorderSide(color: colors.border),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text('Từ chối',
-                        style: TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w600)),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: () => _handleInviteAction(notif, true),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF2979FF),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text('Chấp nhận',
-                        style: TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w600)),
-                  ),
-                ],
-              ),
-            ],
           ],
         ),
       ),
@@ -498,13 +486,9 @@ class _FilterSegment extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              isActive
-                  ? Icons.filter_alt_rounded
-                  : Icons.filter_alt_outlined,
+              isActive ? Icons.filter_alt_rounded : Icons.filter_alt_outlined,
               size: 16,
-              color: isActive
-                  ? const Color(0xFF2979FF)
-                  : colors.textMuted,
+              color: isActive ? const Color(0xFF2979FF) : colors.textMuted,
             ),
             const SizedBox(width: 6),
             Text(

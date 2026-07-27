@@ -264,13 +264,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       String winnerName = match.score1 > match.score2
           ? match.team1Name
           : match.team2Name;
-      String winnerId = match.score1 > match.score2
-          ? match.team1Id
-          : match.team2Id;
-      String loserId = match.score1 > match.score2
-          ? match.team2Id
-          : match.team1Id;
-
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -329,22 +322,84 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                ref
-                    .read(
-                      matchControllerProvider((
-                        tournamentId: widget.tournamentId,
-                        matchId: widget.matchId,
-                      )),
-                    )
-                    .endMatch(winnerId, loserId);
-                context.pop();
+                _showScoreDetailsRequiredMessage();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.colors.success,
               ),
-              child: const Text('Xác nhận Kết thúc'),
+              child: const Text('Mở bảng điểm để kết thúc'),
             ),
           ],
+        ),
+      );
+    }
+  }
+
+  void _showScoreDetailsRequiredMessage() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Cần nhập tỉ số set trong bảng chấm điểm trước khi kết thúc trận.',
+        ),
+        backgroundColor: context.colors.warning,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showUnsupportedPenaltyMessage() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Ghi nhật ký phạt chi tiết chưa hỗ trợ trên App. Trọng tài vẫn có thể chấm điểm; quyết định xử thắng/truất quyền cần BTC/Admin thực hiện.',
+        ),
+        backgroundColor: context.colors.warning,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _applyDisqualification({
+    required String winnerId,
+    required String reason,
+  }) async {
+    if (reason.trim().length < 5) {
+      _showUnsupportedPenaltyMessage();
+      return;
+    }
+    try {
+      await ref
+          .read(
+            matchControllerProvider((
+              tournamentId: widget.tournamentId,
+              matchId: widget.matchId,
+            )),
+          )
+          .applyOperation(
+            action: 'DISQUALIFICATION',
+            reason: reason.trim(),
+            winnerId: winnerId,
+          );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Đã ghi nhận xử thắng/truất quyền.'),
+          backgroundColor: context.colors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      context.pop();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Không thể ghi nhận quyết định. Vui lòng thử lại.',
+          ),
+          backgroundColor: context.colors.error,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
@@ -361,24 +416,21 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         team1Name: match.team1Name,
         team2Name: match.team2Name,
         onSubmit: (teamName, option, reason) {
-          final isT1 = teamName == match.team1Name;
-          ref
-              .read(
-                matchControllerProvider((
-                  tournamentId: widget.tournamentId,
-                  matchId: widget.matchId,
-                )),
-              )
-              .addPenalty(isT1, sport, option.id, option.name, reason);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Đã ghi nhận ${option.name}.'),
-                backgroundColor: context.colors.success,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+          final penalizedTeam1 = teamName == match.team1Name;
+          final severePenalty =
+              option.id == 'black_card' ||
+              option.id == 'game_penalty' ||
+              option.id == 'foul';
+          if (!severePenalty) {
+            _showUnsupportedPenaltyMessage();
+            return;
           }
+          final winnerId = penalizedTeam1 ? match.team2Id : match.team1Id;
+          _applyDisqualification(
+            winnerId: winnerId,
+            reason:
+                '${option.name}: ${reason.trim().isEmpty ? 'Quyết định xử phạt của trọng tài' : reason.trim()}',
+          );
         },
       ),
     );
@@ -492,53 +544,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
-  void _forceWinMatch(String winnerId, String loserId) {
-    final match = ref
-        .read(
-          singleMatchProvider((
-            tournamentId: widget.tournamentId,
-            matchId: widget.matchId,
-          )),
-        )
-        .value;
-    if (match != null) {
-      int newScore1 = match.score1;
-      int newScore2 = match.score2;
-
-      if (winnerId == match.team1Id) {
-        newScore1 =
-            match.maxScore ??
-            (match.score1 <= match.score2 ? match.score2 + 1 : match.score1);
-      } else {
-        newScore2 =
-            match.maxScore ??
-            (match.score2 <= match.score1 ? match.score1 + 1 : match.score2);
-      }
-
-      ref
-          .read(
-            matchControllerProvider((
-              tournamentId: widget.tournamentId,
-              matchId: widget.matchId,
-            )),
-          )
-          .updateMatchResultByAdmin(
-            score1: newScore1,
-            score2: newScore2,
-            winnerId: winnerId,
-            loserId: loserId,
-          );
-    } else {
-      ref
-          .read(
-            matchControllerProvider((
-              tournamentId: widget.tournamentId,
-              matchId: widget.matchId,
-            )),
-          )
-          .endMatch(winnerId, loserId);
-    }
-    context.pop();
+  void _forceWinMatch(String winnerId, String _) {
+    _applyDisqualification(
+      winnerId: winnerId,
+      reason: 'Xử thắng nhanh theo quyết định của trọng tài/BTC',
+    );
   }
 
   @override
@@ -557,10 +567,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       )),
     );
     final auth = ref.watch(authProvider);
-    final canOpenScoring = auth.canScore ||
-        auth.isAuthenticated ||
+    final canOpenScoring =
+        auth.canScore ||
         auth.role == UserRole.admin ||
         auth.role == UserRole.referee;
+    final canOperateMatch = auth.role == UserRole.admin;
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
@@ -630,8 +641,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       tournamentId: widget.tournamentId,
                       matchId: widget.matchId,
                       match: match,
-                      onRecordPenalty: () => _showFoulSelectionDialog(match),
-                      onForceWin: () => _showForceWinDialog(match),
+                      onRecordPenalty: canOperateMatch
+                          ? () => _showFoulSelectionDialog(match)
+                          : null,
+                      onForceWin: canOperateMatch
+                          ? () => _showForceWinDialog(match)
+                          : null,
                     ),
                     icon: const Icon(Icons.scoreboard_rounded, size: 18),
                     label: const Text('Tính điểm'),
@@ -685,13 +700,21 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 if (match.isCompleted) {
                   return _buildCompletedState(match, auth.role);
                 }
-                return _buildLiveState(match, canOpenScoring: false);
+                return _buildLiveState(
+                  match,
+                  canOpenScoring: false,
+                  canOperateMatch: false,
+                );
               }
 
               if (match.isScheduled) {
                 return _buildSetupState(match);
               } else if (match.isLive) {
-                return _buildLiveState(match, canOpenScoring: canOpenScoring);
+                return _buildLiveState(
+                  match,
+                  canOpenScoring: canOpenScoring,
+                  canOperateMatch: canOperateMatch,
+                );
               } else {
                 return _buildCompletedState(match, auth.role);
               }
@@ -759,6 +782,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     SportRuleKind kind,
     SportConfig config,
   ) {
+    final canOperateMatch = ref.read(authProvider).role == UserRole.admin;
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -780,7 +804,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(Icons.sports_score_rounded, color: context.colors.info, size: 42),
+              Icon(
+                Icons.sports_score_rounded,
+                color: context.colors.info,
+                size: 42,
+              ),
               const SizedBox(height: 12),
               Text(
                 'Thông tin trận đấu',
@@ -845,7 +873,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         ),
                         _buildSetupChip(
                           'Luật',
-                          config.mustWinByTwo ? 'Cách biệt 2' : 'Không cách biệt 2',
+                          config.mustWinByTwo
+                              ? 'Cách biệt 2'
+                              : 'Không cách biệt 2',
                         ),
                       ],
                     ),
@@ -855,11 +885,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               const SizedBox(height: 18),
               TextField(
                 controller: _refereeController,
-                style: TextStyle(fontSize: 15, color: context.colors.textPrimary),
+                style: TextStyle(
+                  fontSize: 15,
+                  color: context.colors.textPrimary,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Tên trọng tài hoặc ghi chú nhanh',
                   helperText: 'Không bắt buộc. Chỉ hiển thị trong app nếu có.',
-                  prefixIcon: Icon(Icons.person_outline_rounded, color: context.colors.textMuted),
+                  prefixIcon: Icon(
+                    Icons.person_outline_rounded,
+                    color: context.colors.textMuted,
+                  ),
                   filled: true,
                   fillColor: context.colors.bgDark,
                   border: OutlineInputBorder(
@@ -897,8 +933,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             ? match.refereeName
                             : _refereeController.text.trim(),
                       ),
-                      onRecordPenalty: () => _showFoulSelectionDialog(match),
-                      onForceWin: () => _showForceWinDialog(match),
+                      onRecordPenalty: canOperateMatch
+                          ? () => _showFoulSelectionDialog(match)
+                          : null,
+                      onForceWin: canOperateMatch
+                          ? () => _showForceWinDialog(match)
+                          : null,
                     );
                   },
                   icon: const Icon(Icons.play_arrow_rounded),
@@ -923,6 +963,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   Widget _buildSetupState(MatchModel match) {
+    final canOperateMatch = ref.read(authProvider).role == UserRole.admin;
     final kind = SportRuleKind.fromString(match.sportKey);
     final config = resolveSportConfig(match.sportRules, kind);
     _ensureSetupControlsSeeded(match, config);
@@ -1224,8 +1265,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             ? match.refereeName
                             : _refereeController.text.trim(),
                       ),
-                      onRecordPenalty: () => _showFoulSelectionDialog(match),
-                      onForceWin: () => _showForceWinDialog(match),
+                      onRecordPenalty: canOperateMatch
+                          ? () => _showFoulSelectionDialog(match)
+                          : null,
+                      onForceWin: canOperateMatch
+                          ? () => _showForceWinDialog(match)
+                          : null,
                     );
                   },
                   icon: const Icon(Icons.play_arrow_rounded),
@@ -1319,11 +1364,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   // ═══════════════════════════════════════════════════════════
   //  LIVE STATE — Đang thi đấu / Viewer
   // ═══════════════════════════════════════════════════════════
-  Widget _buildLiveState(MatchModel match, {required bool canOpenScoring}) {
+  Widget _buildLiveState(
+    MatchModel match, {
+    required bool canOpenScoring,
+    required bool canOperateMatch,
+  }) {
     if (widget.isViewer || canOpenScoring) {
       return _buildViewerState(
         match,
         canOpenScoring: canOpenScoring,
+        canOperateMatch: canOperateMatch,
       );
     }
 
@@ -1625,7 +1675,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   // ═══════════════════════════════════════════════════════════
   //  VIEWER STATE — Người xem
   // ═══════════════════════════════════════════════════════════
-  Widget _buildViewerState(MatchModel match, {required bool canOpenScoring}) {
+  Widget _buildViewerState(
+    MatchModel match, {
+    required bool canOpenScoring,
+    required bool canOperateMatch,
+  }) {
     final params = (tournamentId: widget.tournamentId, matchId: widget.matchId);
 
     return Column(
@@ -1718,7 +1772,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     ),
                   ),
                   onPressed: () async {
-                    final controller = ref.read(matchControllerProvider(params));
+                    final controller = ref.read(
+                      matchControllerProvider(params),
+                    );
                     if (match.isScheduled) {
                       await controller.startMatch();
                     }
@@ -1728,8 +1784,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         tournamentId: widget.tournamentId,
                         matchId: widget.matchId,
                         match: match,
-                        onRecordPenalty: () => _showFoulSelectionDialog(match),
-                        onForceWin: () => _showForceWinDialog(match),
+                        onRecordPenalty: canOperateMatch
+                            ? () => _showFoulSelectionDialog(match)
+                            : null,
+                        onForceWin: canOperateMatch
+                            ? () => _showForceWinDialog(match)
+                            : null,
                       );
                     }
                   },
@@ -2118,7 +2178,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       return realMembers.map((m) => _memberEloLabel(m, isDoubles)).join('\n');
     }
     final label = isDoubles ? 'ELO Đôi' : 'ELO Đơn';
-    if (displayList.length == 1) return '${displayList.first} • $label: Chưa có';
+    if (displayList.length == 1)
+      return '${displayList.first} • $label: Chưa có';
     return displayList.map((n) => '$n • $label: Chưa có').join('\n');
   }
 
@@ -2166,7 +2227,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     List<String> displayList,
     Color color,
   ) {
-    final bool isDoubles = displayList.length >= 2 ||
+    final bool isDoubles =
+        displayList.length >= 2 ||
         teamName.contains('&') ||
         teamName.contains(' - ') ||
         teamName.toLowerCase().contains('đôi');
@@ -2219,7 +2281,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     }
 
     // Singles
-    final name1 = displayList.isNotEmpty ? displayList[0].trim() : teamName.trim();
+    final name1 = displayList.isNotEmpty
+        ? displayList[0].trim()
+        : teamName.trim();
     final initial = name1.isNotEmpty ? name1[0].toUpperCase() : 'V';
     return CircleAvatar(
       radius: 26,

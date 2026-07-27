@@ -5,8 +5,10 @@ import 'package:share_plus/share_plus.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/registration_gate.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_banner.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_filter_segment.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_state_views.dart';
@@ -51,7 +53,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
   @override
   Widget build(BuildContext context) {
-    final tournamentAsync = ref.watch(tournamentIntroProvider(widget.tournamentId));
+    final tournamentAsync = ref.watch(
+      tournamentIntroProvider(widget.tournamentId),
+    );
     final authRole = ref.watch(authProvider).role;
 
     return Scaffold(
@@ -89,11 +93,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     return SafeArea(
       child: Stack(
         children: [
-          Positioned(
-            left: 12,
-            top: 8,
-            child: _backButton(colors),
-          ),
+          Positioned(left: 12, top: 8, child: _backButton(colors)),
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -120,16 +120,16 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     return SafeArea(
       child: Stack(
         children: [
-          Positioned(
-            left: 12,
-            top: 8,
-            child: _backButton(colors),
-          ),
+          Positioned(left: 12, top: 8, child: _backButton(colors)),
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline_rounded, color: colors.error, size: 42),
+                Icon(
+                  Icons.error_outline_rounded,
+                  color: colors.error,
+                  size: 42,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'Không tải được giải đấu',
@@ -152,8 +152,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () =>
-                      ref.invalidate(tournamentIntroProvider(widget.tournamentId)),
+                  onPressed: () => ref.invalidate(
+                    tournamentIntroProvider(widget.tournamentId),
+                  ),
                   child: const Text('Thử lại'),
                 ),
               ],
@@ -195,11 +196,20 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _buildContent(Tournament tournament, UserRole? role) {
-    if ((_selectedDivisionId == null || _selectedDivision.isEmpty) && tournament.divisions.isNotEmpty) {
+    if ((_selectedDivisionId == null || _selectedDivision.isEmpty) &&
+        tournament.divisions.isNotEmpty) {
       _selectedDivision = tournament.divisions.first.name;
       _selectedDivisionId = tournament.divisions.first.id;
     }
     final teamsAsync = ref.watch(introTeamsProvider(widget.tournamentId));
+    final profileAsync = ref.watch(userProfileProvider);
+    final teams = teamsAsync.asData?.value ?? const <Team>[];
+    final profile = profileAsync.asData?.value;
+    final identityCheckPending =
+        teamsAsync.isLoading ||
+        profileAsync.isLoading ||
+        teamsAsync.hasError ||
+        profileAsync.hasError;
     final colors = context.colors;
 
     return Stack(
@@ -238,16 +248,19 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         Positioned(
           right: 16,
           bottom: 96,
-          child: _buildBottomBar(tournament, role),
+          child: _buildBottomBar(
+            tournament,
+            role,
+            teams: teams,
+            currentUserId: profile?.id ?? '',
+            identityCheckPending: identityCheckPending,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildTopBar(
-    Tournament tournament,
-    AppColorsExtension colors,
-  ) {
+  Widget _buildTopBar(Tournament tournament, AppColorsExtension colors) {
     final followedAsync = ref.watch(followedTournamentsProvider);
     final isFollowing = followedAsync.maybeWhen(
       data: (items) => items.any((t) => t.id == tournament.id),
@@ -338,10 +351,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  Future<void> _toggleFollow(
-    Tournament tournament,
-    bool isFollowing,
-  ) async {
+  Future<void> _toggleFollow(Tournament tournament, bool isFollowing) async {
     final auth = ref.read(authProvider);
     if (!auth.isAuthenticated) {
       context.go('/login');
@@ -388,9 +398,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final text =
         '${tournament.name} - ${tournament.category ?? tournament.sport}';
     final url = 'https://giaidau.vnvar.com/tournaments/${tournament.id}';
-    await SharePlus.instance.share(
-      ShareParams(text: '$text\n\n$url'),
-    );
+    await SharePlus.instance.share(ShareParams(text: '$text\n\n$url'));
   }
 
   Widget _buildTabContent(
@@ -398,10 +406,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     List<Team> teams,
     UserRole? role,
   ) {
-    final divisions = tournament.divisions
-        .map((d) => d.name)
-        .toSet()
-        .toList();
+    final divisions = tournament.divisions.map((d) => d.name).toSet().toList();
 
     return Column(
       children: [
@@ -420,7 +425,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 onDivisionChanged: (val) {
                   setState(() {
                     _selectedDivision = val;
-                    final matchedList = tournament.divisions.where((d) => d.name == val);
+                    final matchedList = tournament.divisions.where(
+                      (d) => d.name == val,
+                    );
                     if (matchedList.isNotEmpty) {
                       _selectedDivisionId = matchedList.first.id;
                     } else if (tournament.divisions.isNotEmpty) {
@@ -478,10 +485,17 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  Widget _buildBottomBar(Tournament tournament, UserRole? role) {
+  Widget _buildBottomBar(
+    Tournament tournament,
+    UserRole? role, {
+    required List<Team> teams,
+    required String currentUserId,
+    required bool identityCheckPending,
+  }) {
     final statusUpper = tournament.status.toUpperCase();
 
-    final isLiveOrEnded = StatusHelper.isTournamentInProgress(tournament.status) ||
+    final isLiveOrEnded =
+        StatusHelper.isTournamentInProgress(tournament.status) ||
         StatusHelper.isTournamentCompleted(tournament.status) ||
         statusUpper == 'ONGOING' ||
         statusUpper == 'IN_PROGRESS' ||
@@ -495,37 +509,149 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       return const SizedBox.shrink();
     }
 
-    return _registrationButton(tournament);
+    return _registrationButton(
+      tournament,
+      teams: teams,
+      currentUserId: currentUserId,
+      identityCheckPending: identityCheckPending,
+    );
   }
 
-  Widget _registrationButton(Tournament tournament) {
+  TournamentDivision? _selectedDivisionFor(Tournament tournament) {
+    if (_selectedDivisionId != null && _selectedDivisionId!.isNotEmpty) {
+      for (final d in tournament.divisions) {
+        if (d.id == _selectedDivisionId) return d;
+      }
+    }
+    if (_selectedDivision.isNotEmpty) {
+      for (final d in tournament.divisions) {
+        if (d.name == _selectedDivision) return d;
+      }
+    }
+    return tournament.divisions.length == 1 ? tournament.divisions.first : null;
+  }
+
+  bool _isCurrentUserRegistered(List<Team> teams, String currentUserId) {
+    const inactiveStatuses = {'WITHDRAWN', 'REJECTED', 'KICKED'};
+    return teams.any((team) {
+      if (inactiveStatuses.contains(team.approvalStatus)) return false;
+      return team.memberInfos.any((member) => member.userId == currentUserId);
+    });
+  }
+
+  String _registrationStatusForGate(String status) {
+    final normalized = status.trim().toUpperCase();
+    if (normalized == 'REGISTRATION' || normalized == 'REGISTRATION_OPEN') {
+      return 'REGISTRATION_OPEN';
+    }
+    if (normalized == 'UPCOMING') return 'UPCOMING';
+    return normalized;
+  }
+
+  RegistrationGateResult _registrationGate(
+    Tournament tournament, {
+    required List<Team> teams,
+    required String currentUserId,
+    required bool identityCheckPending,
+  }) {
+    final selectedDivision = _selectedDivisionFor(tournament);
+    final divisionFull =
+        selectedDivision != null &&
+        selectedDivision.maxParticipants != null &&
+        selectedDivision.participantCount >= selectedDivision.maxParticipants!;
+
+    return evaluateRegistrationGate(
+      status: _registrationStatusForGate(tournament.status),
+      registrationMode: tournament.registrationMode,
+      registrationStartDate: tournament.registrationStartDate,
+      registrationEndDate: tournament.registrationEndDate,
+      now: DateTime.now(),
+      identityCheckPending: identityCheckPending,
+      alreadyRegistered:
+          currentUserId.isNotEmpty &&
+          _isCurrentUserRegistered(teams, currentUserId),
+      divisionSelectionRequired:
+          tournament.divisions.length > 1 &&
+          (_selectedDivisionId == null || _selectedDivisionId!.isEmpty),
+      divisionFull: divisionFull,
+    );
+  }
+
+  void _openRegistration(
+    Tournament tournament, {
+    required RegistrationGateResult gate,
+  }) {
+    if (tournament.isLite) {
+      if (tournament.inviteCode != null && tournament.inviteCode!.isNotEmpty) {
+        context.push('/lite-join/${tournament.inviteCode}');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Giải đấu chưa có mã mời.')),
+        );
+      }
+      return;
+    }
+
+    if (!gate.canContinue) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(gate.message ?? 'Không thể đăng ký lúc này.')),
+      );
+      return;
+    }
+
+    if (gate.message != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(gate.message!)));
+    }
+
+    final query = _selectedDivisionId != null && _selectedDivisionId!.isNotEmpty
+        ? '?divisionId=$_selectedDivisionId'
+        : '';
+    context.push('/register/${tournament.id}$query');
+  }
+
+  Widget _registrationButton(
+    Tournament tournament, {
+    required List<Team> teams,
+    required String currentUserId,
+    required bool identityCheckPending,
+  }) {
+    final gate = _registrationGate(
+      tournament,
+      teams: teams,
+      currentUserId: currentUserId,
+      identityCheckPending: identityCheckPending,
+    );
+    final disabled = !gate.canContinue;
+
     return Container(
       decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.25),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: disabled
+            ? const []
+            : [
+                BoxShadow(
+                  color: AppTheme.primary.withValues(alpha: 0.18),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
       ),
       child: FilledButton(
         style: FilledButton.styleFrom(
-          backgroundColor: AppTheme.primary,
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+          backgroundColor: disabled
+              ? context.colors.bgElevated
+              : AppTheme.primary,
+          foregroundColor: disabled ? context.colors.textMuted : Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
-        onPressed: () {
-          final query = _selectedDivisionId != null && _selectedDivisionId!.isNotEmpty
-              ? '?divisionId=$_selectedDivisionId'
-              : '';
-          context.push('/register/${tournament.id}$query');
-        },
-        child: const Text(
-          "Đăng ký",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        onPressed: () => _openRegistration(tournament, gate: gate),
+        child: Text(
+          gate.label,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         ),
       ),
     );
@@ -536,10 +662,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabController tabController;
   final AppColorsExtension colors;
 
-  _TabBarDelegate({
-    required this.tabController,
-    required this.colors,
-  });
+  _TabBarDelegate({required this.tabController, required this.colors});
 
   @override
   Widget build(

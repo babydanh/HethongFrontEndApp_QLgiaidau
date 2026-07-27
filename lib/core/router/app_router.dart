@@ -51,9 +51,9 @@ import 'package:app_quanly_giaidau/features/register/screens/doubles_registratio
 import 'package:app_quanly_giaidau/features/register/screens/join_invite_screen.dart';
 import 'package:app_quanly_giaidau/features/register/screens/join_team_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_join_screen.dart';
+import 'package:app_quanly_giaidau/features/lite/screens/lite_pairing_screen.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/features/dashboard/screens/dashboard_screen.dart';
-import 'package:app_quanly_giaidau/features/dashboard/screens/organizer_lite_screen.dart';
 import 'package:app_quanly_giaidau/features/series/screens/series_screen.dart';
 import 'package:app_quanly_giaidau/features/series/screens/series_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/match/screens/matches_list_screen.dart';
@@ -477,7 +477,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           final inviteCode = state.uri.queryParameters['invite'];
-          final divId = state.uri.queryParameters['divisionId'] ?? '';
           // Division info passed via extra
           final extra = state.extra;
           return DoublesRegistrationFlow(
@@ -535,7 +534,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/organizer-lite/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return OrganizerLiteScreen(tournamentId: id);
+          return LitePairingScreen(tournamentId: id);
+        },
+      ),
+
+      GoRoute(
+        path: '/lite-pairing/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return LitePairingScreen(tournamentId: id);
         },
       ),
 

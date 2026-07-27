@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 
 class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
 
   @override
-  ConsumerState<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
+  ConsumerState<ChangePasswordScreen> createState() =>
+      _ChangePasswordScreenState();
 }
 
 class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
@@ -22,6 +25,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   bool _obscureConfirm = true;
   bool _isLoading = false;
 
+  static const _log = AppLogger('ChangePasswordScreen');
+
   @override
   void dispose() {
     _currentPasswordController.dispose();
@@ -34,27 +39,74 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   bool _hasUppercase(String pwd) => pwd.contains(RegExp(r'[A-Z]'));
   bool _hasNumber(String pwd) => pwd.contains(RegExp(r'[0-9]'));
 
+  String _friendlyError(Object error) {
+    final msg = error.toString().replaceFirst('Exception: ', '');
+    final lower = msg.toLowerCase();
+    if (lower.contains('socket') ||
+        lower.contains('connection') ||
+        lower.contains('timeout')) {
+      return 'Không thể kết nối máy chủ. Vui lòng thử lại.';
+    }
+    if (lower.contains('incorrect') ||
+        lower.contains('wrong') ||
+        lower.contains('sai') ||
+        lower.contains('mật khẩu hiện tại')) {
+      return 'Mật khẩu hiện tại không đúng.';
+    }
+    return 'Không thể đổi mật khẩu. Vui lòng thử lại.';
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
+    _log.info('Đổi mật khẩu');
 
-    // UI only — simulate API call delay
-    await Future.delayed(const Duration(milliseconds: 1000));
+    try {
+      await ref
+          .read(userRepositoryProvider)
+          .changePassword(
+            _currentPasswordController.text,
+            _newPasswordController.text,
+          );
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _log.success('Đổi mật khẩu thành công');
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Đổi mật khẩu thành công'),
-        backgroundColor: const Color(0xFF10B981),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      ),
-    );
-    context.go('/profile');
+      _currentPasswordController.clear();
+      _newPasswordController.clear();
+      _confirmPasswordController.clear();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Đổi mật khẩu thành công'),
+          backgroundColor: context.colors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        ),
+      );
+      context.go('/profile');
+    } catch (e, stack) {
+      _log.error('Lỗi đổi mật khẩu', e, stack);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_friendlyError(e)),
+          backgroundColor: context.colors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        ),
+      );
+    }
   }
 
   @override
@@ -282,7 +334,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF2979FF).withValues(alpha: 0.7),
+                            color: const Color(
+                              0xFF2979FF,
+                            ).withValues(alpha: 0.7),
                             height: 1.4,
                           ),
                         ),
@@ -303,7 +357,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     return Row(
       children: [
         Icon(
-          isMet ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+          isMet
+              ? Icons.check_circle_rounded
+              : Icons.radio_button_unchecked_rounded,
           size: 16,
           color: isMet ? const Color(0xFF10B981) : const Color(0xFFCBD5E1),
         ),

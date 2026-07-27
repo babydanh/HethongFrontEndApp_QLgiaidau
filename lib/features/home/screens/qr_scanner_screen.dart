@@ -26,16 +26,33 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
 
   Future<void> _handleBarcode(BarcodeCapture capture) async {
     if (_isProcessing) return;
-    
+
     final List<Barcode> barcodes = capture.barcodes;
     if (barcodes.isEmpty) return;
 
     String? code = barcodes.first.rawValue;
     if (code == null || code.isEmpty) return;
 
+    final uri = Uri.tryParse(code);
+    final segments = uri?.pathSegments ?? const <String>[];
+    final liteIndex = segments.indexOf('join');
+    final isLiteJoinUrl =
+        uri != null &&
+        segments.length > liteIndex + 1 &&
+        liteIndex >= 0 &&
+        segments.take(liteIndex).join('/') == 'lite/tournaments';
+    if (isLiteJoinUrl) {
+      final inviteCode = segments[liteIndex + 1];
+      if (inviteCode.isNotEmpty) {
+        setState(() => _isProcessing = true);
+        await _controller.stop();
+        if (mounted) context.go('/lite-join/$inviteCode');
+        return;
+      }
+    }
+
     // Trích xuất token từ URL nếu QR được tạo theo dạng app_quanly_giaidau:join?code=XXX
     if (code.contains('code=')) {
-      final uri = Uri.tryParse(code);
       if (uri != null && uri.queryParameters.containsKey('code')) {
         code = uri.queryParameters['code']!;
       } else {
@@ -47,10 +64,10 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     }
 
     setState(() => _isProcessing = true);
-    
+
     // Attempt to validate token
     final success = await ref.read(authProvider.notifier).validateToken(code);
-    
+
     if (!mounted) return;
 
     if (success) {
@@ -63,7 +80,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
         UserRole.viewer => '/intro/${auth.tournamentId}',
         _ => '/home',
       };
-      
+
       // Stop scanner before navigating away
       _controller.stop();
       context.go(route);
@@ -76,7 +93,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
           backgroundColor: context.colors.error,
         ),
       );
-      
+
       // Wait a bit before allowing another scan
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) {
@@ -100,17 +117,14 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       ),
       body: Stack(
         children: [
-          MobileScanner(
-            controller: _controller,
-            onDetect: _handleBarcode,
-          ),
-          
+          MobileScanner(controller: _controller, onDetect: _handleBarcode),
+
           // Custom scanner overlay
           CustomPaint(
             painter: ScannerOverlayPainter(borderColor: AppTheme.primary),
             child: const SizedBox.expand(),
           ),
-          
+
           // Processing indicator
           if (_isProcessing)
             Container(
@@ -150,7 +164,7 @@ class ScannerOverlayPainter extends CustomPainter {
     final bgPaint = Paint()
       ..color = Colors.black.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
-    
+
     // Draw background with cutout
     canvas.drawPath(
       Path.combine(
@@ -178,7 +192,10 @@ class ScannerOverlayPainter extends CustomPainter {
       Path()
         ..moveTo(left, top + cornerLength)
         ..lineTo(left, top + radius)
-        ..arcToPoint(Offset(left + radius, top), radius: Radius.circular(radius))
+        ..arcToPoint(
+          Offset(left + radius, top),
+          radius: Radius.circular(radius),
+        )
         ..lineTo(left + cornerLength, top),
       borderPaint,
     );
@@ -188,7 +205,10 @@ class ScannerOverlayPainter extends CustomPainter {
       Path()
         ..moveTo(left + scanArea - cornerLength, top)
         ..lineTo(left + scanArea - radius, top)
-        ..arcToPoint(Offset(left + scanArea, top + radius), radius: Radius.circular(radius))
+        ..arcToPoint(
+          Offset(left + scanArea, top + radius),
+          radius: Radius.circular(radius),
+        )
         ..lineTo(left + scanArea, top + cornerLength),
       borderPaint,
     );
@@ -198,7 +218,10 @@ class ScannerOverlayPainter extends CustomPainter {
       Path()
         ..moveTo(left + scanArea, top + scanArea - cornerLength)
         ..lineTo(left + scanArea, top + scanArea - radius)
-        ..arcToPoint(Offset(left + scanArea - radius, top + scanArea), radius: Radius.circular(radius))
+        ..arcToPoint(
+          Offset(left + scanArea - radius, top + scanArea),
+          radius: Radius.circular(radius),
+        )
         ..lineTo(left + scanArea - cornerLength, top + scanArea),
       borderPaint,
     );
@@ -208,7 +231,10 @@ class ScannerOverlayPainter extends CustomPainter {
       Path()
         ..moveTo(left + cornerLength, top + scanArea)
         ..lineTo(left + radius, top + scanArea)
-        ..arcToPoint(Offset(left, top + scanArea - radius), radius: Radius.circular(radius))
+        ..arcToPoint(
+          Offset(left, top + scanArea - radius),
+          radius: Radius.circular(radius),
+        )
         ..lineTo(left, top + scanArea - cornerLength),
       borderPaint,
     );

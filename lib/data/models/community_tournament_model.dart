@@ -27,32 +27,39 @@ class CommunityTournamentModel {
   });
 
   factory CommunityTournamentModel.fromJson(Map<String, dynamic> json) {
-    // Lấy sport từ category object hoặc từ sportRules/tournamentConfig
+    // Sport từ category object hoặc trực tiếp
     String sport = json['sport']?.toString() ?? '';
     if (sport.isEmpty && json['category'] is Map) {
       sport = (json['category'] as Map)['slug']?.toString() ?? '';
     }
 
-    // Lấy maxTeams từ tournamentConfig hoặc trực tiếp
+    // maxTeams từ tournamentConfig hoặc trực tiếp
     int maxTeams = 16;
     if (json['maxParticipants'] != null) {
       maxTeams = int.tryParse(json['maxParticipants'].toString()) ?? 16;
     } else if (json['tournamentConfig'] is Map) {
-      maxTeams = int.tryParse((json['tournamentConfig'] as Map)['maxTeams']?.toString() ?? '16') ?? 16;
+      maxTeams =
+          int.tryParse(
+            (json['tournamentConfig'] as Map)['maxTeams']?.toString() ?? '16',
+          ) ??
+          16;
     }
 
-    // Lấy teamCount từ _count
+    // teamCount từ _count
     int teamCount = 0;
     if (json['_count'] is Map) {
       var count = (json['_count'] as Map)['participants'];
       if (count != null) teamCount = int.tryParse(count.toString()) ?? 0;
     }
 
-    final bool isLite = json['isLite'] == true ||
-        json['isQuick'] == true ||
-        json['type'] == 'LITE' ||
-        json['isClubLite'] == true ||
-        (json['inviteCode'] != null && json['inviteCode'].toString().isNotEmpty);
+    // Lite: parse mode từ tournamentConfig, không heuristic
+    bool isLite = false;
+    if (json['tournamentConfig'] is Map) {
+      final mode = (json['tournamentConfig'] as Map)['mode']
+          ?.toString()
+          .toUpperCase();
+      isLite = mode == 'LITE';
+    }
 
     return CommunityTournamentModel(
       id: json['id']?.toString() ?? '',
@@ -63,7 +70,9 @@ class CommunityTournamentModel {
       maxTeams: maxTeams,
       teamCount: teamCount,
       startDate: json['startDate']?.toString(),
-      locationAddress: json['locationAddress']?.toString() ?? json['venue']?['locationAddress']?.toString(),
+      locationAddress:
+          json['locationAddress']?.toString() ??
+          json['venue']?['locationAddress']?.toString(),
       bannerUrl: json['bannerUrl']?.toString(),
       isLite: isLite,
     );

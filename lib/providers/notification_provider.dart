@@ -4,9 +4,25 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_notification_reposi
 import 'package:app_quanly_giaidau/domain/entities/app_notification.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final notificationRepositoryProvider = Provider<ApiNotificationRepository>((ref) {
+final notificationRepositoryProvider = Provider<ApiNotificationRepository>((
+  ref,
+) {
   return ApiNotificationRepository(ref.watch(dioClientProvider));
 });
+
+/// Friendly error message for notification/cache/connection errors.
+String friendlyNotificationError(Object error) {
+  final msg = error.toString().toLowerCase();
+  if (msg.contains('socket') ||
+      msg.contains('connection') ||
+      msg.contains('timeout')) {
+    return 'Không thể kết nối máy chủ thông báo. Vui lòng thử lại.';
+  }
+  if (msg.contains('redis') || msg.contains('cache')) {
+    return 'Dữ liệu thông báo đang được đồng bộ. Vui lòng thử lại sau.';
+  }
+  return 'Không thể tải thông báo. Hãy thử lại.';
+}
 
 /// Provider cho số thông báo chưa đọc
 final unreadCountProvider = FutureProvider<int>((ref) async {
@@ -19,10 +35,12 @@ final unreadCountProvider = FutureProvider<int>((ref) async {
 });
 
 /// Provider cho danh sách thông báo (phân trang)
-final notificationsProvider = FutureProvider.family<List<AppNotification>, int>((ref, page) async {
-  final repo = ref.watch(notificationRepositoryProvider);
-  return repo.getMyNotifications(page: page, limit: 20);
-});
+final notificationsProvider = FutureProvider.family<List<AppNotification>, int>(
+  (ref, page) async {
+    final repo = ref.watch(notificationRepositoryProvider);
+    return repo.getMyNotifications(page: page, limit: 20);
+  },
+);
 
 /// Notifier quản lý trạng thái thông báo
 class NotificationNotifier extends Notifier<NotificationState> {
@@ -56,16 +74,14 @@ class NotificationNotifier extends Notifier<NotificationState> {
       _log.error('Không thể tải thông báo', e, stack);
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Không thể tải thông báo. Hãy thử lại.',
+        errorMessage: friendlyNotificationError(e),
       );
     }
   }
 
   /// Thêm 1 notification mới (từ socket realtime)
   void addNotification(AppNotification notif) {
-    state = state.copyWith(
-      notifications: [notif, ...state.notifications],
-    );
+    state = state.copyWith(notifications: [notif, ...state.notifications]);
   }
 
   /// Đánh dấu 1 cái đã đọc
@@ -74,7 +90,17 @@ class NotificationNotifier extends Notifier<NotificationState> {
     await repo.markAsRead(id);
     state = state.copyWith(
       notifications: state.notifications.map((n) {
-        if (n.id == id) return AppNotification(id: n.id, type: n.type, title: n.title, body: n.body, redirectUrl: n.redirectUrl, isRead: true, createdAt: n.createdAt);
+        if (n.id == id) {
+          return AppNotification(
+            id: n.id,
+            type: n.type,
+            title: n.title,
+            body: n.body,
+            redirectUrl: n.redirectUrl,
+            isRead: true,
+            createdAt: n.createdAt,
+          );
+        }
         return n;
       }).toList(),
     );
@@ -86,15 +112,28 @@ class NotificationNotifier extends Notifier<NotificationState> {
     final repo = ref.read(notificationRepositoryProvider);
     await repo.markAllAsRead();
     state = state.copyWith(
-      notifications: state.notifications.map((n) => AppNotification(id: n.id, type: n.type, title: n.title, body: n.body, redirectUrl: n.redirectUrl, isRead: true, createdAt: n.createdAt)).toList(),
+      notifications: state.notifications
+          .map(
+            (n) => AppNotification(
+              id: n.id,
+              type: n.type,
+              title: n.title,
+              body: n.body,
+              redirectUrl: n.redirectUrl,
+              isRead: true,
+              createdAt: n.createdAt,
+            ),
+          )
+          .toList(),
     );
     ref.invalidate(unreadCountProvider);
   }
 }
 
-final notificationStateProvider = NotifierProvider<NotificationNotifier, NotificationState>(
-  NotificationNotifier.new,
-);
+final notificationStateProvider =
+    NotifierProvider<NotificationNotifier, NotificationState>(
+      NotificationNotifier.new,
+    );
 
 class NotificationState {
   final List<AppNotification> notifications;

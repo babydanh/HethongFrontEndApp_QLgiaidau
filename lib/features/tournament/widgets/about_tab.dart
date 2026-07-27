@@ -55,7 +55,9 @@ class AboutTab extends StatelessWidget {
                           : null,
                       child: resolvedAvatar.isEmpty
                           ? Text(
-                              creatorName.isNotEmpty ? creatorName[0].toUpperCase() : 'B',
+                              creatorName.isNotEmpty
+                                  ? creatorName[0].toUpperCase()
+                                  : 'B',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -116,7 +118,10 @@ class AboutTab extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             "Người sáng lập giải đấu",
-                            style: TextStyle(fontSize: 13, color: colors.textMuted),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: colors.textMuted,
+                            ),
                           ),
                         ],
                       ),
@@ -167,24 +172,29 @@ class AboutTab extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildInfoRow(
                   label: 'Môn thể thao',
-                  value: AppConstants.sportNames[tournament.sport] ?? tournament.sport,
+                  value:
+                      AppConstants.sportNames[tournament.sport] ??
+                      tournament.sport,
                   colors: colors,
                 ),
                 const SizedBox(height: 12),
                 _buildInfoRow(
                   label: 'Thể thức',
-                  value: AppConstants.formatNames[tournament.format] ??
+                  value:
+                      AppConstants.formatNames[tournament.format] ??
                       tournament.format.replaceAll('_', ' '),
                   colors: colors,
                 ),
                 const SizedBox(height: 12),
                 _buildInfoRow(
                   label: 'Hình thức thi đấu',
-                  value: AppConstants.bracketTypeNames[tournament.bracketType] ??
+                  value:
+                      AppConstants.bracketTypeNames[tournament.bracketType] ??
                       tournament.bracketType,
                   colors: colors,
                 ),
-                if (tournament.bracketType != AppConstants.bracketRoundRobin) ...[
+                if (tournament.bracketType !=
+                    AppConstants.bracketRoundRobin) ...[
                   const SizedBox(height: 12),
                   _buildInfoRow(
                     label: 'Số đội tối đa',
@@ -268,10 +278,7 @@ class AboutTab extends StatelessWidget {
   }
 
   Widget _sectionDivider(AppColorsExtension colors) {
-    return Container(
-      height: 1,
-      color: colors.border.withValues(alpha: 0.5),
-    );
+    return Container(height: 1, color: colors.border.withValues(alpha: 0.5));
   }
 
   Widget _buildInfoRow({
@@ -324,7 +331,9 @@ class AboutTab extends StatelessWidget {
   }
 
   Widget _buildContactCard(
-      Map<String, dynamic>? contactInfo, AppColorsExtension colors) {
+    Map<String, dynamic>? contactInfo,
+    AppColorsExtension colors,
+  ) {
     if (contactInfo == null || contactInfo.isEmpty) {
       return Text(
         "Chưa cập nhật",
@@ -333,8 +342,7 @@ class AboutTab extends StatelessWidget {
     }
 
     final items = <Widget>[];
-    void addItem(IconData icon, String? value, String label,
-        {String? action}) {
+    void addItem(IconData icon, String? value, String label, {String? action}) {
       if (value == null || value.toString().trim().isEmpty) return;
       items.add(
         InkWell(
@@ -372,25 +380,38 @@ class AboutTab extends StatelessWidget {
       );
     }
 
-    addItem(Icons.phone_rounded, contactInfo['phone']?.toString(), 'Phone',
-        action: contactInfo['phone'] != null
-            ? 'tel:${contactInfo['phone']}'
-            : null);
-    addItem(Icons.email_rounded, contactInfo['email']?.toString(), 'Email',
-        action: contactInfo['email'] != null
-            ? 'mailto:${contactInfo['email']}'
-            : null);
-    addItem(Icons.chat_rounded, contactInfo['zalo']?.toString(), 'Zalo',
-        action: contactInfo['zalo'] != null
-            ? 'https://zalo.me/${contactInfo['zalo']}'
-            : null);
     addItem(
-        Icons.facebook_rounded,
-        contactInfo['facebook']?.toString(),
-        'Facebook',
-        action: contactInfo['facebook']?.toString() != null
-            ? contactInfo['facebook'].toString()
-            : null);
+      Icons.phone_rounded,
+      contactInfo['phone']?.toString(),
+      'Phone',
+      action: contactInfo['phone'] != null
+          ? 'tel:${contactInfo['phone']}'
+          : null,
+    );
+    addItem(
+      Icons.email_rounded,
+      contactInfo['email']?.toString(),
+      'Email',
+      action: contactInfo['email'] != null
+          ? 'mailto:${contactInfo['email']}'
+          : null,
+    );
+    addItem(
+      Icons.chat_rounded,
+      contactInfo['zalo']?.toString(),
+      'Zalo',
+      action: contactInfo['zalo'] != null
+          ? 'https://zalo.me/${contactInfo['zalo']}'
+          : null,
+    );
+    addItem(
+      Icons.facebook_rounded,
+      contactInfo['facebook']?.toString(),
+      'Facebook',
+      action: contactInfo['facebook']?.toString() != null
+          ? contactInfo['facebook'].toString()
+          : null,
+    );
 
     if (items.isEmpty) {
       return Text(
@@ -403,15 +424,19 @@ class AboutTab extends StatelessWidget {
   }
 
   Widget _buildRegistrationInfoCard(
-      BuildContext context, Tournament tournament) {
+    BuildContext context,
+    Tournament tournament,
+  ) {
     final colors = Theme.of(context).extension<AppColorsExtension>()!;
     final slotsFilled = tournament.maxTeams > 0
-        ? tournament.divisions
-            .fold<int>(0, (sum, d) => sum + d.participantCount)
+        ? tournament.divisions.fold<int>(
+            0,
+            (sum, d) => sum + d.participantCount,
+          )
         : 0;
     final isRegistrationOpen =
         StatusHelper.isTournamentRegistration(tournament.status) ||
-            StatusHelper.isTournamentUpcoming(tournament.status);
+        StatusHelper.isTournamentUpcoming(tournament.status);
 
     return Container(
       width: double.infinity,
@@ -428,16 +453,23 @@ class AboutTab extends StatelessWidget {
           const SizedBox(height: 16),
           // Entry fee
           if (tournament.entryFee != null && tournament.entryFee! > 0) ...[
-            _buildRegInfoRow('Phí tham gia',
-                '${tournament.entryFee!.toStringAsFixed(0)} VNĐ', colors),
+            _buildRegInfoRow(
+              'Phí tham gia',
+              '${tournament.entryFee!.toStringAsFixed(0)} VNĐ',
+              colors,
+            ),
             const SizedBox(height: 12),
-          ] else if (tournament.entryFee != null && tournament.entryFee! == 0) ...[
+          ] else if (tournament.entryFee != null &&
+              tournament.entryFee! == 0) ...[
             _buildRegInfoRow('Phí tham gia', 'Miễn phí', colors),
             const SizedBox(height: 12),
           ],
           // Max participants
-          _buildRegInfoRow('Số lượng tối đa', '${tournament.maxTeams} đội',
-              colors),
+          _buildRegInfoRow(
+            'Số lượng tối đa',
+            '${tournament.maxTeams} đội',
+            colors,
+          ),
           const SizedBox(height: 12),
           // Registration period
           if (tournament.registrationStartDate != null) ...[
@@ -464,8 +496,7 @@ class AboutTab extends StatelessWidget {
           // Countdown & Register button
           if (isRegistrationOpen) ...[
             if (tournament.registrationStartDate != null &&
-                tournament.registrationStartDate!
-                    .isAfter(DateTime.now()))
+                tournament.registrationStartDate!.isAfter(DateTime.now()))
               CountdownTimer(
                 targetDate: tournament.registrationStartDate!,
                 compact: false,
@@ -487,13 +518,22 @@ class AboutTab extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(100),
                     ),
                   ),
-                  onPressed: () =>
-                      context.push('/register/${tournament.id}'),
+                  onPressed: () {
+                    if (tournament.isLite &&
+                        tournament.inviteCode != null &&
+                        tournament.inviteCode!.isNotEmpty) {
+                      context.push('/lite-join/${tournament.inviteCode}');
+                    } else {
+                      context.push('/register/${tournament.id}');
+                    }
+                  },
                   child: const Text(
                     "Đăng ký",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
@@ -502,8 +542,7 @@ class AboutTab extends StatelessWidget {
               ),
             ),
           ] else if (tournament.registrationEndDate != null &&
-              tournament.registrationEndDate!
-                  .isBefore(DateTime.now())) ...[
+              tournament.registrationEndDate!.isBefore(DateTime.now())) ...[
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -514,8 +553,11 @@ class AboutTab extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.timer_off_rounded,
-                      size: 18, color: colors.textMuted),
+                  Icon(
+                    Icons.timer_off_rounded,
+                    size: 18,
+                    color: colors.textMuted,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Đã kết thúc đăng ký',
@@ -531,7 +573,10 @@ class AboutTab extends StatelessWidget {
   }
 
   Widget _buildRegInfoRow(
-      String label, String value, AppColorsExtension colors) {
+    String label,
+    String value,
+    AppColorsExtension colors,
+  ) {
     return Row(
       children: [
         Container(
@@ -560,14 +605,13 @@ class AboutTab extends StatelessWidget {
     );
   }
 
-  Widget _buildSlotProgressBar(
-      int filled, int max, AppColorsExtension colors) {
+  Widget _buildSlotProgressBar(int filled, int max, AppColorsExtension colors) {
     final ratio = max > 0 ? filled / max : 0.0;
     final progressColor = ratio >= 0.9
         ? colors.error
         : ratio >= 0.7
-            ? colors.warning
-            : colors.success;
+        ? colors.warning
+        : colors.success;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,9 +635,10 @@ class AboutTab extends StatelessWidget {
             Text(
               '${(ratio * 100).toStringAsFixed(0)}%',
               style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: progressColor),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: progressColor,
+              ),
             ),
           ],
         ),

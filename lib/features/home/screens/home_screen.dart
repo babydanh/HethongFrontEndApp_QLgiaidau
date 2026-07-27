@@ -66,7 +66,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String _tournamentSport = 'all';
   String _tournamentStatus = 'all';
   String _clubSport = 'all';
-  String _rankingsSport = 'all';
+  String _rankingsSport = 'pickleball';
   String _tournamentContent = 'all';
   String _tournamentBracket = 'all';
   String _tournamentRanked = 'all';

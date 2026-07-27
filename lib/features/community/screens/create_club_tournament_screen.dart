@@ -18,10 +18,12 @@ class CreateClubTournamentScreen extends ConsumerStatefulWidget {
   const CreateClubTournamentScreen({super.key, required this.clubId});
 
   @override
-  ConsumerState<CreateClubTournamentScreen> createState() => _CreateClubTournamentScreenState();
+  ConsumerState<CreateClubTournamentScreen> createState() =>
+      _CreateClubTournamentScreenState();
 }
 
-class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamentScreen> {
+class _CreateClubTournamentScreenState
+    extends ConsumerState<CreateClubTournamentScreen> {
   static const _log = AppLogger('CreateClubTournament');
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
@@ -45,11 +47,16 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   /// Map App sport slug → backend slug
   String _mapSportSlug() {
     switch (_selectedSport) {
-      case AppConstants.sportBadminton: return 'badminton';
-      case AppConstants.sportTennis: return 'tennis';
-      case AppConstants.sportPickleball: return 'pickleball';
-      case AppConstants.sportTableTennis: return 'table_tennis';
-      default: return 'badminton';
+      case AppConstants.sportBadminton:
+        return 'badminton';
+      case AppConstants.sportTennis:
+        return 'tennis';
+      case AppConstants.sportPickleball:
+        return 'pickleball';
+      case AppConstants.sportTableTennis:
+        return 'table_tennis';
+      default:
+        return 'badminton';
     }
   }
 
@@ -91,8 +98,10 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}'),
-            backgroundColor: Colors.red,
+            content: Text(
+              'Lỗi: ${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
+            ),
+            backgroundColor: context.colors.error,
           ),
         );
       }
@@ -110,7 +119,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         result: result,
         onManage: () {
           context.pop();
-          context.push('/organizer-lite/${result.id}');
+          context.push('/lite-pairing/${result.id}');
         },
         onClose: () {
           context.pop();
@@ -135,7 +144,11 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         ),
         title: Text(
           'Tạo giải đấu trong CLB',
-          style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w800, fontSize: 17),
+          style: TextStyle(
+            color: colors.textPrimary,
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+          ),
         ),
         centerTitle: true,
       ),
@@ -151,7 +164,9 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
               const SizedBox(height: 6),
               TextFormField(
                 controller: _nameCtrl,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Vui lòng nhập tên giải đấu' : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? 'Vui lòng nhập tên giải đấu'
+                    : null,
                 style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'VD: Giải Cầu lông Mở rộng 2026',
@@ -222,7 +237,10 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                     color: _isRanked ? AppTheme.primary : context.colors.border,
                   ),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -234,14 +252,19 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: _isRanked ? AppTheme.primary : context.colors.textPrimary,
+                              color: _isRanked
+                                  ? AppTheme.primary
+                                  : context.colors.textPrimary,
                             ),
                           ),
                           Text(
                             _isRanked
                                 ? 'Kết quả ảnh hưởng đến điểm ELO'
                                 : 'Giải giao hữu, không tính xếp hạng',
-                            style: TextStyle(fontSize: 11, color: context.colors.textMuted),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.colors.textMuted,
+                            ),
                           ),
                         ],
                       ),
@@ -263,14 +286,26 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                 child: FilledButton.icon(
                   onPressed: _isLoading ? null : _submit,
                   icon: _isLoading
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : const Icon(Icons.add_rounded),
                   label: Text(
                     _isLoading ? 'Đang tạo...' : 'Tạo giải đấu',
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
                   ),
                   style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                    ),
                   ),
                 ),
               ),
@@ -282,15 +317,22 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   }
 
   Widget _label(String text, AppColorsExtension colors) {
-    return Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.textSecondary));
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: colors.textSecondary,
+      ),
+    );
   }
 
   Widget _buildSportSelector() {
     final sports = [
-      (AppConstants.sportBadminton, 'Cầu lông', '🏸'),
-      (AppConstants.sportTennis, 'Tennis', '🎾'),
-      (AppConstants.sportPickleball, 'Pickleball', '🥒'),
-      (AppConstants.sportTableTennis, 'Bóng bàn', '🏓'),
+      (AppConstants.sportBadminton, 'Cầu lông', Icons.sports_tennis),
+      (AppConstants.sportTennis, 'Tennis', Icons.sports_tennis),
+      (AppConstants.sportPickleball, 'Pickleball', Icons.sports_tennis),
+      (AppConstants.sportTableTennis, 'Bóng bàn', Icons.sports_tennis),
     ];
     return Row(
       children: sports.map((s) {
@@ -303,15 +345,35 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: selected ? AppTheme.primary.withValues(alpha: 0.1) : context.colors.bgSurface,
+                  color: selected
+                      ? AppTheme.primary.withValues(alpha: 0.1)
+                      : context.colors.bgSurface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: selected ? AppTheme.primary : context.colors.border, width: selected ? 1.5 : 1),
+                  border: Border.all(
+                    color: selected ? AppTheme.primary : context.colors.border,
+                    width: selected ? 1.5 : 1,
+                  ),
                 ),
                 child: Column(
                   children: [
-                    Text(s.$3, style: const TextStyle(fontSize: 20)),
+                    Icon(
+                      s.$3,
+                      size: 22,
+                      color: selected
+                          ? AppTheme.primary
+                          : context.colors.textSecondary,
+                    ),
                     const SizedBox(height: 4),
-                    Text(s.$2, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: selected ? AppTheme.primary : context.colors.textSecondary)),
+                    Text(
+                      s.$2,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: selected
+                            ? AppTheme.primary
+                            : context.colors.textSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -338,12 +400,26 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: selected ? AppTheme.primary.withValues(alpha: 0.1) : context.colors.bgSurface,
+                  color: selected
+                      ? AppTheme.primary.withValues(alpha: 0.1)
+                      : context.colors.bgSurface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: selected ? AppTheme.primary : context.colors.border, width: selected ? 1.5 : 1),
+                  border: Border.all(
+                    color: selected ? AppTheme.primary : context.colors.border,
+                    width: selected ? 1.5 : 1,
+                  ),
                 ),
                 child: Center(
-                  child: Text(f.$2, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: selected ? AppTheme.primary : context.colors.textSecondary)),
+                  child: Text(
+                    f.$2,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: selected
+                          ? AppTheme.primary
+                          : context.colors.textSecondary,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -355,10 +431,22 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
 
   Widget _buildBracketSelector() {
     final brackets = [
-      (AppConstants.bracketSingleElimination, 'Loại trực tiếp', 'Loại ngay khi thua'),
-      (AppConstants.bracketDoubleElimination, 'Loại kép', 'Có nhánh thắng/thua'),
+      (
+        AppConstants.bracketSingleElimination,
+        'Loại trực tiếp',
+        'Loại ngay khi thua',
+      ),
+      (
+        AppConstants.bracketDoubleElimination,
+        'Loại kép',
+        'Có nhánh thắng/thua',
+      ),
       (AppConstants.bracketRoundRobin, 'Vòng tròn', 'Tất cả gặp nhau'),
-      (AppConstants.bracketGroupStageKnockout, 'Vòng bảng + Loại trực tiếp', 'Chia bảng, chọn đội đi tiếp'),
+      (
+        AppConstants.bracketGroupStageKnockout,
+        'Vòng bảng + Loại trực tiếp',
+        'Tối thiểu 4 đội, hệ thống tự động chia đều',
+      ),
     ];
     return Column(
       children: brackets.map((b) {
@@ -370,15 +458,24 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: selected ? AppTheme.primary.withValues(alpha: 0.08) : context.colors.bgSurface,
+                color: selected
+                    ? AppTheme.primary.withValues(alpha: 0.08)
+                    : context.colors.bgSurface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: selected ? AppTheme.primary : context.colors.border, width: selected ? 1.5 : 1),
+                border: Border.all(
+                  color: selected ? AppTheme.primary : context.colors.border,
+                  width: selected ? 1.5 : 1,
+                ),
               ),
               child: Row(
                 children: [
                   Icon(
-                    selected ? Icons.check_circle_rounded : Icons.circle_outlined,
-                    color: selected ? AppTheme.primary : context.colors.textMuted,
+                    selected
+                        ? Icons.check_circle_rounded
+                        : Icons.circle_outlined,
+                    color: selected
+                        ? AppTheme.primary
+                        : context.colors.textMuted,
                     size: 20,
                   ),
                   const SizedBox(width: 12),
@@ -386,8 +483,23 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(b.$2, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: selected ? AppTheme.primary : context.colors.textPrimary)),
-                        Text(b.$3, style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
+                        Text(
+                          b.$2,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: selected
+                                ? AppTheme.primary
+                                : context.colors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          b.$3,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: context.colors.textMuted,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -417,7 +529,7 @@ class _LiteSuccessSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final link = result.joinUrl ?? '/lite/tournaments/join/${result.inviteCode ?? result.id}';
+    final link = result.resolvedJoinUrl;
 
     return Container(
       decoration: BoxDecoration(
@@ -453,7 +565,11 @@ class _LiteSuccessSheet extends StatelessWidget {
                   color: colors.success.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.check_circle_rounded, color: colors.success, size: 32),
+                child: Icon(
+                  Icons.check_circle_rounded,
+                  color: colors.success,
+                  size: 32,
+                ),
               ),
               const SizedBox(height: 14),
 
@@ -462,7 +578,7 @@ class _LiteSuccessSheet extends StatelessWidget {
                 'Tạo giải thành công!',
                 style: TextStyle(
                   fontSize: 18,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   color: colors.textPrimary,
                 ),
               ),
@@ -477,29 +593,32 @@ class _LiteSuccessSheet extends StatelessWidget {
               const SizedBox(height: 20),
 
               // ─── QR Code ───
-              if (result.qrPayload != null || result.joinUrl != null)
+              if (result.resolvedQrPayload.isNotEmpty)
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: QrImageView(
-                    data: result.qrPayload ?? link,
+                    data: result.resolvedQrPayload,
                     version: QrVersions.auto,
                     size: 160,
                     backgroundColor: Colors.white,
                     padding: EdgeInsets.zero,
                   ),
                 ),
-              if (result.qrPayload != null || result.joinUrl != null)
+              if (result.resolvedQrPayload.isNotEmpty)
                 const SizedBox(height: 16),
 
               // ─── Link ───
               if (link.isNotEmpty)
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.bgSurface,
                     borderRadius: BorderRadius.circular(12),
@@ -512,8 +631,7 @@ class _LiteSuccessSheet extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              if (link.isNotEmpty)
-                const SizedBox(height: 20),
+              if (link.isNotEmpty) const SizedBox(height: 20),
 
               // ─── Buttons ───
               Row(
@@ -530,7 +648,10 @@ class _LiteSuccessSheet extends StatelessWidget {
                         );
                       },
                       icon: const Icon(Icons.copy_rounded, size: 18),
-                      label: const Text('Sao chép link', style: TextStyle(fontSize: 13)),
+                      label: const Text(
+                        'Sao chép link',
+                        style: TextStyle(fontSize: 13),
+                      ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -544,11 +665,16 @@ class _LiteSuccessSheet extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () {
                         SharePlus.instance.share(
-                          ShareParams(text: 'Tham gia giải ${result.name}: $link'),
+                          ShareParams(
+                            text: 'Tham gia giải ${result.name}: $link',
+                          ),
                         );
                       },
                       icon: const Icon(Icons.share_rounded, size: 18),
-                      label: const Text('Chia sẻ', style: TextStyle(fontSize: 13)),
+                      label: const Text(
+                        'Chia sẻ',
+                        style: TextStyle(fontSize: 13),
+                      ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -570,7 +696,7 @@ class _LiteSuccessSheet extends StatelessWidget {
                   icon: const Icon(Icons.speed_rounded, size: 20),
                   label: const Text(
                     'Vào quản lý nhanh',
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
                   ),
                   style: FilledButton.styleFrom(
                     shape: RoundedRectangleBorder(

@@ -97,7 +97,13 @@ class TournamentRegistrationSheet extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  context.push('/register/${tournament.id}');
+                  if (tournament.isLite &&
+                      tournament.inviteCode != null &&
+                      tournament.inviteCode!.isNotEmpty) {
+                    context.push('/lite-join/${tournament.inviteCode}');
+                  } else {
+                    context.push('/register/${tournament.id}');
+                  }
                 },
                 icon: const Icon(Icons.arrow_forward_rounded),
                 label: const Text(

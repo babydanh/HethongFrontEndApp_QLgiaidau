@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/repositories/team_repository.dart';
 
 class ApiTeamRepository implements ITeamRepository {
@@ -15,13 +16,19 @@ class ApiTeamRepository implements ITeamRepository {
     // Với backend REST API, việc đăng ký VĐV/Đội đi qua endpoint đăng ký giải đấu
     final payload = {
       'teamName': team.name,
-      'contactPhone': team.contactEmail.isNotEmpty ? team.contactEmail : '0900000000',
+      'contactPhone': team.contactEmail.isNotEmpty
+          ? team.contactEmail
+          : '0900000000',
       'playerNames': team.members.isNotEmpty ? team.members : [team.name],
     };
-    final response = await _dioClient.dio.post('/tournaments/$tournamentId/register', data: payload);
+    final response = await _dioClient.dio.post(
+      '/tournaments/$tournamentId/register',
+      data: payload,
+    );
     if (response.statusCode == 200 || response.statusCode == 201) {
       // Map API response back to Team model
-      final data = response.data['data']['participant'] ?? response.data['data'];
+      final data =
+          response.data['data']['participant'] ?? response.data['data'];
       return Team.fromJson(data, data['id']);
     }
     throw Exception('Failed to create/register team via API');
@@ -45,34 +52,57 @@ class ApiTeamRepository implements ITeamRepository {
   @override
   Stream<List<Team>> watchByTournament(String tournamentId) async* {
     yield await getAllByTournament(tournamentId);
-    yield* Stream.periodic(const Duration(seconds: 12))
-        .asyncMap((_) => getAllByTournament(tournamentId));
+    yield* Stream.periodic(
+      const Duration(seconds: 12),
+    ).asyncMap((_) => getAllByTournament(tournamentId));
   }
 
   @override
   Future<List<Team>> getAllByTournament(String tournamentId) async {
     _log.debug('Fetching all participants/teams for tournament: $tournamentId');
     try {
-      final response = await _dioClient.dio.get('/tournaments/$tournamentId/participants');
+      final response = await _dioClient.dio.get(
+        '/tournaments/$tournamentId/participants',
+      );
       if (response.statusCode == 200) {
         final List<dynamic> list = response.data['data'] ?? response.data ?? [];
         return list.map((json) {
           final String id = json['id']?.toString() ?? '';
           final String teamName = json['teamName']?.toString() ?? '';
-          final List<dynamic> rosters = json['rosters'] as List<dynamic>? ?? [];
-          final List<String> members = rosters
-              .map((r) => (r['fullName'] ?? r['user']?['fullName'] ?? '').toString())
-              .where((n) => n.isNotEmpty)
+          final List<dynamic> rosters =
+              json['rosters'] as List<dynamic>? ??
+              json['members'] as List<dynamic>? ??
+              [];
+          final List<MatchMemberInfo> memberInfos = rosters
+              .whereType<Map>()
+              .map(
+                (r) => MatchMemberInfo.fromJson(Map<String, dynamic>.from(r)),
+              )
+              .where(
+                (m) =>
+                    m.fullName.trim().isNotEmpty ||
+                    (m.userId?.isNotEmpty ?? false),
+              )
+              .toList();
+          final List<String> members = memberInfos
+              .map((m) => m.fullName)
+              .where((n) => n.trim().isNotEmpty)
               .toList();
 
           final divisionMap = json['division'] as Map<String, dynamic>?;
-          final groupName = divisionMap?['name']?.toString() ?? json['divisionName']?.toString() ?? '';
+          final groupName =
+              divisionMap?['name']?.toString() ??
+              json['divisionName']?.toString() ??
+              '';
 
           return Team(
             id: id,
             name: teamName.isNotEmpty ? teamName : 'Đội $id',
             group: groupName,
-            members: members.isNotEmpty ? members : [teamName.isNotEmpty ? teamName : 'VĐV'],
+            members: members.isNotEmpty
+                ? members
+                : [teamName.isNotEmpty ? teamName : 'VĐV'],
+            memberInfos: memberInfos,
             contactEmail: json['contactPhone']?.toString() ?? '',
             qrCode: json['qrCode']?.toString() ?? id,
             approvalStatus:
@@ -80,7 +110,8 @@ class ApiTeamRepository implements ITeamRepository {
                 json['status']?.toString().toUpperCase() ??
                 'PENDING',
             createdAt: json['createdAt'] != null
-                ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+                ? DateTime.tryParse(json['createdAt'].toString()) ??
+                      DateTime.now()
                 : DateTime.now(),
           );
         }).toList();
@@ -93,9 +124,16 @@ class ApiTeamRepository implements ITeamRepository {
   }
 
   @override
-  Future<void> update(String tournamentId, String teamId, Map<String, dynamic> data) async {
+  Future<void> update(
+    String tournamentId,
+    String teamId,
+    Map<String, dynamic> data,
+  ) async {
     _log.info('Updating team $teamId via API: $data');
-    await _dioClient.dio.patch('/tournaments/$tournamentId/participants/$teamId', data: data);
+    await _dioClient.dio.patch(
+      '/tournaments/$tournamentId/participants/$teamId',
+      data: data,
+    );
   }
 
   @override
@@ -108,7 +146,9 @@ class ApiTeamRepository implements ITeamRepository {
   @override
   Future<void> delete(String tournamentId, String teamId) async {
     _log.info('Deleting team $teamId via API');
-    await _dioClient.dio.delete('/tournaments/$tournamentId/participants/$teamId');
+    await _dioClient.dio.delete(
+      '/tournaments/$tournamentId/participants/$teamId',
+    );
   }
 
   @override

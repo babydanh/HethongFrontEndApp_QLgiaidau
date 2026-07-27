@@ -55,61 +55,35 @@ class MatchMemberInfo {
   });
 
   factory MatchMemberInfo.fromJson(Map<String, dynamic> json) {
-    final user = json['user'] is Map<String, dynamic>
-        ? json['user'] as Map<String, dynamic>
-        : null;
-    final ranking = json['ranking'] is Map<String, dynamic>
-        ? json['ranking'] as Map<String, dynamic>
-        : null;
-    final rank = json['rank'] is Map<String, dynamic>
-        ? json['rank'] as Map<String, dynamic>
-        : null;
-    final tier = json['tier'] is Map<String, dynamic>
-        ? json['tier'] as Map<String, dynamic>
-        : null;
-
-    int? parseInt(dynamic value) {
-      if (value is int) return value;
-      if (value is num) return value.round();
-      if (value is String) return int.tryParse(value);
-      return null;
-    }
-
-    final fullName =
-        json['fullName']?.toString() ??
-        json['name']?.toString() ??
-        user?['fullName']?.toString() ??
-        user?['name']?.toString() ??
-        '';
-
+    final profile = json['profile'];
+    final user = json['user'];
     return MatchMemberInfo(
       userId:
           json['userId']?.toString() ??
           json['user_id']?.toString() ??
-          user?['id']?.toString(),
-      fullName: fullName,
-      eloPoints: parseInt(
-        json['eloPoints'] ??
-            json['elo'] ??
-            json['elo_points'] ??
-            ranking?['eloPoints'] ??
-            ranking?['elo'] ??
-            rank?['eloPoints'],
-      ),
-      tierName:
-          json['tierName']?.toString() ??
-          ranking?['tierName']?.toString() ??
-          rank?['tierName']?.toString() ??
-          tier?['name']?.toString(),
+          (user is Map ? user['id']?.toString() : null),
+      fullName:
+          json['fullName']?.toString() ??
+          json['full_name']?.toString() ??
+          (profile is Map ? profile['fullName']?.toString() : null) ??
+          (user is Map ? user['fullName']?.toString() : null) ??
+          json['name']?.toString() ??
+          'Vận động viên',
+      eloPoints: json['eloPoints'] is num
+          ? (json['eloPoints'] as num).toInt()
+          : int.tryParse(json['eloPoints']?.toString() ?? ''),
+      tierName: json['tierName']?.toString() ?? json['tier_name']?.toString(),
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    if (userId != null) 'userId': userId,
-    'fullName': fullName,
-    if (eloPoints != null) 'eloPoints': eloPoints,
-    if (tierName != null) 'tierName': tierName,
-  };
+  Map<String, dynamic> toJson() {
+    return {
+      if (userId != null) 'userId': userId,
+      'fullName': fullName,
+      if (eloPoints != null) 'eloPoints': eloPoints,
+      if (tierName != null) 'tierName': tierName,
+    };
+  }
 }
 
 class MatchModel {
@@ -302,14 +276,19 @@ class MatchModel {
       team2Members: team2MemberInfos.map((m) => m.fullName).toList(),
       team1MemberInfos: team1MemberInfos,
       team2MemberInfos: team2MemberInfos,
-      groupName: json['groupName']?.toString() ??
+      groupName:
+          json['groupName']?.toString() ??
           json['group_name']?.toString() ??
-          (json['group'] is Map ? json['group']['name']?.toString() : json['group']?.toString()),
-      stageName: json['stageName']?.toString() ??
+          (json['group'] is Map
+              ? json['group']['name']?.toString()
+              : json['group']?.toString()),
+      stageName:
+          json['stageName']?.toString() ??
           json['stage_name']?.toString() ??
           json['stage']?.toString() ??
           json['stageType']?.toString(),
-      stageType: json['stageType']?.toString() ??
+      stageType:
+          json['stageType']?.toString() ??
           json['stage_type']?.toString() ??
           (json['stage'] is Map ? json['stage']['type']?.toString() : null),
       isBye: json['isBye'] ?? json['is_bye'] ?? false,

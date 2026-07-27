@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart';
 
@@ -71,8 +72,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           indicatorWeight: 3,
           labelColor: AppTheme.primary,
           unselectedLabelColor: colors.textSecondary,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 14,
+          ),
           tabs: const [
             Tab(text: 'Hồ sơ'),
             Tab(text: 'Ngân hàng'),
@@ -82,11 +89,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          _ProfileTab(),
-          _BankTab(),
-          _SecurityTab(),
-        ],
+        children: const [_ProfileTab(), _BankTab(), _SecurityTab()],
       ),
     );
   }
@@ -145,8 +148,17 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
 
   final _genders = ['Nam', 'Nữ', 'Khác'];
   final _provinces = [
-    'Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ',
-    'An Giang', 'Bình Dương', 'Đồng Nai', 'Khánh Hòa', 'Lâm Đồng', 'Bình Thuận',
+    'Hà Nội',
+    'TP. Hồ Chí Minh',
+    'Đà Nẵng',
+    'Hải Phòng',
+    'Cần Thơ',
+    'An Giang',
+    'Bình Dương',
+    'Đồng Nai',
+    'Khánh Hòa',
+    'Lâm Đồng',
+    'Bình Thuận',
   ];
 
   @override
@@ -222,11 +234,19 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         return _buildForm(colors, profile.avatarUrl, profile.email);
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => _buildErrorState(colors, 'Không thể tải hồ sơ', () => ref.invalidate(userProfileProvider)),
+      error: (e, _) => _buildErrorState(
+        colors,
+        'Không thể tải hồ sơ',
+        () => ref.invalidate(userProfileProvider),
+      ),
     );
   }
 
-  Widget _buildForm(AppColorsExtension colors, String? avatarUrl, String? email) {
+  Widget _buildForm(
+    AppColorsExtension colors,
+    String? avatarUrl,
+    String? email,
+  ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       physics: const BouncingScrollPhysics(),
@@ -242,8 +262,9 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 controller: _nameCtrl,
                 hint: 'Nhập họ tên',
                 prefixIcon: Icons.person_outline,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Vui lòng nhập họ tên' : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? 'Vui lòng nhập họ tên'
+                    : null,
               ),
               const SizedBox(height: 16),
               _fieldLabel(colors, 'Email'),
@@ -389,8 +410,11 @@ class _BankTabState extends ConsumerState<_BankTab> {
         return _buildForm(colors);
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => _buildErrorState(colors, 'Không thể tải thông tin ngân hàng',
-          () => ref.invalidate(userProfileProvider)),
+      error: (e, _) => _buildErrorState(
+        colors,
+        'Không thể tải thông tin ngân hàng',
+        () => ref.invalidate(userProfileProvider),
+      ),
     );
   }
 
@@ -453,7 +477,11 @@ class _BankTabState extends ConsumerState<_BankTab> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.lock_rounded, size: 18, color: AppTheme.primary.withValues(alpha: 0.8)),
+          Icon(
+            Icons.lock_rounded,
+            size: 18,
+            color: AppTheme.primary.withValues(alpha: 0.8),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -525,14 +553,21 @@ class _SecurityTab extends ConsumerWidget {
                   ),
                 ],
               ],
-              loading: () => [const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator()),
-              )],
-              error: (_, _) => [Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text('Không thể tải trạng thái', style: TextStyle(color: colors.textSecondary)),
-              )],
+              loading: () => [
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ],
+              error: (_, _) => [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Không thể tải trạng thái',
+                    style: TextStyle(color: colors.textSecondary),
+                  ),
+                ),
+              ],
             ),
           ]),
           const SizedBox(height: 24),
@@ -554,7 +589,11 @@ class _SecurityTab extends ConsumerWidget {
               icon: Icons.security_rounded,
               title: 'Mật khẩu mạnh',
               subtitle: 'Tối thiểu 6 ký tự, nên có chữ hoa và số',
-              trailing: Icon(Icons.check_circle_rounded, color: colors.success, size: 20),
+              trailing: Icon(
+                Icons.check_circle_rounded,
+                color: colors.success,
+                size: 20,
+              ),
             ),
           ]),
           const SizedBox(height: 24),
@@ -569,16 +608,77 @@ class _SecurityTab extends ConsumerWidget {
               title: 'Thiết bị hiện tại',
               subtitle: 'Đang hoạt động',
               trailing: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: colors.success.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   'Online',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: colors.success),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: colors.success,
+                  ),
                 ),
               ),
+            ),
+          ]),
+          const SizedBox(height: 24),
+
+          // Tài khoản
+          _sectionTitle(colors, 'Tài khoản'),
+          const SizedBox(height: 10),
+          _card(colors, [
+            _actionRow(
+              colors,
+              icon: Icons.logout_rounded,
+              title: 'Đăng xuất',
+              subtitle: 'Kết thúc phiên đăng nhập hiện tại',
+              onTap: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: colors.bgCard,
+                    title: const Text('Đăng xuất'),
+                    content: const Text('Bạn có chắc muốn đăng xuất?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Hủy'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('Đăng xuất'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true) {
+                  await ref.read(authProvider.notifier).signOut();
+                  if (context.mounted) context.go('/login');
+                }
+              },
+            ),
+            _divider(colors),
+            _actionRow(
+              colors,
+              icon: Icons.delete_forever_rounded,
+              title: 'Xóa tài khoản',
+              subtitle: 'Xóa vĩnh viễn tài khoản và dữ liệu',
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text(
+                      'Tính năng xóa tài khoản đang được hoàn thiện. Bạn có thể dùng trang Web để xóa tài khoản.',
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
             ),
           ]),
           const SizedBox(height: 32),
@@ -654,7 +754,9 @@ Widget _dropdown(
         icon: Icon(Icons.arrow_drop_down_rounded, color: colors.textMuted),
         style: TextStyle(fontSize: 14, color: colors.textPrimary),
         dropdownColor: colors.bgCard,
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        items: items
+            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+            .toList(),
         onChanged: onChange,
       ),
     ),
@@ -668,7 +770,11 @@ Widget _divider(AppColorsExtension colors) {
   );
 }
 
-Widget _saveButton(BuildContext context, bool isLoading, Future<void> Function() onSave) {
+Widget _saveButton(
+  BuildContext context,
+  bool isLoading,
+  Future<void> Function() onSave,
+) {
   return SizedBox(
     width: double.infinity,
     height: 52,
@@ -697,11 +803,18 @@ Widget _saveButton(BuildContext context, bool isLoading, Future<void> Function()
             ? const SizedBox(
                 width: 24,
                 height: 24,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                ),
               )
             : const Text(
                 'Lưu thay đổi',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
               ),
       ),
     ),
@@ -733,7 +846,14 @@ Widget _securityRow(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: TextStyle(fontSize: 11, color: colors.textMuted, fontWeight: FontWeight.w500)),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: colors.textMuted,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               const SizedBox(height: 2),
               Text(
                 fallbackText ?? (verified ? 'Đã xác thực' : 'Chưa xác thực'),
@@ -751,14 +871,18 @@ Widget _securityRow(
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: (verified ? colors.success : colors.warning).withValues(alpha: 0.12),
+            color: (verified ? colors.success : colors.warning).withValues(
+              alpha: 0.12,
+            ),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                verified ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+                verified
+                    ? Icons.check_circle_rounded
+                    : Icons.error_outline_rounded,
                 size: 13,
                 color: verified ? colors.success : colors.warning,
               ),
@@ -808,22 +932,41 @@ Widget _actionRow(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(subtitle, style: TextStyle(fontSize: 12, color: colors.textMuted)),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 12, color: colors.textMuted),
+                ),
               ],
             ),
           ),
-          if (trailing != null) trailing
+          if (trailing != null)
+            trailing
           else if (onTap != null)
-            Icon(Icons.chevron_right_rounded, size: 20, color: colors.textMuted),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: colors.textMuted,
+            ),
         ],
       ),
     ),
   );
 }
 
-Widget _buildErrorState(AppColorsExtension colors, String message, VoidCallback onRetry) {
+Widget _buildErrorState(
+  AppColorsExtension colors,
+  String message,
+  VoidCallback onRetry,
+) {
   return Center(
     child: Padding(
       padding: const EdgeInsets.all(32),
@@ -832,7 +975,14 @@ Widget _buildErrorState(AppColorsExtension colors, String message, VoidCallback 
         children: [
           Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
           const SizedBox(height: 16),
-          Text(message, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+          Text(
+            message,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 16),
           FilledButton(onPressed: onRetry, child: const Text('Thử lại')),
         ],
