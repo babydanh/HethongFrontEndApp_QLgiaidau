@@ -80,6 +80,7 @@ class LiteManagementState {
   final bool generating;
   final String? generatingStrategy;
   final bool creatingBracket;
+  final bool mockLoading;
   final String? matchType;
   final String? tournamentName;
   final String? inviteCode;
@@ -95,6 +96,7 @@ class LiteManagementState {
     this.generating = false,
     this.generatingStrategy,
     this.creatingBracket = false,
+    this.mockLoading = false,
     this.matchType,
     this.tournamentName,
     this.inviteCode,
@@ -113,6 +115,7 @@ class LiteManagementState {
     bool? generating,
     String? generatingStrategy,
     bool? creatingBracket,
+    bool? mockLoading,
     String? matchType,
     String? tournamentName,
     String? inviteCode,
@@ -130,6 +133,7 @@ class LiteManagementState {
       generating: generating ?? this.generating,
       generatingStrategy: generatingStrategy ?? this.generatingStrategy,
       creatingBracket: creatingBracket ?? this.creatingBracket,
+      mockLoading: mockLoading ?? this.mockLoading,
       matchType: matchType ?? this.matchType,
       tournamentName: tournamentName ?? this.tournamentName,
       inviteCode: inviteCode ?? this.inviteCode,
@@ -339,6 +343,24 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       _log.error('Lỗi tạo bracket', e);
       state = state.copyWith(creatingBracket: false);
       rethrow;
+    }
+  }
+
+  Future<void> seedMock(String tournamentId, int count) async {
+    state = state.copyWith(mockLoading: true);
+    try {
+      final names = List.generate(count, (i) => 'VĐV ảo ${i + 1}');
+      await _dio.post(
+        '/tournaments/$tournamentId/mock-participants',
+        data: {'names': names},
+      );
+      _log.success('Đã tạo $count VĐV ảo');
+      await _fetchParticipants(tournamentId);
+    } on DioException catch (e) {
+      _log.error('Lỗi tạo VĐV ảo', e);
+      rethrow;
+    } finally {
+      state = state.copyWith(mockLoading: false);
     }
   }
 }

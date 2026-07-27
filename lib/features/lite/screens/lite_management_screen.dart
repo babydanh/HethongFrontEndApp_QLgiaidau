@@ -210,7 +210,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 ),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                 ),
                 child: Text(
                   statusLabel,
@@ -451,6 +451,37 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               child: LinearProgressIndicator(),
             ),
 
+          // ─── Mock tools ───
+          Row(
+            children: [
+              const Spacer(),
+              TextButton.icon(
+                onPressed: state.mockLoading
+                    ? null
+                    : () => _promptSeedMock(colors, notifier),
+                icon: state.mockLoading
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(
+                        Icons.science_outlined,
+                        size: 18,
+                        color: colors.warning,
+                      ),
+                label: Text(
+                  state.mockLoading ? 'Đang tạo...' : 'Tạo VĐV ảo',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colors.warning,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
           if (isDoubles) ...[
             // ─── Pending Section ───
             _sectionHeader(
@@ -674,6 +705,44 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         ],
       ),
     );
+  }
+
+  Future<void> _promptSeedMock(
+    AppColorsExtension colors,
+    LiteManagementNotifier notifier,
+  ) async {
+    final ctrl = TextEditingController(text: '8');
+    final count = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Tạo VĐV ảo'),
+        content: TextField(
+          controller: ctrl,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Số lượng',
+            hintText: '1-50',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final n = int.tryParse(ctrl.text.trim()) ?? 0;
+              if (n < 1 || n > 50) return;
+              Navigator.pop(ctx, n);
+            },
+            child: const Text('Tạo'),
+          ),
+        ],
+      ),
+    );
+    if (count != null) {
+      notifier.seedMock(widget.tournamentId, count);
+    }
   }
 
   Future<void> _createBracket(
@@ -953,7 +1022,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: colors.warning.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                 ),
                 child: Text(
                   'Chờ cặp',
@@ -1018,7 +1087,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: colors.success.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             ),
             child: Text(
               'Đã tham gia',
