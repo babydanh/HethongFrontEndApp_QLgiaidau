@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
+import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 
 class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
 
   @override
-  ConsumerState<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
+  ConsumerState<ChangePasswordScreen> createState() =>
+      _ChangePasswordScreenState();
 }
 
 class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
@@ -39,41 +41,63 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
     setState(() => _isLoading = true);
 
-    // UI only — simulate API call delay
-    await Future.delayed(const Duration(milliseconds: 1000));
+    try {
+      await ref
+          .read(dioClientProvider)
+          .dio
+          .post(
+            '/auth/change-password',
+            data: {
+              'currentPassword': _currentPasswordController.text,
+              'newPassword': _newPasswordController.text,
+            },
+          );
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Đổi mật khẩu thành công'),
-        backgroundColor: const Color(0xFF10B981),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      ),
-    );
-    context.go('/profile');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Đổi mật khẩu thành công'),
+          backgroundColor: context.colors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        ),
+      );
+      context.go('/profile');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
+          backgroundColor: context.colors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final newPassword = _newPasswordController.text;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: colors.bgDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+          icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
           onPressed: () => context.go('/profile'),
         ),
-        title: const Text(
+        title: Text(
           'Đổi mật khẩu',
           style: TextStyle(
-            color: Color(0xFF0F172A),
+            color: colors.textPrimary,
             fontWeight: FontWeight.w900,
             fontSize: 20,
           ),
@@ -93,11 +117,11 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colors.bgCard,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF2979FF).withValues(alpha: 0.06),
+                      color: AppTheme.primary.withValues(alpha: 0.06),
                       blurRadius: 16,
                       offset: const Offset(0, 4),
                     ),
@@ -261,10 +285,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2979FF).withValues(alpha: 0.06),
+                    color: AppTheme.primary.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: const Color(0xFF2979FF).withValues(alpha: 0.15),
+                      color: AppTheme.primary.withValues(alpha: 0.15),
                     ),
                   ),
                   child: Row(
@@ -273,7 +297,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                       Icon(
                         Icons.info_outline_rounded,
                         size: 18,
-                        color: const Color(0xFF2979FF).withValues(alpha: 0.7),
+                        color: AppTheme.primary.withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -282,7 +306,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF2979FF).withValues(alpha: 0.7),
+                            color: AppTheme.primary.withValues(alpha: 0.7),
                             height: 1.4,
                           ),
                         ),
@@ -300,12 +324,15 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   }
 
   Widget _buildRequirementRow(String text, bool isMet) {
+    final colors = context.colors;
     return Row(
       children: [
         Icon(
-          isMet ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+          isMet
+              ? Icons.check_circle_rounded
+              : Icons.radio_button_unchecked_rounded,
           size: 16,
-          color: isMet ? const Color(0xFF10B981) : const Color(0xFFCBD5E1),
+          color: isMet ? colors.success : colors.textMuted,
         ),
         const SizedBox(width: 8),
         Text(
@@ -313,7 +340,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: isMet ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
+            color: isMet ? colors.success : colors.textMuted,
           ),
         ),
       ],
@@ -328,12 +355,13 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w700,
-        color: Color(0xFF0F172A),
+        color: colors.textPrimary,
       ),
     );
   }
