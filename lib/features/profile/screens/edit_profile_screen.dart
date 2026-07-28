@@ -1093,8 +1093,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
       ),
     );
   }
-    );
-  }
 
   Widget _buildVerifyButton({required bool isVerified, required VoidCallback onVerify}) {
     return Container(
