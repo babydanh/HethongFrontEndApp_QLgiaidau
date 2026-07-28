@@ -877,22 +877,6 @@ class _TournamentRegisterScreenState
                         }
                       });
                     }
-                    if (_selectedDiv != null && widget.divisionId != null) {
-                      final preDiv = divs.where((d) => d.id == _selectedDiv).firstOrNull;
-                      if (preDiv != null &&
-                          (preDiv.matchType == 'DOUBLES' ||
-                              preDiv.matchType == 'MIXED_DOUBLES')) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) {
-                            final inviteCode = _localInviteCode ?? widget.inviteCode ?? '';
-                            context.pushReplacement(
-                              '/register/${widget.tournamentId}/doubles?divisionId=${preDiv.id}&invite=$inviteCode',
-                              extra: preDiv,
-                            );
-                          }
-                        });
-                      }
-                    }
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

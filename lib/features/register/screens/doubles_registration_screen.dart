@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart'
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:intl/intl.dart';
 
 class DoublesRegistrationFlow extends ConsumerStatefulWidget {
@@ -211,7 +212,7 @@ class _DoublesRegistrationFlowState
         }
       }
     } catch (e) {
-      _showError('Lỗi: $e');
+      _showError(ErrorParser.parse(e, 'Không thể tạo đội đăng ký. Vui lòng thử lại.'));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -257,15 +258,16 @@ class _DoublesRegistrationFlowState
     } catch (_) {}
   }
 
-  void _showError(String msg) {
+  void _showError(dynamic msg) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      final text = msg is String ? msg : ErrorParser.parse(msg);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final tAsync = ref.watch(tournamentProvider(widget.tournamentId));
+    final tAsync = ref.watch(tournamentIntroProvider(widget.tournamentId));
     final colors = context.colors;
 
     if (_success) return _buildSuccess(colors);
