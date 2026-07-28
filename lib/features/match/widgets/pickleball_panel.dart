@@ -18,8 +18,8 @@ class PickleballPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.watch(scorePanelNotifierProvider(params));
-    final state = notifier.state;
+    final state = ref.watch(scorePanelNotifierProvider(params));
+    final notifier = ref.read(scorePanelNotifierProvider(params).notifier);
     final pb = state.pickleball ?? const PickleballServeState();
     final colors = context.colors;
 
