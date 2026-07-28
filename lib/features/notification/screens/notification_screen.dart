@@ -51,13 +51,6 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     }
   }
 
-  String? _fallbackRoute(String type) {
-    if (type.startsWith('TOURNAMENT') || type.startsWith('MATCH')) return '/tournaments';
-    if (type == 'CLUB_INVITE') return '/communities';
-    if (type.startsWith('PAYMENT') || type.startsWith('PAYOUT')) return '/profile';
-    return null;
-  }
-
   Future<void> _markAllAsRead() async {
     try {
       await ref.read(notificationStateProvider.notifier).markAllAsRead();
@@ -318,9 +311,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   }
 
   Widget _buildCard(AppNotification notif, AppColorsExtension colors) {
-    final isInvite = notif.type == 'TOURNAMENT_REGISTER_PENDING' ||
-        notif.type == 'CLUB_INVITE' ||
-        notif.type == 'INVITE';
+    final isInvite = notif.isInvite;
 
     return GestureDetector(
       onTap: () async {
@@ -340,12 +331,10 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
           }
         }
         if (!mounted) return;
-        if (notif.redirectUrl != null && notif.redirectUrl!.isNotEmpty) {
-          context.go(notif.redirectUrl!);
-        } else {
-          final fallback = _fallbackRoute(notif.type);
-          if (fallback != null) context.go(fallback);
-        }
+        // REFEREE invites have inline buttons — don't navigate
+        if (notif.isRefereeInvite) return;
+        final route = notif.routeTarget;
+        if (route != null) context.push(route);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 6),

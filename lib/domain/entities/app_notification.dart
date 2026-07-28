@@ -9,6 +9,7 @@ class AppNotification {
   final String? redirectUrl; // deep link
   final bool isRead;
   final DateTime createdAt;
+  final Map<String, dynamic>? data; // raw data payload
 
   const AppNotification({
     required this.id,
@@ -18,6 +19,7 @@ class AppNotification {
     this.redirectUrl,
     this.isRead = false,
     required this.createdAt,
+    this.data,
   });
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
@@ -29,7 +31,84 @@ class AppNotification {
       redirectUrl: json['redirectUrl'],
       isRead: json['isRead'] ?? json['is_read'] ?? false,
       createdAt: DateTime.tryParse(json['createdAt'] ?? json['created_at'] ?? '') ?? DateTime.now(),
+      data: (json['data'] is Map<String, dynamic>) ? json['data'] as Map<String, dynamic> : null,
     );
+  }
+
+  /// Trích xuất tournamentId từ data payload
+  String? get tournamentId {
+    if (data == null) return null;
+    final val = data!['tournamentId'];
+    if (val is String && val.isNotEmpty) return val;
+    if (val is num) return val.toString();
+    return null;
+  }
+
+  /// Trích xuất matchId từ data payload
+  String? get matchId {
+    if (data == null) return null;
+    final val = data!['matchId'];
+    if (val is String && val.isNotEmpty) return val;
+    if (val is num) return val.toString();
+    return null;
+  }
+
+  /// Đường dẫn đích dựa trên loại thông báo + data
+  String? get routeTarget {
+    switch (type) {
+      case 'MATCH_LIVE':
+      case 'MATCH_RESULT':
+        if (matchId != null) return '/live/$matchId';
+        return null;
+
+      case 'TOURNAMENT_INVITE':
+      case 'TOURNAMENT_REGISTER_PENDING':
+      case 'TEAM_CONFIRMATION_EXPIRED':
+        if (tournamentId != null) return '/intro/$tournamentId';
+        return null;
+
+      case 'CLUB_INVITE':
+        return '/communities';
+
+      case 'DOUBLES_TEAM_INVITE':
+        if (tournamentId != null) return '/register/$tournamentId/doubles';
+        return null;
+
+      case 'PAYMENT':
+      case 'PAYOUT':
+      case 'PAYOUT_APPROVED':
+      case 'PAYOUT_REJECTED':
+        return '/profile';
+
+      default:
+        // type chứa 'DOUBLES'
+        if (type.contains('DOUBLES') && tournamentId != null) {
+          return '/register/$tournamentId/doubles';
+        }
+        // type chứa 'GENERAL' hoặc unknown → dùng redirectUrl nếu có
+        if (type.startsWith('GENERAL') || type.startsWith('SYSTEM')) {
+          if (redirectUrl != null && redirectUrl!.isNotEmpty) return redirectUrl;
+          return null;
+        }
+        // REFEREE types are handled inline via isInvite/isRefereeInvite — no route
+        if (isRefereeInvite) return null;
+        // Fallback: dùng redirectUrl nếu có
+        if (redirectUrl != null && redirectUrl!.isNotEmpty) return redirectUrl;
+        return null;
+    }
+  }
+
+  /// Kiểm tra nếu là lời mời trọng tài
+  bool get isRefereeInvite {
+    return type == 'REFEREE_INVITE' || type.contains('REFEREE');
+  }
+
+  /// Kiểm tra nếu thông báo có chứa action accept/decline
+  bool get isInvite {
+    return type == 'TOURNAMENT_REGISTER_PENDING' ||
+        type == 'CLUB_INVITE' ||
+        type == 'INVITE' ||
+        isRefereeInvite;
   }
 
   /// Icon theo loại thông báo
