@@ -605,7 +605,10 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
     setState(() => _generating = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
-      await dio.post('/tournaments/lite/${widget.tournamentId}/bracket');
+      await dio.post(
+        '/tournaments/${widget.tournamentId}/generate-bracket',
+        data: {'seedingType': 'RANDOM'},
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Đã tạo bracket thành công!')),
