@@ -254,19 +254,27 @@ class _TournamentRegisterScreenState
             inviteCode: _localInviteCode ?? widget.inviteCode,
           );
       if (!mounted) return;
-      setState(() {
-        _success = true;
-        _registeredEntryFee = result.entryFee;
-      });
-      if (result.entryFee > 0 && result.participantId.isNotEmpty) {
+      final t = ref.read(tournamentProvider(widget.tournamentId)).asData?.value;
+      final effectiveFee = (result.entryFee > 0)
+          ? result.entryFee
+          : (selectedDiv?.entryFee ?? t?.entryFee ?? 0.0);
+
+      if (effectiveFee > 0 && result.participantId.isNotEmpty) {
         context.push(
           '/payment/checkout',
           extra: {
             'tournamentId': widget.tournamentId,
             'participantId': result.participantId,
-            'amount': result.entryFee,
+            'divisionId': divisionId,
+            'amount': effectiveFee,
+            'tournamentName': t?.name ?? 'Giải đấu',
           },
         );
+      } else {
+        setState(() {
+          _success = true;
+          _registeredEntryFee = effectiveFee;
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -1103,8 +1111,8 @@ class _TournamentRegisterScreenState
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton.icon(
+                  height: 52,
+                  child: FilledButton.icon(
                     onPressed: _submitting ? null : _register,
                     icon: _submitting
                         ? const SizedBox(
@@ -1115,13 +1123,26 @@ class _TournamentRegisterScreenState
                               color: Colors.white,
                             ),
                           )
-                        : const Icon(Icons.check_circle_outline_rounded),
+                        : const Icon(Icons.check_circle_rounded, size: 20),
                     label: Text(
-                      _submitting ? 'Đang xử lý...' : _getSubmitLabel(t),
+                      _submitting
+                          ? 'Đang xử lý...'
+                          : (_selectedDivision?.entryFee != null && _selectedDivision!.entryFee! > 0)
+                              ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(_selectedDivision!.entryFee!.ceil())}đ'
+                              : (t.entryFee != null && t.entryFee! > 0)
+                                  ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(t.entryFee!.ceil())}đ'
+                                  : '${_getSubmitLabel(t)} (Miễn phí)',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                    style: ElevatedButton.styleFrom(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                   ),
