@@ -179,42 +179,74 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
   }
 
   Widget _buildChart(List<EloHistoryLog> history, AppColorsExtension colors) {
-    if (history.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          border: Border.all(color: colors.border),
-        ),
-        child: Center(
-          child: Text(
-            'Chưa có dữ liệu',
-            style: TextStyle(fontSize: 13, color: colors.textMuted),
-          ),
-        ),
-      );
-    }
-
-    final sorted = List<EloHistoryLog>.from(history)..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-    final peakElo = sorted.fold<int>(widget.currentElo, (peak, h) => h.newElo > peak ? h.newElo : peak);
-    final chartData = sorted.map((h) {
-      final date = DateTime.tryParse(h.createdAt) ?? DateTime.now();
-      final label = DateFormat('dd/MM').format(date);
-      return (label, h.newElo);
-    }).toList();
+    final sorted = List<EloHistoryLog>.from(history)
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final peakElo = sorted.fold<int>(
+      widget.currentElo,
+      (peak, h) => h.newElo > peak ? h.newElo : peak,
+    );
 
     return Column(
       children: [
-        EloProgressChart(
-          data: chartData,
-          currentElo: widget.currentElo,
-          tierName: widget.tierName,
-          height: 200,
-        ),
-        const SizedBox(height: 8),
+        if (history.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+              border: Border.all(color: colors.border),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.show_chart_rounded,
+                    color: AppTheme.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Chưa có lịch sử biến động ELO',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Hãy tham gia các trận đấu xếp hạng để ghi nhận điểm ELO',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colors.textMuted,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          )
+        else
+          EloProgressChart(
+            data: sorted.map((h) {
+              final date = DateTime.tryParse(h.createdAt) ?? DateTime.now();
+              return (DateFormat('dd/MM').format(date), h.newElo);
+            }).toList(),
+            currentElo: widget.currentElo,
+            tierName: widget.tierName,
+            height: 200,
+          ),
+        const SizedBox(height: 10),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: colors.bgCard,
             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -223,7 +255,7 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
           child: Row(
             children: [
               Text(
-                'Peak ELO',
+                'Peak ELO (Cao nhất)',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -242,7 +274,10 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
               if (peakElo > widget.currentElo) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.warning.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(4),
