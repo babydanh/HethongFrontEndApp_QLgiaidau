@@ -236,8 +236,8 @@ class _DoublesRegistrationFlowState
   void _startPolling() {
     _pollTimer?.cancel();
     _pollElapsed = 0;
-    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      _pollElapsed += 3;
+    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _pollElapsed += 1;
       if (_pollElapsed >= _pollMaxDuration) {
         _pollTimer?.cancel();
         if (mounted) {
@@ -755,13 +755,8 @@ class _DoublesRegistrationFlowState
             ),
           ],
         ),
-        const SizedBox(height: 4),
-        Center(
-          child: Text(
-            'Tự động hết hạn sau ${_pollMaxDuration - _pollElapsed}s',
-            style: TextStyle(fontSize: 11, color: colors.textMuted),
-          ),
-        ),
+        const SizedBox(height: 8),
+        _buildCountdownBadge(colors),
         const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
@@ -775,6 +770,57 @@ class _DoublesRegistrationFlowState
         ),
       ],
     ).animate().fadeIn(duration: 300.ms);
+  }
+
+  /// Countdown badge for partner invitation — shows MM:SS, pulsing red when ≤30s
+  Widget _buildCountdownBadge(AppColorsExtension colors) {
+    final remaining = _pollMaxDuration - _pollElapsed;
+    final minutes = remaining ~/ 60;
+    final seconds = remaining % 60;
+    final isUrgent = remaining <= 30;
+    final badgeColor = isUrgent ? colors.error : const Color(0xFF2979FF);
+
+    Widget badge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      decoration: BoxDecoration(
+        color: badgeColor.withValues(alpha: isUrgent ? 0.15 : 0.10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: badgeColor.withValues(alpha: isUrgent ? 0.4 : 0.2),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isUrgent ? Icons.timer_off_rounded : Icons.timer_rounded,
+            size: 18,
+            color: badgeColor,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Giữ chỗ trong ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: badgeColor,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (isUrgent) {
+      badge = badge.animate(
+        onPlay: (controller) => controller.repeat(reverse: true),
+      ).shimmer(
+        duration: 600.ms,
+        color: colors.error.withValues(alpha: 0.3),
+      );
+    }
+
+    return Center(child: badge);
   }
 
   Widget _buildStep3(Tournament t, AppColorsExtension colors) {
