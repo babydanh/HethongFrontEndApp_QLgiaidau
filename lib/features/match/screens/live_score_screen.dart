@@ -1427,23 +1427,47 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.colors.bgCard,
-        title: Text('Xác nhận kết thúc trận đấu', style: TextStyle(color: context.colors.textPrimary, fontWeight: FontWeight.bold)),
-        content: Text('Bạn có chắc chắn muốn kết thúc trận đấu này và chốt kết quả tỉ số?', style: TextStyle(color: context.colors.textSecondary)),
+        title: Text(
+          'Xác nhận kết thúc trận đấu',
+          style: TextStyle(
+            color: context.colors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          'Bạn có chắc chắn muốn kết thúc trận đấu này và chốt kết quả tỉ số?',
+          style: TextStyle(color: context.colors.textSecondary),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy'),
+          ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
               try {
-                await ref.read(dioProvider).patch('/matches/${match.id}/status', data: {'status': 'COMPLETED'});
+                await ref
+                    .read(dioProvider)
+                    .patch(
+                      '/matches/${match.id}/status',
+                      data: {'status': 'COMPLETED'},
+                    );
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: context.colors.success),
-            child: const Text('Xác nhận', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.colors.success,
+            ),
+            child: const Text(
+              'Xác nhận',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
