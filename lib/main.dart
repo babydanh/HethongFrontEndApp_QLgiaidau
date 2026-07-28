@@ -25,24 +25,10 @@ void main() async {
   // Khởi tạo hệ thống Lỗi Toàn Cục (Global Error Handler)
   GlobalErrorHandler.init();
 
-  // Khởi tạo Smart Orientation
-  final view = PlatformDispatcher.instance.views.first;
-  final logicalWidth = view.physicalSize.width / view.devicePixelRatio;
-
-  if (logicalWidth < 600) {
-    // Khóa cứng màn hình dọc (Portrait) cho Điện thoại di động
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
-  } else {
-    // Mở khóa hoàn toàn đa hướng cho Tablet / TV / Web
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-  }
+  // Khóa màn hình dọc (Portrait) cho ứng dụng theo chuẩn
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
 
   runApp(
     const ProviderScope(

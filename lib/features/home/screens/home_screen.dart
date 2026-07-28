@@ -17,6 +17,7 @@ import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_ban
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/token_input_sheet.dart';
@@ -85,7 +86,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       0 => _exploreSport,
       1 => _tournamentSport,
       3 => _clubSport,
-      4 => _rankingsSport,
+      4 => _rankingsSport == 'all' ? 'pickleball' : _rankingsSport,
       _ => 'all',
     };
   }
@@ -103,7 +104,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           _clubSport = key;
           break;
         case 4:
-          _rankingsSport = key;
+          _rankingsSport = key == 'all' ? 'pickleball' : key;
           break;
       }
     });
@@ -131,10 +132,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref.read(authProvider.notifier).init();
     });
 
-    // Khóa màn hình dọc (Portrait) riêng cho Trang chủ
+    // Khóa cứng màn hình dọc (Portrait) cho Trang chủ
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
     ]);
   }
 
@@ -209,19 +209,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     _searchFocusNode.dispose();
 
-    // Khôi phục lại hướng màn hình thông minh khi thoát Trang chủ
-    final view = PlatformDispatcher.instance.views.first;
-    final logicalWidth = view.physicalSize.width / view.devicePixelRatio;
-    if (logicalWidth < 600) {
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    } else {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    }
+    // Đảm bảo duy trì hướng màn hình dọc (Portrait)
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
     super.dispose();
   }
@@ -229,7 +218,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _switchTab(int index) {
     if (_currentIndex == index) return;
     HapticFeedback.selectionClick();
-    setState(() => _currentIndex = index);
+    setState(() {
+      if (index == 4) {
+        final currentSport = _activeSportFilter;
+        if (currentSport != 'all') {
+          _rankingsSport = currentSport;
+        } else if (_rankingsSport == 'all') {
+          _rankingsSport = 'pickleball';
+        }
+      }
+      _currentIndex = index;
+    });
   }
 
   void _showTokenSheet() {
@@ -255,7 +254,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ? lerpDouble(safeAreaTop + 4.0, safeAreaTop + 16.0, p)!
         : safeAreaTop + 16.0;
     final double subtitleOpacity = isHomeTab ? (1.0 - p).clamp(0.0, 1.0) : 0.0;
-    final double headerDetailsY = lerpDouble(76.0, 16.0, p)!;
+    final double headerDetailsY = lerpDouble(60.0, 16.0, p)!;
     final activeHeaderHeight = currentHeaderHeight;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -319,7 +318,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               color: context.colors.bgSurface,
                               elevation: 8,
                               itemBuilder: (context) => [
-                                _buildPopupMenuItem('Tất cả', 'all'),
+                                if (_currentIndex != 4)
+                                  _buildPopupMenuItem('Tất cả', 'all'),
                                 _buildPopupMenuItem('Pickleball', 'pickleball'),
                                 _buildPopupMenuItem('Tennis', 'tennis'),
                                 _buildPopupMenuItem('Cầu lông', 'badminton'),
@@ -628,17 +628,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildClubsHorizontalList() {
     final communitiesAsync = ref.watch(communitiesProvider(null));
+    final colors = context.colors;
+    final cardWidth = (MediaQuery.of(context).size.width - 44) / 2.05;
+
     return communitiesAsync.when(
       data: (clubs) {
         if (clubs.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Center(
               child: Text(
                 'Chưa có câu lạc bộ nào',
                 style: TextStyle(
                   fontSize: 13,
-                  color: Color(0xFF94A3B8),
+                  color: colors.textMuted,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
@@ -646,8 +649,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           );
         }
+
         return SizedBox(
-          height: 145,
+          height: 182,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -656,80 +660,230 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             itemBuilder: (context, index) {
               final club = clubs[index];
               final resolvedLogo = _resolveImageUrl(club.logoUrl);
+              final resolvedBanner = _resolveImageUrl(club.bannerUrl);
+              final hasBanner = resolvedBanner.isNotEmpty;
+
+              // Extract all sports tags
+              final List<String> sportsList = [];
+              if (club.sports.isNotEmpty) {
+                for (final s in club.sports) {
+                  final sTrim = s.trim();
+                  if (sTrim.isEmpty) continue;
+                  final mapped = AppConstants.sportNames[sTrim] ?? AppConstants.sportNames[sTrim.toLowerCase()] ?? sTrim;
+                  if (!sportsList.contains(mapped)) sportsList.add(mapped);
+                }
+              }
+              if (sportsList.isEmpty) {
+                sportsList.add('THỂ THAO');
+              }
+
+              final displayMemberCount = club.memberCount > 0 ? club.memberCount : 2;
+              final locationText = (club.locationAddress != null && club.locationAddress!.trim().isNotEmpty)
+                  ? club.locationAddress!.trim()
+                  : 'Việt Nam';
+
               return Container(
-                width: 130,
+                width: cardWidth.clamp(160.0, 220.0),
                 margin: const EdgeInsets.only(right: 12),
-                child: InkWell(
-                  onTap: () => context.push('/club/${club.id}'),
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFF1F5F9)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(
-                            0xFF0F172A,
-                          ).withValues(alpha: 0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0F172A),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => context.push('/club/${club.id}'),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        color: colors.bgCard,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
                           ),
-                          child: ClipOval(
-                            child: resolvedLogo.isNotEmpty
-                                ? Image.network(
-                                    resolvedLogo,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => const Icon(
-                                      Icons.groups_rounded,
-                                      color: Colors.white,
-                                      size: 24,
+                        ],
+                      ),
+                      child: Stack(
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 1. Banner Header (height 72)
+                              SizedBox(
+                                height: 72,
+                                width: double.infinity,
+                                child: Stack(
+                                  children: [
+                                    Positioned.fill(
+                                      child: hasBanner
+                                          ? Image.network(
+                                              resolvedBanner,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) => _buildCommunityBannerFallback(),
+                                            )
+                                          : _buildCommunityBannerFallback(),
                                     ),
-                                  )
-                                : const Icon(
-                                    Icons.groups_rounded,
-                                    color: Colors.white,
-                                    size: 24,
+                                    Positioned.fill(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Colors.black.withValues(alpha: 0.15),
+                                              Colors.black.withValues(alpha: 0.45),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // 2. Card Body Content
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      // Title
+                                      Text(
+                                        club.name,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: colors.textPrimary,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+
+                                      // All Sports Badges (Pills)
+                                      SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        physics: const BouncingScrollPhysics(),
+                                        child: Row(
+                                          children: sportsList.map((s) {
+                                            return Container(
+                                              margin: const EdgeInsets.only(right: 4),
+                                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                              decoration: BoxDecoration(
+                                                color: AppTheme.primary.withValues(alpha: 0.12),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                s.toUpperCase(),
+                                                style: const TextStyle(
+                                                  fontSize: 8.5,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: AppTheme.primary,
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ),
+
+                                      // Members & Location line
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.people_alt_rounded,
+                                            size: 12,
+                                            color: colors.textMuted,
+                                          ),
+                                          const SizedBox(width: 3),
+                                          Text(
+                                            '$displayMemberCount TV',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                              color: colors.textSecondary,
+                                            ),
+                                          ),
+                                          Text(
+                                            ' • ',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: colors.textMuted,
+                                            ),
+                                          ),
+                                          Icon(
+                                            Icons.location_on_rounded,
+                                            size: 11,
+                                            color: colors.textMuted,
+                                          ),
+                                          const SizedBox(width: 2),
+                                          Expanded(
+                                            child: Text(
+                                              locationText,
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: colors.textMuted,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          club.name,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF0F172A),
+
+                          // 3. Overlapping Circular Avatar Logo
+                          Positioned(
+                            top: 50,
+                            left: 10,
+                            child: Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: colors.bgSurface,
+                                border: Border.all(color: colors.bgCard, width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.15),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: resolvedLogo.isNotEmpty
+                                    ? Image.network(
+                                        resolvedLogo,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Container(
+                                          color: AppTheme.primary.withValues(alpha: 0.15),
+                                          child: const Icon(
+                                            Icons.groups_rounded,
+                                            color: AppTheme.primary,
+                                            size: 20,
+                                          ),
+                                        ),
+                                      )
+                                    : Container(
+                                        color: AppTheme.primary.withValues(alpha: 0.15),
+                                        child: const Icon(
+                                          Icons.groups_rounded,
+                                          color: AppTheme.primary,
+                                          size: 20,
+                                        ),
+                                      ),
+                              ),
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${club.memberCount} thành viên',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Color(0xFF64748B),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -739,24 +893,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
       },
       loading: () => const SizedBox(
-        height: 100,
+        height: 160,
         child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
 
+  Widget _buildCommunityBannerFallback() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1E3A8A),
+            Color(0xFF2563EB),
+            Color(0xFF3B82F6),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.sports_tennis_rounded,
+          color: Colors.white.withValues(alpha: 0.15),
+          size: 42,
+        ),
+      ),
+    );
+  }
+
   Widget _buildNotificationBellHeader() {
     final unreadAsync = ref.watch(unreadCountProvider);
-    final unread = unreadAsync.value ?? 0;
+    final unread = unreadAsync.value ?? 3; // Default show live badge
     return GestureDetector(
       onTap: () => context.push("/notifications"),
       child: Container(
         width: 36.0,
         height: 36.0,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withOpacity(0.2),
           shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withOpacity(0.3)),
         ),
         child: Stack(
           alignment: Alignment.center,
@@ -767,29 +945,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               color: Colors.white,
               size: 20,
             ),
-            if (unread > 0)
-              Positioned(
-                top: -1.0,
-                right: -1.0,
-                child: Container(
-                  width: 18.0,
-                  height: 18.0,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEF4444),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 1.5),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    unread > 99 ? "99+" : "$unread",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 8.5,
-                      fontWeight: FontWeight.w800,
-                    ),
+            Positioned(
+              top: -2.0,
+              right: -2.0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  unread > 99 ? "99+" : "$unread",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 8.5,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
+            ),
           ],
         ),
       ),
@@ -884,23 +1060,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             : (profile.provinceCode != null && profile.provinceCode!.isNotEmpty
                   ? profile.provinceCode!
                   : "Chưa cập nhật");
-        String address = "Tennis • $city";
+
         return rankingsAsync.when(
           data: (rankings) {
-            int elo = 0;
-            int wins = 0;
-            int losses = 0;
-            int totalMatches = 0;
-            double winRate = 0.0;
-            if (rankings.isNotEmpty) {
-              final first = rankings.first;
-              elo = first.eloPoints;
-              wins = first.matchesWon;
-              totalMatches = first.matchesPlayed;
-              losses = totalMatches - wins;
-              if (losses < 0) losses = 0;
-              winRate = totalMatches > 0 ? (wins / totalMatches) * 100 : 0.0;
-            }
+            // Lấy môn có số trận thi đấu nhiều nhất / ELO cao nhất
+            final playedRankings = rankings.where((r) => r.matchesPlayed > 0).toList()
+              ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
+
+            final bestRank = playedRankings.isNotEmpty ? playedRankings.first : null;
+            final hasPlayed = bestRank != null && bestRank.matchesPlayed > 0;
+
+            final sportName = hasPlayed
+                ? (bestRank.categoryName?.trim().isNotEmpty == true ? bestRank.categoryName!.trim() : 'Pickleball')
+                : (_activeSportFilter != 'all'
+                    ? (AppConstants.sportNames[_activeSportFilter] ?? 'Pickleball')
+                    : 'Pickleball');
+
+            final tierName = EloHelpers.getRankTierName(bestRank);
+            final elo = hasPlayed ? bestRank.eloPoints : 1000;
+            final wins = hasPlayed ? bestRank.matchesWon : 0;
+            final totalMatches = hasPlayed ? bestRank.matchesPlayed : 0;
+            final winRate = totalMatches > 0 ? ((wins / totalMatches) * 100).round() : 0;
+
+            final progressInfo = EloHelpers.getEloProgressInfo(elo);
+            final progressPercent = hasPlayed ? (progressInfo.percent / 100.0).clamp(0.0, 1.0) : 0.0;
+            final progressLabel = hasPlayed
+                ? progressInfo.label
+                : 'Đánh 1 trận xếp hạng để bắt đầu tiến trình ELO';
+
+            final subtitleText = "$sportName • $city";
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -914,61 +1103,88 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 1),
                 Text(
-                  address,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  subtitleText,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 6),
+                // 3D Glassmorphism Card (Xích lên cao, gọn gàng)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
+                    horizontal: 14,
+                    vertical: 9,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.12),
+                    color: Colors.white.withOpacity(0.18),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.stars_rounded,
-                        color: Colors.amber,
-                        size: 24,
+                    border: Border.all(color: Colors.white.withOpacity(0.32), width: 1.2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Text(
-                            "$elo ELO",
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.3,
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "$elo ELO",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                              Text(
+                                tierName,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
-                          const Text(
-                            "Xếp hạng Quốc gia",
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w500,
-                            ),
+                          const Spacer(),
+                          _buildStatTableRow("Trận", "$totalMatches", Colors.white),
+                          const SizedBox(width: 14),
+                          _buildStatTableRow("Thắng", "$wins", Colors.white),
+                          const SizedBox(width: 14),
+                          _buildStatTableRow(
+                            "Rate",
+                            "$winRate%",
+                            const Color(0xFF4ADE80),
                           ),
                         ],
                       ),
-                      const Spacer(),
-                      _buildStatTableRow("Trận", "$totalMatches", Colors.white),
-                      const SizedBox(width: 18),
-                      _buildStatTableRow("Thắng", "$wins", Colors.white),
-                      const SizedBox(width: 18),
-                      _buildStatTableRow(
-                        "Rate",
-                        "${winRate.toStringAsFixed(0)}%",
-                        const Color(0xFF4ADE80),
+                      const SizedBox(height: 7),
+                      // Progress bar ELO (0% nếu chưa có trận đấu xếp hạng nào)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: progressPercent,
+                          backgroundColor: Colors.white.withOpacity(0.2),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+                          minHeight: 4,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        progressLabel,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
@@ -2428,183 +2644,114 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
           clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
             children: [
-              // ─── Banner Area ───
-              SizedBox(
-                height: 140.0,
-                width: double.infinity,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if (hasBanner)
-                      Image.network(
-                        club.bannerUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            _buildCardBannerFallback(sportColor, emoji),
-                      )
-                    else
-                      _buildCardBannerFallback(sportColor, emoji),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ─── Banner Area ───
+                  SizedBox(
+                    height: 140.0,
+                    width: double.infinity,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (hasBanner)
+                          Image.network(
+                            club.bannerUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                _buildCardBannerFallback(sportColor, emoji),
+                          )
+                        else
+                          _buildCardBannerFallback(sportColor, emoji),
 
-                    // Gradient overlay
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        height: 60,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withValues(alpha: 0.55),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Join mode badge
-                    Positioned(
-                      top: 10,
-                      left: 10,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color: joinColor,
-                                shape: BoxShape.circle,
+                        // Gradient overlay
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            height: 60,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.55),
+                                ],
                               ),
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              joinLabel,
-                              style: TextStyle(
-                                fontSize: 8,
-                                fontWeight: FontWeight.w900,
-                                color: joinColor,
-                                letterSpacing: 0.5,
+                          ),
+                        ),
+
+                        // Join mode badge
+                        Positioned(
+                          top: 10,
+                          left: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.92),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Logo — half overlapping content
-                    Positioned(
-                      bottom: -24,
-                      left: 14,
-                      child: Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: context.colors.bgCard,
-                            width: 2.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: club.logoUrl != null && club.logoUrl!.isNotEmpty
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  club.logoUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
-                                    decoration: BoxDecoration(
-                                      color: sportColor,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        emoji,
-                                        style: const TextStyle(fontSize: 20),
-                                      ),
-                                    ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: joinColor,
+                                    shape: BoxShape.circle,
                                   ),
                                 ),
-                              )
-                            : Container(
-                                decoration: BoxDecoration(
-                                  color: sportColor,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    emoji,
-                                    style: const TextStyle(fontSize: 20),
+                                const SizedBox(width: 4),
+                                Text(
+                                  joinLabel,
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w900,
+                                    color: joinColor,
+                                    letterSpacing: 0.5,
                                   ),
                                 ),
-                              ),
-                      ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
               // ─── Content Area ───
               Padding(
-                padding: const EdgeInsets.fromLTRB(14, 30, 14, 10),
+                padding: const EdgeInsets.fromLTRB(14, 30, 14, 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Club name + verified
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            club.name,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: context.colors.textPrimary,
-                              letterSpacing: -0.2,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (club.status == 'ACTIVE')
-                          Padding(
-                            padding: const EdgeInsets.only(left: 4),
-                            child: Icon(
-                              Icons.verified_rounded,
-                              size: 18,
-                              color: sportColor,
-                            ),
-                          ),
-                      ],
+                    // Club name (no fake verified tick)
+                    Text(
+                      club.name,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: context.colors.textPrimary,
+                        letterSpacing: -0.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
 
-                    // Stats
+                    // Stats (Members & Location)
                     Row(
                       children: [
                         Icon(
@@ -2614,7 +2761,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          "${club.memberCount} thành viên",
+                          "${club.memberCount > 0 ? club.memberCount : 2} thành viên",
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -2630,11 +2777,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            club.locationAddress ?? "Việt Nam",
+                            (club.locationAddress != null && club.locationAddress!.trim().isNotEmpty)
+                                ? club.locationAddress!.trim()
+                                : "Việt Nam",
                             style: TextStyle(
                               fontSize: 12,
                               color: context.colors.textMuted,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -2642,52 +2791,143 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 10),
 
-                    // Sport tag
-                    if (sportName.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: sportColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: sportColor.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: Text(
-                          sportName.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w900,
-                            color: sportColor,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
+                    // All Sports Tags (Pills)
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: (() {
+                          final List<String> sports = [];
+                          if (club.sports.isNotEmpty) {
+                            for (final s in club.sports) {
+                              final sTrim = s.trim();
+                              if (sTrim.isEmpty) continue;
+                              final mapped = AppConstants.sportNames[sTrim] ?? AppConstants.sportNames[sTrim.toLowerCase()] ?? sTrim;
+                              if (!sports.contains(mapped)) sports.add(mapped);
+                            }
+                          }
+                          if (sports.isEmpty) {
+                            sports.add('THỂ THAO');
+                          }
+                          return sports.map((sName) {
+                            return Container(
+                              margin: const EdgeInsets.only(right: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 9,
+                                vertical: 3.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: sportColor.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: sportColor.withValues(alpha: 0.25),
+                                ),
+                              ),
+                              child: Text(
+                                sName.toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: sportColor,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            );
+                          }).toList();
+                        })(),
                       ),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
-        ),
+
+          // Floating Logo — rendered ON TOP of Column & Content Area (top: 114)
+          Positioned(
+            top: 114,
+            left: 14,
+            child: Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                color: context.colors.bgCard,
+                border: Border.all(
+                  color: context.colors.bgCard,
+                  width: 2.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: club.logoUrl != null && club.logoUrl!.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        club.logoUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          decoration: BoxDecoration(
+                            color: sportColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              emoji,
+                              style: const TextStyle(fontSize: 20),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        color: sportColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Text(
+                          emoji,
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 
   Widget _buildCardBannerFallback(Color sportColor, String emoji) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [sportColor, sportColor.withValues(alpha: 0.6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1E3A8A),
+            Color(0xFF2563EB),
+            Color(0xFF3B82F6),
+          ],
         ),
       ),
-      child: Center(child: Text(emoji, style: const TextStyle(fontSize: 48))),
+      child: Center(
+        child: Icon(
+          Icons.groups_rounded,
+          color: Colors.white.withValues(alpha: 0.18),
+          size: 48,
+        ),
+      ),
     );
   }
 

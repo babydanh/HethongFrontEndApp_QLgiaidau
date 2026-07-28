@@ -252,103 +252,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     }
   }
 
-  void _checkWinner(MatchModel match) {
-    if (match.maxScore == null) return;
-
-    int max = match.maxScore!;
-    if (match.score1 >= max || match.score2 >= max) {
-      if (match.winByTwo) {
-        if ((match.score1 - match.score2).abs() < 2) return;
-      }
-
-      String winnerName = match.score1 > match.score2
-          ? match.team1Name
-          : match.team2Name;
-      String winnerId = match.score1 > match.score2
-          ? match.team1Id
-          : match.team2Id;
-      String loserId = match.score1 > match.score2
-          ? match.team2Id
-          : match.team1Id;
-
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AlertDialog(
-          backgroundColor: context.colors.bgCard,
-          title: Row(
-            children: [
-              const Icon(
-                Icons.emoji_events_rounded,
-                color: Colors.amber,
-                size: 28,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Trận đấu kết thúc!',
-                style: TextStyle(color: context.colors.textPrimary),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Đội $winnerName đã giành chiến thắng!',
-                style: TextStyle(
-                  color: context.colors.textSecondary,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: context.colors.success.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${match.score1} - ${match.score2}',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    color: context.colors.success,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Tiếp tục đánh (Hủy)'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ref
-                    .read(
-                      matchControllerProvider((
-                        tournamentId: widget.tournamentId,
-                        matchId: widget.matchId,
-                      )),
-                    )
-                    .endMatch(winnerId, loserId);
-                context.pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.colors.success,
-              ),
-              child: const Text('Xác nhận Kết thúc'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
+  // ═══════════════════════════════════════════════════════════
+  //  FOUL / PENALTY
+  // ═══════════════════════════════════════════════════════════
 
   void _showFoulSheet(bool isTeam1, MatchModel match) {
     final tournamentAsync = ref.read(tournamentProvider(widget.tournamentId));
@@ -501,43 +407,26 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           )),
         )
         .value;
-    if (match != null) {
-      int newScore1 = match.score1;
-      int newScore2 = match.score2;
-
-      if (winnerId == match.team1Id) {
-        newScore1 =
-            match.maxScore ??
-            (match.score1 <= match.score2 ? match.score2 + 1 : match.score1);
-      } else {
-        newScore2 =
-            match.maxScore ??
-            (match.score2 <= match.score1 ? match.score1 + 1 : match.score2);
-      }
-
-      ref
-          .read(
-            matchControllerProvider((
-              tournamentId: widget.tournamentId,
-              matchId: widget.matchId,
-            )),
-          )
-          .updateMatchResultByAdmin(
-            score1: newScore1,
-            score2: newScore2,
-            winnerId: winnerId,
-            loserId: loserId,
-          );
-    } else {
-      ref
-          .read(
-            matchControllerProvider((
-              tournamentId: widget.tournamentId,
-              matchId: widget.matchId,
-            )),
-          )
-          .endMatch(winnerId, loserId);
-    }
+    if (match == null) return;
+    ref
+        .read(
+          matchControllerProvider((
+            tournamentId: widget.tournamentId,
+            matchId: widget.matchId,
+          )),
+        )
+        .completeMatchWithDetails(
+          winnerId: winnerId,
+          loserId: loserId,
+          finalSets: [
+            SetScoreData(
+              score1: match.score1,
+              score2: match.score2,
+              isFinished: true,
+            ),
+          ],
+          overrideReason: 'Xử thắng trực tiếp (force win)',
+        );
     context.pop();
   }
 
@@ -557,10 +446,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       )),
     );
     final auth = ref.watch(authProvider);
-    final canOpenScoring = auth.canScore ||
-        auth.isAuthenticated ||
-        auth.role == UserRole.admin ||
-        auth.role == UserRole.referee;
+    final canOpenScoring = !widget.isViewer && auth.canScore;
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
@@ -676,9 +562,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               _trackScoreChanges(match);
 
               if (match.isLive) {
-                WidgetsBinding.instance.addPostFrameCallback(
-                  (_) => _checkWinner(match),
-                );
+                // Live state — scoring handled via scorePanelNotifierProvider
               }
 
               if (!canOpenScoring) {
@@ -780,7 +664,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(Icons.sports_score_rounded, color: context.colors.info, size: 42),
+              Icon(
+                Icons.sports_score_rounded,
+                color: context.colors.info,
+                size: 42,
+              ),
               const SizedBox(height: 12),
               Text(
                 'Thông tin trận đấu',
@@ -845,7 +733,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         ),
                         _buildSetupChip(
                           'Luật',
-                          config.mustWinByTwo ? 'Cách biệt 2' : 'Không cách biệt 2',
+                          config.mustWinByTwo
+                              ? 'Cách biệt 2'
+                              : 'Không cách biệt 2',
                         ),
                       ],
                     ),
@@ -855,11 +745,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               const SizedBox(height: 18),
               TextField(
                 controller: _refereeController,
-                style: TextStyle(fontSize: 15, color: context.colors.textPrimary),
+                style: TextStyle(
+                  fontSize: 15,
+                  color: context.colors.textPrimary,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Tên trọng tài hoặc ghi chú nhanh',
                   helperText: 'Không bắt buộc. Chỉ hiển thị trong app nếu có.',
-                  prefixIcon: Icon(Icons.person_outline_rounded, color: context.colors.textMuted),
+                  prefixIcon: Icon(
+                    Icons.person_outline_rounded,
+                    color: context.colors.textMuted,
+                  ),
                   filled: true,
                   fillColor: context.colors.bgDark,
                   border: OutlineInputBorder(
@@ -901,10 +797,14 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       onForceWin: () => _showForceWinDialog(match),
                     );
                   },
-                  icon: const Icon(Icons.play_arrow_rounded),
+                  icon: const Icon(Icons.play_arrow_rounded, size: 22),
                   label: const Text(
-                    'MỞ BẢNG CHẤM ĐIỂM',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    'BẮT ĐẦU TRẬN ĐẤU',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.colors.success,
@@ -1321,10 +1221,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   // ═══════════════════════════════════════════════════════════
   Widget _buildLiveState(MatchModel match, {required bool canOpenScoring}) {
     if (widget.isViewer || canOpenScoring) {
-      return _buildViewerState(
-        match,
-        canOpenScoring: canOpenScoring,
-      );
+      return _buildViewerState(match, canOpenScoring: canOpenScoring);
     }
 
     return Column(
@@ -1718,7 +1615,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     ),
                   ),
                   onPressed: () async {
-                    final controller = ref.read(matchControllerProvider(params));
+                    final controller = ref.read(
+                      matchControllerProvider(params),
+                    );
                     if (match.isScheduled) {
                       await controller.startMatch();
                     }
@@ -2118,7 +2017,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       return realMembers.map((m) => _memberEloLabel(m, isDoubles)).join('\n');
     }
     final label = isDoubles ? 'ELO Đôi' : 'ELO Đơn';
-    if (displayList.length == 1) return '${displayList.first} • $label: Chưa có';
+    if (displayList.length == 1)
+      return '${displayList.first} • $label: Chưa có';
     return displayList.map((n) => '$n • $label: Chưa có').join('\n');
   }
 
@@ -2166,7 +2066,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     List<String> displayList,
     Color color,
   ) {
-    final bool isDoubles = displayList.length >= 2 ||
+    final bool isDoubles =
+        displayList.length >= 2 ||
         teamName.contains('&') ||
         teamName.contains(' - ') ||
         teamName.toLowerCase().contains('đôi');
@@ -2219,7 +2120,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     }
 
     // Singles
-    final name1 = displayList.isNotEmpty ? displayList[0].trim() : teamName.trim();
+    final name1 = displayList.isNotEmpty
+        ? displayList[0].trim()
+        : teamName.trim();
     final initial = name1.isNotEmpty ? name1[0].toUpperCase() : 'V';
     return CircleAvatar(
       radius: 26,

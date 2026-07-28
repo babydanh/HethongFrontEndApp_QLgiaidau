@@ -28,7 +28,10 @@ class MatchBottomBar extends ConsumerWidget {
           if (state.errorMessage != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Text(state.errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+              child: Text(
+                state.errorMessage!,
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
             ),
           // Override toggle
           if (state.overrideEnabled)
@@ -43,7 +46,9 @@ class MatchBottomBar extends ConsumerWidget {
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 11),
                   filled: true,
                   fillColor: colors.bgSurface,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   contentPadding: const EdgeInsets.all(8),
                 ),
                 onChanged: (v) => notifier.setOverride(true, v),
@@ -84,7 +89,11 @@ class MatchBottomBar extends ConsumerWidget {
             // Override toggle button
             TextButton.icon(
               onPressed: () => notifier.setOverride(true, ''),
-              icon: const Icon(Icons.warning_amber_rounded, size: 14, color: Colors.orange),
+              icon: const Icon(
+                Icons.warning_amber_rounded,
+                size: 14,
+                color: Colors.orange,
+              ),
               label: Text(
                 'Override (chốt tỉ số ngoại lệ)',
                 style: TextStyle(fontSize: 11, color: Colors.orange[700]),
@@ -112,9 +121,19 @@ class MatchBottomBar extends ConsumerWidget {
     return ElevatedButton.icon(
       onPressed: onTap,
       icon: loading
-          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
           : Icon(icon, size: 18),
-      label: Text(label, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+      label: Text(
+        label,
+        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+      ),
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         foregroundColor: Colors.white,

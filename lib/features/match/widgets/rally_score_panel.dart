@@ -37,7 +37,8 @@ class RallyScorePanel extends ConsumerWidget {
     final team1Name = matchAsync.value?.team1Name ?? 'Đội 1';
     final team2Name = matchAsync.value?.team2Name ?? 'Đội 2';
 
-    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
 
     return SizedBox(
       height: isLandscape ? double.infinity : 520,

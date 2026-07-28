@@ -19,6 +19,7 @@ class UserProfile {
   final String? role;
   final int? eloPoints;
   final String? tierName;
+  final String? createdAt;
 
   const UserProfile({
     required this.id,
@@ -41,6 +42,7 @@ class UserProfile {
     this.role,
     this.eloPoints,
     this.tierName,
+    this.createdAt,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -79,6 +81,7 @@ class UserProfile {
       role: p['role']?.toString(),
       eloPoints: _parseInt(p['eloPoints']),
       tierName: p['tierName']?.toString(),
+      createdAt: p['createdAt']?.toString(),
     );
   }
 

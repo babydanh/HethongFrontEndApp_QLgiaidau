@@ -10,10 +10,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart' as legacy;
 
 /// Provider cho ScorePanelNotifier — dùng legacy.ChangeNotifierProvider.family.
-final scorePanelNotifierProvider =
-    legacy.ChangeNotifierProvider.autoDispose.family<ScorePanelNotifier, MatchControlParams>((ref, arg) {
-  return ScorePanelNotifier(arg, ref);
-});
+final scorePanelNotifierProvider = legacy.ChangeNotifierProvider.autoDispose
+    .family<ScorePanelNotifier, MatchControlParams>((ref, arg) {
+      return ScorePanelNotifier(arg, ref);
+    });
 
 /// Quản lý scoring logic cho tất cả môn thể thao (Tennis, Pickleball, Rally).
 ///
@@ -26,17 +26,13 @@ class ScorePanelNotifier extends ChangeNotifier {
   ScorePanelState _state;
 
   ScorePanelNotifier(this.arg, this.ref)
-      : _state = ScorePanelState(config: _initConfig(ref, arg)) {
-    ref.listen<AsyncValue<MatchModel?>>(
-      singleMatchProvider(arg),
-      (prev, next) {
-        final match = next.value;
-        if (match != null) {
-          _updateStateFromMatch(match);
-        }
-      },
-      fireImmediately: true,
-    );
+    : _state = ScorePanelState(config: _initConfig(ref, arg)) {
+    ref.listen<AsyncValue<MatchModel?>>(singleMatchProvider(arg), (prev, next) {
+      final match = next.value;
+      if (match != null) {
+        _updateStateFromMatch(match);
+      }
+    }, fireImmediately: true);
   }
 
   ScorePanelState get state => _state;
@@ -55,7 +51,9 @@ class ScorePanelNotifier extends ChangeNotifier {
 
     // 1. Finished Sets
     final rawSets = details['sets'] as List? ?? [];
-    final finishedSets = rawSets.map((s) => SetScoreData.fromJson(s as Map<String, dynamic>)).toList();
+    final finishedSets = rawSets
+        .map((s) => SetScoreData.fromJson(s as Map<String, dynamic>))
+        .toList();
 
     // 2. Tennis point state
     TennisGameState? tennisState;
@@ -69,11 +67,16 @@ class ScorePanelNotifier extends ChangeNotifier {
         if (val is int) return val;
         final s = val.toString();
         switch (s) {
-          case '15': return 1;
-          case '30': return 2;
-          case '40': return 3;
-          case 'A': return 4;
-          default: return 0;
+          case '15':
+            return 1;
+          case '30':
+            return 2;
+          case '40':
+            return 3;
+          case 'A':
+            return 4;
+          default:
+            return 0;
         }
       }
 
@@ -146,8 +149,12 @@ class ScorePanelNotifier extends ChangeNotifier {
     final t = _state.tennis ?? const TennisGameState();
     _state = _state.copyWith(
       tennis: t.copyWith(
-        team1GamePoints: isTeam1 ? (t.team1GamePoints > 0 ? t.team1GamePoints - 1 : 0) : t.team1GamePoints,
-        team2GamePoints: !isTeam1 ? (t.team2GamePoints > 0 ? t.team2GamePoints - 1 : 0) : t.team2GamePoints,
+        team1GamePoints: isTeam1
+            ? (t.team1GamePoints > 0 ? t.team1GamePoints - 1 : 0)
+            : t.team1GamePoints,
+        team2GamePoints: !isTeam1
+            ? (t.team2GamePoints > 0 ? t.team2GamePoints - 1 : 0)
+            : t.team2GamePoints,
       ),
       errorMessage: null,
     );
@@ -158,47 +165,72 @@ class ScorePanelNotifier extends ChangeNotifier {
     final t = _state.tennis;
     if (t == null) return;
     if (t.isTiebreak) {
-      if (t.team1GamePoints >= 7 && (t.team1GamePoints - t.team2GamePoints) >= 2) {
+      if (t.team1GamePoints >= 7 &&
+          (t.team1GamePoints - t.team2GamePoints) >= 2) {
         _finishTennisGame(1);
-      } else if (t.team2GamePoints >= 7 && (t.team2GamePoints - t.team1GamePoints) >= 2) {
+      } else if (t.team2GamePoints >= 7 &&
+          (t.team2GamePoints - t.team1GamePoints) >= 2) {
         _finishTennisGame(2);
       }
       return;
     }
-    if (t.team1GamePoints >= 4 && (t.team1GamePoints - t.team2GamePoints) >= 2) {
+    if (t.team1GamePoints >= 4 &&
+        (t.team1GamePoints - t.team2GamePoints) >= 2) {
       _finishTennisGame(1);
-    } else if (t.team2GamePoints >= 4 && (t.team2GamePoints - t.team1GamePoints) >= 2) {
+    } else if (t.team2GamePoints >= 4 &&
+        (t.team2GamePoints - t.team1GamePoints) >= 2) {
       _finishTennisGame(2);
     }
   }
 
   void _finishTennisGame(int winnerTeam) {
-    final curSet = _state.finishedSets.isNotEmpty ? _state.finishedSets.last : null;
+    final curSet = _state.finishedSets.isNotEmpty
+        ? _state.finishedSets.last
+        : null;
     List<SetScoreData> newSets;
     if (curSet != null && !curSet.isFinished) {
       newSets = [
         ..._state.finishedSets.sublist(0, _state.finishedSets.length - 1),
-        winnerTeam == 1 ? curSet.copyWith(score1: curSet.score1 + 1) : curSet.copyWith(score2: curSet.score2 + 1),
+        winnerTeam == 1
+            ? curSet.copyWith(score1: curSet.score1 + 1)
+            : curSet.copyWith(score2: curSet.score2 + 1),
       ];
     } else {
-      newSets = [..._state.finishedSets, winnerTeam == 1
-          ? const SetScoreData(score1: 1, score2: 0)
-          : const SetScoreData(score1: 0, score2: 1)];
+      newSets = [
+        ..._state.finishedSets,
+        winnerTeam == 1
+            ? const SetScoreData(score1: 1, score2: 0)
+            : const SetScoreData(score1: 0, score2: 1),
+      ];
     }
-    _state = _state.copyWith(finishedSets: newSets, tennis: const TennisGameState());
+    _state = _state.copyWith(
+      finishedSets: newSets,
+      tennis: const TennisGameState(),
+    );
     _checkTennisSetEnd();
   }
 
   void _checkTennisSetEnd() {
-    final curSet = _state.finishedSets.isNotEmpty ? _state.finishedSets.last : null;
+    final curSet = _state.finishedSets.isNotEmpty
+        ? _state.finishedSets.last
+        : null;
     if (curSet == null) return;
     if (isSetComplete(curSet, _state.config)) {
       final idx = _state.finishedSets.length - 1;
       final newSets = [..._state.finishedSets];
       newSets[idx] = newSets[idx].copyWith(isFinished: true);
-      _state = _state.copyWith(finishedSets: newSets, tennis: const TennisGameState());
-    } else if (curSet.score1 >= _state.config.tiebreakAt && curSet.score2 >= _state.config.tiebreakAt && curSet.score1 == curSet.score2) {
-      _state = _state.copyWith(tennis: (_state.tennis ?? const TennisGameState()).copyWith(isTiebreak: true));
+      _state = _state.copyWith(
+        finishedSets: newSets,
+        tennis: const TennisGameState(),
+      );
+    } else if (curSet.score1 >= _state.config.tiebreakAt &&
+        curSet.score2 >= _state.config.tiebreakAt &&
+        curSet.score1 == curSet.score2) {
+      _state = _state.copyWith(
+        tennis: (_state.tennis ?? const TennisGameState()).copyWith(
+          isTiebreak: true,
+        ),
+      );
     }
   }
 
@@ -207,13 +239,18 @@ class ScorePanelNotifier extends ChangeNotifier {
   bool pickleballAwardPoint(bool isTeam1) {
     final pb = _state.pickleball ?? const PickleballServeState();
     if (pb.isTeam1Serving != isTeam1) {
-      _state = _state.copyWith(errorMessage: 'Chỉ đội giao bóng mới được ghi điểm!');
+      _state = _state.copyWith(
+        errorMessage: 'Chỉ đội giao bóng mới được ghi điểm!',
+      );
       notifyListeners();
       return false;
     }
     final r = _state.rally ?? const RallySetState();
     _state = _state.copyWith(
-      rally: RallySetState(currentP1: isTeam1 ? r.currentP1 + 1 : r.currentP1, currentP2: !isTeam1 ? r.currentP2 + 1 : r.currentP2),
+      rally: RallySetState(
+        currentP1: isTeam1 ? r.currentP1 + 1 : r.currentP1,
+        currentP2: !isTeam1 ? r.currentP2 + 1 : r.currentP2,
+      ),
       pickleball: pb.copyWith(serverNumber: 1),
       errorMessage: null,
     );
@@ -225,7 +262,9 @@ class ScorePanelNotifier extends ChangeNotifier {
   void pickleballSwitchServer() {
     final pb = _state.pickleball ?? const PickleballServeState();
     _state = _state.copyWith(
-      pickleball: pb.serverNumber == 1 ? pb.copyWith(serverNumber: 2) : pb.copyWith(isTeam1Serving: !pb.isTeam1Serving, serverNumber: 1),
+      pickleball: pb.serverNumber == 1
+          ? pb.copyWith(serverNumber: 2)
+          : pb.copyWith(isTeam1Serving: !pb.isTeam1Serving, serverNumber: 1),
       errorMessage: null,
     );
     notifyListeners();
@@ -233,7 +272,13 @@ class ScorePanelNotifier extends ChangeNotifier {
 
   void pickleballSideOut() {
     final pb = _state.pickleball ?? const PickleballServeState();
-    _state = _state.copyWith(pickleball: pb.copyWith(isTeam1Serving: !pb.isTeam1Serving, serverNumber: 1), errorMessage: null);
+    _state = _state.copyWith(
+      pickleball: pb.copyWith(
+        isTeam1Serving: !pb.isTeam1Serving,
+        serverNumber: 1,
+      ),
+      errorMessage: null,
+    );
     notifyListeners();
   }
 
@@ -244,10 +289,17 @@ class ScorePanelNotifier extends ChangeNotifier {
       SetScoreData(score1: r.currentP1, score2: r.currentP2),
       _state.config,
     )) {
-      _state = _state.copyWith(finishedSets: [
-        ..._state.finishedSets,
-        SetScoreData(score1: r.currentP1, score2: r.currentP2, isFinished: true),
-      ], rally: const RallySetState());
+      _state = _state.copyWith(
+        finishedSets: [
+          ..._state.finishedSets,
+          SetScoreData(
+            score1: r.currentP1,
+            score2: r.currentP2,
+            isFinished: true,
+          ),
+        ],
+        rally: const RallySetState(),
+      );
       notifyListeners();
     }
   }
@@ -257,7 +309,10 @@ class ScorePanelNotifier extends ChangeNotifier {
   void rallyAddPoint(bool isTeam1) {
     final r = _state.rally ?? const RallySetState();
     _state = _state.copyWith(
-      rally: RallySetState(currentP1: isTeam1 ? r.currentP1 + 1 : r.currentP1, currentP2: !isTeam1 ? r.currentP2 + 1 : r.currentP2),
+      rally: RallySetState(
+        currentP1: isTeam1 ? r.currentP1 + 1 : r.currentP1,
+        currentP2: !isTeam1 ? r.currentP2 + 1 : r.currentP2,
+      ),
       errorMessage: null,
     );
     _checkRallySetEnd();
@@ -268,8 +323,12 @@ class ScorePanelNotifier extends ChangeNotifier {
     final r = _state.rally ?? const RallySetState();
     _state = _state.copyWith(
       rally: RallySetState(
-        currentP1: isTeam1 ? (r.currentP1 > 0 ? r.currentP1 - 1 : 0) : r.currentP1,
-        currentP2: !isTeam1 ? (r.currentP2 > 0 ? r.currentP2 - 1 : 0) : r.currentP2,
+        currentP1: isTeam1
+            ? (r.currentP1 > 0 ? r.currentP1 - 1 : 0)
+            : r.currentP1,
+        currentP2: !isTeam1
+            ? (r.currentP2 > 0 ? r.currentP2 - 1 : 0)
+            : r.currentP2,
       ),
       errorMessage: null,
     );
@@ -283,10 +342,17 @@ class ScorePanelNotifier extends ChangeNotifier {
       SetScoreData(score1: r.currentP1, score2: r.currentP2),
       _state.config,
     )) {
-      _state = _state.copyWith(finishedSets: [
-        ..._state.finishedSets,
-        SetScoreData(score1: r.currentP1, score2: r.currentP2, isFinished: true),
-      ], rally: const RallySetState());
+      _state = _state.copyWith(
+        finishedSets: [
+          ..._state.finishedSets,
+          SetScoreData(
+            score1: r.currentP1,
+            score2: r.currentP2,
+            isFinished: true,
+          ),
+        ],
+        rally: const RallySetState(),
+      );
       notifyListeners();
     }
   }
@@ -339,13 +405,22 @@ class ScorePanelNotifier extends ChangeNotifier {
     try {
       final finalSets = _setsForSubmission();
       final match = ref.read(singleMatchProvider(arg)).value;
-      final winnerId = winnerTeam == 1 ? match?.team1Id ?? '' : match?.team2Id ?? '';
-      final loserId = winnerTeam == 1 ? match?.team2Id ?? '' : match?.team1Id ?? '';
-      await ref.read(matchControllerProvider(arg)).completeMatchWithDetails(
-        winnerId: winnerId, loserId: loserId, finalSets: finalSets,
-        overrideReason:
-            _state.overrideEnabled ? _state.overrideReason.trim() : null,
-      );
+      final winnerId = winnerTeam == 1
+          ? match?.team1Id ?? ''
+          : match?.team2Id ?? '';
+      final loserId = winnerTeam == 1
+          ? match?.team2Id ?? ''
+          : match?.team1Id ?? '';
+      await ref
+          .read(matchControllerProvider(arg))
+          .completeMatchWithDetails(
+            winnerId: winnerId,
+            loserId: loserId,
+            finalSets: finalSets,
+            overrideReason: _state.overrideEnabled
+                ? _state.overrideReason.trim()
+                : null,
+          );
       _state = _state.copyWith(isSubmitting: false);
       notifyListeners();
     } catch (e, stack) {
@@ -364,11 +439,16 @@ class ScorePanelNotifier extends ChangeNotifier {
 /// Helper: ánh xạ tennis game point (0,1,2,3,4+) sang hiển thị (0,15,30,40,Ad).
 String tennisPointLabel(int points) {
   switch (points) {
-    case 0: return '0';
-    case 1: return '15';
-    case 2: return '30';
-    case 3: return '40';
-    default: return 'Ad';
+    case 0:
+      return '0';
+    case 1:
+      return '15';
+    case 2:
+      return '30';
+    case 3:
+      return '40';
+    default:
+      return 'Ad';
   }
 }
 
@@ -383,10 +463,15 @@ String formatTennisPoint(int myPoints, int opponentPoints, bool isTiebreak) {
   }
 
   switch (myPoints) {
-    case 0: return '0';
-    case 1: return '15';
-    case 2: return '30';
-    case 3: return '40';
-    default: return 'Ad';
+    case 0:
+      return '0';
+    case 1:
+      return '15';
+    case 2:
+      return '30';
+    case 3:
+      return '40';
+    default:
+      return 'Ad';
   }
 }

@@ -25,7 +25,7 @@ class PenaltyInputDialog extends StatefulWidget {
 class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
   late IPenaltyStrategy _strategy;
   late List<PenaltyOption> _options;
-  
+
   PenaltyOption? _selectedOption;
   String? _selectedTeam;
   final _reasonController = TextEditingController();
@@ -53,8 +53,12 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final canSubmit = _selectedOption != null && _selectedTeam != null && _reasonController.text.trim().isNotEmpty;
-    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final canSubmit =
+        _selectedOption != null &&
+        _selectedTeam != null &&
+        _reasonController.text.trim().isNotEmpty;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
 
     return AlertDialog(
       backgroundColor: context.colors.bgCard,
@@ -63,16 +67,40 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
         horizontal: isLandscape ? 24.0 : 40.0,
         vertical: isLandscape ? 8.0 : 24.0,
       ),
-      titlePadding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 8),
-      contentPadding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 8),
-      actionsPadding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 16),
+      titlePadding: const EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: 8,
+      ),
+      contentPadding: const EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 8,
+        bottom: 8,
+      ),
+      actionsPadding: const EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 8,
+        bottom: 16,
+      ),
       title: Row(
         children: [
           Icon(Icons.style, color: context.colors.error),
           const SizedBox(width: 8),
-          Expanded(child: Text(AppConstants.textRecordPenalty, style: TextStyle(color: context.colors.textPrimary, fontSize: 16))),
+          Expanded(
+            child: Text(
+              AppConstants.textRecordPenalty,
+              style: TextStyle(color: context.colors.textPrimary, fontSize: 16),
+            ),
+          ),
           IconButton(
-            icon: Icon(Icons.info_outline, color: context.colors.textMuted, size: 20),
+            icon: Icon(
+              Icons.info_outline,
+              color: context.colors.textMuted,
+              size: 20,
+            ),
             onPressed: _showRulesDialog,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -86,21 +114,31 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(AppConstants.textOffendingTeam, style: TextStyle(color: context.colors.textSecondary, fontWeight: FontWeight.bold, fontSize: 13)),
+              Text(
+                AppConstants.textOffendingTeam,
+                style: TextStyle(
+                  color: context.colors.textSecondary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Expanded(
-                    child: _buildTeamChoice(widget.team1Name),
-                  ),
+                  Expanded(child: _buildTeamChoice(widget.team1Name)),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildTeamChoice(widget.team2Name),
-                  ),
+                  Expanded(child: _buildTeamChoice(widget.team2Name)),
                 ],
               ),
               const SizedBox(height: 16),
-              Text(AppConstants.textPenaltyType, style: TextStyle(color: context.colors.textSecondary, fontWeight: FontWeight.bold, fontSize: 13)),
+              Text(
+                AppConstants.textPenaltyType,
+                style: TextStyle(
+                  color: context.colors.textSecondary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -108,7 +146,14 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
                 children: _options.map((opt) => _buildOptionChip(opt)).toList(),
               ),
               const SizedBox(height: 16),
-              Text(AppConstants.textReasonRequired, style: TextStyle(color: context.colors.textSecondary, fontWeight: FontWeight.bold, fontSize: 13)),
+              Text(
+                AppConstants.textReasonRequired,
+                style: TextStyle(
+                  color: context.colors.textSecondary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
               const SizedBox(height: 8),
               TextField(
                 controller: _reasonController,
@@ -132,13 +177,22 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(AppConstants.textCancel, style: TextStyle(color: context.colors.textMuted)),
+          child: Text(
+            AppConstants.textCancel,
+            style: TextStyle(color: context.colors.textMuted),
+          ),
         ),
         ElevatedButton(
-          onPressed: canSubmit ? () {
-            widget.onSubmit(_selectedTeam!, _selectedOption!, _reasonController.text.trim());
-            Navigator.pop(context);
-          } : null,
+          onPressed: canSubmit
+              ? () {
+                  widget.onSubmit(
+                    _selectedTeam!,
+                    _selectedOption!,
+                    _reasonController.text.trim(),
+                  );
+                  Navigator.pop(context);
+                }
+              : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: _selectedOption?.color ?? context.colors.error,
           ),
@@ -155,7 +209,9 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primary.withValues(alpha: 0.2) : context.colors.bgSurface,
+          color: isSelected
+              ? AppTheme.primary.withValues(alpha: 0.2)
+              : context.colors.bgSurface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? AppTheme.primary : context.colors.border,
@@ -184,7 +240,9 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? option.color.withValues(alpha: 0.15) : context.colors.bgSurface,
+          color: isSelected
+              ? option.color.withValues(alpha: 0.15)
+              : context.colors.bgSurface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? option.color : context.colors.border,

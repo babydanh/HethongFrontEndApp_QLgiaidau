@@ -16,12 +16,11 @@ class TennisGameState {
     int? team1GamePoints,
     int? team2GamePoints,
     bool? isTiebreak,
-  }) =>
-      TennisGameState(
-        team1GamePoints: team1GamePoints ?? this.team1GamePoints,
-        team2GamePoints: team2GamePoints ?? this.team2GamePoints,
-        isTiebreak: isTiebreak ?? this.isTiebreak,
-      );
+  }) => TennisGameState(
+    team1GamePoints: team1GamePoints ?? this.team1GamePoints,
+    team2GamePoints: team2GamePoints ?? this.team2GamePoints,
+    isTiebreak: isTiebreak ?? this.isTiebreak,
+  );
 }
 
 /// Trạng thái giao bóng cho Pickleball Side-Out.
@@ -48,11 +47,10 @@ class RallySetState {
 
   const RallySetState({this.currentP1 = 0, this.currentP2 = 0});
 
-  RallySetState copyWith({int? currentP1, int? currentP2}) =>
-      RallySetState(
-        currentP1: currentP1 ?? this.currentP1,
-        currentP2: currentP2 ?? this.currentP2,
-      );
+  RallySetState copyWith({int? currentP1, int? currentP2}) => RallySetState(
+    currentP1: currentP1 ?? this.currentP1,
+    currentP2: currentP2 ?? this.currentP2,
+  );
 }
 
 /// State tổng thể của ScorePanelNotifier.
@@ -117,16 +115,15 @@ class ScorePanelState {
     String? errorMessage,
     bool? overrideEnabled,
     String? overrideReason,
-  }) =>
-      ScorePanelState(
-        config: config ?? this.config,
-        finishedSets: finishedSets ?? this.finishedSets,
-        tennis: tennis ?? this.tennis,
-        pickleball: pickleball ?? this.pickleball,
-        rally: rally ?? this.rally,
-        isSubmitting: isSubmitting ?? this.isSubmitting,
-        errorMessage: errorMessage,
-        overrideEnabled: overrideEnabled ?? this.overrideEnabled,
-        overrideReason: overrideReason ?? this.overrideReason,
-      );
+  }) => ScorePanelState(
+    config: config ?? this.config,
+    finishedSets: finishedSets ?? this.finishedSets,
+    tennis: tennis ?? this.tennis,
+    pickleball: pickleball ?? this.pickleball,
+    rally: rally ?? this.rally,
+    isSubmitting: isSubmitting ?? this.isSubmitting,
+    errorMessage: errorMessage,
+    overrideEnabled: overrideEnabled ?? this.overrideEnabled,
+    overrideReason: overrideReason ?? this.overrideReason,
+  );
 }

@@ -27,7 +27,8 @@ class YellowCardEventRenderer implements IMatchEventRenderer {
   IconData getIcon(MatchEvent event) => Icons.rectangle;
 
   @override
-  Color getColor(BuildContext context, MatchEvent event) => Colors.yellow.shade700;
+  Color getColor(BuildContext context, MatchEvent event) =>
+      Colors.yellow.shade700;
 
   @override
   String getActionText(MatchEvent event) => 'Thẻ Vàng';
@@ -49,7 +50,8 @@ class FoulEventRenderer implements IMatchEventRenderer {
   IconData getIcon(MatchEvent event) => Icons.warning_rounded;
 
   @override
-  Color getColor(BuildContext context, MatchEvent event) => Colors.orange.shade700;
+  Color getColor(BuildContext context, MatchEvent event) =>
+      Colors.orange.shade700;
 
   @override
   String getActionText(MatchEvent event) => 'Phạm lỗi: ${event.description}';

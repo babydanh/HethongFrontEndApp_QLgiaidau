@@ -23,8 +23,12 @@ class ApiCommunityRepository implements ICommunityRepository {
 
       final response = await _dioClient.dio.get('/communities', queryParameters: params);
       if (response.statusCode == 200) {
-        final data = response.data['data'] as List<dynamic>? ?? [];
-        return data.map((e) => Community.fromJson(e as Map<String, dynamic>)).toList();
+        final raw = response.data;
+        final data = raw is Map ? (raw['data'] as List<dynamic>? ?? []) : (raw as List<dynamic>? ?? []);
+        return data
+            .map((e) => Community.fromJson(e as Map<String, dynamic>))
+            .where((c) => c.status.toUpperCase() == 'ACTIVE' && c.visibility.toUpperCase() == 'PUBLIC')
+            .toList();
       }
       _log.warning('getCommunities status=${response.statusCode}');
       return [];
@@ -40,7 +44,11 @@ class ApiCommunityRepository implements ICommunityRepository {
     try {
       final response = await _dioClient.dio.get('/communities/my');
       if (response.statusCode == 200) {
-        final data = response.data['data'] as List<dynamic>? ?? [];
+        final raw = response.data;
+        final data = raw is Map ? (raw['data'] as List<dynamic>? ?? []) : (raw as List<dynamic>? ?? []);
+        if (data.isNotEmpty) {
+          _log.info('getMyCommunities sample raw item: ${data.first}');
+        }
         return data.map((e) => Community.fromJson(e as Map<String, dynamic>)).toList();
       }
       _log.warning('getMyCommunities status=${response.statusCode}');

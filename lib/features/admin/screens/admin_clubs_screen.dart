@@ -101,6 +101,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
       ('all', 'Tất cả', colors.textPrimary),
       ('ACTIVE', 'Hoạt động', const Color(0xFF10B981)),
       ('PENDING', 'Chờ duyệt', const Color(0xFFF59E0B)),
+      ('INACTIVE', 'Đã khóa', const Color(0xFFEF4444)),
       ('REJECTED', 'Từ chối', const Color(0xFFEF4444)),
     ];
     return SizedBox(
@@ -145,7 +146,15 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
     return clubsAsync.when(
       data: (clubs) {
         final filtered = clubs.where((c) {
-          if (_statusFilter != 'all' && c.status != _statusFilter) return false;
+          if (_statusFilter != 'all') {
+            if (_statusFilter == 'INACTIVE' && (c.status == 'INACTIVE' || c.status == 'REJECTED' || c.status == 'DEACTIVATED' || c.status == 'SUSPENDED')) {
+              // match
+            } else if (_statusFilter == 'REJECTED' && (c.status == 'REJECTED' || c.status == 'INACTIVE' || c.status == 'DEACTIVATED' || c.status == 'SUSPENDED')) {
+              // match
+            } else if (c.status != _statusFilter) {
+              return false;
+            }
+          }
           if (_searchQuery.isNotEmpty &&
               !c.name.toLowerCase().contains(_searchQuery.toLowerCase())) {
             return false;

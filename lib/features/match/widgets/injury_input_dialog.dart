@@ -29,7 +29,8 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final canSubmit = _selectedTeam != null && _descController.text.trim().isNotEmpty;
+    final canSubmit =
+        _selectedTeam != null && _descController.text.trim().isNotEmpty;
 
     return AlertDialog(
       backgroundColor: context.colors.bgCard,
@@ -38,7 +39,12 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
         children: [
           Icon(Icons.local_hospital_rounded, color: context.colors.warning),
           const SizedBox(width: 8),
-          Expanded(child: Text('Ghi nhận Y tế/Chấn thương', style: TextStyle(color: context.colors.textPrimary, fontSize: 16))),
+          Expanded(
+            child: Text(
+              'Ghi nhận Y tế/Chấn thương',
+              style: TextStyle(color: context.colors.textPrimary, fontSize: 16),
+            ),
+          ),
         ],
       ),
       content: SingleChildScrollView(
@@ -46,7 +52,14 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Đội/VĐV cần hỗ trợ y tế:', style: TextStyle(color: context.colors.textSecondary, fontWeight: FontWeight.bold, fontSize: 13)),
+            Text(
+              'Đội/VĐV cần hỗ trợ y tế:',
+              style: TextStyle(
+                color: context.colors.textSecondary,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -56,7 +69,14 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
               ],
             ),
             const SizedBox(height: 16),
-            Text('Mô tả tình trạng:', style: TextStyle(color: context.colors.textSecondary, fontWeight: FontWeight.bold, fontSize: 13)),
+            Text(
+              'Mô tả tình trạng:',
+              style: TextStyle(
+                color: context.colors.textSecondary,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
             const SizedBox(height: 8),
             TextField(
               controller: _descController,
@@ -82,10 +102,12 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
           child: Text('Hủy', style: TextStyle(color: context.colors.textMuted)),
         ),
         ElevatedButton(
-          onPressed: canSubmit ? () {
-            widget.onSubmit(_selectedTeam!, _descController.text.trim());
-            Navigator.pop(context);
-          } : null,
+          onPressed: canSubmit
+              ? () {
+                  widget.onSubmit(_selectedTeam!, _descController.text.trim());
+                  Navigator.pop(context);
+                }
+              : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: context.colors.warning,
             foregroundColor: Colors.black,
@@ -103,7 +125,9 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? context.colors.warning.withValues(alpha: 0.2) : context.colors.bgSurface,
+          color: isSelected
+              ? context.colors.warning.withValues(alpha: 0.2)
+              : context.colors.bgSurface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? context.colors.warning : context.colors.border,
@@ -114,7 +138,9 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
         child: Text(
           teamName,
           style: TextStyle(
-            color: isSelected ? context.colors.warning : context.colors.textSecondary,
+            color: isSelected
+                ? context.colors.warning
+                : context.colors.textSecondary,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             fontSize: 13,
           ),

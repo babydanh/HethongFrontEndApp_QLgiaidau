@@ -5,11 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AdminEditScoreDialog extends ConsumerStatefulWidget {
   final MatchModel match;
-  
+
   const AdminEditScoreDialog({super.key, required this.match});
 
   @override
-  ConsumerState<AdminEditScoreDialog> createState() => _AdminEditScoreDialogState();
+  ConsumerState<AdminEditScoreDialog> createState() =>
+      _AdminEditScoreDialogState();
 }
 
 class _AdminEditScoreDialogState extends ConsumerState<AdminEditScoreDialog> {
@@ -20,9 +21,15 @@ class _AdminEditScoreDialogState extends ConsumerState<AdminEditScoreDialog> {
   @override
   void initState() {
     super.initState();
-    _score1Controller = TextEditingController(text: widget.match.score1.toString());
-    _score2Controller = TextEditingController(text: widget.match.score2.toString());
-    _selectedWinnerId = widget.match.winnerId.isNotEmpty ? widget.match.winnerId : null;
+    _score1Controller = TextEditingController(
+      text: widget.match.score1.toString(),
+    );
+    _score2Controller = TextEditingController(
+      text: widget.match.score2.toString(),
+    );
+    _selectedWinnerId = widget.match.winnerId.isNotEmpty
+        ? widget.match.winnerId
+        : null;
   }
 
   @override
@@ -36,13 +43,19 @@ class _AdminEditScoreDialogState extends ConsumerState<AdminEditScoreDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: context.colors.bgCard,
-      title: Text('Admin: Sửa kết quả', style: TextStyle(color: context.colors.textPrimary)),
+      title: Text(
+        'Admin: Sửa kết quả',
+        style: TextStyle(color: context.colors.textPrimary),
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Nhập lại điểm số:', style: TextStyle(color: context.colors.textSecondary)),
+            Text(
+              'Nhập lại điểm số:',
+              style: TextStyle(color: context.colors.textSecondary),
+            ),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -70,7 +83,10 @@ class _AdminEditScoreDialogState extends ConsumerState<AdminEditScoreDialog> {
               ],
             ),
             const SizedBox(height: 24),
-            Text('Chọn đội thắng:', style: TextStyle(color: context.colors.textSecondary)),
+            Text(
+              'Chọn đội thắng:',
+              style: TextStyle(color: context.colors.textSecondary),
+            ),
             const SizedBox(height: 12),
             RadioGroup<String>(
               groupValue: _selectedWinnerId,
@@ -78,12 +94,18 @@ class _AdminEditScoreDialogState extends ConsumerState<AdminEditScoreDialog> {
               child: Column(
                 children: [
                   RadioListTile<String>(
-                    title: Text(widget.match.team1Name, style: TextStyle(color: context.colors.textPrimary)),
+                    title: Text(
+                      widget.match.team1Name,
+                      style: TextStyle(color: context.colors.textPrimary),
+                    ),
                     value: widget.match.team1Id,
                     activeColor: AppTheme.primary,
                   ),
                   RadioListTile<String>(
-                    title: Text(widget.match.team2Name, style: TextStyle(color: context.colors.textPrimary)),
+                    title: Text(
+                      widget.match.team2Name,
+                      style: TextStyle(color: context.colors.textPrimary),
+                    ),
                     value: widget.match.team2Id,
                     activeColor: AppTheme.primary,
                   ),
@@ -96,16 +118,25 @@ class _AdminEditScoreDialogState extends ConsumerState<AdminEditScoreDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Hủy', style: TextStyle(color: AppTheme.secondaryLight)),
+          child: const Text(
+            'Hủy',
+            style: TextStyle(color: AppTheme.secondaryLight),
+          ),
         ),
         ElevatedButton(
           onPressed: _selectedWinnerId == null
               ? null
               : () {
-                  final score1 = int.tryParse(_score1Controller.text) ?? widget.match.score1;
-                  final score2 = int.tryParse(_score2Controller.text) ?? widget.match.score2;
-                  final loserId = _selectedWinnerId == widget.match.team1Id ? widget.match.team2Id : widget.match.team1Id;
-                  
+                  final score1 =
+                      int.tryParse(_score1Controller.text) ??
+                      widget.match.score1;
+                  final score2 =
+                      int.tryParse(_score2Controller.text) ??
+                      widget.match.score2;
+                  final loserId = _selectedWinnerId == widget.match.team1Id
+                      ? widget.match.team2Id
+                      : widget.match.team1Id;
+
                   Navigator.pop(context, {
                     'score1': score1,
                     'score2': score2,

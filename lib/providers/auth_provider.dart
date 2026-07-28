@@ -10,7 +10,7 @@ import 'package:app_quanly_giaidau/providers/saved_tournaments_provider.dart';
 
 enum AuthStatus { unauthenticated, validating, authenticated, invalid }
 
-enum UserRole { admin, referee, viewer }
+enum UserRole { admin, referee, organizer, viewer }
 
 // ─── Auth State ───
 
@@ -48,8 +48,9 @@ class AuthState {
   bool get isAuthenticated => status == AuthStatus.authenticated;
   bool get isAdmin => role == UserRole.admin;
   bool get isReferee => role == UserRole.referee;
+  bool get isOrganizer => role == UserRole.organizer;
   bool get isViewer => role == UserRole.viewer;
-  bool get canScore => isAdmin || isReferee;
+  bool get canScore => isAdmin || isReferee || isOrganizer;
 }
 
 // ─── Auth Notifier ───
@@ -75,8 +76,11 @@ class AuthNotifier extends Notifier<AuthState> {
   static UserRole parseRole(String? roleStr) {
     if (roleStr == null || roleStr.trim().isEmpty) return UserRole.viewer;
     final r = roleStr.trim().toLowerCase();
-    if (r == 'admin' || r == 'organizer') {
+    if (r == 'admin') {
       return UserRole.admin;
+    }
+    if (r == 'organizer') {
+      return UserRole.organizer;
     }
     if (r == 'referee') {
       return UserRole.referee;
@@ -91,7 +95,9 @@ class AuthNotifier extends Notifier<AuthState> {
     if (hasJwt) {
       final roleStr = await tokenManager.getRole();
       final restoredRole = parseRole(roleStr);
-      _log.success("Khôi phục phiên đăng nhập từ JWT token. Role: ${restoredRole.name}");
+      _log.success(
+        "Khôi phục phiên đăng nhập từ JWT token. Role: ${restoredRole.name}",
+      );
       state = AuthState(
         status: AuthStatus.authenticated,
         role: restoredRole,
@@ -100,7 +106,9 @@ class AuthNotifier extends Notifier<AuthState> {
       return;
     }
 
-    final savedToken = await ref.read(restoreSavedInviteTokenUseCaseProvider).call();
+    final savedToken = await ref
+        .read(restoreSavedInviteTokenUseCaseProvider)
+        .call();
     if (savedToken != null && savedToken.isNotEmpty) {
       await validateToken(savedToken);
     }
@@ -108,12 +116,16 @@ class AuthNotifier extends Notifier<AuthState> {
 
   /// Xác thực token
   Future<bool> validateToken(String tokenCode) async {
-    _log.info('Bắt đầu xác thực token: ${tokenCode.substring(0, 3)}*** via NestJS API');
+    _log.info(
+      'Bắt đầu xác thực token: ${tokenCode.substring(0, 3)}*** via NestJS API',
+    );
     state = state.copyWith(status: AuthStatus.validating);
 
     try {
       _log.debug('Đang truy vấn token từ API...');
-      final token = await ref.read(validateInviteTokenUseCaseProvider).call(tokenCode);
+      final token = await ref
+          .read(validateInviteTokenUseCaseProvider)
+          .call(tokenCode);
       _log.debug('Truy vấn token hoàn tất. Kết quả: ${token?.id}');
 
       if (token == null) {
@@ -128,9 +140,11 @@ class AuthNotifier extends Notifier<AuthState> {
       final role = parseRole(token.role);
 
       await ref.read(saveInviteTokenUseCaseProvider).call(tokenCode);
-      
+
       // Ghi nhớ giải đấu này vào session danh sách giải đấu của bạn
-      await ref.read(savedTournamentsProvider.notifier).saveTournament(token.tournamentId, tokenCode, role.name);
+      await ref
+          .read(savedTournamentsProvider.notifier)
+          .saveTournament(token.tournamentId, tokenCode, role.name);
 
       _log.success(
         'Xác thực thành công. Role: ${role.name}, Tournament: ${token.tournamentId}',
@@ -162,9 +176,11 @@ class AuthNotifier extends Notifier<AuthState> {
     required String tournamentId,
   }) async {
     await ref.read(saveInviteTokenUseCaseProvider).call(tokenCode);
-    
+
     // Lưu vào danh sách các giải đấu của mình
-    await ref.read(savedTournamentsProvider.notifier).saveTournament(tournamentId, tokenCode, role.name);
+    await ref
+        .read(savedTournamentsProvider.notifier)
+        .saveTournament(tournamentId, tokenCode, role.name);
 
     state = AuthState(
       status: AuthStatus.authenticated,
@@ -196,10 +212,9 @@ class AuthNotifier extends Notifier<AuthState> {
     state = state.copyWith(status: AuthStatus.validating);
 
     try {
-      final session = await ref.read(loginWithEmailUseCaseProvider).call(
-            email: email,
-            password: password,
-          );
+      final session = await ref
+          .read(loginWithEmailUseCaseProvider)
+          .call(email: email, password: password);
       final role = _mapSessionRole(session);
       await _saveJwtSession(session, role);
       state = AuthState(
@@ -224,9 +239,9 @@ class AuthNotifier extends Notifier<AuthState> {
     state = state.copyWith(status: AuthStatus.validating);
 
     try {
-      final session = await ref.read(loginWithGoogleUseCaseProvider).call(
-            idToken: idToken,
-          );
+      final session = await ref
+          .read(loginWithGoogleUseCaseProvider)
+          .call(idToken: idToken);
       final role = _mapSessionRole(session);
       await _saveJwtSession(session, role);
       state = AuthState(
@@ -251,7 +266,9 @@ class AuthNotifier extends Notifier<AuthState> {
     state = state.copyWith(status: AuthStatus.validating);
 
     try {
-      final session = await ref.read(authRepositoryProvider).loginWithFacebook(accessToken);
+      final session = await ref
+          .read(authRepositoryProvider)
+          .loginWithFacebook(accessToken);
       final role = _mapSessionRole(session);
       await _saveJwtSession(session, role);
       state = AuthState(
@@ -271,16 +288,18 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   /// Đăng ký tài khoản mới bằng Email & Mật khẩu
-  Future<bool> registerWithEmailPassword(String email, String password, String fullName) async {
+  Future<bool> registerWithEmailPassword(
+    String email,
+    String password,
+    String fullName,
+  ) async {
     _log.info('Đăng ký bằng email: $email via NestJS Mobile API');
     state = state.copyWith(status: AuthStatus.validating);
 
     try {
-      final session = await ref.read(registerWithEmailUseCaseProvider).call(
-            email: email,
-            password: password,
-            fullName: fullName,
-          );
+      final session = await ref
+          .read(registerWithEmailUseCaseProvider)
+          .call(email: email, password: password, fullName: fullName);
       final role = _mapSessionRole(session);
       await _saveJwtSession(session, role);
       state = AuthState(
@@ -311,18 +330,23 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   void _startTokenListener(String tokenCode) {
-    if (tokenCode == 'SESSION') return; // Không cần listen token của email session
+    if (tokenCode == 'SESSION')
+      return; // Không cần listen token của email session
     _tokenSubscription?.cancel();
-    _tokenSubscription = ref.read(tokenRepositoryProvider).watchToken(tokenCode).listen((token) {
-      if (token == null && state.isAuthenticated) {
-        _log.warning(
-          'Token $tokenCode đã bị vô hiệu hóa hoặc xóa. Tiến hành đăng xuất tự động.',
-        );
-        signOut(
-          reason: 'Phiên đăng nhập đã hết hạn hoặc mã truy cập đã được đổi.',
-        );
-      }
-    });
+    _tokenSubscription = ref
+        .read(tokenRepositoryProvider)
+        .watchToken(tokenCode)
+        .listen((token) {
+          if (token == null && state.isAuthenticated) {
+            _log.warning(
+              'Token $tokenCode đã bị vô hiệu hóa hoặc xóa. Tiến hành đăng xuất tự động.',
+            );
+            signOut(
+              reason:
+                  'Phiên đăng nhập đã hết hạn hoặc mã truy cập đã được đổi.',
+            );
+          }
+        });
   }
 
   /// Đăng xuất

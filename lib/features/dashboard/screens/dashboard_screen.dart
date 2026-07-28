@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_card.d
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -830,16 +831,33 @@ class _TournamentTile extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.12),
+                  color: AppTheme.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: colors.border.withValues(alpha: 0.5)),
                 ),
-                child: const Icon(
-                  Icons.emoji_events_rounded,
-                  color: AppTheme.primary,
-                ),
+                clipBehavior: Clip.antiAlias,
+                child: (tournament.logoUrl != null && tournament.logoUrl!.isNotEmpty)
+                    ? Image.network(
+                        tournament.logoUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Padding(
+                          padding: const EdgeInsets.all(7),
+                          child: SvgPicture.asset(
+                            'assets/images/vndcsport.svg',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.all(7),
+                        child: SvgPicture.asset(
+                          'assets/images/vndcsport.svg',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(

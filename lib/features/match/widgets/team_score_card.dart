@@ -24,14 +24,23 @@ class TeamScoreCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Chỉ lắng nghe sự thay đổi của score, name, winnerId của đội này
-    final match = ref.watch(singleMatchProvider((tournamentId: tournamentId, matchId: matchId)).select((asyncVal) => asyncVal.value));
-    
+    final match = ref.watch(
+      singleMatchProvider((
+        tournamentId: tournamentId,
+        matchId: matchId,
+      )).select((asyncVal) => asyncVal.value),
+    );
+
     if (match == null) return const SizedBox.shrink();
 
     final name = isTeam1 ? match.team1Name : match.team2Name;
     final score = isTeam1 ? match.score1 : match.score2;
-    final isWinner = isCompleted && match.winnerId == (isTeam1 ? match.team1Id : match.team2Id);
-    final controller = ref.read(matchControllerProvider((tournamentId: tournamentId, matchId: matchId)));
+    final isWinner =
+        isCompleted &&
+        match.winnerId == (isTeam1 ? match.team1Id : match.team2Id);
+    final controller = ref.read(
+      matchControllerProvider((tournamentId: tournamentId, matchId: matchId)),
+    );
 
     return Column(
       children: [
@@ -79,8 +88,10 @@ class TeamScoreCard extends ConsumerWidget {
           const SizedBox(height: 16),
           ScoreStepper(
             currentScore: score,
-            onDecrement: () => _addScore(context, controller, match.maxScore, isTeam1, -1),
-            onIncrement: () => _addScore(context, controller, match.maxScore, isTeam1, 1),
+            onDecrement: () =>
+                _addScore(context, controller, match.maxScore, isTeam1, -1),
+            onIncrement: () =>
+                _addScore(context, controller, match.maxScore, isTeam1, 1),
           ),
           const SizedBox(height: 16),
           // Các nút thẻ vàng/đỏ được thiết kế theo giao diện cơ bản (hoặc rút gọn nếu môn thể thao có cấu hình riêng)
@@ -102,9 +113,7 @@ class TeamScoreCard extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Lỗi: Bạn không có quyền sửa điểm.'),
-          ),
+          const SnackBar(content: Text('Lỗi: Bạn không có quyền sửa điểm.')),
         );
       }
     }

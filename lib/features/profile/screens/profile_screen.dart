@@ -6,6 +6,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/theme_provider.dart' as tp;
@@ -16,7 +17,9 @@ import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
-import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/domain/entities/community.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
@@ -33,6 +36,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _uploadingCover = false;
   int _activeTab = 0;
   String _selectedSport = 'all';
+  String _followedFilter = 'all';
 
   Future<void> _pickImage(bool isCover) async {
     final colors = context.colors;
@@ -347,6 +351,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _buildMyTournamentsSection(context),
             const SizedBox(height: 24),
 
+            // My Communities Section
+            _buildSectionTitle(colors, 'Câu lạc bộ của tôi & đã tham gia'),
+            const SizedBox(height: 10),
+            _buildMyCommunitiesSection(context),
+            const SizedBox(height: 24),
+
             // Followed Tournaments Section
             _buildSectionTitle(colors, 'Giải đấu đang theo dõi'),
             const SizedBox(height: 10),
@@ -544,55 +554,58 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
         ),
-        // Avatar
+        // Avatar Centered (Facebook Style)
         Positioned(
-          bottom: -46,
-          left: 24,
-          child: GestureDetector(
-            onTap: _pickAndUploadAvatar,
-            child: Stack(
-              children: [
-                Container(
-                  width: 92,
-                  height: 92,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(colors: [AppTheme.primary, AppTheme.primaryLight]),
-                    boxShadow: [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.35), blurRadius: 14, offset: const Offset(0, 4))],
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: 86,
-                      height: 86,
-                      decoration: BoxDecoration(shape: BoxShape.circle, color: colors.bgSurface),
-                      child: profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(43),
-                              child: Image.network(profile.avatarUrl!, fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => _avatarFallback(context, profile),
-                              ),
-                            )
-                          : _avatarFallback(context, profile),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: 30,
-                    height: 30,
+          bottom: -50,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: GestureDetector(
+              onTap: _pickAndUploadAvatar,
+              child: Stack(
+                children: [
+                  Container(
+                    width: 100,
+                    height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppTheme.primary,
-                      border: Border.all(color: colors.bgDark, width: 2.5),
+                      gradient: const LinearGradient(colors: [AppTheme.primary, AppTheme.primaryLight]),
+                      boxShadow: [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.35), blurRadius: 16, offset: const Offset(0, 4))],
                     ),
-                    child: _uploading
-                        ? const Padding(padding: EdgeInsets.all(6), child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Icon(Icons.camera_alt_rounded, size: 15, color: Colors.white),
+                    child: Center(
+                      child: Container(
+                        width: 94,
+                        height: 94,
+                        decoration: BoxDecoration(shape: BoxShape.circle, color: colors.bgSurface),
+                        child: profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(47),
+                                child: Image.network(profile.avatarUrl!, fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => _avatarFallback(context, profile),
+                                ),
+                              )
+                            : _avatarFallback(context, profile),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppTheme.primary,
+                        border: Border.all(color: colors.bgDark, width: 2.5),
+                      ),
+                      child: _uploading
+                          ? const Padding(padding: EdgeInsets.all(6), child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : const Icon(Icons.camera_alt_rounded, size: 16, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -625,75 +638,105 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final colors = context.colors;
     final isEmailVerified = profile.isEmailVerified == true;
 
+    // Translate role to Vietnamese
+    String getRoleText(String? r) {
+      if (r == null || r.isEmpty) return 'Vận động viên';
+      final upper = r.toUpperCase();
+      if (upper == 'ADMIN') return 'Quản trị viên';
+      if (upper == 'ORGANIZER') return 'Ban tổ chức';
+      if (upper == 'REFEREE') return 'Trọng tài';
+      return upper;
+    }
+
+    final roleText = getRoleText(profile.role);
+
+    // Format joined date
+    String joinedDateText = 'Tháng 7, 2026';
+    if (profile.createdAt != null && profile.createdAt!.isNotEmpty) {
+      try {
+        final dt = DateTime.parse(profile.createdAt!);
+        joinedDateText = 'Tháng ${dt.month}, ${dt.year}';
+      } catch (_) {}
+    }
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 46, 24, 0),
+      padding: const EdgeInsets.fromLTRB(24, 56, 24, 0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Text(
-                profile.fullName ?? 'Người dùng',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: colors.textPrimary,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (profile.role != null && profile.role!.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
-                  ),
-                  child: Text(
-                    profile.role!.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.primary,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-            ],
+          // 1. Centered Name
+          Text(
+            profile.fullName ?? 'Người dùng',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: colors.textPrimary,
+              letterSpacing: -0.3,
+            ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
+
+          // 2. Role Badge (Placed cleanly below name, matching Web brand royal blue style)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3.5),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF), // bg-blue-50
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFBFDBFE)), // border-blue-200
+            ),
+            child: Text(
+              roleText,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF2563EB), // text-blue-600 (Royal Blue brand)
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // 3. Email with Verified Checkmark Centered
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.email_outlined, size: 13, color: colors.textMuted),
+              Icon(Icons.email_outlined, size: 14, color: colors.textMuted),
               const SizedBox(width: 5),
-              Expanded(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        profile.email ?? '',
-                        style: TextStyle(fontSize: 13, color: colors.textSecondary),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (isEmailVerified) ...[
-                      const SizedBox(width: 5),
-                      const Icon(
-                        Icons.verified_rounded,
-                        size: 15,
-                        color: Color(0xFF10B981),
-                      ),
-                    ],
-                  ],
+              Flexible(
+                child: Text(
+                  profile.email ?? '',
+                  style: TextStyle(fontSize: 13, color: colors.textSecondary, fontWeight: FontWeight.w500),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
+              ),
+              if (isEmailVerified) ...[
+                const SizedBox(width: 5),
+                const Icon(
+                  Icons.verified_rounded,
+                  size: 15,
+                  color: Color(0xFF2563EB), // Web Royal Blue Verified Check
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // 4. Joined Date Line
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.calendar_today_outlined, size: 13, color: colors.textMuted),
+              const SizedBox(width: 5),
+              Text(
+                'Đã tham gia từ $joinedDateText',
+                style: TextStyle(fontSize: 12.5, color: colors.textSecondary, fontWeight: FontWeight.w500),
               ),
             ],
           ),
+
           if (profile.bio != null && profile.bio!.isNotEmpty) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
@@ -704,6 +747,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               child: Text(
                 profile.bio!,
+                textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.4),
               ),
             ),
@@ -1234,21 +1278,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildFollowedTournamentsSection(BuildContext context) {
+  // ─── MY COMMUNITIES / CLUBS SECTION ─────────────────────────────────────
+  Widget _buildMyCommunitiesSection(BuildContext context) {
     final colors = context.colors;
-    final followedAsync = ref.watch(followedTournamentsProvider);
+    final myCommunitiesAsync = ref.watch(myCommunitiesProvider);
 
-    return followedAsync.when(
-      data: (tournaments) {
-        final visible = [...tournaments]
-          ..sort((a, b) {
-            final priorityDiff = _followedTournamentPriority(a).compareTo(_followedTournamentPriority(b));
-            if (priorityDiff != 0) return priorityDiff;
-            return _followedTournamentTimestamp(b).compareTo(_followedTournamentTimestamp(a));
-          });
-        final topVisible = visible.take(5).toList();
-
-        if (topVisible.isEmpty) {
+    return myCommunitiesAsync.when(
+      data: (communities) {
+        if (communities.isEmpty) {
           return Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -1259,17 +1296,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Center(
               child: Column(
                 children: [
-                  Icon(Icons.bookmark_border_rounded, size: 40, color: colors.textMuted),
+                  Icon(Icons.groups_outlined, size: 40, color: colors.textMuted),
                   const SizedBox(height: 8),
                   Text(
-                    'Bạn chưa theo dõi giải nào.',
+                    'Bạn chưa tạo hoặc tham gia câu lạc bộ nào.',
                     style: TextStyle(color: colors.textSecondary, fontSize: 13),
                   ),
-                  const SizedBox(height: 8),
-                  TextButton.icon(
-                    onPressed: () => context.go('/home'),
-                    icon: const Icon(Icons.explore_rounded, size: 16),
-                    label: const Text('Khám phá giải đấu'),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: () => context.push('/club/create'),
+                    icon: const Icon(Icons.add_rounded, size: 16),
+                    label: const Text('Tạo CLB mới'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
                   ),
                 ],
               ),
@@ -1285,21 +1326,287 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           child: Column(
             children: [
+              ...communities.map((club) => _buildCommunityRow(club, colors, context)),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: const [
-                    _StatusPill(label: 'Vừa kết thúc', backgroundColor: Color(0xFF0F172A), foregroundColor: Colors.white),
-                    _StatusPill(label: 'Đang diễn ra', backgroundColor: Color(0xFFFEF2F2), foregroundColor: Color(0xFFB91C1C), borderColor: Color(0xFFFECACA)),
-                    _StatusPill(label: 'Mở đăng ký', backgroundColor: Color(0xFFF0FDF4), foregroundColor: Color(0xFF047857), borderColor: Color(0xFFBBF7D0)),
-                    _StatusPill(label: 'Sắp diễn ra', backgroundColor: Color(0xFFEFF6FF), foregroundColor: Color(0xFF1D4ED8), borderColor: Color(0xFFBFDBFE)),
-                  ],
+                padding: const EdgeInsets.all(8),
+                child: TextButton.icon(
+                  onPressed: () => context.push('/club/create'),
+                  icon: const Icon(Icons.add_rounded, size: 16),
+                  label: const Text('Tạo CLB mới'),
                 ),
               ),
-              const SizedBox(height: 8),
-              ...topVisible.map((tournament) => _buildFollowedTournamentRow(tournament, colors, context)),
+            ],
+          ),
+        );
+      },
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary),
+        ),
+      ),
+      error: (e, _) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.border),
+        ),
+        child: Center(
+          child: Text(
+            'Không thể tải danh sách CLB',
+            style: TextStyle(color: colors.textSecondary, fontSize: 13),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCommunityRow(Community club, AppColorsExtension colors, BuildContext context) {
+    final currentUserId = ref.watch(userProfileProvider).value?.id;
+    final isOwner = club.myRole == 'OWNER' ||
+        club.myRole == 'LEADER' ||
+        club.myRole == 'CREATOR' ||
+        club.myRole == 'HOST' ||
+        (currentUserId != null && club.ownerId == currentUserId) ||
+        (club.myRole != 'MEMBER' && club.myRole != 'JOINED');
+
+    final isAdmin = !isOwner && (club.myRole == 'ADMIN' || club.myRole == 'MODERATOR');
+
+    final roleLabel = isOwner ? 'Chủ sở hữu' : (isAdmin ? 'Quản trị' : 'Đã tham gia');
+    final roleColor = isOwner ? const Color(0xFFF59E0B) : (isAdmin ? AppTheme.primary : const Color(0xFF059669));
+
+    final List<Widget> sportWidgets = [];
+    if (club.sports.isNotEmpty) {
+      for (final rawS in club.sports) {
+        final sTrim = rawS.trim();
+        if (sTrim.isEmpty) continue;
+        final mapped = AppConstants.sportNames[sTrim] ?? AppConstants.sportNames[sTrim.toLowerCase()] ?? sTrim;
+        sportWidgets.add(
+          Container(
+            margin: const EdgeInsets.only(right: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              mapped.toUpperCase(),
+              style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.primary),
+            ),
+          ),
+        );
+      }
+    }
+    if (sportWidgets.isEmpty) {
+      sportWidgets.add(
+        Container(
+          margin: const EdgeInsets.only(right: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: const Text(
+            'THỂ THAO',
+            style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.primary),
+          ),
+        ),
+      );
+    }
+
+    final displayMemberCount = club.memberCount > 0 ? club.memberCount : 2;
+
+    return InkWell(
+      onTap: () => context.push('/club/${club.id}'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _buildTournamentLogo(club.logoUrl, club.bannerUrl),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    club.name,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 5),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: [
+                        ...sportWidgets,
+                        const SizedBox(width: 2),
+                        Text(
+                          '$displayMemberCount Thành viên',
+                          style: TextStyle(fontSize: 11, color: colors.textMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: roleColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: roleColor.withValues(alpha: 0.3)),
+              ),
+              child: Text(
+                roleLabel,
+                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: roleColor),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(Icons.chevron_right_rounded, size: 18, color: colors.textMuted),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTournamentLogo(String? logoUrl, String? bannerUrl) {
+    final colors = context.colors;
+    final url = (logoUrl != null && logoUrl.isNotEmpty)
+        ? logoUrl
+        : ((bannerUrl != null && bannerUrl.isNotEmpty) ? bannerUrl : null);
+
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: const Color(0xFF2979FF).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: colors.border.withValues(alpha: 0.6)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: url != null
+          ? Image.network(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _defaultVndcLogo(),
+            )
+          : _defaultVndcLogo(),
+    );
+  }
+
+  Widget _defaultVndcLogo() {
+    return Padding(
+      padding: const EdgeInsets.all(7),
+      child: SvgPicture.asset(
+        'assets/images/vndcsport.svg',
+        fit: BoxFit.contain,
+      ),
+    );
+  }
+
+  Widget _buildFollowedTournamentsSection(BuildContext context) {
+    final colors = context.colors;
+    final followedAsync = ref.watch(followedTournamentsProvider);
+
+    return followedAsync.when(
+      data: (tournaments) {
+        final now = DateTime.now();
+
+        final filteredList = tournaments.where((t) {
+          if (_followedFilter == 'all') return true;
+          final isCompleted = StatusHelper.isTournamentCompleted(t.status);
+          final isRecentCompleted = isCompleted &&
+              t.endDate != null &&
+              now.difference(t.endDate!).inDays <= 14;
+
+          if (_followedFilter == 'recent_completed') return isRecentCompleted || isCompleted;
+          if (_followedFilter == 'in_progress') return StatusHelper.isTournamentInProgress(t.status);
+          if (_followedFilter == 'registration') return StatusHelper.isTournamentRegistration(t.status);
+          if (_followedFilter == 'upcoming') return StatusHelper.isTournamentUpcoming(t.status);
+          return true;
+        }).toList();
+
+        final visible = [...filteredList]
+          ..sort((a, b) {
+            final priorityDiff = _followedTournamentPriority(a).compareTo(_followedTournamentPriority(b));
+            if (priorityDiff != 0) return priorityDiff;
+            return _followedTournamentTimestamp(b).compareTo(_followedTournamentTimestamp(a));
+          });
+        final topVisible = visible.take(5).toList();
+
+        final filters = [
+          {'id': 'all', 'label': 'Tất cả'},
+          {'id': 'recent_completed', 'label': 'Vừa kết thúc'},
+          {'id': 'in_progress', 'label': 'Đang diễn ra'},
+          {'id': 'registration', 'label': 'Mở đăng ký'},
+          {'id': 'upcoming', 'label': 'Sắp diễn ra'},
+        ];
+
+        return Container(
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: filters.map((f) {
+                      final isSelected = _followedFilter == f['id'];
+                      return GestureDetector(
+                        onTap: () => setState(() => _followedFilter = f['id'] as String),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isSelected ? AppTheme.primary : colors.bgSurface,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected ? AppTheme.primary : colors.border,
+                            ),
+                          ),
+                          child: Text(
+                            f['label'] as String,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                              color: isSelected ? Colors.white : colors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+
+              if (topVisible.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Text(
+                    tournaments.isEmpty
+                        ? 'Bạn chưa theo dõi giải nào.'
+                        : 'Không có giải đấu phù hợp với bộ lọc.',
+                    style: TextStyle(color: colors.textMuted, fontSize: 13),
+                  ),
+                )
+              else
+                ...topVisible.map((tournament) => _buildFollowedTournamentRow(tournament, colors, context)),
+
               if (visible.length > 5)
                 Padding(
                   padding: const EdgeInsets.all(8),
@@ -1355,7 +1662,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             : StatusHelper.isTournamentInProgress(tournament.status)
                 ? 'Đang diễn ra'
                 : StatusHelper.isTournamentRegistration(tournament.status)
-                    ? 'Mở đăng ký'
+                    ? 'Đang mở đăng ký'
                     : StatusHelper.isTournamentUpcoming(tournament.status)
                         ? 'Sắp diễn ra'
                         : 'Đang theo dõi';
@@ -1365,15 +1672,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.bookmark_rounded, size: 18, color: AppTheme.primary),
-            ),
+            _buildTournamentLogo(tournament.logoUrl, tournament.bannerUrl),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -1388,34 +1687,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 2),
                   Text(
                     statusLabel,
-                    style: TextStyle(fontSize: 11, color: colors.textMuted),
+                    style: TextStyle(fontSize: 11, color: AppTheme.primary, fontWeight: FontWeight.w700),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Text(
                     statusHint,
                     style: TextStyle(fontSize: 10, color: colors.textMuted),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      if (isRecentCompleted)
-                        _StatusPill(
-                          label: 'Vừa kết thúc',
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                        ),
-                      if (isCompleted && !isRecentCompleted)
-                        _StatusPill(
-                          label: 'Đã kết thúc',
-                          backgroundColor: colors.bgSurface,
-                          foregroundColor: colors.textSecondary,
-                          borderColor: colors.border,
-                        ),
-                    ],
                   ),
                 ],
               ),
@@ -1440,7 +1719,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildTournamentRow(dynamic t, AppColorsExtension colors, BuildContext context) {
-    final statusLabel = t.status?.toString().replaceAll('_', ' ') ?? 'draft';
+    final rawStatus = t.status?.toString() ?? 'draft';
+    final statusLabel = StatusHelper.getTournamentStatusLabel(rawStatus);
+    final String? logoUrl = t is Tournament ? t.logoUrl : (t.logoUrl?.toString());
+    final String? bannerUrl = t is Tournament ? t.bannerUrl : (t.bannerUrl?.toString());
+
     return GestureDetector(
       onLongPress: () async {
         final confirm = await showDialog<bool>(
@@ -1473,44 +1756,37 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         }
       },
       child: InkWell(
-      onTap: () => context.push('/intro/${t.id}'),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+        onTap: () => context.push('/intro/${t.id}'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              // Logo giải đấu thật hoặc vndcsport.svg
+              _buildTournamentLogo(logoUrl, bannerUrl),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.name ?? '',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      statusLabel,
+                      style: TextStyle(fontSize: 11, color: colors.textMuted, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
               ),
-              child: Icon(Icons.emoji_events_rounded, size: 18, color: AppTheme.primary),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    t.name ?? '',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    statusLabel,
-                    style: TextStyle(fontSize: 11, color: colors.textMuted),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, size: 18, color: colors.textMuted),
-          ],
+              Icon(Icons.chevron_right_rounded, size: 18, color: colors.textMuted),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 

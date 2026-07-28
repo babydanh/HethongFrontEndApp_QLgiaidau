@@ -64,13 +64,19 @@ class _MatchSettingsDialogState extends State<MatchSettingsDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Hủy', style: TextStyle(color: context.colors.textSecondary)),
+          child: Text(
+            'Hủy',
+            style: TextStyle(color: context.colors.textSecondary),
+          ),
         ),
         ElevatedButton(
           onPressed: () {
             if (_refereeController.text.trim().isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: const Text('Vui lòng nhập tên trọng tài'), backgroundColor: context.colors.error),
+                SnackBar(
+                  content: const Text('Vui lòng nhập tên trọng tài'),
+                  backgroundColor: context.colors.error,
+                ),
               );
               return;
             }

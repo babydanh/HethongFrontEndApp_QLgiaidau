@@ -100,14 +100,12 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
         }
 
         // Sport filter
-        if (_selectedSport.isNotEmpty &&
-            m.sportKey != _selectedSport) {
+        if (_selectedSport.isNotEmpty && m.sportKey != _selectedSport) {
           return false;
         }
 
         // Status filter
-        if (_selectedStatus.isNotEmpty &&
-            m.status != _selectedStatus) {
+        if (_selectedStatus.isNotEmpty && m.status != _selectedStatus) {
           return false;
         }
 
@@ -180,19 +178,19 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? _buildError(colors)
-              : Column(
-                  children: [
-                    _buildSearchBar(colors),
-                    _buildFilterRow(colors),
-                    _buildActiveFilters(colors),
-                    Expanded(
-                      child: _filteredMatches.isEmpty
-                          ? _buildEmpty(colors)
-                          : _buildGroupedList(colors),
-                    ),
-                  ],
+          ? _buildError(colors)
+          : Column(
+              children: [
+                _buildSearchBar(colors),
+                _buildFilterRow(colors),
+                _buildActiveFilters(colors),
+                Expanded(
+                  child: _filteredMatches.isEmpty
+                      ? _buildEmpty(colors)
+                      : _buildGroupedList(colors),
                 ),
+              ],
+            ),
     );
   }
 
@@ -211,10 +209,18 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
           decoration: InputDecoration(
             hintText: 'Tìm theo tên VĐV / CLB...',
             hintStyle: TextStyle(color: colors.textMuted, fontSize: 14),
-            prefixIcon: Icon(Icons.search_rounded, color: colors.textMuted, size: 20),
+            prefixIcon: Icon(
+              Icons.search_rounded,
+              color: colors.textMuted,
+              size: 20,
+            ),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon: Icon(Icons.clear_rounded, color: colors.textMuted, size: 18),
+                    icon: Icon(
+                      Icons.clear_rounded,
+                      color: colors.textMuted,
+                      size: 18,
+                    ),
                     onPressed: () {
                       _searchController.clear();
                     },
@@ -243,7 +249,9 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
               activeTextColor: const Color(0xFF4A4E4D),
               onTap: () {
                 setState(() {
-                  _selectedStatus = _selectedStatus == 'completed' ? '' : 'completed';
+                  _selectedStatus = _selectedStatus == 'completed'
+                      ? ''
+                      : 'completed';
                   _applyFilters();
                 });
               },
@@ -269,7 +277,9 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
               activeTextColor: const Color(0xFF386629),
               onTap: () {
                 setState(() {
-                  _selectedStatus = _selectedStatus == 'registration' ? '' : 'registration';
+                  _selectedStatus = _selectedStatus == 'registration'
+                      ? ''
+                      : 'registration';
                   _applyFilters();
                 });
               },
@@ -282,7 +292,9 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
               activeTextColor: const Color(0xFF995C00),
               onTap: () {
                 setState(() {
-                  _selectedStatus = _selectedStatus == 'scheduled' ? '' : 'scheduled';
+                  _selectedStatus = _selectedStatus == 'scheduled'
+                      ? ''
+                      : 'scheduled';
                   _applyFilters();
                 });
               },
@@ -295,7 +307,9 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
               activeTextColor: const Color(0xFF64748B),
               onTap: () {
                 setState(() {
-                  _selectedStatus = _selectedStatus == 'finished' ? '' : 'finished';
+                  _selectedStatus = _selectedStatus == 'finished'
+                      ? ''
+                      : 'finished';
                   _applyFilters();
                 });
               },
@@ -340,48 +354,68 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   Widget _buildActiveFilters(AppColorsExtension colors) {
     final chips = <Widget>[];
     if (_selectedSport.isNotEmpty) {
-      chips.add(_buildActiveChip(
-        AppConstants.sportNames[_selectedSport] ?? _selectedSport,
-        () => setState(() { _selectedSport = ''; _applyFilters(); }),
-        colors,
-      ));
+      chips.add(
+        _buildActiveChip(
+          AppConstants.sportNames[_selectedSport] ?? _selectedSport,
+          () => setState(() {
+            _selectedSport = '';
+            _applyFilters();
+          }),
+          colors,
+        ),
+      );
     }
     if (_selectedStatus.isNotEmpty) {
-      chips.add(_buildActiveChip(
-        _statusLabels[_selectedStatus] ?? '',
-        () => setState(() { _selectedStatus = ''; _applyFilters(); }),
-        colors,
-      ));
+      chips.add(
+        _buildActiveChip(
+          _statusLabels[_selectedStatus] ?? '',
+          () => setState(() {
+            _selectedStatus = '';
+            _applyFilters();
+          }),
+          colors,
+        ),
+      );
     }
     if (_selectedDateRange != null) {
       final fmt = DateFormat('dd/MM');
-      chips.add(_buildActiveChip(
-        '${fmt.format(_selectedDateRange!.start)} - ${fmt.format(_selectedDateRange!.end)}',
-        () => setState(() { _selectedDateRange = null; _applyFilters(); }),
-        colors,
-      ));
+      chips.add(
+        _buildActiveChip(
+          '${fmt.format(_selectedDateRange!.start)} - ${fmt.format(_selectedDateRange!.end)}',
+          () => setState(() {
+            _selectedDateRange = null;
+            _applyFilters();
+          }),
+          colors,
+        ),
+      );
     }
     if (_selectedLocation.isNotEmpty) {
-      chips.add(_buildActiveChip(
-        _selectedLocation,
-        () => setState(() { _selectedLocation = ''; _applyFilters(); }),
-        colors,
-      ));
+      chips.add(
+        _buildActiveChip(
+          _selectedLocation,
+          () => setState(() {
+            _selectedLocation = '';
+            _applyFilters();
+          }),
+          colors,
+        ),
+      );
     }
 
     if (chips.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Wrap(
-        spacing: 6,
-        runSpacing: 4,
-        children: chips,
-      ),
+      child: Wrap(spacing: 6, runSpacing: 4, children: chips),
     );
   }
 
-  Widget _buildActiveChip(String label, VoidCallback onRemove, AppColorsExtension colors) {
+  Widget _buildActiveChip(
+    String label,
+    VoidCallback onRemove,
+    AppColorsExtension colors,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -392,7 +426,14 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: colors.info)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: colors.info,
+            ),
+          ),
           const SizedBox(width: 4),
           GestureDetector(
             onTap: onRemove,
@@ -416,33 +457,59 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Chọn môn thể thao', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: colors.textPrimary)),
+            Text(
+              'Chọn môn thể thao',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: colors.textPrimary,
+              ),
+            ),
             const SizedBox(height: 16),
             _buildSportOption(ctx, colors, '', 'Tất cả', null),
-            ...AppConstants.sportNames.entries.map((e) => _buildSportOption(ctx, colors, e.key, e.value, e.key)),
+            ...AppConstants.sportNames.entries.map(
+              (e) => _buildSportOption(ctx, colors, e.key, e.value, e.key),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSportOption(BuildContext ctx, AppColorsExtension colors, String value, String label, String? sportKey) {
+  Widget _buildSportOption(
+    BuildContext ctx,
+    AppColorsExtension colors,
+    String value,
+    String label,
+    String? sportKey,
+  ) {
     final isSelected = _selectedSport == value;
     return ListTile(
       leading: Icon(
-        sportKey != null ? Icons.sports_tennis_rounded : Icons.all_inclusive_rounded,
+        sportKey != null
+            ? Icons.sports_tennis_rounded
+            : Icons.all_inclusive_rounded,
         color: isSelected ? colors.info : colors.textMuted,
       ),
-      title: Text(label, style: TextStyle(color: isSelected ? colors.info : colors.textPrimary, fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500)),
-      trailing: isSelected ? Icon(Icons.check_rounded, color: colors.info) : null,
+      title: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? colors.info : colors.textPrimary,
+          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+        ),
+      ),
+      trailing: isSelected
+          ? Icon(Icons.check_rounded, color: colors.info)
+          : null,
       onTap: () {
-        setState(() { _selectedSport = value; _applyFilters(); });
+        setState(() {
+          _selectedSport = value;
+          _applyFilters();
+        });
         Navigator.pop(ctx);
       },
     );
   }
-
-
 
   void _showLocationInput(AppColorsExtension colors) {
     final controller = TextEditingController(text: _selectedLocation);
@@ -451,15 +518,27 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: colors.bgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Nhập địa điểm', style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w700)),
+        title: Text(
+          'Nhập địa điểm',
+          style: TextStyle(
+            color: colors.textPrimary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         content: TextField(
           controller: controller,
           style: TextStyle(color: colors.textPrimary),
           decoration: InputDecoration(
             hintText: 'Tên địa điểm, sân...',
             hintStyle: TextStyle(color: colors.textMuted),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: colors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: colors.border),
+            ),
           ),
         ),
         actions: [
@@ -469,7 +548,10 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
           ),
           FilledButton(
             onPressed: () {
-              setState(() { _selectedLocation = controller.text.trim(); _applyFilters(); });
+              setState(() {
+                _selectedLocation = controller.text.trim();
+                _applyFilters();
+              });
               Navigator.pop(ctx);
             },
             child: const Text('Áp dụng'),
@@ -505,7 +587,10 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   }
 
   Widget _buildTournamentGroup(
-      String tournamentName, List<MatchModel> matches, AppColorsExtension colors) {
+    String tournamentName,
+    List<MatchModel> matches,
+    AppColorsExtension colors,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -578,7 +663,8 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (match.team1Members != null && match.team1Members!.isNotEmpty)
+                  if (match.team1Members != null &&
+                      match.team1Members!.isNotEmpty)
                     Text(
                       match.team1Members!.join(', '),
                       style: TextStyle(fontSize: 10, color: colors.textMuted),
@@ -605,8 +691,8 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
                   color: isLive
                       ? const Color(0xFF2979FF)
                       : match.isCompleted
-                          ? colors.success
-                          : colors.textPrimary,
+                      ? colors.success
+                      : colors.textPrimary,
                 ),
               ),
             ),
@@ -626,7 +712,8 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.end,
                   ),
-                  if (match.team2Members != null && match.team2Members!.isNotEmpty)
+                  if (match.team2Members != null &&
+                      match.team2Members!.isNotEmpty)
                     Text(
                       match.team2Members!.join(', '),
                       style: TextStyle(fontSize: 10, color: colors.textMuted),
@@ -735,13 +822,19 @@ class _FilterChip extends StatelessWidget {
           color: isActive ? activeColor.withValues(alpha: 0.12) : colors.bgCard,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isActive ? activeColor.withValues(alpha: 0.4) : colors.border,
+            color: isActive
+                ? activeColor.withValues(alpha: 0.4)
+                : colors.border,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: isActive ? activeColor : colors.textMuted),
+            Icon(
+              icon,
+              size: 16,
+              color: isActive ? activeColor : colors.textMuted,
+            ),
             const SizedBox(width: 6),
             Text(
               label,
@@ -788,7 +881,9 @@ class _StatusFilterPill extends StatelessWidget {
           color: isSelected ? activeBgColor : colors.bgCard,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? activeTextColor.withValues(alpha: 0.3) : colors.border,
+            color: isSelected
+                ? activeTextColor.withValues(alpha: 0.3)
+                : colors.border,
             width: isSelected ? 1.2 : 1.0,
           ),
         ),

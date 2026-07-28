@@ -383,7 +383,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
           : const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
             ),
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 160),
       children: [
           // ── Diagram Access Banner ──
           if (!isRoundRobin)

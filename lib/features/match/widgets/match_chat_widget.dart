@@ -67,12 +67,13 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
       if (existingRoom != null) {
         _roomId = existingRoom['id'] as String?;
       } else {
-        final createResp = await dio.post('/chat/rooms', data: {
-          'name': matchRoomId,
-          'type': 'GROUP',
-          'memberIds': [],
-        });
-        _roomId = createResp.data['data']?['id'] as String? ?? createResp.data['id'] as String?;
+        final createResp = await dio.post(
+          '/chat/rooms',
+          data: {'name': matchRoomId, 'type': 'GROUP', 'memberIds': []},
+        );
+        _roomId =
+            createResp.data['data']?['id'] as String? ??
+            createResp.data['id'] as String?;
       }
 
       if (_roomId != null) await _loadMessages();
@@ -83,7 +84,10 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
     }
 
     // Poll every 5 seconds
-    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _loadMessages());
+    _pollTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _loadMessages(),
+    );
   }
 
   Future<void> _loadMessages() async {
@@ -104,16 +108,19 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
     _msgCtrl.clear();
     try {
       final dio = ref.read(dioProvider);
-      await dio.post('/chat/messages', data: {
-        'roomId': _roomId,
-        'content': text,
-      });
+      await dio.post(
+        '/chat/messages',
+        data: {'roomId': _roomId, 'content': text},
+      );
       await _loadMessages();
       // Scroll to bottom
       Future.delayed(const Duration(milliseconds: 200), () {
         if (_scrollCtrl.hasClients) {
-          _scrollCtrl.animateTo(_scrollCtrl.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+          _scrollCtrl.animateTo(
+            _scrollCtrl.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
         }
       });
     } catch (e, stack) {
@@ -132,59 +139,105 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
               : _messages.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.chat_bubble_outline_rounded, size: 32, color: colors.textMuted),
-                          const SizedBox(height: 8),
-                          Text('Chưa có tin nhắn', style: TextStyle(fontSize: 12, color: colors.textMuted)),
-                        ],
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        size: 32,
+                        color: colors.textMuted,
                       ),
-                    )
-                  : ListView.builder(
-                      controller: _scrollCtrl,
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      itemCount: _messages.length,
-                      itemBuilder: (context, i) {
-                        final msg = _messages[i];
-                        final sender = msg['senderName'] as String? ?? msg['sender']?['fullName'] as String? ?? 'Người dùng';
-                        final content = msg['content'] as String? ?? msg['messageText'] as String? ?? '';
-                        final time = msg['createdAt'] as String? ?? msg['timestamp'] as String? ?? '';
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              CircleAvatar(
-                                radius: 14,
-                                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                                child: Text(sender.isNotEmpty ? sender[0].toUpperCase() : '?',
-                                    style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w800, fontSize: 10)),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Chưa có tin nhắn',
+                        style: TextStyle(fontSize: 12, color: colors.textMuted),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  controller: _scrollCtrl,
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  itemCount: _messages.length,
+                  itemBuilder: (context, i) {
+                    final msg = _messages[i];
+                    final sender =
+                        msg['senderName'] as String? ??
+                        msg['sender']?['fullName'] as String? ??
+                        'Người dùng';
+                    final content =
+                        msg['content'] as String? ??
+                        msg['messageText'] as String? ??
+                        '';
+                    final time =
+                        msg['createdAt'] as String? ??
+                        msg['timestamp'] as String? ??
+                        '';
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 14,
+                            backgroundColor: AppTheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
+                            child: Text(
+                              sender.isNotEmpty ? sender[0].toUpperCase() : '?',
+                              style: const TextStyle(
+                                color: AppTheme.primary,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 10,
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   children: [
-                                    Row(
-                                      children: [
-                                        Text(sender, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: colors.textPrimary)),
-                                        const SizedBox(width: 6),
-                                        Text(_formatTime(time), style: TextStyle(fontSize: 9, color: colors.textMuted)),
-                                      ],
+                                    Text(
+                                      sender,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: colors.textPrimary,
+                                      ),
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(content, style: TextStyle(fontSize: 12, color: colors.textSecondary)),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      _formatTime(time),
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        color: colors.textMuted,
+                                      ),
+                                    ),
                                   ],
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 2),
+                                Text(
+                                  content,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: colors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        );
-                      },
-                    ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
         ),
         // Input
         Container(
@@ -212,9 +265,17 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
               GestureDetector(
                 onTap: _sendMessage,
                 child: Container(
-                  width: 36, height: 36,
-                  decoration: BoxDecoration(color: AppTheme.primary, borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.send_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                 ),
               ),
             ],
@@ -248,17 +309,32 @@ class LiveCameraPlaceholder extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 80, height: 80,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Icon(Icons.videocam_rounded, size: 36, color: Colors.white54),
+              child: const Icon(
+                Icons.videocam_rounded,
+                size: 36,
+                color: Colors.white54,
+              ),
             ),
             const SizedBox(height: 12),
-            Text('Camera trực tiếp', style: TextStyle(fontSize: 14, color: colors.textMuted, fontWeight: FontWeight.w600)),
+            Text(
+              'Camera trực tiếp',
+              style: TextStyle(
+                fontSize: 14,
+                color: colors.textMuted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text('Kết nối camera sân đấu...', style: TextStyle(fontSize: 11, color: colors.textMuted)),
+            Text(
+              'Kết nối camera sân đấu...',
+              style: TextStyle(fontSize: 11, color: colors.textMuted),
+            ),
           ],
         ),
       ),

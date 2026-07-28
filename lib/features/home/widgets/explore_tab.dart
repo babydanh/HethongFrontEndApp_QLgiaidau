@@ -284,7 +284,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
     final isAuth = auth.isAuthenticated;
 
     return SizedBox(
-      height: isAuth ? 220 : 185,
+      height: isAuth ? 255 : 185,
       child: Stack(
         children: [
           // Wave background
@@ -325,10 +325,34 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                         ),
                       ),
                       const Spacer(),
-                      // Notification
-                      _NavIconBtn(
-                        icon: Icons.notifications_outlined,
-                        onTap: () {},
+                      // Notification with Live Red Badge
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          _NavIconBtn(
+                            icon: Icons.notifications_outlined,
+                            onTap: () {},
+                          ),
+                          Positioned(
+                            top: -2,
+                            right: -2,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFEF4444),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Text(
+                                '3',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(width: 8),
                       // Avatar / login
@@ -392,34 +416,107 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
   }
 
   // ─────────────────────────────────────
-  // Compact stats row (khi đã login)
+  // 3D Glassmorphism Athlete ELO Card (khi đã login)
   // ─────────────────────────────────────
   Widget _buildCompactStatsRow() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.diamond_rounded, color: Color(0xFFFFD700), size: 18),
-          const SizedBox(width: 6),
-          const Text(
-            'Kim Cương  •  1340 ELO',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
+          // Row 1: Rating + Stats
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFD700).withValues(alpha: 0.25),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.star_rounded, color: Color(0xFFFFD700), size: 16),
+              ),
+              const SizedBox(width: 8),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '1000 ELO',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  Text(
+                    'Xếp hạng Quốc gia',
+                    style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              _buildMiniStat('0', 'Trận'),
+              const SizedBox(width: 10),
+              _buildMiniStat('0', 'Thắng'),
+              const SizedBox(width: 10),
+              _buildMiniStat('0%', 'Rate', color: const Color(0xFF4ADE80)),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Row 2: ELO Progress Bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: 0.35,
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+              minHeight: 5,
             ),
           ),
-          const Spacer(),
-          _buildMiniStat('47', 'Trận'),
-          const SizedBox(width: 12),
-          _buildMiniStat('31', 'Thắng'),
-          const SizedBox(width: 12),
-          _buildMiniStat('66%', 'Rate', color: const Color(0xFF4ADE80)),
+          const SizedBox(height: 6),
+
+          // Row 3: ELO Subtext & Streak Badge
+          Row(
+            children: [
+              const Icon(Icons.workspace_premium_rounded, color: Color(0xFFFFD700), size: 12),
+              const SizedBox(width: 4),
+              const Text(
+                'Còn 50 ELO nữa lên Hạng Vàng',
+                style: TextStyle(color: Colors.white70, fontSize: 10.5, fontWeight: FontWeight.w600),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  children: [
+                    Text('🔥', style: TextStyle(fontSize: 10)),
+                    SizedBox(width: 2),
+                    Text(
+                      'Phong độ cao',
+                      style: TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w800),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

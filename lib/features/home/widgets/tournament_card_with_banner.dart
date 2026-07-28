@@ -176,206 +176,288 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
     final hasBanner = resolvedBannerUrl.isNotEmpty;
     final categoryChips = _getCategoryChips(widget.tournament);
 
+    final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl ?? widget.tournament.creatorAvatarUrl);
+    final hasLogo = resolvedLogoUrl.isNotEmpty;
+
     return GestureDetector(
       onTap: widget.onTap,
       child: Container(
         margin: widget.margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: colors.bgCard,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: colors.border.withValues(alpha: 0.7), width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 12,
               offset: const Offset(0, 4),
             )
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(7.5),
-                topRight: Radius.circular(7.5),
-              ),
-              child: Stack(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    height: 170,
+                  // Banner Header (height 155)
+                  SizedBox(
+                    height: 155,
                     width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade100,
-                      image: hasBanner
-                          ? DecorationImage(
-                              image: NetworkImage(resolvedBannerUrl),
-                              fit: BoxFit.cover,
-                             )
-                          : null,
-                      gradient: hasBanner
-                          ? null
-                          : LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.blue.shade900,
-                                Colors.indigo.shade900,
-                              ],
-                            ),
-                    ),
-                    child: !hasBanner
-                        ? Center(
-                            child: SvgPicture.asset(
-                              "assets/images/vndcsport.svg",
-                              width: 140,
-                              fit: BoxFit.contain,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (hasBanner)
+                          Image.network(
+                            resolvedBannerUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [Color(0xFF2979FF), Color(0xFF1565C0)],
+                                ),
+                              ),
+                              child: Center(
+                                child: SvgPicture.asset(
+                                  "assets/images/vndcsport.svg",
+                                  width: 130,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
                             ),
                           )
-                        : null,
+                        else
+                          Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Color(0xFF2979FF), Color(0xFF1565C0)],
+                              ),
+                            ),
+                            child: Center(
+                              child: SvgPicture.asset(
+                                "assets/images/vndcsport.svg",
+                                width: 130,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                        // Status badge top-left
+                        Positioned(
+                          top: 10,
+                          left: 10,
+                          child: StatusBadge(statusKey: widget.tournament.status),
+                        ),
+                      ],
+                    ),
                   ),
-                  // Status badge top-left
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: StatusBadge(statusKey: widget.tournament.status),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Left Column: Date Block
-                  _buildDateBlock(context, colors),
-                  
-                  // Vertical divider
-                  Container(
-                    width: 1,
-                    height: 48,
-                    margin: const EdgeInsets.symmetric(horizontal: 10),
-                    color: colors.border.withValues(alpha: 0.6),
-                  ),
-                  
-                  // Right Column: Details
-                  Expanded(
-                    child: Column(
+
+                  // Bottom Details Body (padding top 18 for floating logo)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Row 1: Sport + ELO Tag
-                        Row(
-                          children: [
-                            Text(
-                              _getSportEmojiAndLabel(widget.tournament.sport),
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w800,
-                                color: colors.textMuted,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            if (widget.tournament.isRanked == true) ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFFFBEB),
-                                  borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(color: const Color(0xFFFDE68A), width: 0.5),
-                                ),
-                                child: const Text(
-                                  "XẾP HẠNG ELO",
-                                  style: TextStyle(
-                                    fontSize: 8.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFFD97706),
+                        // Left Column: Date Block
+                        _buildDateBlock(context, colors),
+                        
+                        // Vertical divider
+                        Container(
+                          width: 1,
+                          height: 54,
+                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                          color: colors.border.withValues(alpha: 0.6),
+                        ),
+                        
+                        // Right Column: Details
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Row 1: Sport + ELO Tag
+                              Row(
+                                children: [
+                                  Text(
+                                    _getSportEmojiAndLabel(widget.tournament.sport),
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: colors.textMuted,
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
+                                  if (widget.tournament.isRanked == true) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFFFBEB),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: const Color(0xFFFDE68A), width: 0.5),
+                                      ),
+                                      child: const Text(
+                                        "XẾP HẠNG ELO",
+                                        style: TextStyle(
+                                          fontSize: 8.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFFD97706),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+                              // Row 2: Title
+                              Text(
+                                widget.tournament.name,
+                                style: TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.textPrimary,
                                 ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (widget.tournament.locationAddress != null && widget.tournament.locationAddress!.trim().isNotEmpty) ...[
+                                const SizedBox(height: 3),
+                                Row(
+                                  children: [
+                                    Icon(Icons.location_on_rounded, size: 12, color: colors.textMuted),
+                                    const SizedBox(width: 3),
+                                    Expanded(
+                                      child: Text(
+                                        widget.tournament.locationAddress!.trim(),
+                                        style: TextStyle(fontSize: 10.5, color: colors.textMuted, fontWeight: FontWeight.w500),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                              const SizedBox(height: 5),
+                              // Row 3: Fee & Format/Division Chips
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text(
+                                    widget.tournament.entryFee == null || widget.tournament.entryFee == 0
+                                        ? "Miễn phí"
+                                        : "${NumberFormat.decimalPattern().format(widget.tournament.entryFee)} đ",
+                                    style: const TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF10B981),
+                                    ),
+                                  ),
+                                  Text(
+                                    "•",
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: colors.textMuted,
+                                    ),
+                                  ),
+                                  if (categoryChips.isNotEmpty)
+                                    ...categoryChips.map((chipText) => Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: colors.bgSurface,
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+                                      ),
+                                      child: Text(
+                                        chipText,
+                                        style: TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: colors.textSecondary,
+                                        ),
+                                      ),
+                                    ))
+                                  else
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: colors.bgSurface,
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+                                      ),
+                                      child: Text(
+                                        widget.tournament.format == "single_elimination"
+                                            ? "Loại trực tiếp"
+                                            : "Vòng tròn",
+                                        style: TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: colors.textSecondary,
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
                             ],
-                          ],
-                        ),
-                        const SizedBox(height: 3),
-                        // Row 2: Title
-                        Text(
-                          widget.tournament.name,
-                          style: TextStyle(
-                            fontSize: 14.0,
-                            fontWeight: FontWeight.bold,
-                            color: colors.textPrimary,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        // Row 3: Fee & Format/Division Chips
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Text(
-                              widget.tournament.entryFee == null || widget.tournament.entryFee == 0
-                                  ? "0 đ"
-                                  : "${NumberFormat.decimalPattern().format(widget.tournament.entryFee)} đ",
-                              style: const TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF10B981),
-                              ),
-                            ),
-                            Text(
-                              "•",
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: colors.textMuted,
-                              ),
-                            ),
-                            if (categoryChips.isNotEmpty)
-                              ...categoryChips.map((chipText) => Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF1F5F9),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  chipText,
-                                  style: const TextStyle(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF475569),
-                                  ),
-                                ),
-                              ))
-                            else
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF1F5F9),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  widget.tournament.format == "single_elimination"
-                                      ? "Loại trực tiếp"
-                                      : "Vòng tròn",
-                                  style: const TextStyle(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF475569),
-                                  ),
-                                ),
-                              ),
-                          ],
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
+
+              // Floating Logo Avatar (top: 133, left: 14)
+              Positioned(
+                top: 133,
+                left: 14,
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colors.bgSurface,
+                    border: Border.all(color: colors.bgCard, width: 2.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: hasLogo
+                        ? Image.network(
+                            resolvedLogoUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: const Color(0xFF2979FF).withValues(alpha: 0.1),
+                              padding: const EdgeInsets.all(8),
+                              child: SvgPicture.asset(
+                                "assets/images/vndcsport.svg",
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          )
+                        : Container(
+                            color: const Color(0xFF2979FF).withValues(alpha: 0.1),
+                            padding: const EdgeInsets.all(8),
+                            child: SvgPicture.asset(
+                              "assets/images/vndcsport.svg",
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

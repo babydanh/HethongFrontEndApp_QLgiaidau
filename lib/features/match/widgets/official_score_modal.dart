@@ -71,7 +71,10 @@ void showOfficialScoreModal(
               children: [
                 // 1. TOP HEADER BAR: Match Title & Quick Status
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   color: colors.bgSurface,
                   child: Row(
                     children: [
@@ -87,15 +90,25 @@ void showOfficialScoreModal(
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.primary.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: AppTheme.primary.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Text(
                           _sportLabel(kind).toUpperCase(),
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: AppTheme.primary, letterSpacing: 0.8),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            color: AppTheme.primary,
+                            letterSpacing: 0.8,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -114,11 +127,14 @@ void showOfficialScoreModal(
                     ],
                   ),
                 ),
-                
+
                 // 2. CONFIG BAR (ĐẨY HẾT NẰM NGANG TRÊN CÙNG)
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
                   color: colors.bgSurface.withValues(alpha: 0.5),
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -129,14 +145,17 @@ void showOfficialScoreModal(
                         _RuleChip(label: 'Thắng ${config.setsToWin} set'),
                         const SizedBox(width: 6),
                         _RuleChip(
-                          label: '${config.pointsPerSet} ${kind == SportRuleKind.tennis ? 'game/set' : 'điểm/set'}',
+                          label:
+                              '${config.pointsPerSet} ${kind == SportRuleKind.tennis ? 'game/set' : 'điểm/set'}',
                         ),
                         if (config.mustWinByTwo) ...[
                           const SizedBox(width: 6),
                           const _RuleChip(label: 'Thắng cách 2'),
                         ],
                         const SizedBox(width: 6),
-                        _RuleChip(label: _scoringModelLabel(config.scoringModel)),
+                        _RuleChip(
+                          label: _scoringModelLabel(config.scoringModel),
+                        ),
                         if (config.maxPoints > config.pointsPerSet) ...[
                           const SizedBox(width: 6),
                           _RuleChip(label: 'Trần điểm ${config.maxPoints}'),
@@ -156,28 +175,49 @@ void showOfficialScoreModal(
                 // 3. CENTER SCORE ARENA (BẢNG TÍNH ĐIỂM CHÍNH NẰM CHÍNH GIỮA MÀN HÌNH)
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     child: Column(
                       children: [
                         Expanded(
                           child: kind == SportRuleKind.tennis
-                              ? TennisScorePanel(params: params, isReadOnly: false)
+                              ? TennisScorePanel(
+                                  params: params,
+                                  isReadOnly: false,
+                                )
                               : usePickleballSideOutPanel
-                              ? PickleballPanel(params: params, isReadOnly: false)
+                              ? PickleballPanel(
+                                  params: params,
+                                  isReadOnly: false,
+                                )
                               : kind == SportRuleKind.badminton
-                              ? BadmintonScorePanel(params: params, isReadOnly: false)
+                              ? BadmintonScorePanel(
+                                  params: params,
+                                  isReadOnly: false,
+                                )
                               : kind == SportRuleKind.tableTennis
-                              ? TableTennisScorePanel(params: params, isReadOnly: false)
-                              : RallyScorePanel(params: params, isReadOnly: false),
+                              ? TableTennisScorePanel(
+                                  params: params,
+                                  isReadOnly: false,
+                                )
+                              : RallyScorePanel(
+                                  params: params,
+                                  isReadOnly: false,
+                                ),
                         ),
                         Consumer(
                           builder: (context, ref, _) {
-                            final n = ref.watch(scorePanelNotifierProvider(params));
+                            final n = ref.watch(
+                              scorePanelNotifierProvider(params),
+                            );
                             final state = n.state;
                             return Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (state.errorMessage != null && state.errorMessage!.trim().isNotEmpty) ...[
+                                if (state.errorMessage != null &&
+                                    state.errorMessage!.trim().isNotEmpty) ...[
                                   ScoreWarningBox(message: state.errorMessage!),
                                   const SizedBox(height: 4),
                                 ],
@@ -202,7 +242,10 @@ void showOfficialScoreModal(
                     final n = ref.watch(scorePanelNotifierProvider(params));
                     final state = n.state;
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       color: colors.bgSurface,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -214,18 +257,35 @@ void showOfficialScoreModal(
                                 children: [
                                   Expanded(
                                     child: TextField(
-                                      onChanged: (val) => n.setOverride(true, val),
+                                      onChanged: (val) =>
+                                          n.setOverride(true, val),
                                       style: const TextStyle(fontSize: 12),
                                       decoration: InputDecoration(
-                                        hintText: 'Nhập lý do ngoại lệ bắt buộc...',
-                                        hintStyle: TextStyle(fontSize: 11, color: colors.textMuted),
+                                        hintText:
+                                            'Nhập lý do ngoại lệ bắt buộc...',
+                                        hintStyle: TextStyle(
+                                          fontSize: 11,
+                                          color: colors.textMuted,
+                                        ),
                                         isDense: true,
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 8,
+                                            ),
                                         filled: true,
-                                        fillColor: colors.warning.withValues(alpha: 0.1),
+                                        fillColor: colors.warning.withValues(
+                                          alpha: 0.1,
+                                        ),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                          borderSide: BorderSide(color: colors.warning.withValues(alpha: 0.4)),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: colors.warning.withValues(
+                                              alpha: 0.4,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -239,48 +299,81 @@ void showOfficialScoreModal(
                               // Toggle Ngoại lệ
                               FilterChip(
                                 selected: state.overrideEnabled,
-                                onSelected: (sel) => n.setOverride(sel, state.overrideReason),
+                                onSelected: (sel) =>
+                                    n.setOverride(sel, state.overrideReason),
                                 label: Text(
-                                  state.overrideEnabled ? 'Ngoại lệ: BẬT' : 'Ngoại lệ',
+                                  state.overrideEnabled
+                                      ? 'Ngoại lệ: BẬT'
+                                      : 'Ngoại lệ',
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
-                                    color: state.overrideEnabled ? colors.warning : colors.textMuted,
+                                    color: state.overrideEnabled
+                                        ? colors.warning
+                                        : colors.textMuted,
                                   ),
                                 ),
-                                selectedColor: colors.warning.withValues(alpha: 0.16),
+                                selectedColor: colors.warning.withValues(
+                                  alpha: 0.16,
+                                ),
                                 backgroundColor: colors.bgCard,
                                 visualDensity: VisualDensity.compact,
                               ),
                               const SizedBox(width: 8),
                               // Tag Hình phạt theo môn
-                              Text('Phạt: ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: colors.textMuted)),
+                              Text(
+                                'Phạt: ',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.textMuted,
+                                ),
+                              ),
                               const SizedBox(width: 2),
                               Expanded(
                                 child: SingleChildScrollView(
                                   scrollDirection: Axis.horizontal,
                                   child: Row(
-                                    children: strategy.getOptions().take(4).map((option) {
-                                      return Container(
-                                        margin: const EdgeInsets.only(right: 6),
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: option.color.withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(option.icon, size: 12, color: option.color),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              option.name,
-                                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: option.color),
+                                    children: strategy.getOptions().take(4).map(
+                                      (option) {
+                                        return Container(
+                                          margin: const EdgeInsets.only(
+                                            right: 6,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: option.color.withValues(
+                                              alpha: 0.12,
                                             ),
-                                          ],
-                                        ),
-                                      );
-                                    }).toList(),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                option.icon,
+                                                size: 12,
+                                                color: option.color,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                option.name,
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: option.color,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ).toList(),
                                   ),
                                 ),
                               ),
@@ -289,10 +382,19 @@ void showOfficialScoreModal(
                               if (onRecordPenalty != null)
                                 OutlinedButton.icon(
                                   onPressed: onRecordPenalty,
-                                  icon: const Icon(Icons.gavel_rounded, size: 15),
-                                  label: const Text('Ghi phạt', style: TextStyle(fontSize: 11)),
+                                  icon: const Icon(
+                                    Icons.gavel_rounded,
+                                    size: 15,
+                                  ),
+                                  label: const Text(
+                                    'Ghi phạt',
+                                    style: TextStyle(fontSize: 11),
+                                  ),
                                   style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
                                     visualDensity: VisualDensity.compact,
                                   ),
                                 ),
@@ -301,31 +403,54 @@ void showOfficialScoreModal(
                               if (onForceWin != null)
                                 FilledButton.icon(
                                   onPressed: onForceWin,
-                                  icon: const Icon(Icons.emoji_events_rounded, size: 15),
-                                  label: const Text('Xử thắng', style: TextStyle(fontSize: 11)),
+                                  icon: const Icon(
+                                    Icons.emoji_events_rounded,
+                                    size: 15,
+                                  ),
+                                  label: const Text(
+                                    'Xử thắng',
+                                    style: TextStyle(fontSize: 11),
+                                  ),
                                   style: FilledButton.styleFrom(
                                     backgroundColor: colors.error,
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
                                     visualDensity: VisualDensity.compact,
                                   ),
                                 ),
                               if (state.overrideEnabled) ...[
                                 const SizedBox(width: 6),
                                 FilledButton.icon(
-                                  onPressed: state.overrideReason.trim().isEmpty || state.isSubmitting
+                                  onPressed:
+                                      state.overrideReason.trim().isEmpty ||
+                                          state.isSubmitting
                                       ? null
                                       : () async {
-                                          final winnerTeam = state.team1SetWins >= state.team2SetWins ? 1 : 2;
+                                          final winnerTeam =
+                                              state.team1SetWins >=
+                                                  state.team2SetWins
+                                              ? 1
+                                              : 2;
                                           await n.completeMatch(winnerTeam);
                                         },
-                                  icon: const Icon(Icons.check_circle_rounded, size: 15),
+                                  icon: const Icon(
+                                    Icons.check_circle_rounded,
+                                    size: 15,
+                                  ),
                                   label: Text(
-                                    state.isSubmitting ? 'Đang lưu...' : 'Chốt kết quả',
+                                    state.isSubmitting
+                                        ? 'Đang lưu...'
+                                        : 'Chốt kết quả',
                                     style: const TextStyle(fontSize: 11),
                                   ),
                                   style: FilledButton.styleFrom(
                                     backgroundColor: colors.warning,
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
                                     visualDensity: VisualDensity.compact,
                                   ),
                                 ),

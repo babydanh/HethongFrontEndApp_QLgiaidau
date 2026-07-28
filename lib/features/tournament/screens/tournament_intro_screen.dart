@@ -204,44 +204,109 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
     return Stack(
       children: [
-        SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            children: [
-              _buildTopBar(tournament, colors),
-              TournamentHeaderView(
-                tournament: tournament,
-                colors: colors,
-                compact: false,
-              ),
-              SizedBox(
-                height: 38,
-                child: _TabBarDelegate(
-                  tabController: _tabController,
-                  colors: colors,
-                ).build(context, 0, false),
-              ),
-              teamsAsync.when(
-                data: (teams) => _buildTabContent(tournament, teams, role),
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Center(
+        Column(
+          children: [
+            _buildTopBar(tournament, colors),
+            Expanded(
+              child: NestedScrollView(
+                physics: const BouncingScrollPhysics(),
+                headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                  SliverToBoxAdapter(
+                    child: TournamentHeaderView(
+                      tournament: tournament,
+                      colors: colors,
+                      compact: false,
+                    ),
+                  ),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _TabBarDelegate(
+                      tabController: _tabController,
+                      colors: colors,
+                    ),
+                  ),
+                ],
+                body: teamsAsync.when(
+                  data: (teams) => TabBarView(
+                    controller: _tabController,
+                    children: [
+                      SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 160),
+                        child: AboutTab(
+                          tournament: tournament,
+                          teamCount: teams.length,
+                          resolveImageUrl: _resolveImageUrl,
+                        ),
+                      ),
+                      SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 160),
+                        child: tournament.isLite
+                            ? _buildLiteTeamList(teams)
+                            : TeamsTab(
+                                teams: teams,
+                                selectedDivision: _selectedDivision,
+                              ),
+                      ),
+                      SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 160),
+                        child: BracketTab(
+                          tournamentId: widget.tournamentId,
+                          selectedDivisionId: _selectedDivisionId,
+                        ),
+                      ),
+                      SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 160),
+                        child: GalleryTab(
+                          galleryImages: tournament.galleryImages,
+                          resolveImageUrl: _resolveImageUrl,
+                        ),
+                      ),
+                    ],
+                  ),
+                  loading: () => const Center(
                     child: CircularProgressIndicator(color: AppTheme.primary),
                   ),
+                  error: (e, _) => Center(
+                    child: Text(
+                      'Không thể tải dữ liệu đội',
+                      style: TextStyle(color: colors.textSecondary),
+                    ),
+                  ),
                 ),
-                error: (e, _) => _buildTabContent(tournament, [], role),
               ),
-              const SizedBox(height: 160),
-            ],
+            ),
+          ],
+        ),
+
+        // Fixed Compact Floating Registration Pill on the right side
+        if (_shouldShowRegistration(tournament))
+          Positioned(
+            right: 16,
+            bottom: 88,
+            child: _registrationButton(tournament),
           ),
-        ),
-        Positioned(
-          right: 16,
-          bottom: 96,
-          child: _buildBottomBar(tournament, role),
-        ),
       ],
     );
+  }
+
+  bool _shouldShowRegistration(Tournament tournament) {
+    final statusUpper = tournament.status.toUpperCase();
+    final isLiveOrEnded =
+        StatusHelper.isTournamentInProgress(tournament.status) ||
+        StatusHelper.isTournamentCompleted(tournament.status) ||
+        statusUpper == 'ONGOING' ||
+        statusUpper == 'IN_PROGRESS' ||
+        statusUpper == 'LIVE' ||
+        statusUpper == 'COMPLETED' ||
+        statusUpper == 'FINISHED' ||
+        statusUpper == 'CLOSED' ||
+        statusUpper == 'CANCELLED';
+
+    return !isLiveOrEnded;
   }
 
   Widget _buildTopBar(Tournament tournament, AppColorsExtension colors) {
@@ -251,87 +316,69 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       orElse: () => false,
     );
 
-    return Container(
-      color: colors.bgDark,
-      child: SafeArea(
-        bottom: false,
-        child: SizedBox(
-          height: kToolbarHeight,
-          child: Row(
-            children: [
-              IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: colors.bgCard.withValues(alpha: 0.8),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.arrow_back_rounded,
-                    color: colors.textPrimary,
-                    size: 20,
-                  ),
-                ),
-                onPressed: _goBack,
-              ),
-              Expanded(
-                child: Center(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    child: Text(
-                      tournament.name.toUpperCase(),
-                      key: ValueKey(tournament.name),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: _isFollowLoading
-                    ? SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppTheme.primary,
-                        ),
-                      )
-                    : Icon(
-                        isFollowing
-                            ? Icons.bookmark_rounded
-                            : Icons.bookmark_border_rounded,
-                        color: isFollowing
-                            ? AppTheme.primary
-                            : colors.textPrimary,
-                        size: 22,
-                      ),
-                onPressed: _isFollowLoading
-                    ? null
-                    : () => _toggleFollow(tournament, isFollowing),
-                tooltip: isFollowing ? 'Bỏ theo dõi' : 'Theo dõi',
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.share_rounded,
-                  color: colors.textPrimary,
-                  size: 20,
-                ),
-                onPressed: () => _shareTournament(tournament),
-                tooltip: 'Chia sẻ',
-              ),
-              const SizedBox(width: 8),
-            ],
+    return AppBar(
+      backgroundColor: colors.bgDark,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      centerTitle: true,
+      leading: IconButton(
+        icon: Container(
+          padding: const EdgeInsets.all(7),
+          decoration: BoxDecoration(
+            color: colors.bgCard.withValues(alpha: 0.88),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.arrow_back_rounded,
+            color: colors.textPrimary,
+            size: 19,
           ),
         ),
+        onPressed: _goBack,
       ),
+      title: Text(
+        tournament.name.toUpperCase(),
+        key: ValueKey(tournament.name),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: colors.textPrimary,
+          fontSize: 13.5,
+          fontWeight: FontWeight.w900,
+          letterSpacing: -0.1,
+        ),
+      ),
+      actions: [
+        IconButton(
+          icon: _isFollowLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppTheme.primary,
+                  ),
+                )
+              : Icon(
+                  isFollowing ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                  color: isFollowing ? AppTheme.primary : colors.textPrimary,
+                  size: 22,
+                ),
+          onPressed: _isFollowLoading ? null : () => _toggleFollow(tournament, isFollowing),
+          tooltip: isFollowing ? 'Bỏ theo dõi' : 'Theo dõi',
+        ),
+        IconButton(
+          icon: Icon(
+            Icons.share_rounded,
+            color: colors.textPrimary,
+            size: 20,
+          ),
+          onPressed: () => _shareTournament(tournament),
+          tooltip: 'Chia sẻ',
+        ),
+        const SizedBox(width: 4),
+      ],
     );
   }
 
@@ -577,34 +624,14 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  Widget _buildBottomBar(Tournament tournament, UserRole? role) {
-    final statusUpper = tournament.status.toUpperCase();
-
-    final isLiveOrEnded =
-        StatusHelper.isTournamentInProgress(tournament.status) ||
-        StatusHelper.isTournamentCompleted(tournament.status) ||
-        statusUpper == 'ONGOING' ||
-        statusUpper == 'IN_PROGRESS' ||
-        statusUpper == 'LIVE' ||
-        statusUpper == 'COMPLETED' ||
-        statusUpper == 'FINISHED' ||
-        statusUpper == 'CLOSED' ||
-        statusUpper == 'CANCELLED';
-
-    if (isLiveOrEnded) {
-      return const SizedBox.shrink();
-    }
-
-    return _registrationButton(tournament);
-  }
-
   Widget _registrationButton(Tournament tournament) {
     return Container(
       decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.25),
-            blurRadius: 10,
+            color: AppTheme.primary.withValues(alpha: 0.35),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -612,12 +639,18 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       child: FilledButton(
         style: FilledButton.styleFrom(
           backgroundColor: AppTheme.primary,
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
+            borderRadius: BorderRadius.circular(30),
           ),
         ),
         onPressed: () {
+          final auth = ref.read(authProvider);
+          if (!auth.isAuthenticated) {
+            context.push('/login');
+            return;
+          }
           if (tournament.isLite &&
               tournament.inviteCode != null &&
               tournament.inviteCode!.isNotEmpty) {
@@ -632,7 +665,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         },
         child: const Text(
           "Đăng ký",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
         ),
       ),
     );
@@ -652,62 +685,58 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     return Container(
-      color: colors.bgDark,
       width: double.infinity,
-      child: Stack(
-        children: [
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 1,
-              color: colors.border.withValues(alpha: 0.5),
-            ),
+      alignment: Alignment.centerLeft,
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        border: Border(
+          bottom: BorderSide(
+            color: colors.border.withValues(alpha: 0.5),
+            width: 1,
           ),
-          TabBar(
-            controller: tabController,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            labelPadding: const EdgeInsets.symmetric(horizontal: 16),
-            indicatorSize: TabBarIndicatorSize.tab,
-            indicator: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: AppTheme.primary.withValues(alpha: 0.3),
-              ),
-            ),
-            dividerColor: Colors.transparent,
-            labelColor: AppTheme.primary,
-            unselectedLabelColor: colors.textSecondary,
-            labelStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.normal,
-              fontSize: 13,
-            ),
-            tabs: const [
-              Tab(height: 32, text: "Giới thiệu"),
-              Tab(height: 32, text: "Danh sách đội"),
-              Tab(height: 32, text: "Bảng thi đấu"),
-              Tab(height: 32, text: "Thư viện"),
-            ],
+        ),
+      ),
+      child: TabBar(
+        controller: tabController,
+        isScrollable: true,
+        tabAlignment: TabAlignment.start,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 16),
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: BoxDecoration(
+          color: AppTheme.primary.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: AppTheme.primary.withValues(alpha: 0.3),
           ),
+        ),
+        dividerColor: Colors.transparent,
+        labelColor: AppTheme.primary,
+        unselectedLabelColor: colors.textSecondary,
+        labelStyle: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.normal,
+          fontSize: 13,
+        ),
+        tabs: const [
+          Tab(height: 34, text: "Giới thiệu"),
+          Tab(height: 34, text: "Danh sách đội"),
+          Tab(height: 34, text: "Bảng thi đấu"),
+          Tab(height: 34, text: "Thư viện"),
         ],
       ),
     );
   }
 
   @override
-  double get maxExtent => 38;
+  double get maxExtent => 44;
 
   @override
-  double get minExtent => 38;
+  double get minExtent => 44;
 
   @override
-  bool shouldRebuild(_TabBarDelegate oldDelegate) => false;
+  bool shouldRebuild(_TabBarDelegate oldDelegate) => true;
 }
