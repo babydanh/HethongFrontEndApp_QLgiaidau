@@ -1435,8 +1435,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             onPressed: () async {
               Navigator.pop(ctx);
               try {
-                await ref.read(matchRepositoryProvider).updateStatus(match.id, 'COMPLETED');
-                ref.invalidate(matchProvider(widget.matchId));
+                await ref.read(dioProvider).patch('/matches/${match.id}/status', data: {'status': 'COMPLETED'});
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
