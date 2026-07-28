@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/payment_model.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -29,11 +30,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   String _selectedGateway = 'PAYOS';
   bool _isSubmitting = false;
 
-  Future<void> _handleCheckout() async {
+  Future<void> _handleCheckout(double effectiveAmount, String? effectiveName) async {
     setState(() => _isSubmitting = true);
     try {
       // Free tournament handling
-      if (widget.amount <= 0) {
+      if (effectiveAmount <= 0) {
         await Future.delayed(const Duration(milliseconds: 300));
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -56,7 +57,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         CreatePaymentDto(
           tournamentId: widget.tournamentId,
           participantId: widget.participantId,
-          amount: widget.amount,
+          amount: effectiveAmount,
         ),
       );
 
@@ -75,13 +76,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           if (mounted) {
             context.pushReplacement('/payment/payos-verify', extra: {
               'paymentId': paymentId,
-              'amount': widget.amount,
+              'amount': effectiveAmount,
               'tournamentId': widget.tournamentId,
-              'tournamentName': widget.tournamentName,
+              'tournamentName': effectiveName,
             });
           }
         } else {
-          throw Exception('Không lấy được liên kết thanh toán');
+          throw Exception('Không lấy được liên kết thanh toán từ PayOS');
         }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -109,7 +110,24 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   Widget build(BuildContext context) {
     final fmt = NumberFormat('#,###', 'vi_VN');
     final colors = context.colors;
-    final isFree = widget.amount <= 0;
+
+    // Fetch fallback tournament details if widget.amount <= 0 or tournamentName is null
+    final tournamentAsync = widget.tournamentId.isNotEmpty
+        ? ref.watch(tournamentProvider(widget.tournamentId))
+        : null;
+    final tournament = tournamentAsync?.asData?.value;
+
+    final effectiveAmount = widget.amount > 0
+        ? widget.amount
+        : (tournament?.entryFee != null && tournament!.entryFee! > 0
+            ? tournament.entryFee!
+            : 0.0);
+
+    final effectiveName = (widget.tournamentName != null && widget.tournamentName!.isNotEmpty)
+        ? widget.tournamentName
+        : (tournament?.name ?? '');
+
+    final isFree = effectiveAmount <= 0;
 
     return Scaffold(
       backgroundColor: colors.bgDark,
@@ -164,18 +182,17 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    isFree ? '0đ' : '${fmt.format(widget.amount.ceil())}đ',
+                    isFree ? '0đ' : '${fmt.format(effectiveAmount.ceil())}đ',
                     style: TextStyle(
                       color: colors.textPrimary,
                       fontSize: 40,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  if (widget.tournamentName != null &&
-                      widget.tournamentName!.isNotEmpty) ...[
+                  if (effectiveName != null && effectiveName.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Text(
-                      widget.tournamentName!,
+                      effectiveName,
                       style: TextStyle(
                         color: colors.textSecondary,
                         fontSize: 14,
@@ -286,7 +303,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _handleCheckout,
+                onPressed: _isSubmitting ? null : () => _handleCheckout(effectiveAmount, effectiveName),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
@@ -307,7 +324,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     : Text(
                         isFree
                             ? 'Xác nhận tham gia (Miễn phí)'
-                            : 'Thanh toán ${fmt.format(widget.amount.ceil())}đ',
+                            : 'Thanh toán ${fmt.format(effectiveAmount.ceil())}đ',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
