@@ -144,11 +144,14 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   case 1:
                     return _buildParticipantsTab(colors, state, notifier);
                   case 2:
-                    // Lazy-load bracket API only after the tab is opened.
-                    return BracketViewScreen(
-                      tournamentId: widget.tournamentId,
-                      isEmbedded: true,
-                    );
+                    // Do not call the public bracket endpoint before the organizer
+                    // has created a Lite bracket.
+                    return state.hasBracket
+                        ? BracketViewScreen(
+                            tournamentId: widget.tournamentId,
+                            isEmbedded: true,
+                          )
+                        : _buildBracketTab(colors, state, notifier);
                   default:
                     return const SizedBox.shrink();
                 }
