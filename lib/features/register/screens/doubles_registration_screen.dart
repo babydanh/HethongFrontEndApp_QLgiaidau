@@ -644,6 +644,7 @@ class _DoublesRegistrationFlowState
         (_teamInviteToken != null
             ? '${Uri.base.origin}/tournaments/${widget.tournamentId}/join-team?pid=$_participantId&token=$_teamInviteToken'
             : null);
+    final showInvite = inviteLink != null || _teamInviteToken != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -672,10 +673,10 @@ class _DoublesRegistrationFlowState
           style: TextStyle(fontSize: 13, color: colors.textSecondary),
         ),
         const SizedBox(height: 24),
-        if (inviteLink != null) ...[
+        if (showInvite) ...[
           Center(
             child: QrImageView(
-              data: inviteLink,
+              data: inviteLink ?? _teamInviteToken!,
               version: QrVersions.auto,
               size: 200,
               backgroundColor: Colors.white,
@@ -704,7 +705,7 @@ class _DoublesRegistrationFlowState
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  inviteLink,
+                  inviteLink ?? _teamInviteToken!,
                   style: TextStyle(fontSize: 12, color: AppTheme.primary),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -717,7 +718,7 @@ class _DoublesRegistrationFlowState
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () {
-                Clipboard.setData(ClipboardData(text: inviteLink));
+                Clipboard.setData(ClipboardData(text: inviteLink ?? _teamInviteToken!));
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Đã sao chép'),
