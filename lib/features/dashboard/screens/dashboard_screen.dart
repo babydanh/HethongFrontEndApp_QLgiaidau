@@ -922,7 +922,7 @@ class _TournamentTile extends StatelessWidget {
     return InkWell(
       onTap: () {
         if (isOwner || isCoOrg) {
-          context.push('/organizer-lite/${tournament.id}');
+          context.push('/lite-manage/${tournament.id}');
         } else {
           context.push('/intro/${tournament.id}');
         }

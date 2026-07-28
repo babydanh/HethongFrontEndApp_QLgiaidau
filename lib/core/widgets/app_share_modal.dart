@@ -312,7 +312,7 @@ class AppShareModal {
     return Image.network(
       resolved,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => SvgPicture.network(
+      errorBuilder: (context, error, stackTrace) => SvgPicture.network(
         "https://giaidau.vnvar.com/vndcsport.svg",
         fit: BoxFit.contain,
         placeholderBuilder: (_) => const Icon(

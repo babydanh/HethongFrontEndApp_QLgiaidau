@@ -298,7 +298,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         title: club.name,
                         subtitle: '${club.locationAddress ?? "Việt Nam"} • ${club.memberCount} thành viên',
                         webUrl: 'https://giaidau.vnvar.com/communities/${club.id}',
-                        imageUrl: club.logoUrl ?? club.avatarUrl ?? club.bannerUrl,
+                        imageUrl: club.logoUrl ?? club.bannerUrl,
                         badgeText: 'Câu Lạc Bộ',
                       );
                     },
