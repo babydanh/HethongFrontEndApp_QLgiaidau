@@ -178,9 +178,10 @@ class AppShareModal {
                   label: 'Chia sẻ qua App',
                   onTap: () {
                     Navigator.pop(ctx);
-                    Share.share(
-                      '$title\n$subtitle\n\nXem chi tiết tại: $webUrl',
-                      subject: title,
+                    SharePlus.instance.share(
+                      ShareParams(
+                        text: '$title\n$subtitle\n\nXem chi tiết tại: $webUrl',
+                      ),
                     );
                   },
                 ),
