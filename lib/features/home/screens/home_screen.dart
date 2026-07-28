@@ -1600,6 +1600,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     items: const [
                       ('all', 'Tất cả'),
                       ('registration', 'Đăng ký'),
+                      ('upcoming', 'Sắp diễn ra'),
                       ('in_progress', 'Thi đấu'),
                       ('completed', 'Hoàn thành'),
                     ],
@@ -2300,6 +2301,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           t.status != "draft") {
         return false;
       }
+      if (_tournamentStatus == "upcoming" &&
+          t.status != "upcoming" &&
+          t.status != "scheduled") {
+        return false;
+      }
       if (_tournamentStatus == "in_progress" && t.status != "in_progress") {
         return false;
       }
@@ -2367,6 +2373,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 items: const [
                   (key: "all", label: "Tất cả"),
                   (key: "registration", label: "Đăng ký"),
+                  (key: "upcoming", label: "Sắp diễn ra"),
                   (key: "in_progress", label: "Thi đấu"),
                   (key: "completed", label: "Hoàn thành"),
                 ],
