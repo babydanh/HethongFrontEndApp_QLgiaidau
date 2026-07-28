@@ -18,8 +18,8 @@ class TennisScorePanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.watch(scorePanelNotifierProvider(params));
-    final state = notifier.state;
+    final state = ref.watch(scorePanelNotifierProvider(params));
+    final notifier = ref.read(scorePanelNotifierProvider(params).notifier);
     final t = state.tennis ?? const TennisGameState();
     final colors = context.colors;
     final ts = state.config;
