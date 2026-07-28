@@ -82,6 +82,7 @@ class AppConstants {
   static const String statusDraft = 'draft';
   static const String statusUpcoming = 'upcoming';
   static const String statusRegistration = 'registration';
+  static const String statusRegistrationClosed = 'registration_closed';
   static const String statusDrawing = 'drawing';
   static const String statusInProgress = 'in_progress';
   static const String statusCompleted = 'completed';
@@ -90,7 +91,8 @@ class AppConstants {
   static const Map<String, String> statusNames = {
     statusDraft: 'Nháp',
     statusUpcoming: 'Sắp diễn ra',
-    statusRegistration: 'Đang đăng ký',
+    statusRegistration: 'Đang mở đăng ký',
+    statusRegistrationClosed: 'Đã đóng đăng ký',
     statusDrawing: 'Bốc thăm',
     statusInProgress: 'Đang thi đấu',
     statusCompleted: 'Đã kết thúc',

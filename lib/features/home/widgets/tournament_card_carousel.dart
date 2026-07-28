@@ -90,16 +90,21 @@ class TournamentCardCarousel extends StatelessWidget {
     final colors = context.colors;
     final sportLabel = (AppConstants.sportNames[tournament.sport] ?? tournament.sport).toUpperCase();
     final normalizedStatus = StatusHelper.normalizeTournamentStatus(tournament.status);
-    String statusText = "ĐANG ĐĂNG KÝ";
+    String statusText = "ĐANG MỞ ĐĂNG KÝ";
     Color statusBg = const Color(0xFF2563EB);
     if (StatusHelper.isTournamentInProgress(normalizedStatus)) {
       statusText = "ĐANG DIỄN RA";
-      statusBg = const Color(0xFFEF4444);
+      statusBg = const Color(0xFF22C55E);
     } else if (StatusHelper.isTournamentCompleted(normalizedStatus)) {
       statusText = "ĐÃ KẾT THÚC";
       statusBg = Colors.grey.shade600;
+    } else if (StatusHelper.isTournamentRegistrationClosed(normalizedStatus) ||
+        tournament.status.toUpperCase() == 'REGISTRATION_CLOSED' ||
+        tournament.status.toUpperCase() == 'CLOSED') {
+      statusText = "ĐÃ ĐÓNG ĐĂNG KÝ";
+      statusBg = const Color(0xFFEF4444);
     } else if (StatusHelper.isTournamentRegistration(normalizedStatus)) {
-      statusText = "ĐANG ĐĂNG KÝ";
+      statusText = "ĐANG MỞ ĐĂNG KÝ";
       statusBg = const Color(0xFF2563EB);
     }
 

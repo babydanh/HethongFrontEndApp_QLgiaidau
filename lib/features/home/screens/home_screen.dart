@@ -3168,7 +3168,10 @@ class _TournamentCard extends StatelessWidget {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF97316),
+                        color: StatusHelper.getTournamentStatusColor(
+                          tournament.status,
+                          context,
+                        ),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(

@@ -282,31 +282,14 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           ],
         ),
 
-        // Fixed Compact Floating Registration Pill on the right side
-        if (_shouldShowRegistration(tournament))
-          Positioned(
-            right: 16,
-            bottom: 88,
-            child: _registrationButton(tournament),
-          ),
+        // Floating Registration Button (Active or Disabled if closed)
+        Positioned(
+          right: 16,
+          bottom: 88,
+          child: _registrationButton(tournament),
+        ),
       ],
     );
-  }
-
-  bool _shouldShowRegistration(Tournament tournament) {
-    final statusUpper = tournament.status.toUpperCase();
-    final isLiveOrEnded =
-        StatusHelper.isTournamentInProgress(tournament.status) ||
-        StatusHelper.isTournamentCompleted(tournament.status) ||
-        statusUpper == 'ONGOING' ||
-        statusUpper == 'IN_PROGRESS' ||
-        statusUpper == 'LIVE' ||
-        statusUpper == 'COMPLETED' ||
-        statusUpper == 'FINISHED' ||
-        statusUpper == 'CLOSED' ||
-        statusUpper == 'CANCELLED';
-
-    return !isLiveOrEnded;
   }
 
   Widget _buildTopBar(Tournament tournament, AppColorsExtension colors) {
@@ -625,47 +608,69 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _registrationButton(Tournament tournament) {
+    final now = DateTime.now();
+    final statusUpper = tournament.status.toUpperCase();
+    final isClosed = statusUpper == 'REGISTRATION_CLOSED' ||
+        statusUpper == 'CLOSED' ||
+        statusUpper == 'IN_PROGRESS' ||
+        statusUpper == 'ONGOING' ||
+        statusUpper == 'COMPLETED' ||
+        statusUpper == 'FINISHED' ||
+        statusUpper == 'CANCELLED' ||
+        (tournament.registrationEndDate != null && now.isAfter(tournament.registrationEndDate!));
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.35),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: isClosed
+            ? []
+            : [
+                BoxShadow(
+                  color: AppTheme.primary.withValues(alpha: 0.35),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: FilledButton(
         style: FilledButton.styleFrom(
-          backgroundColor: AppTheme.primary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+          backgroundColor: isClosed ? context.colors.bgCard : AppTheme.primary,
+          disabledBackgroundColor: context.colors.bgCard,
+          foregroundColor: isClosed ? context.colors.textMuted : Colors.white,
+          disabledForegroundColor: context.colors.textMuted,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
+            side: isClosed ? BorderSide(color: context.colors.border) : BorderSide.none,
           ),
         ),
-        onPressed: () {
-          final auth = ref.read(authProvider);
-          if (!auth.isAuthenticated) {
-            context.push('/login');
-            return;
-          }
-          if (tournament.isLite &&
-              tournament.inviteCode != null &&
-              tournament.inviteCode!.isNotEmpty) {
-            context.push('/lite-join/${tournament.inviteCode}');
-            return;
-          }
-          final query =
-              _selectedDivisionId != null && _selectedDivisionId!.isNotEmpty
-              ? '?divisionId=$_selectedDivisionId'
-              : '';
-          context.push('/register/${tournament.id}$query');
-        },
-        child: const Text(
-          "Đăng ký",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        onPressed: isClosed
+            ? null
+            : () {
+                final auth = ref.read(authProvider);
+                if (!auth.isAuthenticated) {
+                  context.push('/login');
+                  return;
+                }
+                if (tournament.isLite &&
+                    tournament.inviteCode != null &&
+                    tournament.inviteCode!.isNotEmpty) {
+                  context.push('/lite-join/${tournament.inviteCode}');
+                  return;
+                }
+                final query =
+                    _selectedDivisionId != null && _selectedDivisionId!.isNotEmpty
+                    ? '?divisionId=$_selectedDivisionId'
+                    : '';
+                context.push('/register/${tournament.id}$query');
+              },
+        child: Text(
+          isClosed ? "Đã đóng đăng ký" : "Đăng ký ngay",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+            color: isClosed ? context.colors.textMuted : Colors.white,
+          ),
         ),
       ),
     );

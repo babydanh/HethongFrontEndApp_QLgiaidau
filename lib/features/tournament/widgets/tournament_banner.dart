@@ -364,8 +364,18 @@ _PrimaryActionTag _resolvePrimaryActionTag(
     );
   }
 
+  if (StatusHelper.isTournamentRegistrationClosed(tournament.status) ||
+      tournament.status.toUpperCase() == 'REGISTRATION_CLOSED' ||
+      tournament.status.toUpperCase() == 'CLOSED') {
+    return _PrimaryActionTag(
+      label: 'ĐÃ ĐÓNG ĐĂNG KÝ',
+      icon: Icons.lock_outline_rounded,
+      iconColor: context.colors.error,
+    );
+  }
+
   return const _PrimaryActionTag(
-    label: 'ĐĂNG KÝ',
+    label: 'ĐANG MỞ ĐĂNG KÝ',
     icon: Icons.person_add_alt_1_rounded,
     iconColor: AppTheme.primary,
   );
@@ -761,7 +771,19 @@ class _TournamentBannerState extends State<TournamentBanner> {
                       children: [
                         Row(
                           children: [
-                            _buildTag("ĐĂNG KÝ", colors),
+                            _buildTag(
+                              (StatusHelper.isTournamentRegistrationClosed(widget.tournament.status) ||
+                                      widget.tournament.status.toUpperCase() == 'REGISTRATION_CLOSED' ||
+                                      widget.tournament.status.toUpperCase() == 'CLOSED')
+                                  ? "ĐÃ ĐÓNG ĐĂNG KÝ"
+                                  : "ĐANG MỞ ĐĂNG KÝ",
+                              colors,
+                              color: (StatusHelper.isTournamentRegistrationClosed(widget.tournament.status) ||
+                                      widget.tournament.status.toUpperCase() == 'REGISTRATION_CLOSED' ||
+                                      widget.tournament.status.toUpperCase() == 'CLOSED')
+                                  ? colors.error
+                                  : null,
+                            ),
                             const SizedBox(width: 6),
                             _buildTag(
                               "VÒNG TRÒN",

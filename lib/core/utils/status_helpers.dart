@@ -8,10 +8,10 @@ class StatusHelper {
     return switch (status) {
       'DRAFT' => AppConstants.statusDraft,
       'UPCOMING' => AppConstants.statusUpcoming,
-      'REGISTRATION_OPEN' || 'REGISTRATION_CLOSED' => AppConstants.statusRegistration,
+      'REGISTRATION_OPEN' => AppConstants.statusRegistration,
+      'REGISTRATION_CLOSED' || 'CLOSED' => AppConstants.statusRegistrationClosed,
       'ONGOING' || 'IN_PROGRESS' => AppConstants.statusInProgress,
-      'COMPLETED' => AppConstants.statusCompleted,
-      'FINISHED' => AppConstants.statusCompleted,
+      'COMPLETED' || 'FINISHED' => AppConstants.statusCompleted,
       'CANCELLED' => AppConstants.statusCancelled,
       _ => rawStatus?.toLowerCase() ?? AppConstants.statusDraft,
     };
@@ -25,6 +25,7 @@ class StatusHelper {
   static bool isTournamentDraft(String status) => normalizeTournamentStatus(status) == AppConstants.statusDraft;
   static bool isTournamentUpcoming(String status) => normalizeTournamentStatus(status) == AppConstants.statusUpcoming;
   static bool isTournamentRegistration(String status) => normalizeTournamentStatus(status) == AppConstants.statusRegistration;
+  static bool isTournamentRegistrationClosed(String status) => normalizeTournamentStatus(status) == AppConstants.statusRegistrationClosed;
   static bool isTournamentInProgress(String status) => normalizeTournamentStatus(status) == AppConstants.statusInProgress;
   static bool isTournamentCompleted(String status) => normalizeTournamentStatus(status) == AppConstants.statusCompleted;
   static bool isTournamentCancelled(String status) => normalizeTournamentStatus(status) == AppConstants.statusCancelled;
@@ -33,6 +34,7 @@ class StatusHelper {
     final normalized = normalizeTournamentStatus(status);
     return switch (normalized) {
       AppConstants.statusRegistration => const Color(0xFF2563EB),
+      AppConstants.statusRegistrationClosed => const Color(0xFFEF4444),
       AppConstants.statusUpcoming => context.colors.info,
       AppConstants.statusDrawing => context.colors.warning,
       AppConstants.statusInProgress => const Color(0xFF22C55E),
