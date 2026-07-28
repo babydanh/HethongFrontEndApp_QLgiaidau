@@ -610,13 +610,18 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   Widget _registrationButton(Tournament tournament) {
     final now = DateTime.now();
     final statusUpper = tournament.status.toUpperCase();
-    final isClosed = statusUpper == 'REGISTRATION_CLOSED' ||
-        statusUpper == 'CLOSED' ||
-        statusUpper == 'IN_PROGRESS' ||
+
+    // Hide button completely if tournament is already in progress, completed or cancelled
+    if (statusUpper == 'IN_PROGRESS' ||
         statusUpper == 'ONGOING' ||
         statusUpper == 'COMPLETED' ||
         statusUpper == 'FINISHED' ||
-        statusUpper == 'CANCELLED' ||
+        statusUpper == 'CANCELLED') {
+      return const SizedBox.shrink();
+    }
+
+    final isClosed = statusUpper == 'REGISTRATION_CLOSED' ||
+        statusUpper == 'CLOSED' ||
         (tournament.registrationEndDate != null && now.isAfter(tournament.registrationEndDate!));
 
     return Container(
