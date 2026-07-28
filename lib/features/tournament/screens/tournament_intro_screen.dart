@@ -16,6 +16,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/about_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/gallery_tab.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -409,10 +410,14 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Future<void> _shareTournament(Tournament tournament) async {
-    final text =
-        '${tournament.name} - ${tournament.category ?? tournament.sport}';
-    final url = 'https://giaidau.vnvar.com/tournaments/${tournament.id}';
-    await SharePlus.instance.share(ShareParams(text: '$text\n\n$url'));
+    AppShareModal.show(
+      context: context,
+      title: tournament.name,
+      subtitle: '${tournament.locationAddress ?? "Việt Nam"} • ${tournament.category ?? tournament.sport}',
+      webUrl: 'https://giaidau.vnvar.com/tournaments/${tournament.id}',
+      imageUrl: tournament.bannerUrl ?? tournament.logoUrl,
+      badgeText: tournament.isLite ? 'Giải Nhanh (Lite)' : 'Giải Nâng Cao',
+    );
   }
 
   Widget _buildTabContent(

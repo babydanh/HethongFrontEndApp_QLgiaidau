@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_ranking_widget.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 
 class ClubDetailScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -291,7 +292,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       size: 18,
                       color: colors.textPrimary,
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      AppShareModal.show(
+                        context: context,
+                        title: club.name,
+                        subtitle: '${club.locationAddress ?? "Việt Nam"} • ${club.memberCount} thành viên',
+                        webUrl: 'https://giaidau.vnvar.com/communities/${club.id}',
+                        imageUrl: club.logoUrl,
+                        badgeText: 'Câu Lạc Bộ',
+                      );
+                    },
                   ),
                 ),
               ],
@@ -730,9 +740,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           ),
         ),
         const SizedBox(height: 24),
-        _sectionTitle("XẾP HẠNG ELO", colors),
-        const SizedBox(height: 10),
-        ClubRankingWidget(clubId: widget.clubId, compact: true),
       ],
     );
   }
