@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
+import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 
 class ClubRankingWidget extends ConsumerStatefulWidget {
   final String clubId;
@@ -62,7 +63,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
       final categoryId = _selectedCategoryId ??
           (categories.isNotEmpty ? categories.first.id : null);
       if (categoryId == null || categoryId.isEmpty) {
-        throw StateError('Chưa có môn thể thao để tải bảng xếp hạng CLB.');
+        _selectedCategoryId = null;
       }
       _selectedCategoryId = categoryId;
       final queryParams = <String, dynamic>{
@@ -70,7 +71,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         'scope': 'COMMUNITY',
         'matchType': _selectedMatchType,
         'genderRestriction': _selectedGender,
-        'categoryId': categoryId,
+        if (categoryId != null && categoryId.isNotEmpty) 'categoryId': categoryId,
         'limit': widget.compact ? 3 : 20,
       };
       final response = await dio.get(
@@ -81,9 +82,31 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
       final List<dynamic> dataList = raw is Map<String, dynamic>
           ? (raw['data'] as List<dynamic>? ?? [])
           : (raw as List<dynamic>? ?? []);
-      final rankings = dataList
+      var rankings = dataList
           .map((json) => PlayerRanking.fromJson(json as Map<String, dynamic>))
           .toList();
+      if (rankings.isEmpty) {
+        final membersResponse = await dio.get('/communities/${widget.clubId}/members');
+        final rawMembers = membersResponse.data is Map<String, dynamic>
+            ? (membersResponse.data['data'] as List<dynamic>? ?? const [])
+            : (membersResponse.data as List<dynamic>? ?? const []);
+        rankings = rawMembers
+            .map((item) => CommunityMemberModel.fromJson(item as Map<String, dynamic>))
+            .where((member) => member.status == 'JOINED')
+            .map(
+              (member) => PlayerRanking(
+                id: 'community-member-${member.id}',
+                userId: member.userId,
+                fullName: member.userFullName ?? member.userEmail ?? 'Thành viên',
+                avatarUrl: member.userAvatarUrl,
+                categoryId: categoryId,
+                matchType: _selectedMatchType,
+                genderRestriction: _selectedGender,
+                tierName: 'Chưa xếp hạng',
+              ),
+            )
+            .toList();
+      }
       if (mounted) {
         setState(() {
           _rankings = rankings;
