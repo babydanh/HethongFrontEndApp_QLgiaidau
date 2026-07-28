@@ -47,18 +47,23 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
     super.dispose();
   }
 
-  void _centerInitialView(Size viewport, Size canvas, double scale) {
+  void _centerInitialView(Size viewport, Size canvas) {
     if (_didCenterInitialView || viewport.width <= 0 || viewport.height <= 0) {
       return;
     }
     _didCenterInitialView = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final dx = ((viewport.width - canvas.width * scale) / 2).clamp(16.0, double.infinity);
-      final dy = ((viewport.height - canvas.height * scale) / 2).clamp(16.0, double.infinity);
+      // Compute scale to fit canvas within viewport with 85% margin
+      final scaleX = viewport.width / canvas.width;
+      final scaleY = viewport.height / canvas.height;
+      final fitScale = (scaleX < scaleY ? scaleX : scaleY) * 0.85;
+
+      final dx = ((viewport.width - canvas.width * fitScale) / 2).clamp(16.0, double.infinity);
+      final dy = ((viewport.height - canvas.height * fitScale) / 2).clamp(16.0, double.infinity);
       _tc.value = Matrix4.identity()
         ..translate(dx, dy)
-        ..scale(scale);
+        ..scale(fitScale);
     });
   }
 
@@ -131,7 +136,6 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
         _centerInitialView(
           Size(constraints.maxWidth, constraints.maxHeight),
           canvasSize,
-          0.6,
         );
 
         return InteractiveViewer(
@@ -140,7 +144,8 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
           boundaryMargin: const EdgeInsets.all(800),
           minScale: 0.2,
           maxScale: 2.5,
-          child: Padding(
+          child: RepaintBoundary(
+            child: Padding(
             padding: const EdgeInsets.all(40),
             child: SizedBox(
               width: layout.width,
@@ -150,7 +155,8 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                 children: [
               // ── Band background labels ──
               if (wRounds.isNotEmpty)
-                Positioned(
+                RepaintBoundary(
+                  child: Positioned(
                   left: 0,
                   top: layout.winnersTop - 80,
                   child: _DeBandLabel(
@@ -159,9 +165,10 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                     color: const Color(0xFF0284C7),
                     width: layout.winnersBandWidth,
                   ),
-                ),
+                )),
               if (lRounds.isNotEmpty)
-                Positioned(
+                RepaintBoundary(
+                  child: Positioned(
                   left: 0,
                   top: layout.losersTop - 80,
                   child: _DeBandLabel(
@@ -170,14 +177,15 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                     color: colors.textSecondary,
                     width: layout.losersBandWidth,
                   ),
-                ),
+                )),
               if (bands.finals.isNotEmpty)
-                Positioned(
+                RepaintBoundary(
+                  child: Positioned(
                   left: layout.grandFinalX,
                   top: layout.grandFinalTop - 36,
                   width: _kCardW,
                   child: _DeRoundHeader(label: 'CHUNG KẾT TỔNG'),
-                ),
+                )),
 
               // ── Connector lines ──
               Positioned.fill(
@@ -206,12 +214,13 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                 } else {
                   label = MatchRoundLabel.doubleUpperHeader(fromEnd);
                 }
-                return Positioned(
+                return RepaintBoundary(
+                  child: Positioned(
                   left: layout.winnerColumnX(round),
                   top: layout.winnersTop - 36,
                   width: _kCardW,
                   child: _DeRoundHeader(label: label),
-                );
+                ));
               }),
 
               // ── Round headers — losers band ──
@@ -227,19 +236,21 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                 } else {
                   label = MatchRoundLabel.doubleLowerHeader(fromEnd, round);
                 }
-                return Positioned(
+                return RepaintBoundary(
+                  child: Positioned(
                   left: layout.loserColumnX(round),
                   top: layout.losersTop - 36,
                   width: _kCardW,
                   child: _DeRoundHeader(label: label),
-                );
+                ));
               }),
 
               // ── Match cards ──
               ...widget.matches.map((match) {
                 final pos = positions[match.id];
                 if (pos == null) return const SizedBox.shrink();
-                return Positioned(
+                return RepaintBoundary(
+                  child: Positioned(
                   left: pos.dx,
                   top: pos.dy,
                   width: _kCardW,
@@ -251,11 +262,12 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                     isReadOnly: widget.isReadOnly,
                     isGrandFinal: match.nextMatchId.isEmpty,
                   ),
-                );
+                ));
               }),
                 ],
               ),
             ),
+          ),
           ),
         );
       },

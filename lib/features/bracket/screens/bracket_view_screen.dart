@@ -50,6 +50,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
+      if (_tabController.indexIsChanging) return;
       if (mounted) setState(() {});
     });
 

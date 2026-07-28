@@ -120,24 +120,29 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     return terminalMatches.isEmpty ? null : terminalMatches.first.id;
   }
 
-  void _centerInitialView(Size viewport, Size canvas, double scale) {
+  void _centerInitialView(Size viewport, Size canvas) {
     if (_didCenterInitialView || viewport.width <= 0 || viewport.height <= 0) {
       return;
     }
     _didCenterInitialView = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final dx = ((viewport.width - canvas.width * scale) / 2).clamp(
+      // Compute scale to fit canvas within viewport with 85% margin
+      final scaleX = viewport.width / canvas.width;
+      final scaleY = viewport.height / canvas.height;
+      final fitScale = (scaleX < scaleY ? scaleX : scaleY) * 0.85;
+
+      final dx = ((viewport.width - canvas.width * fitScale) / 2).clamp(
         16.0,
         double.infinity,
       );
-      final dy = ((viewport.height - canvas.height * scale) / 2).clamp(
+      final dy = ((viewport.height - canvas.height * fitScale) / 2).clamp(
         16.0,
         double.infinity,
       );
       _tc.value = Matrix4.identity()
-        ..setEntry(0, 0, scale)
-        ..setEntry(1, 1, scale)
+        ..setEntry(0, 0, fitScale)
+        ..setEntry(1, 1, fitScale)
         ..setEntry(0, 3, dx)
         ..setEntry(1, 3, dy);
     });
@@ -176,16 +181,16 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
         _centerInitialView(
           Size(constraints.maxWidth, constraints.maxHeight),
           canvasSize,
-          0.72,
         );
 
-        return InteractiveViewer(
+                return InteractiveViewer(
           transformationController: _tc,
           constrained: false,
           boundaryMargin: const EdgeInsets.all(800),
           minScale: 0.25,
           maxScale: 2.5,
-          child: Padding(
+          child: RepaintBoundary(
+            child: Padding(
             padding: const EdgeInsets.all(40),
             child: SizedBox(
               width: canvasW,
@@ -209,17 +214,19 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
                     final columnIndex = entry.key;
                     final colX = columnIndex * (_kCardW + _kColGap);
                     final roundName = _getRoundLabel(columnIndex, totalRounds);
-                    return Positioned(
+                    return RepaintBoundary(
+                      child: Positioned(
                       left: colX,
                       top: -42,
                       width: _kCardW,
                       child: _RoundHeader(label: roundName),
-                    );
+                    ));
                   }),
                   ...diagramMatches.map((match) {
                     final pos = positions[match.id];
                     if (pos == null) return const SizedBox.shrink();
-                    return Positioned(
+                    return RepaintBoundary(
+                      child: Positioned(
                       left: pos.dx,
                       top: pos.dy,
                       width: _kCardW,
@@ -231,11 +238,12 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
                         isReadOnly: widget.isReadOnly,
                         isGrandFinal: match.id == finalMatchId,
                       ),
-                    );
+                    ));
                   }),
                 ],
               ),
             ),
+          ),
           ),
         );
       },
