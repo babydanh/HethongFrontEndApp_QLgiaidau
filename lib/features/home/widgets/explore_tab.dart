@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
@@ -1552,8 +1553,13 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
               Expanded(
                 child: InkWell(
                   onTap: () {
-                    final text = '${m.team1Name} vs ${m.team2Name} - ${m.tournamentName ?? 'Giải đấu'}';
-                    SharePlus.instance.share(ShareParams(text: text));
+                    AppShareModal.show(
+                      context: context,
+                      title: '${m.team1Name} VS ${m.team2Name}',
+                      subtitle: 'Giải đấu: ${m.tournamentName ?? "Giao hữu"} • ${m.court.isNotEmpty ? m.court : "Đang thi đấu"}',
+                      webUrl: 'https://giaidau.vnvar.com/live/${m.id}',
+                      badgeText: m.isLive ? 'Trận đấu đang Live 🔴' : 'Trận đấu',
+                    );
                   },
                   borderRadius: BorderRadius.circular(10),
                   child: Container(

@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/domain/entities/elo_history_log.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 
 /// Trang xem hồ sơ công khai của người dùng khác.
 ///
@@ -78,6 +79,28 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             ),
             onPressed: () => context.pop(),
           ),
+          actions: [
+            IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colors.bgCard.withValues(alpha: 0.8),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.share_rounded, color: colors.textPrimary, size: 20),
+              ),
+              onPressed: () {
+                AppShareModal.show(
+                  context: context,
+                  title: profile.fullName,
+                  subtitle: profile.bio ?? 'Hồ sơ Vận động viên',
+                  webUrl: 'https://giaidau.vnvar.com/profile/user/${widget.userId}',
+                  imageUrl: profile.avatarUrl,
+                  badgeText: 'Thẻ VĐV & ELO',
+                );
+              },
+            ),
+          ],
           flexibleSpace: FlexibleSpaceBar(
             background: _buildCoverSection(context, profile, colors),
           ),

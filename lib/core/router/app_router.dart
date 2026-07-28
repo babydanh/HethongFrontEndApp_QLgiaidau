@@ -580,14 +580,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const DashboardScreen(),
       ),
       GoRoute(
-        path: '/organizer-lite/:id',
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return LitePairingScreen(tournamentId: id);
-        },
-      ),
-
-      GoRoute(
         path: '/lite-pairing/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;

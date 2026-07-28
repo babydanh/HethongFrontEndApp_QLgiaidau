@@ -71,13 +71,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(height: 12),
               ListTile(
-                leading: const Icon(Icons.camera_alt_rounded, color: AppTheme.primary),
-                title: Text('Chụp ảnh mới', style: TextStyle(color: colors.textPrimary)),
+                leading: const Icon(
+                  Icons.camera_alt_rounded,
+                  color: AppTheme.primary,
+                ),
+                title: Text(
+                  'Chụp ảnh mới',
+                  style: TextStyle(color: colors.textPrimary),
+                ),
                 onTap: () => Navigator.pop(context, ImageSource.camera),
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library_rounded, color: AppTheme.primary),
-                title: Text('Chọn từ thư viện', style: TextStyle(color: colors.textPrimary)),
+                leading: const Icon(
+                  Icons.photo_library_rounded,
+                  color: AppTheme.primary,
+                ),
+                title: Text(
+                  'Chọn từ thư viện',
+                  style: TextStyle(color: colors.textPrimary),
+                ),
                 onTap: () => Navigator.pop(context, ImageSource.gallery),
               ),
               const SizedBox(height: 12),
@@ -104,13 +116,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ref.invalidate(userProfileProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Ảnh bìa đã được cập nhật'), backgroundColor: Color(0xFF10B981), behavior: SnackBarBehavior.floating),
+            const SnackBar(
+              content: Text('Ảnh bìa đã được cập nhật'),
+              backgroundColor: Color(0xFF10B981),
+              behavior: SnackBarBehavior.floating,
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lỗi: ${e.toString().replaceAll("Exception: ", "")}'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+            SnackBar(
+              content: Text(
+                'Lỗi: ${e.toString().replaceAll("Exception: ", "")}',
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
           );
         }
       } finally {
@@ -124,13 +146,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ref.invalidate(userProfileProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Ảnh đại diện đã được cập nhật'), backgroundColor: Color(0xFF10B981), behavior: SnackBarBehavior.floating),
+            const SnackBar(
+              content: Text('Ảnh đại diện đã được cập nhật'),
+              backgroundColor: Color(0xFF10B981),
+              behavior: SnackBarBehavior.floating,
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lỗi: ${e.toString().replaceAll("Exception: ", "")}'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+            SnackBar(
+              content: Text(
+                'Lỗi: ${e.toString().replaceAll("Exception: ", "")}',
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
           );
         }
       } finally {
@@ -160,19 +192,37 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: context.colors.textPrimary,
+          ),
           onPressed: () => context.go('/home'),
         ),
         title: Text(
           'Hồ sơ',
-          style: TextStyle(color: context.colors.textPrimary, fontWeight: FontWeight.w900, fontSize: 20),
+          style: TextStyle(
+            color: context.colors.textPrimary,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+          ),
         ),
         centerTitle: true,
         actions: [
           TextButton.icon(
             onPressed: () => context.go('/profile/edit'),
-            icon: const Icon(Icons.edit_rounded, size: 18, color: AppTheme.primary),
-            label: const Text('Sửa', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700, fontSize: 14)),
+            icon: const Icon(
+              Icons.edit_rounded,
+              size: 18,
+              color: AppTheme.primary,
+            ),
+            label: const Text(
+              'Sửa',
+              style: TextStyle(
+                color: AppTheme.primary,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            ),
           ),
           const SizedBox(width: 4),
         ],
@@ -207,7 +257,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           'Hồ sơ',
           style: TextStyle(
             color: colors.textPrimary,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
             fontSize: 20,
           ),
         ),
@@ -231,7 +281,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 'Xin chào!',
                 style: TextStyle(
                   fontSize: 24,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   color: colors.textPrimary,
                   letterSpacing: -0.3,
                 ),
@@ -260,7 +310,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                     ),
                   ),
                 ),
@@ -320,10 +370,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: _buildTabButton(0, "Thông tin", Icons.person_outline_rounded),
+                    child: _buildTabButton(
+                      0,
+                      "Thông tin",
+                      Icons.person_outline_rounded,
+                    ),
                   ),
                   Expanded(
-                    child: _buildTabButton(1, "Tài khoản", Icons.manage_accounts_outlined),
+                    child: _buildTabButton(
+                      1,
+                      "Tài khoản",
+                      Icons.manage_accounts_outlined,
+                    ),
                   ),
                 ],
               ),
@@ -388,10 +446,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget _buildSportFilterChips(AppColorsExtension colors) {
     final sports = const [
       {'id': 'all', 'label': 'Tất cả', 'icon': Icons.grid_view_rounded},
-      {'id': 'pickleball', 'label': 'Pickleball', 'icon': Icons.sports_tennis_rounded},
-      {'id': 'badminton', 'label': 'Cầu lông', 'icon': Icons.sports_tennis_outlined},
+      {
+        'id': 'pickleball',
+        'label': 'Pickleball',
+        'icon': Icons.sports_tennis_rounded,
+      },
+      {
+        'id': 'badminton',
+        'label': 'Cầu lông',
+        'icon': Icons.sports_tennis_outlined,
+      },
       {'id': 'table_tennis', 'label': 'Bóng bàn', 'icon': Icons.sports_rounded},
-      {'id': 'tennis', 'label': 'Tennis', 'icon': Icons.sports_baseball_rounded},
+      {
+        'id': 'tennis',
+        'label': 'Tennis',
+        'icon': Icons.sports_baseball_rounded,
+      },
     ];
 
     return SizedBox(
@@ -413,7 +483,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
                 color: isSelected ? AppTheme.primary : colors.bgCard,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                 border: Border.all(
                   color: isSelected ? AppTheme.primary : colors.border,
                 ),
@@ -423,7 +493,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           color: AppTheme.primary.withValues(alpha: 0.25),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
-                        )
+                        ),
                       ]
                     : null,
               ),
@@ -440,7 +510,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     sport['label'] as String,
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w600,
                       color: isSelected ? Colors.white : colors.textSecondary,
                     ),
                   ),
@@ -509,7 +581,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               gradient: profile.coverUrl != null && profile.coverUrl!.isNotEmpty
                   ? null
                   : const LinearGradient(
-                      colors: [Color(0xFF1A1A2E), Color(0xFF16213E), Color(0xFF0F3460)],
+                      colors: [
+                        Color(0xFF1A1A2E),
+                        Color(0xFF16213E),
+                        Color(0xFF0F3460),
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -518,12 +594,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ? Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(profile.coverUrl!, fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => _coverGradient()),
+                      Image.network(
+                        profile.coverUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _coverGradient(),
+                      ),
                       Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [Colors.transparent, colors.bgDark.withValues(alpha: 0.5)],
+                            colors: [
+                              Colors.transparent,
+                              colors.bgDark.withValues(alpha: 0.5),
+                            ],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                           ),
@@ -546,11 +629,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.45),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1.5),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  width: 1.5,
+                ),
               ),
               child: _uploadingCover
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Icon(Icons.camera_alt_rounded, size: 17, color: Colors.white),
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.camera_alt_rounded,
+                      size: 17,
+                      color: Colors.white,
+                    ),
             ),
           ),
         ),
@@ -569,19 +666,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: const LinearGradient(colors: [AppTheme.primary, AppTheme.primaryLight]),
-                      boxShadow: [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.35), blurRadius: 16, offset: const Offset(0, 4))],
+                      gradient: const LinearGradient(
+                        colors: [AppTheme.primary, AppTheme.primaryLight],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primary.withValues(alpha: 0.35),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Center(
                       child: Container(
                         width: 94,
                         height: 94,
-                        decoration: BoxDecoration(shape: BoxShape.circle, color: colors.bgSurface),
-                        child: profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: colors.bgSurface,
+                        ),
+                        child:
+                            profile.avatarUrl != null &&
+                                profile.avatarUrl!.isNotEmpty
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(47),
-                                child: Image.network(profile.avatarUrl!, fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) => _avatarFallback(context, profile),
+                                child: Image.network(
+                                  profile.avatarUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      _avatarFallback(context, profile),
                                 ),
                               )
                             : _avatarFallback(context, profile),
@@ -600,8 +713,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         border: Border.all(color: colors.bgDark, width: 2.5),
                       ),
                       child: _uploading
-                          ? const Padding(padding: EdgeInsets.all(6), child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Icon(Icons.camera_alt_rounded, size: 16, color: Colors.white),
+                          ? const Padding(
+                              padding: EdgeInsets.all(6),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.camera_alt_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                     ),
                   ),
                 ],
@@ -614,21 +737,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _coverGradient() => const DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF1A1A2E), Color(0xFF16213E), Color(0xFF0F3460)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-      );
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [Color(0xFF1A1A2E), Color(0xFF16213E), Color(0xFF0F3460)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    ),
+  );
 
   Widget _avatarFallback(BuildContext context, UserProfile profile) {
     final colors = context.colors;
     return Center(
       child: Text(
         _initials(profile.fullName ?? ''),
-        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: colors.textSecondary),
+        style: TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.w700,
+          color: colors.textSecondary,
+        ),
       ),
     );
   }
@@ -670,7 +797,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 22,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
               color: colors.textPrimary,
               letterSpacing: -0.3,
             ),
@@ -682,8 +809,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3.5),
             decoration: BoxDecoration(
               color: const Color(0xFFEFF6FF), // bg-blue-50
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFBFDBFE)), // border-blue-200
+              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+              border: Border.all(
+                color: const Color(0xFFBFDBFE),
+              ), // border-blue-200
             ),
             child: Text(
               roleText,
@@ -705,7 +834,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Flexible(
                 child: Text(
                   profile.email ?? '',
-                  style: TextStyle(fontSize: 13, color: colors.textSecondary, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -726,11 +859,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.calendar_today_outlined, size: 13, color: colors.textMuted),
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 13,
+                color: colors.textMuted,
+              ),
               const SizedBox(width: 5),
               Text(
                 'Đã tham gia từ $joinedDateText',
-                style: TextStyle(fontSize: 12.5, color: colors.textSecondary, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: colors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
@@ -748,7 +889,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Text(
                 profile.bio!,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.4),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colors.textSecondary,
+                  height: 1.4,
+                ),
               ),
             ),
           ],
@@ -791,8 +936,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return rankingsAsync.when(
       data: (rankings) {
-        final playedRankings = rankings.where((r) => r.matchesPlayed > 0).toList()
-          ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
+        final playedRankings =
+            rankings.where((r) => r.matchesPlayed > 0).toList()
+              ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
 
         if (playedRankings.isEmpty) {
           const unranked = PlayerRanking(
@@ -819,7 +965,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         }
 
         final ranking = playedRankings.first;
-        final losses = (ranking.matchesPlayed - ranking.matchesWon).clamp(0, 9999);
+        final losses = (ranking.matchesPlayed - ranking.matchesWon).clamp(
+          0,
+          9999,
+        );
         final winRate = ranking.matchesPlayed == 0
             ? 0.0
             : ranking.matchesWon / ranking.matchesPlayed;
@@ -847,7 +996,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           height: 180,
           decoration: BoxDecoration(
             color: colors.bgCard,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
             border: Border.all(color: colors.border),
           ),
         ),
@@ -883,11 +1032,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required String nextLabel,
   }) {
     final colors = context.colors;
-    final isUnranked = ranking.matchesPlayed == 0 ||
+    final isUnranked =
+        ranking.matchesPlayed == 0 ||
         ranking.tierName == 'Chưa xếp hạng' ||
         ranking.tierName.toUpperCase().contains('UNRANKED');
 
-    final tierColor = isUnranked ? const Color(0xFF94A3B8) : _getTierColor(ranking.tierName);
+    final tierColor = isUnranked
+        ? const Color(0xFF94A3B8)
+        : _getTierColor(ranking.tierName);
     final fmt = NumberFormat('#,###');
     const winColor = Color(0xFF22C55E);
     const lossColor = Color(0xFFEF4444);
@@ -896,7 +1048,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
       decoration: BoxDecoration(
         color: colors.bgCard,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         border: Border.all(color: colors.border),
         boxShadow: [
           BoxShadow(
@@ -940,7 +1092,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           style: TextStyle(
                             color: colors.textMuted,
                             fontSize: 10,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                             letterSpacing: 1.2,
                           ),
                         ),
@@ -951,16 +1103,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             color: tierColor,
                             fontSize: isUnranked ? 28 : 34,
                             height: 1.0,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          isUnranked ? 'Chưa có rank' : '${fmt.format(ranking.eloPoints)} ELO',
+                          isUnranked
+                              ? 'Chưa có rank'
+                              : '${fmt.format(ranking.eloPoints)} ELO',
                           style: TextStyle(
                             color: isUnranked ? colors.textMuted : tierColor,
                             fontSize: 10,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -983,13 +1137,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             children: [
               Text(
                 'Tỷ lệ thắng ',
-                style: TextStyle(color: colors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: colors.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               Text(
                 '${(winRate * 100).toStringAsFixed(1)}%',
                 style: const TextStyle(
                   color: winColor,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   fontSize: 13,
                 ),
               ),
@@ -1039,7 +1197,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             color: color,
             fontSize: 26,
             height: 1,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 2),
@@ -1054,8 +1212,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ],
     );
   }
-
-
 
   String _rankLetter(String tierName) {
     final upper = tierName.trim().toUpperCase();
@@ -1077,25 +1233,48 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       (p) => p.code == profile.provinceCode,
       orElse: () => Province(code: '', name: ''),
     );
-    final provinceDisplay = province.name.isNotEmpty 
-        ? province.name 
-        : (profile.provinceCode != null && profile.provinceCode!.isNotEmpty ? profile.provinceCode! : '—');
+    final provinceDisplay = province.name.isNotEmpty
+        ? province.name
+        : (profile.provinceCode != null && profile.provinceCode!.isNotEmpty
+              ? profile.provinceCode!
+              : '—');
 
     final emailVerified = profile.isEmailVerified == true;
     final items = <_InfoItem>[
-      _InfoItem(Icons.phone_rounded, 'Số điện thoại', profile.phoneNumber ?? '—'),
+      _InfoItem(
+        Icons.phone_rounded,
+        'Số điện thoại',
+        profile.phoneNumber ?? '—',
+      ),
       _InfoItem(Icons.cake_rounded, 'Ngày sinh', profile.dateOfBirth ?? '—'),
       _InfoItem(Icons.wc_rounded, 'Giới tính', profile.gender ?? '—'),
       _InfoItem(Icons.location_on_rounded, 'Địa chỉ', profile.address ?? '—'),
       _InfoItem(Icons.map_rounded, 'Tỉnh/Thành phố', provinceDisplay),
-      _InfoItem(Icons.verified_outlined, 'Email xác thực', emailVerified ? 'Đã xác thực' : 'Chưa xác thực'),
-      _InfoItem(Icons.phone_android_rounded, 'SĐT xác thực', profile.isPhoneVerified == true ? 'Đã xác thực' : 'Chưa xác thực'),
+      _InfoItem(
+        Icons.verified_outlined,
+        'Email xác thực',
+        emailVerified ? 'Đã xác thực' : 'Chưa xác thực',
+      ),
+      _InfoItem(
+        Icons.phone_android_rounded,
+        'SĐT xác thực',
+        profile.isPhoneVerified == true ? 'Đã xác thực' : 'Chưa xác thực',
+      ),
     ];
     if (profile.bankName != null && profile.bankName!.isNotEmpty) {
-      items.add(_InfoItem(Icons.account_balance_rounded, 'Ngân hàng', profile.bankName!));
+      items.add(
+        _InfoItem(
+          Icons.account_balance_rounded,
+          'Ngân hàng',
+          profile.bankName!,
+        ),
+      );
     }
-    if (profile.bankAccountNumber != null && profile.bankAccountNumber!.isNotEmpty) {
-      items.add(_InfoItem(Icons.numbers_rounded, 'STK', profile.bankAccountNumber!));
+    if (profile.bankAccountNumber != null &&
+        profile.bankAccountNumber!.isNotEmpty) {
+      items.add(
+        _InfoItem(Icons.numbers_rounded, 'STK', profile.bankAccountNumber!),
+      );
     }
 
     return Container(
@@ -1103,7 +1282,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
         color: colors.bgCard,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         border: Border.all(color: colors.border),
       ),
       child: Column(
@@ -1116,12 +1295,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: (emailVerified ? const Color(0xFF22C55E) : colors.warning).withValues(alpha: 0.12),
+                    color:
+                        (emailVerified
+                                ? const Color(0xFF22C55E)
+                                : colors.warning)
+                            .withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    emailVerified ? Icons.verified_rounded : Icons.mark_email_unread_rounded,
-                    color: emailVerified ? const Color(0xFF16A34A) : colors.warning,
+                    emailVerified
+                        ? Icons.verified_rounded
+                        : Icons.mark_email_unread_rounded,
+                    color: emailVerified
+                        ? const Color(0xFF16A34A)
+                        : colors.warning,
                     size: 20,
                   ),
                 ),
@@ -1132,14 +1319,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: [
                       Text(
                         'Trạng thái email',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.textPrimary),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         emailVerified
                             ? 'Email đã được xác thực và sẵn sàng cho các chức năng bảo mật.'
                             : 'Email chưa xác thực, nên xác minh để hoàn tất bảo mật tài khoản.',
-                        style: TextStyle(fontSize: 12, color: colors.textMuted, height: 1.35),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textMuted,
+                          height: 1.35,
+                        ),
                       ),
                     ],
                   ),
@@ -1147,7 +1342,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ],
             ),
           ),
-          Divider(height: 1, color: colors.borderLight, indent: 16, endIndent: 16),
+          Divider(
+            height: 1,
+            color: colors.borderLight,
+            indent: 16,
+            endIndent: 16,
+          ),
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -1159,13 +1359,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             itemBuilder: (_, i) {
               final item = items[i];
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     Container(
                       width: 30,
                       height: 30,
-                      decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       child: Icon(item.icon, size: 16, color: AppTheme.primary),
                     ),
                     const SizedBox(width: 12),
@@ -1173,9 +1379,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(item.label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: colors.textSecondary)),
+                          Text(
+                            item.label,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: colors.textSecondary,
+                            ),
+                          ),
                           const SizedBox(height: 2),
-                          Text(item.value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary)),
+                          Text(
+                            item.value,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: colors.textPrimary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1208,16 +1428,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: colors.bgCard,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               border: Border.all(color: colors.border),
             ),
             child: Center(
               child: Column(
                 children: [
-                  Icon(Icons.emoji_events_outlined, size: 40, color: colors.textMuted),
+                  Icon(
+                    Icons.emoji_events_outlined,
+                    size: 40,
+                    color: colors.textMuted,
+                  ),
                   const SizedBox(height: 8),
-                  Text('Bạn chưa tạo hoặc tham gia giải nào.',
-                      style: TextStyle(color: colors.textSecondary, fontSize: 13)),
+                  Text(
+                    'Bạn chưa tạo hoặc tham gia giải nào.',
+                    style: TextStyle(color: colors.textSecondary, fontSize: 13),
+                  ),
                   const SizedBox(height: 8),
                   TextButton.icon(
                     onPressed: () => context.go('/dashboard'),
@@ -1233,7 +1459,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         return Container(
           decoration: BoxDecoration(
             color: colors.bgCard,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
             border: Border.all(color: colors.border),
           ),
           child: Column(
@@ -1255,14 +1481,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       loading: () => Center(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary),
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppTheme.primary,
+          ),
         ),
       ),
       error: (e, _) => Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: colors.bgCard,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
           border: Border.all(color: colors.border),
         ),
         child: Center(
@@ -1270,7 +1499,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             children: [
               Icon(Icons.cloud_off_rounded, size: 32, color: colors.textMuted),
               const SizedBox(height: 8),
-              Text('Không thể tải dữ liệu', style: TextStyle(color: colors.textSecondary, fontSize: 13)),
+              Text(
+                'Không thể tải dữ liệu',
+                style: TextStyle(color: colors.textSecondary, fontSize: 13),
+              ),
             ],
           ),
         ),
@@ -1290,13 +1522,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: colors.bgCard,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               border: Border.all(color: colors.border),
             ),
             child: Center(
               child: Column(
                 children: [
-                  Icon(Icons.groups_outlined, size: 40, color: colors.textMuted),
+                  Icon(
+                    Icons.groups_outlined,
+                    size: 40,
+                    color: colors.textMuted,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     'Bạn chưa tạo hoặc tham gia câu lạc bộ nào.',
@@ -1309,7 +1545,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     label: const Text('Tạo CLB mới'),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTheme.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ],
@@ -1321,12 +1559,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         return Container(
           decoration: BoxDecoration(
             color: colors.bgCard,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
             border: Border.all(color: colors.border),
           ),
           child: Column(
             children: [
-              ...communities.map((club) => _buildCommunityRow(club, colors, context)),
+              ...communities.map(
+                (club) => _buildCommunityRow(club, colors, context),
+              ),
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: TextButton.icon(
@@ -1342,14 +1582,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       loading: () => const Center(
         child: Padding(
           padding: EdgeInsets.all(20),
-          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary),
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppTheme.primary,
+          ),
         ),
       ),
       error: (e, _) => Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: colors.bgCard,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
           border: Border.all(color: colors.border),
         ),
         child: Center(
@@ -1362,26 +1605,39 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildCommunityRow(Community club, AppColorsExtension colors, BuildContext context) {
+  Widget _buildCommunityRow(
+    Community club,
+    AppColorsExtension colors,
+    BuildContext context,
+  ) {
     final currentUserId = ref.watch(userProfileProvider).value?.id;
-    final isOwner = club.myRole == 'OWNER' ||
+    final isOwner =
+        club.myRole == 'OWNER' ||
         club.myRole == 'LEADER' ||
         club.myRole == 'CREATOR' ||
         club.myRole == 'HOST' ||
         (currentUserId != null && club.ownerId == currentUserId) ||
         (club.myRole != 'MEMBER' && club.myRole != 'JOINED');
 
-    final isAdmin = !isOwner && (club.myRole == 'ADMIN' || club.myRole == 'MODERATOR');
+    final isAdmin =
+        !isOwner && (club.myRole == 'ADMIN' || club.myRole == 'MODERATOR');
 
-    final roleLabel = isOwner ? 'Chủ sở hữu' : (isAdmin ? 'Quản trị' : 'Đã tham gia');
-    final roleColor = isOwner ? const Color(0xFFF59E0B) : (isAdmin ? AppTheme.primary : const Color(0xFF059669));
+    final roleLabel = isOwner
+        ? 'Chủ sở hữu'
+        : (isAdmin ? 'Quản trị' : 'Đã tham gia');
+    final roleColor = isOwner
+        ? const Color(0xFFF59E0B)
+        : (isAdmin ? AppTheme.primary : const Color(0xFF059669));
 
     final List<Widget> sportWidgets = [];
     if (club.sports.isNotEmpty) {
       for (final rawS in club.sports) {
         final sTrim = rawS.trim();
         if (sTrim.isEmpty) continue;
-        final mapped = AppConstants.sportNames[sTrim] ?? AppConstants.sportNames[sTrim.toLowerCase()] ?? sTrim;
+        final mapped =
+            AppConstants.sportNames[sTrim] ??
+            AppConstants.sportNames[sTrim.toLowerCase()] ??
+            sTrim;
         sportWidgets.add(
           Container(
             margin: const EdgeInsets.only(right: 6),
@@ -1392,7 +1648,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             child: Text(
               mapped.toUpperCase(),
-              style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.primary),
+              style: const TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.primary,
+              ),
             ),
           ),
         );
@@ -1409,7 +1669,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           child: const Text(
             'THỂ THAO',
-            style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.primary),
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.primary,
+            ),
           ),
         ),
       );
@@ -1433,7 +1697,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   Text(
                     club.name,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1447,7 +1715,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         const SizedBox(width: 2),
                         Text(
                           '$displayMemberCount Thành viên',
-                          style: TextStyle(fontSize: 11, color: colors.textMuted),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colors.textMuted,
+                          ),
                         ),
                       ],
                     ),
@@ -1460,16 +1731,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: roleColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                 border: Border.all(color: roleColor.withValues(alpha: 0.3)),
               ),
               child: Text(
                 roleLabel,
-                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: roleColor),
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: roleColor,
+                ),
               ),
             ),
             const SizedBox(width: 6),
-            Icon(Icons.chevron_right_rounded, size: 18, color: colors.textMuted),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: colors.textMuted,
+            ),
           ],
         ),
       ),
@@ -1522,22 +1801,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         final filteredList = tournaments.where((t) {
           if (_followedFilter == 'all') return true;
           final isCompleted = StatusHelper.isTournamentCompleted(t.status);
-          final isRecentCompleted = isCompleted &&
+          final isRecentCompleted =
+              isCompleted &&
               t.endDate != null &&
               now.difference(t.endDate!).inDays <= 14;
 
-          if (_followedFilter == 'recent_completed') return isRecentCompleted || isCompleted;
-          if (_followedFilter == 'in_progress') return StatusHelper.isTournamentInProgress(t.status);
-          if (_followedFilter == 'registration') return StatusHelper.isTournamentRegistration(t.status);
-          if (_followedFilter == 'upcoming') return StatusHelper.isTournamentUpcoming(t.status);
+          if (_followedFilter == 'recent_completed')
+            return isRecentCompleted || isCompleted;
+          if (_followedFilter == 'in_progress')
+            return StatusHelper.isTournamentInProgress(t.status);
+          if (_followedFilter == 'registration')
+            return StatusHelper.isTournamentRegistration(t.status);
+          if (_followedFilter == 'upcoming')
+            return StatusHelper.isTournamentUpcoming(t.status);
           return true;
         }).toList();
 
         final visible = [...filteredList]
           ..sort((a, b) {
-            final priorityDiff = _followedTournamentPriority(a).compareTo(_followedTournamentPriority(b));
+            final priorityDiff = _followedTournamentPriority(
+              a,
+            ).compareTo(_followedTournamentPriority(b));
             if (priorityDiff != 0) return priorityDiff;
-            return _followedTournamentTimestamp(b).compareTo(_followedTournamentTimestamp(a));
+            return _followedTournamentTimestamp(
+              b,
+            ).compareTo(_followedTournamentTimestamp(a));
           });
         final topVisible = visible.take(5).toList();
 
@@ -1552,7 +1840,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         return Container(
           decoration: BoxDecoration(
             color: colors.bgCard,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
             border: Border.all(color: colors.border),
           ),
           child: Column(
@@ -1566,24 +1854,38 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: filters.map((f) {
                       final isSelected = _followedFilter == f['id'];
                       return GestureDetector(
-                        onTap: () => setState(() => _followedFilter = f['id'] as String),
+                        onTap: () =>
+                            setState(() => _followedFilter = f['id'] as String),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 180),
                           margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppTheme.primary : colors.bgSurface,
-                            borderRadius: BorderRadius.circular(20),
+                            color: isSelected
+                                ? AppTheme.primary
+                                : colors.bgSurface,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusXL,
+                            ),
                             border: Border.all(
-                              color: isSelected ? AppTheme.primary : colors.border,
+                              color: isSelected
+                                  ? AppTheme.primary
+                                  : colors.border,
                             ),
                           ),
                           child: Text(
                             f['label'] as String,
                             style: TextStyle(
                               fontSize: 11.5,
-                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                              color: isSelected ? Colors.white : colors.textSecondary,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w600,
+                              color: isSelected
+                                  ? Colors.white
+                                  : colors.textSecondary,
                             ),
                           ),
                         ),
@@ -1605,7 +1907,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 )
               else
-                ...topVisible.map((tournament) => _buildFollowedTournamentRow(tournament, colors, context)),
+                ...topVisible.map(
+                  (tournament) =>
+                      _buildFollowedTournamentRow(tournament, colors, context),
+                ),
 
               if (visible.length > 5)
                 Padding(
@@ -1623,14 +1928,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       loading: () => const Center(
         child: Padding(
           padding: EdgeInsets.all(20),
-          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary),
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppTheme.primary,
+          ),
         ),
       ),
       error: (e, _) => Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: colors.bgCard,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
           border: Border.all(color: colors.border),
         ),
         child: Center(
@@ -1649,23 +1957,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildFollowedTournamentRow(Tournament tournament, AppColorsExtension colors, BuildContext context) {
-    final statusLabel = StatusHelper.getTournamentStatusLabel(tournament.status);
+  Widget _buildFollowedTournamentRow(
+    Tournament tournament,
+    AppColorsExtension colors,
+    BuildContext context,
+  ) {
+    final statusLabel = StatusHelper.getTournamentStatusLabel(
+      tournament.status,
+    );
     final isCompleted = StatusHelper.isTournamentCompleted(tournament.status);
-    final isRecentCompleted = isCompleted &&
+    final isRecentCompleted =
+        isCompleted &&
         tournament.endDate != null &&
         DateTime.now().difference(tournament.endDate!).inDays <= 14;
     final statusHint = isRecentCompleted
         ? 'Vừa kết thúc trong 14 ngày gần đây'
         : isCompleted
-            ? 'Đã kết thúc'
-            : StatusHelper.isTournamentInProgress(tournament.status)
-                ? 'Đang diễn ra'
-                : StatusHelper.isTournamentRegistration(tournament.status)
-                    ? 'Đang mở đăng ký'
-                    : StatusHelper.isTournamentUpcoming(tournament.status)
-                        ? 'Sắp diễn ra'
-                        : 'Đang theo dõi';
+        ? 'Đã kết thúc'
+        : StatusHelper.isTournamentInProgress(tournament.status)
+        ? 'Đang diễn ra'
+        : StatusHelper.isTournamentRegistration(tournament.status)
+        ? 'Đang mở đăng ký'
+        : StatusHelper.isTournamentUpcoming(tournament.status)
+        ? 'Sắp diễn ra'
+        : 'Đang theo dõi';
     return InkWell(
       onTap: () => context.push('/intro/${tournament.id}'),
       child: Padding(
@@ -1679,15 +1994,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    tournament.name.isNotEmpty ? tournament.name : '(Chưa có tên)',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                    tournament.name.isNotEmpty
+                        ? tournament.name
+                        : '(Chưa có tên)',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     statusLabel,
-                    style: TextStyle(fontSize: 11, color: AppTheme.primary, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 1),
                   Text(
@@ -1699,7 +2024,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, size: 18, color: colors.textMuted),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: colors.textMuted,
+            ),
           ],
         ),
       ),
@@ -1709,7 +2038,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   int _followedTournamentPriority(Tournament tournament) {
     if (StatusHelper.isTournamentCompleted(tournament.status)) return 0;
     if (StatusHelper.isTournamentInProgress(tournament.status)) return 1;
-    if (StatusHelper.isTournamentRegistration(tournament.status) || StatusHelper.isTournamentUpcoming(tournament.status)) return 2;
+    if (StatusHelper.isTournamentRegistration(tournament.status) ||
+        StatusHelper.isTournamentUpcoming(tournament.status))
+      return 2;
     if (StatusHelper.isTournamentCancelled(tournament.status)) return 3;
     return 4;
   }
@@ -1718,11 +2049,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return tournament.endDate ?? tournament.updatedAt;
   }
 
-  Widget _buildTournamentRow(dynamic t, AppColorsExtension colors, BuildContext context) {
+  Widget _buildTournamentRow(
+    dynamic t,
+    AppColorsExtension colors,
+    BuildContext context,
+  ) {
     final rawStatus = t.status?.toString() ?? 'draft';
     final statusLabel = StatusHelper.getTournamentStatusLabel(rawStatus);
-    final String? logoUrl = t is Tournament ? t.logoUrl : (t.logoUrl?.toString());
-    final String? bannerUrl = t is Tournament ? t.bannerUrl : (t.bannerUrl?.toString());
+    final String? logoUrl = t is Tournament
+        ? t.logoUrl
+        : (t.logoUrl?.toString());
+    final String? bannerUrl = t is Tournament
+        ? t.bannerUrl
+        : (t.bannerUrl?.toString());
 
     return GestureDetector(
       onLongPress: () async {
@@ -1731,10 +2070,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           builder: (ctx) => AlertDialog(
             backgroundColor: colors.bgCard,
             title: const Text('Xóa giải đấu?'),
-            content: Text('Bạn có chắc muốn xóa "${t.name}"?',
-                style: TextStyle(color: colors.textSecondary, fontSize: 14)),
+            content: Text(
+              'Bạn có chắc muốn xóa "${t.name}"?',
+              style: TextStyle(color: colors.textSecondary, fontSize: 14),
+            ),
             actions: [
-              TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Hủy')),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Hủy'),
+              ),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(true),
                 child: Text('Xóa', style: TextStyle(color: colors.error)),
@@ -1743,11 +2087,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         );
         if (confirm == true && context.mounted) {
-          final success = await ref.read(tournamentActionProvider.notifier).deleteTournament(t.id);
+          final success = await ref
+              .read(tournamentActionProvider.notifier)
+              .deleteTournament(t.id);
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(success ? 'Đã xóa giải đấu' : 'Không thể xóa giải đấu'),
+                content: Text(
+                  success ? 'Đã xóa giải đấu' : 'Không thể xóa giải đấu',
+                ),
                 backgroundColor: success ? colors.success : colors.error,
               ),
             );
@@ -1756,7 +2104,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         }
       },
       child: InkWell(
-        onTap: () => context.push('/intro/${t.id}'),
+        onTap: () => context.push(
+          t.isLite == true ? '/lite-manage/${t.id}' : '/intro/${t.id}',
+        ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
@@ -1770,19 +2120,42 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   children: [
                     Text(
                       t.name ?? '',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (t.isLite != true) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'Quản lý trên web',
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 2),
                     Text(
                       statusLabel,
-                      style: TextStyle(fontSize: 11, color: colors.textMuted, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colors.textMuted,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, size: 18, color: colors.textMuted),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: colors.textMuted,
+              ),
             ],
           ),
         ),
@@ -1795,11 +2168,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final colors = context.colors;
     final items = [
       _MenuItem(Icons.dashboard_rounded, 'Dashboard', '/dashboard'),
-      _MenuItem(Icons.person_outline_rounded, 'Chỉnh sửa hồ sơ', '/profile/edit'),
-      _MenuItem(Icons.account_balance_wallet_rounded, 'Lịch sử thanh toán', '/payments'),
+      _MenuItem(
+        Icons.person_outline_rounded,
+        'Chỉnh sửa hồ sơ',
+        '/profile/edit',
+      ),
+      _MenuItem(
+        Icons.account_balance_wallet_rounded,
+        'Lịch sử thanh toán',
+        '/payments',
+      ),
       _MenuItem(Icons.emoji_events_rounded, 'Chuỗi giải đấu', '/series'),
       _MenuItem(Icons.mail_outline_rounded, 'Lời mời CLB', '/club-invites'),
-      _MenuItem(Icons.lock_outline_rounded, 'Đổi mật khẩu', '/profile/change-password'),
+      _MenuItem(
+        Icons.lock_outline_rounded,
+        'Đổi mật khẩu',
+        '/profile/change-password',
+      ),
       _MenuItem(Icons.leaderboard_rounded, 'Lịch sử ELO', '/profile/elo'),
     ];
 
@@ -1807,20 +2192,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
         color: colors.bgCard,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         border: Border.all(color: colors.border),
       ),
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: items.length,
-        separatorBuilder: (context, index) => Divider(height: 1, color: colors.borderLight, indent: 56),
+        separatorBuilder: (context, index) =>
+            Divider(height: 1, color: colors.borderLight, indent: 56),
         itemBuilder: (_, i) {
           final item = items[i];
           final isLast = i == items.length - 1;
           return InkWell(
             onTap: item.route != null ? () => context.push(item.route!) : null,
-            borderRadius: isLast ? const BorderRadius.vertical(bottom: Radius.circular(20)) : BorderRadius.zero,
+            borderRadius: isLast
+                ? const BorderRadius.vertical(bottom: Radius.circular(20))
+                : BorderRadius.zero,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
               child: Row(
@@ -1828,12 +2216,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Container(
                     width: 30,
                     height: 30,
-                    decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     child: Icon(item.icon, size: 16, color: AppTheme.primary),
                   ),
                   const SizedBox(width: 14),
-                  Expanded(child: Text(item.label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary))),
-                  Icon(Icons.chevron_right_rounded, size: 18, color: colors.textMuted),
+                  Expanded(
+                    child: Text(
+                      item.label,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: colors.textMuted,
+                  ),
                 ],
               ),
             ),
@@ -1850,7 +2254,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
         color: colors.bgCard,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         border: Border.all(color: colors.border),
       ),
       child: Column(
@@ -1865,12 +2269,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Container(
                     width: 30,
                     height: 30,
-                    decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
-                    child: const Icon(Icons.notifications_outlined, size: 16, color: AppTheme.primary),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.notifications_outlined,
+                      size: 16,
+                      color: AppTheme.primary,
+                    ),
                   ),
                   const SizedBox(width: 14),
-                  Expanded(child: Text('Thông báo', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary))),
-                  Icon(Icons.chevron_right_rounded, size: 18, color: colors.textMuted),
+                  Expanded(
+                    child: Text(
+                      'Thông báo',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: colors.textMuted,
+                  ),
                 ],
               ),
             ),
@@ -1883,15 +2307,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Container(
                   width: 30,
                   height: 30,
-                  decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
-                  child: const Icon(Icons.dark_mode_rounded, size: 16, color: AppTheme.primary),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.dark_mode_rounded,
+                    size: 16,
+                    color: AppTheme.primary,
+                  ),
                 ),
                 const SizedBox(width: 14),
-                Expanded(child: Text('Chế độ tối', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary))),
+                Expanded(
+                  child: Text(
+                    'Chế độ tối',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                ),
                 Switch(
                   value: isDark,
                   activeThumbColor: AppTheme.primary,
-                  onChanged: (v) => ref.read(tp.themeProvider.notifier).toggleTheme(),
+                  onChanged: (v) =>
+                      ref.read(tp.themeProvider.notifier).toggleTheme(),
                 ),
               ],
             ),
@@ -1905,14 +2346,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               if (!context.mounted) return;
               context.go('/home');
             },
-            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(20),
+            ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
               child: Row(
                 children: [
-                  const Icon(Icons.logout_rounded, size: 20, color: AppTheme.adminColor),
+                  const Icon(
+                    Icons.logout_rounded,
+                    size: 20,
+                    color: AppTheme.adminColor,
+                  ),
                   const SizedBox(width: 14),
-                  const Text('Đăng xuất', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.adminColor)),
+                  const Text(
+                    'Đăng xuất',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.adminColor,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1928,10 +2382,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
-          Container(width: 3, height: 18, decoration: BoxDecoration(color: AppTheme.primary, borderRadius: BorderRadius.circular(2))),
+          Container(
+            width: 3,
+            height: 18,
+            decoration: BoxDecoration(
+              color: AppTheme.primary,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
           const SizedBox(width: 10),
-          Text(title,
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: colors.textSecondary, letterSpacing: 0.3)),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: colors.textSecondary,
+              letterSpacing: 0.3,
+            ),
+          ),
         ],
       ),
     );
@@ -1948,12 +2416,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           children: [
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 16),
-            Text('Không thể tải thông tin',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+            Text(
+              'Không thể tải thông tin',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: colors.textPrimary,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(message, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: colors.textSecondary)),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: colors.textSecondary),
+            ),
             const SizedBox(height: 20),
-            FilledButton(onPressed: () => ref.invalidate(userProfileProvider), child: const Text('Thử lại')),
+            FilledButton(
+              onPressed: () => ref.invalidate(userProfileProvider),
+              child: const Text('Thử lại'),
+            ),
           ],
         ),
       ),
@@ -1963,7 +2444,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── HELPERS ────────────────────────────────────────────────────────
   String _initials(String name) {
     final p = name.trim().split(' ');
-    if (p.length >= 2) return '${p[p.length - 2][0]}${p[p.length - 1][0]}'.toUpperCase();
+    if (p.length >= 2)
+      return '${p[p.length - 2][0]}${p[p.length - 1][0]}'.toUpperCase();
     return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 }
@@ -1995,7 +2477,7 @@ class _StatusPill extends StatelessWidget {
         style: TextStyle(
           color: foregroundColor,
           fontSize: 10,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           letterSpacing: 0.2,
         ),
       ),
@@ -2038,19 +2520,65 @@ class ProfileShimmerLoading extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(width: 160, height: 22, decoration: BoxDecoration(color: colors.border, borderRadius: BorderRadius.circular(8))),
+                  Container(
+                    width: 160,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Container(width: 200, height: 14, decoration: BoxDecoration(color: colors.border, borderRadius: BorderRadius.circular(8))),
+                  Container(
+                    width: 200,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   const SizedBox(height: 16),
-                  Container(height: 100, decoration: BoxDecoration(color: colors.border, borderRadius: BorderRadius.circular(20))),
+                  Container(
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                    ),
+                  ),
                   const SizedBox(height: 20),
-                  Container(width: 120, height: 14, decoration: BoxDecoration(color: colors.border, borderRadius: BorderRadius.circular(8))),
+                  Container(
+                    width: 120,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   const SizedBox(height: 12),
-                  Container(height: 200, decoration: BoxDecoration(color: colors.border, borderRadius: BorderRadius.circular(20))),
+                  Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                    ),
+                  ),
                   const SizedBox(height: 20),
-                  Container(width: 120, height: 14, decoration: BoxDecoration(color: colors.border, borderRadius: BorderRadius.circular(8))),
+                  Container(
+                    width: 120,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   const SizedBox(height: 12),
-                  Container(height: 160, decoration: BoxDecoration(color: colors.border, borderRadius: BorderRadius.circular(20))),
+                  Container(
+                    height: 160,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -2060,7 +2588,6 @@ class ProfileShimmerLoading extends StatelessWidget {
     );
   }
 }
-
 
 class _EloRingPainter extends CustomPainter {
   final double progress; // 0.0 to 1.0

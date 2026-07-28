@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 
 /// Tạo giải đấu Lite trong câu lạc bộ
 /// Gọi POST /tournaments/lite — đơn giản, không cần categoryId UUID
@@ -664,10 +665,12 @@ class _LiteSuccessSheet extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        SharePlus.instance.share(
-                          ShareParams(
-                            text: 'Tham gia giải ${result.name}: $link',
-                          ),
+                        AppShareModal.show(
+                          context: context,
+                          title: 'Giải Nhanh: ${result.name}',
+                          subtitle: 'Mã mời: ${result.inviteCode} • Quét QR hoặc mở link để tham gia',
+                          webUrl: link,
+                          badgeText: 'Giải Nhanh (Lite)',
                         );
                       },
                       icon: const Icon(Icons.share_rounded, size: 18),

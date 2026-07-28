@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 
 class LiveTournamentWithMatchesCard extends ConsumerStatefulWidget {
   final Tournament tournament;
@@ -646,8 +647,14 @@ class _LiveTournamentWithMatchesCardState
               // Button 3: Nút Chia sẻ CHỈ CÓ ICON
               InkWell(
                 onTap: () {
-                  final text = '${match.team1Name} vs ${match.team2Name} - ${widget.tournament.name}';
-                  SharePlus.instance.share(ShareParams(text: text));
+                  AppShareModal.show(
+                    context: context,
+                    title: '${match.team1Name} VS ${match.team2Name}',
+                    subtitle: 'Giải đấu: ${widget.tournament.name} • ${match.court.isNotEmpty ? match.court : "Đang thi đấu"}',
+                    webUrl: 'https://giaidau.vnvar.com/live/${match.id}',
+                    imageUrl: widget.tournament.logoUrl,
+                    badgeText: match.isLive ? 'Trận đấu đang Live 🔴' : 'Trận đấu',
+                  );
                 },
                 borderRadius: BorderRadius.circular(10),
                 child: Container(

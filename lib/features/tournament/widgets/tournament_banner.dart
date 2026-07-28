@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
@@ -807,12 +808,13 @@ class _TournamentBannerState extends State<TournamentBanner> {
                               ),
                               onPressed: () {
                                 final tournament = widget.tournament;
-                                final text =
-                                    '${tournament.name} - ${tournament.category ?? tournament.sport}';
-                                final url =
-                                    'https://giaidau.vnvar.com/tournaments/${tournament.id}';
-                                SharePlus.instance.share(
-                                  ShareParams(text: '$text\n\n$url'),
+                                AppShareModal.show(
+                                  context: context,
+                                  title: tournament.name,
+                                  subtitle: '${tournament.locationAddress ?? "Việt Nam"} • ${tournament.category ?? tournament.sport}',
+                                  webUrl: 'https://giaidau.vnvar.com/tournaments/${tournament.id}',
+                                  imageUrl: tournament.bannerUrl ?? tournament.logoUrl,
+                                  badgeText: tournament.isLite ? 'Giải Nhanh (Lite)' : 'Giải Nâng Cao',
                                 );
                               },
                               icon: const Icon(Icons.share, size: 12),
