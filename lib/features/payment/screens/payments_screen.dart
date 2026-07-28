@@ -651,9 +651,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       children: [
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: () async {
+                            onPressed: () {
                               Navigator.pop(ctx);
-                              ref.refresh(myPaymentsProvider);
+                              ref.invalidate(myPaymentsProvider);
                             },
                             icon: const Icon(Icons.refresh_rounded, size: 18),
                             label: const Text('Kiểm tra lại'),
@@ -793,15 +793,17 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         if (result != null) {
           final paymentId = result['paymentId'] ?? payment.id;
           final paymentUrl = result['paymentUrl'] ?? '';
-          if (paymentUrl.isNotEmpty && mounted) {
-            Navigator.pop(context);
+          if (paymentUrl.isNotEmpty && context.mounted) {
+            final nav = Navigator.of(context);
+            final router = GoRouter.of(context);
+            nav.pop();
             final uri = Uri.parse(paymentUrl);
             final opened = await launchUrl(
               uri,
               mode: LaunchMode.externalApplication,
             );
-            if (opened && mounted) {
-              context.push('/payment/payos-verify', extra: {
+            if (opened) {
+              router.push('/payment/payos-verify', extra: {
                 'paymentId': paymentId,
                 'amount': payment.amount,
                 'tournamentId': payment.tournamentId,
@@ -814,9 +816,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       }
 
       // Fallback: Navigate to checkout screen directly
-      if (mounted) {
-        Navigator.pop(context);
-        context.push('/payment/checkout', extra: {
+      if (context.mounted) {
+        final nav = Navigator.of(context);
+        final router = GoRouter.of(context);
+        nav.pop();
+        router.push('/payment/checkout', extra: {
           'tournamentId': payment.tournamentId,
           'participantId': payment.participantId,
           'amount': payment.amount,
@@ -824,7 +828,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Không thể tạo liên kết thanh toán: $e')),
         );
