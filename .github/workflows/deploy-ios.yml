@@ -1,0 +1,73 @@
+name: Deploy iOS to App Store
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: 'Số build (tăng dần)'
+        required: false
+        default: '1'
+
+jobs:
+  deploy-ios:
+    name: Build & Upload iOS
+    runs-on: macos-latest
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Setup Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          architecture: x64
+
+      # 3. Flutter dependencies
+      - name: Install Flutter packages
+        run: flutter pub get
+
+      # 4. Build iOS (không sign)
+      - name: Build iOS release
+        run: flutter build ios --release --no-codesign
+
+      # 5. Cài CocoaPods
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install --repo-update
+
+      # 6. Import certificate + provisioning profile
+      - name: Import signing certificate
+        uses: apple-actions/import-codesign-certs@v2
+        with:
+          p12-file-base64: ${{ secrets.IOS_CERT_BASE64 }}
+          p12-password: ${{ secrets.IOS_CERT_PASSWORD }}
+          provisioning-profile-base64: ${{ secrets.IOS_PROFILE_BASE64 }}
+
+      # 7. Archive + Export IPA
+      - name: Archive and export IPA
+        run: |
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace \
+                     -scheme Runner \
+                     -configuration Release \
+                     -derivedDataPath build \
+                     -archivePath build/Runner.xcarchive \
+                     clean archive
+          xcodebuild -exportArchive \
+                     -archivePath build/Runner.xcarchive \
+                     -exportOptionsPlist ExportOptions.plist \
+                     -exportPath build/ipa \
+                     -allowProvisioningUpdates
+
+      # 8. Upload lên App Store Connect
+      - name: Upload to App Store
+        uses: apple-actions/upload-to-app-store@v3
+        with:
+          ipa-path: ios/build/ipa/*.ipa
+          api-key-id: ${{ secrets.APP_STORE_API_KEY_ID }}
+          api-issuer-id: ${{ secrets.APP_STORE_API_ISSUER_ID }}
+          api-private-key: ${{ secrets.APP_STORE_API_PRIVATE_KEY }}

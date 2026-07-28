@@ -37,7 +37,8 @@ import 'package:app_quanly_giaidau/features/profile/screens/user_profile_screen.
 import 'package:app_quanly_giaidau/features/profile/screens/edit_profile_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/change_password_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/settings_screen.dart';
-import 'package:app_quanly_giaidau/features/rankings/screens/user_ranking_detail_screen.dart';
+import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/admin/screens/admin_clubs_screen.dart';
 import 'package:app_quanly_giaidau/features/admin/screens/change_requests_screen.dart';
 import 'package:app_quanly_giaidau/features/admin/screens/disputes_screen.dart';
@@ -431,7 +432,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: 'elo',
-            builder: (context, state) => const UserRankingDetailScreen(),
+            builder: (context, state) {
+              return Consumer(builder: (context, ref, _) {
+                final profile = ref.watch(userProfileProvider).asData?.value;
+                final userId = profile?.id ?? '';
+                final userName = profile?.fullName ?? 'Người dùng';
+                final avatarUrl = profile?.avatarUrl;
+                return EloHistoryScreen(
+                  userId: userId,
+                  userName: userName,
+                  avatarUrl: avatarUrl,
+                  currentElo: 1000,
+                );
+              });
+            },
           ),
           GoRoute(
             path: 'user/:id',
