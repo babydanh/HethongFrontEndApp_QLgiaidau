@@ -65,7 +65,6 @@ class MatchCardDetail extends StatelessWidget {
         ),
         child: SingleChildScrollView(
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
               if (isLive)
                 Container(

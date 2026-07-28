@@ -33,13 +33,18 @@ class BracketMatchCard extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: context.colors.bgCard,
         contentPadding: EdgeInsets.zero,
-        content: SizedBox(
-          width: 320,
-          child: MatchCardDetail(
-            match: match,
-            isReferee: isReferee,
-            isReadOnly: isReadOnly,
-            tournamentId: tournamentId,
+        content: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
+          ),
+          child: SizedBox(
+            width: 320,
+            child: MatchCardDetail(
+              match: match,
+              isReferee: isReferee,
+              isReadOnly: isReadOnly,
+              tournamentId: tournamentId,
+            ),
           ),
         ),
       ),
