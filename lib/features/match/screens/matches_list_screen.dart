@@ -164,7 +164,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
           'Trận đấu',
           style: TextStyle(
             color: colors.textPrimary,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
             fontSize: 20,
           ),
         ),
@@ -461,7 +461,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
               'Chọn môn thể thao',
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: colors.textPrimary,
               ),
             ),
@@ -605,7 +605,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
                   tournamentName,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     color: colors.textSecondary,
                   ),
                   maxLines: 1,
@@ -687,7 +687,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
                     : 'VS',
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   color: isLive
                       ? const Color(0xFF2979FF)
                       : match.isCompleted

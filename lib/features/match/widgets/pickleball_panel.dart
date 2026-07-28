@@ -51,7 +51,7 @@ class PickleballPanel extends ConsumerWidget {
                 ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFA500).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                   border: Border.all(
                     color: const Color(0xFFFFA500).withValues(alpha: 0.25),
                   ),
@@ -70,7 +70,7 @@ class PickleballPanel extends ConsumerWidget {
                         style: const TextStyle(
                           color: Color(0xFFFFA500),
                           fontSize: 13,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
@@ -87,7 +87,7 @@ class PickleballPanel extends ConsumerWidget {
                         'Lượt #${pb.serverNumber}',
                         style: const TextStyle(
                           fontSize: 10,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                           color: Color(0xFFB45309),
                         ),
                       ),
@@ -222,7 +222,7 @@ class PickleballPanel extends ConsumerWidget {
               color.withValues(alpha: 0.04),
             ],
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
           border: Border.all(
             color: isServing
                 ? const Color(0xFFFFA500).withValues(alpha: 0.7)
@@ -249,7 +249,7 @@ class PickleballPanel extends ConsumerWidget {
                     teamName,
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       color: colors.textPrimary,
                     ),
                     textAlign: TextAlign.center,
@@ -264,7 +264,7 @@ class PickleballPanel extends ConsumerWidget {
               '$score',
               style: TextStyle(
                 fontSize: compact ? 48 : 56,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
                 color: color,
                 height: 0.95,
               ),
@@ -284,7 +284,7 @@ class PickleballPanel extends ConsumerWidget {
                     : 'Đang đỡ · chưa được ghi điểm',
                 style: TextStyle(
                   fontSize: 9,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   color: isServing ? const Color(0xFFFFA500) : colors.textMuted,
                 ),
                 textAlign: TextAlign.center,

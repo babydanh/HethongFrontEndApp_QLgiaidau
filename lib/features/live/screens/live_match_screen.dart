@@ -305,7 +305,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
       selectedColor: AppTheme.primary,
       backgroundColor: colors.bgCard,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(100),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         side: BorderSide(color: isSelected ? Colors.transparent : colors.border),
       ),
       showCheckmark: false,
@@ -356,7 +356,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: context.colors.error.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                   ),
                   child: const Icon(
                     Icons.sports_esports_rounded,
@@ -375,7 +375,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                             letterSpacing: -0.3,
                           ),
                           maxLines: 1,
@@ -408,7 +408,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                         horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: context.colors.error,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                       boxShadow: [
                         BoxShadow(
                           color: context.colors.error.withValues(alpha: 0.4),
@@ -433,7 +433,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 11,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -489,7 +489,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         ),
         child: Column(
           children: [
@@ -500,7 +500,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 16,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
               ),
             ),
             Text(
@@ -536,7 +536,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
             height: 32,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
             ),
             child: Icon(icon, color: color, size: 18),
           ),
@@ -545,7 +545,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
             title,
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               color: context.colors.textPrimary,
               letterSpacing: -0.2,
             ),
@@ -563,7 +563,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 8,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -574,7 +574,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: context.colors.bgSurface,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
             ),
             child: Text(
               '$count',
@@ -623,7 +623,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                     const Color(0xFF1E293B),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               ),
               child: Row(
                 children: [
@@ -632,7 +632,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                     ),
                     child: const Icon(
                       Icons.sports_esports_rounded,
@@ -648,7 +648,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -705,7 +705,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                     height: 88,
                     decoration: BoxDecoration(
                       color: context.colors.bgSurface,
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                     ),
                     child: Icon(
                       Icons.sports_score_rounded,
@@ -746,7 +746,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                           horizontal: 24, vertical: 12),
                       decoration: BoxDecoration(
                         color: context.colors.info.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                         border: Border.all(
                           color: context.colors.info.withValues(alpha: 0.2),
                         ),
@@ -795,7 +795,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
               height: 140,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               ),
             ),
             // Section header shimmer
@@ -808,7 +808,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                     height: 32,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -832,7 +832,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                 height: 120,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                 ),
               ),
             ),
@@ -857,7 +857,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
               height: 80,
               decoration: BoxDecoration(
                 color: context.colors.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               ),
               child: Icon(
                 Icons.cloud_off_rounded,
@@ -898,7 +898,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
               label: const Text('Thử lại'),
               style: FilledButton.styleFrom(
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                 ),
               ),
             ),

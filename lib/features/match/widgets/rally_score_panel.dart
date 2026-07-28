@@ -62,7 +62,7 @@ class RallyScorePanel extends ConsumerWidget {
                       color: nearSetPoint
                           ? colors.warning.withValues(alpha: 0.12)
                           : colors.bgSurface,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                       border: Border.all(
                         color: nearSetPoint
                             ? colors.warning.withValues(alpha: 0.3)
@@ -193,7 +193,7 @@ class RallyScorePanel extends ConsumerWidget {
             color.withValues(alpha: 0.05),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         border: Border.all(color: color.withValues(alpha: 0.18)),
       ),
       child: Column(
@@ -203,7 +203,7 @@ class RallyScorePanel extends ConsumerWidget {
             teamName,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               color: colors.textPrimary,
             ),
             textAlign: TextAlign.center,
@@ -234,7 +234,7 @@ class RallyScorePanel extends ConsumerWidget {
                 '$score',
                 style: TextStyle(
                   fontSize: compact ? 54 : 64,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   color: color,
                 ),
                 textAlign: TextAlign.center,
@@ -300,7 +300,7 @@ class RallyScorePanel extends ConsumerWidget {
             label,
             style: TextStyle(
               fontSize: 11,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               color: colors.textSecondary,
             ),
           ),

@@ -34,7 +34,7 @@ class SetHistoryBar extends StatelessWidget {
                 'Set: $team1SetWins - $team2SetWins',
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   color: colors?.textPrimary,
                 ),
               ),
@@ -63,7 +63,7 @@ class SetHistoryBar extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: colors?.bgCard,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                     border: Border.all(
                       color: s.isFinished
                           ? (winnerIs1
@@ -88,7 +88,7 @@ class SetHistoryBar extends StatelessWidget {
                         '${s.score1}-${s.score2}',
                         style: TextStyle(
                           fontSize: 11,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                           color: s.isFinished
                               ? (winnerIs1
                                     ? const Color(0xFF2979FF)

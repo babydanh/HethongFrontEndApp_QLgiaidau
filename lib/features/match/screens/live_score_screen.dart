@@ -168,6 +168,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     try {
       final dio = ref.read(dioClientProvider).dio;
       final response = await dio.get('/matches/${widget.matchId}/comments');
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final data = response.data['data'] as List?;
         if (data != null) {
@@ -182,7 +183,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     } catch (e) {
       // ignore
     } finally {
-      setState(() => _isLoadingComments = false);
+      if (mounted) setState(() => _isLoadingComments = false);
     }
   }
 
@@ -227,7 +228,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         ),
       );
     } finally {
-      setState(() => _isSubmittingComment = false);
+      if (mounted) setState(() => _isSubmittingComment = false);
     }
   }
 

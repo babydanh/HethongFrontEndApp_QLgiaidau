@@ -284,9 +284,7 @@ void showOfficialScoreModal(
                                           alpha: 0.1,
                                         ),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
+                                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                                           borderSide: BorderSide(
                                             color: colors.warning.withValues(
                                               alpha: 0.4,
@@ -354,9 +352,7 @@ void showOfficialScoreModal(
                                             color: option.color.withValues(
                                               alpha: 0.12,
                                             ),
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
+                                            borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                                           ),
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,

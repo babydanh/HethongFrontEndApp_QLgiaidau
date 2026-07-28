@@ -192,7 +192,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                               sender.isNotEmpty ? sender[0].toUpperCase() : '?',
                               style: const TextStyle(
                                 color: AppTheme.primary,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w700,
                                 fontSize: 10,
                               ),
                             ),
@@ -269,7 +269,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                   height: 36,
                   decoration: BoxDecoration(
                     color: AppTheme.primary,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                   ),
                   child: const Icon(
                     Icons.send_rounded,
@@ -313,7 +313,7 @@ class LiveCameraPlaceholder extends StatelessWidget {
               height: 80,
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               ),
               child: const Icon(
                 Icons.videocam_rounded,

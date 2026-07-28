@@ -25,7 +25,7 @@ class TableTennisScorePanel extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: colors.warning.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
             border: Border.all(color: colors.warning.withValues(alpha: 0.22)),
           ),
           child: Row(

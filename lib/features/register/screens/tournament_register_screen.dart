@@ -51,6 +51,25 @@ class _TournamentRegisterScreenState
     if (widget.divisionId != null && widget.divisionId!.isNotEmpty) {
       _selectedDiv = widget.divisionId;
     }
+    _checkExistingRegistration();
+  }
+
+  Future<void> _checkExistingRegistration() async {
+    try {
+      final dio = ref.read(dioProvider);
+      final response = await dio.get('/tournaments/${widget.tournamentId}/my-registration');
+      if (response.data != null && response.data['participantId'] != null) {
+        if (mounted) {
+          setState(() {
+            _alreadyRegistered = true;
+            _existingParticipantId = response.data['participantId']?.toString();
+            _checkingRegistration = false;
+          });
+        }
+        return;
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _checkingRegistration = false);
   }
   String? _divisionError;
   bool _submitting = false;
@@ -62,6 +81,9 @@ class _TournamentRegisterScreenState
   String? _inviteError;
   String? _localInviteCode;
   double? _registeredEntryFee;
+  bool _checkingRegistration = true;
+  bool _alreadyRegistered = false;
+  String? _existingParticipantId;
 
   String _getSubmitLabel(Tournament? t) {
     if (t?.registrationMode == 'APPROVAL') return 'Gửi yêu cầu tham gia';

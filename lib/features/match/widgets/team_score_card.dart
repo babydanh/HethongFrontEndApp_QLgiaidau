@@ -64,7 +64,7 @@ class TeamScoreCard extends ConsumerWidget {
             color: isWinner
                 ? context.colors.success.withValues(alpha: 0.1)
                 : context.colors.bgCard,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
             border: Border.all(
               color: isWinner ? context.colors.success : context.colors.border,
               width: 2,
@@ -75,7 +75,7 @@ class TeamScoreCard extends ConsumerWidget {
               '$score',
               style: TextStyle(
                 fontSize: 48,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: isWinner
                     ? context.colors.success
                     : context.colors.textPrimary,

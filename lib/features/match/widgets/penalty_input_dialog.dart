@@ -62,7 +62,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
 
     return AlertDialog(
       backgroundColor: context.colors.bgCard,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusXL)),
       insetPadding: EdgeInsets.symmetric(
         horizontal: isLandscape ? 24.0 : 40.0,
         vertical: isLandscape ? 8.0 : 24.0,
@@ -164,7 +164,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
                   filled: true,
                   fillColor: context.colors.bgSurface,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -212,7 +212,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
           color: isSelected
               ? AppTheme.primary.withValues(alpha: 0.2)
               : context.colors.bgSurface,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
           border: Border.all(
             color: isSelected ? AppTheme.primary : context.colors.border,
             width: isSelected ? 1.5 : 1,
@@ -243,7 +243,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
           color: isSelected
               ? option.color.withValues(alpha: 0.15)
               : context.colors.bgSurface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
           border: Border.all(
             color: isSelected ? option.color : context.colors.border,
             width: 1,

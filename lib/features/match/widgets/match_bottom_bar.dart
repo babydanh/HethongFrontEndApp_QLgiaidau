@@ -47,7 +47,7 @@ class MatchBottomBar extends ConsumerWidget {
                   filled: true,
                   fillColor: colors.bgSurface,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   ),
                   contentPadding: const EdgeInsets.all(8),
                 ),
@@ -132,14 +132,14 @@ class MatchBottomBar extends ConsumerWidget {
           : Icon(icon, size: 18),
       label: Text(
         label,
-        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
       ),
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         foregroundColor: Colors.white,
         disabledBackgroundColor: color.withValues(alpha: 0.3),
         padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusXL)),
       ),
     );
   }

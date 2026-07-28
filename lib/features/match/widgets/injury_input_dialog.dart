@@ -34,7 +34,7 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
 
     return AlertDialog(
       backgroundColor: context.colors.bgCard,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusXL)),
       title: Row(
         children: [
           Icon(Icons.local_hospital_rounded, color: context.colors.warning),
@@ -87,7 +87,7 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
                 filled: true,
                 fillColor: context.colors.bgSurface,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -128,7 +128,7 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
           color: isSelected
               ? context.colors.warning.withValues(alpha: 0.2)
               : context.colors.bgSurface,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
           border: Border.all(
             color: isSelected ? context.colors.warning : context.colors.border,
             width: isSelected ? 1.5 : 1,

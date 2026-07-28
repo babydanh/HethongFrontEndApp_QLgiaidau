@@ -25,7 +25,7 @@ class BadmintonScorePanel extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: AppTheme.primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
             border: Border.all(color: AppTheme.primary.withValues(alpha: 0.18)),
           ),
           child: Row(

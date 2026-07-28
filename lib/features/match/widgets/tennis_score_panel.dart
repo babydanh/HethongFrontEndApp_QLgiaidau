@@ -60,7 +60,7 @@ class TennisScorePanel extends ConsumerWidget {
                   gradient: const LinearGradient(
                     colors: [Color(0xFFFF7A00), Color(0xFFFF4500)],
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                 ),
                 child: Row(
                   children: [
@@ -89,7 +89,7 @@ class TennisScorePanel extends ConsumerWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: colors.bgSurface,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                 border: Border.all(color: colors.border),
               ),
               child: Wrap(
@@ -221,7 +221,7 @@ class TennisScorePanel extends ConsumerWidget {
             color.withValues(alpha: 0.06),
           ],
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         border: Border.all(color: color.withValues(alpha: 0.18)),
       ),
       child: Column(
@@ -231,7 +231,7 @@ class TennisScorePanel extends ConsumerWidget {
             teamName,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               color: colors.textPrimary,
             ),
             textAlign: TextAlign.center,
@@ -259,7 +259,7 @@ class TennisScorePanel extends ConsumerWidget {
             displayPoints,
             style: TextStyle(
               fontSize: compact ? 54 : 62,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
               color: color,
               height: 0.95,
             ),
@@ -301,7 +301,7 @@ class TennisScorePanel extends ConsumerWidget {
           'VS',
           style: TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: colors.textMuted,
           ),
         ),
@@ -331,7 +331,7 @@ class TennisScorePanel extends ConsumerWidget {
                 : 'GAME',
             style: TextStyle(
               fontSize: 10,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
               color: isTiebreak
                   ? const Color(0xFFFF7A00)
                   : isDeuce
@@ -364,7 +364,7 @@ class TennisScorePanel extends ConsumerWidget {
                 TextSpan(
                   text: value,
                   style: TextStyle(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     color: colors.textPrimary,
                   ),
                 ),
