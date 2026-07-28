@@ -1336,7 +1336,9 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Lỗi: ${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
+              e is DioException && e.response?.statusCode == 404
+                  ? 'Không tìm thấy API hủy ghép trên máy chủ. Vui lòng cập nhật backend.'
+                  : 'Không thể hủy ghép cặp. Vui lòng thử lại.',
             ),
           ),
         );
