@@ -323,7 +323,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     child: _buildTabButton(0, "Thông tin", Icons.person_outline_rounded),
                   ),
                   Expanded(
-                    child: _buildTabButton(1, "Cài đặt", Icons.settings_outlined),
+                    child: _buildTabButton(1, "Tài khoản", Icons.manage_accounts_outlined),
                   ),
                 ],
               ),
@@ -1796,11 +1796,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final items = [
       _MenuItem(Icons.dashboard_rounded, 'Dashboard', '/dashboard'),
       _MenuItem(Icons.person_outline_rounded, 'Chỉnh sửa hồ sơ', '/profile/edit'),
-
       _MenuItem(Icons.account_balance_wallet_rounded, 'Lịch sử thanh toán', '/payments'),
       _MenuItem(Icons.emoji_events_rounded, 'Chuỗi giải đấu', '/series'),
-	      _MenuItem(Icons.mail_outline_rounded, 'Lời mời CLB', '/club-invites'),
-      _MenuItem(Icons.settings_rounded, 'Cài đặt', '/profile/settings'),
+      _MenuItem(Icons.mail_outline_rounded, 'Lời mời CLB', '/club-invites'),
       _MenuItem(Icons.lock_outline_rounded, 'Đổi mật khẩu', '/profile/change-password'),
       _MenuItem(Icons.leaderboard_rounded, 'Lịch sử ELO', '/profile/elo'),
     ];

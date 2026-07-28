@@ -427,7 +427,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: 'settings',
-            builder: (context, state) => const SettingsScreen(),
+            builder: (context, state) => const EditProfileScreen(),
           ),
           GoRoute(
             path: 'elo',
