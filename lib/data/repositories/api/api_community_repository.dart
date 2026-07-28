@@ -24,7 +24,13 @@ class ApiCommunityRepository implements ICommunityRepository {
       final response = await _dioClient.dio.get('/communities', queryParameters: params);
       if (response.statusCode == 200) {
         final raw = response.data;
-        final data = raw is Map ? (raw['data'] as List<dynamic>? ?? []) : (raw as List<dynamic>? ?? []);
+        final payload = raw is Map ? raw['data'] : raw;
+        final data = payload is Map
+            ? <dynamic>[
+                ...(payload['created'] as List<dynamic>? ?? const []),
+                ...(payload['joined'] as List<dynamic>? ?? const []),
+              ]
+            : (payload as List<dynamic>? ?? const []);
         return data
             .map((e) => Community.fromJson(e as Map<String, dynamic>))
             .where((c) => c.status.toUpperCase() == 'ACTIVE' && c.visibility.toUpperCase() == 'PUBLIC')
