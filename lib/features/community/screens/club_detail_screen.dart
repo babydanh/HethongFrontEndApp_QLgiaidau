@@ -898,9 +898,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
     final isQuick = t.isLite;
     final badgeColor = isQuick ? const Color(0xFFF59E0B) : AppTheme.primary;
+    final isAdmin = _myMembership?.role == 'OWNER' || _myMembership?.role == 'ADMIN' || _myMembership?.role == 'MODERATOR';
 
     return InkWell(
-      onTap: () => context.push('/intro/${t.id}'),
+      onTap: () {
+        if (isQuick && isAdmin) {
+          context.push('/lite/tournaments/${t.id}/manage');
+        } else {
+          context.push('/intro/${t.id}');
+        }
+      },
       borderRadius: BorderRadius.circular(14),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -1027,7 +1034,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       ),
                       const SizedBox(width: 2),
                       Text(
-                        isQuick ? 'Giải Nhanh' : 'Nâng Cao',
+                        isQuick
+                            ? (isAdmin ? '⚡ Quản lý Lite' : 'Giải Nhanh')
+                            : 'Nâng Cao',
                         style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
@@ -1144,7 +1153,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: const Text(
-                                  '30s',
+                                  '30s trên App',
                                   style: TextStyle(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w900,
@@ -1156,7 +1165,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Tạo nhanh trong 30 giây. Sinh mã QR & Link mời chia sẻ trực tiếp cho các thành viên.',
+                            'Tạo nhanh trong 30 giây ngay trên App. Sinh mã QR & Link mời chia sẻ trực tiếp cho các thành viên.',
                             style: TextStyle(
                               fontSize: 12,
                               color: colors.textSecondary,
@@ -1173,11 +1182,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
             const SizedBox(height: 12),
 
-            // Option 2: Giải Nâng Cao (Full)
+            // Option 2: Giải Nâng Cao (Full) - Direct to Web notice
             InkWell(
               onTap: () {
                 Navigator.pop(ctx);
-                context.push('/tournaments/create');
+                _showAdvancedTournamentWebDialog(context);
               },
               borderRadius: BorderRadius.circular(16),
               child: Container(
@@ -1209,17 +1218,40 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Giải Nâng Cao (Chuyên nghiệp)',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: colors.textPrimary,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                'Giải Nâng Cao',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2563EB),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text(
+                                  '💻 Tạo trên Web',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Đầy đủ cấu hình: Thể thức Vòng bảng, Knockout, Lịch thi đấu, Phí tham gia & Giải thưởng.',
+                            'Chỉ khởi tạo trên Web giaidau.vnvar.com. Đầy đủ cấu hình: Thể thức Vòng bảng, Knockout, Lịch thi đấu & Giải thưởng.',
                             style: TextStyle(
                               fontSize: 12,
                               color: colors.textSecondary,
@@ -1229,13 +1261,47 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+                    Icon(Icons.open_in_browser_rounded, color: const Color(0xFF2563EB)),
                   ],
                 ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showAdvancedTournamentWebDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.laptop_chromebook_rounded, color: Color(0xFF2563EB)),
+            SizedBox(width: 10),
+            Text('Tạo giải nâng cao trên Web', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text(
+          'Giải đấu nâng cao có nhiều cấu hình chuyên sâu (Vòng bảng, Knockout, Lịch thi đấu, Lệ phí & Giải thưởng).\n\nVui lòng truy cập trang web giaidau.vnvar.com trên máy tính để tạo giải nâng cao cho câu lạc bộ!',
+          style: TextStyle(fontSize: 13, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Đóng'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              context.push('/tournaments/create');
+              Navigator.pop(ctx);
+            },
+            icon: const Icon(Icons.copy_rounded, size: 16),
+            label: const Text('Sao chép link Web'),
+          ),
+        ],
       ),
     );
   }

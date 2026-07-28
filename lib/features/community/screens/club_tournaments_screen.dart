@@ -365,11 +365,41 @@ class ClubTournamentsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            // Option 2: Giải Nâng Cao (Full)
+            // Option 2: Giải Nâng Cao (Full) - Notice for Web
             InkWell(
               onTap: () {
                 Navigator.pop(ctx);
-                context.push('/tournaments/create');
+                showDialog(
+                  context: context,
+                  builder: (dialogCtx) => AlertDialog(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    title: const Row(
+                      children: [
+                        Icon(Icons.laptop_chromebook_rounded, color: Color(0xFF2563EB)),
+                        SizedBox(width: 10),
+                        Text('Tạo giải nâng cao trên Web', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    content: const Text(
+                      'Giải đấu nâng cao có nhiều cấu hình chuyên sâu (Vòng bảng, Knockout, Lịch thi đấu, Lệ phí & Giải thưởng).\n\nVui lòng truy cập trang web giaidau.vnvar.com trên máy tính để tạo giải nâng cao cho câu lạc bộ!',
+                      style: TextStyle(fontSize: 13, height: 1.5),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogCtx),
+                        child: const Text('Đóng'),
+                      ),
+                      FilledButton.icon(
+                        onPressed: () {
+                          context.push('/tournaments/create');
+                          Navigator.pop(dialogCtx);
+                        },
+                        icon: const Icon(Icons.copy_rounded, size: 16),
+                        label: const Text('Sao chép link Web'),
+                      ),
+                    ],
+                  ),
+                );
               },
               borderRadius: BorderRadius.circular(16),
               child: Container(
@@ -401,17 +431,40 @@ class ClubTournamentsScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Giải Nâng Cao (Chuyên nghiệp)',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: colors.textPrimary,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                'Giải Nâng Cao',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2563EB),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text(
+                                  '💻 Tạo trên Web',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Đầy đủ cấu hình: Thể thức Vòng bảng, Knockout, Lịch thi đấu, Phí tham gia & Giải thưởng.',
+                            'Chỉ khởi tạo trên Web giaidau.vnvar.com. Đầy đủ cấu hình: Thể thức Vòng bảng, Knockout, Lịch thi đấu & Giải thưởng.',
                             style: TextStyle(
                               fontSize: 12,
                               color: colors.textSecondary,
@@ -421,7 +474,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+                    Icon(Icons.open_in_browser_rounded, color: const Color(0xFF2563EB)),
                   ],
                 ),
               ),
