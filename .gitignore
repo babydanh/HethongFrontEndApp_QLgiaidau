@@ -101,3 +101,13 @@ package-lock.json
 build/
 .flutter-plugins
 .flutter-plugins-dependencies
+
+# Tools & Local Cache
+graphify-out/
+.claude/
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/App.framework
+ios/Flutter/ephemeral/
