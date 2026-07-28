@@ -665,7 +665,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 context.push('/register/${tournament.id}$query');
               },
         child: Text(
-          isClosed ? "Đã đóng đăng ký" : "Đăng ký ngay",
+          isClosed ? "Đã đóng đăng ký" : "Đăng ký",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 13,
