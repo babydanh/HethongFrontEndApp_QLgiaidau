@@ -390,7 +390,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       {'id': 'all', 'label': 'Tất cả', 'icon': Icons.grid_view_rounded},
       {'id': 'pickleball', 'label': 'Pickleball', 'icon': Icons.sports_tennis_rounded},
       {'id': 'badminton', 'label': 'Cầu lông', 'icon': Icons.sports_tennis_outlined},
-      {'id': 'football', 'label': 'Bóng đá', 'icon': Icons.sports_soccer_rounded},
+      {'id': 'table_tennis', 'label': 'Bóng bàn', 'icon': Icons.sports_rounded},
       {'id': 'tennis', 'label': 'Tennis', 'icon': Icons.sports_baseball_rounded},
     ];
 

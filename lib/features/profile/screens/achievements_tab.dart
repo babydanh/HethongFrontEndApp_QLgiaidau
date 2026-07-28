@@ -80,7 +80,7 @@ class AchievementsTab extends ConsumerWidget {
       final s = a.sportId.toLowerCase();
       if (selectedSport == 'pickleball' && (s.contains('pickle') || s.contains('padd'))) return true;
       if (selectedSport == 'badminton' && (s.contains('badminton') || s.contains('cầu'))) return true;
-      if (selectedSport == 'football' && (s.contains('foot') || s.contains('socc') || s.contains('bóng'))) return true;
+      if (selectedSport == 'table_tennis' && (s.contains('table') || s.contains('bàn'))) return true;
       if (selectedSport == 'tennis' && s.contains('tennis')) return true;
       return s == selectedSport;
     }).toList();
