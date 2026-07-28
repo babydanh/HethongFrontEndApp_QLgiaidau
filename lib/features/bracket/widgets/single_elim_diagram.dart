@@ -199,7 +199,8 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
                 clipBehavior: Clip.none,
                 children: [
                   Positioned.fill(
-                    child: CustomPaint(
+                    child: RepaintBoundary(
+                      child: CustomPaint(
                       painter: _BracketConnectorPainter(
                         matches: diagramMatches,
                         positions: positions,
@@ -208,25 +209,23 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
                         cardH: _kCardH,
                         colGap: _kColGap,
                       ),
-                    ),
+                    )),
                   ),
                   ...sortedRounds.asMap().entries.map((entry) {
                     final columnIndex = entry.key;
                     final colX = columnIndex * (_kCardW + _kColGap);
                     final roundName = _getRoundLabel(columnIndex, totalRounds);
-                    return RepaintBoundary(
-                      child: Positioned(
+                    return Positioned(
                       left: colX,
                       top: -42,
                       width: _kCardW,
                       child: _RoundHeader(label: roundName),
-                    ));
+                    );
                   }),
                   ...diagramMatches.map((match) {
                     final pos = positions[match.id];
                     if (pos == null) return const SizedBox.shrink();
-                    return RepaintBoundary(
-                      child: Positioned(
+                    return Positioned(
                       left: pos.dx,
                       top: pos.dy,
                       width: _kCardW,
@@ -238,7 +237,7 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
                         isReadOnly: widget.isReadOnly,
                         isGrandFinal: match.id == finalMatchId,
                       ),
-                    ));
+                    );
                   }),
                 ],
               ),

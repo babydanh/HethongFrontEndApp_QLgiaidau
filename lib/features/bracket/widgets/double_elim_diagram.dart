@@ -155,8 +155,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                 children: [
               // ── Band background labels ──
               if (wRounds.isNotEmpty)
-                RepaintBoundary(
-                  child: Positioned(
+                Positioned(
                   left: 0,
                   top: layout.winnersTop - 80,
                   child: _DeBandLabel(
@@ -165,10 +164,9 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                     color: const Color(0xFF0284C7),
                     width: layout.winnersBandWidth,
                   ),
-                )),
+                ),
               if (lRounds.isNotEmpty)
-                RepaintBoundary(
-                  child: Positioned(
+                Positioned(
                   left: 0,
                   top: layout.losersTop - 80,
                   child: _DeBandLabel(
@@ -177,19 +175,19 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                     color: colors.textSecondary,
                     width: layout.losersBandWidth,
                   ),
-                )),
+                ),
               if (bands.finals.isNotEmpty)
-                RepaintBoundary(
-                  child: Positioned(
+                Positioned(
                   left: layout.grandFinalX,
                   top: layout.grandFinalTop - 36,
                   width: _kCardW,
                   child: _DeRoundHeader(label: 'CHUNG KẾT TỔNG'),
-                )),
+                ),
 
               // ── Connector lines ──
               Positioned.fill(
-                child: CustomPaint(
+                child: RepaintBoundary(
+                  child: CustomPaint(
                   painter: _DoubleElimPainter(
                     matches: widget.matches,
                     positions: positions,
@@ -198,7 +196,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                     primaryColor: colors.border.withValues(alpha: 0.8),
                     loserColor: colors.border.withValues(alpha: 0.8),
                   ),
-                ),
+                )),
               ),
 
               // ── Round headers — winners band ──
@@ -214,13 +212,12 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                 } else {
                   label = MatchRoundLabel.doubleUpperHeader(fromEnd);
                 }
-                return RepaintBoundary(
-                  child: Positioned(
+                return Positioned(
                   left: layout.winnerColumnX(round),
                   top: layout.winnersTop - 36,
                   width: _kCardW,
                   child: _DeRoundHeader(label: label),
-                ));
+                );
               }),
 
               // ── Round headers — losers band ──
@@ -236,21 +233,19 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                 } else {
                   label = MatchRoundLabel.doubleLowerHeader(fromEnd, round);
                 }
-                return RepaintBoundary(
-                  child: Positioned(
+                return Positioned(
                   left: layout.loserColumnX(round),
                   top: layout.losersTop - 36,
                   width: _kCardW,
                   child: _DeRoundHeader(label: label),
-                ));
+                );
               }),
 
               // ── Match cards ──
               ...widget.matches.map((match) {
                 final pos = positions[match.id];
                 if (pos == null) return const SizedBox.shrink();
-                return RepaintBoundary(
-                  child: Positioned(
+                return Positioned(
                   left: pos.dx,
                   top: pos.dy,
                   width: _kCardW,
@@ -262,7 +257,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                     isReadOnly: widget.isReadOnly,
                     isGrandFinal: match.nextMatchId.isEmpty,
                   ),
-                ));
+                );
               }),
                 ],
               ),
