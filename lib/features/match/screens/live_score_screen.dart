@@ -1422,6 +1422,35 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
+  void _showCompleteMatchDialog(MatchModel match) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.colors.bgCard,
+        title: Text('Xác nhận kết thúc trận đấu', style: TextStyle(color: context.colors.textPrimary, fontWeight: FontWeight.bold)),
+        content: Text('Bạn có chắc chắn muốn kết thúc trận đấu này và chốt kết quả tỉ số?', style: TextStyle(color: context.colors.textSecondary)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                await ref.read(matchRepositoryProvider).updateStatus(match.id, 'COMPLETED');
+                ref.invalidate(matchProvider(widget.matchId));
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: context.colors.success),
+            child: const Text('Xác nhận', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildReadOnlyScoreCard({
     required String teamName,
     required int score,
