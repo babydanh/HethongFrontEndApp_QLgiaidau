@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/domain/services/score_validator.dart';
@@ -6,36 +6,31 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.da
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart' as legacy;
 
-/// Provider cho ScorePanelNotifier — dùng legacy.ChangeNotifierProvider.family.
-final scorePanelNotifierProvider = legacy.ChangeNotifierProvider.autoDispose
-    .family<ScorePanelNotifier, MatchControlParams>((ref, arg) {
-      return ScorePanelNotifier(arg, ref);
-    });
+/// Provider cho ScorePanelNotifier.
+final scorePanelNotifierProvider = NotifierProvider.autoDispose
+    .family<ScorePanelNotifier, ScorePanelState, MatchControlParams>(
+      (arg) => ScorePanelNotifier(arg),
+    );
 
 /// Quản lý scoring logic cho tất cả môn thể thao (Tennis, Pickleball, Rally).
-///
-/// Gọi notifyListeners() sau mỗi lần state thay đổi để widget rebuild.
-class ScorePanelNotifier extends ChangeNotifier {
+class ScorePanelNotifier extends Notifier<ScorePanelState> {
   static const _log = AppLogger('ScorePanelNotifier');
-
   final MatchControlParams arg;
-  final Ref ref;
-  ScorePanelState _state;
 
-  ScorePanelNotifier(this.arg, this.ref)
-    : _state = ScorePanelState(config: _initConfig(ref, arg)) {
+  ScorePanelNotifier(this.arg);
+
+  @override
+  ScorePanelState build() {
+    final config = _initConfig(ref, arg);
     ref.listen<AsyncValue<MatchModel?>>(singleMatchProvider(arg), (prev, next) {
       final match = next.value;
       if (match != null) {
         _updateStateFromMatch(match);
       }
     }, fireImmediately: true);
+    return ScorePanelState(config: config);
   }
-
-  ScorePanelState get state => _state;
 
   void _updateStateFromMatch(MatchModel match) {
     final details = match.scoreDetails;
@@ -44,8 +39,7 @@ class ScorePanelNotifier extends ChangeNotifier {
       SportRuleKind.fromString(match.sportKey),
     );
     if (details == null) {
-      _state = _state.copyWith(config: config);
-      notifyListeners();
+      state = state.copyWith(config: config);
       return;
     }
 
@@ -99,8 +93,8 @@ class ScorePanelNotifier extends ChangeNotifier {
 
     // 4. Rally Point state
     RallySetState? rallyState;
-    if (_state.config.scoringModel == SportScoringModel.rallyPointSet ||
-        _state.config.scoringModel == SportScoringModel.pickleballSideOut) {
+    if (state.config.scoringModel == SportScoringModel.rallyPointSet ||
+        state.config.scoringModel == SportScoringModel.pickleballSideOut) {
       final activeSet = finishedSets.where((s) => !s.isFinished).firstOrNull;
       if (activeSet != null) {
         rallyState = RallySetState(
@@ -112,14 +106,13 @@ class ScorePanelNotifier extends ChangeNotifier {
       }
     }
 
-    _state = _state.copyWith(
+    state = state.copyWith(
       config: config,
       finishedSets: finishedSets,
       tennis: tennisState,
       pickleball: pbState,
       rally: rallyState,
     );
-    notifyListeners();
   }
 
   static SportConfig _initConfig(Ref ref, MatchControlParams arg) {
@@ -133,8 +126,8 @@ class ScorePanelNotifier extends ChangeNotifier {
   // ════════════════ TENNIS ════════════════
 
   void tennisAwardPoint(bool isTeam1) {
-    final t = _state.tennis ?? const TennisGameState();
-    _state = _state.copyWith(
+    final t = state.tennis ?? const TennisGameState();
+    state = state.copyWith(
       tennis: t.copyWith(
         team1GamePoints: isTeam1 ? t.team1GamePoints + 1 : t.team1GamePoints,
         team2GamePoints: !isTeam1 ? t.team2GamePoints + 1 : t.team2GamePoints,
@@ -142,12 +135,11 @@ class ScorePanelNotifier extends ChangeNotifier {
       errorMessage: null,
     );
     _checkTennisGameEnd();
-    notifyListeners();
   }
 
   void tennisRemovePoint(bool isTeam1) {
-    final t = _state.tennis ?? const TennisGameState();
-    _state = _state.copyWith(
+    final t = state.tennis ?? const TennisGameState();
+    state = state.copyWith(
       tennis: t.copyWith(
         team1GamePoints: isTeam1
             ? (t.team1GamePoints > 0 ? t.team1GamePoints - 1 : 0)
@@ -158,11 +150,10 @@ class ScorePanelNotifier extends ChangeNotifier {
       ),
       errorMessage: null,
     );
-    notifyListeners();
   }
 
   void _checkTennisGameEnd() {
-    final t = _state.tennis;
+    final t = state.tennis;
     if (t == null) return;
     if (t.isTiebreak) {
       if (t.team1GamePoints >= 7 &&
@@ -184,26 +175,26 @@ class ScorePanelNotifier extends ChangeNotifier {
   }
 
   void _finishTennisGame(int winnerTeam) {
-    final curSet = _state.finishedSets.isNotEmpty
-        ? _state.finishedSets.last
+    final curSet = state.finishedSets.isNotEmpty
+        ? state.finishedSets.last
         : null;
     List<SetScoreData> newSets;
     if (curSet != null && !curSet.isFinished) {
       newSets = [
-        ..._state.finishedSets.sublist(0, _state.finishedSets.length - 1),
+        ...state.finishedSets.sublist(0, state.finishedSets.length - 1),
         winnerTeam == 1
             ? curSet.copyWith(score1: curSet.score1 + 1)
             : curSet.copyWith(score2: curSet.score2 + 1),
       ];
     } else {
       newSets = [
-        ..._state.finishedSets,
+        ...state.finishedSets,
         winnerTeam == 1
             ? const SetScoreData(score1: 1, score2: 0)
             : const SetScoreData(score1: 0, score2: 1),
       ];
     }
-    _state = _state.copyWith(
+    state = state.copyWith(
       finishedSets: newSets,
       tennis: const TennisGameState(),
     );
@@ -211,23 +202,23 @@ class ScorePanelNotifier extends ChangeNotifier {
   }
 
   void _checkTennisSetEnd() {
-    final curSet = _state.finishedSets.isNotEmpty
-        ? _state.finishedSets.last
+    final curSet = state.finishedSets.isNotEmpty
+        ? state.finishedSets.last
         : null;
     if (curSet == null) return;
-    if (isSetComplete(curSet, _state.config)) {
-      final idx = _state.finishedSets.length - 1;
-      final newSets = [..._state.finishedSets];
+    if (isSetComplete(curSet, state.config)) {
+      final idx = state.finishedSets.length - 1;
+      final newSets = [...state.finishedSets];
       newSets[idx] = newSets[idx].copyWith(isFinished: true);
-      _state = _state.copyWith(
+      state = state.copyWith(
         finishedSets: newSets,
         tennis: const TennisGameState(),
       );
-    } else if (curSet.score1 >= _state.config.tiebreakAt &&
-        curSet.score2 >= _state.config.tiebreakAt &&
+    } else if (curSet.score1 >= state.config.tiebreakAt &&
+        curSet.score2 >= state.config.tiebreakAt &&
         curSet.score1 == curSet.score2) {
-      _state = _state.copyWith(
-        tennis: (_state.tennis ?? const TennisGameState()).copyWith(
+      state = state.copyWith(
+        tennis: (state.tennis ?? const TennisGameState()).copyWith(
           isTiebreak: true,
         ),
       );
@@ -237,16 +228,15 @@ class ScorePanelNotifier extends ChangeNotifier {
   // ════════════════ PICKLEBALL ════════════════
 
   bool pickleballAwardPoint(bool isTeam1) {
-    final pb = _state.pickleball ?? const PickleballServeState();
+    final pb = state.pickleball ?? const PickleballServeState();
     if (pb.isTeam1Serving != isTeam1) {
-      _state = _state.copyWith(
+      state = state.copyWith(
         errorMessage: 'Chỉ đội giao bóng mới được ghi điểm!',
       );
-      notifyListeners();
       return false;
     }
-    final r = _state.rally ?? const RallySetState();
-    _state = _state.copyWith(
+    final r = state.rally ?? const RallySetState();
+    state = state.copyWith(
       rally: RallySetState(
         currentP1: isTeam1 ? r.currentP1 + 1 : r.currentP1,
         currentP2: !isTeam1 ? r.currentP2 + 1 : r.currentP2,
@@ -255,43 +245,40 @@ class ScorePanelNotifier extends ChangeNotifier {
       errorMessage: null,
     );
     _checkPickleballGameEnd();
-    notifyListeners();
     return true;
   }
 
   void pickleballSwitchServer() {
-    final pb = _state.pickleball ?? const PickleballServeState();
-    _state = _state.copyWith(
+    final pb = state.pickleball ?? const PickleballServeState();
+    state = state.copyWith(
       pickleball: pb.serverNumber == 1
           ? pb.copyWith(serverNumber: 2)
           : pb.copyWith(isTeam1Serving: !pb.isTeam1Serving, serverNumber: 1),
       errorMessage: null,
     );
-    notifyListeners();
   }
 
   void pickleballSideOut() {
-    final pb = _state.pickleball ?? const PickleballServeState();
-    _state = _state.copyWith(
+    final pb = state.pickleball ?? const PickleballServeState();
+    state = state.copyWith(
       pickleball: pb.copyWith(
         isTeam1Serving: !pb.isTeam1Serving,
         serverNumber: 1,
       ),
       errorMessage: null,
     );
-    notifyListeners();
   }
 
   void _checkPickleballGameEnd() {
-    final r = _state.rally;
+    final r = state.rally;
     if (r == null) return;
     if (isSetComplete(
       SetScoreData(score1: r.currentP1, score2: r.currentP2),
-      _state.config,
+      state.config,
     )) {
-      _state = _state.copyWith(
+      state = state.copyWith(
         finishedSets: [
-          ..._state.finishedSets,
+          ...state.finishedSets,
           SetScoreData(
             score1: r.currentP1,
             score2: r.currentP2,
@@ -300,15 +287,14 @@ class ScorePanelNotifier extends ChangeNotifier {
         ],
         rally: const RallySetState(),
       );
-      notifyListeners();
     }
   }
 
   // ════════════════ RALLY ════════════════
 
   void rallyAddPoint(bool isTeam1) {
-    final r = _state.rally ?? const RallySetState();
-    _state = _state.copyWith(
+    final r = state.rally ?? const RallySetState();
+    state = state.copyWith(
       rally: RallySetState(
         currentP1: isTeam1 ? r.currentP1 + 1 : r.currentP1,
         currentP2: !isTeam1 ? r.currentP2 + 1 : r.currentP2,
@@ -316,12 +302,11 @@ class ScorePanelNotifier extends ChangeNotifier {
       errorMessage: null,
     );
     _checkRallySetEnd();
-    notifyListeners();
   }
 
   void rallyRemovePoint(bool isTeam1) {
-    final r = _state.rally ?? const RallySetState();
-    _state = _state.copyWith(
+    final r = state.rally ?? const RallySetState();
+    state = state.copyWith(
       rally: RallySetState(
         currentP1: isTeam1
             ? (r.currentP1 > 0 ? r.currentP1 - 1 : 0)
@@ -332,19 +317,18 @@ class ScorePanelNotifier extends ChangeNotifier {
       ),
       errorMessage: null,
     );
-    notifyListeners();
   }
 
   void _checkRallySetEnd() {
-    final r = _state.rally;
+    final r = state.rally;
     if (r == null) return;
     if (isSetComplete(
       SetScoreData(score1: r.currentP1, score2: r.currentP2),
-      _state.config,
+      state.config,
     )) {
-      _state = _state.copyWith(
+      state = state.copyWith(
         finishedSets: [
-          ..._state.finishedSets,
+          ...state.finishedSets,
           SetScoreData(
             score1: r.currentP1,
             score2: r.currentP2,
@@ -353,30 +337,29 @@ class ScorePanelNotifier extends ChangeNotifier {
         ],
         rally: const RallySetState(),
       );
-      notifyListeners();
     }
   }
 
   // ════════════════ COMMON ════════════════
 
-  bool get isMatchComplete => _state.isMatchComplete;
+  bool get isMatchComplete => state.isMatchComplete;
 
   bool canCompleteAs(int winnerTeam) {
     if (winnerTeam != 1 && winnerTeam != 2) return false;
-    if (!_state.overrideEnabled) {
-      return _state.isMatchComplete && _state.winnerTeam == winnerTeam;
+    if (!state.overrideEnabled) {
+      return state.isMatchComplete && state.winnerTeam == winnerTeam;
     }
-    if (_state.overrideReason.trim().isEmpty) return false;
+    if (state.overrideReason.trim().isEmpty) return false;
 
     final (team1Wins, team2Wins) = computeMatchSetsWon(_setsForSubmission());
     return winnerTeam == 1 ? team1Wins > team2Wins : team2Wins > team1Wins;
   }
 
   List<SetScoreData> _setsForSubmission() {
-    final finalSets = List<SetScoreData>.from(_state.finishedSets);
-    if (_state.config.scoringModel != SportScoringModel.tennisSet &&
-        _state.rally != null) {
-      final rally = _state.rally!;
+    final finalSets = List<SetScoreData>.from(state.finishedSets);
+    if (state.config.scoringModel != SportScoringModel.tennisSet &&
+        state.rally != null) {
+      final rally = state.rally!;
       if (rally.currentP1 > 0 || rally.currentP2 > 0) {
         finalSets.add(
           SetScoreData(
@@ -392,16 +375,14 @@ class ScorePanelNotifier extends ChangeNotifier {
 
   Future<void> completeMatch(int winnerTeam) async {
     if (!canCompleteAs(winnerTeam)) {
-      _state = _state.copyWith(
-        errorMessage: _state.overrideEnabled
+      state = state.copyWith(
+        errorMessage: state.overrideEnabled
             ? 'Nhập lý do và bảo đảm đội được xử thắng đang dẫn theo số set/game.'
             : 'Trận chưa đạt điều kiện kết thúc theo cấu hình.',
       );
-      notifyListeners();
       return;
     }
-    _state = _state.copyWith(isSubmitting: true, errorMessage: null);
-    notifyListeners();
+    state = state.copyWith(isSubmitting: true, errorMessage: null);
     try {
       final finalSets = _setsForSubmission();
       final match = ref.read(singleMatchProvider(arg)).value;
@@ -417,22 +398,81 @@ class ScorePanelNotifier extends ChangeNotifier {
             winnerId: winnerId,
             loserId: loserId,
             finalSets: finalSets,
-            overrideReason: _state.overrideEnabled
-                ? _state.overrideReason.trim()
+            overrideReason: state.overrideEnabled
+                ? state.overrideReason.trim()
                 : null,
           );
-      _state = _state.copyWith(isSubmitting: false);
-      notifyListeners();
+      state = state.copyWith(isSubmitting: false);
     } catch (e, stack) {
       _log.error('Lỗi kết thúc trận', e, stack);
-      _state = _state.copyWith(isSubmitting: false, errorMessage: 'Lỗi: $e');
-      notifyListeners();
+      state = state.copyWith(isSubmitting: false, errorMessage: 'Lỗi: $e');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  USER-ACTIONS: Finish Set & Override
+  // ═══════════════════════════════════════════════════════════
+
+  /// Get confirmation message for finishing current set, or null if no set to finish.
+  String? finishSetConfirmMessage() {
+    final rally = state.rally;
+    final tennis = state.tennis;
+    if (rally != null && (rally.currentP1 > 0 || rally.currentP2 > 0)) {
+      final setNum = state.finishedSets.length + 1;
+      return 'Kết thúc set $setNum với tỉ số ${rally.currentP1}-${rally.currentP2}?';
+    }
+    if (state.config.scoringModel == SportScoringModel.tennisSet &&
+        tennis != null) {
+      final setNum = state.finishedSets.length + 1;
+      return 'Kết thúc set $setNum?';
+    }
+    return null;
+  }
+
+  void finishSet() {
+    final rally = state.rally;
+    final tennis = state.tennis;
+
+    if (state.config.scoringModel == SportScoringModel.tennisSet) {
+      if (tennis == null) return;
+      final curSet = state.finishedSets.isNotEmpty
+          ? state.finishedSets.last
+          : null;
+      List<SetScoreData> newSets;
+      if (curSet != null && !curSet.isFinished) {
+        newSets = [
+          ...state.finishedSets.sublist(0, state.finishedSets.length - 1),
+          curSet.copyWith(isFinished: true),
+        ];
+      } else {
+        newSets = [
+          ...state.finishedSets,
+          const SetScoreData(score1: 0, score2: 0, isFinished: true),
+        ];
+      }
+      state = state.copyWith(
+        finishedSets: newSets,
+        tennis: const TennisGameState(),
+      );
+    } else {
+      if (rally == null) return;
+      final newFinishedSets = [
+        ...state.finishedSets,
+        SetScoreData(
+          score1: rally.currentP1,
+          score2: rally.currentP2,
+          isFinished: true,
+        ),
+      ];
+      state = state.copyWith(
+        finishedSets: newFinishedSets,
+        rally: const RallySetState(),
+      );
     }
   }
 
   void setOverride(bool enabled, String reason) {
-    _state = _state.copyWith(overrideEnabled: enabled, overrideReason: reason);
-    notifyListeners();
+    state = state.copyWith(overrideEnabled: enabled, overrideReason: reason);
   }
 }
 

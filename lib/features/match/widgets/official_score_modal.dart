@@ -96,7 +96,9 @@ void showOfficialScoreModal(
                         ),
                         decoration: BoxDecoration(
                           color: AppTheme.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusMedium,
+                          ),
                           border: Border.all(
                             color: AppTheme.primary.withValues(alpha: 0.3),
                           ),
@@ -209,8 +211,12 @@ void showOfficialScoreModal(
                         ),
                         Consumer(
                           builder: (context, ref, _) {
-                            final state = ref.watch(scorePanelNotifierProvider(params));
-                            final n = ref.read(scorePanelNotifierProvider(params).notifier);
+                            final state = ref.watch(
+                              scorePanelNotifierProvider(params),
+                            );
+                            final n = ref.read(
+                              scorePanelNotifierProvider(params).notifier,
+                            );
                             return Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -238,7 +244,9 @@ void showOfficialScoreModal(
                 Consumer(
                   builder: (context, ref, _) {
                     final state = ref.watch(scorePanelNotifierProvider(params));
-                    final n = ref.read(scorePanelNotifierProvider(params).notifier);
+                    final n = ref.read(
+                      scorePanelNotifierProvider(params).notifier,
+                    );
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
