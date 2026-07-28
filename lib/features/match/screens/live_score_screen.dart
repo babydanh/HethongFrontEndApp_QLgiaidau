@@ -1253,20 +1253,19 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           ).animate().fadeIn(duration: 300.ms),
         ),
 
-        // ─── Main Score Area ───
+        // ─── Main Score Area (read-only) ───
         Expanded(
           child: Row(
             children: [
               // Team 1
               Expanded(
-                child: _buildTeamScoreControl(
-                  match: match,
-                  isTeam1: true,
-                  color: const Color(0xFF2979FF),
-                  showAnim: _showScore1Anim,
+                child: _buildReadOnlyScoreCard(
+                  teamName: match.team1Name,
+                  score: match.score1,
+                  setsWon: match.sets.length,
                 ),
               ),
-              // Center VS
+              // Center VS + LIVE
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -1284,7 +1283,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       'VS',
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                         color: context.colors.textMuted,
                       ),
                     ),
@@ -1316,7 +1315,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 9,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w700,
                               letterSpacing: 1,
                             ),
                           ),
@@ -1328,11 +1327,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
               // Team 2
               Expanded(
-                child: _buildTeamScoreControl(
-                  match: match,
-                  isTeam1: false,
-                  color: const Color(0xFFEF4444),
-                  showAnim: _showScore2Anim,
+                child: _buildReadOnlyScoreCard(
+                  teamName: match.team2Name,
+                  score: match.score2,
+                  setsWon: match.sets.length,
                 ),
               ),
             ],
@@ -1345,47 +1343,51 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           color: context.colors.bgCard,
           child: Row(
             children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orangeAccent,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              if (canOpenScoring) ...[
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orangeAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                  icon: const Icon(Icons.sports_kabaddi_rounded, size: 20),
-                  label: const Text(
-                    'THỔI CÒI',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
+                    icon: const Icon(Icons.sports_kabaddi_rounded, size: 20),
+                    label: const Text(
+                      'THỔI CÒI',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
                     ),
+                    onPressed: () => _showFoulSelectionDialog(match),
                   ),
-                  onPressed: () => _showFoulSelectionDialog(match),
                 ),
-              ),
-              const SizedBox(width: 8),
+                const SizedBox(width: 8),
+              ],
               Expanded(
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: context.colors.error,
+                    backgroundColor: context.colors.success,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  icon: const Icon(Icons.emoji_events, size: 20),
+                  icon: const Icon(Icons.check_circle_outline, size: 20),
                   label: const Text(
-                    'XỬ THẮNG',
+                    'KẾT THÚC',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
                     ),
                   ),
-                  onPressed: () => _showForceWinDialog(match),
+                  onPressed: canOpenScoring
+                      ? () => _showCompleteMatchDialog(match)
+                      : null,
                 ),
               ),
             ],
@@ -1413,6 +1415,51 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               fontSize: 11,
               color: context.colors.textSecondary,
               fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReadOnlyScoreCard({
+    required String teamName,
+    required int score,
+    required int setsWon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.colors.bgSurface.withValues(alpha: 0.3),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            teamName,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: context.colors.textPrimary,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            transitionBuilder: (child, animation) {
+              return ScaleTransition(scale: animation, child: child);
+            },
+            child: Text(
+              '$score',
+              key: ValueKey('score_$score'),
+              style: TextStyle(
+                fontSize: 72,
+                fontWeight: FontWeight.w700,
+                color: context.colors.textPrimary,
+                height: 1,
+              ),
             ),
           ),
         ],
