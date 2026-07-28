@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
 class LiteJoinScreen extends ConsumerStatefulWidget {
@@ -59,12 +60,11 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final msg = e is Exception
-            ? e.toString().replaceAll('Exception: ', '')
-            : 'Có lỗi xảy ra';
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorParser.parse(e, 'Không thể tham gia giải đấu.')),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _joining = false);
@@ -86,12 +86,13 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final msg = e is Exception
-            ? e.toString().replaceAll('Exception: ', '')
-            : 'Có lỗi xảy ra';
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ErrorParser.parse(e, 'Không thể gửi yêu cầu vào CLB.'),
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _requestingClub = false);
@@ -187,6 +188,16 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                     ),
                     const SizedBox(height: 12),
                     const Text('Giải đã đóng đăng ký'),
+                  ],
+
+                  if (_status?['registrationNotOpen'] == true) ...[
+                    Icon(
+                      Icons.schedule_rounded,
+                      size: 40,
+                      color: context.colors.warning,
+                    ),
+                    const SizedBox(height: 12),
+                    const Text('Giải đấu chưa mở đăng ký'),
                   ],
 
                   // Case: Tournament full

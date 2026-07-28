@@ -36,7 +36,6 @@ import 'package:app_quanly_giaidau/features/profile/screens/profile_screen.dart'
 import 'package:app_quanly_giaidau/features/profile/screens/user_profile_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/edit_profile_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/change_password_screen.dart';
-import 'package:app_quanly_giaidau/features/profile/screens/settings_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/admin/screens/admin_clubs_screen.dart';
@@ -68,6 +67,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       final auth = ref.read(authProvider);
       final isAuth = auth.status == AuthStatus.authenticated;
       final currentPath = state.matchedLocation;
+      final isPublicRegistrationRoute =
+          currentPath.startsWith('/register/') ||
+          currentPath.startsWith('/join/') ||
+          currentPath == '/join-team' ||
+          currentPath.startsWith('/lite-join/');
 
       // Splash screen & Login screen — luôn cho phép
       if (currentPath == '/' ||
@@ -96,7 +100,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           !currentPath.startsWith('/live') &&
           !currentPath.startsWith('/matches') &&
           !currentPath.startsWith('/chat') &&
-          !currentPath.startsWith('/series')) {
+          !currentPath.startsWith('/series') &&
+          !isPublicRegistrationRoute) {
         return '/home';
       }
 
@@ -132,7 +137,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ─── Login/Register ───
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginRegisterScreen(),
+        builder: (context, state) => LoginRegisterScreen(
+          redirectPath: state.uri.queryParameters['redirect'],
+        ),
       ),
       GoRoute(
         path: '/forgot-password',
@@ -149,7 +156,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ─── Login Loading Transition ───
       GoRoute(
         path: '/login-loading',
-        builder: (context, state) => const LoginLoadingScreen(),
+        builder: (context, state) =>
+            LoginLoadingScreen(redirectPath: state.extra as String?),
       ),
 
       // ─── Home ───
@@ -433,18 +441,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'elo',
             builder: (context, state) {
-              return Consumer(builder: (context, ref, _) {
-                final profile = ref.watch(userProfileProvider).asData?.value;
-                final userId = profile?.id ?? '';
-                final userName = profile?.fullName ?? 'Người dùng';
-                final avatarUrl = profile?.avatarUrl;
-                return EloHistoryScreen(
-                  userId: userId,
-                  userName: userName,
-                  avatarUrl: avatarUrl,
-                  currentElo: 1000,
-                );
-              });
+              return Consumer(
+                builder: (context, ref, _) {
+                  final profile = ref.watch(userProfileProvider).asData?.value;
+                  final userId = profile?.id ?? '';
+                  final userName = profile?.fullName ?? 'Người dùng';
+                  final avatarUrl = profile?.avatarUrl;
+                  return EloHistoryScreen(
+                    userId: userId,
+                    userName: userName,
+                    avatarUrl: avatarUrl,
+                    currentElo: 1000,
+                  );
+                },
+              );
             },
           ),
           GoRoute(
@@ -470,9 +480,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final extra = state.extra as Map?;
           return JoinTeamScreen(
-            tournamentId: extra?['tournamentId'] ?? '',
-            participantId: extra?['participantId'] ?? '',
-            token: extra?['token'] ?? '',
+            tournamentId:
+                extra?['tournamentId'] ??
+                state.uri.queryParameters['tournamentId'] ??
+                '',
+            participantId:
+                extra?['participantId'] ??
+                state.uri.queryParameters['pid'] ??
+                '',
+            token: extra?['token'] ?? state.uri.queryParameters['token'] ?? '',
           );
         },
       ),
@@ -598,6 +614,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return CheckoutScreen(
             tournamentId: extra?['tournamentId'] ?? '',
             participantId: extra?['participantId'] ?? '',
+            divisionId: extra?['divisionId']?.toString(),
             amount: (extra?['amount'] ?? 0).toDouble(),
             tournamentName: extra?['tournamentName']?.toString(),
           );

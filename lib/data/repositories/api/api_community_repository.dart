@@ -24,7 +24,7 @@ class ApiCommunityRepository implements ICommunityRepository {
       final response = await _dioClient.dio.get('/communities', queryParameters: params);
       if (response.statusCode == 200) {
         final raw = response.data;
-        final payload = raw is Map ? raw['data'] : raw;
+        final payload = raw is Map && raw.containsKey('data') ? raw['data'] : raw;
         final data = payload is Map
             ? <dynamic>[
                 ...(payload['created'] as List<dynamic>? ?? const []),
@@ -51,11 +51,17 @@ class ApiCommunityRepository implements ICommunityRepository {
       final response = await _dioClient.dio.get('/communities/my');
       if (response.statusCode == 200) {
         final raw = response.data;
-        final data = raw is Map ? (raw['data'] as List<dynamic>? ?? []) : (raw as List<dynamic>? ?? []);
-        if (data.isNotEmpty) {
-          _log.info('getMyCommunities sample raw item: ${data.first}');
+        final payload = raw is Map && raw.containsKey('data') ? raw['data'] : raw;
+        final List<dynamic> list = payload is Map
+            ? <dynamic>[
+                ...(payload['created'] as List<dynamic>? ?? const []),
+                ...(payload['joined'] as List<dynamic>? ?? const []),
+              ]
+            : (payload as List<dynamic>? ?? const []);
+        if (list.isNotEmpty) {
+          _log.info('getMyCommunities sample raw item: ${list.first}');
         }
-        return data.map((e) => Community.fromJson(e as Map<String, dynamic>)).toList();
+        return list.map((e) => Community.fromJson(e as Map<String, dynamic>)).toList();
       }
       _log.warning('getMyCommunities status=${response.statusCode}');
       return [];
@@ -289,7 +295,6 @@ class ApiCommunityRepository implements ICommunityRepository {
     );
   }
 
-  @override
   @override
   Future<void> removeMember(String communityId, String userId) async {
     _log.info('Xoá thành viên: $userId khỏi CLB $communityId');

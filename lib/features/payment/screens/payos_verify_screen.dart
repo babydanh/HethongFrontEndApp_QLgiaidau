@@ -33,9 +33,9 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto-poll every 5 seconds up to 12 times (1 minute) to check payment completion
+    // PayOS links expire after 15 minutes, so keep polling for the full lifetime.
     _autoCheckTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (_checkAttempts >= 12) {
+      if (_checkAttempts >= 180) {
         _autoCheckTimer?.cancel();
         return;
       }
@@ -56,39 +56,49 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
     }
 
     try {
-      final payment = await ref.read(paymentRepositoryProvider).getPaymentById(widget.paymentId);
+      final payment = await ref
+          .read(paymentRepositoryProvider)
+          .getPaymentById(widget.paymentId);
       if (payment != null) {
         if (payment.isCompleted && mounted) {
           _autoCheckTimer?.cancel();
-          context.pushReplacement('/payment/result', extra: {
-            'status': 'success',
-            'tournamentId': widget.tournamentId,
-            'amount': widget.amount,
-          });
+          context.pushReplacement(
+            '/payment/result',
+            extra: {
+              'status': 'success',
+              'tournamentId': widget.tournamentId,
+              'amount': widget.amount,
+            },
+          );
           return;
-        } else if (payment.isFailed && mounted) {
+        } else if (payment.isTerminalFailure && mounted) {
           _autoCheckTimer?.cancel();
-          context.pushReplacement('/payment/result', extra: {
-            'status': 'fail',
-            'tournamentId': widget.tournamentId,
-            'amount': widget.amount,
-          });
+          context.pushReplacement(
+            '/payment/result',
+            extra: {
+              'status': 'fail',
+              'tournamentId': widget.tournamentId,
+              'amount': widget.amount,
+            },
+          );
           return;
         }
       }
       if (!silent && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Hệ thống chưa nhận được thanh toán. Vui lòng kiểm tra lại sau vài giây.'),
+            content: Text(
+              'Hệ thống chưa nhận được thanh toán. Vui lòng kiểm tra lại sau vài giây.',
+            ),
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (e) {
       if (!silent && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Có lỗi xảy ra: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Có lỗi xảy ra: $e')));
       }
     } finally {
       if (!silent && mounted) {
@@ -127,7 +137,11 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                   size: 40,
                   color: Color(0xFFFF5622),
                 ),
-              ).animate().scale(delay: 100.ms, duration: 400.ms, curve: Curves.easeOutBack),
+              ).animate().scale(
+                delay: 100.ms,
+                duration: 400.ms,
+                curve: Curves.easeOutBack,
+              ),
               const SizedBox(height: 24),
               Text(
                 'Thanh toán qua PayOS',
@@ -160,7 +174,10 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Số tiền:', style: TextStyle(color: colors.textSecondary)),
+                        Text(
+                          'Số tiền:',
+                          style: TextStyle(color: colors.textSecondary),
+                        ),
                         Text(
                           '${fmt.format(widget.amount.ceil())}đ',
                           style: TextStyle(
@@ -175,7 +192,10 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Trạng thái:', style: TextStyle(color: colors.textSecondary)),
+                        Text(
+                          'Trạng thái:',
+                          style: TextStyle(color: colors.textSecondary),
+                        ),
                         Row(
                           children: [
                             SizedBox(

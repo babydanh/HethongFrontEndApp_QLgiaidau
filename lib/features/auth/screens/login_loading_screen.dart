@@ -9,7 +9,9 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginLoadingScreen extends ConsumerStatefulWidget {
-  const LoginLoadingScreen({super.key});
+  final String? redirectPath;
+
+  const LoginLoadingScreen({super.key, this.redirectPath});
 
   @override
   ConsumerState<LoginLoadingScreen> createState() => _LoginLoadingScreenState();
@@ -22,7 +24,12 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
     // Chờ 2.2 giây để người dùng trải nghiệm hiệu ứng chào mừng trước khi thu nhỏ thành header trang chủ
     Timer(const Duration(milliseconds: 2200), () {
       if (mounted) {
-        context.go('/home');
+        final destination = widget.redirectPath;
+        context.go(
+          destination != null && destination.startsWith('/')
+              ? destination
+              : '/home',
+        );
       }
     });
   }
@@ -42,10 +49,7 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
             tag: "vnsport_header_bg",
             child: CustomPaint(
               size: Size(double.infinity, size.height * 0.68),
-              painter: VnsportHeaderPainter(
-                isLoggedIn: true,
-                colors: colors,
-              ),
+              painter: VnsportHeaderPainter(isLoggedIn: true, colors: colors),
             ),
           ),
           SafeArea(
@@ -66,7 +70,7 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Dòng chào mừng với hiệu ứng mượt mà
                   userProfileAsync.when(
                     data: (profile) {
@@ -75,24 +79,30 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            "CHÀO MỪNG QUAY TRỞ LẠI",
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2.0,
-                            ),
-                          ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.2, end: 0),
+                                "CHÀO MỪNG QUAY TRỞ LẠI",
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 2.0,
+                                ),
+                              )
+                              .animate()
+                              .fadeIn(duration: 400.ms)
+                              .slideY(begin: 0.2, end: 0),
                           const SizedBox(height: 8),
                           Text(
-                            name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                          ).animate().fadeIn(delay: 200.ms, duration: 500.ms).scale(begin: const Offset(0.9, 0.9)),
+                                name,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              )
+                              .animate()
+                              .fadeIn(delay: 200.ms, duration: 500.ms)
+                              .scale(begin: const Offset(0.9, 0.9)),
                         ],
                       );
                     },
@@ -101,7 +111,9 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                       height: 24,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.white70,
+                        ),
                       ),
                     ),
                     error: (context, error) => Text(
@@ -113,7 +125,7 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                       ),
                     ).animate().fadeIn(),
                   ),
-                  
+
                   const SizedBox(height: 48),
                   // Spinner hiệu ứng mờ sang trọng
                   const SizedBox(

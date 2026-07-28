@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/payment_model.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -11,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 class CheckoutScreen extends ConsumerStatefulWidget {
   final String tournamentId;
   final String participantId;
+  final String? divisionId;
   final double amount;
   final String? tournamentName;
 
@@ -18,6 +20,7 @@ class CheckoutScreen extends ConsumerStatefulWidget {
     super.key,
     required this.tournamentId,
     required this.participantId,
+    this.divisionId,
     required this.amount,
     this.tournamentName,
   });
@@ -30,7 +33,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   String _selectedGateway = 'PAYOS';
   bool _isSubmitting = false;
 
-  Future<void> _handleCheckout(double effectiveAmount, String? effectiveName) async {
+  Future<void> _handleCheckout(
+    double effectiveAmount,
+    String? effectiveName,
+  ) async {
     setState(() => _isSubmitting = true);
     try {
       // Free tournament handling
@@ -53,17 +59,22 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       }
 
       // Paid tournament handling via PayOS
-      final result = await ref.read(paymentRepositoryProvider).createPaymentLink(
-        CreatePaymentDto(
-          tournamentId: widget.tournamentId,
-          participantId: widget.participantId,
-          amount: effectiveAmount,
-        ),
-      );
+      final result = await ref
+          .read(paymentRepositoryProvider)
+          .createPaymentLink(
+            CreatePaymentDto(
+              tournamentId: widget.tournamentId,
+              participantId: widget.participantId,
+              divisionId: widget.divisionId,
+            ),
+          );
 
       if (result != null && mounted) {
         final paymentId = result['paymentId'] ?? '';
         final paymentUrl = result['paymentUrl'] ?? '';
+        final confirmedAmount =
+            double.tryParse(result['amount']?.toString() ?? '') ??
+            effectiveAmount;
         if (paymentUrl.isNotEmpty) {
           final uri = Uri.parse(paymentUrl);
           final opened = await launchUrl(
@@ -74,12 +85,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             throw Exception('Không thể mở trang thanh toán PayOS');
           }
           if (mounted) {
-            context.pushReplacement('/payment/payos-verify', extra: {
-              'paymentId': paymentId,
-              'amount': effectiveAmount,
-              'tournamentId': widget.tournamentId,
-              'tournamentName': effectiveName,
-            });
+            context.pushReplacement(
+              '/payment/payos-verify',
+              extra: {
+                'paymentId': paymentId,
+                'amount': confirmedAmount,
+                'tournamentId': widget.tournamentId,
+                'tournamentName': effectiveName,
+              },
+            );
           }
         } else {
           throw Exception('Không lấy được liên kết thanh toán từ PayOS');
@@ -96,7 +110,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(
+              ErrorParser.parse(
+                e,
+                'Không thể tạo thanh toán. Vui lòng thử lại.',
+              ),
+            ),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -120,10 +139,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final effectiveAmount = widget.amount > 0
         ? widget.amount
         : (tournament?.entryFee != null && tournament!.entryFee! > 0
-            ? tournament.entryFee!
-            : 0.0);
+              ? tournament.entryFee!
+              : 0.0);
 
-    final effectiveName = (widget.tournamentName != null && widget.tournamentName!.isNotEmpty)
+    final effectiveName =
+        (widget.tournamentName != null && widget.tournamentName!.isNotEmpty)
         ? widget.tournamentName
         : (tournament?.name ?? '');
 
@@ -174,7 +194,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   Text(
                     isFree ? 'MIỄN PHÍ' : 'LỆ PHÍ THAM GIA',
                     style: TextStyle(
-                      color: isFree ? const Color(0xFF10B981) : colors.textMuted,
+                      color: isFree
+                          ? const Color(0xFF10B981)
+                          : colors.textMuted,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1,
@@ -303,7 +325,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: _isSubmitting ? null : () => _handleCheckout(effectiveAmount, effectiveName),
+                onPressed: _isSubmitting
+                    ? null
+                    : () => _handleCheckout(effectiveAmount, effectiveName),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,

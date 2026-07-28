@@ -14,7 +14,7 @@ class TournamentDivisionOption {
   final String id;
   final String name;
   final String? genderRestriction; // 'MALE' | 'FEMALE' | 'MIXED'
-  final String? matchType;         // 'SINGLES' | 'DOUBLES' | 'MIXED_DOUBLES'
+  final String? matchType; // 'SINGLES' | 'DOUBLES' | 'MIXED_DOUBLES'
   final String? categoryId;
   final double? minElo;
   final double? maxElo;
@@ -40,10 +40,14 @@ class TournamentRegistrationResult {
   const TournamentRegistrationResult({
     required this.participantId,
     required this.entryFee,
+    required this.teamStatus,
+    required this.isWaitlisted,
   });
 
   final String participantId;
   final double entryFee;
+  final String teamStatus;
+  final bool isWaitlisted;
 
   factory TournamentRegistrationResult.fromJson(Map<String, dynamic> json) {
     // Backend trả participantId trong participant.id, fallback top-level id
@@ -61,6 +65,13 @@ class TournamentRegistrationResult {
     return TournamentRegistrationResult(
       participantId: extractId(json),
       entryFee: (json['entryFee'] as num?)?.toDouble() ?? 0,
+      teamStatus: json['participant'] is Map
+          ? (json['participant']['teamStatus']?.toString() ?? '')
+          : '',
+      isWaitlisted:
+          json['isWaitlisted'] == true ||
+          (json['participant'] is Map &&
+              json['participant']['teamStatus']?.toString() == 'WAITLISTED'),
     );
   }
 }

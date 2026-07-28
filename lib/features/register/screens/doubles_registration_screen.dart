@@ -60,6 +60,7 @@ class _DoublesRegistrationFlowState
 
   // Step 3
   double? _entryFee;
+  String _teamStatus = '';
 
   @override
   void dispose() {
@@ -184,7 +185,14 @@ class _DoublesRegistrationFlowState
           );
       if (!mounted) return;
       _participantId = result.participantId;
-      _entryFee = result.entryFee;
+      _teamStatus = result.teamStatus;
+      final tournament = ref
+          .read(tournamentIntroProvider(widget.tournamentId))
+          .asData
+          ?.value;
+      _entryFee = result.entryFee > 0
+          ? result.entryFee
+          : (widget.division.entryFee ?? tournament?.entryFee ?? 0);
 
       // Fetch registration details to get invite token/link
       try {
@@ -198,21 +206,28 @@ class _DoublesRegistrationFlowState
         );
         if (mounted && regResp.data['data'] is Map) {
           final regData = regResp.data['data'] as Map;
-          _teamInviteToken = regData['teamInviteToken']?.toString();
-          _teamInviteLink = regData['teamInviteLink']?.toString();
+          final participant = regData['participant'];
+          if (participant is Map) {
+            _teamInviteToken = participant['teamInviteToken']?.toString();
+            _teamInviteLink = participant['teamInviteLink']?.toString();
+          }
         }
       } catch (_) {}
 
       if (mounted) {
-        if (_selectedPartner != null || _inviteLater) {
+        if (result.isWaitlisted ||
+            result.teamStatus == 'COMPLETE' ||
+            result.teamStatus == 'PENDING_APPROVAL') {
+          setState(() => _step = 3);
+        } else {
           setState(() => _step = 2);
           _startPolling();
-        } else {
-          setState(() => _step = 3);
         }
       }
     } catch (e) {
-      _showError(ErrorParser.parse(e, 'Không thể tạo đội đăng ký. Vui lòng thử lại.'));
+      _showError(
+        ErrorParser.parse(e, 'Không thể tạo đội đăng ký. Vui lòng thử lại.'),
+      );
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -246,13 +261,18 @@ class _DoublesRegistrationFlowState
       );
       if (!mounted || resp.data['data'] is! Map) return;
       final regData = resp.data['data'] as Map;
-      final teamStatus = regData['teamStatus']?.toString() ?? '';
+      final participant = regData['participant'];
+      if (participant is! Map) return;
+      final teamStatus = participant['teamStatus']?.toString() ?? '';
       if (teamStatus == 'COMPLETE' ||
-          teamStatus == 'PENDING' ||
-          teamStatus == 'PENDING_APPROVAL') {
+          teamStatus == 'PENDING_APPROVAL' ||
+          teamStatus == 'WAITLISTED') {
         _pollTimer?.cancel();
         if (mounted) {
-          setState(() => _step = 3);
+          setState(() {
+            _teamStatus = teamStatus;
+            _step = 3;
+          });
         }
       }
     } catch (_) {}
@@ -747,9 +767,9 @@ class _DoublesRegistrationFlowState
           child: TextButton(
             onPressed: () {
               _pollTimer?.cancel();
-              setState(() => _step = 3);
+              context.go('/intro/${widget.tournamentId}');
             },
-            child: const Text('Bỏ qua, tiếp tục'),
+            child: const Text('Tiếp tục sau'),
           ),
         ),
       ],
@@ -757,6 +777,12 @@ class _DoublesRegistrationFlowState
   }
 
   Widget _buildStep3(Tournament t, AppColorsExtension colors) {
+    final canPay =
+        _entryFee != null &&
+        _entryFee! > 0 &&
+        _participantId != null &&
+        (_teamStatus == 'COMPLETE' || _teamStatus == 'PENDING_APPROVAL');
+    final isWaitlisted = _teamStatus == 'WAITLISTED';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -789,7 +815,13 @@ class _DoublesRegistrationFlowState
           ),
           child: Column(
             children: [
-              Icon(Icons.check_circle_rounded, size: 48, color: colors.success),
+              Icon(
+                isWaitlisted
+                    ? Icons.hourglass_top_rounded
+                    : Icons.check_circle_rounded,
+                size: 48,
+                color: isWaitlisted ? colors.warning : colors.success,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Đội của bạn: ${_teamNameCtrl.text}',
@@ -825,6 +857,14 @@ class _DoublesRegistrationFlowState
                   ),
                 ),
               ],
+              if (isWaitlisted) ...[
+                const SizedBox(height: 12),
+                Text(
+                  'Đội đang ở danh sách chờ. Bạn chưa cần thanh toán cho đến khi có suất chính thức.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: colors.textSecondary),
+                ),
+              ],
             ],
           ),
         ),
@@ -834,29 +874,25 @@ class _DoublesRegistrationFlowState
           height: 50,
           child: FilledButton.icon(
             onPressed: () {
-              if (_entryFee != null &&
-                  _entryFee! > 0 &&
-                  _participantId != null) {
+              if (canPay) {
                 context.push(
                   '/payment/checkout',
                   extra: {
                     'tournamentId': widget.tournamentId,
                     'participantId': _participantId,
+                    'divisionId': widget.division.id,
                     'amount': _entryFee,
+                    'tournamentName': t.name,
                   },
                 );
               } else {
                 setState(() => _success = true);
               }
             },
-            icon: _entryFee != null && _entryFee! > 0
+            icon: canPay
                 ? const Icon(Icons.payment_rounded)
                 : const Icon(Icons.check_rounded),
-            label: Text(
-              _entryFee != null && _entryFee! > 0
-                  ? 'Tiến hành thanh toán'
-                  : 'Hoàn tất',
-            ),
+            label: Text(canPay ? 'Tiến hành thanh toán' : 'Hoàn tất'),
             style: FilledButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),

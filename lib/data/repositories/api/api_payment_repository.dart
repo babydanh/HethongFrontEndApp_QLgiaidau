@@ -32,28 +32,32 @@ class PaymentRepository {
       return null;
     } catch (e, stack) {
       _log.error('Error fetching payment $id', e, stack);
-      return null;
+      rethrow;
     }
   }
 
   Future<Map<String, dynamic>?> createPaymentLink(CreatePaymentDto dto) async {
     try {
-      final response = await _dioClient.dio.post('/payments/create-link', data: dto.toJson());
+      final response = await _dioClient.dio.post(
+        '/payments/create-link',
+        data: dto.toJson(),
+      );
       if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data['data'];
       }
       return null;
     } catch (e, stack) {
       _log.error('Error creating payment link', e, stack);
-      return null;
+      rethrow;
     }
   }
 
   Future<bool> mockVerify(String paymentId) async {
     try {
-      final response = await _dioClient.dio.post('/payments/mock-verify', data: {
-        'paymentId': paymentId,
-      });
+      final response = await _dioClient.dio.post(
+        '/payments/mock-verify',
+        data: {'paymentId': paymentId},
+      );
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e, stack) {
       _log.error('Error verifying payment', e, stack);

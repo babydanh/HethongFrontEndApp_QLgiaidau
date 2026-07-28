@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/payment_model.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -88,7 +89,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     );
   }
 
-  Widget _buildContent(BuildContext context, WidgetRef ref, List<PaymentModel> payments) {
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    List<PaymentModel> payments,
+  ) {
     final colors = context.colors;
     final pending = payments.where((p) => p.isPending).toList();
 
@@ -100,7 +105,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         case 'pending':
           return p.isPending;
         case 'failed':
-          return p.isFailed || p.isRefunded;
+          return p.isTerminalFailure || p.isRefunded;
         default:
           return true;
       }
@@ -150,7 +155,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       children: [
                         Text(
                           'Tổng giao dịch',
-                          style: TextStyle(color: colors.textMuted, fontSize: 12),
+                          style: TextStyle(
+                            color: colors.textMuted,
+                            fontSize: 12,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -166,11 +174,16 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   ),
                   if (pending.isNotEmpty)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF59E0B).withValues(alpha: 0.16),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+                        border: Border.all(
+                          color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -200,9 +213,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
           ),
 
           // Filter chips
-          SliverToBoxAdapter(
-            child: _buildFilterChips(context),
-          ),
+          SliverToBoxAdapter(child: _buildFilterChips(context)),
 
           if (filteredPayments.isEmpty)
             SliverFillRemaining(
@@ -229,7 +240,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        _filter == 'all' ? 'Chưa có giao dịch nào' : 'Không có giao dịch phù hợp',
+                        _filter == 'all'
+                            ? 'Chưa có giao dịch nào'
+                            : 'Không có giao dịch phù hợp',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -251,7 +264,8 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
-                  (context, index) => _buildPaymentCard(context, filteredPayments[index]),
+                  (context, index) =>
+                      _buildPaymentCard(context, filteredPayments[index]),
                   childCount: filteredPayments.length,
                 ),
               ),
@@ -290,7 +304,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
-                      color: selected ? chipColor.withValues(alpha: 0.16) : colors.bgCard,
+                      color: selected
+                          ? chipColor.withValues(alpha: 0.16)
+                          : colors.bgCard,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: selected ? chipColor : colors.border,
@@ -302,7 +318,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                        fontWeight: selected
+                            ? FontWeight.w800
+                            : FontWeight.w600,
                         color: selected ? chipColor : colors.textSecondary,
                       ),
                     ),
@@ -328,7 +346,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     } else if (payment.isPending) {
       statusColor = const Color(0xFFF59E0B);
       statusIcon = Icons.access_time_rounded;
-    } else if (payment.isFailed) {
+    } else if (payment.isTerminalFailure) {
       statusColor = const Color(0xFFEF4444);
       statusIcon = Icons.cancel_rounded;
     } else {
@@ -389,7 +407,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           const SizedBox(height: 2),
                           Text(
                             '${payment.gatewayLabel} • $dateStr',
-                            style: TextStyle(fontSize: 11, color: colors.textMuted),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colors.textMuted,
+                            ),
                           ),
                         ],
                       ),
@@ -407,7 +428,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         ),
                         const SizedBox(height: 4),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: statusColor.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(6),
@@ -433,14 +457,21 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                     payment.transactionReference!.isNotEmpty) ...[
                   const SizedBox(height: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: colors.bgSurface,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.numbers_rounded, size: 14, color: colors.textMuted),
+                        Icon(
+                          Icons.numbers_rounded,
+                          size: 14,
+                          color: colors.textMuted,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
@@ -452,7 +483,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                             ),
                           ),
                         ),
-                        if (payment.isPending || payment.isFailed)
+                        if (payment.isRetryable)
                           Text(
                             'Ấn để thanh toán lại ›',
                             style: TextStyle(
@@ -462,7 +493,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                             ),
                           )
                         else
-                          Icon(Icons.chevron_right_rounded, size: 16, color: colors.textMuted),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            size: 16,
+                            color: colors.textMuted,
+                          ),
                       ],
                     ),
                   ),
@@ -488,7 +523,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     } else if (payment.isPending) {
       statusColor = const Color(0xFFF59E0B);
       statusIcon = Icons.access_time_rounded;
-    } else if (payment.isFailed) {
+    } else if (payment.isTerminalFailure) {
       statusColor = const Color(0xFFEF4444);
       statusIcon = Icons.cancel_rounded;
     } else {
@@ -507,7 +542,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: colors.bgCard,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
                 border: Border.all(color: colors.border),
               ),
               child: Column(
@@ -554,7 +591,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                             ),
                             Text(
                               dateStr,
-                              style: TextStyle(fontSize: 12, color: colors.textMuted),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colors.textMuted,
+                              ),
                             ),
                           ],
                         ),
@@ -574,16 +614,30 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   const SizedBox(height: 20),
 
                   // Details rows
-                  _buildDetailRow(colors, 'Giải đấu', payment.tournamentName ?? 'Chưa xác định'),
+                  _buildDetailRow(
+                    colors,
+                    'Giải đấu',
+                    payment.tournamentName ?? 'Chưa xác định',
+                  ),
                   if (payment.teamName != null && payment.teamName!.isNotEmpty)
                     _buildDetailRow(colors, 'Tên VĐV / Đội', payment.teamName!),
-                  _buildDetailRow(colors, 'Kênh thanh toán', payment.gatewayLabel),
+                  _buildDetailRow(
+                    colors,
+                    'Kênh thanh toán',
+                    payment.gatewayLabel,
+                  ),
                   if (payment.transactionReference != null &&
                       payment.transactionReference!.isNotEmpty)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Mã giao dịch', style: TextStyle(fontSize: 13, color: colors.textMuted)),
+                        Text(
+                          'Mã giao dịch',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: colors.textMuted,
+                          ),
+                        ),
                         Row(
                           children: [
                             Text(
@@ -598,7 +652,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                             const SizedBox(width: 6),
                             InkWell(
                               onTap: () {
-                                Clipboard.setData(ClipboardData(text: payment.transactionReference!));
+                                Clipboard.setData(
+                                  ClipboardData(
+                                    text: payment.transactionReference!,
+                                  ),
+                                );
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('Đã sao chép mã giao dịch'),
@@ -608,7 +666,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                               },
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
-                                child: Icon(Icons.copy_rounded, size: 16, color: AppTheme.primary),
+                                child: Icon(
+                                  Icons.copy_rounded,
+                                  size: 16,
+                                  color: AppTheme.primary,
+                                ),
                               ),
                             ),
                           ],
@@ -619,17 +681,23 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   const SizedBox(height: 24),
 
                   // Actions area: Re-pay / Refresh status
-                  if (payment.isPending || payment.isFailed) ...[
+                  if (payment.isRetryable) ...[
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.info_outline_rounded, color: Color(0xFFF59E0B), size: 20),
+                          const Icon(
+                            Icons.info_outline_rounded,
+                            color: Color(0xFFF59E0B),
+                            size: 20,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -671,7 +739,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           child: FilledButton.icon(
                             onPressed: _isProcessingLink
                                 ? null
-                                : () => _retryPayment(context, payment, setModalState),
+                                : () => _retryPayment(
+                                    context,
+                                    payment,
+                                    setModalState,
+                                  ),
                             icon: _isProcessingLink
                                 ? const SizedBox(
                                     width: 18,
@@ -683,8 +755,12 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                                   )
                                 : const Icon(Icons.payment_rounded, size: 18),
                             label: Text(
-                              _isProcessingLink ? 'Đang xử lý...' : 'Thanh toán ngay',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              _isProcessingLink
+                                  ? 'Đang xử lý...'
+                                  : 'Thanh toán ngay',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             style: FilledButton.styleFrom(
                               backgroundColor: AppTheme.primary,
@@ -704,11 +780,17 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFF10B981).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.verified_user_rounded, color: Color(0xFF10B981), size: 20),
+                          const Icon(
+                            Icons.verified_user_rounded,
+                            color: Color(0xFF10B981),
+                            size: 20,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -750,7 +832,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     );
   }
 
-  Widget _buildDetailRow(AppColorsExtension colors, String label, String value) {
+  Widget _buildDetailRow(
+    AppColorsExtension colors,
+    String label,
+    String value,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
@@ -783,16 +869,21 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     setModalState(() => _isProcessingLink = true);
     try {
       if (payment.tournamentId.isNotEmpty && payment.participantId.isNotEmpty) {
-        final result = await ref.read(paymentRepositoryProvider).createPaymentLink(
-          CreatePaymentDto(
-            tournamentId: payment.tournamentId,
-            participantId: payment.participantId,
-          ),
-        );
+        final result = await ref
+            .read(paymentRepositoryProvider)
+            .createPaymentLink(
+              CreatePaymentDto(
+                tournamentId: payment.tournamentId,
+                participantId: payment.participantId,
+              ),
+            );
 
         if (result != null) {
           final paymentId = result['paymentId'] ?? payment.id;
           final paymentUrl = result['paymentUrl'] ?? '';
+          final confirmedAmount =
+              double.tryParse(result['amount']?.toString() ?? '') ??
+              payment.amount;
           if (paymentUrl.isNotEmpty && context.mounted) {
             final nav = Navigator.of(context);
             final router = GoRouter.of(context);
@@ -803,12 +894,15 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               mode: LaunchMode.externalApplication,
             );
             if (opened) {
-              router.push('/payment/payos-verify', extra: {
-                'paymentId': paymentId,
-                'amount': payment.amount,
-                'tournamentId': payment.tournamentId,
-                'tournamentName': payment.tournamentName,
-              });
+              router.push(
+                '/payment/payos-verify',
+                extra: {
+                  'paymentId': paymentId,
+                  'amount': confirmedAmount,
+                  'tournamentId': payment.tournamentId,
+                  'tournamentName': payment.tournamentName,
+                },
+              );
               return;
             }
           }
@@ -820,17 +914,27 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         final nav = Navigator.of(context);
         final router = GoRouter.of(context);
         nav.pop();
-        router.push('/payment/checkout', extra: {
-          'tournamentId': payment.tournamentId,
-          'participantId': payment.participantId,
-          'amount': payment.amount,
-          'tournamentName': payment.tournamentName,
-        });
+        router.push(
+          '/payment/checkout',
+          extra: {
+            'tournamentId': payment.tournamentId,
+            'participantId': payment.participantId,
+            'amount': payment.amount,
+            'tournamentName': payment.tournamentName,
+          },
+        );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Không thể tạo liên kết thanh toán: $e')),
+          SnackBar(
+            content: Text(
+              ErrorParser.parse(
+                e,
+                'Không thể tạo liên kết thanh toán. Vui lòng thử lại.',
+              ),
+            ),
+          ),
         );
       }
     } finally {

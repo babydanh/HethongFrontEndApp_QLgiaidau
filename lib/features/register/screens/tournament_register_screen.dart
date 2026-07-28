@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -57,12 +56,25 @@ class _TournamentRegisterScreenState
   Future<void> _checkExistingRegistration() async {
     try {
       final dio = ref.read(dioProvider);
-      final response = await dio.get('/tournaments/${widget.tournamentId}/my-registration');
-      if (response.data != null && response.data['participantId'] != null) {
+      final response = await dio.get(
+        '/tournaments/${widget.tournamentId}/my-registration',
+      );
+      final raw = response.data;
+      final payload = raw is Map && raw['data'] is Map ? raw['data'] : raw;
+      final participant = payload is Map && payload['participant'] is Map
+          ? payload['participant'] as Map
+          : null;
+      if (payload is Map &&
+          payload['registered'] == true &&
+          participant != null) {
         if (mounted) {
           setState(() {
             _alreadyRegistered = true;
-            _existingParticipantId = response.data['participantId']?.toString();
+            _existingParticipantId = participant['id']?.toString();
+            _existingDivisionId = participant['tournamentDivisionId']
+                ?.toString();
+            _existingTeamStatus = participant['teamStatus']?.toString();
+            _existingIsPaid = participant['isPaid'] == true;
             _checkingRegistration = false;
           });
         }
@@ -71,6 +83,7 @@ class _TournamentRegisterScreenState
     } catch (_) {}
     if (mounted) setState(() => _checkingRegistration = false);
   }
+
   String? _divisionError;
   bool _submitting = false;
   bool _success = false;
@@ -81,9 +94,13 @@ class _TournamentRegisterScreenState
   String? _inviteError;
   String? _localInviteCode;
   double? _registeredEntryFee;
+  String? _registrationTeamStatus;
   bool _checkingRegistration = true;
   bool _alreadyRegistered = false;
   String? _existingParticipantId;
+  String? _existingDivisionId;
+  String? _existingTeamStatus;
+  bool _existingIsPaid = false;
 
   String _getSubmitLabel(Tournament? t) {
     if (t?.registrationMode == 'APPROVAL') return 'Gửi yêu cầu tham gia';
@@ -208,6 +225,12 @@ class _TournamentRegisterScreenState
   }
 
   Future<void> _register() async {
+    if (_alreadyRegistered) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bạn đã đăng ký giải đấu này rồi.')),
+      );
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
     final userAsync = ref.read(userProfileProvider);
     final user = userAsync.asData?.value;
@@ -264,8 +287,8 @@ class _TournamentRegisterScreenState
     final String effectiveTeamName = _nameCtrl.text.trim().isNotEmpty
         ? _nameCtrl.text.trim()
         : (user?.fullName?.trim().isNotEmpty == true
-            ? user!.fullName!.trim()
-            : 'Vận động viên');
+              ? user!.fullName!.trim()
+              : 'Vận động viên');
 
     setState(() => _submitting = true);
     try {
@@ -282,8 +305,15 @@ class _TournamentRegisterScreenState
       final effectiveFee = (result.entryFee > 0)
           ? result.entryFee
           : (selectedDiv?.entryFee ?? t?.entryFee ?? 0.0);
+      _registrationTeamStatus = result.teamStatus;
+      final canProceedToPayment =
+          !result.isWaitlisted &&
+          (result.teamStatus == 'COMPLETE' ||
+              result.teamStatus == 'PENDING_APPROVAL');
 
-      if (effectiveFee > 0 && result.participantId.isNotEmpty) {
+      if (effectiveFee > 0 &&
+          result.participantId.isNotEmpty &&
+          canProceedToPayment) {
         context.push(
           '/payment/checkout',
           extra: {
@@ -302,9 +332,7 @@ class _TournamentRegisterScreenState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               ErrorParser.parse(e, 'Không thể đăng ký. Vui lòng thử lại.'),
@@ -345,7 +373,9 @@ class _TournamentRegisterScreenState
       items.add('Tối đa ${d.maxParticipants} đội');
     }
     if (d.entryFee != null && d.entryFee! > 0) {
-      items.add('${NumberFormat('#,###', 'vi_VN').format(d.entryFee!.ceil())}đ');
+      items.add(
+        '${NumberFormat('#,###', 'vi_VN').format(d.entryFee!.ceil())}đ',
+      );
     } else {
       items.add('Miễn phí');
     }
@@ -382,6 +412,9 @@ class _TournamentRegisterScreenState
               return const Center(child: Text('Không tìm thấy giải'));
             }
             if (!isAuth) return _buildLoginPrompt(t);
+            if (_checkingRegistration) {
+              return const Center(child: CircularProgressIndicator());
+            }
             // Invite gate: nếu là PRIVATE và chưa có mã mời
             final needsInvite =
                 (t.visibility == 'PRIVATE' ||
@@ -397,14 +430,18 @@ class _TournamentRegisterScreenState
                         TournamentDivisionOption(
                           id: 'default_${t.id}',
                           name: t.name.isNotEmpty ? t.name : 'Nội dung chính',
-                          matchType: t.format.toLowerCase() == 'doubles' ||
+                          matchType:
+                              t.format.toLowerCase() == 'doubles' ||
                                   t.name.toLowerCase().contains('đôi')
                               ? 'DOUBLES'
                               : 'SINGLES',
                           entryFee: t.entryFee,
                           maxParticipants: t.maxTeams,
-                        )
+                        ),
                       ];
+                if (_alreadyRegistered) {
+                  return _buildExistingRegistration(t, effectiveDivs);
+                }
                 return _buildForm(t, AsyncValue.data(effectiveDivs));
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -413,14 +450,18 @@ class _TournamentRegisterScreenState
                   TournamentDivisionOption(
                     id: 'default_${t.id}',
                     name: t.name.isNotEmpty ? t.name : 'Nội dung chính',
-                    matchType: t.format.toLowerCase() == 'doubles' ||
+                    matchType:
+                        t.format.toLowerCase() == 'doubles' ||
                             t.name.toLowerCase().contains('đôi')
                         ? 'DOUBLES'
                         : 'SINGLES',
                     entryFee: t.entryFee,
                     maxParticipants: t.maxTeams,
-                  )
+                  ),
                 ];
+                if (_alreadyRegistered) {
+                  return _buildExistingRegistration(t, fallbackDivs);
+                }
                 return _buildForm(t, AsyncValue.data(fallbackDivs));
               },
             );
@@ -433,8 +474,107 @@ class _TournamentRegisterScreenState
   }
 
   String _getSuccessTitle(Tournament? t) {
+    if (_registrationTeamStatus == 'WAITLISTED') {
+      return 'Đã vào danh sách chờ';
+    }
     if (t?.registrationMode == 'APPROVAL') return 'Gửi yêu cầu thành công!';
     return 'Đăng ký thành công!';
+  }
+
+  Widget _buildExistingRegistration(
+    Tournament tournament,
+    List<TournamentDivisionOption> divisions,
+  ) {
+    TournamentDivisionOption? existingDivision;
+    for (final division in divisions) {
+      if (division.id == _existingDivisionId) {
+        existingDivision = division;
+        break;
+      }
+    }
+
+    final fee = existingDivision?.entryFee ?? tournament.entryFee ?? 0;
+    final status = _existingTeamStatus ?? '';
+    final canPay =
+        !_existingIsPaid &&
+        fee > 0 &&
+        (_existingParticipantId?.isNotEmpty ?? false) &&
+        (status == 'COMPLETE' || status == 'PENDING_APPROVAL');
+    final statusLabel = switch (status) {
+      'PENDING_PARTNER' => 'Đang chờ đồng đội tham gia',
+      'PENDING_APPROVAL' => 'Đang chờ Ban tổ chức duyệt',
+      'WAITLISTED' => 'Đang ở danh sách chờ',
+      'COMPLETE' when _existingIsPaid => 'Đã đăng ký và thanh toán',
+      'COMPLETE' => 'Đã đăng ký, chưa thanh toán',
+      _ => 'Bạn đã đăng ký giải đấu này',
+    };
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: context.colors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.colors.border),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            _existingIsPaid ? Icons.verified_rounded : Icons.how_to_reg_rounded,
+            size: 52,
+            color: _existingIsPaid ? context.colors.success : AppTheme.primary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            statusLabel,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: context.colors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (status == 'WAITLISTED') ...[
+            const SizedBox(height: 8),
+            Text(
+              'Bạn chưa cần thanh toán cho đến khi có suất chính thức.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: context.colors.textSecondary),
+            ),
+          ],
+          if (canPay) ...[
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => context.push(
+                  '/payment/checkout',
+                  extra: {
+                    'tournamentId': tournament.id,
+                    'participantId': _existingParticipantId,
+                    'divisionId': _existingDivisionId,
+                    'amount': fee,
+                    'tournamentName': tournament.name,
+                  },
+                ),
+                icon: const Icon(Icons.payment_rounded),
+                label: Text(
+                  'Thanh toán ${NumberFormat('#,###', 'vi_VN').format(fee.ceil())}đ',
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => context.go('/intro/${tournament.id}'),
+              child: const Text('Xem chi tiết giải đấu'),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildSuccess(Tournament? t) => Scaffold(
@@ -475,7 +615,9 @@ class _TournamentRegisterScreenState
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'Đã thanh toán ${NumberFormat('#,###', 'vi_VN').format(_registeredEntryFee!.ceil())}đ',
+                  _registrationTeamStatus == 'WAITLISTED'
+                      ? 'Chưa cần thanh toán cho đến khi có suất chính thức'
+                      : 'Phí tham gia ${NumberFormat('#,###', 'vi_VN').format(_registeredEntryFee!.ceil())}đ chưa thanh toán',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -494,8 +636,7 @@ class _TournamentRegisterScreenState
                 context,
                 tournamentId: widget.tournamentId,
                 divisionId: _selectedDiv,
-                hasPaid:
-                    _registeredEntryFee != null && _registeredEntryFee! > 0,
+                hasPaid: false,
               ),
               icon: Icon(
                 Icons.exit_to_app_rounded,
@@ -545,7 +686,10 @@ class _TournamentRegisterScreenState
             runSpacing: 8,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: colors.bgSurface,
                   borderRadius: BorderRadius.circular(8),
@@ -553,20 +697,33 @@ class _TournamentRegisterScreenState
                 ),
                 child: Text(
                   'Tối đa: ${t.maxTeams} đội',
-                  style: TextStyle(color: colors.textMuted, fontSize: 12, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: colors.textMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: hasFee ? AppTheme.primary.withValues(alpha: 0.12) : colors.bgSurface,
+                  color: hasFee
+                      ? AppTheme.primary.withValues(alpha: 0.12)
+                      : colors.bgSurface,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: hasFee ? AppTheme.primary.withValues(alpha: 0.3) : colors.border,
+                    color: hasFee
+                        ? AppTheme.primary.withValues(alpha: 0.3)
+                        : colors.border,
                   ),
                 ),
                 child: Text(
-                  hasFee ? 'Phí: ${fmt.format(t.entryFee!.ceil())}đ' : 'Miễn phí',
+                  hasFee
+                      ? 'Phí: ${fmt.format(t.entryFee!.ceil())}đ'
+                      : 'Miễn phí',
                   style: TextStyle(
                     color: hasFee ? AppTheme.primary : colors.textMuted,
                     fontWeight: FontWeight.w800,
@@ -690,7 +847,21 @@ class _TournamentRegisterScreenState
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: () => context.push('/login'),
+              onPressed: () {
+                final params = <String, String>{};
+                if (widget.inviteCode?.isNotEmpty == true) {
+                  params['invite'] = widget.inviteCode!;
+                }
+                if (widget.divisionId?.isNotEmpty == true) {
+                  params['divisionId'] = widget.divisionId!;
+                }
+                final query = Uri(queryParameters: params).query;
+                final redirect =
+                    '/register/${widget.tournamentId}${query.isEmpty ? '' : '?$query'}';
+                context.push(
+                  '/login?redirect=${Uri.encodeComponent(redirect)}',
+                );
+              },
               icon: const Icon(Icons.login),
               label: const Text('Đăng nhập'),
             ),
@@ -716,7 +887,8 @@ class _TournamentRegisterScreenState
         user?.gender?.isEmpty == true;
 
     final now = DateTime.now();
-    final isRegistrationClosed = (t.status == 'REGISTRATION_CLOSED' ||
+    final isRegistrationClosed =
+        (t.status == 'REGISTRATION_CLOSED' ||
         t.status == 'IN_PROGRESS' ||
         t.status == 'COMPLETED' ||
         t.status == 'CANCELLED' ||
@@ -728,7 +900,8 @@ class _TournamentRegisterScreenState
         _buildHeader(t),
         const SizedBox(height: 14),
         _RegistrationCountdownCard(
-          targetDate: t.registrationEndDate ??
+          targetDate:
+              t.registrationEndDate ??
               t.startDate ??
               DateTime.now().add(const Duration(days: 7)),
         ),
@@ -739,7 +912,9 @@ class _TournamentRegisterScreenState
             decoration: BoxDecoration(
               color: context.colors.warning.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: context.colors.warning.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: context.colors.warning.withValues(alpha: 0.3),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -857,36 +1032,55 @@ class _TournamentRegisterScreenState
                       decoration: BoxDecoration(
                         color: AppTheme.primary.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                        border: Border.all(
+                          color: AppTheme.primary.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Tên thi đấu', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.textMuted)),
+                          Text(
+                            'Tên thi đấu',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: context.colors.textMuted,
+                            ),
+                          ),
                           const SizedBox(height: 4),
                           Text(
                             user?.fullName ?? 'Chưa cập nhật',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: context.colors.textPrimary,
+                            ),
                           ),
                           const SizedBox(height: 2),
-                          Text('Tên sẽ được lấy từ tài khoản của bạn', style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
+                          Text(
+                            'Tên sẽ được lấy từ tài khoản của bạn',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.colors.textMuted,
+                            ),
+                          ),
                         ],
                       ),
                     )
                   else
-                    TextFormField(
-                      controller: _nameCtrl,
-                      style: TextStyle(color: context.colors.textPrimary),
-                      decoration: InputDecoration(
-                        labelText: 'Tên đội',
-                        hintText: 'Nhập tên đội',
-                        filled: true,
-                        fillColor: context.colors.bgDark,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppTheme.primary.withValues(alpha: 0.2),
+                        ),
                       ),
-                      validator: (v) => (v == null || v.trim().length < 3)
-                          ? 'Tối thiểu 3 ký tự'
-                          : null,
+                      child: const Text(
+                        'Tên đội và đồng đội sẽ được chọn ở bước tiếp theo.',
+                      ),
                     ),
                 const SizedBox(height: 16),
                 divAsync.when(
@@ -954,29 +1148,33 @@ class _TournamentRegisterScreenState
                                             children: meta
                                                 .map(
                                                   (label) => Container(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 4,
-                                                    ),
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 4,
+                                                        ),
                                                     decoration: BoxDecoration(
                                                       color: sel
                                                           ? AppTheme.primary
-                                                              .withValues(
-                                                                  alpha: 0.10)
+                                                                .withValues(
+                                                                  alpha: 0.10,
+                                                                )
                                                           : context
-                                                              .colors.bgCard,
+                                                                .colors
+                                                                .bgCard,
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                        999,
-                                                      ),
+                                                            999,
+                                                          ),
                                                       border: Border.all(
                                                         color: sel
                                                             ? AppTheme.primary
-                                                                .withValues(
-                                                                    alpha: 0.24)
+                                                                  .withValues(
+                                                                    alpha: 0.24,
+                                                                  )
                                                             : context
-                                                                .colors.border,
+                                                                  .colors
+                                                                  .border,
                                                       ),
                                                     ),
                                                     child: Text(
@@ -987,8 +1185,9 @@ class _TournamentRegisterScreenState
                                                             FontWeight.w700,
                                                         color: sel
                                                             ? AppTheme.primary
-                                                            : context.colors
-                                                                .textSecondary,
+                                                            : context
+                                                                  .colors
+                                                                  .textSecondary,
                                                       ),
                                                     ),
                                                   ),
@@ -1161,7 +1360,9 @@ class _TournamentRegisterScreenState
                   width: double.infinity,
                   height: 52,
                   child: FilledButton(
-                    onPressed: (isRegistrationClosed || _submitting) ? null : _register,
+                    onPressed: (isRegistrationClosed || _submitting)
+                        ? null
+                        : _register,
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTheme.primary,
                       disabledBackgroundColor: context.colors.bgSurface,
@@ -1184,11 +1385,12 @@ class _TournamentRegisterScreenState
                         : Text(
                             isRegistrationClosed
                                 ? 'Giải đấu đã đóng đăng ký'
-                                : (_selectedDivision?.entryFee != null && _selectedDivision!.entryFee! > 0)
-                                    ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(_selectedDivision!.entryFee!.ceil())}đ'
-                                    : (t.entryFee != null && t.entryFee! > 0)
-                                        ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(t.entryFee!.ceil())}đ'
-                                        : '${_getSubmitLabel(t)} (Miễn phí)',
+                                : (_selectedDivision?.entryFee != null &&
+                                      _selectedDivision!.entryFee! > 0)
+                                ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(_selectedDivision!.entryFee!.ceil())}đ'
+                                : (t.entryFee != null && t.entryFee! > 0)
+                                ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(t.entryFee!.ceil())}đ'
+                                : '${_getSubmitLabel(t)} (Miễn phí)',
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
@@ -1212,8 +1414,9 @@ class _TournamentRegisterScreenState
     final startDateStr = t.startDate != null
         ? DateFormat('dd/MM/yyyy').format(t.startDate!)
         : 'Chưa xếp lịch';
-    final endDateStr =
-        t.endDate != null ? DateFormat('dd/MM/yyyy').format(t.endDate!) : null;
+    final endDateStr = t.endDate != null
+        ? DateFormat('dd/MM/yyyy').format(t.endDate!)
+        : null;
 
     return Container(
       width: double.infinity,
@@ -1398,11 +1601,7 @@ class _RegistrationCountdownCardState
         children: [
           Row(
             children: [
-              Icon(
-                Icons.timer_outlined,
-                color: colors.textSecondary,
-                size: 16,
-              ),
+              Icon(Icons.timer_outlined, color: colors.textSecondary, size: 16),
               const SizedBox(width: 8),
               Text(
                 'HẠN ĐĂNG KÝ CÒN LẠI',
@@ -1415,10 +1614,7 @@ class _RegistrationCountdownCardState
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: colors.bgSurface,
                   borderRadius: BorderRadius.circular(20),
@@ -1439,13 +1635,13 @@ class _RegistrationCountdownCardState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildTimeUnit('${days}'.padLeft(2, '0'), 'Ngày', colors),
+              _buildTimeUnit('$days'.padLeft(2, '0'), 'Ngày', colors),
               _buildColon(colors),
-              _buildTimeUnit('${hours}'.padLeft(2, '0'), 'Giờ', colors),
+              _buildTimeUnit('$hours'.padLeft(2, '0'), 'Giờ', colors),
               _buildColon(colors),
-              _buildTimeUnit('${minutes}'.padLeft(2, '0'), 'Phút', colors),
+              _buildTimeUnit('$minutes'.padLeft(2, '0'), 'Phút', colors),
               _buildColon(colors),
-              _buildTimeUnit('${seconds}'.padLeft(2, '0'), 'Giây', colors),
+              _buildTimeUnit('$seconds'.padLeft(2, '0'), 'Giây', colors),
             ],
           ),
         ],
