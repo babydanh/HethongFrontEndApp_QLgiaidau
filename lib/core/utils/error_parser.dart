@@ -26,6 +26,29 @@ class ErrorParser {
 
         if (msg != null) {
           // Ánh xạ lỗi hệ thống sang tiếng Việt
+          final lower = msg.toLowerCase();
+          if (lower.contains('registration is closed') || lower.contains('chưa hoặc đã đóng')) {
+            return 'Giải đấu đã đóng đăng ký.';
+          }
+          if (lower.contains('registration period has not started') || lower.contains('chưa bắt đầu')) {
+            return 'Thời gian đăng ký chưa bắt đầu.';
+          }
+          if (lower.contains('registration period has ended') || lower.contains('đã kết thúc')) {
+            return 'Thời gian đăng ký đã kết thúc.';
+          }
+          if (lower.contains('tournament is full') || lower.contains('đã đầy') || lower.contains('đủ số lượng')) {
+            return 'Giải đấu đã đủ số lượng người tham gia.';
+          }
+          if (lower.contains('already registered') || lower.contains('đã đăng ký')) {
+            return 'Bạn đã đăng ký tham gia giải đấu này rồi.';
+          }
+          if (lower.contains('tournament not found') || lower.contains('không tồn tại')) {
+            return 'Không tìm thấy giải đấu.';
+          }
+          if (lower.contains('invalid invite code') || lower.contains('mã mời')) {
+            return 'Mã mời giải đấu không hợp lệ hoặc đã hết hạn.';
+          }
+
           const viMap = {
             'Email already exists': 'Email này đã được đăng ký. Vui lòng dùng email khác hoặc đăng nhập.',
             'email should not be empty': 'Vui lòng nhập địa chỉ email.',
@@ -34,6 +57,7 @@ class ErrorParser {
             'password should not be empty': 'Vui lòng nhập mật khẩu.',
             'fullName should not be empty': 'Vui lòng nhập họ và tên.',
             'Invalid credentials': 'Email hoặc mật khẩu không đúng.',
+            'Tournament registration is closed': 'Giải đấu đã đóng đăng ký.',
             'Tài khoản này được đăng ký qua Google. Vui lòng đăng nhập bằng Google.': 'Tài khoản này đã đăng ký qua Google. Vui lòng đăng nhập bằng Google.',
           };
           return viMap[msg] ?? msg;

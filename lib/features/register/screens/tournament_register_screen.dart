@@ -691,11 +691,51 @@ class _TournamentRegisterScreenState
         user?.gender == null ||
         user?.gender?.isEmpty == true;
 
+    final now = DateTime.now();
+    final isRegistrationClosed = (t.status == 'REGISTRATION_CLOSED' ||
+        t.status == 'IN_PROGRESS' ||
+        t.status == 'COMPLETED' ||
+        t.status == 'CANCELLED' ||
+        (t.registrationEndDate != null && now.isAfter(t.registrationEndDate!)));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeader(t),
         const SizedBox(height: 24),
+        if (isRegistrationClosed) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: context.colors.warning.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: context.colors.warning.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Giải đấu đã đóng đăng ký',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: context.colors.warning,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Ban tổ chức hiện đã ngắt nhận hồ sơ đăng ký mới cho giải đấu này.',
+                  style: TextStyle(
+                    color: context.colors.textSecondary,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         if (isIncomplete) ...[
           Container(
             padding: const EdgeInsets.all(16),
@@ -1107,10 +1147,12 @@ class _TournamentRegisterScreenState
                   width: double.infinity,
                   height: 52,
                   child: FilledButton(
-                    onPressed: _submitting ? null : _register,
+                    onPressed: (isRegistrationClosed || _submitting) ? null : _register,
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTheme.primary,
+                      disabledBackgroundColor: context.colors.bgSurface,
                       foregroundColor: Colors.white,
+                      disabledForegroundColor: context.colors.textMuted,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -1126,13 +1168,15 @@ class _TournamentRegisterScreenState
                             ),
                           )
                         : Text(
-                            (_selectedDivision?.entryFee != null && _selectedDivision!.entryFee! > 0)
-                                ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(_selectedDivision!.entryFee!.ceil())}đ'
-                                : (t.entryFee != null && t.entryFee! > 0)
-                                    ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(t.entryFee!.ceil())}đ'
-                                    : '${_getSubmitLabel(t)} (Miễn phí)',
+                            isRegistrationClosed
+                                ? 'Giải đấu đã đóng đăng ký'
+                                : (_selectedDivision?.entryFee != null && _selectedDivision!.entryFee! > 0)
+                                    ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(_selectedDivision!.entryFee!.ceil())}đ'
+                                    : (t.entryFee != null && t.entryFee! > 0)
+                                        ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(t.entryFee!.ceil())}đ'
+                                        : '${_getSubmitLabel(t)} (Miễn phí)',
                             style: const TextStyle(
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.2,
                             ),
