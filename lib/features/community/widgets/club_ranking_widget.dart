@@ -97,7 +97,49 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     }
 
     if (_error != null || _rankings == null || _rankings!.isEmpty) {
-      return const SizedBox.shrink();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.emoji_events_rounded, size: 16, color: context.colors.textSecondary),
+              const SizedBox(width: 6),
+              Text('Xếp hạng ELO CLB', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary, letterSpacing: 0.3)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            decoration: BoxDecoration(
+              color: context.colors.bgCard,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              border: Border.all(color: context.colors.border),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(3, (i) => Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    width: i == 1 ? 52 : 44,
+                    height: i == 1 ? 52 : 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: context.colors.borderLight, width: 1.5),
+                      color: context.colors.bgSurface,
+                    ),
+                    child: Center(child: Text('#${i + 1}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.textMuted))),
+                  )),
+                ),
+                const SizedBox(height: 10),
+                Text('Chưa có dữ liệu xếp hạng', style: TextStyle(fontSize: 12, color: context.colors.textMuted)),
+                Text('Tham gia thi đấu để có ELO', style: TextStyle(fontSize: 11, color: context.colors.textMuted.withValues(alpha: 0.7))),
+              ],
+            ),
+          ),
+        ],
+      );
     }
 
     final rankings = _rankings!;
