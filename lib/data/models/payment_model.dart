@@ -87,16 +87,26 @@ class PaymentModel {
 
 class CreatePaymentDto {
   final String tournamentId;
-  final String participantId;
+  final String? participantId;
+  final String? purpose;
+  final String? divisionId;
+  final double? amount;
 
   const CreatePaymentDto({
     required this.tournamentId,
-    required this.participantId,
+    this.participantId,
+    this.purpose = 'REGISTRATION_FEE',
+    this.divisionId,
+    this.amount,
   });
 
   Map<String, dynamic> toJson() => {
-    'tournamentId': tournamentId,
-    'participantId': participantId,
-    'purpose': 'REGISTRATION_FEE',
-  };
+        'tournamentId': tournamentId,
+        'purpose': purpose ?? 'REGISTRATION_FEE',
+        if (participantId != null && participantId!.isNotEmpty)
+          'participantId': participantId,
+        if (divisionId != null && divisionId!.isNotEmpty)
+          'divisionId': divisionId,
+        if (amount != null && amount! > 0) 'amount': amount,
+      };
 }
