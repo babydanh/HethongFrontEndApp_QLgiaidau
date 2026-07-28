@@ -675,7 +675,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   color: context.colors.textPrimary,
                 ),
               ),
@@ -685,7 +685,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   color: context.colors.info,
                 ),
               ),
@@ -694,7 +694,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: context.colors.bgDark,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                   border: Border.all(color: context.colors.border),
                 ),
                 child: Column(
@@ -704,7 +704,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       'Luật giải đang áp dụng',
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                         color: context.colors.textPrimary,
                       ),
                     ),
@@ -782,27 +782,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     await controller.startMatch(
                       refereeName: _refereeController.text.trim(),
                     );
-                    if (!mounted) return;
-                    showOfficialScoreModal(
-                      context,
-                      tournamentId: widget.tournamentId,
-                      matchId: widget.matchId,
-                      match: match.copyWith(
-                        status: 'live',
-                        refereeName: _refereeController.text.trim().isEmpty
-                            ? match.refereeName
-                            : _refereeController.text.trim(),
-                      ),
-                      onRecordPenalty: () => _showFoulSelectionDialog(match),
-                      onForceWin: () => _showForceWinDialog(match),
-                    );
                   },
                   icon: const Icon(Icons.play_arrow_rounded, size: 22),
                   label: const Text(
                     'BẮT ĐẦU TRẬN ĐẤU',
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -810,7 +796,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     backgroundColor: context.colors.success,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                     ),
                   ),
                 ),
@@ -857,7 +843,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 height: 56,
                 decoration: BoxDecoration(
                   color: context.colors.info.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                 ),
                 child: Icon(
                   Icons.settings_rounded,
@@ -870,7 +856,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 'Cấu hình Trận đấu',
                 style: TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   color: context.colors.textPrimary,
                 ),
               ),
@@ -899,7 +885,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: context.colors.bgDark,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                   border: Border.all(color: context.colors.border),
                 ),
                 child: Column(
@@ -909,7 +895,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       'Cấu hình giải đang áp dụng',
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                         color: context.colors.textPrimary,
                       ),
                     ),
@@ -1108,36 +1094,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       timeLimitMinutes: resolvedTimeLimit,
                       refereeName: _refereeController.text.trim(),
                     );
-                    if (!mounted) {
-                      return;
-                    }
-                    showOfficialScoreModal(
-                      context,
-                      tournamentId: widget.tournamentId,
-                      matchId: widget.matchId,
-                      match: match.copyWith(
-                        status: 'live',
-                        maxScore: resolvedMaxScore,
-                        winByTwo: _winByTwo,
-                        timeLimitMinutes: resolvedTimeLimit,
-                        refereeName: _refereeController.text.trim().isEmpty
-                            ? match.refereeName
-                            : _refereeController.text.trim(),
-                      ),
-                      onRecordPenalty: () => _showFoulSelectionDialog(match),
-                      onForceWin: () => _showForceWinDialog(match),
-                    );
                   },
                   icon: const Icon(Icons.play_arrow_rounded),
                   label: const Text(
-                    'BẮT ĐẦU VÀ MỞ BÀN CHẤM ĐIỂM',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    'BẮT ĐẦU TRẬN ĐẤU',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.colors.success,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                     ),
                   ),
                 ),
@@ -1207,7 +1174,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               text: value,
               style: TextStyle(
                 color: context.colors.textPrimary,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -1276,7 +1243,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     ),
                     decoration: BoxDecoration(
                       color: context.colors.bgCard,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                       border: Border.all(color: context.colors.border),
                     ),
                     child: Text(
@@ -1299,7 +1266,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       ),
                       decoration: BoxDecoration(
                         color: context.colors.error,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1402,7 +1369,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: context.colors.bgSurface,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1557,14 +1524,14 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               height: 44,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               ),
               child: Center(
                 child: Text(
                   teamName.isNotEmpty ? teamName[0].toUpperCase() : '?',
                   style: TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     color: color,
                   ),
                 ),
@@ -1594,7 +1561,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     key: ValueKey('score_${isTeam1}_$score'),
                     style: TextStyle(
                       fontSize: 72,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                       color: color,
                       height: 1,
                     ),
@@ -1641,7 +1608,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               border: Border.all(
                 color: match.isScheduled
                     ? const Color(0xFF16A34A).withValues(alpha: 0.4)
@@ -1679,7 +1646,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             : 'BÀN TRỌNG TÀI - ĐANG THI ĐẤU',
                         style: TextStyle(
                           fontSize: 13,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                           color: context.colors.textPrimary,
                           letterSpacing: 0.3,
                         ),
@@ -1699,28 +1666,51 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   ),
                 ),
                 const SizedBox(width: 10),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: match.isScheduled
-                        ? const Color(0xFF16A34A)
-                        : const Color(0xFF2563EB),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
+                if (match.isScheduled)
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF16A34A),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () async {
-                    final controller = ref.read(
-                      matchControllerProvider(params),
-                    );
-                    if (match.isScheduled) {
+                    onPressed: () async {
+                      final controller = ref.read(
+                        matchControllerProvider(params),
+                      );
                       await controller.startMatch();
-                    }
-                    if (mounted) {
+                    },
+                    icon: const Icon(
+                      Icons.play_arrow_rounded,
+                      size: 18,
+                    ),
+                    label: const Text(
+                      'BẮT ĐẦU TRẬN ĐẤU',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  )
+                else
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      ),
+                    ),
+                    onPressed: () {
                       showOfficialScoreModal(
                         context,
                         tournamentId: widget.tournamentId,
@@ -1729,21 +1719,244 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         onRecordPenalty: () => _showFoulSelectionDialog(match),
                         onForceWin: () => _showForceWinDialog(match),
                       );
-                    }
-                  },
-                  icon: Icon(
-                    match.isScheduled
-                        ? Icons.play_arrow_rounded
-                        : Icons.scoreboard_rounded,
-                    size: 18,
-                  ),
-                  label: Text(
-                    match.isScheduled ? '🚀 BẮT ĐẦU' : '⚡ TÍNH ĐIỂM',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 12,
+                    },
+                    icon: const Icon(
+                      Icons.scoreboard_rounded,
+                      size: 18,
+                    ),
+                    label: const Text(
+                      'MỞ BẢNG CHẤM ĐIỂM',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
+              ],
+            ),
+          ),
+        // ─── Referee Actions (Chốt set & Ngoại lệ) ───
+        if (canOpenScoring && match.isLive)
+          Container(
+            margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: context.colors.bgCard,
+              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+              border: Border.all(color: context.colors.border),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Chốt set row
+                Row(
+                  children: [
+                    Icon(
+                      Icons.flag_rounded,
+                      size: 16,
+                      color: context.colors.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Consumer(
+                        builder: (context, ref, _) {
+                          final n = ref.watch(scorePanelNotifierProvider(params).notifier);
+                          final msg = n.finishSetConfirmMessage();
+                          if (msg == null) {
+                            return Text(
+                              'Chưa có điểm để chốt set',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: context.colors.textMuted,
+                              ),
+                            );
+                          }
+                          return Text(
+                            msg,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.colors.textPrimary,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final n = ref.watch(scorePanelNotifierProvider(params).notifier);
+                        return FilledButton.tonalIcon(
+                          onPressed: n.finishSetConfirmMessage() != null
+                              ? () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      backgroundColor: context.colors.bgCard,
+                                      title: Text(
+                                        'Xác nhận chốt set',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          color: context.colors.textPrimary,
+                                        ),
+                                      ),
+                                      content: Text(
+                                        n.finishSetConfirmMessage() ?? '',
+                                        style: TextStyle(
+                                          color: context.colors.textSecondary,
+                                        ),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(ctx),
+                                          child: const Text('Hủy'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.pop(ctx);
+                                            n.finishSet();
+                                          },
+                                          child: const Text('Xác nhận'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+                              : null,
+                          icon: const Icon(Icons.check_rounded, size: 16),
+                          label: const Text(
+                            'Chốt set',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                // Override toggle
+                Consumer(
+                  builder: (context, ref, _) {
+                    final state = ref.watch(scorePanelNotifierProvider(params));
+                    final n = ref.read(scorePanelNotifierProvider(params).notifier);
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 8),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                          onTap: () => n.setOverride(!state.overrideEnabled, state.overrideReason),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  state.overrideEnabled
+                                      ? Icons.expand_less_rounded
+                                      : Icons.expand_more_rounded,
+                                  size: 16,
+                                  color: state.overrideEnabled
+                                      ? context.colors.warning
+                                      : context.colors.textMuted,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Chế độ ngoại lệ',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: state.overrideEnabled
+                                        ? context.colors.warning
+                                        : context.colors.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: state.overrideEnabled
+                                        ? context.colors.warning
+                                        : context.colors.border,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (state.overrideEnabled) ...[
+                          const SizedBox(height: 6),
+                          TextField(
+                            onChanged: (val) => n.setOverride(true, val),
+                            style: const TextStyle(fontSize: 12),
+                            decoration: InputDecoration(
+                              hintText: 'Nhập lý do ngoại lệ bắt buộc...',
+                              hintStyle: TextStyle(
+                                fontSize: 11,
+                                color: context.colors.textMuted,
+                              ),
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
+                              filled: true,
+                              fillColor: context.colors.warning.withValues(alpha: 0.1),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                                borderSide: BorderSide(
+                                  color: context.colors.warning.withValues(alpha: 0.4),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () => _showForceWinDialog(match),
+                                  icon: const Icon(Icons.emoji_events_rounded, size: 15),
+                                  label: const Text(
+                                    'Xử thắng',
+                                    style: TextStyle(fontSize: 11),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8,
+                                    ),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: FilledButton.icon(
+                                  onPressed: state.overrideReason.trim().isEmpty || state.isSubmitting
+                                      ? null
+                                      : () async {
+                                          final winnerTeam = state.team1SetWins >= state.team2SetWins ? 1 : 2;
+                                          await n.completeMatch(winnerTeam);
+                                        },
+                                  icon: const Icon(Icons.check_circle_rounded, size: 15),
+                                  label: Text(
+                                    state.isSubmitting ? 'Đang lưu...' : 'Chốt kết quả',
+                                    style: const TextStyle(fontSize: 11),
+                                  ),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: context.colors.warning,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8,
+                                    ),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -1756,7 +1969,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.black,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                 border: Border.all(color: context.colors.border, width: 1),
                 boxShadow: [
                   BoxShadow(
@@ -1771,7 +1984,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   // Video feed mockup / Background
                   Positioned.fill(
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                       child: Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -1835,7 +2048,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                                 : (match.isCompleted ? 'KẾT THÚC' : 'SẮP ĐẤU'),
                             style: TextStyle(
                               fontSize: 8.5,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w700,
                               color: match.isLive ? Colors.red : Colors.grey,
                               letterSpacing: 0.5,
                             ),
@@ -2059,7 +2272,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             unselectedLabelColor: context.colors.textSecondary,
             indicator: BoxDecoration(
               color: AppTheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
             ),
             indicatorSize: TabBarIndicatorSize.tab,
             dividerColor: Colors.transparent,
@@ -2082,8 +2295,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               // Tab 1: Score (Premium Viewer Scoreboard)
               Consumer(
                 builder: (context, ref, _) {
-                  final n = ref.watch(scorePanelNotifierProvider(params));
-                  return _buildViewerScoreboard(match, n.state);
+                  final state = ref.watch(scorePanelNotifierProvider(params));
+                  return _buildViewerScoreboard(match, state);
                 },
               ),
 
@@ -2145,7 +2358,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           return Text(label, style: style, textAlign: TextAlign.center);
         }
         return InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
           onTap: () => context.push('/profile/user/$userId'),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -2192,7 +2405,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   initial1,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                     color: color,
                   ),
                 ),
@@ -2207,7 +2420,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   initial2,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                     color: color,
                   ),
                 ),
@@ -2230,7 +2443,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         initial,
         style: TextStyle(
           fontSize: 18,
-          fontWeight: FontWeight.w900,
+          fontWeight: FontWeight.w700,
           color: color,
         ),
       ),
@@ -2346,13 +2559,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   ),
                   decoration: BoxDecoration(
                     color: AppTheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                   ),
                   child: Text(
                     scoreSummary,
                     style: const TextStyle(
                       fontSize: 10,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       color: AppTheme.primary,
                     ),
                   ),
@@ -2365,7 +2578,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: colors.bgCard,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               border: Border.all(color: colors.border),
             ),
             child: Wrap(
@@ -2397,7 +2610,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 end: Alignment.bottomRight,
                 colors: [colors.bgCard, colors.bgSurface],
               ),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               border: Border.all(color: colors.border, width: 1),
               boxShadow: [
                 BoxShadow(
@@ -2425,7 +2638,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             match.team1Name,
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w700,
                               color: colors.textPrimary,
                             ),
                             textAlign: TextAlign.center,
@@ -2453,7 +2666,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               color: const Color(
                                 0xFF2979FF,
                               ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                             ),
                             child: Text(
                               'SET THẮNG: $team1SetWins',
@@ -2480,7 +2693,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                                 '${match.score1}',
                                 style: TextStyle(
                                   fontSize: 40,
-                                  fontWeight: FontWeight.w900,
+                                  fontWeight: FontWeight.w700,
                                   color: colors.textPrimary,
                                   fontFamily: 'Courier',
                                 ),
@@ -2500,7 +2713,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                                 '${match.score2}',
                                 style: TextStyle(
                                   fontSize: 40,
-                                  fontWeight: FontWeight.w900,
+                                  fontWeight: FontWeight.w700,
                                   color: colors.textPrimary,
                                   fontFamily: 'Courier',
                                 ),
@@ -2558,7 +2771,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             match.team2Name,
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w700,
                               color: colors.textPrimary,
                             ),
                             textAlign: TextAlign.center,
@@ -2586,7 +2799,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               color: const Color(
                                 0xFFEF4444,
                               ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                             ),
                             child: Text(
                               'SET THẮNG: $team2SetWins',
@@ -2647,7 +2860,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ),
                 decoration: BoxDecoration(
                   color: boxBg,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                   border: Border.all(color: borderCol, width: 1.5),
                 ),
                 child: Column(
@@ -2665,7 +2878,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       scoreDisplay,
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                         color: isPlayed || currentPlaying
                             ? colors.textPrimary
                             : colors.textMuted.withValues(alpha: 0.5),
@@ -2682,7 +2895,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           Card(
             color: colors.bgCard,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               side: BorderSide(color: colors.border, width: 0.5),
             ),
             elevation: 0,
@@ -2810,7 +3023,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             TextSpan(
               text: value,
               style: TextStyle(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: context.colors.textPrimary,
               ),
             ),
@@ -2848,7 +3061,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               'TRẬN ĐẤU ĐÃ KẾT THÚC',
               style: TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: context.colors.textPrimary,
                 letterSpacing: -0.3,
               ),
@@ -2865,7 +3078,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     context.colors.success.withValues(alpha: 0.05),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                 border: Border.all(
                   color: context.colors.success.withValues(alpha: 0.2),
                 ),
@@ -2881,7 +3094,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           '${match.score1}',
                           style: TextStyle(
                             fontSize: 40,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                             color: match.winnerId == match.team1Id
                                 ? context.colors.success
                                 : context.colors.textMuted,
@@ -2912,7 +3125,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       '-',
                       style: TextStyle(
                         fontSize: 36,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                         color: context.colors.textMuted,
                       ),
                     ),
@@ -2925,7 +3138,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           '${match.score2}',
                           style: TextStyle(
                             fontSize: 40,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                             color: match.winnerId == match.team2Id
                                 ? context.colors.success
                                 : context.colors.textMuted,
@@ -2961,7 +3174,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.amber.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                 border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
               ),
               child: Row(
@@ -3079,7 +3292,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.orange.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                       ),
                       child: Text(
                         'Việc thay đổi kết quả sẽ ghi đè dữ liệu và tự động cập nhật nhánh đấu tiếp theo.',
@@ -3114,7 +3327,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                                   filled: true,
                                   fillColor: context.colors.bgDark,
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                                     borderSide: BorderSide(
                                       color: context.colors.border,
                                     ),
@@ -3147,7 +3360,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                                   filled: true,
                                   fillColor: context.colors.bgDark,
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                                     borderSide: BorderSide(
                                       color: context.colors.border,
                                     ),
@@ -3196,7 +3409,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         filled: true,
                         fillColor: context.colors.bgDark,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                           borderSide: BorderSide(color: context.colors.border),
                         ),
                       ),
@@ -3317,7 +3530,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           height: 56,
                           decoration: BoxDecoration(
                             color: colors.bgSurface,
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                           ),
                           child: Icon(
                             Icons.chat_bubble_outline_rounded,
@@ -3391,7 +3604,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           ),
                           decoration: BoxDecoration(
                             color: badgeColor.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                             border: Border.all(
                               color: badgeColor.withValues(alpha: 0.2),
                               width: 0.5,
