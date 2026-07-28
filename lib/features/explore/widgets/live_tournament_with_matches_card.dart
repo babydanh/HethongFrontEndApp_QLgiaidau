@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
-import 'package:share_plus/share_plus.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';

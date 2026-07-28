@@ -8,7 +8,6 @@ import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 
