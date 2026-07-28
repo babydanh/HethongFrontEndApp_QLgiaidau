@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/providers/notification_provider.dart';
+import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/app_notification.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {
@@ -248,6 +251,8 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       );
 
   Widget _buildList(List<AppNotification> notifications, AppColorsExtension colors) {
+    final workspaceAsync = ref.watch(myTournamentWorkspaceProvider);
+
     final grouped = <String, List<AppNotification>>{};
     final now = DateTime.now();
     for (final n in notifications) {
@@ -271,14 +276,28 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       if (!orderedKeys.contains(k)) orderedKeys.add(k);
     }
 
+    final hasWorkspace = workspaceAsync.asData?.value.hasAnyData ?? false;
+
     return RefreshIndicator(
       onRefresh: () => ref.read(notificationStateProvider.notifier).loadPage(1),
       child: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: orderedKeys.length + 1,
+        itemCount: orderedKeys.length + 1 + (hasWorkspace ? 1 : 0),
         itemBuilder: (context, index) {
-          if (index >= orderedKeys.length) {
+          var offset = 0;
+
+          // ── Giải đấu của tôi section ──
+          if (hasWorkspace && index == 0) {
+            offset = 1;
+            return _buildMyTournaments(
+              workspaceAsync.asData!.value,
+              colors,
+            );
+          }
+
+          final adjustedIndex = index - offset;
+          if (adjustedIndex >= orderedKeys.length) {
             return _isLoadingMore
                 ? const Padding(
                     padding: EdgeInsets.all(16),
@@ -286,7 +305,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2)))
                 : const SizedBox.shrink();
           }
-          final entryKey = orderedKeys[index];
+          final entryKey = orderedKeys[adjustedIndex];
           final items = grouped[entryKey]!;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,6 +326,130 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
           );
         },
       ),
+    );
+  }
+
+  /// Build section "Các giải đấu của tôi" — horizontal scrollable list
+  Widget _buildMyTournaments(TournamentWorkspace workspace, AppColorsExtension colors) {
+    // Collect tournaments with their roles
+    final items = <_TournamentWithRole>[];
+    for (final t in workspace.organizedTournaments) {
+      items.add(_TournamentWithRole(t, 'BTC', const Color(0xFF2979FF)));
+    }
+    for (final t in workspace.coOrganizerTournaments) {
+      items.add(_TournamentWithRole(t, 'BTC', const Color(0xFF2979FF)));
+    }
+    // Referee tournaments — try to find the full Tournament object
+    for (final refInvite in workspace.refereeTournaments) {
+      Tournament? t = workspace.organizedTournaments
+          .where((ot) => ot.id == refInvite.tournamentId).firstOrNull;
+      t ??= workspace.participatingTournaments
+          .where((pt) => pt.id == refInvite.tournamentId).firstOrNull;
+      if (t != null && !items.any((i) => i.tournament.id == t!.id)) {
+        items.add(_TournamentWithRole(t, 'Trọng tài', const Color(0xFFF59E0B)));
+      }
+    }
+    for (final t in workspace.participatingTournaments) {
+      if (!items.any((i) => i.tournament.id == t.id)) {
+        items.add(_TournamentWithRole(t, 'VĐV', const Color(0xFF10B981)));
+      }
+    }
+
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    // Sort: lite tournaments first, then by name
+    items.sort((a, b) {
+      final aLite = a.tournament.isLite ? 0 : 1;
+      final bLite = b.tournament.isLite ? 0 : 1;
+      if (aLite != bLite) return aLite.compareTo(bLite);
+      return a.tournament.name.compareTo(b.tournament.name);
+    });
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Text(
+            'Các giải đấu của tôi',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: colors.textSecondary,
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 92,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
+            itemBuilder: (_, i) {
+              final item = items[i];
+              return GestureDetector(
+                onTap: () => context.push('/intro/${item.tournament.id}'),
+                child: Container(
+                  width: 180,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colors.bgCard,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: colors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (item.tournament.isLite)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: Icon(
+                                Icons.bolt_rounded,
+                                size: 14,
+                                color: colors.warning,
+                              ),
+                            ),
+                          Expanded(
+                            child: Text(
+                              item.tournament.name,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textPrimary,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: item.roleColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          item.role,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: item.roleColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -457,6 +600,16 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       ),
     );
   }
+}
+
+// ─── _TournamentWithRole Helper ───
+
+class _TournamentWithRole {
+  final Tournament tournament;
+  final String role;
+  final Color roleColor;
+
+  const _TournamentWithRole(this.tournament, this.role, this.roleColor);
 }
 
 // ─── Filter Segment Widget ───
