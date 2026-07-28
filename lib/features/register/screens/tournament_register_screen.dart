@@ -237,13 +237,19 @@ class _TournamentRegisterScreenState
       );
       return;
     }
+    final String effectiveTeamName = _nameCtrl.text.trim().isNotEmpty
+        ? _nameCtrl.text.trim()
+        : (user?.fullName?.trim().isNotEmpty == true
+            ? user!.fullName!.trim()
+            : 'Vận động viên');
+
     setState(() => _submitting = true);
     try {
       final result = await ref
           .read(tournamentRepositoryProvider)
           .registerParticipant(
             tournamentId: widget.tournamentId,
-            teamName: _nameCtrl.text,
+            teamName: effectiveTeamName,
             divisionId: divisionId,
             inviteCode: _localInviteCode ?? widget.inviteCode,
           );

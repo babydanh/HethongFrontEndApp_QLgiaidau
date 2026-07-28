@@ -254,11 +254,15 @@ class ApiTournamentRepository implements ITournamentRepository {
       queryParameters['invite'] = inviteCode.trim();
     }
 
+    final validDivisionId = (divisionId != null && !divisionId.startsWith('default_') && divisionId.isNotEmpty)
+        ? divisionId
+        : null;
+
     final response = await _dioClient.dio.post(
       '/tournaments/$tournamentId/register',
       data: {
         'teamName': teamName.trim(),
-        'divisionId': divisionId,
+        if (validDivisionId != null) 'divisionId': validDivisionId,
         if (partnerEmailOrPhone != null && partnerEmailOrPhone.trim().isNotEmpty)
           'partnerEmailOrPhone': partnerEmailOrPhone.trim(),
       },
