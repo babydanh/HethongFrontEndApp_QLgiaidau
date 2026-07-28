@@ -27,6 +27,17 @@ class ErrorParser {
         if (msg != null) {
           // Ánh xạ lỗi hệ thống sang tiếng Việt
           final lower = msg.toLowerCase();
+          if (lower.contains('divisionid must be a uuid') ||
+              lower.contains('division id must be a uuid')) {
+            return 'Hạng mục thi đấu không hợp lệ. Vui lòng quay lại chọn lại hạng mục.';
+          }
+          if (lower.contains('payment link') &&
+              (lower.contains('expired') || lower.contains('expire'))) {
+            return 'Liên kết thanh toán đã hết hạn. Vui lòng tạo giao dịch mới.';
+          }
+          if (lower.contains('already paid') || lower.contains('payment already')) {
+            return 'Khoản phí này đã được thanh toán hoặc đang được xử lý.';
+          }
           if (lower.contains('registration is closed') || lower.contains('chưa hoặc đã đóng')) {
             return 'Giải đấu đã đóng đăng ký.';
           }

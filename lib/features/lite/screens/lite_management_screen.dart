@@ -93,6 +93,30 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       ),
       body: state.loading && state.participants.isEmpty
           ? const Center(child: CircularProgressIndicator())
+          : state.error != null && state.tournament == null
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.cloud_off_rounded, size: 44, color: colors.textMuted),
+                    const SizedBox(height: 12),
+                    Text(
+                      state.error!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: () => notifier.init(widget.tournamentId),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Thử lại'),
+                    ),
+                  ],
+                ),
+              ),
+            )
           : TabBarView(
               controller: _tabController,
               children: [

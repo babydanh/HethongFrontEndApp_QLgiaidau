@@ -6,12 +6,18 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PayOSVerifyScreen extends ConsumerStatefulWidget {
   final String paymentId;
   final double amount;
   final String tournamentId;
   final String? tournamentName;
+  final String? paymentUrl;
+  final String? qrCode;
+  final String? expiresAt;
+  final String? orderCode;
 
   const PayOSVerifyScreen({
     super.key,
@@ -19,6 +25,10 @@ class PayOSVerifyScreen extends ConsumerStatefulWidget {
     required this.amount,
     required this.tournamentId,
     this.tournamentName,
+    this.paymentUrl,
+    this.qrCode,
+    this.expiresAt,
+    this.orderCode,
   });
 
   @override
@@ -119,11 +129,12 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
-      body: Center(
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
                 width: 90,
@@ -162,6 +173,30 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                 ),
               ),
               const SizedBox(height: 32),
+              if (widget.qrCode != null && widget.qrCode!.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: colors.border),
+                  ),
+                  child: QrImageView(
+                    data: widget.qrCode!,
+                    size: 220,
+                    backgroundColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Mã QR thanh toán PayOS',
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -222,6 +257,20 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                   ],
                 ),
               ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
+              if (widget.paymentUrl != null && widget.paymentUrl!.isNotEmpty)
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: () => launchUrl(
+                      Uri.parse(widget.paymentUrl!),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                    icon: const Icon(Icons.open_in_new_rounded),
+                    label: const Text('Mở trang thanh toán PayOS'),
+                  ),
+                ),
+              const SizedBox(height: 16),
               const SizedBox(height: 40),
               SizedBox(
                 width: double.infinity,

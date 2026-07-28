@@ -10,6 +10,7 @@ class PaymentModel {
   final DateTime? completedAt;
   final String? tournamentName;
   final String? teamName;
+  final String? divisionId;
 
   const PaymentModel({
     required this.id,
@@ -23,6 +24,7 @@ class PaymentModel {
     this.completedAt,
     this.tournamentName,
     this.teamName,
+    this.divisionId,
   });
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) {
@@ -75,6 +77,11 @@ class PaymentModel {
           : (pMap['participant'] is Map
                 ? (pMap['participant'] as Map)['teamName']?.toString()
                 : json['teamName']?.toString()),
+      divisionId: (pMap['divisionId'] ??
+                  pMap['tournamentDivisionId'] ??
+                  json['divisionId'] ??
+                  json['tournamentDivisionId'])
+              ?.toString(),
     );
   }
 
@@ -146,9 +153,17 @@ class CreatePaymentDto {
   Map<String, dynamic> toJson() => {
     'tournamentId': tournamentId,
     'purpose': purpose ?? 'REGISTRATION_FEE',
-    if (participantId != null && participantId!.isNotEmpty)
-      'participantId': participantId,
-    if (divisionId != null && divisionId!.isNotEmpty) 'divisionId': divisionId,
+    if (isValidUuid(participantId)) 'participantId': participantId!.trim(),
+    if (isValidUuid(divisionId)) 'divisionId': divisionId!.trim(),
     if (amount != null && amount! > 0) 'amount': amount,
   };
+}
+
+final _uuidPattern = RegExp(
+  r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$',
+);
+
+bool isValidUuid(String? value) {
+  final normalized = value?.trim();
+  return normalized != null && _uuidPattern.hasMatch(normalized);
 }

@@ -875,12 +875,15 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               CreatePaymentDto(
                 tournamentId: payment.tournamentId,
                 participantId: payment.participantId,
+                divisionId: payment.divisionId,
               ),
             );
 
         if (result != null) {
           final paymentId = result['paymentId'] ?? payment.id;
           final paymentUrl = result['paymentUrl'] ?? '';
+          final qrCode = result['qrCode']?.toString() ?? '';
+          final expiresAt = result['expiresAt']?.toString();
           final confirmedAmount =
               double.tryParse(result['amount']?.toString() ?? '') ??
               payment.amount;
@@ -901,6 +904,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   'amount': confirmedAmount,
                   'tournamentId': payment.tournamentId,
                   'tournamentName': payment.tournamentName,
+                  'paymentUrl': paymentUrl,
+                  'qrCode': qrCode,
+                  'expiresAt': expiresAt,
+                  'orderCode': result['orderCode']?.toString(),
                 },
               );
               return;
@@ -919,6 +926,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
           extra: {
             'tournamentId': payment.tournamentId,
             'participantId': payment.participantId,
+            'divisionId': payment.divisionId,
             'amount': payment.amount,
             'tournamentName': payment.tournamentName,
           },

@@ -2105,7 +2105,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       },
       child: InkWell(
         onTap: () => context.push(
-          t.isLite == true ? '/lite-manage/${t.id}' : '/intro/${t.id}',
+          t.isLite == true
+              ? '/lite-manage/${t.id}'
+              : '/admin/tournament/${t.id}',
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -2128,17 +2130,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (t.isLite != true) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        'Quản lý trên web',
-                        style: TextStyle(
-                          fontSize: 9,
-                          color: AppTheme.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
+                    const SizedBox(height: 2),
+                    Text(
+                      t.isLite == true
+                          ? 'Giải nhanh (Lite) • Quản lý trên app'
+                          : 'Giải nâng cao • Quản lý đầy đủ',
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: t.isLite == true
+                            ? const Color(0xFF059669)
+                            : AppTheme.primary,
+                        fontWeight: FontWeight.w600,
                       ),
-                    ],
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       statusLabel,

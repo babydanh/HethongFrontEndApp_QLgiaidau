@@ -37,6 +37,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     double effectiveAmount,
     String? effectiveName,
   ) async {
+    final rawDivisionId = widget.divisionId?.trim();
+    if (rawDivisionId != null &&
+        rawDivisionId.isNotEmpty &&
+        !isValidUuid(rawDivisionId)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Nội dung thi đấu không hợp lệ. Vui lòng quay lại chọn lại hạng mục.',
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
     setState(() => _isSubmitting = true);
     try {
       // Free tournament handling
@@ -71,11 +85,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
       if (result != null && mounted) {
         final paymentId = result['paymentId'] ?? '';
-        final paymentUrl = result['paymentUrl'] ?? '';
+        final paymentUrl = result['paymentUrl']?.toString() ?? '';
+        final qrCode = result['qrCode']?.toString() ?? '';
+        final expiresAt = result['expiresAt']?.toString();
         final confirmedAmount =
             double.tryParse(result['amount']?.toString() ?? '') ??
             effectiveAmount;
-        if (paymentUrl.isNotEmpty) {
+        if (paymentUrl.isNotEmpty || qrCode.isNotEmpty) {
           final uri = Uri.parse(paymentUrl);
           final opened = await launchUrl(
             uri,
@@ -92,6 +108,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 'amount': confirmedAmount,
                 'tournamentId': widget.tournamentId,
                 'tournamentName': effectiveName,
+                'paymentUrl': paymentUrl,
+                'qrCode': qrCode,
+                'expiresAt': expiresAt,
+                'orderCode': result['orderCode']?.toString(),
               },
             );
           }
@@ -268,7 +288,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'PayOS VietQR',
+                                'QR thanh toán PayOS',
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,

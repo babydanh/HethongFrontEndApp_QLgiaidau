@@ -184,7 +184,9 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
 
   Future<void> _fetchTournament(String tournamentId) async {
     try {
-      final res = await _dio.get('/tournaments/$tournamentId');
+      final res = await _dio
+          .get('/tournaments/$tournamentId')
+          .timeout(const Duration(seconds: 12));
       final envelope = res.data;
       final payload = envelope is Map ? envelope['data'] : envelope;
       if (payload is Map) {
@@ -228,9 +230,9 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   Future<void> _fetchParticipants(String tournamentId) async {
     state = state.copyWith(loading: true, error: null, clearError: true);
     try {
-      final res = await _dio.get(
-        '/tournaments/lite/$tournamentId/participants',
-      );
+      final res = await _dio
+          .get('/tournaments/lite/$tournamentId/participants')
+          .timeout(const Duration(seconds: 12));
       final envelope = res.data;
       final payload = envelope is Map ? envelope['data'] : envelope;
       final rawParticipants = payload is List ? payload : const <dynamic>[];

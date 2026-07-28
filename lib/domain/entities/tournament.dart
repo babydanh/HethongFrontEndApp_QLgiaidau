@@ -135,7 +135,12 @@ class Tournament {
     if (json['tournamentConfig'] != null && json['tournamentConfig'] is Map) {
       config = json['tournamentConfig'] as Map<String, dynamic>;
     }
-    final configMode = config['mode']?.toString().toUpperCase();
+    final configMode = (config['mode'] ??
+            json['mode'] ??
+            json['configMode'] ??
+            json['tournamentMode'])
+        ?.toString()
+        .toUpperCase();
 
     String bracketTypeVal =
         (config['bracketType']?.toString() ??
@@ -241,7 +246,7 @@ class Tournament {
       registrationMode: config['registrationMode']?.toString(),
       hideFeaturedCardText: config['hideFeaturedCardText'] == true,
       inviteCode: json['inviteCode']?.toString(),
-      isLite: configMode == 'LITE',
+      isLite: json['isLite'] == true || configMode == 'LITE',
     );
   }
 

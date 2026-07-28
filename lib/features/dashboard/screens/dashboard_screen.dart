@@ -922,7 +922,11 @@ class _TournamentTile extends StatelessWidget {
     return InkWell(
       onTap: () {
         if (isOwner || isCoOrg) {
-          context.push('/lite-manage/${tournament.id}');
+          context.push(
+            tournament.isLite
+                ? '/lite-manage/${tournament.id}'
+                : '/admin/tournament/${tournament.id}',
+          );
         } else {
           context.push('/intro/${tournament.id}');
         }
@@ -965,8 +969,8 @@ class _TournamentTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    tournament.name,
+                   Text(
+                     tournament.name,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
@@ -974,6 +978,19 @@ class _TournamentTile extends StatelessWidget {
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                   ),
+                  const SizedBox(height: 2),
+                  Text(
+                    tournament.isLite
+                        ? 'Giải nhanh (Lite) • Quản lý trên app'
+                        : 'Giải nâng cao • Quản lý đầy đủ',
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: tournament.isLite
+                          ? const Color(0xFF059669)
+                          : AppTheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 5),
                   Row(

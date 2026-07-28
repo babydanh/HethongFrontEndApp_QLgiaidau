@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 
 class ClubRankingWidget extends ConsumerStatefulWidget {
   final String clubId;
@@ -24,11 +25,19 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   String _selectedMatchType = 'SINGLES';
   String _selectedGender = 'MALE';
   String? _selectedCategoryId;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _fetchRankings();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchRankings() async {
@@ -43,7 +52,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         'scope': 'COMMUNITY',
         'matchType': _selectedMatchType,
         'genderRestriction': _selectedGender,
-        'limit': widget.compact ? 3 : 10,
+        'limit': widget.compact ? 3 : 20,
       };
       if (_selectedCategoryId != null && _selectedCategoryId!.isNotEmpty) {
         queryParams['categoryId'] = _selectedCategoryId;
@@ -142,7 +151,19 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
       );
     }
 
-    final rankings = _rankings!;
+    final allRankings = _rankings!;
+    final query = _searchQuery.trim().toLowerCase();
+    final rankings = query.isEmpty
+        ? allRankings
+        : allRankings
+            .where((ranking) => ranking.fullName.toLowerCase().contains(query))
+            .toList();
+    final isSearching = query.isNotEmpty;
+    final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
+    final myRanking = currentUserId == null
+        ? null
+        : allRankings.where((ranking) => ranking.userId == currentUserId).firstOrNull;
+    final myRank = myRanking == null ? null : allRankings.indexOf(myRanking) + 1;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,15 +197,41 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         const SizedBox(height: 10),
 
         // ── Podium Row (Top 3) ──
-        if (rankings.isNotEmpty) _buildPodiumRow(rankings),
+        if (!widget.compact) ...[
+          TextField(
+            controller: _searchController,
+            onChanged: (value) => setState(() => _searchQuery = value),
+            decoration: InputDecoration(
+              hintText: 'Tìm thành viên trong top 20...',
+              prefixIcon: const Icon(Icons.search_rounded, size: 18),
+              isDense: true,
+              filled: true,
+              fillColor: colors.bgCard,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: colors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: colors.border),
+              ),
+            ),
+          ),
+          if (myRanking != null) ...[
+            const SizedBox(height: 8),
+            _buildMyRankingCard(myRanking, myRank, colors),
+          ],
+        ],
+        if (!isSearching && rankings.isNotEmpty) _buildPodiumRow(rankings),
 
         // ── Ranks 4-10 List ──
-        if (!widget.compact && rankings.length > 3) ...[
+        if (!widget.compact && rankings.length > (isSearching ? 0 : 3)) ...[
           const SizedBox(height: 10),
-          ...List.generate(rankings.length - 3, (i) {
-            final index = i + 3;
+          ...List.generate(rankings.length - (isSearching ? 0 : 3), (i) {
+            final index = isSearching ? i : i + 3;
             final r = rankings[index];
-            return _buildListRow(r, index + 1, colors);
+            final actualRank = allRankings.indexOf(r) + 1;
+            return _buildListRow(r, actualRank, colors);
           }),
         ],
 
@@ -217,6 +264,44 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   }
 
   // ─── Gender Filter ───
+
+  Widget _buildMyRankingCard(
+    PlayerRanking ranking,
+    int? rank,
+    AppColorsExtension colors,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: AppTheme.primary,
+            child: Text(
+              rank == null ? '—' : '#$rank',
+              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Xếp hạng của bạn', style: TextStyle(color: AppTheme.primary, fontSize: 11, fontWeight: FontWeight.w800)),
+                Text(ranking.fullName, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.textPrimary, fontSize: 13, fontWeight: FontWeight.w700)),
+              ],
+            ),
+          ),
+          Text('${ranking.eloPoints} ELO', style: TextStyle(color: AppTheme.primary, fontSize: 12, fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
+  }
 
   Widget _buildGenderFilter() {
     return Container(
