@@ -881,19 +881,23 @@ class _TournamentBannerState extends State<TournamentBanner> {
     AppColorsExtension colors, {
     IconData? icon,
     Color? iconColor,
+    Color? color,
   }) {
+    final textColor = color ?? colors.textSecondary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: colors.bgElevated,
+        color: color != null ? color.withValues(alpha: 0.12) : colors.bgElevated,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: colors.border),
+        border: Border.all(
+          color: color != null ? color.withValues(alpha: 0.3) : colors.border,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 12, color: iconColor ?? colors.textSecondary),
+            Icon(icon, size: 12, color: iconColor ?? textColor),
             const SizedBox(width: 4),
           ],
           Text(
@@ -901,7 +905,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
             style: TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.bold,
-              color: colors.textSecondary,
+              color: textColor,
             ),
           ),
         ],
