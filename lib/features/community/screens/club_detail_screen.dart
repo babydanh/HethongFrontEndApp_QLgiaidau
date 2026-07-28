@@ -2224,159 +2224,177 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   // ════════════════════════════════════
   Widget _buildRankingsTab(AppColorsExtension colors) {
     final rankingsAsync = ref.watch(communityRankingsProvider(widget.clubId));
-    return rankingsAsync.when(
-      data: (rankings) {
-        if (rankings.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.leaderboard_outlined,
-                  size: 48,
-                  color: colors.textMuted,
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        ClubRankingWidget(clubId: widget.clubId),
+        const SizedBox(height: 20),
+        Text(
+          'XẾP HẠNG CHI TIẾT',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: colors.textMuted,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 12),
+        rankingsAsync.when(
+          data: (rankings) {
+            if (rankings.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.leaderboard_outlined,
+                        size: 48,
+                        color: colors.textMuted,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        "Chưa có xếp hạng",
+                        style: TextStyle(color: colors.textSecondary, fontSize: 14),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Tham gia giải đấu để có ELO",
+                        style: TextStyle(color: colors.textMuted, fontSize: 12),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  "Chưa có xếp hạng",
-                  style: TextStyle(color: colors.textSecondary, fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Tham gia giải đấu để có ELO",
-                  style: TextStyle(color: colors.textMuted, fontSize: 12),
-                ),
-              ],
-            ),
-          );
-        }
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: rankings.length,
-          itemBuilder: (context, i) {
-            final r = rankings[i];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.border),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: i < 3
-                          ? [
-                              Colors.amber,
-                              const Color(0xFF94A3B8),
-                              const Color(0xFFCD7F32),
-                            ][i].withValues(alpha: 0.15)
-                          : colors.bgSurface,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${i + 1}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
+              );
+            }
+            return Column(
+              children: List.generate(rankings.length, (i) {
+                final r = rankings[i];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: colors.bgCard,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: colors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
                           color: i < 3
                               ? [
                                   Colors.amber,
                                   const Color(0xFF94A3B8),
                                   const Color(0xFFCD7F32),
-                                ][i]
-                              : colors.textSecondary,
+                                ][i].withValues(alpha: 0.15)
+                              : colors.bgSurface,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                    child: Text(
-                      r.fullName.isNotEmpty ? r.fullName[0].toUpperCase() : '?',
-                      style: const TextStyle(
-                        color: AppTheme.primary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      r.fullName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: r.eloPoints >= 1000
-                          ? Colors.amber.withValues(alpha: 0.12)
-                          : AppTheme.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.diamond_outlined,
-                          size: 10,
-                          color: r.eloPoints >= 1000
-                              ? Colors.amber
-                              : AppTheme.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${r.eloPoints}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            color: r.eloPoints >= 1000
-                                ? Colors.amber
-                                : AppTheme.primary,
+                        child: Center(
+                          child: Text(
+                            '${i + 1}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              color: i < 3
+                                  ? [
+                                      Colors.amber,
+                                      const Color(0xFF94A3B8),
+                                      const Color(0xFFCD7F32),
+                                    ][i]
+                                  : colors.textSecondary,
+                            ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 10),
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                        child: Text(
+                          r.fullName.isNotEmpty ? r.fullName[0].toUpperCase() : '?',
+                          style: const TextStyle(
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          r.fullName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: r.eloPoints >= 1000
+                              ? Colors.amber.withValues(alpha: 0.12)
+                              : AppTheme.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.diamond_outlined,
+                              size: 10,
+                              color: r.eloPoints >= 1000
+                                  ? Colors.amber
+                                  : AppTheme.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${r.eloPoints}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                color: r.eloPoints >= 1000
+                                    ? Colors.amber
+                                    : AppTheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, st) {
+            _log.error('Lỗi tải bảng xếp hạng', e, st);
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+                  const SizedBox(height: 12),
+                  Text(
+                    "Không thể tải xếp hạng",
+                    style: TextStyle(color: colors.textSecondary, fontSize: 14),
                   ),
                 ],
               ),
             );
           },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) {
-        _log.error('Lỗi tải bảng xếp hạng', e, st);
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
-              const SizedBox(height: 12),
-              Text(
-                "Không thể tải xếp hạng",
-                style: TextStyle(color: colors.textSecondary, fontSize: 14),
-              ),
-            ],
-          ),
-        );
-      },
+        ),
+      ],
     );
   }
 
