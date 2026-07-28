@@ -639,6 +639,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             amount: (extra?['amount'] ?? 0).toDouble(),
             tournamentId: extra?['tournamentId'] ?? '',
             tournamentName: extra?['tournamentName']?.toString(),
+            paymentUrl: extra?['paymentUrl']?.toString(),
+            qrCode: extra?['qrCode']?.toString(),
+            expiresAt: extra?['expiresAt']?.toString(),
+            orderCode: extra?['orderCode']?.toString(),
           );
         },
       ),

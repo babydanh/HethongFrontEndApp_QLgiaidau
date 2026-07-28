@@ -216,6 +216,10 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       }
     } catch (e, stack) {
       _log.error('Lỗi tải thông tin giải', e, stack);
+      state = state.copyWith(
+        loading: false,
+        error: 'Không thể tải thông tin giải đấu',
+      );
     }
   }
 
