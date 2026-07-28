@@ -903,7 +903,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     return InkWell(
       onTap: () {
         if (isQuick && isAdmin) {
-          context.push('/lite/tournaments/${t.id}/manage');
+          context.push('/lite-manage/${t.id}');
         } else {
           context.push('/intro/${t.id}');
         }

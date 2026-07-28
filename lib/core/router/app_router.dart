@@ -499,6 +499,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           return LiteJoinScreen(inviteCode: inviteCode);
         },
       ),
+      GoRoute(
+        path: '/lite/tournaments/join/:inviteCode',
+        builder: (context, state) {
+          final inviteCode = state.pathParameters['inviteCode']!;
+          return LiteJoinScreen(inviteCode: inviteCode);
+        },
+      ),
 
       // ─── Tournament Register ───
       GoRoute(
@@ -590,6 +597,13 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       GoRoute(
         path: '/lite-manage/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return LiteManagementScreen(tournamentId: id);
+        },
+      ),
+      GoRoute(
+        path: '/lite/tournaments/:id/manage',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return LiteManagementScreen(tournamentId: id);
