@@ -83,7 +83,7 @@ void showOfficialScoreModal(
                           '${match.team1Name} vs ${match.team2Name}',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                             color: colors.textPrimary,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -96,7 +96,7 @@ void showOfficialScoreModal(
                         ),
                         decoration: BoxDecoration(
                           color: AppTheme.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                           border: Border.all(
                             color: AppTheme.primary.withValues(alpha: 0.3),
                           ),
@@ -105,7 +105,7 @@ void showOfficialScoreModal(
                           _sportLabel(kind).toUpperCase(),
                           style: TextStyle(
                             fontSize: 11,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                             color: AppTheme.primary,
                             letterSpacing: 0.8,
                           ),
@@ -209,10 +209,8 @@ void showOfficialScoreModal(
                         ),
                         Consumer(
                           builder: (context, ref, _) {
-                            final n = ref.watch(
-                              scorePanelNotifierProvider(params),
-                            );
-                            final state = n.state;
+                            final state = ref.watch(scorePanelNotifierProvider(params));
+                            final n = ref.read(scorePanelNotifierProvider(params).notifier);
                             return Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -222,9 +220,9 @@ void showOfficialScoreModal(
                                   const SizedBox(height: 4),
                                 ],
                                 SetHistoryBar(
-                                  finishedSets: n.state.finishedSets,
-                                  team1SetWins: n.state.team1SetWins,
-                                  team2SetWins: n.state.team2SetWins,
+                                  finishedSets: state.finishedSets,
+                                  team1SetWins: state.team1SetWins,
+                                  team2SetWins: state.team2SetWins,
                                 ),
                               ],
                             );
@@ -239,8 +237,8 @@ void showOfficialScoreModal(
                 // 4. BOTTOM REFEREE CONTROL BAR (HÌNH PHẠT, NGOẠI LỆ VÀ NÚT XỬ LÝ TRỌNG TÀI)
                 Consumer(
                   builder: (context, ref, _) {
-                    final n = ref.watch(scorePanelNotifierProvider(params));
-                    final state = n.state;
+                    final state = ref.watch(scorePanelNotifierProvider(params));
+                    final n = ref.read(scorePanelNotifierProvider(params).notifier);
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -521,7 +519,7 @@ class ScoreWarningBox extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: colors.warning.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         border: Border.all(color: colors.warning.withValues(alpha: 0.35)),
       ),
       child: Row(
