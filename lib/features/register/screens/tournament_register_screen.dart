@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -702,7 +704,13 @@ class _TournamentRegisterScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeader(t),
-        const SizedBox(height: 24),
+        const SizedBox(height: 14),
+        _RegistrationCountdownCard(
+          targetDate: t.registrationEndDate ??
+              t.startDate ??
+              DateTime.now().add(const Duration(days: 7)),
+        ),
+        const SizedBox(height: 16),
         if (isRegistrationClosed) ...[
           Container(
             padding: const EdgeInsets.all(16),
@@ -1187,7 +1195,332 @@ class _TournamentRegisterScreenState
             ),
           ),
         ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
+        const SizedBox(height: 16),
+        _buildTournamentHighlightsCard(t),
       ],
+    );
+  }
+
+  Widget _buildTournamentHighlightsCard(Tournament t) {
+    final colors = context.colors;
+    final startDateStr = t.startDate != null
+        ? DateFormat('dd/MM/yyyy').format(t.startDate!)
+        : 'Chưa xếp lịch';
+    final endDateStr =
+        t.endDate != null ? DateFormat('dd/MM/yyyy').format(t.endDate!) : null;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.stars_rounded, color: AppTheme.primary, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'QUYỀN LỢI & QUY ĐỊNH THAM GIA',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _buildInfoRow(
+            Icons.event_available_rounded,
+            'Thời gian thi đấu',
+            endDateStr != null ? '$startDateStr - $endDateStr' : startDateStr,
+            colors,
+          ),
+          if (t.locationAddress != null && t.locationAddress!.isNotEmpty)
+            _buildInfoRow(
+              Icons.location_on_rounded,
+              'Địa điểm thi đấu',
+              t.locationAddress!,
+              colors,
+            ),
+          _buildInfoRow(
+            Icons.verified_user_rounded,
+            'Xếp lịch & ELO',
+            'Sơ đồ thi đấu công khai, tích lũy điểm ELO tự động sau giải',
+            colors,
+          ),
+          _buildInfoRow(
+            Icons.support_agent_rounded,
+            'Hỗ trợ VĐV',
+            'Hỗ trợ hoàn hủy lệ phí & thắc mắc trực tiếp với Ban tổ chức',
+            colors,
+          ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 350.ms, duration: 300.ms);
+  }
+
+  Widget _buildInfoRow(
+    IconData icon,
+    String title,
+    String desc,
+    AppColorsExtension colors,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: AppTheme.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  desc,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colors.textMuted,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RegistrationCountdownCard extends StatefulWidget {
+  final DateTime targetDate;
+  const _RegistrationCountdownCard({required this.targetDate});
+
+  @override
+  State<_RegistrationCountdownCard> createState() =>
+      _RegistrationCountdownCardState();
+}
+
+class _RegistrationCountdownCardState
+    extends State<_RegistrationCountdownCard> {
+  Timer? _timer;
+  Duration _remaining = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateRemaining();
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _calculateRemaining(),
+    );
+  }
+
+  void _calculateRemaining() {
+    final now = DateTime.now();
+    final diff = widget.targetDate.difference(now);
+    if (mounted) {
+      setState(() {
+        _remaining = diff.isNegative ? Duration.zero : diff;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    if (_remaining == Duration.zero) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: colors.error.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.error.withValues(alpha: 0.25)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.timer_off_rounded, color: colors.error, size: 20),
+            const SizedBox(width: 10),
+            Text(
+              'Hạn đăng ký giải đấu đã kết thúc',
+              style: TextStyle(
+                color: colors.error,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final days = _remaining.inDays;
+    final hours = _remaining.inHours % 24;
+    final minutes = _remaining.inMinutes % 60;
+    final seconds = _remaining.inSeconds % 60;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.primary.withValues(alpha: 0.12),
+            AppTheme.primary.withValues(alpha: 0.03),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.timer_outlined,
+                  color: AppTheme.primary,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'HẠN ĐĂNG KÝ CÒN LẠI',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.primary,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  'ĐANG MỞ',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildTimeUnit('${days}'.padLeft(2, '0'), 'Ngày', colors),
+              _buildColon(colors),
+              _buildTimeUnit('${hours}'.padLeft(2, '0'), 'Giờ', colors),
+              _buildColon(colors),
+              _buildTimeUnit('${minutes}'.padLeft(2, '0'), 'Phút', colors),
+              _buildColon(colors),
+              _buildTimeUnit('${seconds}'.padLeft(2, '0'), 'Giây', colors),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeUnit(String value, String unit, AppColorsExtension colors) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: colors.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: colors.textPrimary,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          unit,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: colors.textMuted,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildColon(AppColorsExtension colors) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Text(
+        ':',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w900,
+          color: colors.textMuted,
+        ),
+      ),
     );
   }
 }
