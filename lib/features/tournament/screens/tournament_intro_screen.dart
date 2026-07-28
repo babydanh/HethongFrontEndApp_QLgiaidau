@@ -414,7 +414,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       title: tournament.name,
       subtitle: '${tournament.locationAddress ?? "Việt Nam"} • ${tournament.category ?? tournament.sport}',
       webUrl: 'https://giaidau.vnvar.com/tournaments/${tournament.id}',
-      imageUrl: tournament.bannerUrl ?? tournament.logoUrl,
+      imageUrl: tournament.logoUrl ?? tournament.bannerUrl,
       badgeText: tournament.isLite ? 'Giải Nhanh (Lite)' : 'Giải Nâng Cao',
     );
   }

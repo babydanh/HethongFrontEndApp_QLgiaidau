@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -77,27 +78,15 @@ class AppShareModal {
                   Container(
                     width: 52,
                     height: 52,
+                    padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.15),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: colors.border),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: imageUrl != null && imageUrl.isNotEmpty
-                          ? Image.network(
-                              imageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const Icon(
-                                Icons.emoji_events_rounded,
-                                color: AppTheme.primary,
-                                size: 26,
-                              ),
-                            )
-                          : const Icon(
-                              Icons.emoji_events_rounded,
-                              color: AppTheme.primary,
-                              size: 26,
-                            ),
+                      borderRadius: BorderRadius.circular(8),
+                      child: _buildPreviewImage(imageUrl),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -294,5 +283,54 @@ class AppShareModal {
         ),
       ),
     );
+  }
+
+  static Widget _buildPreviewImage(String? url) {
+    if (url == null || url.trim().isEmpty) {
+      return SvgPicture.network(
+        "https://giaidau.vnvar.com/vndcsport.svg",
+        fit: BoxFit.contain,
+        placeholderBuilder: (_) => const Icon(
+          Icons.emoji_events_rounded,
+          color: AppTheme.primary,
+          size: 24,
+        ),
+      );
+    }
+    final resolved = _resolveImageUrl(url);
+    if (resolved.toLowerCase().endsWith('.svg')) {
+      return SvgPicture.network(
+        resolved,
+        fit: BoxFit.contain,
+        placeholderBuilder: (_) => const Icon(
+          Icons.emoji_events_rounded,
+          color: AppTheme.primary,
+          size: 24,
+        ),
+      );
+    }
+    return Image.network(
+      resolved,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => SvgPicture.network(
+        "https://giaidau.vnvar.com/vndcsport.svg",
+        fit: BoxFit.contain,
+        placeholderBuilder: (_) => const Icon(
+          Icons.emoji_events_rounded,
+          color: AppTheme.primary,
+          size: 24,
+        ),
+      ),
+    );
+  }
+
+  static String _resolveImageUrl(String url) {
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+    if (url.startsWith("/")) {
+      return "https://qlgiaidau.esports.vn$url";
+    }
+    return "https://qlgiaidau.esports.vn/$url";
   }
 }
