@@ -422,10 +422,12 @@ class _OrganizerLiteSection extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final colors = context.colors;
+
     return _SectionCard(
-      title: 'Quản lý nhanh',
+      title: 'Quản lý nhanh (${managedTournaments.length})',
       child: Column(
-        children: managedTournaments.take(3).map((tournament) {
+        children: managedTournaments.map((tournament) {
           final isOwner = workspace.organizedTournaments.any(
             (item) => item.id == tournament.id,
           );
@@ -437,22 +439,34 @@ class _OrganizerLiteSection extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: context.colors.bgSurface,
+                  color: colors.bgSurface,
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: colors.border),
                 ),
                 child: Row(
                   children: [
                     Container(
-                      width: 42,
-                      height: 42,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.12),
+                        color: colors.bgCard,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colors.border),
                       ),
-                      child: const Icon(
-                        Icons.dashboard_customize_rounded,
-                        color: AppTheme.primary,
-                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: (tournament.logoUrl != null && tournament.logoUrl!.isNotEmpty)
+                          ? Image.network(
+                              tournament.logoUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: SvgPicture.asset('assets/images/vndcsport.svg', fit: BoxFit.contain),
+                              ),
+                            )
+                          : Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: SvgPicture.asset('assets/images/vndcsport.svg', fit: BoxFit.contain),
+                            ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -464,31 +478,54 @@ class _OrganizerLiteSection extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
-                              color: context.colors.textPrimary,
+                              color: colors.textPrimary,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            isOwner ? 'Chủ giải' : 'Ban tổ chức',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.colors.textMuted,
-                            ),
+                          const SizedBox(height: 5),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isOwner
+                                      ? const Color(0xFFEFF6FF)
+                                      : const Color(0xFFF3E8FF),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: isOwner
+                                        ? const Color(0xFFBFDBFE)
+                                        : const Color(0xFFE9D5FF),
+                                  ),
+                                ),
+                                child: Text(
+                                  isOwner ? 'Chủ giải' : 'Ban tổ chức',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: isOwner
+                                        ? const Color(0xFF2563EB)
+                                        : const Color(0xFF9333EA),
+                                  ),
+                                ),
+                              ),
+                              if (tournament.sport.isNotEmpty) ...[
+                                const SizedBox(width: 6),
+                                Text(
+                                  '• ${tournament.sport}',
+                                  style: TextStyle(fontSize: 11, color: colors.textMuted),
+                                ),
+                              ],
+                            ],
                           ),
                         ],
                       ),
                     ),
-                    FilledButton(
-                      onPressed: () =>
-                          context.push('/organizer-lite/${tournament.id}'),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        minimumSize: Size.zero,
-                      ),
-                      child: const Text('Mở'),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: colors.textMuted,
+                      size: 22,
                     ),
                   ],
                 ),
@@ -508,16 +545,26 @@ class _TournamentSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tournaments = workspace.visibleTournaments.take(4).toList();
+    final tournaments = workspace.visibleTournaments;
+
     return _SectionCard(
-      title: 'Giải của tôi',
+      title: 'Giải của tôi (${tournaments.length})',
       child: tournaments.isEmpty
           ? const _EmptySectionText('Bạn chưa tham gia hoặc quản lý giải nào.')
           : Column(
               children: tournaments.map((tournament) {
+                final isOwner = workspace.organizedTournaments.any((item) => item.id == tournament.id);
+                final isCoOrg = workspace.coOrganizerTournaments.any((item) => item.id == tournament.id);
+                final isParticipant = workspace.participatingTournaments.any((item) => item.id == tournament.id);
+
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: _TournamentTile(tournament: tournament),
+                  child: _TournamentTile(
+                    tournament: tournament,
+                    isOwner: isOwner,
+                    isCoOrg: isCoOrg,
+                    isParticipant: isParticipant,
+                  ),
                 );
               }).toList(),
             ),
@@ -805,95 +852,136 @@ class _AssignmentTile extends StatelessWidget {
 }
 
 class _TournamentTile extends StatelessWidget {
-  const _TournamentTile({required this.tournament});
+  const _TournamentTile({
+    required this.tournament,
+    this.isOwner = false,
+    this.isCoOrg = false,
+    this.isParticipant = false,
+  });
 
   final Tournament tournament;
+  final bool isOwner;
+  final bool isCoOrg;
+  final bool isParticipant;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: colors.border.withValues(alpha: 0.5)),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: (tournament.logoUrl != null && tournament.logoUrl!.isNotEmpty)
-                    ? Image.network(
-                        tournament.logoUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Padding(
-                          padding: const EdgeInsets.all(7),
-                          child: SvgPicture.asset(
-                            'assets/images/vndcsport.svg',
-                            fit: BoxFit.contain,
+
+    String badgeText = 'Đã đăng ký';
+    Color badgeBg = const Color(0xFFECFDF5);
+    Color badgeTextCol = const Color(0xFF059669);
+    Color badgeBorder = const Color(0xFFA7F3D0);
+
+    if (isOwner) {
+      badgeText = 'Chủ giải';
+      badgeBg = const Color(0xFFEFF6FF);
+      badgeTextCol = const Color(0xFF2563EB);
+      badgeBorder = const Color(0xFFBFDBFE);
+    } else if (isCoOrg) {
+      badgeText = 'Ban tổ chức';
+      badgeBg = const Color(0xFFF3E8FF);
+      badgeTextCol = const Color(0xFF9333EA);
+      badgeBorder = const Color(0xFFE9D5FF);
+    }
+
+    return InkWell(
+      onTap: () {
+        if (isOwner || isCoOrg) {
+          context.push('/organizer-lite/${tournament.id}');
+        } else {
+          context.push('/intro/${tournament.id}');
+        }
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: colors.bgSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: colors.bgCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.border),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: (tournament.logoUrl != null && tournament.logoUrl!.isNotEmpty)
+                  ? Image.network(
+                      tournament.logoUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: SvgPicture.asset('assets/images/vndcsport.svg', fit: BoxFit.contain),
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: SvgPicture.asset('assets/images/vndcsport.svg', fit: BoxFit.contain),
+                    ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tournament.name,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: colors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: badgeBg,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: badgeBorder),
+                        ),
+                        child: Text(
+                          badgeText,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: badgeTextCol,
                           ),
                         ),
-                      )
-                    : Padding(
-                        padding: const EdgeInsets.all(7),
-                        child: SvgPicture.asset(
-                          'assets/images/vndcsport.svg',
-                          fit: BoxFit.contain,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          _buildTournamentMeta(tournament),
+                          style: TextStyle(fontSize: 11, color: colors.textMuted),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tournament.name,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _buildTournamentMeta(tournament),
-                      style: TextStyle(fontSize: 11, color: colors.textMuted),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => context.push('/intro/${tournament.id}'),
-                  child: const Text('Xem giải'),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: FilledButton(
-                  onPressed: () =>
-                      context.push('/tournament/${tournament.id}/bracket'),
-                  child: const Text('Xem bracket'),
-                ),
-              ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: colors.textMuted,
+              size: 22,
+            ),
+          ],
+        ),
       ),
     );
   }
