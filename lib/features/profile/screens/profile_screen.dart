@@ -1416,11 +1416,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return workspaceAsync.when(
       data: (workspace) {
-        final tournaments = [
-          ...workspace.organizedTournaments,
-          ...workspace.coOrganizerTournaments,
-          ...workspace.participatingTournaments,
+        final roleGroups = <({String label, IconData icon, Color color, List<dynamic> items})>[
+          (label: 'Chủ giải', icon: Icons.workspace_premium_rounded, color: const Color(0xFF059669), items: workspace.organizedTournaments),
+          (label: 'Ban tổ chức', icon: Icons.groups_rounded, color: AppTheme.primary, items: workspace.coOrganizerTournaments),
+          (label: 'Trọng tài', icon: Icons.gavel_rounded, color: AppTheme.refereeColor, items: workspace.refereeTournaments),
+          (label: 'Người chơi', icon: Icons.sports_tennis_rounded, color: context.colors.info, items: workspace.participatingTournaments),
         ];
+        final tournaments = roleGroups.expand((group) => group.items).toList();
         final visible = tournaments.take(4).toList();
 
         if (visible.isEmpty) {
@@ -1464,7 +1466,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           child: Column(
             children: [
-              ...visible.map((t) => _buildTournamentRow(t, colors, context)),
+              ...visible.map((t) {
+                final group = roleGroups.firstWhere(
+                  (item) => item.items.any((candidate) => candidate.id == t.id),
+                );
+                return _buildTournamentRow(
+                  t,
+                  colors,
+                  context,
+                  roleLabel: group.label,
+                  roleColor: group.color,
+                  roleIcon: group.icon,
+                );
+              }),
               if (tournaments.length > 4)
                 Padding(
                   padding: const EdgeInsets.all(8),
@@ -2053,6 +2067,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     dynamic t,
     AppColorsExtension colors,
     BuildContext context,
+    {
+    required String roleLabel,
+    required Color roleColor,
+    required IconData roleIcon,
+    }
   ) {
     final rawStatus = t.status?.toString() ?? 'draft';
     final statusLabel = StatusHelper.getTournamentStatusLabel(rawStatus);
@@ -2104,11 +2123,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         }
       },
       child: InkWell(
-        onTap: () => context.push(
-          t.isLite == true
-              ? '/lite-manage/${t.id}'
-              : '/admin/tournament/${t.id}',
-        ),
+        onTap: () {
+          if (t.isLite == true) {
+            context.push('/lite-manage/${t.id}');
+          } else {
+            _showAdvancedManagementUnsupported(context);
+          }
+        },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
@@ -2144,6 +2165,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(roleIcon, size: 11, color: roleColor),
+                        const SizedBox(width: 3),
+                        Text(
+                          roleLabel,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: roleColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
                     Text(
                       statusLabel,
                       style: TextStyle(
@@ -2163,6 +2199,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showAdvancedManagementUnsupported(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Quản lý giải Nâng Cao'),
+        content: const Text(
+          'App hiện chỉ hỗ trợ quản lý giải nhanh (Lite). '
+          'Giải Nâng Cao vui lòng quản lý trên web.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Đã hiểu'),
+          ),
+        ],
       ),
     );
   }

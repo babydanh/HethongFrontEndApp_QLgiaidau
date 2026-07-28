@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_card.dart';
 import 'package:flutter/material.dart';
@@ -441,7 +442,11 @@ class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> 
       tournamentMap[t.id] = t;
     }
 
-    final allTournaments = tournamentMap.values.toList();
+    final allTournaments = tournamentMap.values.toList()
+      ..sort((a, b) {
+        if (a.isLite == b.isLite) return 0;
+        return a.isLite ? -1 : 1;
+      });
 
     // Filter by search query
     final filteredTournaments = allTournaments.where((t) {
@@ -606,9 +611,9 @@ class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> 
   }
 }
 
-class _QuickActions extends StatelessWidget {
+class _QuickActions extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -628,6 +633,13 @@ class _QuickActions extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+          _QuickActionRow(
+            icon: Icons.bolt_rounded,
+            title: 'Tạo giải nhanh (Lite)',
+            subtitle: 'Tạo nhanh trong câu lạc bộ của bạn',
+            onTap: () => _openLiteCreation(context, ref),
+          ),
+          const Divider(height: 24),
           _QuickActionRow(
             icon: Icons.notifications_rounded,
             title: 'Thông báo',
@@ -651,6 +663,73 @@ class _QuickActions extends StatelessWidget {
         ],
       ),
     ).animate().fadeIn(delay: 180.ms, duration: 260.ms);
+  }
+
+  Future<void> _openLiteCreation(BuildContext context, WidgetRef ref) async {
+    final communities = await ref.read(myCommunitiesProvider.future);
+    if (!context.mounted) return;
+
+    if (communities.isEmpty) {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Cần có câu lạc bộ'),
+          content: const Text(
+            'Bạn cần tạo hoặc tham gia câu lạc bộ trước khi tạo giải nhanh (Lite).',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Để sau'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                context.push('/club/create');
+              },
+              child: const Text('Tạo câu lạc bộ'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (communities.length == 1) {
+      context.push('/club/${communities.first.id}/create-tournament');
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: Text(
+                'Chọn câu lạc bộ tạo giải',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+            ),
+            ...communities.map(
+              (club) => ListTile(
+                leading: const CircleAvatar(child: Icon(Icons.groups_rounded)),
+                title: Text(club.name),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  context.push('/club/${club.id}/create-tournament');
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -920,13 +999,28 @@ class _TournamentTile extends StatelessWidget {
     }
 
     return InkWell(
-      onTap: () {
-        if (isOwner || isCoOrg) {
-          context.push(
-            tournament.isLite
-                ? '/lite-manage/${tournament.id}'
-                : '/admin/tournament/${tournament.id}',
-          );
+        onTap: () {
+          if (isOwner || isCoOrg) {
+            if (tournament.isLite) {
+              context.push('/lite-manage/${tournament.id}');
+            } else {
+              showDialog<void>(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: const Text('Quản lý giải Nâng Cao'),
+                  content: const Text(
+                    'App hiện chỉ hỗ trợ quản lý giải nhanh (Lite). '
+                    'Giải Nâng Cao vui lòng quản lý trên web.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: const Text('Đã hiểu'),
+                    ),
+                  ],
+                ),
+              );
+            }
         } else {
           context.push('/intro/${tournament.id}');
         }

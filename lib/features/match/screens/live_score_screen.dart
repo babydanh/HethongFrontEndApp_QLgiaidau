@@ -780,9 +780,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         matchId: widget.matchId,
                       )),
                     );
-                    await controller.startMatch(
-                      refereeName: _refereeController.text.trim(),
-                    );
+                    await controller.startMatch();
                   },
                   icon: const Icon(Icons.play_arrow_rounded, size: 22),
                   label: const Text(
@@ -1093,7 +1091,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     await controller.startMatch(
                       maxScore: resolvedMaxScore,
                       timeLimitMinutes: resolvedTimeLimit,
-                      refereeName: _refereeController.text.trim(),
                     );
                   },
                   icon: const Icon(Icons.play_arrow_rounded),
@@ -2962,7 +2959,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       const Divider(height: 16),
                       _buildInfoRow(
                         'Trọng tài chính',
-                        match.refereeName ?? 'Nguyễn Trọng Tài',
+                        match.refereeName?.trim().isNotEmpty == true
+                            ? match.refereeName!
+                            : 'Chưa xác định',
                       ),
                       const Divider(height: 16),
                       _buildInfoRow(

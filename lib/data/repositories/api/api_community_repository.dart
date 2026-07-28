@@ -214,7 +214,7 @@ class ApiCommunityRepository implements ICommunityRepository {
   }
 
   @override
-  Future<List<CommunityRankingModel>> getRankings(String communityId, {int limit = 50}) async {
+  Future<List<CommunityRankingModel>> getRankings(String communityId, {int limit = 20}) async {
     _log.info('Lấy bảng xếp hạng CLB: $communityId');
     try {
       final response = await _dioClient.dio.get('/communities/$communityId/rankings', queryParameters: {'limit': limit});

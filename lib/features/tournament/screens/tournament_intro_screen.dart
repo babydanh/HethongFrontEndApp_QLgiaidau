@@ -409,11 +409,16 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Future<void> _shareTournament(Tournament tournament) async {
+    final shareUrl = tournament.isLite &&
+            tournament.inviteCode != null &&
+            tournament.inviteCode!.isNotEmpty
+        ? 'https://giaidau.vnvar.com/lite/tournaments/join/${Uri.encodeComponent(tournament.inviteCode!)}'
+        : 'https://giaidau.vnvar.com/tournaments/${tournament.id}';
     AppShareModal.show(
       context: context,
       title: tournament.name,
       subtitle: '${tournament.locationAddress ?? "Việt Nam"} • ${tournament.category ?? tournament.sport}',
-      webUrl: 'https://giaidau.vnvar.com/tournaments/${tournament.id}',
+      webUrl: shareUrl,
       imageUrl: tournament.logoUrl ?? tournament.bannerUrl,
       badgeText: tournament.isLite ? 'Giải Nhanh (Lite)' : 'Giải Nâng Cao',
     );

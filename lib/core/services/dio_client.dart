@@ -81,11 +81,18 @@ class DioClient {
             if (refreshToken != null && refreshToken.isNotEmpty) {
               try {
                 // Sử dụng client Dio riêng để tránh vòng lặp interceptor vô hạn
-                final refreshDio = Dio(BaseOptions(baseUrl: baseUrl));
+                final refreshDio = Dio(
+                  BaseOptions(
+                    baseUrl: baseUrl,
+                    connectTimeout: const Duration(seconds: 8),
+                    receiveTimeout: const Duration(seconds: 8),
+                    sendTimeout: const Duration(seconds: 8),
+                  ),
+                );
                 final response = await refreshDio.post(
                   '/auth/mobile/refresh',
                   data: {'refreshToken': refreshToken},
-                );
+                ).timeout(const Duration(seconds: 10));
 
                 if (response.statusCode == 200 || response.statusCode == 201) {
                   final data = response.data;

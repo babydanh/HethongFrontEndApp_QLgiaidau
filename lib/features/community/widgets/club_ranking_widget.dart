@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +9,7 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
 
 class ClubRankingWidget extends ConsumerStatefulWidget {
   final String clubId;
@@ -27,36 +30,49 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   String? _selectedCategoryId;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchRankings();
+    _pollingTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _fetchRankings(showLoading: false),
+    );
   }
 
   @override
   void dispose() {
+    _pollingTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _fetchRankings() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  Future<void> _fetchRankings({bool showLoading = true}) async {
+    if (showLoading) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
       final dio = ref.read(dioProvider);
+      final categories = await ref.read(categoriesProvider.future);
+      final categoryId = _selectedCategoryId ??
+          (categories.isNotEmpty ? categories.first.id : null);
+      if (categoryId == null || categoryId.isEmpty) {
+        throw StateError('Chưa có môn thể thao để tải bảng xếp hạng CLB.');
+      }
+      _selectedCategoryId = categoryId;
       final queryParams = <String, dynamic>{
         'communityId': widget.clubId,
         'scope': 'COMMUNITY',
         'matchType': _selectedMatchType,
         'genderRestriction': _selectedGender,
+        'categoryId': categoryId,
         'limit': widget.compact ? 3 : 20,
       };
-      if (_selectedCategoryId != null && _selectedCategoryId!.isNotEmpty) {
-        queryParams['categoryId'] = _selectedCategoryId;
-      }
       final response = await dio.get(
         '/rankings/leaderboard',
         queryParameters: queryParams,
@@ -72,6 +88,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         setState(() {
           _rankings = rankings;
           _loading = false;
+          _error = null;
         });
       }
     } on DioException catch (e) {
@@ -236,6 +253,16 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         ],
 
         // ── Xem tất cả (compact mode) ──
+        if (!widget.compact) ...[
+          const SizedBox(height: 8),
+          Center(
+            child: Text(
+              'Tự động cập nhật mỗi 30 giây',
+              style: TextStyle(fontSize: 10, color: colors.textMuted),
+            ),
+          ),
+        ],
+
         if (widget.compact) ...[
           const SizedBox(height: 8),
           GestureDetector(
@@ -630,6 +657,16 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
               fontSize: 9,
               fontWeight: FontWeight.w600,
               color: colors.textMuted,
+            ),
+          ),
+          const SizedBox(width: 6),
+
+          Text(
+            '${player.matchesWon}-${player.matchesPlayed - player.matchesWon}',
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: colors.textSecondary,
             ),
           ),
           const SizedBox(width: 6),

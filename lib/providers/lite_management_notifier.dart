@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
@@ -168,16 +170,47 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   @override
   LiteManagementState build() => const LiteManagementState();
 
+  void markLoadFailed(String message) {
+    state = state.copyWith(loading: false, error: message);
+  }
+
   Dio get _dio => ref.read(dioClientProvider).dio;
+
+  String _apiError(DioException error, String fallback) {
+    final data = error.response?.data;
+    if (data is Map && data['message'] != null) {
+      return data['message'].toString();
+    }
+    if (error.response?.statusCode == 401) {
+      return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+    }
+    if (error.response?.statusCode == 403) {
+      return 'Bạn không có quyền quản lý giải Lite này.';
+    }
+    return fallback;
+  }
 
   // ─── Initialize with tournament ID (called from screen) ───
 
   Future<void> init(String tournamentId) async {
     state = const LiteManagementState(loading: true);
-    await Future.wait([
-      _fetchTournament(tournamentId),
-      _fetchParticipants(tournamentId),
-    ]);
+    try {
+      await Future.wait([
+        _fetchTournament(tournamentId),
+        _fetchParticipants(tournamentId),
+      ]).timeout(const Duration(seconds: 15));
+    } on TimeoutException {
+      state = state.copyWith(
+        loading: false,
+        error: 'Tải dữ liệu giải Lite quá lâu. Vui lòng thử lại.',
+      );
+    } catch (e, stack) {
+      _log.error('Lỗi khởi tạo quản lý Lite', e, stack);
+      state = state.copyWith(
+        loading: false,
+        error: 'Không thể tải dữ liệu giải Lite. Vui lòng thử lại.',
+      );
+    }
   }
 
   // ─── Fetch tournament details ───
@@ -190,6 +223,15 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       final envelope = res.data;
       final payload = envelope is Map ? envelope['data'] : envelope;
       if (payload is Map) {
+        final config = payload['tournamentConfig'];
+        final mode = config is Map ? config['mode']?.toString().toUpperCase() : null;
+        if (mode != null && mode != 'LITE') {
+          state = state.copyWith(
+            loading: false,
+            error: 'Đây là giải Nâng Cao. App chỉ hỗ trợ quản lý giải Lite.',
+          );
+          return;
+        }
         final rawMatchType =
             payload['matchType']?.toString().toUpperCase() ?? 'SINGLES';
         final rawName = payload['name']?.toString() ?? '';
@@ -220,7 +262,9 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       _log.error('Lỗi tải thông tin giải', e, stack);
       state = state.copyWith(
         loading: false,
-        error: 'Không thể tải thông tin giải đấu',
+        error: e is DioException
+            ? _apiError(e, 'Không thể tải thông tin giải đấu')
+            : 'Không thể tải thông tin giải đấu',
       );
     }
   }
@@ -253,7 +297,9 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       _log.error('Lỗi tải danh sách người tham gia', e, stack);
       state = state.copyWith(
         loading: false,
-        error: 'Không thể tải danh sách người tham gia',
+        error: e is DioException
+            ? _apiError(e, 'Không thể tải danh sách người tham gia')
+            : 'Không thể tải danh sách người tham gia',
       );
     }
   }
@@ -262,10 +308,17 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
 
   Future<void> refresh(String tournamentId) async {
     state = const LiteManagementState(loading: true);
-    await Future.wait([
-      _fetchTournament(tournamentId),
-      _fetchParticipants(tournamentId),
-    ]);
+    try {
+      await Future.wait([
+        _fetchTournament(tournamentId),
+        _fetchParticipants(tournamentId),
+      ]).timeout(const Duration(seconds: 15));
+    } on TimeoutException {
+      state = state.copyWith(
+        loading: false,
+        error: 'Tải dữ liệu giải Lite quá lâu. Vui lòng thử lại.',
+      );
+    }
   }
 
   void toggleSelection(String id) {

@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
+import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 
 class LiteManagementScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -21,20 +25,35 @@ class LiteManagementScreen extends ConsumerStatefulWidget {
 class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  Timer? _loadWatchdog;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       if (mounted) setState(() {});
     });
-    // Trigger initial data load
-    ref.read(liteManagementProvider.notifier).init(widget.tournamentId);
+    // Wait until the first frame so auth/provider state is ready before the
+    // first protected Lite request. Manual refresh already runs after this.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(liteManagementProvider.notifier).init(widget.tournamentId);
+      _loadWatchdog = Timer(const Duration(seconds: 18), () {
+        if (!mounted) return;
+        final state = ref.read(liteManagementProvider);
+        if (state.loading && state.error == null) {
+          ref.read(liteManagementProvider.notifier).markLoadFailed(
+            'Không tải được dữ liệu giải Lite. Kiểm tra mạng hoặc thử lại.',
+          );
+        }
+      });
+    });
   }
 
   @override
   void dispose() {
+    _loadWatchdog?.cancel();
     _tabController.dispose();
     super.dispose();
   }
@@ -84,14 +103,13 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           ),
           indicatorSize: TabBarIndicatorSize.tab,
           tabs: const [
-            Tab(text: 'Tổng quan'),
-            Tab(text: 'Người tham gia'),
-            Tab(text: 'Bracket'),
-            Tab(text: 'Trận đấu'),
+            Tab(icon: Icon(Icons.dashboard_outlined, size: 18), text: 'Tổng quan'),
+            Tab(icon: Icon(Icons.people_outline_rounded, size: 18), text: 'Người tham gia'),
+            Tab(icon: Icon(Icons.account_tree_outlined, size: 18), text: 'Bracket & trận đấu'),
           ],
         ),
       ),
-      body: state.loading && state.participants.isEmpty
+      body: state.loading && state.error == null && state.participants.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : state.error != null && state.tournament == null
           ? Center(
@@ -117,14 +135,24 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 ),
               ),
             )
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildOverviewTab(colors, state, notifier),
-                _buildParticipantsTab(colors, state, notifier),
-                _buildBracketTab(colors, state, notifier),
-                _buildMatchesTab(colors),
-              ],
+          : AnimatedBuilder(
+              animation: _tabController,
+              builder: (context, _) {
+                switch (_tabController.index) {
+                  case 0:
+                    return _buildOverviewTab(colors, state, notifier);
+                  case 1:
+                    return _buildParticipantsTab(colors, state, notifier);
+                  case 2:
+                    // Lazy-load bracket API only after the tab is opened.
+                    return BracketViewScreen(
+                      tournamentId: widget.tournamentId,
+                      isEmbedded: true,
+                    );
+                  default:
+                    return const SizedBox.shrink();
+                }
+              },
             ),
     );
   }
@@ -160,6 +188,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           // ─── Header Card ───
           _buildHeaderCard(colors, state),
           const SizedBox(height: 20),
+          _buildLiteFlow(colors, state),
+          const SizedBox(height: 24),
 
           // ─── Info Grid ───
           _sectionHeader(
@@ -174,7 +204,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             ('Thể thức bảng đấu', bracketLabel),
             ('Số đội tối đa', tournament?.maxTeams.toString() ?? '--'),
             ('Người tham gia', '${state.participants.length}'),
-            ('Trận đấu', '--'),
+            ('Trận đấu', state.hasBracket ? 'Đã tạo' : 'Chưa tạo'),
           ]),
           const SizedBox(height: 24),
 
@@ -190,6 +220,72 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             const SizedBox(height: 10),
             _qrCodeCard(colors, state.inviteCode!),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLiteFlow(
+    AppColorsExtension colors,
+    LiteManagementState state,
+  ) {
+    final steps = [
+      ('Người tham gia', state.participants.isNotEmpty, Icons.people_outline_rounded),
+      ('Ghép cặp', state.isDoubles ? state.completeParticipants.isNotEmpty : true, Icons.link_rounded),
+      ('Tạo bracket', state.hasBracket, Icons.account_tree_outlined),
+      ('Theo dõi trận', state.hasBracket, Icons.sports_tennis_rounded),
+    ];
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Tiến độ giải Lite',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.textPrimary),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              for (var i = 0; i < steps.length; i++) ...[
+                Expanded(
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: steps[i].$2
+                            ? AppTheme.primary
+                            : colors.bgSurface,
+                        child: Icon(
+                          steps[i].$3,
+                          size: 16,
+                          color: steps[i].$2 ? Colors.white : colors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        steps[i].$1,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: steps[i].$2 ? AppTheme.primary : colors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                if (i < steps.length - 1)
+                  Expanded(
+                    child: Divider(
+                      color: steps[i].$2 ? AppTheme.primary : colors.border,
+                      thickness: 1.5,
+                    ),
+                  ),
+              ],
+            ],
+          ),
         ],
       ),
     );
@@ -803,11 +899,14 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       }
     } catch (e) {
       if (mounted) {
+        final message = e is DioException && e.response?.statusCode == 401
+            ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại rồi thử tạo bracket.'
+            : e is DioException && e.response?.statusCode == 403
+                ? 'Tài khoản chưa được xác thực hoặc không có quyền tạo bracket.'
+                : e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Lỗi: ${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
-            ),
+            content: Text('Lỗi: $message'),
           ),
         );
       }

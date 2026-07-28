@@ -2223,6 +2223,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   //  TAB 5: BẢNG XẾP HẠNG (Rankings)
   // ════════════════════════════════════
   Widget _buildRankingsTab(AppColorsExtension colors) {
+    // The ranking widget already contains the podium, Top 4-20 list,
+    // search, polling status, and the current user's ELO card.
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [ClubRankingWidget(clubId: widget.clubId)],
+    );
+
+    /*
     final rankingsAsync = ref.watch(communityRankingsProvider(widget.clubId));
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -2396,6 +2404,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ),
       ],
     );
+    */
   }
 
   // ════════════════════════════════════
