@@ -130,11 +130,9 @@ class DashboardScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
                     _RoleSection(workspace: workspace),
                     const SizedBox(height: 16),
-                    _OrganizerLiteSection(workspace: workspace),
-                    const SizedBox(height: 16),
                     _AssignedMatchesSection(workspace: workspace),
                     const SizedBox(height: 16),
-                    _TournamentSection(workspace: workspace),
+                    _UnifiedTournamentsSection(workspace: workspace),
                   ],
                 ),
               ),
@@ -406,153 +404,151 @@ class _AssignedMatchesSection extends StatelessWidget {
   }
 }
 
-class _OrganizerLiteSection extends StatelessWidget {
-  const _OrganizerLiteSection({required this.workspace});
+class _UnifiedTournamentsSection extends StatefulWidget {
+  const _UnifiedTournamentsSection({required this.workspace});
 
   final TournamentWorkspace workspace;
 
   @override
-  Widget build(BuildContext context) {
-    final managedTournaments = [
-      ...workspace.organizedTournaments,
-      ...workspace.coOrganizerTournaments,
-    ];
+  State<_UnifiedTournamentsSection> createState() => _UnifiedTournamentsSectionState();
+}
 
-    if (managedTournaments.isEmpty) {
-      return const SizedBox.shrink();
+class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> {
+  bool _isExpanded = false;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final workspace = widget.workspace;
+
+    // Deduplicate all tournaments (Organized, Co-Organized, Participating)
+    final Map<String, Tournament> tournamentMap = {};
+    for (final t in workspace.organizedTournaments) {
+      tournamentMap[t.id] = t;
+    }
+    for (final t in workspace.coOrganizerTournaments) {
+      tournamentMap[t.id] = t;
+    }
+    for (final t in workspace.participatingTournaments) {
+      tournamentMap[t.id] = t;
     }
 
-    final colors = context.colors;
+    final allTournaments = tournamentMap.values.toList();
 
-    return _SectionCard(
-      title: 'Quản lý nhanh (${managedTournaments.length})',
+    // Filter by search query
+    final filteredTournaments = allTournaments.where((t) {
+      if (_searchQuery.trim().isEmpty) return true;
+      final q = _searchQuery.toLowerCase().trim();
+      return t.name.toLowerCase().contains(q) ||
+          t.sport.toLowerCase().contains(q);
+    }).toList();
+
+    final visibleTournaments = _isExpanded
+        ? filteredTournaments
+        : filteredTournaments.take(4).toList();
+
+    final remainingCount = filteredTournaments.length - 4;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.border),
+      ),
       child: Column(
-        children: managedTournaments.map((tournament) {
-          final isOwner = workspace.organizedTournaments.any(
-            (item) => item.id == tournament.id,
-          );
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: InkWell(
-              onTap: () => context.push('/organizer-lite/${tournament.id}'),
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: colors.bgSurface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colors.border),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section Title Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Giải đấu của tôi (${allTournaments.length})',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
                 ),
-                child: Row(
+              ),
+              if (allTournaments.isNotEmpty)
+                Text(
+                  '${allTournaments.length} giải',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textMuted,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Search Bar
+          if (allTournaments.length > 2) ...[
+            Container(
+              height: 38,
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.border),
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (val) => setState(() => _searchQuery = val),
+                style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                decoration: InputDecoration(
+                  hintText: 'Tìm kiếm giải đấu...',
+                  hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
+                  prefixIcon: Icon(Icons.search_rounded, size: 18, color: colors.textMuted),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear_rounded, size: 16),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+
+          // List of Tournament Cards
+          if (filteredTournaments.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Column(
                   children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: colors.bgCard,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: colors.border),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: (tournament.logoUrl != null && tournament.logoUrl!.isNotEmpty)
-                          ? Image.network(
-                              tournament.logoUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: SvgPicture.asset('assets/images/vndcsport.svg', fit: BoxFit.contain),
-                              ),
-                            )
-                          : Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: SvgPicture.asset('assets/images/vndcsport.svg', fit: BoxFit.contain),
-                            ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            tournament.name,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: colors.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 5),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: isOwner
-                                      ? const Color(0xFFEFF6FF)
-                                      : const Color(0xFFF3E8FF),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: isOwner
-                                        ? const Color(0xFFBFDBFE)
-                                        : const Color(0xFFE9D5FF),
-                                  ),
-                                ),
-                                child: Text(
-                                  isOwner ? 'Chủ giải' : 'Ban tổ chức',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: isOwner
-                                        ? const Color(0xFF2563EB)
-                                        : const Color(0xFF9333EA),
-                                  ),
-                                ),
-                              ),
-                              if (tournament.sport.isNotEmpty) ...[
-                                const SizedBox(width: 6),
-                                Text(
-                                  '• ${tournament.sport}',
-                                  style: TextStyle(fontSize: 11, color: colors.textMuted),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: colors.textMuted,
-                      size: 22,
+                    Icon(Icons.emoji_events_outlined, size: 36, color: colors.textMuted),
+                    const SizedBox(height: 8),
+                    Text(
+                      _searchQuery.isNotEmpty
+                          ? 'Không tìm thấy giải đấu phù hợp'
+                          : 'Bạn chưa tạo hoặc tham gia giải đấu nào',
+                      style: TextStyle(fontSize: 13, color: colors.textSecondary),
                     ),
                   ],
                 ),
               ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-}
-
-class _TournamentSection extends StatelessWidget {
-  const _TournamentSection({required this.workspace});
-
-  final TournamentWorkspace workspace;
-
-  @override
-  Widget build(BuildContext context) {
-    final tournaments = workspace.visibleTournaments;
-
-    return _SectionCard(
-      title: 'Giải của tôi (${tournaments.length})',
-      child: tournaments.isEmpty
-          ? const _EmptySectionText('Bạn chưa tham gia hoặc quản lý giải nào.')
-          : Column(
-              children: tournaments.map((tournament) {
+            )
+          else ...[
+            Column(
+              children: visibleTournaments.map((tournament) {
                 final isOwner = workspace.organizedTournaments.any((item) => item.id == tournament.id);
                 final isCoOrg = workspace.coOrganizerTournaments.any((item) => item.id == tournament.id);
                 final isParticipant = workspace.participatingTournaments.any((item) => item.id == tournament.id);
@@ -568,6 +564,44 @@ class _TournamentSection extends StatelessWidget {
                 );
               }).toList(),
             ),
+
+            // "Xem thêm" / "Thu gọn" button
+            if (filteredTournaments.length > 4) ...[
+              const SizedBox(height: 4),
+              SizedBox(
+                width: double.infinity,
+                height: 42,
+                child: TextButton.icon(
+                  onPressed: () => setState(() => _isExpanded = !_isExpanded),
+                  icon: Icon(
+                    _isExpanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    size: 20,
+                    color: AppTheme.primary,
+                  ),
+                  label: Text(
+                    _isExpanded
+                        ? 'Thu gọn'
+                        : 'Xem thêm ($remainingCount giải khác)',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    backgroundColor: AppTheme.primary.withValues(alpha: 0.08),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ],
+      ),
     );
   }
 }
