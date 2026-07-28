@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
+import 'package:app_quanly_giaidau/domain/entities/elo_history_log.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
+import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
 
 /// Trang xem hồ sơ công khai của người dùng khác.
 ///
@@ -309,22 +313,41 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
 
   // ─── ELO CHART ─────────────────────────────────────────────────────
   Widget _buildEloChart(BuildContext context, UserPublicProfile profile, AppColorsExtension colors) {
-    // Mock ELO history data — real data will come from API
-    // In production, fetch from GET /rankings/user/:userId/history or similar
-    final mockEloHistory = _generateMockEloHistory(profile);
+    final userId = profile.id;
 
-    if (mockEloHistory.isEmpty) {
-      return _buildEmptyPlaceholder(colors, Icons.show_chart_outlined, 'Chưa có dữ liệu biểu đồ ELO');
+    if (userId.isEmpty) {
+      return _buildEmptyPlaceholder(colors, Icons.show_chart_outlined, 'Không có dữ liệu người dùng');
     }
 
-    final maxElo = mockEloHistory.map((e) => e.$2).reduce((a, b) => a > b ? a : b);
-    final minElo = mockEloHistory.map((e) => e.$2).reduce((a, b) => a < b ? a : b);
-    final eloRange = (maxElo - minElo).clamp(50, 1000);
-    final chartMinY = (minElo - eloRange * 0.1).round();
-    final chartMaxY = (maxElo + eloRange * 0.1).round();
+    final query = (
+      userId: userId,
+      categoryId: null as String?,
+      scope: null as String?,
+      communityId: null as String?,
+      page: 1,
+      limit: 50,
+    );
+    final historyAsync = ref.watch(eloHistoryProvider(query));
+    final history = historyAsync.asData?.value ?? [];
+    final currentElo = profile.ranks.isNotEmpty ? profile.ranks.first.eloPoints : 1000;
+    final tierName = profile.ranks.isNotEmpty ? profile.ranks.first.tierName : null;
+    final userName = profile.fullName.isNotEmpty ? profile.fullName : 'Người dùng';
+
+    // Build chart data points from history
+    List<(String, int)> chartData;
+    if (history.isNotEmpty) {
+      final sorted = List<EloHistoryLog>.from(history)
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      chartData = sorted.map((h) {
+        final date = DateTime.tryParse(h.createdAt) ?? DateTime.now();
+        return (DateFormat('dd/MM').format(date), h.newElo);
+      }).toList();
+    } else {
+      chartData = [];
+    }
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 20, 16, 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
@@ -333,161 +356,46 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 8, bottom: 16),
-            child: Row(
-              children: [
-                Icon(Icons.trending_up_rounded, size: 18, color: colors.success),
-                const SizedBox(width: 6),
-                Text(
-                  'Lịch sử ELO',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary),
-                ),
-                const Spacer(),
-                Text(
-                  'Hiện tại: ${profile.ranks.isNotEmpty ? profile.ranks.first.eloPoints : 1000}',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.primary),
-                ),
-              ],
-            ),
+          EloProgressChart(
+            data: chartData,
+            currentElo: currentElo,
+            tierName: tierName,
+            height: 180,
+            onHistoryEmpty: const SizedBox.shrink(),
           ),
+          const SizedBox(height: 12),
           SizedBox(
-            height: 220,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: (chartMaxY - chartMinY) / 4,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: colors.border.withValues(alpha: 0.3),
-                      strokeWidth: 1,
-                    );
-                  },
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 28,
-                      interval: (mockEloHistory.length / 4).ceilToDouble().clamp(1, double.infinity),
-                      getTitlesWidget: (value, meta) {
-                        final index = value.toInt();
-                        if (index < 0 || index >= mockEloHistory.length) return const SizedBox.shrink();
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Text(
-                            mockEloHistory[index].$1,
-                            style: TextStyle(fontSize: 9, color: colors.textMuted),
-                          ),
-                        );
-                      },
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EloHistoryScreen(
+                      userId: userId,
+                      userName: userName,
+                      avatarUrl: profile.avatarUrl,
+                      currentElo: currentElo,
+                      tierName: tierName,
                     ),
                   ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 38,
-                      getTitlesWidget: (value, meta) {
-                        return Text(
-                          '${value.toInt()}',
-                          style: TextStyle(fontSize: 9, color: colors.textMuted),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                minY: chartMinY.toDouble(),
-                maxY: chartMaxY.toDouble(),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: mockEloHistory.asMap().entries.map((entry) {
-                      return FlSpot(entry.key.toDouble(), entry.value.$2.toDouble());
-                    }).toList(),
-                    isCurved: true,
-                    preventCurveOverShooting: true,
-                    color: AppTheme.primary,
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        final isLast = index == mockEloHistory.length - 1;
-                        return FlDotCirclePainter(
-                          radius: isLast ? 4 : 2,
-                          color: isLast ? AppTheme.primary : colors.bgCard,
-                          strokeWidth: isLast ? 2 : 1.5,
-                          strokeColor: AppTheme.primary,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: AppTheme.primary.withValues(alpha: 0.08),
-                    ),
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.primary.withValues(alpha: 0.3),
-                        AppTheme.primary.withValues(alpha: 0.02),
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                ],
-                lineTouchData: LineTouchData(
-                  enabled: true,
-                  touchTooltipData: LineTouchTooltipData(
-                    getTooltipItems: (touchedSpots) {
-                      return touchedSpots.map((spot) {
-                        final index = spot.spotIndex;
-                        final label = index < mockEloHistory.length ? mockEloHistory[index].$1 : '';
-                        return LineTooltipItem(
-                          'ELO: ${spot.y.toInt()}\n$label',
-                          TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
-                        );
-                      }).toList();
-                    },
-                  ),
-                ),
+                );
+              },
+              icon: Icon(Icons.history_rounded, size: 16, color: AppTheme.primary),
+              label: Text(
+                'Xem lịch sử chi tiết',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.primary),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.3)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ),
         ],
       ),
     );
-  }
-
-  /// Generate mock ELO history from current rank data
-  List<(String, int)> _generateMockEloHistory(UserPublicProfile profile) {
-    if (profile.ranks.isEmpty) return [];
-
-    // Take the first rank category and generate mock history
-    final currentElo = profile.ranks.first.eloPoints;
-    final months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
-    final now = DateTime.now();
-    final currentMonth = now.month;
-
-    // Generate progressive ELO values
-    final history = <(String, int)>[];
-    var elo = (currentElo * 0.7).round(); // Start at 70% of current
-    final step = ((currentElo - elo) / 6).round().clamp(1, 50);
-
-    for (var i = 0; i < 6; i++) {
-      final monthIndex = (currentMonth - 6 + i) % 12;
-      final monthLabel = months[monthIndex >= 0 ? monthIndex : monthIndex + 12];
-      elo += step + (i % 3 == 0 ? 10 : -5); // Some variation
-      history.add((monthLabel, elo.clamp(100, 3000)));
-    }
-    // Ensure last point matches current ELO
-    history.last = (months[(currentMonth - 1) % 12], currentElo);
-
-    return history;
   }
 
   // ─── DETAILED STATS ───────────────────────────────────────────────

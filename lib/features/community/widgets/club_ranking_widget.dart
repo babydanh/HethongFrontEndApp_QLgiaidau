@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
@@ -8,8 +9,9 @@ import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 
 class ClubRankingWidget extends ConsumerStatefulWidget {
   final String clubId;
+  final bool compact;
 
-  const ClubRankingWidget({super.key, required this.clubId});
+  const ClubRankingWidget({super.key, required this.clubId, this.compact = false});
 
   @override
   ConsumerState<ClubRankingWidget> createState() => _ClubRankingWidgetState();
@@ -20,6 +22,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   bool _loading = true;
   String? _error;
   String _selectedMatchType = 'SINGLES';
+  String _selectedGender = 'MALE';
   String? _selectedCategoryId;
 
   @override
@@ -39,7 +42,8 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         'communityId': widget.clubId,
         'scope': 'COMMUNITY',
         'matchType': _selectedMatchType,
-        'limit': 10,
+        'genderRestriction': _selectedGender,
+        'limit': widget.compact ? 3 : 10,
       };
       if (_selectedCategoryId != null && _selectedCategoryId!.isNotEmpty) {
         queryParams['categoryId'] = _selectedCategoryId;
@@ -120,8 +124,11 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
               ),
             ),
             const Spacer(),
+            // Gender filter tabs
+            if (!widget.compact) _buildGenderFilter(),
+            if (!widget.compact) const SizedBox(width: 6),
             // Match type filter tabs
-            _buildMatchTypeFilter(),
+            if (!widget.compact) _buildMatchTypeFilter(),
           ],
         ),
         const SizedBox(height: 10),
@@ -130,7 +137,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         if (rankings.isNotEmpty) _buildPodiumRow(rankings),
 
         // ── Ranks 4-10 List ──
-        if (rankings.length > 3) ...[
+        if (!widget.compact && rankings.length > 3) ...[
           const SizedBox(height: 10),
           ...List.generate(rankings.length - 3, (i) {
             final index = i + 3;
@@ -138,7 +145,77 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             return _buildListRow(r, index + 1, colors);
           }),
         ],
+
+        // ── Xem tất cả (compact mode) ──
+        if (widget.compact) ...[
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => context.push('/community/${widget.clubId}?tab=rankings'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+              ),
+              child: Center(
+                child: Text(
+                  'Xem tất cả xếp hạng →',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.primary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ],
+    );
+  }
+
+  // ─── Gender Filter ───
+
+  Widget _buildGenderFilter() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _genderTab('Nam', 'MALE'),
+          _genderTab('Nữ', 'FEMALE'),
+        ],
+      ),
+    );
+  }
+
+  Widget _genderTab(String label, String value) {
+    final isActive = _selectedGender == value;
+    return GestureDetector(
+      onTap: () {
+        if (_selectedGender != value) {
+          setState(() => _selectedGender = value);
+          _fetchRankings();
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: isActive ? AppTheme.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSmall - 1),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: isActive ? Colors.white : AppTheme.primary,
+          ),
+        ),
+      ),
     );
   }
 

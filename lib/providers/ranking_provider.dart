@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
+import 'package:app_quanly_giaidau/domain/entities/elo_history_log.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -40,6 +41,44 @@ final userRankProvider = FutureProvider.family<UserRankResponse?, ({String userI
       return await repo.getUserRank(params.userId, params.categoryId);
     } catch (e) {
       return null;
+    }
+  },
+);
+
+/// Provider lấy lịch sử biến động ELO của user.
+/// GET /rankings/user/:userId/history
+typedef EloHistoryQuery = ({
+  String userId,
+  String? categoryId,
+  String? scope,
+  String? communityId,
+  int page,
+  int limit,
+});
+
+final eloHistoryProvider = FutureProvider.family<List<EloHistoryLog>, EloHistoryQuery>(
+  (ref, query) async {
+    try {
+      if (query.userId.isEmpty) return [];
+      final dio = ref.read(dioProvider);
+      final params = <String, dynamic>{
+        'page': query.page,
+        'limit': query.limit,
+      };
+      if (query.categoryId != null) params['categoryId'] = query.categoryId;
+      if (query.scope != null) params['scope'] = query.scope;
+      if (query.communityId != null) params['communityId'] = query.communityId;
+
+      final response = await dio.get('/rankings/user/${query.userId}/history', queryParameters: params);
+      final raw = response.data;
+      final List<dynamic> list = raw is Map<String, dynamic>
+          ? (raw['data'] as List<dynamic>? ?? [])
+          : (raw as List<dynamic>? ?? []);
+      return list
+          .map((e) => EloHistoryLog.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      return [];
     }
   },
 );

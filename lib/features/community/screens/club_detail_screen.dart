@@ -732,7 +732,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         const SizedBox(height: 24),
         _sectionTitle("XẾP HẠNG ELO", colors),
         const SizedBox(height: 10),
-        ClubRankingWidget(clubId: widget.clubId),
+        ClubRankingWidget(clubId: widget.clubId, compact: true),
       ],
     );
   }
