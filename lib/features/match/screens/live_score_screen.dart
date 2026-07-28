@@ -1588,6 +1588,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   // ═══════════════════════════════════════════════════════════
   Widget _buildViewerState(MatchModel match, {required bool canOpenScoring}) {
     final params = (tournamentId: widget.tournamentId, matchId: widget.matchId);
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Column(
       children: [
@@ -1994,7 +1996,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         Container(
           margin: EdgeInsets.fromLTRB(12, canOpenScoring ? 10 : 12, 12, 6),
           child: AspectRatio(
-            aspectRatio: 16 / 9,
+            // Landscape needs a shorter broadcast frame so controls and tabs
+            // remain inside the viewport instead of overflowing at the bottom.
+            aspectRatio: isLandscape ? 2.35 : 16 / 9,
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.black,
