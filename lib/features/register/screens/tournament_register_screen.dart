@@ -337,7 +337,7 @@ class _TournamentRegisterScreenState
 
   @override
   Widget build(BuildContext context) {
-    final tAsync = ref.watch(tournamentProvider(widget.tournamentId));
+    final tAsync = ref.watch(tournamentIntroProvider(widget.tournamentId));
     final divAsync = ref.watch(_divisionsProvider(widget.tournamentId));
     final isAuth = ref.watch(authProvider).isAuthenticated;
 
@@ -1220,20 +1220,14 @@ class _TournamentRegisterScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.stars_rounded, color: AppTheme.primary, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                'QUYỀN LỢI & QUY ĐỊNH THAM GIA',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: colors.textPrimary,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
+          Text(
+            'QUYỀN LỢI & QUY ĐỊNH THAM GIA',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: colors.textMuted,
+              letterSpacing: 0.8,
+            ),
           ),
           const SizedBox(height: 14),
           _buildInfoRow(
@@ -1277,15 +1271,11 @@ class _TournamentRegisterScreenState
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 16, color: AppTheme.primary),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(icon, size: 16, color: colors.textSecondary),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1393,41 +1383,27 @@ class _RegistrationCountdownCardState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primary.withValues(alpha: 0.12),
-            AppTheme.primary.withValues(alpha: 0.03),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
+        border: Border.all(color: colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.timer_outlined,
-                  color: AppTheme.primary,
-                  size: 16,
-                ),
+              Icon(
+                Icons.timer_outlined,
+                color: colors.textSecondary,
+                size: 16,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'HẠN ĐĂNG KÝ CÒN LẠI',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.primary,
+                  color: colors.textMuted,
                   letterSpacing: 0.8,
                 ),
               ),
@@ -1438,15 +1414,16 @@ class _RegistrationCountdownCardState
                   vertical: 3,
                 ),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary,
+                  color: colors.bgSurface,
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: colors.border),
                 ),
-                child: const Text(
+                child: Text(
                   'ĐANG MỞ',
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    color: colors.textSecondary,
                   ),
                 ),
               ),
