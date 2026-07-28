@@ -43,24 +43,9 @@ class EloProgressCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1E3A8A),
-            Color(0xFF2563EB),
-            Color(0xFF3B82F6),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1E3A8A).withValues(alpha: 0.35),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: context.colors.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,8 +60,8 @@ class EloProgressCard extends StatelessWidget {
                   children: [
                     Text(
                       userName.isNotEmpty ? userName : 'Người dùng',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
                       ),
@@ -88,8 +73,8 @@ class EloProgressCard extends StatelessWidget {
                       Text(
                         userEmail!,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.58),
-                          fontSize: 11,
+                          color: context.colors.textMuted,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
                         maxLines: 1,
@@ -102,9 +87,9 @@ class EloProgressCard extends StatelessWidget {
               if (onTapProfile != null)
                 IconButton(
                   onPressed: onTapProfile,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.chevron_right_rounded,
-                    color: Colors.white70,
+                    color: context.colors.textMuted,
                   ),
                   tooltip: 'Trang cá nhân',
                 ),
@@ -115,15 +100,15 @@ class EloProgressCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.07),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+              color: context.colors.bgSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: context.colors.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Column(
@@ -132,21 +117,21 @@ class EloProgressCard extends StatelessWidget {
                           Text(
                             'TIẾN TRÌNH ELO NỔI BẬT',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.52),
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.8,
+                              color: context.colors.textMuted,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           Text(
                             activeRank == null
                                 ? 'Môn thi đấu • Tổng quan'
                                 : EloHelpers.getRankDisplayName(activeRank),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w900,
+                            style: TextStyle(
+                              color: context.colors.textPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -157,34 +142,23 @@ class EloProgressCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 7,
+                        horizontal: 12,
+                        vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(999),
+                        color: AppTheme.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: AppTheme.primaryLight.withValues(alpha: 0.35),
+                          color: AppTheme.primary.withValues(alpha: 0.3),
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.emoji_events_rounded,
-                            color: Colors.amber,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            '$eloPoints',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        '$eloPoints ELO',
+                        style: const TextStyle(
+                          color: AppTheme.primary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                   ],
@@ -196,8 +170,8 @@ class EloProgressCard extends StatelessWidget {
                     Text(
                       hasRank ? currentThreshold.name : '1000',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.72),
-                        fontSize: 10,
+                        color: context.colors.textPrimary,
+                        fontSize: 11,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -208,9 +182,9 @@ class EloProgressCard extends StatelessWidget {
                             : EloHelpers.getOnboardingCopy(),
                         textAlign: TextAlign.right,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.58),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                          color: context.colors.textMuted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -218,39 +192,39 @@ class EloProgressCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 7),
+                const SizedBox(height: 6),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(999),
                   child: LinearProgressIndicator(
                     value: hasRank ? progress.percent / 100 : 0,
-                    minHeight: 8,
-                    backgroundColor: Colors.white.withValues(alpha: 0.12),
+                    minHeight: 6,
+                    backgroundColor: context.colors.border,
                     valueColor: const AlwaysStoppedAnimation<Color>(
-                      AppTheme.primaryLight,
+                      AppTheme.primary,
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       '${currentThreshold.minElo}',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.45),
-                        fontSize: 9,
+                        color: context.colors.textMuted,
+                        fontSize: 10,
                       ),
                     ),
                     Text(
                       nextThreshold == null ? 'MAX' : '${nextThreshold.minElo}',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.45),
-                        fontSize: 9,
+                        color: context.colors.textMuted,
+                        fontSize: 10,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 _ShieldRow(status: shield),
               ],
             ),
@@ -366,16 +340,17 @@ class _StatChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: context.colors.bgSurface,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.colors.border.withValues(alpha: 0.5)),
         ),
         child: Column(
           children: [
             Text(
               value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
+              style: TextStyle(
+                color: context.colors.textPrimary,
+                fontSize: 15,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -383,8 +358,8 @@ class _StatChip extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.58),
-                fontSize: 9.5,
+                color: context.colors.textMuted,
+                fontSize: 10,
                 fontWeight: FontWeight.w700,
               ),
             ),
