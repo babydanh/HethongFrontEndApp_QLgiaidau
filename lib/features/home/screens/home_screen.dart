@@ -93,20 +93,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _setActiveSportFilter(String key) {
     setState(() {
-      switch (_currentIndex) {
-        case 0:
-          _exploreSport = key;
-          break;
-        case 1:
-          _tournamentSport = key;
-          break;
-        case 3:
-          _clubSport = key;
-          break;
-        case 4:
-          _rankingsSport = key == 'all' ? 'pickleball' : key;
-          break;
-      }
+      _exploreSport = key;
+      _tournamentSport = key;
+      _clubSport = key;
+      _rankingsSport = key == 'all' ? 'pickleball' : key;
     });
   }
 
