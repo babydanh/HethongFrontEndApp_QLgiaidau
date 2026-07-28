@@ -489,78 +489,73 @@ class _TournamentRegisterScreenState
     ),
   );
 
-  Widget _buildHeader(Tournament t) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+  Widget _buildHeader(Tournament t) {
+    final colors = context.colors;
+    final fmt = NumberFormat('#,###', 'vi_VN');
+    final hasFee = t.entryFee != null && t.entryFee! > 0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.border),
       ),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.emoji_events_rounded,
-                color: Colors.amber,
-                size: 24,
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            t.name,
+            style: TextStyle(
+              color: colors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.3,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    t.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                    ),
-                    maxLines: 2,
+            maxLines: 2,
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: colors.bgSurface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: colors.border),
+                ),
+                child: Text(
+                  'Tối đa: ${t.maxTeams} đội',
+                  style: TextStyle(color: colors.textMuted, fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: hasFee ? AppTheme.primary.withValues(alpha: 0.12) : colors.bgSurface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: hasFee ? AppTheme.primary.withValues(alpha: 0.3) : colors.border,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Tối đa: ${t.maxTeams} đội',
-                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+                child: Text(
+                  hasFee ? 'Phí: ${fmt.format(t.entryFee!.ceil())}đ' : 'Miễn phí',
+                  style: TextStyle(
+                    color: hasFee ? AppTheme.primary : colors.textMuted,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
-        ),
-        if (t.entryFee != null && t.entryFee! > 0) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: context.colors.warning.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              'Phí: ${NumberFormat('#,###', 'vi_VN').format(t.entryFee!.ceil())}đ',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
-            ),
+            ],
           ),
         ],
-      ],
-    ),
-  ).animate().fadeIn(duration: 300.ms);
+      ),
+    ).animate().fadeIn(duration: 250.ms);
+  }
 
   Widget _buildInviteGate(Tournament t) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
@@ -815,7 +810,6 @@ class _TournamentRegisterScreenState
                       decoration: InputDecoration(
                         labelText: 'Tên đội',
                         hintText: 'Nhập tên đội',
-                        prefixIcon: Icon(Icons.group_rounded, color: context.colors.textMuted),
                         filled: true,
                         fillColor: context.colors.bgDark,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -1112,31 +1106,8 @@ class _TournamentRegisterScreenState
                 SizedBox(
                   width: double.infinity,
                   height: 52,
-                  child: FilledButton.icon(
+                  child: FilledButton(
                     onPressed: _submitting ? null : _register,
-                    icon: _submitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.check_circle_rounded, size: 20),
-                    label: Text(
-                      _submitting
-                          ? 'Đang xử lý...'
-                          : (_selectedDivision?.entryFee != null && _selectedDivision!.entryFee! > 0)
-                              ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(_selectedDivision!.entryFee!.ceil())}đ'
-                              : (t.entryFee != null && t.entryFee! > 0)
-                                  ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(t.entryFee!.ceil())}đ'
-                                  : '${_getSubmitLabel(t)} (Miễn phí)',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTheme.primary,
                       foregroundColor: Colors.white,
@@ -1145,6 +1116,27 @@ class _TournamentRegisterScreenState
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
+                    child: _submitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            (_selectedDivision?.entryFee != null && _selectedDivision!.entryFee! > 0)
+                                ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(_selectedDivision!.entryFee!.ceil())}đ'
+                                : (t.entryFee != null && t.entryFee! > 0)
+                                    ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(t.entryFee!.ceil())}đ'
+                                    : '${_getSubmitLabel(t)} (Miễn phí)',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
                   ),
                 ),
               ],
