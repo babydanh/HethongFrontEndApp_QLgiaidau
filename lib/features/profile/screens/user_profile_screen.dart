@@ -166,16 +166,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               children: [
                 // Thành tích Quán quân / Á quân / Hạng ba
                 _buildAchievementsSection(context, profile, colors),
-                const SizedBox(height: 24),
-                // Biểu đồ ELO
-                _sectionTitle(colors, 'Biểu đồ ELO'),
-                const SizedBox(height: 12),
-                _buildEloChart(context, profile, colors),
-                const SizedBox(height: 24),
-                // Thống kê chuyên sâu
-                _sectionTitle(colors, 'Thống kê chi tiết'),
-                const SizedBox(height: 12),
-                _buildDetailedStats(context, profile, colors),
               ],
             ),
           ),

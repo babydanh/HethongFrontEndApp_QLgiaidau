@@ -287,6 +287,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         ],
         rally: const RallySetState(),
       );
+      _syncSetsToBackend();
     }
   }
 
@@ -337,6 +338,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         ],
         rally: const RallySetState(),
       );
+      _syncSetsToBackend();
     }
   }
 
@@ -429,7 +431,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     return null;
   }
 
-  void finishSet() {
+  Future<void> finishSet() async {
     final rally = state.rally;
     final tennis = state.tennis;
 
@@ -468,6 +470,26 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         finishedSets: newFinishedSets,
         rally: const RallySetState(),
       );
+    }
+
+    await _syncSetsToBackend();
+  }
+
+  Future<void> _syncSetsToBackend() async {
+    final setsToSubmit = _setsForSubmission();
+    final (p1Sets, p2Sets) = computeMatchSetsWon(setsToSubmit);
+    try {
+      if (state.isMatchComplete) {
+        await completeMatch(state.winnerTeam);
+      } else {
+        await ref.read(matchControllerProvider(arg)).updateSetsWithDetails(
+          p1SetsWon: p1Sets,
+          p2SetsWon: p2Sets,
+          scoreDetails: setsToSubmit,
+        );
+      }
+    } catch (e, stack) {
+      _log.error('Lỗi đồng bộ tỉ số set lên backend', e, stack);
     }
   }
 
