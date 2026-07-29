@@ -260,6 +260,33 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  /// Đăng nhập bằng Apple
+  Future<bool> loginWithApple(String idToken, {String? fullName}) async {
+    _log.info('Đăng nhập bằng Apple via NestJS Mobile API');
+    state = state.copyWith(status: AuthStatus.validating);
+
+    try {
+      final session = await ref
+          .read(authRepositoryProvider)
+          .loginWithApple(idToken: idToken, fullName: fullName);
+      final role = _mapSessionRole(session);
+      await _saveJwtSession(session, role);
+      state = AuthState(
+        status: AuthStatus.authenticated,
+        role: role,
+        tokenCode: 'SESSION',
+      );
+      return true;
+    } catch (e, stack) {
+      _log.error('Lỗi đăng nhập Apple', e, stack);
+      state = AuthState(
+        status: AuthStatus.invalid,
+        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+      );
+      return false;
+    }
+  }
+
   /// Đăng nhập bằng Facebook
   Future<bool> loginWithFacebook(String accessToken) async {
     _log.info('Đăng nhập bằng Facebook via NestJS Mobile API');

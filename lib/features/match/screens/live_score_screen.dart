@@ -744,7 +744,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ),
               ),
               const SizedBox(height: 18),
-              TextField(
+              if (false)
+                TextField(
                 controller: _refereeController,
                 style: TextStyle(
                   fontSize: 15,
@@ -781,6 +782,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       )),
                     );
                     await controller.startMatch();
+                    if (!context.mounted) return;
+                    showOfficialScoreModal(
+                      context,
+                      tournamentId: widget.tournamentId,
+                      matchId: widget.matchId,
+                      match: match.copyWith(
+                        status: 'ONGOING',
+                        startedAt: DateTime.now(),
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.play_arrow_rounded, size: 22),
                   label: const Text(

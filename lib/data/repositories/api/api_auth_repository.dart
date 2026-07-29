@@ -90,6 +90,32 @@ class ApiAuthRepository implements IAuthRepository {
   }
 
   @override
+  Future<AuthSession> loginWithApple({
+    required String idToken,
+    String? fullName,
+  }) async {
+    _log.info('Đăng nhập bằng Apple qua Mobile API');
+    try {
+      final response = await _dioClient.dio.post(
+        '/auth/mobile/apple',
+        data: {
+          'idToken': idToken,
+          if (fullName != null && fullName.isNotEmpty) 'fullName': fullName,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return _mapAuthSession(response.data);
+      }
+
+      throw Exception('Không tìm thấy thông tin xác thực Apple');
+    } catch (e, stack) {
+      _log.error('Lỗi đăng nhập Apple', e, stack);
+      throw Exception(ErrorParser.parse(e, 'Lỗi kết nối đến máy chủ'));
+    }
+  }
+
+  @override
   Future<AuthSession> loginWithFacebook(String accessToken) async {
     _log.info('Đăng nhập bằng Facebook qua Mobile API');
     try {

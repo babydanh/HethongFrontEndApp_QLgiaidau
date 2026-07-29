@@ -5,7 +5,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -123,6 +125,49 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       setState(() {
         _isLoading = false;
         _errorMessage = "Lỗi Google Sign-In: ${e.toString()}";
+      });
+    }
+  }
+
+  Future<void> _submitApple() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        throw Exception("Không nhận được ID Token từ Apple");
+      }
+      final fullName = [credential.givenName, credential.familyName]
+          .where((s) => s != null && s.trim().isNotEmpty)
+          .join(' ');
+      bool success = await ref
+          .read(authProvider.notifier)
+          .loginWithApple(idToken, fullName: fullName.isNotEmpty ? fullName : null);
+      if (!mounted) return;
+      if (success) {
+        ref.invalidate(userProfileProvider);
+        ref.invalidate(userRankingsProvider);
+        context.go("/login-loading", extra: widget.redirectPath);
+      } else {
+        final auth = ref.read(authProvider);
+        setState(() {
+          _isLoading = false;
+          _errorMessage = auth.errorMessage ?? "Đăng nhập Apple thất bại";
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = "Lỗi Apple Sign-In: ${e.toString()}";
       });
     }
   }
@@ -436,33 +481,71 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Google Button
-                        OutlinedButton.icon(
-                          onPressed: _isLoading ? null : _submitGoogle,
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(52),
-                            side: BorderSide(
-                              color: isDark ? Colors.white24 : Colors.black12,
-                              width: 1.2,
+                        // Social Buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: _isLoading ? null : _submitGoogle,
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(52),
+                                  side: BorderSide(
+                                    color: isDark ? Colors.white24 : Colors.black12,
+                                    width: 1.2,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.0),
+                                  ),
+                                  backgroundColor: Colors.transparent,
+                                ),
+                                icon: SvgPicture.asset(
+                                  'assets/logos/google_g.svg',
+                                  width: 20,
+                                  height: 20,
+                                ),
+                                label: Text(
+                                  "Google",
+                                  style: TextStyle(
+                                    color: textPrimaryColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15.0,
+                                  ),
+                                ),
+                              ),
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            backgroundColor: Colors.transparent,
-                          ),
-                          icon: SvgPicture.asset(
-                            'assets/logos/google_g.svg',
-                            width: 20,
-                            height: 20,
-                          ),
-                          label: Text(
-                            "Google",
-                            style: TextStyle(
-                              color: textPrimaryColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15.0,
-                            ),
-                          ),
+                            if (defaultTargetPlatform == TargetPlatform.iOS) ...[
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _isLoading ? null : _submitApple,
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: const Size.fromHeight(52),
+                                    side: BorderSide(
+                                      color: isDark ? Colors.white24 : Colors.black12,
+                                      width: 1.2,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12.0),
+                                    ),
+                                    backgroundColor: Colors.transparent,
+                                  ),
+                                  icon: Icon(
+                                    Icons.apple,
+                                    color: textPrimaryColor,
+                                    size: 24,
+                                  ),
+                                  label: Text(
+                                    "Apple",
+                                    style: TextStyle(
+                                      color: textPrimaryColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15.0,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: 12),
                       ],
