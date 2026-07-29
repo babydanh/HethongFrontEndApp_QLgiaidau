@@ -1770,7 +1770,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Chốt set row
+                // Chốt set / Chốt trận row
                 Row(
                   children: [
                     Icon(
@@ -1782,9 +1782,25 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     Expanded(
                       child: Consumer(
                         builder: (context, ref, _) {
+                          final state = ref.watch(
+                            scorePanelNotifierProvider(params),
+                          );
                           final n = ref.watch(
                             scorePanelNotifierProvider(params).notifier,
                           );
+                          if (state.isMatchComplete) {
+                            final winnerName = state.winnerTeam == 1
+                                ? match.team1Name
+                                : match.team2Name;
+                            return Text(
+                              'Đã đủ điều kiện kết thúc (${state.team1SetWins}-${state.team2SetWins} set • $winnerName thắng)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: context.colors.success,
+                              ),
+                            );
+                          }
                           final msg = n.finishSetConfirmMessage();
                           if (msg == null) {
                             return Text(
@@ -1808,9 +1824,35 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     const SizedBox(width: 8),
                     Consumer(
                       builder: (context, ref, _) {
+                        final state = ref.watch(
+                          scorePanelNotifierProvider(params),
+                        );
                         final n = ref.watch(
                           scorePanelNotifierProvider(params).notifier,
                         );
+                        if (state.isMatchComplete) {
+                          return FilledButton.icon(
+                            onPressed: state.isSubmitting
+                                ? null
+                                : () async {
+                                    final winnerTeam = state.winnerTeam != 0
+                                        ? state.winnerTeam
+                                        : (state.team1SetWins >= state.team2SetWins ? 1 : 2);
+                                    await n.completeMatch(winnerTeam);
+                                  },
+                            icon: const Icon(Icons.emoji_events_rounded, size: 16),
+                            label: Text(
+                              state.isSubmitting ? 'Đang lưu...' : 'CHỐT TRẬN ĐẤU',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: context.colors.success,
+                            ),
+                          );
+                        }
                         return FilledButton.tonalIcon(
                           onPressed: n.finishSetConfirmMessage() != null
                               ? () {

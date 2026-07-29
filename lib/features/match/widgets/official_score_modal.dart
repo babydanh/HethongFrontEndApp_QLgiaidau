@@ -214,9 +214,6 @@ void showOfficialScoreModal(
                             final state = ref.watch(
                               scorePanelNotifierProvider(params),
                             );
-                            final n = ref.read(
-                              scorePanelNotifierProvider(params).notifier,
-                            );
                             return Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -422,20 +419,24 @@ void showOfficialScoreModal(
                                     visualDensity: VisualDensity.compact,
                                   ),
                                 ),
-                              if (state.overrideEnabled) ...[
+                              if (state.isMatchComplete || state.overrideEnabled) ...[
                                 const SizedBox(width: 6),
                                 FilledButton.icon(
-                                  onPressed:
-                                      state.overrideReason.trim().isEmpty ||
-                                          state.isSubmitting
+                                  onPressed: state.isSubmitting ||
+                                          (state.overrideEnabled &&
+                                              state.overrideReason.trim().isEmpty)
                                       ? null
                                       : () async {
-                                          final winnerTeam =
-                                              state.team1SetWins >=
-                                                  state.team2SetWins
-                                              ? 1
-                                              : 2;
+                                          final winnerTeam = state.winnerTeam != 0
+                                              ? state.winnerTeam
+                                              : (state.team1SetWins >=
+                                                      state.team2SetWins
+                                                  ? 1
+                                                  : 2);
                                           await n.completeMatch(winnerTeam);
+                                          if (ctx.mounted && !state.isSubmitting) {
+                                            Navigator.of(ctx).pop();
+                                          }
                                         },
                                   icon: const Icon(
                                     Icons.check_circle_rounded,
@@ -444,11 +445,18 @@ void showOfficialScoreModal(
                                   label: Text(
                                     state.isSubmitting
                                         ? 'Đang lưu...'
-                                        : 'Chốt kết quả',
-                                    style: const TextStyle(fontSize: 11),
+                                        : (state.isMatchComplete
+                                            ? 'CHỐT TRẬN ĐẤU'
+                                            : 'Chốt kết quả'),
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   style: FilledButton.styleFrom(
-                                    backgroundColor: colors.warning,
+                                    backgroundColor: state.isMatchComplete
+                                        ? colors.success
+                                        : colors.warning,
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 12,
                                       vertical: 8,

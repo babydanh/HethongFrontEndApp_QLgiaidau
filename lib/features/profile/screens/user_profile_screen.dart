@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_history_log.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
@@ -36,7 +37,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -118,8 +119,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                 unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 tabs: const [
-                  Tab(text: 'Thông tin'),
-                  Tab(text: 'Thành tích'),
+                  Tab(text: 'Tổng quan'),
+                  Tab(text: 'Trận đấu'),
+                  Tab(text: 'Danh hiệu'),
+                  Tab(text: 'ELO'),
                 ],
               ),
             ),
@@ -150,19 +153,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 else
                   ...profile.ranks.map((rank) => _buildRankCard(context, rank, colors)),
                 const SizedBox(height: 24),
-                // CLB đang tham gia (placeholder)
-                _sectionTitle(colors, 'Câu lạc bộ'),
-                const SizedBox(height: 12),
-                _buildEmptyPlaceholder(colors, Icons.people_outline_rounded, 'Chưa tham gia câu lạc bộ'),
-                const SizedBox(height: 24),
-                // Lịch sử giải đấu (placeholder)
-                _sectionTitle(colors, 'Giải đấu đã tham gia'),
-                const SizedBox(height: 12),
-                _buildEmptyPlaceholder(colors, Icons.emoji_events_outlined, 'Chưa có dữ liệu giải đấu'),
               ],
             ),
           ),
-          // ─── TAB 2: THÀNH TÍCH ─────────────────────────────────
+          _buildMatchesTab(context, profile, colors),
+          // ─── TAB 3: DANH HIỆU ─────────────────────────────────
           SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -184,8 +179,58 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               ],
             ),
           ),
+          SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _sectionTitle(colors, 'Biểu đồ ELO'),
+                const SizedBox(height: 12),
+                _buildEloChart(context, profile, colors),
+                const SizedBox(height: 24),
+                _sectionTitle(colors, 'Thống kê chi tiết'),
+                const SizedBox(height: 12),
+                _buildDetailedStats(context, profile, colors),
+              ],
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMatchesTab(BuildContext context, UserPublicProfile profile, AppColorsExtension colors) {
+    final matchesAsync = ref.watch(publicUserMatchesProvider(profile.id));
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      child: matchesAsync.when(
+        loading: () => const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator())),
+        error: (_, __) => _buildEmptyPlaceholder(colors, Icons.sports_tennis_outlined, 'Chưa tải được lịch sử trận đấu'),
+        data: (matches) => matches.isEmpty
+            ? _buildEmptyPlaceholder(colors, Icons.sports_tennis_outlined, 'Chưa có trận đấu công khai')
+            : Column(children: matches.map((match) => _buildPublicMatchCard(match, colors)).toList()),
+      ),
+    );
+  }
+
+  Widget _buildPublicMatchCard(MatchModel match, AppColorsExtension colors) {
+    final completed = match.status.toLowerCase() == 'completed' || match.completedAt != null;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: colors.bgCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: colors.border)),
+      child: Row(children: [
+        Icon(completed ? Icons.check_circle_outline_rounded : Icons.schedule_rounded, color: completed ? Colors.green : AppTheme.primary),
+        const SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('${match.team1Name}  vs  ${match.team2Name}', style: TextStyle(fontWeight: FontWeight.w700, color: colors.textPrimary), maxLines: 2, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 4),
+          Text('${match.tournamentName ?? 'Giải đấu'}  •  ${completed ? 'Đã kết thúc' : 'Chưa diễn ra'}', style: TextStyle(fontSize: 12, color: colors.textMuted)),
+        ])),
+        Text('${match.score1} - ${match.score2}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: colors.textPrimary)),
+      ]),
     );
   }
 
