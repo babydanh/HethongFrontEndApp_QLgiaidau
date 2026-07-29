@@ -29,6 +29,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   String _selectedMatchType = 'SINGLES';
   String _selectedGender = 'MALE';
   String? _selectedCategoryId;
+  bool _showRankedOnly = false;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   Timer? _pollingTimer;
@@ -198,6 +199,9 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         : allRankings
             .where((ranking) => ranking.fullName.toLowerCase().contains(query))
             .toList();
+    final filteredRankings = _showRankedOnly
+        ? rankings.where((r) => r.matchesPlayed > 0).toList()
+        : rankings;
     final isSearching = query.isNotEmpty;
     final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
     final myRanking = currentUserId == null
@@ -229,6 +233,9 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             const Spacer(),
             // Gender filter tabs
             if (!widget.compact) _buildGenderFilter(),
+            if (!widget.compact) const SizedBox(width: 6),
+            // Ranked-only filter pill
+            if (!widget.compact) _buildRankedFilter(),
             if (!widget.compact) const SizedBox(width: 6),
             // Match type filter tabs
             if (!widget.compact) _buildMatchTypeFilter(),
@@ -262,14 +269,14 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             _buildMyRankingCard(myRanking, myRank, colors),
           ],
         ],
-        if (!isSearching && rankings.isNotEmpty) _buildPodiumRow(rankings),
+        if (!isSearching && filteredRankings.isNotEmpty) _buildPodiumRow(filteredRankings),
 
         // ── Ranks 4-10 List ──
-        if (!widget.compact && rankings.length > (isSearching ? 0 : 3)) ...[
+        if (!widget.compact && filteredRankings.length > (isSearching ? 0 : 3)) ...[
           const SizedBox(height: 10),
-          ...List.generate(rankings.length - (isSearching ? 0 : 3), (i) {
+          ...List.generate(filteredRankings.length - (isSearching ? 0 : 3), (i) {
             final index = isSearching ? i : i + 3;
-            final r = rankings[index];
+            final r = filteredRankings[index];
             final actualRank = allRankings.indexOf(r) + 1;
             return _buildListRow(r, actualRank, colors);
           }),
@@ -315,6 +322,32 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
 
   // ─── Gender Filter ───
 
+  Widget _buildRankedFilter() {
+    final isActive = _showRankedOnly;
+    return GestureDetector(
+      onTap: () => setState(() => _showRankedOnly = !_showRankedOnly),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: isActive ? AppTheme.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+          border: Border.all(
+            color: isActive ? AppTheme.primary : AppTheme.primary.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          'Đã xếp hạng',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: isActive ? Colors.white : AppTheme.primary,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMyRankingCard(
     PlayerRanking ranking,
     int? rank,
@@ -347,7 +380,23 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
               ],
             ),
           ),
-          Text('${ranking.eloPoints} ELO', style: TextStyle(color: AppTheme.primary, fontSize: 12, fontWeight: FontWeight.w800)),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('${ranking.eloPoints} ELO', style: TextStyle(color: AppTheme.primary, fontSize: 12, fontWeight: FontWeight.w800)),
+              if (ranking.winStreak > 0)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('🔥', style: TextStyle(fontSize: 10)),
+                    const SizedBox(width: 2),
+                    Text('${ranking.winStreak}', style: TextStyle(color: AppTheme.primary, fontSize: 10, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              if (ranking.peakElo != null)
+                Text('Peak: ${ranking.peakElo}', style: TextStyle(color: colors.textMuted, fontSize: 9, fontWeight: FontWeight.w500)),
+            ],
+          ),
         ],
       ),
     );

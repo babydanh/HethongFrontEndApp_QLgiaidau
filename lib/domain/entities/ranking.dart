@@ -16,6 +16,7 @@ class PlayerRanking {
   final String? genderRestriction;
   final int? peakElo;
   final bool? shieldActive;
+  final int winStreak;
   final String? updatedAt;
 
   const PlayerRanking({
@@ -36,6 +37,7 @@ class PlayerRanking {
     this.genderRestriction,
     this.peakElo,
     this.shieldActive,
+    this.winStreak = 0,
     this.updatedAt,
   });
 
@@ -68,6 +70,7 @@ class PlayerRanking {
       matchesPlayed:
           ((json['matchesPlayed'] ?? json['totalMatches'] ?? 0) as num).toInt(),
       matchesWon: ((json['matchesWon'] ?? json['wins'] ?? 0) as num).toInt(),
+      winStreak: ((json['winStreak'] ?? json['win_streak'] ?? 0) as num).toInt(),
       categoryId: json['categoryId'] as String? ?? category?['id'] as String?,
       categoryName:
           json['categoryName'] as String? ?? category?['name'] as String?,
@@ -97,6 +100,7 @@ class PlayerRanking {
       if (genderRestriction != null) 'genderRestriction': genderRestriction,
       if (peakElo != null) 'peakElo': peakElo,
       if (shieldActive != null) 'shieldActive': shieldActive,
+      'winStreak': winStreak,
       if (updatedAt != null) 'updatedAt': updatedAt,
     };
   }
@@ -119,6 +123,7 @@ class PlayerRanking {
     String? genderRestriction,
     int? peakElo,
     bool? shieldActive,
+    int? winStreak,
     String? updatedAt,
   }) {
     return PlayerRanking(
@@ -139,6 +144,7 @@ class PlayerRanking {
       genderRestriction: genderRestriction ?? this.genderRestriction,
       peakElo: peakElo ?? this.peakElo,
       shieldActive: shieldActive ?? this.shieldActive,
+      winStreak: winStreak ?? this.winStreak,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
