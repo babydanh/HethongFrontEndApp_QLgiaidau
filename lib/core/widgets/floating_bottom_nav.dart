@@ -128,6 +128,7 @@ class FloatingBottomNav extends ConsumerWidget {
     final userProfileAsync = ref.watch(userProfileProvider);
     final avatarUrl = userProfileAsync.asData?.value.avatarUrl;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     const double navBarHeight = 66.0;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -172,7 +173,7 @@ class FloatingBottomNav extends ConsumerWidget {
 
         // ─── Profile Avatar (center) ───
         Positioned(
-          top: -bottomPadding - 24,
+          top: isIOS ? -14 : -22,
           left: 0,
           right: 0,
           child: GestureDetector(

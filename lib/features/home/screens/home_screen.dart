@@ -221,6 +221,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
+  void _submitSearch() {
+    if (_currentIndex != 0) return;
+
+    final query = _activeSearchQuery.trim();
+    if (query.isEmpty) return;
+
+    _searchQueries[1] = query;
+    _searchControllers[1]!.value = TextEditingValue(
+      text: query,
+      selection: TextSelection.collapsed(offset: query.length),
+    );
+    _searchFocusNode.unfocus();
+    _switchTab(1);
+  }
+
   void _showTokenSheet() {
     showModalBottomSheet(
       context: context,
@@ -1301,7 +1316,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: TextField(
         controller: _activeSearchController,
         focusNode: _searchFocusNode,
+        textInputAction: TextInputAction.search,
         onChanged: (v) => setState(() => _searchQueries[_currentIndex] = v),
+        onSubmitted: (_) => _submitSearch(),
         style: TextStyle(
           fontSize: 14.0,
           fontWeight: FontWeight.normal,

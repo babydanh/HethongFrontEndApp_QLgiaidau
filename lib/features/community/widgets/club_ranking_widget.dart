@@ -85,7 +85,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
       var rankings = dataList
           .map((json) => PlayerRanking.fromJson(json as Map<String, dynamic>))
           .toList();
-      if (rankings.isEmpty) {
+      if (rankings.isEmpty && _selectedMatchType == 'SINGLES') {
         final membersResponse = await dio.get('/communities/${widget.clubId}/members');
         final rawMembers = membersResponse.data is Map<String, dynamic>
             ? (membersResponse.data['data'] as List<dynamic>? ?? const [])
@@ -525,27 +525,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
           ),
           const SizedBox(height: 6),
 
-          // Avatar
-          CircleAvatar(
-            radius: avatarSize / 2,
-            backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-            backgroundImage:
-                player.avatarUrl != null && player.avatarUrl!.isNotEmpty
-                ? NetworkImage(player.avatarUrl!)
-                : null,
-            child: player.avatarUrl == null || player.avatarUrl!.isEmpty
-                ? Text(
-                    player.fullName.isNotEmpty
-                        ? player.fullName[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      color: AppTheme.primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: avatarSize * 0.38,
-                    ),
-                  )
-                : null,
-          ),
+          _buildPodiumAvatars(player, avatarSize),
           const SizedBox(height: 4),
 
           // Name
@@ -635,27 +615,13 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             ),
           ),
 
-          // Avatar
-          CircleAvatar(
-            radius: 11,
-            backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-            backgroundImage:
-                player.avatarUrl != null && player.avatarUrl!.isNotEmpty
-                ? NetworkImage(player.avatarUrl!)
-                : null,
-            child: player.avatarUrl == null || player.avatarUrl!.isEmpty
-                ? Text(
-                    player.fullName.isNotEmpty
-                        ? player.fullName[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      color: AppTheme.primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 8,
-                    ),
-                  )
-                : null,
-          ),
+          // Đôi hiển thị đủ avatar của cả hai người trong cùng một hạng.
+          if (player.partnerName != null) ...[
+            _buildMiniAvatar(player.fullName.split(' / ').first, player.avatarUrl),
+            const SizedBox(width: 2),
+            _buildMiniAvatar(player.partnerName!, player.partnerAvatarUrl),
+          ] else
+            _buildMiniAvatar(player.fullName, player.avatarUrl),
           const SizedBox(width: 7),
 
           // Name
@@ -761,6 +727,48 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMiniAvatar(String name, String? avatarUrl) {
+    return CircleAvatar(
+      radius: 11,
+      backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+      backgroundImage:
+          avatarUrl != null && avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+      child: avatarUrl == null || avatarUrl.isEmpty
+          ? Text(
+              name.isNotEmpty ? name[0].toUpperCase() : '?',
+              style: const TextStyle(
+                color: AppTheme.primary,
+                fontWeight: FontWeight.w600,
+                fontSize: 8,
+              ),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildPodiumAvatars(PlayerRanking player, double avatarSize) {
+    final firstName = player.fullName.split(' / ').first;
+    final avatars = <Widget>[
+      _buildMiniAvatar(firstName, player.avatarUrl),
+    ];
+    if (player.partnerName != null) {
+      avatars.add(_buildMiniAvatar(player.partnerName!, player.partnerAvatarUrl));
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: avatars
+          .map((avatar) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 1),
+                child: SizedBox(
+                  width: avatarSize,
+                  height: avatarSize,
+                  child: FittedBox(child: avatar),
+                ),
+              ))
+          .toList(),
     );
   }
 

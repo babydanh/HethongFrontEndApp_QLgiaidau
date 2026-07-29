@@ -3,6 +3,8 @@ class PlayerRanking {
   final String userId;
   final String fullName;
   final String? avatarUrl;
+  final String? partnerName;
+  final String? partnerAvatarUrl;
   final int eloPoints;
   final String tierName;
   final int rank;
@@ -21,6 +23,8 @@ class PlayerRanking {
     required this.userId,
     required this.fullName,
     this.avatarUrl,
+    this.partnerName,
+    this.partnerAvatarUrl,
     this.eloPoints = 0,
     this.tierName = '',
     this.rank = 0,
@@ -40,17 +44,23 @@ class PlayerRanking {
     //   { id, userId, categoryId, eloPoints, matchesPlayed, matchesWon,
     //     winStreak, updatedAt, tier: { id, name }, user: { id, fullName, avatarUrl } }
     final user = json['user'] as Map<String, dynamic>?;
+    final user1 = json['user1'] as Map<String, dynamic>?;
+    final user2 = json['user2'] as Map<String, dynamic>?;
     final tier = json['tier'] as Map<String, dynamic>?;
     final category = json['category'] as Map<String, dynamic>?;
     return PlayerRanking(
       id: json['id'] as String? ?? '',
-      userId: user?['id'] as String? ?? json['userId'] as String? ?? '',
+      userId: user?['id'] as String? ?? user1?['id'] as String? ?? json['userId'] as String? ?? '',
       fullName:
-          user?['fullName'] as String? ??
+          user1 != null && user2 != null
+          ? '${user1['fullName'] ?? 'VĐV'} / ${user2['fullName'] ?? 'VĐV'}'
+          : user?['fullName'] as String? ??
           json['fullName'] as String? ??
           json['playerName'] as String? ??
           '',
-      avatarUrl: user?['avatarUrl'] as String? ?? json['avatarUrl'] as String?,
+      avatarUrl: user1?['avatarUrl'] as String? ?? user?['avatarUrl'] as String? ?? json['avatarUrl'] as String?,
+      partnerName: user2?['fullName'] as String?,
+      partnerAvatarUrl: user2?['avatarUrl'] as String?,
       eloPoints: ((json['eloPoints'] ?? json['elo_points'] ?? 0) as num)
           .toInt(),
       tierName: tier?['name'] as String? ?? json['tierName'] as String? ?? '',
@@ -96,6 +106,8 @@ class PlayerRanking {
     String? userId,
     String? fullName,
     String? avatarUrl,
+    String? partnerName,
+    String? partnerAvatarUrl,
     int? eloPoints,
     String? tierName,
     int? rank,
@@ -114,6 +126,8 @@ class PlayerRanking {
       userId: userId ?? this.userId,
       fullName: fullName ?? this.fullName,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      partnerName: partnerName ?? this.partnerName,
+      partnerAvatarUrl: partnerAvatarUrl ?? this.partnerAvatarUrl,
       eloPoints: eloPoints ?? this.eloPoints,
       tierName: tierName ?? this.tierName,
       rank: rank ?? this.rank,
