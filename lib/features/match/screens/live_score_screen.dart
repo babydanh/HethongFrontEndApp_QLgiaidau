@@ -1186,24 +1186,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   // ═══════════════════════════════════════════════════════════
   Widget _buildLiveState(MatchModel match, {required bool canOpenScoring}) {
     if (widget.isViewer || canOpenScoring) {
-      return SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 16),
-        child: _buildViewerState(match, canOpenScoring: canOpenScoring),
-      );
+      return _buildViewerState(match, canOpenScoring: canOpenScoring);
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isLandscape =
-            MediaQuery.of(context).orientation == Orientation.landscape;
-
-        return SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 16),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: Column(
+    return Column(
       children: [
         // ─── Info Bar ───
         Container(
@@ -1364,181 +1350,19 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       letterSpacing: 0.5,
                     ),
                   ),
-              children: [
-                // ─── Info Bar ───
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                  color: context.colors.bgCard,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildInfoChip(
-                        Icons.track_changes_rounded,
-                        'Tối đa: ${match.maxScore ?? '∞'}',
-                      ),
-                      if (match.winByTwo) ...[
-                        const SizedBox(width: 12),
-                        _buildInfoChip(Icons.swap_vert_rounded, 'Cách biệt 2'),
-                      ],
-                      if (match.refereeName != null &&
-                          match.refereeName!.isNotEmpty) ...[
-                        const SizedBox(width: 12),
-                        _buildInfoChip(
-                          Icons.person_outline_rounded,
-                          match.refereeName!,
-                        ),
-                      ],
-                    ],
-                  ).animate().fadeIn(duration: 300.ms),
+                  onPressed: canOpenScoring
+                      ? () => _showCompleteMatchDialog(match)
+                      : null,
                 ),
-
-                // ─── Main Score Area (read-only) ───
-                Expanded(
-                  child: Row(
-                    children: [
-                      // Team 1
-                      Expanded(
-                        child: _buildReadOnlyScoreCard(
-                          teamName: match.team1Name,
-                          score: match.score1,
-                          setsWon: match.sets.length,
-                        ),
-                      ),
-                      // Center VS + LIVE
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: context.colors.bgCard,
-                              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-                              border: Border.all(color: context.colors.border),
-                            ),
-                            child: Text(
-                              'VS',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: context.colors.textMuted,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // Live indicator
-                          FadeTransition(
-                            opacity: _livePulseAnim,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: context.colors.error,
-                                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.fiber_manual_record,
-                                    size: 8,
-                                    color: Colors.white,
-                                  ),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    'LIVE',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 1,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      // Team 2
-                      Expanded(
-                        child: _buildReadOnlyScoreCard(
-                          teamName: match.team2Name,
-                          score: match.score2,
-                          setsWon: match.sets.length,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // ─── Bottom Controls ───
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  color: context.colors.bgCard,
-                  child: Row(
-                    children: [
-                      if (canOpenScoring) ...[
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orangeAccent,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            icon: const Icon(Icons.sports_kabaddi_rounded, size: 20),
-                            label: const Text(
-                              'THỔI CÒI',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            onPressed: () => _showFoulSelectionDialog(match),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: context.colors.success,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          icon: const Icon(Icons.check_circle_outline, size: 20),
-                          label: const Text(
-                            'KẾT THÚC',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          onPressed: canOpenScoring
-                              ? () => _showCompleteMatchDialog(match)
-                              : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ],
     );
   }
+
+  Widget _buildInfoChip(IconData icon, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
