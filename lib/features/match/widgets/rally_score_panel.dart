@@ -97,6 +97,7 @@ class RallyScorePanel extends ConsumerWidget {
                                     notifier.rallyRemovePoint(true),
                                 teamName: team1Name,
                                 compact: compact,
+                                isLandscape: isLandscape,
                                 targetPoint: ts.pointsPerSet,
                               ),
                             ),
@@ -112,6 +113,7 @@ class RallyScorePanel extends ConsumerWidget {
                                     notifier.rallyRemovePoint(false),
                                 teamName: team2Name,
                                 compact: compact,
+                                isLandscape: isLandscape,
                                 targetPoint: ts.pointsPerSet,
                               ),
                             ),
@@ -129,6 +131,7 @@ class RallyScorePanel extends ConsumerWidget {
                                     notifier.rallyRemovePoint(true),
                                 teamName: team1Name,
                                 compact: compact,
+                                isLandscape: isLandscape,
                                 targetPoint: ts.pointsPerSet,
                               ),
                             ),
@@ -154,6 +157,7 @@ class RallyScorePanel extends ConsumerWidget {
                                     notifier.rallyRemovePoint(false),
                                 teamName: team2Name,
                                 compact: compact,
+                                isLandscape: isLandscape,
                                 targetPoint: ts.pointsPerSet,
                               ),
                             ),
@@ -176,6 +180,7 @@ class RallyScorePanel extends ConsumerWidget {
     required VoidCallback onDecrement,
     required String teamName,
     required bool compact,
+    required bool isLandscape,
     required int targetPoint,
   }) {
     final color = isTeam1 ? const Color(0xFF2979FF) : const Color(0xFFEA580C);
@@ -233,7 +238,7 @@ class RallyScorePanel extends ConsumerWidget {
               child: Text(
                 '$score',
                 style: TextStyle(
-                  fontSize: compact ? 54 : 64,
+                  fontSize: isLandscape ? 38 : (compact ? 54 : 64),
                   fontWeight: FontWeight.w700,
                   color: color,
                 ),

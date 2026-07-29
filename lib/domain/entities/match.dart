@@ -228,8 +228,14 @@ class MatchModel {
       id: id,
       round: json['round'] ?? 1,
       matchNumber: json['matchNumber'] ?? 1,
-      team1Id: json['team1Id'] ?? '',
-      team2Id: json['team2Id'] ?? '',
+      team1Id: json['team1Id']?.toString() ??
+          json['participant1Id']?.toString() ??
+          (json['participant1'] is Map ? json['participant1']['id']?.toString() : null) ??
+          '',
+      team2Id: json['team2Id']?.toString() ??
+          json['participant2Id']?.toString() ??
+          (json['participant2'] is Map ? json['participant2']['id']?.toString() : null) ??
+          '',
       team1Name: json['team1Name'] ?? 'TBD',
       team2Name: json['team2Name'] ?? 'TBD',
       score1: json['score1'] ?? 0,
