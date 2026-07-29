@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/core/services/match_socket_service.dart';
@@ -175,16 +176,24 @@ class ApiMatchRepository implements IMatchRepository {
 
     int score1 = parseNum(json['score1'] ?? json['participant1Score']);
     int score2 = parseNum(json['score2'] ?? json['participant2Score']);
+    final parsedSets = <SetScore>[];
 
     // Check scoreDetails.sets for point scores of the set
-    if (score1 == 0 && score2 == 0 && json['scoreDetails'] != null) {
+    if (json['scoreDetails'] != null) {
       try {
         final details = json['scoreDetails'];
         if (details is Map && details['sets'] is List) {
           final sets = details['sets'] as List;
+          for (final rawSet in sets) {
+            if (rawSet is! Map) continue;
+            parsedSets.add(SetScore(
+              score1: parseNum(rawSet['team1Score'] ?? rawSet['score1'] ?? rawSet['p1']),
+              score2: parseNum(rawSet['team2Score'] ?? rawSet['score2'] ?? rawSet['p2']),
+            ));
+          }
           if (sets.isNotEmpty) {
             final lastSet = sets.last;
-            if (lastSet is Map) {
+            if (score1 == 0 && score2 == 0 && lastSet is Map) {
               score1 = parseNum(lastSet['score1'] ?? lastSet['p1'] ?? lastSet['team1Score']);
               score2 = parseNum(lastSet['score2'] ?? lastSet['p2'] ?? lastSet['team2Score']);
             }
@@ -233,12 +242,19 @@ class ApiMatchRepository implements IMatchRepository {
       id: json['id'] ?? '',
       round: json['roundNumber'] ?? json['round'] ?? 1,
       matchNumber: json['matchOrder'] ?? json['matchNumber'] ?? 1,
-      team1Id: json['team1Id'] ?? '',
+      team1Id: json['team1Id']?.toString() ??
+          json['participant1Id']?.toString() ??
+          (json['participant1'] is Map ? json['participant1']['id']?.toString() : null) ??
+          '',
       team1Name: team1Name,
-      team2Id: json['team2Id'] ?? '',
+      team2Id: json['team2Id']?.toString() ??
+          json['participant2Id']?.toString() ??
+          (json['participant2'] is Map ? json['participant2']['id']?.toString() : null) ??
+          '',
       team2Name: team2Name,
       score1: score1,
       score2: score2,
+      sets: parsedSets,
       status: _mapMatchStatus(json['status'] as String?),
       bracketPosition: BracketPosition(
         bracket: bracketName,
@@ -248,6 +264,7 @@ class ApiMatchRepository implements IMatchRepository {
       nextMatchId: json['nextMatchId'] ?? '',
       loserNextMatchId: json['loserNextMatchId'] ?? '',
       winnerId: json['winnerId'] ?? '',
+      loserId: json['loserId'] ?? '',
       isBye: json['isBye'] ?? json['is_bye'] ?? false,
       court: _buildCourtDisplay(
         court: json['court']?.toString(),
@@ -292,8 +309,13 @@ class ApiMatchRepository implements IMatchRepository {
             _log.info('Score update received for $matchId via socket');
             final newMatch = _parseMatch(data);
             final mergedMatch = newMatch.copyWith(
+              team1Id: newMatch.team1Id.isEmpty && latestMatch != null ? latestMatch!.team1Id : newMatch.team1Id,
+              team2Id: newMatch.team2Id.isEmpty && latestMatch != null ? latestMatch!.team2Id : newMatch.team2Id,
               team1Name: newMatch.team1Name == 'TBD' && latestMatch != null ? latestMatch!.team1Name : newMatch.team1Name,
               team2Name: newMatch.team2Name == 'TBD' && latestMatch != null ? latestMatch!.team2Name : newMatch.team2Name,
+              tournamentName: newMatch.tournamentName ?? latestMatch?.tournamentName,
+              sportKey: newMatch.sportKey ?? latestMatch?.sportKey,
+              sportRules: newMatch.sportRules ?? latestMatch?.sportRules,
             );
             latestMatch = mergedMatch;
             controller.add(mergedMatch);
@@ -305,8 +327,13 @@ class ApiMatchRepository implements IMatchRepository {
             _log.info('Status update received for $matchId via socket');
             final newMatch = _parseMatch(data);
             final mergedMatch = newMatch.copyWith(
+              team1Id: newMatch.team1Id.isEmpty && latestMatch != null ? latestMatch!.team1Id : newMatch.team1Id,
+              team2Id: newMatch.team2Id.isEmpty && latestMatch != null ? latestMatch!.team2Id : newMatch.team2Id,
               team1Name: newMatch.team1Name == 'TBD' && latestMatch != null ? latestMatch!.team1Name : newMatch.team1Name,
               team2Name: newMatch.team2Name == 'TBD' && latestMatch != null ? latestMatch!.team2Name : newMatch.team2Name,
+              tournamentName: newMatch.tournamentName ?? latestMatch?.tournamentName,
+              sportKey: newMatch.sportKey ?? latestMatch?.sportKey,
+              sportRules: newMatch.sportRules ?? latestMatch?.sportRules,
             );
             latestMatch = mergedMatch;
             controller.add(mergedMatch);
@@ -440,7 +467,20 @@ class ApiMatchRepository implements IMatchRepository {
     if (winnerId != null) payload['winnerId'] = winnerId;
     if (overrideReason != null) payload['overrideReason'] = overrideReason;
 
-    await _dioClient.dio.patch('/matches/$matchId/score', data: payload);
+    try {
+      await _dioClient.dio.patch('/matches/$matchId/score', data: payload);
+    } on DioException catch (error) {
+      final body = error.response?.data;
+      final rawMessage = body is Map ? body['message'] : null;
+      final message = rawMessage is List
+          ? rawMessage.whereType<Object>().map((item) => item.toString()).join('\n')
+          : rawMessage?.toString();
+      throw Exception(
+        message?.trim().isNotEmpty == true
+            ? message
+            : 'Không thể cập nhật điểm trận đấu.',
+      );
+    }
   }
 
   @override

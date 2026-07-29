@@ -585,6 +585,22 @@ class ApiTournamentRepository implements ITournamentRepository {
     final resolvedStageType =
         stageType ?? rawStage?['type']?.toString() ?? json['stageType']?.toString();
 
+    int parseScore(dynamic value) {
+      if (value is num) return value.toInt();
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+
+    final scoreDetails = json['scoreDetails'] is Map
+        ? Map<String, dynamic>.from(json['scoreDetails'] as Map)
+        : null;
+    final rawSets = scoreDetails?['sets'] as List<dynamic>? ?? const [];
+    final sets = rawSets.whereType<Map>().map((rawSet) {
+      return SetScore(
+        score1: parseScore(rawSet['team1Score'] ?? rawSet['score1'] ?? rawSet['p1']),
+        score2: parseScore(rawSet['team2Score'] ?? rawSet['score2'] ?? rawSet['p2']),
+      );
+    }).toList();
+
     return MatchModel(
       id: json['id']?.toString() ?? '',
       round: roundNumber,
@@ -595,6 +611,7 @@ class ApiTournamentRepository implements ITournamentRepository {
       team2Name: team2Name.isNotEmpty ? team2Name : 'TBD',
       score1: (json['p1SetsWon'] as int?) ?? 0,
       score2: (json['p2SetsWon'] as int?) ?? 0,
+      sets: sets,
       status: _mapBracketMatchStatus(json['status'] as String?),
       bracketPosition: BracketPosition(
         bracket: branch,
@@ -615,7 +632,10 @@ class ApiTournamentRepository implements ITournamentRepository {
           ? DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
       refereeId: json['refereeId']?.toString(),
-      scoreDetails: json['scoreDetails'] as Map<String, dynamic>?,
+      scoreDetails: scoreDetails,
+      setsToWin: json['setsToWin'] is num
+          ? (json['setsToWin'] as num).toInt()
+          : null,
       team1Members: team1Members,
       team2Members: team2Members,
       groupName: resolvedGroupName,

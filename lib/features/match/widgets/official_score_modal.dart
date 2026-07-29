@@ -419,6 +419,32 @@ void showOfficialScoreModal(
                                     visualDensity: VisualDensity.compact,
                                   ),
                                 ),
+                              if (!state.isMatchComplete &&
+                                  n.finishSetConfirmMessage() != null) ...[
+                                const SizedBox(width: 6),
+                                OutlinedButton.icon(
+                                  onPressed: state.isSubmitting
+                                      ? null
+                                      : () async {
+                                          final message = n.finishSetConfirmMessage();
+                                          if (message == null) return;
+                                          final confirmed = await showDialog<bool>(
+                                            context: ctx,
+                                            builder: (dialogContext) => AlertDialog(
+                                              title: const Text('Chốt set'),
+                                              content: Text(message),
+                                              actions: [
+                                                TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Hủy')),
+                                                FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Chốt set')),
+                                              ],
+                                            ),
+                                          );
+                                          if (confirmed == true) await n.finishSet();
+                                        },
+                                  icon: const Icon(Icons.flag_rounded, size: 15),
+                                  label: const Text('CHỐT SET', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                ),
+                              ],
                               if (state.isMatchComplete || state.overrideEnabled) ...[
                                 const SizedBox(width: 6),
                                 FilledButton.icon(
@@ -434,7 +460,8 @@ void showOfficialScoreModal(
                                                   ? 1
                                                   : 2);
                                           await n.completeMatch(winnerTeam);
-                                          if (ctx.mounted && !state.isSubmitting) {
+                                          final latest = ref.read(scorePanelNotifierProvider(params));
+                                          if (ctx.mounted && !latest.isSubmitting && latest.errorMessage == null) {
                                             Navigator.of(ctx).pop();
                                           }
                                         },

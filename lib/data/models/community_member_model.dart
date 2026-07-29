@@ -26,6 +26,7 @@ class CommunityMemberModel {
     // Xử lý nested member + user từ BE
     final member = json['member'] as Map<String, dynamic>? ?? json;
     final user = json['user'] as Map<String, dynamic>?;
+    final profile = user?['profile'] as Map<String, dynamic>?;
 
     return CommunityMemberModel(
       id: member['id']?.toString() ?? '',
@@ -33,8 +34,11 @@ class CommunityMemberModel {
       communityId: member['communityId']?.toString() ?? '',
       role: member['role']?.toString() ?? 'MEMBER',
       status: member['status']?.toString() ?? 'JOINED',
-      userFullName: user?['fullName']?.toString(),
-      userAvatarUrl: user?['avatarUrl']?.toString(),
+      userFullName: user?['fullName']?.toString() ?? profile?['fullName']?.toString(),
+      userAvatarUrl: user?['avatarUrl']?.toString() ??
+          user?['avatar_url']?.toString() ??
+          profile?['avatarUrl']?.toString() ??
+          profile?['avatar_url']?.toString(),
       userEmail: user?['email']?.toString(),
       joinedAt: member['joinedAt']?.toString() ?? '',
     );

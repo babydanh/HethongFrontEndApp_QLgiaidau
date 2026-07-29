@@ -509,6 +509,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 if (match == null) {
                   return const SizedBox.shrink();
                 }
+                if (match.isCompleted) {
+                  return const SizedBox.shrink();
+                }
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilledButton.tonalIcon(
@@ -576,9 +579,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               }
 
               if (!canOpenScoring) {
-                if (match.isCompleted) {
-                  return _buildCompletedState(match, auth.role);
-                }
                 return _buildLiveState(match, canOpenScoring: false);
               }
 
@@ -587,7 +587,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               } else if (match.isLive) {
                 return _buildLiveState(match, canOpenScoring: canOpenScoring);
               } else {
-                return _buildCompletedState(match, auth.role);
+                return _buildLiveState(match, canOpenScoring: false);
               }
             },
             loading: () => const Center(child: CircularProgressIndicator()),

@@ -1395,18 +1395,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             onTap: canViewProfile
                 ? () => context.push('/profile/user/${m.userId}')
                 : null,
-            child: CircleAvatar(
+            child: _buildUserAvatar(
+              name: m.userFullName,
+              avatarUrl: m.userAvatarUrl,
               radius: 20,
-              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-              child: Text(
-                (m.userFullName?.isNotEmpty == true ? m.userFullName![0] : '?')
-                    .toUpperCase(),
-                style: const TextStyle(
-                  color: AppTheme.primary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
-                ),
-              ),
+              fallbackColor: AppTheme.primary,
             ),
           ),
           const SizedBox(width: 12),
@@ -2405,6 +2398,33 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       ],
     );
     */
+  }
+
+  Widget _buildUserAvatar({
+    required String? name,
+    required String? avatarUrl,
+    required double radius,
+    required Color fallbackColor,
+  }) {
+    final initial = (name?.trim().isNotEmpty == true ? name!.trim()[0] : '?').toUpperCase();
+    final url = avatarUrl?.trim();
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: fallbackColor.withValues(alpha: 0.1),
+      child: url == null || url.isEmpty
+          ? Text(initial, style: TextStyle(color: fallbackColor, fontWeight: FontWeight.w800, fontSize: radius * 0.7))
+          : ClipOval(
+              child: Image.network(
+                url,
+                width: radius * 2,
+                height: radius * 2,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Center(
+                  child: Text(initial, style: TextStyle(color: fallbackColor, fontWeight: FontWeight.w800, fontSize: radius * 0.7)),
+                ),
+              ),
+            ),
+    );
   }
 
   // ════════════════════════════════════

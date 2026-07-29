@@ -126,43 +126,36 @@ class TierPalette {
     gradient: LinearGradient(colors: [Color(0xFFCBD5E1), Color(0xFF64748B)]),
   );
 
-  /// Lấy palette theo tier (nếu null/empty → chưa xếp hạng).
+  /// Lấy palette theo tier (nếu null/empty → tính theo ELO).
   static TierPalette from(EloTier? tier) {
-    if (tier == null) {
-      return const TierPalette(
-        grade: '',
-        label: '?',
-        fullLabel: 'CHƯA XẾP HẠNG',
-        color: Color(0xFF64748B),
-        soft: Color(0xFFF1F5F9),
-        badgeBg: Color(0xFF64748B),
-        border: Color(0xFFCBD5E1),
-        gradient: LinearGradient(colors: [Color(0xFF475569), Color(0xFF334155)]),
-      );
-    }
-    final nameLower = tier.name.toLowerCase();
-    if (nameLower.contains('tier s') || nameLower == 's' || tier.minElo >= 1800) {
+    if (tier == null) return _lowD;
+    return fromElo(tier.minElo, tier.name);
+  }
+
+  static TierPalette fromElo(int elo, [String? name]) {
+    final nameLower = (name ?? '').toLowerCase();
+    if (nameLower.contains('tier s') || nameLower == 's' || elo >= 1800) {
       return _tierS;
     }
-    if (nameLower.contains('high tier a') || (nameLower.contains('a') && tier.minElo >= 1700)) {
+    if (nameLower.contains('high tier a') || (nameLower.contains('a') && elo >= 1700)) {
       return _highA;
     }
-    if (nameLower.contains('low tier a') || (nameLower.contains('a') && tier.minElo >= 1600)) {
+    if (nameLower.contains('low tier a') || (nameLower.contains('a') && elo >= 1600)) {
       return _lowA;
     }
-    if (nameLower.contains('high tier b') || (nameLower.contains('b') && tier.minElo >= 1500)) {
+    if (nameLower.contains('high tier b') || (nameLower.contains('b') && elo >= 1500)) {
       return _highB;
     }
-    if (nameLower.contains('low tier b') || (nameLower.contains('b') && tier.minElo >= 1400)) {
+    if (nameLower.contains('low tier b') || (nameLower.contains('b') && elo >= 1400)) {
       return _lowB;
     }
-    if (nameLower.contains('high tier c') || (nameLower.contains('c') && tier.minElo >= 1300)) {
+    if (nameLower.contains('high tier c') || (nameLower.contains('c') && elo >= 1300)) {
       return _highC;
     }
-    if (nameLower.contains('low tier c') || (nameLower.contains('c') && tier.minElo >= 1200)) {
+    if (nameLower.contains('low tier c') || (nameLower.contains('c') && elo >= 1200)) {
       return _lowC;
     }
-    if (nameLower.contains('high tier d') || (nameLower.contains('d') && tier.minElo >= 1100)) {
+    if (nameLower.contains('high tier d') || (nameLower.contains('d') && elo >= 1100)) {
       return _highD;
     }
     return _lowD;

@@ -114,10 +114,16 @@ class DioClient {
                     return handler.resolve(retryResponse);
                   }
                 }
+              } on DioException catch (refreshError, stack) {
+                _log.error('Failed to refresh token', refreshError, stack);
+                final refreshStatus = refreshError.response?.statusCode;
+                // Chỉ xóa phiên khi server xác nhận refresh token không còn hợp lệ.
+                // Timeout, mất mạng hoặc lỗi 5xx không được phép làm người dùng đăng xuất.
+                if (refreshStatus == 401 || refreshStatus == 403) {
+                  await _tokenManager.clearTokens();
+                }
               } catch (e, stack) {
-                _log.error('Failed to refresh token', e, stack);
-                await _tokenManager.clearTokens();
-                // TODO: Điều hướng người dùng về màn hình Login hoặc thông báo session expired
+                _log.error('Unexpected refresh token error', e, stack);
               }
             } else {
               _log.warning('No refresh token available');

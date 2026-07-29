@@ -197,7 +197,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       child: matchesAsync.when(
         loading: () => const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator())),
-        error: (_, __) => _buildEmptyPlaceholder(colors, Icons.sports_tennis_outlined, 'Chưa tải được lịch sử trận đấu'),
+        error: (err, stack) => _buildEmptyPlaceholder(colors, Icons.sports_tennis_outlined, 'Chưa tải được lịch sử trận đấu'),
         data: (matches) => matches.isEmpty
             ? _buildEmptyPlaceholder(colors, Icons.sports_tennis_outlined, 'Chưa có trận đấu công khai')
             : Column(children: matches.map((match) => _buildPublicMatchCard(match, colors)).toList()),
@@ -536,7 +536,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           ),
           child: hasCover
               ? Image.network(profile.coverUrl!, fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _coverGradient(),
+                  errorBuilder: (ctx, err, stack) => _coverGradient(),
                 )
               : _coverGradient(),
         ),
@@ -559,7 +559,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       ],
     );
   }
-
   Widget _coverGradient() {
     return const DecoratedBox(
       decoration: BoxDecoration(
@@ -572,8 +571,62 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     );
   }
 
+  String _formatTierName(String? rawTier, int elo, int matchesPlayed) {
+    if (rawTier != null && rawTier.trim().isNotEmpty) {
+      final t = rawTier.trim().toUpperCase();
+      if (t != 'UNRANKED' && t != 'CHƯA XẾP HẠNG') {
+        if (t.contains('TIER S') || t == 'S') return 'Hạng S (Cao thủ)';
+        if (t.contains('HIGH TIER A') || t == 'A+') return 'Hạng A+ (Xuất sắc)';
+        if (t.contains('LOW TIER A') || t == 'A-') return 'Hạng A- (Khá giỏi)';
+        if (t.contains('HIGH TIER B') || t == 'B+') return 'Hạng B+ (Trung bình khá)';
+        if (t.contains('LOW TIER B') || t == 'B-') return 'Hạng B- (Trung bình)';
+        if (t.contains('HIGH TIER C') || t == 'C+') return 'Hạng C+ (Phong trào)';
+        if (t.contains('LOW TIER C') || t == 'C-') return 'Hạng C- (Phong trào)';
+        if (t.contains('HIGH TIER D') || t == 'D+') return 'Hạng D+ (Tập sự)';
+        if (t.contains('LOW TIER D') || t == 'D-') return 'Hạng D- (Tân thủ)';
+        return rawTier;
+      }
+    }
+
+    if (elo >= 1800) return 'Hạng S (Cao thủ)';
+    if (elo >= 1700) return 'Hạng A+ (Xuất sắc)';
+    if (elo >= 1600) return 'Hạng A- (Khá giỏi)';
+    if (elo >= 1500) return 'Hạng B+ (Trung bình khá)';
+    if (elo >= 1400) return 'Hạng B- (Trung bình)';
+    if (elo >= 1300) return 'Hạng C+ (Phong trào)';
+    if (elo >= 1200) return 'Hạng C- (Phong trào)';
+    if (elo >= 1100) return 'Hạng D+ (Tập sự)';
+    return matchesPlayed == 0 ? 'Tân thủ ($elo ELO)' : 'Hạng D- (Tân thủ)';
+  }
+
+  String _formatUserRole(String? role) {
+    if (role == null || role.trim().isEmpty) return 'Vận động viên';
+    final r = role.trim().toUpperCase();
+    switch (r) {
+      case 'ADMIN':
+      case 'SUPER_ADMIN':
+        return 'Quản trị viên';
+      case 'ORGANIZER':
+        return 'Ban tổ chức';
+      case 'REFEREE':
+        return 'Trọng tài';
+      case 'LEADER':
+      case 'CAPTAIN':
+        return 'Trưởng nhóm';
+      case 'COACH':
+        return 'Huấn luyện viên';
+      case 'MEMBER':
+      case 'USER':
+      case 'PLAYER':
+      case 'ATHLETE':
+      default:
+        return 'Vận động viên';
+    }
+  }
+
   // ─── USER INFO HEADER ───────────────────────────────────────
   Widget _buildUserInfoHeader(BuildContext context, UserPublicProfile profile, AppColorsExtension colors) {
+    final roleText = _formatUserRole(null); // default fallback
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Row(
@@ -597,7 +650,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(37),
                         child: Image.network(profile.avatarUrl!, fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _avatarFallback(profile.fullName, colors),
+                          errorBuilder: (ctx, err, stack) => _avatarFallback(profile.fullName, colors),
                         ),
                       )
                     : _avatarFallback(profile.fullName, colors),
@@ -605,7 +658,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             ),
           ),
           const SizedBox(width: 16),
-          // Name + Bio + Thông tin
+          // Name + Role + Bio + Gender
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,25 +679,42 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     ],
                   ],
                 ),
-                const SizedBox(height: 4),
-                if (profile.gender != null && profile.gender!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        Icon(profile.gender == 'Nam' ? Icons.male_rounded : Icons.female_rounded, size: 14, color: colors.textMuted),
-                        const SizedBox(width: 4),
-                        Text(profile.gender!, style: TextStyle(fontSize: 12, color: colors.textSecondary)),
-                      ],
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
+                      ),
+                      child: Text(
+                        roleText,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.primary,
+                        ),
+                      ),
                     ),
-                  ),
-                if (profile.bio != null && profile.bio!.isNotEmpty)
+                    if (profile.gender != null && profile.gender!.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      Icon(profile.gender == 'Nam' ? Icons.male_rounded : Icons.female_rounded, size: 14, color: colors.textMuted),
+                      const SizedBox(width: 3),
+                      Text(profile.gender!, style: TextStyle(fontSize: 12, color: colors.textSecondary)),
+                    ],
+                  ],
+                ),
+                if (profile.bio != null && profile.bio!.isNotEmpty) ...[
+                  const SizedBox(height: 6),
                   Text(
                     profile.bio!,
                     style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.4),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+                ],
               ],
             ),
           ),
@@ -701,8 +771,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
 
   // ─── RANK CARD ──────────────────────────────────────────────
   Widget _buildRankCard(BuildContext context, UserPublicRank rank, AppColorsExtension colors) {
-    final tier = TierPalette.matchTier(rank.eloPoints, []);
-    final palette = TierPalette.from(tier);
+    final palette = TierPalette.fromElo(rank.eloPoints, rank.tierName);
     final wr = rank.matchesPlayed > 0 ? (rank.matchesWon / rank.matchesPlayed * 100).round() : 0;
 
     return Container(

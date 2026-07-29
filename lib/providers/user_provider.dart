@@ -40,11 +40,9 @@ final userProfileProvider = FutureProvider<UserProfile>((ref) async {
   try {
     final repo = ref.read(userRepositoryProvider);
     return await repo.getProfile();
-  } catch (e) {
-    final errStr = e.toString().toLowerCase();
-    if (errStr.contains('401') || errStr.contains('unauthorized')) {
-      ref.read(authProvider.notifier).signOut(reason: 'Phiên đăng nhập hết hạn');
-    }
+  } catch (_) {
+    // DioClient chịu trách nhiệm refresh token. Không tự đăng xuất tại đây vì
+    // lỗi mạng/timeout có thể vẫn mang response 401 của request ban đầu.
     rethrow;
   }
 });

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
@@ -17,11 +18,13 @@ final scorePanelNotifierProvider = NotifierProvider.autoDispose
 class ScorePanelNotifier extends Notifier<ScorePanelState> {
   static const _log = AppLogger('ScorePanelNotifier');
   final MatchControlParams arg;
+  Timer? _liveSyncTimer;
 
   ScorePanelNotifier(this.arg);
 
   @override
   ScorePanelState build() {
+    ref.onDispose(() => _liveSyncTimer?.cancel());
     final config = _initConfig(ref, arg);
     ref.listen<AsyncValue<MatchModel?>>(singleMatchProvider(arg), (prev, next) {
       final match = next.value;
@@ -45,8 +48,14 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
     // 1. Finished Sets
     final rawSets = details['sets'] as List? ?? [];
-    final finishedSets = rawSets
+    // Keep the active set in the rally/tennis state only. Sending it again
+    // from _setsForSubmission used to duplicate the current set and caused
+    // backend validation errors when a point was recorded.
+    final allSets = rawSets
         .map((s) => SetScoreData.fromJson(s as Map<String, dynamic>))
+        .toList();
+    final finishedSets = allSets
+        .where((set) => set.isFinished)
         .toList();
 
     // 2. Tennis point state
@@ -95,7 +104,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     RallySetState? rallyState;
     if (state.config.scoringModel == SportScoringModel.rallyPointSet ||
         state.config.scoringModel == SportScoringModel.pickleballSideOut) {
-      final activeSet = finishedSets.where((s) => !s.isFinished).firstOrNull;
+      final activeSet = allSets.where((s) => !s.isFinished).firstOrNull;
       if (activeSet != null) {
         rallyState = RallySetState(
           currentP1: activeSet.score1,
@@ -245,6 +254,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       errorMessage: null,
     );
     _checkPickleballGameEnd();
+    _scheduleLiveSync();
     return true;
   }
 
@@ -303,6 +313,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       errorMessage: null,
     );
     _checkRallySetEnd();
+    _scheduleLiveSync();
   }
 
   void rallyRemovePoint(bool isTeam1) {
@@ -318,6 +329,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       ),
       errorMessage: null,
     );
+    _scheduleLiveSync();
   }
 
   void _checkRallySetEnd() {
@@ -495,6 +507,32 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   void setOverride(bool enabled, String reason) {
     state = state.copyWith(overrideEnabled: enabled, overrideReason: reason);
+  }
+
+  void _scheduleLiveSync() {
+    _liveSyncTimer?.cancel();
+    _liveSyncTimer = Timer(const Duration(milliseconds: 250), _syncLiveScore);
+  }
+
+  Future<void> _syncLiveScore() async {
+    final rally = state.rally;
+    if (rally == null || state.isMatchComplete) return;
+    if (rally.currentP1 == 0 && rally.currentP2 == 0) return;
+    final sets = [
+      ...state.finishedSets,
+      SetScoreData(score1: rally.currentP1, score2: rally.currentP2),
+    ];
+    final (p1Sets, p2Sets) = computeMatchSetsWon(state.finishedSets);
+    try {
+      await ref.read(matchControllerProvider(arg)).updateSetsWithDetails(
+        p1SetsWon: p1Sets,
+        p2SetsWon: p2Sets,
+        scoreDetails: sets,
+      );
+    } catch (e, stack) {
+      _log.error('Lỗi đồng bộ điểm live', e, stack);
+      state = state.copyWith(errorMessage: 'Không đồng bộ được điểm live. Vui lòng thử lại.');
+    }
   }
 }
 
