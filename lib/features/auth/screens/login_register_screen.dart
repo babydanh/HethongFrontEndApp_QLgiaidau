@@ -10,6 +10,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:app_quanly_giaidau/core/utils/token_generator.dart';
 
 class LoginRegisterScreen extends ConsumerStatefulWidget {
   final String? redirectPath;
@@ -90,6 +91,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
     });
     try {
       final googleSignIn = GoogleSignIn(
+        clientId: dotenv.env['GOOGLE_IOS_CLIENT_ID'],
         serverClientId: dotenv.env['GOOGLE_WEB_CLIENT_ID'],
         scopes: ['email'],
       );
@@ -135,7 +137,9 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       _errorMessage = null;
     });
     try {
+      final nonce = TokenGenerator.generate('APPLE');
       final credential = await SignInWithApple.getAppleIDCredential(
+        nonce: nonce,
         scopes: [
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
@@ -150,7 +154,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
           .join(' ');
       bool success = await ref
           .read(authProvider.notifier)
-          .loginWithApple(idToken, fullName: fullName.isNotEmpty ? fullName : null);
+          .loginWithApple(idToken, nonce: nonce, fullName: fullName.isNotEmpty ? fullName : null);
       if (!mounted) return;
       if (success) {
         ref.invalidate(userProfileProvider);

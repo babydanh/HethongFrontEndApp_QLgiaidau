@@ -16,6 +16,7 @@ abstract class IAuthRepository {
 
   Future<AuthSession> loginWithApple({
     required String idToken,
+    String? nonce,
     String? fullName,
   });
 

@@ -261,14 +261,14 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   /// Đăng nhập bằng Apple
-  Future<bool> loginWithApple(String idToken, {String? fullName}) async {
+  Future<bool> loginWithApple(String idToken, {String? nonce, String? fullName}) async {
     _log.info('Đăng nhập bằng Apple via NestJS Mobile API');
     state = state.copyWith(status: AuthStatus.validating);
 
     try {
       final session = await ref
           .read(authRepositoryProvider)
-          .loginWithApple(idToken: idToken, fullName: fullName);
+          .loginWithApple(idToken: idToken, nonce: nonce, fullName: fullName);
       final role = _mapSessionRole(session);
       await _saveJwtSession(session, role);
       state = AuthState(

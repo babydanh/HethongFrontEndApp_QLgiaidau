@@ -92,6 +92,7 @@ class ApiAuthRepository implements IAuthRepository {
   @override
   Future<AuthSession> loginWithApple({
     required String idToken,
+    String? nonce,
     String? fullName,
   }) async {
     _log.info('Đăng nhập bằng Apple qua Mobile API');
@@ -100,6 +101,7 @@ class ApiAuthRepository implements IAuthRepository {
         '/auth/mobile/apple',
         data: {
           'idToken': idToken,
+          if (nonce != null && nonce.isNotEmpty) 'nonce': nonce,
           if (fullName != null && fullName.isNotEmpty) 'fullName': fullName,
         },
       );
