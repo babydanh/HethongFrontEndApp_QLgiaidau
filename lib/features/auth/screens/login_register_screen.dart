@@ -167,6 +167,16 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
           _errorMessage = auth.errorMessage ?? "Đăng nhập Apple thất bại";
         });
       }
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = "Lỗi Apple Sign-In: ${e.message}";
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
