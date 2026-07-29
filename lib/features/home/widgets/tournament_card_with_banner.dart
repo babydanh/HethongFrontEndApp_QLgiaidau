@@ -118,44 +118,37 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
     final endDay = end.day.toString().padLeft(2, '0');
     final startMonth = start.month.toString().padLeft(2, '0');
     final endMonth = end.month.toString().padLeft(2, '0');
+    final isSameMonth = startMonth == endMonth;
+    final monthText = isSameMonth ? 'Thg $startMonth' : 'Thg $startMonth - Thg $endMonth';
     
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          "$startDay - $endDay",
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: colors.textPrimary,
-            letterSpacing: -0.5,
+    return Container(
+      constraints: const BoxConstraints(minWidth: 70),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            "$startDay - $endDay",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 19,
+              fontWeight: FontWeight.w900,
+              color: colors.textPrimary,
+              letterSpacing: -0.5,
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              startMonth,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: colors.textMuted,
-              ),
+          const SizedBox(height: 3),
+          Text(
+            monthText,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: colors.textMuted,
             ),
-            const SizedBox(width: 12),
-            Text(
-              endMonth,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: colors.textMuted,
-              ),
-            ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -261,7 +254,7 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                   Padding(
                     padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         // Left Column: Date Block
                         _buildDateBlock(context, colors),
