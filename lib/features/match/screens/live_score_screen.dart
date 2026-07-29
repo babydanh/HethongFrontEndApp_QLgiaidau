@@ -447,7 +447,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       )),
     );
     final auth = ref.watch(authProvider);
-    final canOpenScoring = !widget.isViewer && auth.canScore;
+    final canOpenScoring = auth.canScore;
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 

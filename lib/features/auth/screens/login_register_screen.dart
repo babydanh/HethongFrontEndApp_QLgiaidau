@@ -450,11 +450,10 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                             ),
                             backgroundColor: Colors.transparent,
                           ),
-                          icon: Image.network(
-                            "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png",
-                            height: 18.0,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.g_mobiledata, size: 24),
+                          icon: SvgPicture.asset(
+                            'assets/logos/google_g.svg',
+                            width: 20,
+                            height: 20,
                           ),
                           label: Text(
                             "Google",
