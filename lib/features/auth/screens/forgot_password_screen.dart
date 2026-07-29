@@ -149,7 +149,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   // ═══════════════════════════════════════════════════════════
   //  FORM VIEW — Nhập email gửi yêu cầu
   // ═══════════════════════════════════════════════════════════
-  Widget _buildFormView(AppColors colors) {
+  Widget _buildFormView(AppColorsExtension colors) {
     return Form(
       key: _formKey,
       child: Column(
@@ -378,7 +378,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   // ═══════════════════════════════════════════════════════════
   //  SENT VIEW — Thông báo thành công + Đếm ngược gửi lại
   // ═══════════════════════════════════════════════════════════
-  Widget _buildSentView(AppColors colors) {
+  Widget _buildSentView(AppColorsExtension colors) {
     return Column(
       children: [
         const SizedBox(height: 24),
