@@ -1186,7 +1186,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   // ═══════════════════════════════════════════════════════════
   Widget _buildLiveState(MatchModel match, {required bool canOpenScoring}) {
     if (widget.isViewer || canOpenScoring) {
-      return _buildViewerState(match, canOpenScoring: canOpenScoring);
+      return SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 16),
+        child: _buildViewerState(match, canOpenScoring: canOpenScoring),
+      );
     }
 
     return Column(
@@ -2321,9 +2325,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         ),
 
         // ─── Tab Content ───
-        Expanded(
+        SizedBox(
+          height: isLandscape ? 450 : 620,
           child: TabBarView(
             controller: _tabController,
+            physics: const BouncingScrollPhysics(),
             children: [
               // Tab 1: Score (Premium Viewer Scoreboard)
               Consumer(
