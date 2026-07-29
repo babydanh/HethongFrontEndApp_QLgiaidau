@@ -281,6 +281,16 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             return _buildListRow(r, actualRank, colors);
           }),
         ],
+        // ── Empty state when filtered ──
+        if (_showRankedOnly && filteredRankings.isEmpty && !isSearching) ...[
+          const SizedBox(height: 16),
+          Center(
+            child: Text(
+              'Chưa có VĐV nào thi đấu',
+              style: TextStyle(fontSize: 12, color: colors.textMuted),
+            ),
+          ),
+        ],
 
         // ── Xem tất cả (compact mode) ──
         if (!widget.compact) ...[
