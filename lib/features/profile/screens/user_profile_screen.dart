@@ -191,14 +191,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
 
   // ─── ACHIEVEMENTS SECTION ──────────────────────────────────────────
   Widget _buildAchievementsSection(BuildContext context, UserPublicProfile profile, AppColorsExtension colors) {
-    // Derive achievements from rank data (highest ELO = top performers)
-    // In future, this will come from the API's achievements data
-    final sortedRanks = List<UserPublicRank>.from(profile.ranks)
-      ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
+    final achievements = List<UserPublicAchievement>.from(profile.achievements)
+      ..sort((a, b) => a.rank.compareTo(b.rank));
 
-    final championCategories = sortedRanks.where((r) => r.eloPoints >= 1500).toList();
-    final runnerUpCategories = sortedRanks.where((r) => r.eloPoints >= 1200 && r.eloPoints < 1500).toList();
-    final thirdCategories = sortedRanks.where((r) => r.eloPoints >= 1000 && r.eloPoints < 1200).toList();
+    final championCategories = achievements.where((a) => a.rank == 1).toList();
+    final runnerUpCategories = achievements.where((a) => a.rank == 2).toList();
+    final thirdCategories = achievements.where((a) => a.rank == 3).toList();
 
     // If no real achievements, find categories with most wins
     final hasAchievements = championCategories.isNotEmpty ||
@@ -250,7 +248,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 medal: '🥇',
                 title: 'Quán quân',
                 count: championCategories.length,
-                categories: championCategories.map((r) => r.categoryName).toList(),
+                categories: championCategories.map((a) => a.tournamentName).toList(),
               ),
               const SizedBox(height: 12),
             ],
@@ -261,7 +259,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 medal: '🥈',
                 title: 'Á quân',
                 count: runnerUpCategories.length,
-                categories: runnerUpCategories.map((r) => r.categoryName).toList(),
+                categories: runnerUpCategories.map((a) => a.tournamentName).toList(),
               ),
               const SizedBox(height: 12),
             ],
@@ -272,7 +270,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 medal: '🥉',
                 title: 'Hạng ba',
                 count: thirdCategories.length,
-                categories: thirdCategories.map((r) => r.categoryName).toList(),
+                categories: thirdCategories.map((a) => a.tournamentName).toList(),
               ),
             ],
           ],

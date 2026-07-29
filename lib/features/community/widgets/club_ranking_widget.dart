@@ -153,7 +153,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             children: [
               Icon(Icons.emoji_events_rounded, size: 16, color: context.colors.textSecondary),
               const SizedBox(width: 6),
-              Text('Xếp hạng ELO CLB', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary, letterSpacing: 0.3)),
+              Text('Xếp hạng CLB', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary, letterSpacing: 0.3)),
             ],
           ),
           const SizedBox(height: 10),
@@ -218,7 +218,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             ),
             const SizedBox(width: 6),
             Text(
-              'Xếp hạng ELO CLB',
+              'Xếp hạng CLB',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,

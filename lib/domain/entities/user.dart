@@ -186,6 +186,7 @@ class UserPublicProfile {
   final String? bio;
   final bool isVerified;
   final List<UserPublicRank> ranks;
+  final List<UserPublicAchievement> achievements;
 
   const UserPublicProfile({
     required this.id,
@@ -196,6 +197,7 @@ class UserPublicProfile {
     this.bio,
     this.isVerified = false,
     this.ranks = const [],
+    this.achievements = const [],
   });
 
   factory UserPublicProfile.fromJson(Map<String, dynamic> json) {
@@ -211,6 +213,36 @@ class UserPublicProfile {
               ?.map((e) => UserPublicRank.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      achievements: (json['achievements'] as List<dynamic>?)
+              ?.map((e) => UserPublicAchievement.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+class UserPublicAchievement {
+  final String tournamentId;
+  final String tournamentName;
+  final int rank;
+  final String? completedAt;
+  final String? tournamentDate;
+
+  const UserPublicAchievement({
+    required this.tournamentId,
+    required this.tournamentName,
+    required this.rank,
+    this.completedAt,
+    this.tournamentDate,
+  });
+
+  factory UserPublicAchievement.fromJson(Map<String, dynamic> json) {
+    return UserPublicAchievement(
+      tournamentId: json['tournamentId'] as String? ?? '',
+      tournamentName: json['tournamentName'] as String? ?? 'Giải đấu',
+      rank: ((json['rank'] ?? 0) as num).toInt(),
+      completedAt: json['completedAt'] as String?,
+      tournamentDate: json['tournamentDate'] as String?,
     );
   }
 }

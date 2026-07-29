@@ -60,9 +60,8 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
     if (!isDoubles) {
       // ── SINGLES (ĐƠN) LAYOUT: DIRECT PROFILE TAP, NO EXPANSION ──
       final singleInfo = memberInfos.isNotEmpty ? memberInfos.first : null;
-      final eloStr = singleInfo?.eloPoints != null
-          ? 'Elo: ${singleInfo!.eloPoints}'
-          : null;
+      final eloVal = singleInfo?.eloPoints ?? team.eloPoints ?? 1200;
+      final eloStr = 'Elo: $eloVal';
 
       return Container(
         margin: const EdgeInsets.symmetric(vertical: 3),
@@ -148,61 +147,55 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (eloStr != null ||
-                            realTierName != null ||
-                            seedLabel != null) ...[
-                          const SizedBox(height: 3),
-                          Row(
-                            children: [
-                              if (eloStr != null) ...[
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 1.5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF0F9FF),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                      color: const Color(0xFFBAE6FD),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    eloStr,
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF0284C7),
-                                    ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF0F9FF),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: const Color(0xFFBAE6FD),
+                                ),
+                              ),
+                              child: Text(
+                                eloStr,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF0284C7),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            if (realTierName != null || seedLabel != null)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 1.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEFF6FF),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: const Color(0xFFBFDBFE),
                                   ),
                                 ),
-                                const SizedBox(width: 6),
-                              ],
-                              if (realTierName != null || seedLabel != null)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 1.5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEFF6FF),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                      color: const Color(0xFFBFDBFE),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    realTierName ?? seedLabel!,
-                                    style: const TextStyle(
-                                      fontSize: 9.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF1D4ED8),
-                                    ),
+                                child: Text(
+                                  realTierName ?? seedLabel!,
+                                  style: const TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF1D4ED8),
                                   ),
                                 ),
-                            ],
-                          ),
-                        ],
+                              ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -400,11 +393,11 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                   final MatchMemberInfo? mInfo = idx < memberInfos.length
                       ? memberInfos[idx]
                       : null;
-                  final eloStr = mInfo?.eloPoints != null
-                      ? 'Elo: ${mInfo!.eloPoints}'
-                      : null;
+                  final eloVal = mInfo?.eloPoints ?? team.eloPoints ?? 1200;
+                  final eloStr = 'Elo: $eloVal';
                   final tierStr = mInfo?.tierName;
                   final isCaptain = idx == 0;
+                  final memberAvatar = mInfo?.avatarUrl;
 
                   return Container(
                     margin: const EdgeInsets.symmetric(vertical: 3),
@@ -436,14 +429,32 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                                 backgroundColor: AppTheme.primary.withValues(
                                   alpha: 0.15,
                                 ),
-                                child: Text(
-                                  _getInitials(mName),
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.primary,
-                                  ),
-                                ),
+                                child: (memberAvatar != null && memberAvatar.isNotEmpty)
+                                    ? ClipOval(
+                                        child: Image.network(
+                                          memberAvatar,
+                                          fit: BoxFit.cover,
+                                          width: 28,
+                                          height: 28,
+                                          errorBuilder: (context, error, stackTrace) =>
+                                              Text(
+                                                _getInitials(mName),
+                                                style: const TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppTheme.primary,
+                                                ),
+                                              ),
+                                        ),
+                                      )
+                                    : Text(
+                                        _getInitials(mName),
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.primary,
+                                        ),
+                                      ),
                               ),
                               const SizedBox(width: 8),
 
@@ -498,30 +509,28 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                               ),
 
                               // Elo badge
-                              if (eloStr != null) ...[
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 1.5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF0F9FF),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                      color: const Color(0xFFBAE6FD),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    eloStr,
-                                    style: const TextStyle(
-                                      fontSize: 9.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF0284C7),
-                                    ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 1.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF0F9FF),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: const Color(0xFFBAE6FD),
                                   ),
                                 ),
-                                const SizedBox(width: 4),
-                              ],
+                                child: Text(
+                                  eloStr,
+                                  style: const TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF0284C7),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
 
                               // Tier badge
                               if (tierStr != null && tierStr.isNotEmpty) ...[

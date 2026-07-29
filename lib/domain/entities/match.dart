@@ -46,12 +46,14 @@ class MatchMemberInfo {
   final String fullName;
   final int? eloPoints;
   final String? tierName;
+  final String? avatarUrl;
 
   const MatchMemberInfo({
     this.userId,
     required this.fullName,
     this.eloPoints,
     this.tierName,
+    this.avatarUrl,
   });
 
   factory MatchMemberInfo.fromJson(Map<String, dynamic> json) {
@@ -73,6 +75,13 @@ class MatchMemberInfo {
           ? (json['eloPoints'] as num).toInt()
           : int.tryParse(json['eloPoints']?.toString() ?? ''),
       tierName: json['tierName']?.toString() ?? json['tier_name']?.toString(),
+      avatarUrl:
+          json['avatarUrl']?.toString() ??
+          json['avatar_url']?.toString() ??
+          json['photoUrl']?.toString() ??
+          json['photo_url']?.toString() ??
+          (profile is Map ? profile['avatarUrl']?.toString() ?? profile['avatar_url']?.toString() : null) ??
+          (user is Map ? user['avatarUrl']?.toString() ?? user['avatar_url']?.toString() : null),
     );
   }
 
@@ -82,6 +91,7 @@ class MatchMemberInfo {
       'fullName': fullName,
       if (eloPoints != null) 'eloPoints': eloPoints,
       if (tierName != null) 'tierName': tierName,
+      if (avatarUrl != null) 'avatarUrl': avatarUrl,
     };
   }
 }

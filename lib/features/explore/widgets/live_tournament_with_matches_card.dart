@@ -155,7 +155,7 @@ class _LiveTournamentWithMatchesCardState
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              widget.tournament.isRanked ? "Xếp hạng ELO" : "Giải đấu giao lưu",
+                              widget.tournament.isRanked ? "Giải xếp hạng" : "Giải đấu giao lưu",
                               style: TextStyle(
                                 fontSize: 11,
                                 color: colors.textMuted,
