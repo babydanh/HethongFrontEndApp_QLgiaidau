@@ -76,7 +76,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Splash screen & Login screen — luôn cho phép
       if (currentPath == '/' ||
           currentPath == '/login' ||
-          currentPath == '/login-loading') {
+          currentPath == '/login-loading' ||
+          currentPath == '/forgot-password' ||
+          currentPath == '/reset-password') {
         return null;
       }
 
@@ -91,6 +93,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (!isAuth &&
           currentPath != '/home' &&
           currentPath != '/login-loading' &&
+          currentPath != '/forgot-password' &&
+          currentPath != '/reset-password' &&
           currentPath != '/scan-qr' &&
           !currentPath.startsWith('/profile') &&
           !currentPath.startsWith('/intro') &&

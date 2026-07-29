@@ -512,14 +512,23 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilledButton.tonalIcon(
-                    onPressed: () => showOfficialScoreModal(
+                    onPressed: () {
+                      if (match.isScheduled) {
+                        showDialog<void>(
+                          context: context,
+                          builder: (_) => Dialog(child: _buildSetupState(match)),
+                        );
+                        return;
+                      }
+                      showOfficialScoreModal(
                       context,
                       tournamentId: widget.tournamentId,
                       matchId: widget.matchId,
                       match: match,
                       onRecordPenalty: () => _showFoulSelectionDialog(match),
                       onForceWin: () => _showForceWinDialog(match),
-                    ),
+                      );
+                    },
                     icon: const Icon(Icons.scoreboard_rounded, size: 18),
                     label: const Text('Tính điểm'),
                     style: FilledButton.styleFrom(

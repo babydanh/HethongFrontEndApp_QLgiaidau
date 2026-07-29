@@ -1,84 +1,531 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   bool _submitting = false;
   bool _sent = false;
+  String? _errorMessage;
+
+  // Cooldown Timer Logic (120s)
+  Timer? _cooldownTimer;
+  int _cooldownSeconds = 0;
 
   @override
-  void dispose() { _emailCtrl.dispose(); super.dispose(); }
+  void dispose() {
+    _emailCtrl.dispose();
+    _cooldownTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startCooldown(int seconds) {
+    _cooldownTimer?.cancel();
+    setState(() => _cooldownSeconds = seconds);
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_cooldownSeconds <= 1) {
+        timer.cancel();
+        setState(() => _cooldownSeconds = 0);
+      } else {
+        setState(() => _cooldownSeconds--);
+      }
+    });
+  }
 
   Future<void> _submit() async {
-    final email = _emailCtrl.text.trim();
-    if (email.isEmpty || !email.contains('@')) return;
-    setState(() => _submitting = true);
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _submitting = true;
+      _errorMessage = null;
+    });
+
+    final email = _emailCtrl.text.trim().toLowerCase();
+
     try {
-      await ref.read(dioClientProvider).dio.post('/auth/forgot-password', data: {'email': email});
-      setState(() => _sent = true);
+      final response = await ref.read(dioClientProvider).dio.post(
+        '/auth/forgot-password',
+        data: {'email': email},
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _sent = true;
+        _errorMessage = null;
+      });
+
+      _startCooldown(120);
+
+      final message =
+          response.data?['message']?.toString() ??
+          'Hướng dẫn đặt lại mật khẩu đã được gửi đến email!';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: context.colors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
-    } finally { if (mounted) setState(() => _submitting = false); }
+      if (!mounted) return;
+
+      String parsedMessage = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+      if (e is DioException && e.response?.data != null) {
+        final data = e.response?.data;
+        if (data is Map && data['message'] != null) {
+          parsedMessage = data['message'].toString();
+        } else {
+          parsedMessage = ErrorParser.parse(e);
+        }
+      } else {
+        parsedMessage = ErrorParser.parse(e);
+      }
+
+      setState(() {
+        _errorMessage = parsedMessage;
+      });
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Scaffold(
-      backgroundColor: context.colors.bgDark,
-      appBar: AppBar(title: const Text('Quên mật khẩu'), centerTitle: true),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: _sent ? _buildSent() : _buildForm(),
+      backgroundColor: colors.bgDark,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: colors.textPrimary,
+            size: 20,
+          ),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(
+          'Quên mật khẩu',
+          style: TextStyle(
+            color: colors.textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: _sent ? _buildSentView(colors) : _buildFormView(colors),
+        ),
       ),
     );
   }
 
-  Widget _buildSent() => Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-    Container(width: 80, height: 80, decoration: BoxDecoration(color: context.colors.success.withValues(alpha: 0.1), shape: BoxShape.circle),
-      child: const Icon(Icons.mark_email_read_rounded, size: 40, color: Colors.green)),
-    const SizedBox(height: 20),
-    const Text('Email đã được gửi!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-    const SizedBox(height: 8),
-    Text('Vui lòng kiểm tra hộp thư ${_emailCtrl.text.trim()} để đặt lại mật khẩu.', style: TextStyle(color: context.colors.textSecondary), textAlign: TextAlign.center),
-    const SizedBox(height: 24),
-    ElevatedButton(onPressed: () => context.go('/login'), child: const Text('Quay lại đăng nhập')),
-  ]));
+  // ═══════════════════════════════════════════════════════════
+  //  FORM VIEW — Nhập email gửi yêu cầu
+  // ═══════════════════════════════════════════════════════════
+  Widget _buildFormView(AppColors colors) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 12),
 
-  Widget _buildForm() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    const SizedBox(height: 40),
-    Container(width: 64, height: 64, decoration: BoxDecoration(color: context.colors.info.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
-      child: const Icon(Icons.lock_reset_rounded, size: 32, color: Colors.blue)),
-    const SizedBox(height: 20),
-    const Text('Quên mật khẩu?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-    const SizedBox(height: 8),
-    Text('Nhập email của bạn, chúng tôi sẽ gửi liên kết đặt lại mật khẩu.', style: TextStyle(color: context.colors.textSecondary, fontSize: 14)),
-    const SizedBox(height: 24),
-    TextField(
-      controller: _emailCtrl, keyboardType: TextInputType.emailAddress,
-      style: TextStyle(color: context.colors.textPrimary),
-      decoration: InputDecoration(
-        labelText: 'Email', hintText: 'your@email.com',
-        prefixIcon: Icon(Icons.email_outlined, color: context.colors.textMuted),
-        filled: true, fillColor: context.colors.bgDark,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          // Header Icon
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppTheme.primary.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Icon(
+              Icons.lock_reset_rounded,
+              size: 32,
+              color: AppTheme.primary,
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          Text(
+            'Quên mật khẩu?',
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              color: colors.textPrimary,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          Text(
+            'Nhập email của bạn, chúng tôi sẽ gửi liên kết đặt lại mật khẩu kèm thời gian hiệu lực 2 phút.',
+            style: TextStyle(
+              color: colors.textSecondary,
+              fontSize: 14,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Informational Tip Box
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: colors.info.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: colors.info.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  color: colors.info,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Đảm bảo đây là email bạn đã dùng để đăng ký tài khoản.',
+                    style: TextStyle(
+                      color: colors.info,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Error Alert Box
+          if (_errorMessage != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: colors.error.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: colors.error.withValues(alpha: 0.25),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.error_outline_rounded,
+                    color: colors.error,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _errorMessage!,
+                      style: TextStyle(
+                        color: colors.error,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ).animate().shake(duration: 400.ms),
+            const SizedBox(height: 20),
+          ],
+
+          // Email Input
+          Text(
+            'Địa chỉ Email',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _emailCtrl,
+            keyboardType: TextInputType.emailAddress,
+            style: TextStyle(color: colors.textPrimary, fontSize: 15),
+            decoration: InputDecoration(
+              hintText: 'yourname@example.com',
+              hintStyle: TextStyle(color: colors.textMuted, fontSize: 14.5),
+              prefixIcon: Icon(
+                Icons.email_outlined,
+                color: colors.textMuted,
+                size: 20,
+              ),
+              filled: true,
+              fillColor: colors.bgCard,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: AppTheme.primary, width: 1.5),
+              ),
+            ),
+            validator: (val) {
+              if (val == null || val.trim().isEmpty) {
+                return 'Vui lòng nhập địa chỉ email';
+              }
+              if (!RegExp(
+                r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$",
+              ).hasMatch(val.trim())) {
+                return 'Định dạng email không hợp lệ';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 28),
+
+          // Submit Button
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: _submitting ? null : _submit,
+              icon: _submitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.send_rounded, size: 20),
+              label: Text(
+                _submitting ? 'Đang gửi yêu cầu...' : 'GỬI YÊU CẦU',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Back to Login
+          Center(
+            child: TextButton.icon(
+              onPressed: () => context.pop(),
+              icon: const Icon(Icons.arrow_back_rounded, size: 18),
+              label: const Text(
+                'Quay lại Đăng nhập',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+        ],
       ),
-    ),
-    const SizedBox(height: 24),
-    SizedBox(width: double.infinity, height: 50, child: ElevatedButton.icon(
-      onPressed: _submitting ? null : _submit,
-      icon: _submitting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.send_rounded),
-      label: Text(_submitting ? 'Đang gửi...' : 'Gửi yêu cầu'),
-      style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-    )),
-  ]);
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  SENT VIEW — Thông báo thành công + Đếm ngược gửi lại
+  // ═══════════════════════════════════════════════════════════
+  Widget _buildSentView(AppColors colors) {
+    return Column(
+      children: [
+        const SizedBox(height: 24),
+
+        // Success Icon
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: colors.success.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: colors.success.withValues(alpha: 0.3),
+              width: 1.5,
+            ),
+          ),
+          child: Icon(
+            Icons.mark_email_read_rounded,
+            size: 44,
+            color: colors.success,
+          ),
+        ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+        const SizedBox(height: 24),
+
+        Text(
+          'Đã gửi yêu cầu thành công!',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: colors.textPrimary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 12),
+
+        RichText(
+          textAlign: TextAlign.center,
+          text: TextSpan(
+            style: TextStyle(
+              color: colors.textSecondary,
+              fontSize: 14,
+              height: 1.5,
+            ),
+            children: [
+              const TextSpan(
+                text:
+                    'Vui lòng kiểm tra hòm thư (kể cả mục Spam/Thư rác) của địa chỉ email:\n',
+              ),
+              TextSpan(
+                text: _emailCtrl.text.trim(),
+                style: TextStyle(
+                  color: colors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const TextSpan(
+                text: '\nđể nhận liên kết đặt lại mật khẩu.',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Timer Box
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.timer_outlined,
+                color: _cooldownSeconds > 0 ? colors.warning : colors.textMuted,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _cooldownSeconds > 0
+                    ? 'Gửi lại sau: ${_cooldownSeconds}s'
+                    : 'Bạn có thể yêu cầu gửi lại email mới.',
+                style: TextStyle(
+                  color:
+                      _cooldownSeconds > 0
+                          ? colors.textPrimary
+                          : colors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 28),
+
+        // Action Buttons
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: OutlinedButton.icon(
+            onPressed:
+                _cooldownSeconds > 0 || _submitting ? null : () => _submit(),
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: Text(
+              _cooldownSeconds > 0
+                  ? 'GỬI LẠI EMAIL (${_cooldownSeconds}s)'
+                  : 'GỬI LẠI EMAIL',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(
+                color:
+                    _cooldownSeconds > 0
+                        ? colors.border
+                        : AppTheme.primary,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: () => context.go('/login'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            child: const Text(
+              'QUAY LẠI ĐĂNG NHẬP',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

@@ -68,7 +68,7 @@ class AppNotification {
         return null;
 
       case 'CLUB_INVITE':
-        return null; // No dedicated route — let user tap manually
+        return communityId == null ? null : '/club/$communityId';
 
       case 'DOUBLES_TEAM_INVITE':
         if (tournamentId != null) return '/register/$tournamentId/doubles';
@@ -81,21 +81,72 @@ class AppNotification {
         return '/profile';
 
       default:
+        if (type.contains('MATCH') && matchId != null) {
+          return '/live/$matchId';
+        }
+        if (type.startsWith('TOURNAMENT_') && tournamentId != null) {
+          return '/intro/$tournamentId';
+        }
+        if ((type.startsWith('COMMUNITY_') || type.startsWith('CLUB_')) &&
+            communityId != null) {
+          return '/club/$communityId';
+        }
+
         // type chứa 'DOUBLES'
         if (type.contains('DOUBLES') && tournamentId != null) {
           return '/register/$tournamentId/doubles';
         }
         // type chứa 'GENERAL' hoặc unknown → dùng redirectUrl nếu có
         if (type.startsWith('GENERAL') || type.startsWith('SYSTEM')) {
-          if (redirectUrl != null && redirectUrl!.isNotEmpty) return redirectUrl;
+          return _normalizeRedirectUrl(redirectUrl);
           return null;
         }
         // REFEREE types are handled inline via isInvite/isRefereeInvite — no route
         if (isRefereeInvite) return null;
         // Fallback: dùng redirectUrl nếu có
-        if (redirectUrl != null && redirectUrl!.isNotEmpty) return redirectUrl;
-        return null;
+        return _normalizeRedirectUrl(redirectUrl);
     }
+  }
+
+  /// Converts web notification links to routes that exist in the mobile app.
+  String? _normalizeRedirectUrl(String? rawUrl) {
+    if (rawUrl == null || rawUrl.trim().isEmpty) return null;
+    final raw = rawUrl.trim();
+    final uri = Uri.tryParse(raw);
+    if (uri == null) return null;
+    final path = uri.path;
+    final segments = uri.pathSegments;
+
+    if (path == '/profile' || path == '/notifications') return path;
+    if (segments.length >= 2 && segments[0] == 'tournaments') {
+      return '/intro/${segments[1]}';
+    }
+    if (segments.length >= 2 && segments[0] == 'matches') {
+      return '/live/${segments[1]}';
+    }
+    if (segments.length >= 2 &&
+        (segments[0] == 'communities' || segments[0] == 'clubs')) {
+      return '/club/${segments[1]}';
+    }
+    if (path == '/reset-password') {
+      final token = uri.queryParameters['token'];
+      return token == null || token.isEmpty
+          ? null
+          : '/reset-password?token=${Uri.encodeComponent(token)}';
+    }
+    if (path.startsWith('/live/') || path.startsWith('/intro/') ||
+        path.startsWith('/club/') || path.startsWith('/register/')) {
+      return raw;
+    }
+    return null;
+  }
+
+  String? get communityId {
+    if (data == null) return null;
+    final value = data!['communityId'] ?? data!['clubId'];
+    if (value is String && value.isNotEmpty) return value;
+    if (value is num) return value.toString();
+    return null;
   }
 
   /// Kiểm tra nếu là lời mời trọng tài
