@@ -68,7 +68,7 @@ class AppNotification {
         return null;
 
       case 'CLUB_INVITE':
-        return '/communities';
+        return null; // No dedicated route — let user tap manually
 
       case 'DOUBLES_TEAM_INVITE':
         if (tournamentId != null) return '/register/$tournamentId/doubles';
