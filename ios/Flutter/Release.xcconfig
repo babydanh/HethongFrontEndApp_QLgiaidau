@@ -1,1 +1,2 @@
 #include "Generated.xcconfig"
+REVERSED_CLIENT_ID=com.googleusercontent.apps.YOUR_IOS_CLIENT_ID
