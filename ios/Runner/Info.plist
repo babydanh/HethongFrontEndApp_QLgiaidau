@@ -45,6 +45,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>VNSport cần camera để quét mã QR và chụp ảnh hồ sơ.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>VNSport cần quyền chọn ảnh để cập nhật ảnh hồ sơ và câu lạc bộ.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>VNSport cần quyền lưu ảnh khi bạn yêu cầu tải ảnh về thiết bị.</string>
 
 	<!-- Google Sign-In URL Scheme -->
 	<key>CFBundleURLTypes</key>
