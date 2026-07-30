@@ -161,26 +161,13 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          _MetaChip(
-                            icon: Icons.calendar_today_rounded,
-                            label: _dateRange(),
-                          ),
-                          _MetaChip(
-                            icon: Icons.people_alt_rounded,
-                            label: '${tournament.maxTeams} đội',
-                          ),
-                          if ((tournament.locationAddress ?? '').isNotEmpty)
-                            _MetaChip(
-                              icon: Icons.location_on_rounded,
-                              label: tournament.locationAddress!,
-                            ),
-                        ],
-                      ),
+                      if ((tournament.locationAddress ?? '').isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        _MetaChip(
+                          icon: Icons.location_on_rounded,
+                          label: tournament.locationAddress!,
+                        ),
+                      ],
                     ],
                   ),
                 ),
