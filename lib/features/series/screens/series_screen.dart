@@ -116,7 +116,11 @@ class SeriesScreen extends ConsumerWidget {
         boxShadow: isActive ? [BoxShadow(color: context.colors.error.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4))] : null,
       ),
       child: InkWell(
-        onTap: () {/* TODO: series detail */},
+        onTap: series.slug.isEmpty
+            ? null
+            : () => context.push(
+                  '/series/${Uri.encodeComponent(series.slug)}',
+                ),
         borderRadius: BorderRadius.circular(12),
         child: Row(children: [
           Container(

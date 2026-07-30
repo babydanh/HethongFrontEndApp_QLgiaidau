@@ -2095,40 +2095,40 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
         if (images.isNotEmpty) {
           imageWidgets.add(
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.only(top: 8),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                ),
-                itemCount: images.length,
-                itemBuilder: (context, i) => GestureDetector(
-                  onTap: () => _showImagePreview(images[i].imageUrl),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      images[i].imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: colors.bgSurface,
-                        child: Icon(
-                          Icons.broken_image_rounded,
-                          color: colors.textMuted,
-                          size: 28,
-                        ),
+            GridView.builder(
+              padding: const EdgeInsets.only(top: 8),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+              ),
+              itemCount: images.length,
+              itemBuilder: (context, i) => GestureDetector(
+                onTap: () => _showImagePreview(images[i].imageUrl),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(
+                    images[i].imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: colors.bgSurface,
+                      child: Icon(
+                        Icons.broken_image_rounded,
+                        color: colors.textMuted,
+                        size: 28,
                       ),
-                      loadingBuilder: (context, child, progress) {
-                        if (progress == null) return child;
-                        return Container(
-                          color: colors.bgSurface,
-                          child: const Center(
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        );
-                      },
                     ),
+                    loadingBuilder: (context, child, progress) {
+                      if (progress == null) return child;
+                      return Container(
+                        color: colors.bgSurface,
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

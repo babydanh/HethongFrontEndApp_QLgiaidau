@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class OrganizerLiteScreen extends ConsumerStatefulWidget {
   const OrganizerLiteScreen({super.key, required this.tournamentId});
@@ -974,7 +975,23 @@ class _FinanceTab extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () async {
+                    final uri = Uri.parse(
+                      'https://giaidau.vnvar.com/lite/tournaments/'
+                      '${Uri.encodeComponent(tournament.id.toString())}/manage',
+                    );
+                    final opened = await launchUrl(
+                      uri,
+                      mode: LaunchMode.externalApplication,
+                    );
+                    if (!opened && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Không thể mở trang quản lý trên web'),
+                        ),
+                      );
+                    }
+                  },
                   icon: const Icon(Icons.open_in_new_rounded, size: 16),
                   label: const Text('Xem trên web'),
                   style: OutlinedButton.styleFrom(
