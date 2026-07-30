@@ -47,7 +47,7 @@ class VnsportHeader extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'WSPORT',
+                      'VNSPORT',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w900,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
@@ -152,7 +152,7 @@ void showOfficialScoreModal(
                         ),
                         if (config.mustWinByTwo) ...[
                           const SizedBox(width: 6),
-                          const _RuleChip(label: 'Thắng cách 2'),
+                          const _RuleChip(label: l10n.matchWinByTwo),
                         ],
                         const SizedBox(width: 6),
                         _RuleChip(
@@ -305,7 +305,7 @@ void showOfficialScoreModal(
                                 label: Text(
                                   state.overrideEnabled
                                       ? 'Ngoại lệ: BẬT'
-                                      : 'Ngoại lệ',
+                                      : l10n.matchOverrideLabel,
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
@@ -386,7 +386,7 @@ void showOfficialScoreModal(
                                     size: 15,
                                   ),
                                   label: const Text(
-                                    'Ghi phạt',
+                                    l10n.matchRecordPenalty,
                                     style: TextStyle(fontSize: 11),
                                   ),
                                   style: OutlinedButton.styleFrom(
@@ -407,7 +407,7 @@ void showOfficialScoreModal(
                                     size: 15,
                                   ),
                                   label: const Text(
-                                    'Xử thắng',
+                                    l10n.matchForceWin,
                                     style: TextStyle(fontSize: 11),
                                   ),
                                   style: FilledButton.styleFrom(
@@ -431,18 +431,18 @@ void showOfficialScoreModal(
                                           final confirmed = await showDialog<bool>(
                                             context: ctx,
                                             builder: (dialogContext) => AlertDialog(
-                                              title: const Text('Chốt set'),
+                                              title: const Text(l10n.matchFinishSet),
                                               content: Text(message),
                                               actions: [
                                                 TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Hủy')),
-                                                FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Chốt set')),
+                                                FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text(l10n.matchFinishSet)),
                                               ],
                                             ),
                                           );
                                           if (confirmed == true) await n.finishSet();
                                         },
                                   icon: const Icon(Icons.flag_rounded, size: 15),
-                                  label: const Text('CHỐT SET', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  label: const Text(l10n.matchFinishSet, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                 ),
                               ],
                               if (state.isMatchComplete || state.overrideEnabled) ...[
@@ -473,8 +473,8 @@ void showOfficialScoreModal(
                                     state.isSubmitting
                                         ? 'Đang lưu...'
                                         : (state.isMatchComplete
-                                            ? 'CHỐT TRẬN ĐẤU'
-                                            : 'Chốt kết quả'),
+                                            ? l10n.matchSaveMatch
+                                            : l10n.matchSaveResult),
                                     style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
@@ -528,16 +528,16 @@ String _sportLabel(SportRuleKind kind) {
     case SportRuleKind.pickleball:
       return 'Pickleball';
     case SportRuleKind.tableTennis:
-      return 'Bóng bàn';
+      return l10n.sportTableTennis;
     case SportRuleKind.badminton:
-      return 'Cầu lông';
+      return l10n.sportBadminton;
   }
 }
 
 String _scoringModelLabel(SportScoringModel model) {
   switch (model) {
     case SportScoringModel.tennisSet:
-      return 'Chấm theo game tennis';
+      return l10n.tennisFormatSets;
     case SportScoringModel.pickleballSideOut:
       return 'Pickleball side-out';
     case SportScoringModel.rallyPointSet:
@@ -552,6 +552,7 @@ class ScoreWarningBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = context.colors;
     return Container(
       width: double.infinity,
@@ -608,3 +609,4 @@ class _RuleChip extends StatelessWidget {
     );
   }
 }
+

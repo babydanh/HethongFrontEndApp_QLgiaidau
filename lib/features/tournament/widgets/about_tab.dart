@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/widgets/countdown_timer.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class AboutTab extends StatelessWidget {
   final Tournament tournament;
@@ -24,8 +25,9 @@ class AboutTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final resolvedAvatar = resolveImageUrl(tournament.creatorAvatarUrl);
-    final creatorName = tournament.creatorFullName ?? "Ban Tổ Chức";
+    final creatorName = tournament.creatorFullName ?? l10n.organizerName;
 
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 100),
@@ -43,7 +45,7 @@ class AboutTab extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ── BTC Section ──
-                _buildSectionHeader(colors, "BAN TỔ CHỨC"),
+                _buildSectionHeader(colors, l10n.sectionOrganizer),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -101,7 +103,7 @@ class AboutTab extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      "Mới Tạo",
+                                      l10n.newlyCreated,
                                       style: TextStyle(
                                         fontSize: 9,
                                         fontWeight: FontWeight.bold,
@@ -115,7 +117,7 @@ class AboutTab extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            "Người sáng lập giải đấu",
+                            l10n.tournamentFounder,
                             style: TextStyle(fontSize: 13, color: colors.textMuted),
                           ),
                         ],
@@ -129,7 +131,7 @@ class AboutTab extends StatelessWidget {
 
                 // ── Description Section ──
                 if (tournament.description.isNotEmpty) ...[
-                  _buildSectionHeader(colors, "GIỚI THIỆU GIẢI ĐẤU"),
+                  _buildSectionHeader(colors, l10n.sectionAboutTournament),
                   const SizedBox(height: 12),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 200),
@@ -163,23 +165,23 @@ class AboutTab extends StatelessWidget {
                 ],
 
                 // ── Tournament Info Section ──
-                _buildSectionHeader(colors, "THÔNG TIN GIẢI ĐẤU"),
+                _buildSectionHeader(colors, l10n.sectionTournamentInfo),
                 const SizedBox(height: 12),
                 _buildInfoRow(
-                  label: 'Môn thể thao',
+                  label: l10n.sportLabel,
                   value: AppConstants.sportNames[tournament.sport] ?? tournament.sport,
                   colors: colors,
                 ),
                 const SizedBox(height: 12),
                 _buildInfoRow(
-                  label: 'Thể thức',
+                  label: l10n.formatLabel,
                   value: AppConstants.formatNames[tournament.format] ??
                       tournament.format.replaceAll('_', ' '),
                   colors: colors,
                 ),
                 const SizedBox(height: 12),
                 _buildInfoRow(
-                  label: 'Hình thức thi đấu',
+                  label: l10n.bracketTypeLabel,
                   value: AppConstants.bracketTypeNames[tournament.bracketType] ??
                       tournament.bracketType,
                   colors: colors,
@@ -187,8 +189,8 @@ class AboutTab extends StatelessWidget {
                 if (tournament.bracketType != AppConstants.bracketRoundRobin) ...[
                   const SizedBox(height: 12),
                   _buildInfoRow(
-                    label: 'Số đội tối đa',
-                    value: '${tournament.maxTeams} đội',
+                    label: l10n.maxTeamsLabel,
+                    value: '${tournament.maxTeams} ${l10n.teamsUnit}',
                     colors: colors,
                   ),
                 ],
@@ -201,7 +203,7 @@ class AboutTab extends StatelessWidget {
                     tournament.prizeDescription!.trim().isNotEmpty) ...[
                   _buildSectionHeader(
                     colors,
-                    "GIẢI THƯỞNG",
+                    l10n.sectionPrize,
                     accentColor: const Color(0xFFF59E0B),
                   ),
                   const SizedBox(height: 12),
@@ -219,7 +221,7 @@ class AboutTab extends StatelessWidget {
                 ],
 
                 // ── Contact Section ──
-                _buildSectionHeader(colors, "THÔNG TIN LIÊN HỆ"),
+                _buildSectionHeader(colors, l10n.sectionContact),
                 const SizedBox(height: 12),
                 _buildContactCard(tournament.contactInfo, colors),
               ],
@@ -327,7 +329,7 @@ class AboutTab extends StatelessWidget {
       Map<String, dynamic>? contactInfo, AppColorsExtension colors) {
     if (contactInfo == null || contactInfo.isEmpty) {
       return Text(
-        "Chưa cập nhật",
+        l10n.notUpdated,
         style: TextStyle(fontSize: 13, color: colors.textSecondary),
       );
     }
@@ -394,7 +396,7 @@ class AboutTab extends StatelessWidget {
 
     if (items.isEmpty) {
       return Text(
-        "Chưa cập nhật",
+        l10n.notUpdated,
         style: TextStyle(fontSize: 13, color: colors.textSecondary),
       );
     }
@@ -404,6 +406,7 @@ class AboutTab extends StatelessWidget {
 
   Widget _buildRegistrationInfoCard(
       BuildContext context, Tournament tournament) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = Theme.of(context).extension<AppColorsExtension>()!;
     final slotsFilled = tournament.maxTeams > 0
         ? tournament.divisions
@@ -424,25 +427,25 @@ class AboutTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader(colors, "THÔNG TIN ĐĂNG KÝ"),
+          _buildSectionHeader(colors, l10n.sectionRegistration),
           const SizedBox(height: 16),
           // Entry fee
           if (tournament.entryFee != null && tournament.entryFee! > 0) ...[
-            _buildRegInfoRow('Phí tham gia',
-                '${tournament.entryFee!.toStringAsFixed(0)} VNĐ', colors),
+            _buildRegInfoRow(l10n.entryFeeLabel,
+                '${tournament.entryFee!.toStringAsFixed(0)} ${l10n.vnd}', colors),
             const SizedBox(height: 12),
           ] else if (tournament.entryFee != null && tournament.entryFee! == 0) ...[
-            _buildRegInfoRow('Phí tham gia', 'Miễn phí', colors),
+            _buildRegInfoRow(l10n.entryFeeLabel, l10n.freePrice, colors),
             const SizedBox(height: 12),
           ],
           // Max participants
-          _buildRegInfoRow('Số lượng tối đa', '${tournament.maxTeams} đội',
+          _buildRegInfoRow(l10n.maxQuantityLabel, '${tournament.maxTeams} ${l10n.teamsUnit}',
               colors),
           const SizedBox(height: 12),
           // Registration period
           if (tournament.registrationStartDate != null) ...[
             _buildRegInfoRow(
-              'Mở đăng ký',
+              l10n.registrationOpen,
               _formatDate(tournament.registrationStartDate!),
               colors,
             ),
@@ -450,7 +453,7 @@ class AboutTab extends StatelessWidget {
           ],
           if (tournament.registrationEndDate != null) ...[
             _buildRegInfoRow(
-              'Đóng đăng ký',
+              l10n.registrationClose,
               _formatDate(tournament.registrationEndDate!),
               colors,
             ),
@@ -494,8 +497,8 @@ class AboutTab extends StatelessWidget {
                   ),
                   onPressed: () =>
                       context.push('/register/${tournament.id}'),
-                  child: const Text(
-                    "Đăng ký",
+                  child: Text(
+                    l10n.register,
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                 ),
@@ -518,7 +521,7 @@ class AboutTab extends StatelessWidget {
                       size: 18, color: colors.textMuted),
                   const SizedBox(width: 8),
                   Text(
-                    'Đã kết thúc đăng ký',
+                    l10n.registrationEnded,
                     style: TextStyle(fontSize: 14, color: colors.textMuted),
                   ),
                 ],
@@ -584,7 +587,7 @@ class AboutTab extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             Text(
-              'Đã đăng ký: $filled / $max',
+              '${l10n.registeredSlots} $filled / $max',
               style: TextStyle(fontSize: 12, color: colors.textSecondary),
             ),
             const Spacer(),

@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 final myPaymentsProvider = FutureProvider<List<PaymentModel>>((ref) async {
   return ref.watch(paymentRepositoryProvider).getMyPayments();
@@ -29,6 +30,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   Widget build(BuildContext context) {
     final paymentsAsync = ref.watch(myPaymentsProvider);
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: colors.bgDark,
@@ -47,7 +49,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
           },
         ),
         title: Text(
-          'Lịch sử thanh toán',
+          l10n.payments_title,
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.w900,
@@ -57,13 +59,13 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.refresh_rounded, color: colors.textSecondary),
-            tooltip: 'Làm mới',
+            tooltip: l10n.payments_refreshTooltip,
             onPressed: () => ref.refresh(myPaymentsProvider),
           ),
         ],
       ),
       body: paymentsAsync.when(
-        data: (payments) => _buildContent(context, ref, payments),
+        data: (payments) => _buildContent(context, ref, payments, l10n),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Column(
@@ -72,7 +74,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               Icon(Icons.error_outline_rounded, size: 48, color: colors.error),
               const SizedBox(height: 12),
               Text(
-                'Lỗi tải lịch sử thanh toán: $e',
+                '${l10n.payments_loadError} $e',
                 style: TextStyle(color: colors.error, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
@@ -80,7 +82,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               ElevatedButton.icon(
                 onPressed: () => ref.refresh(myPaymentsProvider),
                 icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('Thử lại'),
+                label: Text(l10n.infoRetry),
               ),
             ],
           ),
@@ -93,6 +95,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     BuildContext context,
     WidgetRef ref,
     List<PaymentModel> payments,
+    AppLocalizations l10n,
   ) {
     final colors = context.colors;
     final pending = payments.where((p) => p.isPending).toList();
@@ -154,7 +157,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Tổng giao dịch',
+                          l10n.payments_totalTransactions,
                           style: TextStyle(
                             color: colors.textMuted,
                             fontSize: 12,
@@ -162,7 +165,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${payments.length} giao dịch',
+                          l10n.payments_transactionCount(payments.length),
                           style: TextStyle(
                             color: colors.textPrimary,
                             fontSize: 20,
@@ -197,7 +200,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            '${pending.length} chờ',
+                            l10n.payments_pendingCount(pending.length),
                             style: const TextStyle(
                               color: Color(0xFFF59E0B),
                               fontSize: 12,
@@ -213,7 +216,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
           ),
 
           // Filter chips
-          SliverToBoxAdapter(child: _buildFilterChips(context)),
+          SliverToBoxAdapter(child: _buildFilterChips(context, l10n)),
 
           if (filteredPayments.isEmpty)
             SliverFillRemaining(
@@ -241,8 +244,8 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       const SizedBox(height: 16),
                       Text(
                         _filter == 'all'
-                            ? 'Chưa có giao dịch nào'
-                            : 'Không có giao dịch phù hợp',
+                            ? l10n.payments_emptyAll
+                            : l10n.payments_emptyFiltered,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -251,7 +254,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Các khoản thanh toán lệ phí sẽ xuất hiện tại đây',
+                        l10n.payments_emptySubtitle,
                         style: TextStyle(fontSize: 13, color: colors.textMuted),
                       ),
                     ],
@@ -265,7 +268,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) =>
-                      _buildPaymentCard(context, filteredPayments[index]),
+                      _buildPaymentCard(context, filteredPayments[index], l10n),
                   childCount: filteredPayments.length,
                 ),
               ),
@@ -277,13 +280,13 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     );
   }
 
-  Widget _buildFilterChips(BuildContext context) {
+  Widget _buildFilterChips(BuildContext context, AppLocalizations l10n) {
     final colors = context.colors;
     final filters = [
-      ('all', 'Tất cả', AppTheme.primary),
-      ('completed', 'Thành công', const Color(0xFF10B981)),
-      ('pending', 'Đang xử lý', const Color(0xFFF59E0B)),
-      ('failed', 'Thất bại', const Color(0xFFEF4444)),
+      ('all', l10n.payments_filterAll, AppTheme.primary),
+      ('completed', l10n.payments_filterCompleted, const Color(0xFF10B981)),
+      ('pending', l10n.payments_filterPending, const Color(0xFFF59E0B)),
+      ('failed', l10n.payments_filterFailed, const Color(0xFFEF4444)),
     ];
 
     return Container(
@@ -334,7 +337,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     );
   }
 
-  Widget _buildPaymentCard(BuildContext context, PaymentModel payment) {
+  Widget _buildPaymentCard(BuildContext context, PaymentModel payment, AppLocalizations l10n) {
     final colors = context.colors;
     final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(payment.createdAt);
     Color statusColor;
@@ -372,7 +375,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => _showPaymentDetailsSheet(context, payment),
+          onTap: () => _showPaymentDetailsSheet(context, payment, l10n),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -395,7 +398,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            payment.tournamentName ?? 'Thanh toán giải đấu',
+                            payment.tournamentName ?? l10n.payments_defaultTournamentName,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
@@ -475,7 +478,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            'Mã GD: ${payment.transactionReference}',
+                            l10n.payments_transactionRef(payment.transactionReference!),
                             style: TextStyle(
                               fontSize: 11,
                               fontFamily: 'monospace',
@@ -485,7 +488,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         ),
                         if (payment.isRetryable)
                           Text(
-                            'Ấn để thanh toán lại ›',
+                            l10n.payments_retryCta,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
@@ -510,7 +513,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     ).animate().fadeIn(duration: 250.ms);
   }
 
-  void _showPaymentDetailsSheet(BuildContext context, PaymentModel payment) {
+  void _showPaymentDetailsSheet(BuildContext context, PaymentModel payment, AppLocalizations l10n) {
     final colors = context.colors;
     final fmt = NumberFormat('#,###', 'vi_VN');
     final dateStr = DateFormat('dd/MM/yyyy HH:mm:ss').format(payment.createdAt);
@@ -616,14 +619,14 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   // Details rows
                   _buildDetailRow(
                     colors,
-                    'Giải đấu',
-                    payment.tournamentName ?? 'Chưa xác định',
+                    l10n.payments_detailTournament,
+                    payment.tournamentName ?? l10n.payments_detailUnknown,
                   ),
                   if (payment.teamName != null && payment.teamName!.isNotEmpty)
-                    _buildDetailRow(colors, 'Tên VĐV / Đội', payment.teamName!),
+                    _buildDetailRow(colors, l10n.payments_detailTeamName, payment.teamName!),
                   _buildDetailRow(
                     colors,
-                    'Kênh thanh toán',
+                    l10n.payments_detailGateway,
                     payment.gatewayLabel,
                   ),
                   if (payment.transactionReference != null &&
@@ -632,7 +635,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Mã giao dịch',
+                          l10n.payments_detailTransactionId,
                           style: TextStyle(
                             fontSize: 13,
                             color: colors.textMuted,
@@ -658,9 +661,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                                   ),
                                 );
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Đã sao chép mã giao dịch'),
-                                    duration: Duration(seconds: 2),
+                                  SnackBar(
+                                    content: Text(l10n.payments_copied),
+                                    duration: const Duration(seconds: 2),
                                   ),
                                 );
                               },
@@ -702,8 +705,8 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           Expanded(
                             child: Text(
                               payment.isPending
-                                  ? 'Giao dịch chưa hoàn tất thanh toán. Bạn có thể bấm "Thanh toán ngay" để tiếp tục.'
-                                  : 'Giao dịch bị thất bại. Bạn có thể tiến hành thanh toán lại.',
+                                  ? l10n.payments_retryPendingInfo
+                                  : l10n.payments_retryFailedInfo,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: colors.textPrimary,
@@ -724,7 +727,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                               ref.invalidate(myPaymentsProvider);
                             },
                             icon: const Icon(Icons.refresh_rounded, size: 18),
-                            label: const Text('Kiểm tra lại'),
+                            label: Text(l10n.payments_refreshStatus),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
@@ -756,8 +759,8 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                                 : const Icon(Icons.payment_rounded, size: 18),
                             label: Text(
                               _isProcessingLink
-                                  ? 'Đang xử lý...'
-                                  : 'Thanh toán ngay',
+                                  ? l10n.payments_processing
+                                  : l10n.payments_payNow,
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -794,7 +797,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'Đã xác nhận thanh toán thành công. Vé tham gia giải đấu của bạn đã được kích hoạt!',
+                              l10n.payments_successInfo,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: colors.textPrimary,
@@ -818,7 +821,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        child: const Text('Đóng'),
+                        child: Text(l10n.payments_close),
                       ),
                     ),
                   ],
@@ -866,6 +869,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     PaymentModel payment,
     StateSetter setModalState,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     setModalState(() => _isProcessingLink = true);
     try {
       if (payment.tournamentId.isNotEmpty && payment.participantId.isNotEmpty) {
@@ -939,7 +943,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
             content: Text(
               ErrorParser.parse(
                 e,
-                'Không thể tạo liên kết thanh toán. Vui lòng thử lại.',
+                l10n.payments_createLinkError,
               ),
             ),
           ),

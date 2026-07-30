@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
@@ -124,6 +125,7 @@ class FloatingBottomNav extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final isLoggedIn = ref.watch(authProvider).isAuthenticated;
     final userProfileAsync = ref.watch(userProfileProvider);
     final avatarUrl = userProfileAsync.asData?.value.avatarUrl;
@@ -159,11 +161,11 @@ class FloatingBottomNav extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildNavItem(0, Icons.explore_outlined, Icons.explore_rounded, "Khám phá", activeColor, inactiveColor),
-                    _buildNavItem(1, Icons.emoji_events_outlined, Icons.emoji_events_rounded, "Giải đấu", activeColor, inactiveColor),
+                    _buildNavItem(0, Icons.explore_outlined, Icons.explore_rounded, l10n.navExplore, activeColor, inactiveColor),
+                    _buildNavItem(1, Icons.emoji_events_outlined, Icons.emoji_events_rounded, l10n.navTournaments, activeColor, inactiveColor),
                     const SizedBox(width: 52),
-                    _buildNavItem(3, Icons.people_outline_rounded, Icons.people_rounded, "CLB", activeColor, inactiveColor),
-                    _buildNavItem(4, Icons.leaderboard_outlined, Icons.leaderboard_rounded, "Xếp hạng", activeColor, inactiveColor),
+                    _buildNavItem(3, Icons.people_outline_rounded, Icons.people_rounded, l10n.navClubs, activeColor, inactiveColor),
+                    _buildNavItem(4, Icons.leaderboard_outlined, Icons.leaderboard_rounded, l10n.navRankings, activeColor, inactiveColor),
                   ],
                 ),
               ),

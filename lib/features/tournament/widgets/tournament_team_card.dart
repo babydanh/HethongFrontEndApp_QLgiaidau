@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentTeamCard extends StatefulWidget {
   final Team team;
@@ -27,6 +28,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final team = widget.team;
 
     // Check if Doubles
@@ -55,13 +57,13 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
             !team.group.toLowerCase().startsWith('bảng'))
         ? team.group
         : null;
-    final seedLabel = team.seed > 0 ? 'Hạt giống #${team.seed}' : null;
+    final seedLabel = team.seed > 0 ? '${l10n.seedLabel} #${team.seed}' : null;
 
     if (!isDoubles) {
       // ── SINGLES (ĐƠN) LAYOUT: DIRECT PROFILE TAP, NO EXPANSION ──
       final singleInfo = memberInfos.isNotEmpty ? memberInfos.first : null;
       final eloVal = singleInfo?.eloPoints ?? team.eloPoints ?? 1200;
-      final eloStr = 'Elo: $eloVal';
+      final eloStr = '${l10n.eloLabel} $eloVal';
 
       return Container(
         margin: const EdgeInsets.symmetric(vertical: 3),
@@ -341,8 +343,8 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                           const SizedBox(height: 2),
                           Text(
                             _isExpanded
-                                ? 'Danh sách 2 vận động viên:'
-                                : 'VĐV: ${memberNames.join(", ")}',
+                                ? l10n.doublesMemberList
+                                : '${l10n.memberNamesLabel} ${memberNames.join(", ")}',
                             style: TextStyle(
                               fontSize: 11,
                               color: colors.textSecondary,
@@ -394,7 +396,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                       ? memberInfos[idx]
                       : null;
                   final eloVal = mInfo?.eloPoints ?? team.eloPoints ?? 1200;
-                  final eloStr = 'Elo: $eloVal';
+                  final eloStr = '${l10n.eloLabel} $eloVal';
                   final tierStr = mInfo?.tierName;
                   final isCaptain = idx == 0;
                   final memberAvatar = mInfo?.avatarUrl;
@@ -493,8 +495,8 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                                       ),
                                       child: Text(
                                         isCaptain
-                                            ? 'Trưởng nhóm'
-                                            : 'Thành viên',
+                                            ? l10n.captainRole
+                                            : l10n.memberRole,
                                         style: TextStyle(
                                           fontSize: 9,
                                           fontWeight: FontWeight.bold,

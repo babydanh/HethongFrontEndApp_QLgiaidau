@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart';
 
 import 'package:app_quanly_giaidau/data/models/token_model.dart';
 import 'package:app_quanly_giaidau/providers/token_management_notifier.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TokenManagementScreen extends ConsumerWidget {
   final String tournamentId;
@@ -22,6 +23,7 @@ class TokenManagementScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final tokensState = ref.watch(tokenManagementProvider(tournamentId));
 
     return Scaffold(
@@ -33,7 +35,7 @@ class TokenManagementScreen extends ConsumerWidget {
                 icon: const Icon(Icons.arrow_back_rounded),
                 onPressed: () => context.go('/admin/tournament/$tournamentId'),
               ),
-        title: const Text('Quản lý Mã Truy Cập'),
+        title: Text(l10n.tokenManagement),
       ),
       body: tokensState.when(
         data: (tokens) {
@@ -58,7 +60,7 @@ class TokenManagementScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
           child: Text(
-            'Đã xảy ra lỗi: $error',
+            '${l10n.tokenError}: $error',
             style: TextStyle(color: context.colors.error),
           ),
         ),
@@ -79,6 +81,7 @@ class _TokenCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     // Theo dõi số người dùng online thông qua Provider (tối ưu hơn StreamBuilder)
     final onlineCountAsync = ref.watch(
       presenceCountProvider((tournamentId: tournamentId, role: token.role)),
@@ -126,7 +129,7 @@ class _TokenCard extends ConsumerWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            '$count online',
+                            '$count ${l10n.online}',
                             style: TextStyle(
                               color: count > 0
                                   ? context.colors.success
@@ -180,7 +183,7 @@ class _TokenCard extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _regenerateToken(context, ref),
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Làm mới mã'),
+                    label: Text(l10n.refreshToken),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: context.colors.error,
                       side: BorderSide(color: context.colors.error),
@@ -198,12 +201,13 @@ class _TokenCard extends ConsumerWidget {
 
 
   Future<void> _regenerateToken(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showConfirmDialog(
       context: context,
-      title: 'Xác nhận làm mới',
-      content: 'Bạn có chắc muốn làm mới mã ${token.role.toRoleDisplayName()}?\n\n'
-          'Những người đang truy cập bằng mã cũ sẽ bị đăng xuất khỏi giải ngay lập tức!',
-      confirmText: 'Đồng ý Làm mới',
+      title: l10n.confirmRefreshTitle,
+      content: '${l10n.confirmRefreshContent} ${token.role.toRoleDisplayName()}?\n\n'
+          '${l10n.confirmRefreshNote}',
+      confirmText: l10n.confirmRefreshButton,
     );
 
     if (confirm == true) {
@@ -213,18 +217,19 @@ class _TokenCard extends ConsumerWidget {
 
       if (success && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã tạo mã mới thành công!')),
+          SnackBar(content: Text(l10n.tokenRefreshed)),
         );
       }
     }
   }
 
   void _showQrDialog(BuildContext context, String code) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
-          'QR Code - ${token.role.toRoleDisplayName()}',
+          '${l10n.qrCodeTitle} ${token.role.toRoleDisplayName()}',
           textAlign: TextAlign.center,
         ),
         content: Column(
@@ -242,12 +247,12 @@ class _TokenCard extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Mã: $code',
+              '${l10n.qrCodeValue} $code',
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              'Quét mã này để truy cập trực tiếp vào giải đấu.',
+              l10n.qrCodeInstruction,
               textAlign: TextAlign.center,
               style: TextStyle(color: context.colors.textSecondary),
             ),
@@ -256,7 +261,7 @@ class _TokenCard extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Đóng'),
+            child: Text(l10n.close),
           ),
         ],
       ),

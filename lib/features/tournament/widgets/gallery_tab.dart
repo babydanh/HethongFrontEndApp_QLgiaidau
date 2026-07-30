@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class GalleryTab extends StatelessWidget {
   final List<String> galleryImages;
@@ -16,6 +17,7 @@ class GalleryTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     if (galleryImages.isEmpty) {
       return Center(
@@ -25,7 +27,7 @@ class GalleryTab extends StatelessWidget {
             Icon(Icons.photo_library_outlined, size: 64, color: colors.textMuted.withValues(alpha: 0.4)),
             const SizedBox(height: 16),
             Text(
-              'Chưa có ảnh gallery',
+              l10n.noGalleryImages,
               style: TextStyle(fontSize: 15, color: colors.textSecondary),
             ),
           ],

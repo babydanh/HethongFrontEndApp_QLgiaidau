@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -76,9 +77,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
       _startCooldown(120);
 
+      final l10n = AppLocalizations.of(context)!;
       final message =
           response.data?['message']?.toString() ??
-          'Hướng dẫn đặt lại mật khẩu đã được gửi đến email!';
+          l10n.forgotPassword_sentSuccessMessage;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
@@ -89,7 +91,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      String parsedMessage = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+      final l10n = AppLocalizations.of(context)!;
+      String parsedMessage = l10n.forgotPassword_errorGeneric;
       if (e is DioException && e.response?.data != null) {
         final data = e.response?.data;
         if (data is Map && data['message'] != null) {
@@ -112,6 +115,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: colors.bgDark,
@@ -127,7 +131,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Quên mật khẩu',
+          l10n.forgotPassword_title,
           style: TextStyle(
             color: colors.textPrimary,
             fontSize: 18,
@@ -140,7 +144,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: _sent ? _buildSentView(colors) : _buildFormView(colors),
+          child: _sent ? _buildSentView(colors, l10n) : _buildFormView(colors, l10n),
         ),
       ),
     );
@@ -149,7 +153,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   // ═══════════════════════════════════════════════════════════
   //  FORM VIEW — Nhập email gửi yêu cầu
   // ═══════════════════════════════════════════════════════════
-  Widget _buildFormView(AppColorsExtension colors) {
+  Widget _buildFormView(AppColorsExtension colors, AppLocalizations l10n) {
     return Form(
       key: _formKey,
       child: Column(
@@ -177,7 +181,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           const SizedBox(height: 20),
 
           Text(
-            'Quên mật khẩu?',
+            l10n.forgotPassword_headerTitle,
             style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w900,
@@ -188,7 +192,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           const SizedBox(height: 8),
 
           Text(
-            'Nhập email của bạn, chúng tôi sẽ gửi liên kết đặt lại mật khẩu kèm thời gian hiệu lực 2 phút.',
+            l10n.forgotPassword_description,
             style: TextStyle(
               color: colors.textSecondary,
               fontSize: 14,
@@ -217,7 +221,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Đảm bảo đây là email bạn đã dùng để đăng ký tài khoản.',
+                    l10n.forgotPassword_emailTip,
                     style: TextStyle(
                       color: colors.info,
                       fontSize: 12.5,
@@ -270,7 +274,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
           // Email Input
           Text(
-            'Địa chỉ Email',
+            l10n.emailLabel,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
@@ -283,7 +287,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             keyboardType: TextInputType.emailAddress,
             style: TextStyle(color: colors.textPrimary, fontSize: 15),
             decoration: InputDecoration(
-              hintText: 'yourname@example.com',
+              hintText: l10n.forgotPassword_emailHint,
               hintStyle: TextStyle(color: colors.textMuted, fontSize: 14.5),
               prefixIcon: Icon(
                 Icons.email_outlined,
@@ -311,12 +315,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             ),
             validator: (val) {
               if (val == null || val.trim().isEmpty) {
-                return 'Vui lòng nhập địa chỉ email';
+                return l10n.forgotPassword_emailRequired;
               }
               if (!RegExp(
                 r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$",
               ).hasMatch(val.trim())) {
-                return 'Định dạng email không hợp lệ';
+                return l10n.forgotPassword_emailInvalid;
               }
               return null;
             },
@@ -340,7 +344,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     )
                   : const Icon(Icons.send_rounded, size: 20),
               label: Text(
-                _submitting ? 'Đang gửi yêu cầu...' : 'GỬI YÊU CẦU',
+                _submitting ? l10n.forgotPassword_submitting : l10n.forgotPassword_submitButton,
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
@@ -364,9 +368,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             child: TextButton.icon(
               onPressed: () => context.pop(),
               icon: const Icon(Icons.arrow_back_rounded, size: 18),
-              label: const Text(
-                'Quay lại Đăng nhập',
-                style: TextStyle(fontWeight: FontWeight.w600),
+              label: Text(
+                l10n.forgotPassword_backToLogin,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -378,7 +382,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   // ═══════════════════════════════════════════════════════════
   //  SENT VIEW — Thông báo thành công + Đếm ngược gửi lại
   // ═══════════════════════════════════════════════════════════
-  Widget _buildSentView(AppColorsExtension colors) {
+  Widget _buildSentView(AppColorsExtension colors, AppLocalizations l10n) {
     return Column(
       children: [
         const SizedBox(height: 24),
@@ -404,7 +408,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         const SizedBox(height: 24),
 
         Text(
-          'Đã gửi yêu cầu thành công!',
+          l10n.forgotPassword_sentTitle,
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w900,
@@ -423,9 +427,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               height: 1.5,
             ),
             children: [
-              const TextSpan(
-                text:
-                    'Vui lòng kiểm tra hòm thư (kể cả mục Spam/Thư rác) của địa chỉ email:\n',
+              TextSpan(
+                text: l10n.forgotPassword_checkEmail,
               ),
               TextSpan(
                 text: _emailCtrl.text.trim(),
@@ -434,8 +437,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const TextSpan(
-                text: '\nđể nhận liên kết đặt lại mật khẩu.',
+              TextSpan(
+                text: l10n.forgotPassword_checkEmailSuffix,
               ),
             ],
           ),
@@ -461,8 +464,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               const SizedBox(width: 8),
               Text(
                 _cooldownSeconds > 0
-                    ? 'Gửi lại sau: ${_cooldownSeconds}s'
-                    : 'Bạn có thể yêu cầu gửi lại email mới.',
+                    ? l10n.forgotPassword_resendTimer(_cooldownSeconds)
+                    : l10n.forgotPassword_canResend,
                 style: TextStyle(
                   color:
                       _cooldownSeconds > 0
@@ -487,8 +490,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             icon: const Icon(Icons.refresh_rounded, size: 18),
             label: Text(
               _cooldownSeconds > 0
-                  ? 'GỬI LẠI EMAIL (${_cooldownSeconds}s)'
-                  : 'GỬI LẠI EMAIL',
+                  ? l10n.forgotPassword_resendButtonTimer(_cooldownSeconds)
+                  : l10n.forgotPassword_resendButton,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             style: OutlinedButton.styleFrom(
@@ -519,9 +522,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               ),
               elevation: 0,
             ),
-            child: const Text(
-              'QUAY LẠI ĐĂNG NHẬP',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            child: Text(
+              l10n.forgotPassword_backToLoginButton,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
         ),

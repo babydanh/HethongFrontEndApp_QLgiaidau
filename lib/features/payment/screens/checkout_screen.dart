@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -37,15 +38,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     double effectiveAmount,
     String? effectiveName,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final rawDivisionId = widget.divisionId?.trim();
     if (rawDivisionId != null &&
         rawDivisionId.isNotEmpty &&
         !isValidUuid(rawDivisionId)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Nội dung thi đấu không hợp lệ. Vui lòng quay lại chọn lại hạng mục.',
-          ),
+        SnackBar(
+          content: Text(l10n.checkout_invalidDivision),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -53,14 +53,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     }
     setState(() => _isSubmitting = true);
     try {
-      // Free tournament handling
       if (effectiveAmount <= 0) {
         await Future.delayed(const Duration(milliseconds: 300));
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đã xác nhận tham gia giải đấu (Miễn phí)!'),
-              backgroundColor: Color(0xFF10B981),
+            SnackBar(
+              content: Text(l10n.checkout_freeConfirm),
+              backgroundColor: const Color(0xFF10B981),
             ),
           );
           if (context.canPop()) {
@@ -72,7 +71,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         return;
       }
 
-      // Paid tournament handling via PayOS
       final result = await ref
           .read(paymentRepositoryProvider)
           .createPaymentLink(
@@ -98,7 +96,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             mode: LaunchMode.externalApplication,
           );
           if (!opened) {
-            throw Exception('Không thể mở trang thanh toán PayOS');
+            throw Exception(l10n.checkout_cannotOpenPayOS);
           }
           if (mounted) {
             context.pushReplacement(
@@ -116,12 +114,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             );
           }
         } else {
-          throw Exception('Không lấy được liên kết thanh toán từ PayOS');
+          throw Exception(l10n.checkout_noPaymentLink);
         }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không thể tạo cổng thanh toán. Vui lòng thử lại.'),
+          SnackBar(
+            content: Text(l10n.checkout_createGatewayError),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -133,7 +131,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             content: Text(
               ErrorParser.parse(
                 e,
-                'Không thể tạo thanh toán. Vui lòng thử lại.',
+                l10n.checkout_createPaymentError,
               ),
             ),
             backgroundColor: Colors.redAccent,
@@ -149,8 +147,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   Widget build(BuildContext context) {
     final fmt = NumberFormat('#,###', 'vi_VN');
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
-    // Fetch fallback tournament details if widget.amount <= 0 or tournamentName is null
     final tournamentAsync = widget.tournamentId.isNotEmpty
         ? ref.watch(tournamentProvider(widget.tournamentId))
         : null;
@@ -186,7 +184,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           },
         ),
         title: Text(
-          'Xác nhận thanh toán',
+          l10n.checkout_title,
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.w800,
@@ -200,7 +198,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Amount Summary Card - Minimal & Clean
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
@@ -212,7 +209,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               child: Column(
                 children: [
                   Text(
-                    isFree ? 'MIỄN PHÍ' : 'LỆ PHÍ THAM GIA',
+                    isFree ? l10n.checkout_freeBadge : l10n.checkout_entryFeeLabel,
                     style: TextStyle(
                       color: isFree
                           ? const Color(0xFF10B981)
@@ -253,7 +250,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
             if (!isFree) ...[
               Text(
-                'PHƯƠNG THỨC THANH TOÁN',
+                l10n.checkout_paymentMethodLabel,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -263,7 +260,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Simple Gateway Option
               Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -288,7 +284,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'QR thanh toán PayOS',
+                                l10n.checkout_payOSLabel,
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
@@ -297,7 +293,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Quét mã QR tự động qua ứng dụng ngân hàng',
+                                l10n.checkout_payOSDescription,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: colors.textMuted,
@@ -331,7 +327,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ],
 
             Text(
-              'Nhấn bên dưới để xác nhận và hoàn tất đăng ký tham gia.',
+              l10n.checkout_confirmInstruction,
               style: TextStyle(
                 fontSize: 12,
                 color: colors.textMuted,
@@ -340,7 +336,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Clean Pay Button
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -367,8 +362,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       )
                     : Text(
                         isFree
-                            ? 'Xác nhận tham gia (Miễn phí)'
-                            : 'Thanh toán ${fmt.format(effectiveAmount.ceil())}đ',
+                            ? l10n.checkout_freeConfirmButton
+                            : l10n.checkout_payButton(fmt.format(effectiveAmount.ceil())),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,

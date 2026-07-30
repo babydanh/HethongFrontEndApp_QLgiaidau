@@ -1,4 +1,4 @@
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+﻿import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class OrganizerLiteScreen extends ConsumerStatefulWidget {
   const OrganizerLiteScreen({super.key, required this.tournamentId});
@@ -1310,3 +1311,4 @@ int _countLiveMatches(List<MatchModel> matches) {
     return status == 'live' || status == 'ongoing' || status == 'in_progress';
   }).length;
 }
+

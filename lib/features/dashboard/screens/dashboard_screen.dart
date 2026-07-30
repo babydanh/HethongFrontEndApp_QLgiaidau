@@ -1,4 +1,4 @@
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+﻿import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
@@ -1255,3 +1255,4 @@ class _DashboardErrorCard extends StatelessWidget {
     );
   }
 }
+

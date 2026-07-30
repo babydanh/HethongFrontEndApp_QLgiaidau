@@ -5,6 +5,9 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/router/app_router.dart';
 import 'package:app_quanly_giaidau/core/widgets/socket_observer.dart';
 import 'package:app_quanly_giaidau/providers/theme_provider.dart';
+import 'package:app_quanly_giaidau/providers/locale_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 class MyCustomScrollBehavior extends MaterialScrollBehavior {
   @override
@@ -22,6 +25,7 @@ class TournamentApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeProvider);
+    final locale = ref.watch(localeProvider);
 
     return SocketObserver(
       child: MaterialApp.router(
@@ -32,6 +36,9 @@ class TournamentApp extends ConsumerWidget {
         themeMode: themeMode,
         routerConfig: router,
         scrollBehavior: MyCustomScrollBehavior(),
+        locale: locale,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
       ),
     );
   }

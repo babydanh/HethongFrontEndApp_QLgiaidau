@@ -1,6 +1,7 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';;
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -103,8 +104,8 @@ class _TournamentRegisterScreenState
   bool _existingIsPaid = false;
 
   String _getSubmitLabel(Tournament? t) {
-    if (t?.registrationMode == 'APPROVAL') return 'Gửi yêu cầu tham gia';
-    return 'Xác nhận đăng ký';
+    if (t?.registrationMode == 'APPROVAL') return l10n.registerSubmitApproval;
+    return l10n.registerSubmitConfirm;
   }
 
   @override
@@ -152,8 +153,8 @@ class _TournamentRegisterScreenState
       if (userGender != null && userGender != divGender) {
         setState(() {
           _genderError = divGender == 'MALE'
-              ? 'Nội dung này chỉ dành cho Nam'
-              : 'Nội dung này chỉ dành cho Nữ';
+              ? l10n.registerGenderErrorMale
+              : l10n.registerGenderErrorFemale;
         });
       }
     }
@@ -190,7 +191,7 @@ class _TournamentRegisterScreenState
       if (mounted) {
         setState(
           () => _eloError =
-              'Không thể kiểm tra ELO. Vui lòng thử lại trước khi đăng ký.',
+              l10n.registerEloCheckError,
         );
       }
     } finally {
@@ -201,7 +202,7 @@ class _TournamentRegisterScreenState
   Future<void> _validateInvite() async {
     final code = _inviteCtrl.text.trim();
     if (code.length < 6) {
-      setState(() => _inviteError = 'Mã mời phải có ít nhất 6 ký tự');
+      setState(() => _inviteError = l10n.registerInviteTooShort);
       return;
     }
     setState(() {
@@ -217,7 +218,7 @@ class _TournamentRegisterScreenState
       if (mounted) setState(() => _localInviteCode = code);
     } catch (e) {
       if (mounted) {
-        setState(() => _inviteError = 'Mã mời không hợp lệ hoặc đã hết hạn');
+        setState(() => _inviteError = l10n.registerInviteInvalid);
       }
     } finally {
       if (mounted) setState(() => _inviteValidating = false);
@@ -227,7 +228,7 @@ class _TournamentRegisterScreenState
   Future<void> _register() async {
     if (_alreadyRegistered) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bạn đã đăng ký giải đấu này rồi.')),
+        const SnackBar(content: Text(l10n.registerAlreadyRegistered)),
       );
       return;
     }
@@ -240,7 +241,7 @@ class _TournamentRegisterScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Vui lòng hoàn thiện hồ sơ trước khi đăng ký'),
+            content: Text(l10n.registerProfileIncomplete),
           ),
         );
       }
@@ -269,7 +270,7 @@ class _TournamentRegisterScreenState
             ? divisions.first.id
             : null);
     if (divisions != null && divisions.length > 1 && divisionId == null) {
-      setState(() => _divisionError = 'Hãy chọn nội dung thi đấu.');
+      setState(() => _divisionError = l10n.registerSelectDivision);
       return;
     }
     // If doubles division, navigate to doubles flow
@@ -288,7 +289,7 @@ class _TournamentRegisterScreenState
         ? _nameCtrl.text.trim()
         : (user?.fullName?.trim().isNotEmpty == true
               ? user!.fullName!.trim()
-              : 'Vận động viên');
+              : l10n.registerTypeDefault);
 
     setState(() => _submitting = true);
     try {
@@ -302,9 +303,7 @@ class _TournamentRegisterScreenState
           );
       if (!mounted) return;
       final t = ref.read(tournamentProvider(widget.tournamentId)).asData?.value;
-      final effectiveFee = (result.entryFee > 0)
-          ? result.entryFee
-          : (selectedDiv?.entryFee ?? t?.entryFee ?? 0.0);
+      final effectiveFee = result.entryFee;
       _registrationTeamStatus = result.teamStatus;
       final canProceedToPayment =
           !result.isWaitlisted &&
@@ -335,7 +334,7 @@ class _TournamentRegisterScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              ErrorParser.parse(e, 'Không thể đăng ký. Vui lòng thử lại.'),
+              ErrorParser.parse(e, l10n.registerError),
             ),
           ),
         );
@@ -348,17 +347,17 @@ class _TournamentRegisterScreenState
   String _divisionTypeLabel(TournamentDivisionOption d) {
     final gender = switch ((d.genderRestriction ?? '').toUpperCase()) {
       'MALE' => 'Nam',
-      'FEMALE' => 'Nữ',
-      'MIXED' => 'Nam nữ',
+      'FEMALE' => l10n.registerDivFemale,
+      'MIXED' => l10n.registerDivMixed,
       _ => '',
     };
     final type = switch ((d.matchType ?? '').toUpperCase()) {
-      'SINGLES' => 'Đơn',
-      'DOUBLES' => 'Đôi',
-      'MIXED_DOUBLES' => 'Đôi nam nữ',
-      _ => 'Nội dung',
+      'SINGLES' => l10n.registerTypeSingles,
+      'DOUBLES' => l10n.registerTypeDoubles,
+      'MIXED_DOUBLES' => l10n.registerTypeMixedDoubles,
+      _ => l10n.registerContentTitle,
     };
-    if (type == 'Đôi nam nữ' || gender.isEmpty) return type;
+    if (type == l10n.registerTypeMixedDoubles || gender.isEmpty) return type;
     return '$type $gender';
   }
 
@@ -377,18 +376,19 @@ class _TournamentRegisterScreenState
         '${NumberFormat('#,###', 'vi_VN').format(d.entryFee!.ceil())}đ',
       );
     } else {
-      items.add('Miễn phí');
+      items.add(l10n.registerFree);
     }
     return items;
   }
 
   String _getRegistrationCta(Tournament? t) {
-    if (t?.registrationMode == 'APPROVAL') return 'Gửi yêu cầu tham gia';
-    return 'Đăng ký';
+    if (t?.registrationMode == 'APPROVAL') return l10n.registerSubmitApproval;
+    return l10n.registerButton;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final tAsync = ref.watch(tournamentIntroProvider(widget.tournamentId));
     final divAsync = ref.watch(_divisionsProvider(widget.tournamentId));
     final isAuth = ref.watch(authProvider).isAuthenticated;
@@ -409,7 +409,7 @@ class _TournamentRegisterScreenState
         child: tAsync.when(
           data: (t) {
             if (t == null) {
-              return const Center(child: Text('Không tìm thấy giải'));
+              return const Center(child: Text(l10n.registerTournamentNotFound));
             }
             if (!isAuth) return _buildLoginPrompt(t);
             if (_checkingRegistration) {
@@ -429,10 +429,10 @@ class _TournamentRegisterScreenState
                     : [
                         TournamentDivisionOption(
                           id: 'default_${t.id}',
-                          name: t.name.isNotEmpty ? t.name : 'Nội dung chính',
+                          name: t.name.isNotEmpty ? t.name : l10n.registerContentTitle,
                           matchType:
                               t.format.toLowerCase() == 'doubles' ||
-                                  t.name.toLowerCase().contains('đôi')
+                                  t.name.toLowerCase().contains(l10n.registerTypeDoubles)
                               ? 'DOUBLES'
                               : 'SINGLES',
                           entryFee: t.entryFee,
@@ -449,10 +449,10 @@ class _TournamentRegisterScreenState
                 final fallbackDivs = [
                   TournamentDivisionOption(
                     id: 'default_${t.id}',
-                    name: t.name.isNotEmpty ? t.name : 'Nội dung chính',
+                    name: t.name.isNotEmpty ? t.name : l10n.registerContentTitle,
                     matchType:
                         t.format.toLowerCase() == 'doubles' ||
-                            t.name.toLowerCase().contains('đôi')
+                            t.name.toLowerCase().contains(l10n.registerTypeDoubles)
                         ? 'DOUBLES'
                         : 'SINGLES',
                     entryFee: t.entryFee,
@@ -475,10 +475,10 @@ class _TournamentRegisterScreenState
 
   String _getSuccessTitle(Tournament? t) {
     if (_registrationTeamStatus == 'WAITLISTED') {
-      return 'Đã vào danh sách chờ';
+      return l10n.registerSuccessWaitlisted;
     }
     if (t?.registrationMode == 'APPROVAL') return 'Gửi yêu cầu thành công!';
-    return 'Đăng ký thành công!';
+    return l10n.registerSuccess;
   }
 
   Widget _buildExistingRegistration(
@@ -501,12 +501,12 @@ class _TournamentRegisterScreenState
         (_existingParticipantId?.isNotEmpty ?? false) &&
         (status == 'COMPLETE' || status == 'PENDING_APPROVAL');
     final statusLabel = switch (status) {
-      'PENDING_PARTNER' => 'Đang chờ đồng đội tham gia',
-      'PENDING_APPROVAL' => 'Đang chờ Ban tổ chức duyệt',
-      'WAITLISTED' => 'Đang ở danh sách chờ',
-      'COMPLETE' when _existingIsPaid => 'Đã đăng ký và thanh toán',
-      'COMPLETE' => 'Đã đăng ký, chưa thanh toán',
-      _ => 'Bạn đã đăng ký giải đấu này',
+      'PENDING_PARTNER' => l10n.registerStatusPendingPartner,
+      'PENDING_APPROVAL' => l10n.registerStatusPendingApproval,
+      'WAITLISTED' => l10n.registerStatusWaitlisted,
+      'COMPLETE' when _existingIsPaid => l10n.registerStatusCompletePaid,
+      'COMPLETE' => l10n.registerStatusCompleteUnpaid,
+      _ => l10n.registerAlreadyRegistered,
     };
 
     return Container(
@@ -537,7 +537,7 @@ class _TournamentRegisterScreenState
           if (status == 'WAITLISTED') ...[
             const SizedBox(height: 8),
             Text(
-              'Bạn chưa cần thanh toán cho đến khi có suất chính thức.',
+              l10n.registerNoPaymentWaitlisted,
               textAlign: TextAlign.center,
               style: TextStyle(color: context.colors.textSecondary),
             ),
@@ -569,7 +569,7 @@ class _TournamentRegisterScreenState
             width: double.infinity,
             child: OutlinedButton(
               onPressed: () => context.go('/intro/${tournament.id}'),
-              child: const Text('Xem chi tiết giải đấu'),
+              child: const Text(l10n.registerViewDetail),
             ),
           ),
         ],
@@ -616,7 +616,7 @@ class _TournamentRegisterScreenState
                 ),
                 child: Text(
                   _registrationTeamStatus == 'WAITLISTED'
-                      ? 'Chưa cần thanh toán cho đến khi có suất chính thức'
+                      ? l10n.registerNoPaymentWaitlisted
                       : 'Phí tham gia ${NumberFormat('#,###', 'vi_VN').format(_registeredEntryFee!.ceil())}đ chưa thanh toán',
                   style: TextStyle(
                     fontSize: 13,
@@ -628,7 +628,7 @@ class _TournamentRegisterScreenState
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () => context.go('/intro/${widget.tournamentId}'),
-              child: const Text('Xem chi tiết'),
+              child: const Text(l10n.registerViewDetail),
             ),
             const SizedBox(height: 12),
             TextButton.icon(
@@ -644,7 +644,7 @@ class _TournamentRegisterScreenState
                 color: context.colors.error,
               ),
               label: Text(
-                'Rút lui khỏi giải',
+                l10n.registerWithdraw,
                 style: TextStyle(color: context.colors.error, fontSize: 13),
               ),
             ),
@@ -723,7 +723,7 @@ class _TournamentRegisterScreenState
                 child: Text(
                   hasFee
                       ? 'Phí: ${fmt.format(t.entryFee!.ceil())}đ'
-                      : 'Miễn phí',
+                      : l10n.registerFree,
                   style: TextStyle(
                     color: hasFee ? AppTheme.primary : colors.textMuted,
                     fontWeight: FontWeight.w800,
@@ -746,7 +746,7 @@ class _TournamentRegisterScreenState
         Icon(Icons.lock_rounded, size: 64, color: context.colors.textMuted),
         const SizedBox(height: 24),
         Text(
-          'Giải đấu riêng tư',
+          l10n.registerPrivateTitle,
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w800,
@@ -755,7 +755,7 @@ class _TournamentRegisterScreenState
         ),
         const SizedBox(height: 8),
         Text(
-          'Vui lòng nhập mã mời để tham gia giải đấu này',
+          l10n.registerPrivateDesc,
           style: TextStyle(fontSize: 14, color: context.colors.textSecondary),
           textAlign: TextAlign.center,
         ),
@@ -770,7 +770,7 @@ class _TournamentRegisterScreenState
             color: context.colors.textPrimary,
           ),
           decoration: InputDecoration(
-            hintText: 'Nhập mã mời',
+            hintText: l10n.registerInviteHint,
             filled: true,
             fillColor: context.colors.bgCard,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
@@ -809,7 +809,7 @@ class _TournamentRegisterScreenState
                   )
                 : const Icon(Icons.login_rounded),
             label: Text(
-              _inviteValidating ? 'Đang kiểm tra...' : 'Xác nhận mã mời',
+              _inviteValidating ? l10n.registerInviteValidating : l10n.registerInviteConfirm,
             ),
             style: FilledButton.styleFrom(
               shape: RoundedRectangleBorder(
@@ -842,7 +842,7 @@ class _TournamentRegisterScreenState
             ),
             const SizedBox(height: 12),
             const Text(
-              'Vui lòng đăng nhập để tham gia',
+              l10n.registerLoginPrompt,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -863,7 +863,7 @@ class _TournamentRegisterScreenState
                 );
               },
               icon: const Icon(Icons.login),
-              label: const Text('Đăng nhập'),
+              label: const Text(l10n.registerLoginButton),
             ),
           ],
         ),
@@ -920,7 +920,7 @@ class _TournamentRegisterScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Giải đấu đã đóng đăng ký',
+                  l10n.registerRegClosed,
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
@@ -929,7 +929,7 @@ class _TournamentRegisterScreenState
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Ban tổ chức hiện đã ngắt nhận hồ sơ đăng ký mới cho giải đấu này.',
+                  l10n.registerRegClosedDesc,
                   style: TextStyle(
                     color: context.colors.textSecondary,
                     fontSize: 13,
@@ -963,7 +963,7 @@ class _TournamentRegisterScreenState
                     ),
                     const SizedBox(width: 8),
                     const Text(
-                      'Hồ sơ chưa hoàn thiện',
+                      l10n.registerProfileIncompleteTitle,
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 14,
@@ -973,7 +973,7 @@ class _TournamentRegisterScreenState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Bạn cần cập nhật đầy đủ Họ tên, Số điện thoại và Giới tính trong hồ sơ cá nhân trước khi đăng ký.',
+                  l10n.registerProfileIncompleteDesc,
                   style: TextStyle(
                     color: context.colors.textSecondary,
                     fontSize: 13,
@@ -987,7 +987,7 @@ class _TournamentRegisterScreenState
                     onPressed: () => context.push('/profile/edit'),
                     icon: const Icon(Icons.edit_rounded, size: 16),
                     label: const Text(
-                      'Cập nhật hồ sơ ngay',
+                      l10n.registerUpdateProfile,
                       style: TextStyle(fontWeight: FontWeight.w700),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -1015,7 +1015,7 @@ class _TournamentRegisterScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'THÔNG TIN',
+                  l10n.registerInfoTitle,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -1040,7 +1040,7 @@ class _TournamentRegisterScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Tên thi đấu',
+                            l10n.registerPlayerName,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -1049,7 +1049,7 @@ class _TournamentRegisterScreenState
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            user?.fullName ?? 'Chưa cập nhật',
+                            user?.fullName ?? l10n.registerNameNotUpdated,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -1058,7 +1058,7 @@ class _TournamentRegisterScreenState
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Tên sẽ được lấy từ tài khoản của bạn',
+                            l10n.registerNameFromAccount,
                             style: TextStyle(
                               fontSize: 11,
                               color: context.colors.textMuted,
@@ -1079,7 +1079,7 @@ class _TournamentRegisterScreenState
                         ),
                       ),
                       child: const Text(
-                        'Tên đội và đồng đội sẽ được chọn ở bước tiếp theo.',
+                        l10n.registerTeamNameNext,
                       ),
                     ),
                 const SizedBox(height: 16),
@@ -1097,7 +1097,7 @@ class _TournamentRegisterScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'NỘI DUNG',
+                          l10n.registerContentTitle,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
@@ -1329,7 +1329,7 @@ class _TournamentRegisterScreenState
                                 ),
                                 SizedBox(width: 8),
                                 Text(
-                                  'Đang kiểm tra ELO...',
+                                  l10n.registerEloSchedule,
                                   style: TextStyle(fontSize: 12),
                                 ),
                               ],
@@ -1351,7 +1351,7 @@ class _TournamentRegisterScreenState
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Text(
-                      'Không thể tải nội dung thi đấu. Hãy thử lại.',
+                      l10n.registerDivisionLoadError,
                     ),
                   ),
                 ),
@@ -1384,7 +1384,7 @@ class _TournamentRegisterScreenState
                           )
                         : Text(
                             isRegistrationClosed
-                                ? 'Giải đấu đã đóng đăng ký'
+                                ? l10n.registerRegClosed
                                 : (_selectedDivision?.entryFee != null &&
                                       _selectedDivision!.entryFee! > 0)
                                 ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(_selectedDivision!.entryFee!.ceil())}đ'
@@ -1413,7 +1413,7 @@ class _TournamentRegisterScreenState
     final colors = context.colors;
     final startDateStr = t.startDate != null
         ? DateFormat('dd/MM/yyyy').format(t.startDate!)
-        : 'Chưa xếp lịch';
+        : l10n.registerNotScheduled;
     final endDateStr = t.endDate != null
         ? DateFormat('dd/MM/yyyy').format(t.endDate!)
         : null;
@@ -1430,7 +1430,7 @@ class _TournamentRegisterScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'QUYỀN LỢI & QUY ĐỊNH THAM GIA',
+            l10n.registerTermsTitle,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
@@ -1441,27 +1441,27 @@ class _TournamentRegisterScreenState
           const SizedBox(height: 14),
           _buildInfoRow(
             Icons.event_available_rounded,
-            'Thời gian thi đấu',
+            l10n.registerScheduleTitle,
             endDateStr != null ? '$startDateStr - $endDateStr' : startDateStr,
             colors,
           ),
           if (t.locationAddress != null && t.locationAddress!.isNotEmpty)
             _buildInfoRow(
               Icons.location_on_rounded,
-              'Địa điểm thi đấu',
+              l10n.registerLocationTitle,
               t.locationAddress!,
               colors,
             ),
           _buildInfoRow(
             Icons.verified_user_rounded,
-            'Xếp lịch & ELO',
+            l10n.registerEloScheduleDesc,
             'Sơ đồ thi đấu công khai, tích lũy điểm ELO tự động sau giải',
             colors,
           ),
           _buildInfoRow(
             Icons.support_agent_rounded,
-            'Hỗ trợ VĐV',
-            'Hỗ trợ hoàn hủy lệ phí & thắc mắc trực tiếp với Ban tổ chức',
+            l10n.registerSupportDesc,
+            l10n.registerSupportDesc,
             colors,
           ),
         ],
@@ -1557,6 +1557,7 @@ class _RegistrationCountdownCardState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = context.colors;
 
     if (_remaining == Duration.zero) {
@@ -1572,7 +1573,7 @@ class _RegistrationCountdownCardState
             Icon(Icons.timer_off_rounded, color: colors.error, size: 20),
             const SizedBox(width: 10),
             Text(
-              'Hạn đăng ký giải đấu đã kết thúc',
+              l10n.registerDeadlineExpired,
               style: TextStyle(
                 color: colors.error,
                 fontWeight: FontWeight.w700,
@@ -1604,7 +1605,7 @@ class _RegistrationCountdownCardState
               Icon(Icons.timer_outlined, color: colors.textSecondary, size: 16),
               const SizedBox(width: 8),
               Text(
-                'HẠN ĐĂNG KÝ CÒN LẠI',
+                l10n.registerDeadline,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -1621,7 +1622,7 @@ class _RegistrationCountdownCardState
                   border: Border.all(color: colors.border),
                 ),
                 child: Text(
-                  'ĐANG MỞ',
+                  l10n.registerOpenTag,
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w800,
@@ -1635,13 +1636,13 @@ class _RegistrationCountdownCardState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildTimeUnit('$days'.padLeft(2, '0'), 'Ngày', colors),
+              _buildTimeUnit('$days'.padLeft(2, '0'), l10n.registerDays, colors),
               _buildColon(colors),
-              _buildTimeUnit('$hours'.padLeft(2, '0'), 'Giờ', colors),
+              _buildTimeUnit('$hours'.padLeft(2, '0'), l10n.registerHours, colors),
               _buildColon(colors),
-              _buildTimeUnit('$minutes'.padLeft(2, '0'), 'Phút', colors),
+              _buildTimeUnit('$minutes'.padLeft(2, '0'), l10n.registerMinutes, colors),
               _buildColon(colors),
-              _buildTimeUnit('$seconds'.padLeft(2, '0'), 'Giây', colors),
+              _buildTimeUnit('$seconds'.padLeft(2, '0'), l10n.registerSeconds, colors),
             ],
           ),
         ],
@@ -1703,3 +1704,6 @@ class _RegistrationCountdownCardState
     );
   }
 }
+
+
+

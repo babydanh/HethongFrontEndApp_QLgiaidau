@@ -1266,7 +1266,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          "WSPORT",
+          "VNSPORT",
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w900,
@@ -3682,3 +3682,4 @@ class _TournamentSectionList extends ConsumerWidget {
     );
   }
 }
+

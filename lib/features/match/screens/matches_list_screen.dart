@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 /// Trang hiển thị danh sách trận đấu với filter và search.
@@ -27,14 +28,17 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   List<MatchModel> _filteredMatches = [];
   String? _error;
 
-  // Status filters
-  static const _statusLabels = {
-    '': 'Tất cả',
-    'scheduled': 'Sắp diễn ra',
-    'live': 'Đang thi đấu',
-    'completed': 'Hoàn thành',
-    'walkover': 'Bỏ cuộc',
-  };
+  String _statusLabel(String? status) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return '';
+    switch (status) {
+      case 'scheduled': return l10n.matchesStatusScheduled;
+      case 'live': return l10n.matchesStatusLive;
+      case 'completed': return l10n.matchesStatusCompleted;
+      case 'walkover': return l10n.matchesStatusWalkover;
+      default: return l10n.matchesStatusAll;
+    }
+  }
 
   @override
   void initState() {
@@ -151,6 +155,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: colors.bgDark,
       appBar: AppBar(
@@ -161,7 +166,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Trận đấu',
+          l10n.matchesTitle,
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.w700,
@@ -195,6 +200,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   }
 
   Widget _buildSearchBar(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
@@ -207,7 +213,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
           controller: _searchController,
           style: TextStyle(color: colors.textPrimary, fontSize: 14),
           decoration: InputDecoration(
-            hintText: 'Tìm theo tên VĐV / CLB...',
+            hintText: l10n.matchesSearchHint,
             hintStyle: TextStyle(color: colors.textMuted, fontSize: 14),
             prefixIcon: Icon(
               Icons.search_rounded,
@@ -235,6 +241,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   }
 
   Widget _buildFilterRow(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: SingleChildScrollView(
@@ -243,7 +250,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
           children: [
             // Status Pills
             _StatusFilterPill(
-              label: 'Vừa kết thúc',
+              label: l10n.matchesFilterJustEnded,
               isSelected: _selectedStatus == 'completed',
               activeBgColor: const Color(0xFFF3F4F1),
               activeTextColor: const Color(0xFF4A4E4D),
@@ -258,7 +265,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
             ),
             const SizedBox(width: 8),
             _StatusFilterPill(
-              label: 'Đang diễn ra',
+              label: l10n.matchesFilterOngoing,
               isSelected: _selectedStatus == 'live',
               activeBgColor: const Color(0xFFEBF5FF),
               activeTextColor: const Color(0xFF1E56A0),
@@ -271,7 +278,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
             ),
             const SizedBox(width: 8),
             _StatusFilterPill(
-              label: 'Mở đăng ký',
+              label: l10n.matchesFilterRegistration,
               isSelected: _selectedStatus == 'registration',
               activeBgColor: const Color(0xFFEFF8E9),
               activeTextColor: const Color(0xFF386629),
@@ -286,7 +293,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
             ),
             const SizedBox(width: 8),
             _StatusFilterPill(
-              label: 'Sắp diễn ra',
+              label: l10n.matchesFilterScheduled,
               isSelected: _selectedStatus == 'scheduled',
               activeBgColor: const Color(0xFFFFF5E6),
               activeTextColor: const Color(0xFF995C00),
@@ -301,7 +308,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
             ),
             const SizedBox(width: 8),
             _StatusFilterPill(
-              label: 'Đã kết thúc',
+              label: l10n.matchesFilterEnded,
               isSelected: _selectedStatus == 'finished',
               activeBgColor: const Color(0xFFF1F5F9),
               activeTextColor: const Color(0xFF64748B),
@@ -318,7 +325,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
             // Sport filter
             _FilterChip(
               label: _selectedSport.isEmpty
-                  ? 'Môn thể thao'
+                  ? l10n.matchesFilterSport
                   : AppConstants.sportNames[_selectedSport] ?? _selectedSport,
               icon: Icons.sports_rounded,
               isActive: _selectedSport.isNotEmpty,
@@ -330,7 +337,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
             _FilterChip(
               label: _selectedDateRange != null
                   ? DateFormat('dd/MM').format(_selectedDateRange!.start)
-                  : 'Ngày',
+                  : l10n.matchesFilterDate,
               icon: Icons.calendar_month_rounded,
               isActive: _selectedDateRange != null,
               colors: colors,
@@ -339,7 +346,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
             const SizedBox(width: 8),
             // Location filter
             _FilterChip(
-              label: _selectedLocation.isEmpty ? 'Địa điểm' : _selectedLocation,
+              label: _selectedLocation.isEmpty ? l10n.matchesFilterLocation : _selectedLocation,
               icon: Icons.location_on_rounded,
               isActive: _selectedLocation.isNotEmpty,
               colors: colors,
@@ -352,6 +359,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   }
 
   Widget _buildActiveFilters(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     final chips = <Widget>[];
     if (_selectedSport.isNotEmpty) {
       chips.add(
@@ -368,7 +376,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
     if (_selectedStatus.isNotEmpty) {
       chips.add(
         _buildActiveChip(
-          _statusLabels[_selectedStatus] ?? '',
+          _statusLabel(_selectedStatus),
           () => setState(() {
             _selectedStatus = '';
             _applyFilters();
@@ -445,6 +453,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   }
 
   void _showSportPicker(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: colors.bgCard,
@@ -458,7 +467,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Chọn môn thể thao',
+              l10n.matchesPickSport,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -466,7 +475,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            _buildSportOption(ctx, colors, '', 'Tất cả', null),
+            _buildSportOption(ctx, colors, '', l10n.matchesFilterAll, null),
             ...AppConstants.sportNames.entries.map(
               (e) => _buildSportOption(ctx, colors, e.key, e.value, e.key),
             ),
@@ -512,6 +521,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   }
 
   void _showLocationInput(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: _selectedLocation);
     showDialog(
       context: context,
@@ -519,7 +529,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
         backgroundColor: colors.bgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Nhập địa điểm',
+          l10n.matchesEnterLocation,
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.w700,
@@ -529,7 +539,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
           controller: controller,
           style: TextStyle(color: colors.textPrimary),
           decoration: InputDecoration(
-            hintText: 'Tên địa điểm, sân...',
+            hintText: l10n.matchesLocationHint,
             hintStyle: TextStyle(color: colors.textMuted),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -544,7 +554,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Hủy', style: TextStyle(color: colors.textMuted)),
+            child: Text(l10n.matchesCancel, style: TextStyle(color: colors.textMuted)),
           ),
           FilledButton(
             onPressed: () {
@@ -554,7 +564,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
               });
               Navigator.pop(ctx);
             },
-            child: const Text('Áp dụng'),
+            child: Text(l10n.matchesApply),
           ),
         ],
       ),
@@ -562,10 +572,11 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   }
 
   Widget _buildGroupedList(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     // Group matches by tournament name
     final grouped = <String, List<MatchModel>>{};
     for (final m in _filteredMatches) {
-      final key = m.tournamentName ?? 'Khác';
+      final key = m.tournamentName ?? l10n.matchesOther;
       grouped.putIfAbsent(key, () => []).add(m);
     }
 
@@ -591,6 +602,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
     List<MatchModel> matches,
     AppColorsExtension colors,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -613,7 +625,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
                 ),
               ),
               Text(
-                '${matches.length} trận',
+                l10n.matchesCount(matches.length),
                 style: TextStyle(fontSize: 11, color: colors.textMuted),
               ),
             ],
@@ -731,6 +743,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   }
 
   Widget _buildEmpty(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -750,7 +763,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Không tìm thấy trận đấu',
+            l10n.matchesNoMatchesFound,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -759,7 +772,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Thử thay đổi bộ lọc hoặc tìm kiếm khác',
+            l10n.matchesTryChangeFilter,
             style: TextStyle(fontSize: 13, color: colors.textMuted),
           ),
         ],
@@ -768,6 +781,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   }
 
   Widget _buildError(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -785,7 +799,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
             FilledButton.icon(
               onPressed: _loadData,
               icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Thử lại'),
+              label: Text(l10n.matchesRetry),
             ),
           ],
         ),

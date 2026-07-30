@@ -23,6 +23,8 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -179,6 +181,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final themeMode = ref.watch(tp.themeProvider);
     final isDark = themeMode == ThemeMode.dark;
     final authState = ref.watch(authProvider);
+    final l10n = AppLocalizations.of(context);
 
     if (!authState.isAuthenticated) {
       return _buildLoginPrompt(context);
@@ -199,7 +202,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           onPressed: () => context.go('/home'),
         ),
         title: Text(
-          'Hồ sơ',
+          l10n.profileTitle,
           style: TextStyle(
             color: context.colors.textPrimary,
             fontWeight: FontWeight.w700,
@@ -216,7 +219,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               color: AppTheme.primary,
             ),
             label: const Text(
-              'Sửa',
+              l10n.infoEdit,
               style: TextStyle(
                 color: AppTheme.primary,
                 fontWeight: FontWeight.w700,
@@ -254,7 +257,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           onPressed: () => context.go('/home'),
         ),
         title: Text(
-          'Hồ sơ',
+          l10n.profileTitle,
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.w700,
@@ -372,15 +375,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Expanded(
                     child: _buildTabButton(
                       0,
-                      "Thông tin",
+                      l10n.profileTabInfo,
                       Icons.person_outline_rounded,
                     ),
                   ),
                   Expanded(
                     child: _buildTabButton(
                       1,
-                      "Tài khoản",
-                      Icons.manage_accounts_outlined,
+                      l10n.profileTabSettings,
+                      Icons.settings_rounded,
                     ),
                   ),
                 ],
@@ -404,36 +407,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 24),
 
             // My Tournaments Section
-            _buildSectionTitle(colors, 'Giải đấu của tôi'),
+            _buildSectionTitle(colors, l10n.infoMyTournaments),
             const SizedBox(height: 10),
             _buildMyTournamentsSection(context),
             const SizedBox(height: 24),
 
             // My Communities Section
-            _buildSectionTitle(colors, 'Câu lạc bộ của tôi & đã tham gia'),
+            _buildSectionTitle(colors, l10n.infoMyClubs),
             const SizedBox(height: 10),
             _buildMyCommunitiesSection(context),
             const SizedBox(height: 24),
 
             // Followed Tournaments Section
-            _buildSectionTitle(colors, 'Giải đấu đang theo dõi'),
+            _buildSectionTitle(colors, l10n.infoFollowedTournaments),
             const SizedBox(height: 10),
             _buildFollowedTournamentsSection(context),
             const SizedBox(height: 24),
 
             // Personal Info Section
-            _buildSectionTitle(colors, 'Thông tin cá nhân'),
+            _buildSectionTitle(colors, l10n.infoPersonalInfo),
             const SizedBox(height: 10),
             _buildInfoCard(context, profile),
             const SizedBox(height: 32),
           ] else ...[
             // Tab 1: Cài đặt (Menu buttons)
-            _buildSectionTitle(colors, 'Tài khoản & Thiết lập'),
+            _buildSectionTitle(colors, l10n.settingsAccountTitle),
             const SizedBox(height: 10),
             _buildAccountMenu(context),
             const SizedBox(height: 24),
 
-            _buildSectionTitle(colors, 'Tùy chọn hệ thống'),
+            _buildSectionTitle(colors, l10n.settingsSystemTitle),
             const SizedBox(height: 10),
             _buildOtherMenu(context, isDark),
             const SizedBox(height: 32),
@@ -763,26 +766,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── USER INFO ──────────────────────────────────────────────────────
   Widget _buildUserInfo(BuildContext context, UserProfile profile) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context);
     final isEmailVerified = profile.isEmailVerified == true;
 
     // Translate role to Vietnamese
     String getRoleText(String? r) {
-      if (r == null || r.isEmpty) return 'Vận động viên';
+      if (r == null || r.isEmpty) return l10n.infoPlayer;
       final upper = r.toUpperCase();
-      if (upper == 'ADMIN') return 'Quản trị viên';
-      if (upper == 'ORGANIZER') return 'Ban tổ chức';
-      if (upper == 'REFEREE') return 'Trọng tài';
+      if (upper == 'ADMIN') return l10n.infoAdmin;
+      if (upper == 'ORGANIZER') return l10n.infoOrganizer;
+      if (upper == 'REFEREE') return l10n.infoReferee;
       return upper;
     }
 
     final roleText = getRoleText(profile.role);
 
     // Format joined date
-    String joinedDateText = 'Tháng 7, 2026';
+    String joinedDateText = '${l10n.infoJoinedAt} 7/2026';
     if (profile.createdAt != null && profile.createdAt!.isNotEmpty) {
       try {
         final dt = DateTime.parse(profile.createdAt!);
-        joinedDateText = 'Tháng ${dt.month}, ${dt.year}';
+        joinedDateText = '${l10n.infoJoinedAt} ${dt.month}/${dt.year}';
       } catch (_) {}
     }
 
@@ -1066,7 +1070,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             children: [
               _buildWinLossStat(
                 context,
-                label: 'Thắng',
+                label: l10n.infoWin,
                 value: ranking.matchesWon,
                 color: winColor,
               ),
@@ -2225,26 +2229,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── ACCOUNT MENU ──────────────────────────────────────────────────
   Widget _buildAccountMenu(BuildContext context) {
     final colors = context.colors;
+    final l = AppLocalizations.of(context);
     final items = [
-      _MenuItem(Icons.dashboard_rounded, 'Dashboard', '/dashboard'),
+      _MenuItem(Icons.dashboard_rounded, l.settingsDashboard, '/dashboard'),
       _MenuItem(
         Icons.person_outline_rounded,
-        'Chỉnh sửa hồ sơ',
+        l.settingsEditProfile,
         '/profile/edit',
       ),
       _MenuItem(
         Icons.account_balance_wallet_rounded,
-        'Lịch sử thanh toán',
+        l.settingsPaymentHistory,
         '/payments',
       ),
-      _MenuItem(Icons.emoji_events_rounded, 'Chuỗi giải đấu', '/series'),
-      _MenuItem(Icons.mail_outline_rounded, 'Lời mời CLB', '/club-invites'),
+      _MenuItem(Icons.emoji_events_rounded, l.settingsSeries, '/series'),
+      _MenuItem(Icons.mail_outline_rounded, l.settingsClubInvites, '/club-invites'),
       _MenuItem(
         Icons.lock_outline_rounded,
-        'Đổi mật khẩu',
+        l.settingsChangePassword,
         '/profile/change-password',
       ),
-      _MenuItem(Icons.leaderboard_rounded, 'Lịch sử ELO', '/profile/elo'),
+      _MenuItem(Icons.leaderboard_rounded, l.settingsEloHistory, '/profile/elo'),
     ];
 
     return Container(
@@ -2309,6 +2314,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── OTHER MENU ────────────────────────────────────────────────────
   Widget _buildOtherMenu(BuildContext context, bool isDark) {
     final colors = context.colors;
+    final l = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
@@ -2341,7 +2347,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(width: 14),
                   Expanded(
                     child: Text(
-                      'Thông báo',
+                      l.settingsNotifications,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -2379,7 +2385,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    'Chế độ tối',
+                      l.settingsDarkMode,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -2392,6 +2398,62 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   activeThumbColor: AppTheme.primary,
                   onChanged: (v) =>
                       ref.read(tp.themeProvider.notifier).toggleTheme(),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: colors.borderLight, indent: 56),
+          // ── Language Selector ──────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.language_rounded,
+                    size: 16,
+                    color: AppTheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                      l.settingsLanguage,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: ref.watch(localeProvider).languageCode,
+                      icon: const Icon(Icons.arrow_drop_down, size: 16, color: AppTheme.primary),
+                      style: const TextStyle(fontSize: 13, color: AppTheme.primary, fontWeight: FontWeight.w600),
+                      items: const [
+                        DropdownMenuItem(value: 'vi', child: Text('Tiếng Việt', style: TextStyle(fontSize: 13))),
+                        DropdownMenuItem(value: 'en', child: Text('English', style: TextStyle(fontSize: 13))),
+                      ],
+                      onChanged: (lang) {
+                        if (lang != null) {
+                          ref.read(localeProvider.notifier).changeLocale(lang);
+                        }
+                      },
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -2418,8 +2480,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     color: AppTheme.adminColor,
                   ),
                   const SizedBox(width: 14),
-                  const Text(
-                    'Đăng xuất',
+                  Text(
+                      l.settingsLogout,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,

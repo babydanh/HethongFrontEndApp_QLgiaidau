@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart'
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:intl/intl.dart';
 
@@ -114,8 +115,8 @@ class _DoublesRegistrationFlowState
       if (userGender != null && userGender != divGender) {
         setState(() {
           _genderError = divGender == 'MALE'
-              ? 'Nội dung này chỉ dành cho Nam'
-              : 'Nội dung này chỉ dành cho Nữ';
+              ? AppLocalizations.of(context)!.registerGenderErrorMale
+              : AppLocalizations.of(context)!.registerGenderErrorFemale;
         });
       }
     }
@@ -140,19 +141,19 @@ class _DoublesRegistrationFlowState
       if (minElo != null && elo < minElo) {
         setState(
           () => _eloError =
-              'ELO của bạn ($elo) thấp hơn yêu cầu tối thiểu (${minElo.toInt()})',
+              AppLocalizations.of(context)!.registerEloTooLow(elo, minElo.toInt()),
         );
       } else if (maxElo != null && elo > maxElo) {
         setState(
           () => _eloError =
-              'ELO của bạn ($elo) cao hơn yêu cầu tối đa (${maxElo.toInt()})',
+              AppLocalizations.of(context)!.registerEloTooHigh(elo, maxElo.toInt()),
         );
       }
     } catch (_) {
       if (mounted) {
         setState(
           () => _eloError =
-              'Không thể kiểm tra ELO. Vui lòng thử lại trước khi đăng ký.',
+              AppLocalizations.of(context)!.registerEloCheckError,
         );
       }
     } finally {
@@ -161,8 +162,9 @@ class _DoublesRegistrationFlowState
   }
 
   Future<void> _handleStep1Submit() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_teamNameCtrl.text.trim().length < 3) {
-      _showError('Tên đội tối thiểu 3 ký tự');
+      _showError(l10n.doublesRegTeamNameTooShort);
       return;
     }
     // Gender gate
@@ -186,13 +188,7 @@ class _DoublesRegistrationFlowState
       if (!mounted) return;
       _participantId = result.participantId;
       _teamStatus = result.teamStatus;
-      final tournament = ref
-          .read(tournamentIntroProvider(widget.tournamentId))
-          .asData
-          ?.value;
-      _entryFee = result.entryFee > 0
-          ? result.entryFee
-          : (widget.division.entryFee ?? tournament?.entryFee ?? 0);
+      _entryFee = result.entryFee;
 
       // Fetch registration details to get invite token/link
       try {
@@ -226,7 +222,7 @@ class _DoublesRegistrationFlowState
       }
     } catch (e) {
       _showError(
-        ErrorParser.parse(e, 'Không thể tạo đội đăng ký. Vui lòng thử lại.'),
+        ErrorParser.parse(e, AppLocalizations.of(context)!.doublesRegCreateError),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -241,7 +237,7 @@ class _DoublesRegistrationFlowState
       if (_pollElapsed >= _pollMaxDuration) {
         _pollTimer?.cancel();
         if (mounted) {
-          _showError('Đã hết thời gian chờ đồng đội. Bạn có thể tiếp tục sau.');
+          _showError(AppLocalizations.of(context)!.doublesRegPartnerTimeout);
         }
         return;
       }
@@ -287,17 +283,18 @@ class _DoublesRegistrationFlowState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final tAsync = ref.watch(tournamentIntroProvider(widget.tournamentId));
     final colors = context.colors;
 
     if (_success) return _buildSuccess(colors);
     return Scaffold(
       backgroundColor: colors.bgDark,
-      appBar: AppBar(title: const Text('Đăng ký đôi'), centerTitle: true),
+      appBar: AppBar(title: Text(l10n.doublesRegTitle), centerTitle: true),
       body: tAsync.when(
         data: (t) {
           if (t == null) {
-            return const Center(child: Text('Không tìm thấy giải'));
+            return Center(child: Text(l10n.registerTournamentNotFound));
           }
           // Check gender/ELO gates once when entering Step 1
           if (_step == 1 && !_gatesChecked) {
@@ -322,7 +319,7 @@ class _DoublesRegistrationFlowState
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Lỗi: $e')),
+        error: (e, _) => Center(child: Text('${l10n.registerTournamentNotFound}: $e')),
       ),
     );
   }
@@ -381,11 +378,12 @@ class _DoublesRegistrationFlowState
   }
 
   Widget _buildStep1(Tournament t, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'BƯỚC 1',
+          l10n.doublesRegStep1,
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w800,
@@ -395,7 +393,7 @@ class _DoublesRegistrationFlowState
         ),
         const SizedBox(height: 4),
         Text(
-          'Tạo đội',
+          l10n.doublesRegCreateTeam,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
@@ -407,8 +405,8 @@ class _DoublesRegistrationFlowState
           controller: _teamNameCtrl,
           style: TextStyle(color: colors.textPrimary),
           decoration: InputDecoration(
-            labelText: 'Tên đội',
-            hintText: 'Nhập tên đội của bạn',
+            labelText: l10n.doublesRegTeamName,
+            hintText: l10n.doublesRegTeamNameHint,
             prefixIcon: const Icon(Icons.group_rounded),
             filled: true,
             fillColor: colors.bgCard,
@@ -494,7 +492,7 @@ class _DoublesRegistrationFlowState
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Đang kiểm tra ELO...',
+                  l10n.registerEloCheckError,
                   style: TextStyle(fontSize: 13, color: colors.textSecondary),
                 ),
               ],
@@ -504,7 +502,7 @@ class _DoublesRegistrationFlowState
           children: [
             Expanded(
               child: Text(
-                'TÌM ĐỒNG ĐỘI',
+                l10n.doublesRegSearchPartner,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -522,7 +520,7 @@ class _DoublesRegistrationFlowState
                 size: 18,
               ),
               label: Text(
-                'Mời sau',
+                l10n.doublesRegInviteLater,
                 style: TextStyle(fontSize: 12, color: colors.textSecondary),
               ),
             ),
@@ -535,7 +533,7 @@ class _DoublesRegistrationFlowState
             style: TextStyle(color: colors.textPrimary),
             onChanged: _onSearchChanged,
             decoration: InputDecoration(
-              hintText: 'Nhập email hoặc SĐT đồng đội',
+              hintText: l10n.doublesRegPartnerHint,
               prefixIcon: const Icon(Icons.search_rounded),
               suffixIcon: _searching
                   ? const Padding(
@@ -626,7 +624,7 @@ class _DoublesRegistrationFlowState
                     ),
                   )
                 : const Icon(Icons.arrow_forward_rounded),
-            label: Text(_submitting ? 'Đang xử lý...' : 'Tiếp theo'),
+            label: Text(_submitting ? l10n.doublesRegProcessing : l10n.doublesRegSubmitNext),
             style: FilledButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -639,6 +637,7 @@ class _DoublesRegistrationFlowState
   }
 
   Widget _buildStep2(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     final inviteLink =
         _teamInviteLink ??
         (_teamInviteToken != null
@@ -650,7 +649,7 @@ class _DoublesRegistrationFlowState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'BƯỚC 2',
+          l10n.doublesRegStep2,
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w800,
@@ -660,7 +659,7 @@ class _DoublesRegistrationFlowState
         ),
         const SizedBox(height: 4),
         Text(
-          'Mời đồng đội',
+          l10n.doublesRegInviteTitle,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
@@ -669,7 +668,7 @@ class _DoublesRegistrationFlowState
         ),
         const SizedBox(height: 8),
         Text(
-          'Chia sẻ mã mời hoặc link này cho đồng đội của bạn',
+          l10n.doublesRegInviteDesc,
           style: TextStyle(fontSize: 13, color: colors.textSecondary),
         ),
         const SizedBox(height: 24),
@@ -696,7 +695,7 @@ class _DoublesRegistrationFlowState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Link mời:',
+                  l10n.doublesRegInviteLink,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -720,16 +719,16 @@ class _DoublesRegistrationFlowState
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: inviteLink ?? _teamInviteToken!));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Đã sao chép'),
-                    duration: Duration(seconds: 2),
+                  SnackBar(
+                    content: Text(l10n.doublesRegCopied),
+                    duration: const Duration(seconds: 2),
                   ),
                 );
               },
               icon: const Icon(Icons.copy_rounded, size: 16),
-              label: const Text(
-                'Sao chép link mời',
-                style: TextStyle(fontWeight: FontWeight.w600),
+              label: Text(
+                l10n.doublesRegCopyLink,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
@@ -750,7 +749,7 @@ class _DoublesRegistrationFlowState
             ),
             const SizedBox(width: 12),
             Text(
-              'Đang chờ đồng đội tham gia...',
+              l10n.doublesRegWaiting,
               style: TextStyle(fontSize: 13, color: colors.textSecondary),
             ),
           ],
@@ -765,7 +764,7 @@ class _DoublesRegistrationFlowState
               _pollTimer?.cancel();
               context.go('/intro/${widget.tournamentId}');
             },
-            child: const Text('Tiếp tục sau'),
+            child: const Text(l10n.doublesRegContinueLater),
           ),
         ),
       ],
@@ -844,7 +843,7 @@ class _DoublesRegistrationFlowState
         ),
         const SizedBox(height: 4),
         Text(
-          'Hoàn tất',
+          l10n.doublesRegComplete,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
@@ -939,7 +938,7 @@ class _DoublesRegistrationFlowState
             icon: canPay
                 ? const Icon(Icons.payment_rounded)
                 : const Icon(Icons.check_rounded),
-            label: Text(canPay ? 'Tiến hành thanh toán' : 'Hoàn tất'),
+            label: Text(canPay ? 'Tiến hành thanh toán' : l10n.doublesRegComplete),
             style: FilledButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -990,3 +989,4 @@ class _DoublesRegistrationFlowState
     );
   }
 }
+

@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
 
 class TournamentHeaderView extends StatefulWidget {
@@ -215,14 +216,15 @@ class _BannerCarousel extends StatelessWidget {
 class _FallbackBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SvgPicture.network(
       "https://giaidau.vnvar.com/vndcsport.svg",
       fit: BoxFit.contain,
       placeholderBuilder: (_) => Container(
         color: const Color(0xFF1E293B),
-        child: const Center(
+        child: Center(
           child: Text(
-            "VNSPORT",
+            l10n.vnsport,
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w900,
@@ -243,6 +245,7 @@ class _HeaderBadges extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         SportPill(sportKey: tournament.sport),
@@ -340,9 +343,10 @@ _PrimaryActionTag _resolvePrimaryActionTag(
   BuildContext context,
   Tournament tournament,
 ) {
+  final l10n = AppLocalizations.of(context)!;
   if (StatusHelper.isTournamentInProgress(tournament.status)) {
     return _PrimaryActionTag(
-      label: 'TRỰC TIẾP',
+      label: l10n.liveTag,
       icon: Icons.play_arrow_rounded,
       iconColor: context.colors.success,
     );
@@ -350,7 +354,7 @@ _PrimaryActionTag _resolvePrimaryActionTag(
 
   if (StatusHelper.isTournamentCompleted(tournament.status)) {
     return _PrimaryActionTag(
-      label: 'KẾT QUẢ',
+      label: l10n.resultTag,
       icon: Icons.emoji_events_rounded,
       iconColor: const Color(0xFFD97706),
     );
@@ -358,7 +362,7 @@ _PrimaryActionTag _resolvePrimaryActionTag(
 
   if (StatusHelper.isTournamentCancelled(tournament.status)) {
     return _PrimaryActionTag(
-      label: 'ĐÃ HỦY',
+      label: l10n.cancelledTag,
       icon: Icons.block_rounded,
       iconColor: context.colors.error,
     );
@@ -368,14 +372,14 @@ _PrimaryActionTag _resolvePrimaryActionTag(
       tournament.status.toUpperCase() == 'REGISTRATION_CLOSED' ||
       tournament.status.toUpperCase() == 'CLOSED') {
     return _PrimaryActionTag(
-      label: 'ĐÃ ĐÓNG ĐĂNG KÝ',
+      label: l10n.registrationClosedTag,
       icon: Icons.lock_outline_rounded,
       iconColor: context.colors.error,
     );
   }
 
-  return const _PrimaryActionTag(
-    label: 'ĐANG MỞ ĐĂNG KÝ',
+  return _PrimaryActionTag(
+    label: l10n.registrationOpenTag,
     icon: Icons.person_add_alt_1_rounded,
     iconColor: AppTheme.primary,
   );
@@ -389,6 +393,7 @@ class _HeaderMeta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     return Wrap(
       spacing: 14,
       runSpacing: 7,
@@ -402,11 +407,11 @@ class _HeaderMeta extends StatelessWidget {
         ),
         _HeaderIconText(
           icon: Icons.location_on_outlined,
-          text: tournament.locationAddress ?? "Chưa cập nhật địa điểm",
+          text: tournament.locationAddress ?? l10n.locationNotUpdated,
         ),
         _HeaderIconText(
           icon: Icons.group_rounded,
-          text: "0 / ${tournament.maxTeams} Đội",
+          text: "0 / ${tournament.maxTeams} ${l10n.teamsUnit}",
         ),
       ].map((child) {
         return DefaultTextStyle.merge(
@@ -599,6 +604,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final List<String> images = [];
     if (widget.tournament.bannerUrl != null &&
         widget.tournament.bannerUrl!.isNotEmpty) {
@@ -623,9 +629,9 @@ class _TournamentBannerState extends State<TournamentBanner> {
                       fit: BoxFit.contain,
                       placeholderBuilder: (_) => Container(
                         color: const Color(0xFF1E293B),
-                        child: const Center(
+                        child: Center(
                           child: Text(
-                            "VNSPORT",
+                            l10n.vnsport,
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.w900,
@@ -657,9 +663,9 @@ class _TournamentBannerState extends State<TournamentBanner> {
                               fit: BoxFit.contain,
                               placeholderBuilder: (_) => Container(
                                 color: const Color(0xFF1E293B),
-                                child: const Center(
+                                child: Center(
                                   child: Text(
-                                    "VNSPORT",
+                                    l10n.vnsport,
                                     style: TextStyle(
                                       fontSize: 28,
                                       fontWeight: FontWeight.w900,
@@ -775,8 +781,8 @@ class _TournamentBannerState extends State<TournamentBanner> {
                               (StatusHelper.isTournamentRegistrationClosed(widget.tournament.status) ||
                                       widget.tournament.status.toUpperCase() == 'REGISTRATION_CLOSED' ||
                                       widget.tournament.status.toUpperCase() == 'CLOSED')
-                                  ? "ĐÃ ĐÓNG ĐĂNG KÝ"
-                                  : "ĐANG MỞ ĐĂNG KÝ",
+                                  ? l10n.registrationClosedTag
+                                  : l10n.registrationOpenTag,
                               colors,
                               color: (StatusHelper.isTournamentRegistrationClosed(widget.tournament.status) ||
                                       widget.tournament.status.toUpperCase() == 'REGISTRATION_CLOSED' ||
@@ -786,7 +792,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                             ),
                             const SizedBox(width: 6),
                             _buildTag(
-                              "VÒNG TRÒN",
+                              l10n.roundRobinTag,
                               colors,
                               icon: Icons.loop_rounded,
                               iconColor: const Color(0xFFD97706),
@@ -810,15 +816,15 @@ class _TournamentBannerState extends State<TournamentBanner> {
                                 AppShareModal.show(
                                   context: context,
                                   title: tournament.name,
-                                  subtitle: '${tournament.locationAddress ?? "Việt Nam"} • ${tournament.category ?? tournament.sport}',
+                                  subtitle: '${tournament.locationAddress ?? l10n.vietnam} • ${tournament.category ?? tournament.sport}',
                                   webUrl: 'https://giaidau.vnvar.com/tournaments/${tournament.id}',
                                   imageUrl: tournament.logoUrl ?? tournament.bannerUrl,
-                                  badgeText: tournament.isLite ? 'Giải Nhanh (Lite)' : 'Giải Nâng Cao',
+                                  badgeText: tournament.isLite ? l10n.liteTournament : l10n.advancedTournament,
                                 );
                               },
                               icon: const Icon(Icons.share, size: 12),
-                              label: const Text(
-                                "Chia sẻ",
+                              label: Text(
+                                l10n.share,
                                 style: TextStyle(fontSize: 10),
                               ),
                             ),
@@ -840,12 +846,12 @@ class _TournamentBannerState extends State<TournamentBanner> {
                             _iconText(
                               Icons.location_on_outlined,
                               widget.tournament.locationAddress ??
-                                  "Chưa cập nhật địa điểm",
+                                  l10n.locationNotUpdated,
                               colors,
                             ),
                             _iconText(
                               Icons.group_rounded,
-                              "0 / 16 Đội",
+                              "0 / 16 ${l10n.teamsUnit}",
                               colors,
                             ),
                           ],

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
@@ -21,6 +21,7 @@ class PickleballPanel extends ConsumerWidget {
     final state = ref.watch(scorePanelNotifierProvider(params));
     final notifier = ref.read(scorePanelNotifierProvider(params).notifier);
     final pb = state.pickleball ?? const PickleballServeState();
+    final l10n = AppLocalizations.of(context);
     final colors = context.colors;
 
     // Fetch team names
@@ -30,8 +31,8 @@ class PickleballPanel extends ConsumerWidget {
         matchId: params.matchId,
       )),
     );
-    final team1Name = matchAsync.value?.team1Name ?? 'Đội 1';
-    final team2Name = matchAsync.value?.team2Name ?? 'Đội 2';
+    final team1Name = matchAsync.value?.team1Name ?? l10n.pickleballTeam1;
+    final team2Name = matchAsync.value?.team2Name ?? l10n.pickleballTeam2;
 
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
@@ -162,7 +163,7 @@ class PickleballPanel extends ConsumerWidget {
                         onPressed: () => notifier.pickleballSwitchServer(),
                         icon: const Icon(Icons.swap_horiz_rounded, size: 16),
                         label: const Text(
-                          'Đổi lượt giao',
+                          l10n.pickleballSwitchServer,
                           style: TextStyle(fontSize: 11),
                         ),
                         style: OutlinedButton.styleFrom(
@@ -176,7 +177,7 @@ class PickleballPanel extends ConsumerWidget {
                         onPressed: () => notifier.pickleballSideOut(),
                         icon: const Icon(Icons.sync_alt_rounded, size: 16),
                         label: const Text(
-                          'Mất quyền giao',
+                          l10n.pickleballLoseServe,
                           style: TextStyle(fontSize: 11),
                         ),
                         style: FilledButton.styleFrom(
@@ -321,3 +322,4 @@ class PickleballPanel extends ConsumerWidget {
     );
   }
 }
+

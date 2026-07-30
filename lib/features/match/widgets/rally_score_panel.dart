@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
@@ -24,6 +24,7 @@ class RallyScorePanel extends ConsumerWidget {
     final state = ref.watch(scorePanelNotifierProvider(params));
     final notifier = ref.read(scorePanelNotifierProvider(params).notifier);
     final r = state.rally ?? const RallySetState();
+    final l10n = AppLocalizations.of(context);
     final colors = context.colors;
     final ts = state.config;
 
@@ -34,8 +35,8 @@ class RallyScorePanel extends ConsumerWidget {
         matchId: params.matchId,
       )),
     );
-    final team1Name = matchAsync.value?.team1Name ?? 'Đội 1';
-    final team2Name = matchAsync.value?.team2Name ?? 'Đội 2';
+    final team1Name = matchAsync.value?.team1Name ?? l10n.pickleballTeam1;
+    final team2Name = matchAsync.value?.team2Name ?? l10n.pickleballTeam2;
 
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
@@ -76,8 +77,8 @@ class RallyScorePanel extends ConsumerWidget {
                       children: [
                         _topPill('${ts.pointsPerSet} điểm/set'),
                         _topPill(ts.bestOf > 1 ? 'BO${ts.bestOf}' : '1 set'),
-                        if (ts.mustWinByTwo) _topPill('Thắng cách 2'),
-                        if (nearSetPoint) _topPill('Đang gần điểm chốt set'),
+                        if (ts.mustWinByTwo) _topPill(l10n.matchWinByTwo),
+                        if (nearSetPoint) _topPill(l10n.rallyNearSetPoint),
                       ],
                     ),
                   ),
@@ -225,7 +226,7 @@ class RallyScorePanel extends ConsumerWidget {
             child: Text(
               distance > 0
                   ? 'Còn $distance điểm tới mốc set'
-                  : 'Đã chạm mốc set',
+                  : l10n.rallyReachedThreshold,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
@@ -293,7 +294,8 @@ class RallyScorePanel extends ConsumerWidget {
   Widget _topPill(String label) {
     return Builder(
       builder: (context) {
-        final colors = context.colors;
+        final l10n = AppLocalizations.of(context);
+    final colors = context.colors;
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
@@ -314,3 +316,4 @@ class RallyScorePanel extends ConsumerWidget {
     );
   }
 }
+

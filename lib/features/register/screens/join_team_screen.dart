@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
 class JoinTeamScreen extends ConsumerStatefulWidget {
@@ -41,7 +42,7 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ErrorParser.parse(e, 'Không thể tham gia đội.')),
+            content: Text(ErrorParser.parse(e, AppLocalizations.of(context)!.joinTeamError)),
           ),
         );
       }
@@ -52,6 +53,7 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isAuthenticated = ref.watch(authProvider).isAuthenticated;
     if (!isAuthenticated) {
       final redirect = Uri(
@@ -64,7 +66,7 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
       ).toString();
       return Scaffold(
         backgroundColor: context.colors.bgDark,
-        appBar: AppBar(title: const Text('Tham gia đội')),
+        appBar: AppBar(title: Text(l10n.joinTeamTitle)),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -73,7 +75,7 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
                 '/login?redirect=${Uri.encodeComponent(redirect)}',
               ),
               icon: const Icon(Icons.login_rounded),
-              label: const Text('Đăng nhập để tham gia đội'),
+              label: Text(l10n.joinTeamLogin),
             ),
           ),
         ),
@@ -82,7 +84,7 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
 
     return Scaffold(
       backgroundColor: context.colors.bgDark,
-      appBar: AppBar(title: const Text('Tham gia đội'), centerTitle: true),
+      appBar: AppBar(title: Text(l10n.joinTeamTitle), centerTitle: true),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -96,9 +98,9 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
                       color: context.colors.success,
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Tham gia đội thành công!',
-                      style: TextStyle(
+                    Text(
+                      l10n.joinTeamSuccess,
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                       ),
@@ -107,7 +109,7 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
                     ElevatedButton(
                       onPressed: () =>
                           context.go('/intro/${widget.tournamentId}'),
-                      child: const Text('Xem giải đấu'),
+                      child: Text(l10n.joinTeamViewTournament),
                     ),
                   ],
                 )
@@ -128,17 +130,17 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
-                      'Lời mời tham gia đội',
-                      style: TextStyle(
+                    Text(
+                      l10n.joinTeamInvitation,
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Bạn được mời vào một đội đánh đôi',
-                      style: TextStyle(color: Colors.grey),
+                    Text(
+                      l10n.joinTeamDesc,
+                      style: const TextStyle(color: Colors.grey),
                     ),
                     const SizedBox(height: 32),
                     SizedBox(
@@ -157,7 +159,7 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
                               )
                             : const Icon(Icons.check_circle_outline_rounded),
                         label: Text(
-                          _submitting ? 'Đang xử lý...' : 'Xác nhận tham gia',
+                          _submitting ? l10n.joinTeamProcessing : l10n.joinTeamConfirm,
                         ),
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(

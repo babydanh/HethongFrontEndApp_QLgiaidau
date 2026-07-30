@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
@@ -21,6 +21,7 @@ class TennisScorePanel extends ConsumerWidget {
     final state = ref.watch(scorePanelNotifierProvider(params));
     final notifier = ref.read(scorePanelNotifierProvider(params).notifier);
     final t = state.tennis ?? const TennisGameState();
+    final l10n = AppLocalizations.of(context);
     final colors = context.colors;
     final ts = state.config;
 
@@ -31,8 +32,8 @@ class TennisScorePanel extends ConsumerWidget {
         matchId: params.matchId,
       )),
     );
-    final team1Name = matchAsync.value?.team1Name ?? 'Đội 1';
-    final team2Name = matchAsync.value?.team2Name ?? 'Đội 2';
+    final team1Name = matchAsync.value?.team1Name ?? l10n.pickleballTeam1;
+    final team2Name = matchAsync.value?.team2Name ?? l10n.pickleballTeam2;
 
     final isDeuce =
         !t.isTiebreak &&
@@ -98,12 +99,12 @@ class TennisScorePanel extends ConsumerWidget {
                 alignment: WrapAlignment.center,
                 children: [
                   _infoPill(
-                    'Điểm game',
-                    t.isTiebreak ? 'Tiebreak' : '15 • 30 • 40',
+                    l10n.tennisGameLabel,
+                    t.isTiebreak ? l10n.tennisTiebreakLabel : '15 • 30 • 40',
                   ),
                   _infoPill('Set', '${ts.pointsPerSet} game/set'),
                   _infoPill('Format', 'Thắng ${ts.setsToWin} set'),
-                  if (isDeuce) _infoPill('Trạng thái', 'Deuce'),
+                  if (isDeuce) _infoPill('Trạng thái', l10n.tennisDeuce),
                 ],
               ),
             ),
@@ -325,10 +326,10 @@ class TennisScorePanel extends ConsumerWidget {
           ),
           child: Text(
             isTiebreak
-                ? 'TIEBREAK'
+                ? l10n.tennisTiebreakLabel
                 : isDeuce
-                ? 'DEUCE'
-                : 'GAME',
+                ? l10n.tennisDeuce
+                : l10n.tennisGameLabel,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w700,
@@ -348,7 +349,8 @@ class TennisScorePanel extends ConsumerWidget {
   Widget _infoPill(String label, String value) {
     return Builder(
       builder: (context) {
-        final colors = context.colors;
+        final l10n = AppLocalizations.of(context);
+    final colors = context.colors;
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           decoration: BoxDecoration(
@@ -404,3 +406,4 @@ class TennisScorePanel extends ConsumerWidget {
     );
   }
 }
+

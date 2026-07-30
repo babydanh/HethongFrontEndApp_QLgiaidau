@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/vnsport_header.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class LoginLoadingScreen extends ConsumerStatefulWidget {
   final String? redirectPath;
@@ -21,7 +22,6 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
   @override
   void initState() {
     super.initState();
-    // Chờ 2.2 giây để người dùng trải nghiệm hiệu ứng chào mừng trước khi thu nhỏ thành header trang chủ
     Timer(const Duration(milliseconds: 2200), () {
       if (mounted) {
         final destination = widget.redirectPath;
@@ -39,12 +39,12 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
     final colors = context.colors;
     final userProfileAsync = ref.watch(userProfileProvider);
     final size = MediaQuery.of(context).size;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: colors.bgDark,
       body: Stack(
         children: [
-          // Header siêu to chiếm 68% chiều cao màn hình dùng Hero tag để khi chuyển sang trang chủ sẽ thu nhỏ mượt mà
           Hero(
             tag: "vnsport_header_bg",
             child: CustomPaint(
@@ -58,7 +58,6 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const SizedBox(height: 40),
-                  // Logo VNSPORT siêu to dùng Hero tag
                   Hero(
                     tag: "vnsport_logo",
                     child: SizedBox(
@@ -71,15 +70,14 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Dòng chào mừng với hiệu ứng mượt mà
                   userProfileAsync.when(
                     data: (profile) {
-                      final name = profile.fullName ?? "Người dùng";
+                      final name = profile.fullName ?? l10n.loginLoading_defaultUserName;
                       return Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                                "CHÀO MỪNG QUAY TRỞ LẠI",
+                                l10n.loginLoading_welcomeBack,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.7),
                                   fontSize: 12,
@@ -117,7 +115,7 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                       ),
                     ),
                     error: (context, error) => Text(
-                      "Đăng nhập thành công!",
+                      l10n.loginLoading_loginSuccess,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -127,7 +125,6 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                   ),
 
                   const SizedBox(height: 48),
-                  // Spinner hiệu ứng mờ sang trọng
                   const SizedBox(
                     width: 28,
                     height: 28,

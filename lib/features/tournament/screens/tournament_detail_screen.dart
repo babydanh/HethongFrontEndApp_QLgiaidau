@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart';
 import 'package:app_quanly_giaidau/core/services/excel_export_service.dart';
 
 import 'package:app_quanly_giaidau/core/widgets/responsive_layout.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart';
@@ -36,6 +37,7 @@ class _TournamentDetailScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     TournamentDetailScreen._log
         .debug('Building with tournamentId = ${widget.tournamentId}');
     final tournamentAsync = ref.watch(tournamentProvider(widget.tournamentId));
@@ -43,8 +45,8 @@ class _TournamentDetailScreenState
     return tournamentAsync.when(
       data: (tournament) {
         if (tournament == null) {
-          return const Scaffold(
-            body: Center(child: Text('Giải đấu không tồn tại')),
+          return Scaffold(
+            body: Center(child: Text(l10n.tournamentNotFound)),
           );
         }
 
@@ -57,7 +59,7 @@ class _TournamentDetailScreenState
               onPressed: () => context.go('/admin'),
             ),
             title: Text(
-                tournament.name.isNotEmpty ? tournament.name : '(Chưa có tên)'),
+                tournament.name.isNotEmpty ? tournament.name : l10n.unnamed),
             actions: [
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
@@ -66,9 +68,9 @@ class _TournamentDetailScreenState
                   if (value == 'delete') {
                     final confirm = await showConfirmDialog(
                       context: context,
-                      title: 'Xóa giải đấu?',
-                      content: 'Thao tác này không thể hoàn tác.',
-                      confirmText: 'Xóa',
+                      title: l10n.deleteTournamentTitle,
+                      content: l10n.deleteTournamentContent,
+                      confirmText: l10n.delete,
                     );
                     if (confirm == true && context.mounted) {
                       final success = await ref
@@ -77,15 +79,15 @@ class _TournamentDetailScreenState
                       if (context.mounted) {
                         if (success) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Đã xóa giải đấu thành công')),
+                            SnackBar(
+                                content: Text(l10n.tournamentDeleted)),
                           );
                           context.go('/admin');
                         } else {
                           final error =
                               ref.read(tournamentActionProvider).error;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Lỗi khi xóa: $error')),
+                            SnackBar(content: Text('${l10n.deleteError}: $error')),
                           );
                         }
                       }
@@ -100,7 +102,7 @@ class _TournamentDetailScreenState
                         Icon(Icons.delete,
                             color: context.colors.error, size: 18),
                         SizedBox(width: 8),
-                        Text('Xóa giải đấu',
+                        Text(l10n.deleteTournament,
                             style: TextStyle(color: context.colors.error)),
                       ],
                     ),
@@ -134,12 +136,13 @@ class _TournamentDetailScreenState
       ),
       error: (e, _) => Scaffold(
         backgroundColor: context.colors.bgDark,
-        body: Center(child: Text('Lỗi: $e')),
+        body: Center(child: Text('${l10n.errorPrefix}: $e')),
       ),
     );
   }
 
   Widget _buildDetailView(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     switch (_selectedFeature) {
       case SelectedFeature.tokens:
         return TokenManagementScreen(
@@ -156,7 +159,7 @@ class _TournamentDetailScreenState
       case SelectedFeature.none:
         return Center(
           child: Text(
-            'Chọn một chức năng bên trái',
+            l10n.selectFeature,
             style:
                 TextStyle(color: context.colors.textSecondary, fontSize: 16),
           ),
@@ -166,6 +169,7 @@ class _TournamentDetailScreenState
 
   Widget _buildMasterView(BuildContext context, dynamic tournament,
       {bool isTablet = false}) {
+    final l10n = AppLocalizations.of(context)!;
     final sportIcon = AppConstants.sportIcons[tournament.sport] ?? '🏆';
     final sportName =
         AppConstants.sportNames[tournament.sport] ?? tournament.sport;
@@ -195,7 +199,7 @@ class _TournamentDetailScreenState
               Text(
                 tournament.name.isNotEmpty
                     ? tournament.name
-                    : '(Chưa có tên)',
+                    : l10n.unnamed,
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
@@ -212,9 +216,9 @@ class _TournamentDetailScreenState
                         if (categoryName != null) InfoChip(label: categoryName, color: AppTheme.adminColor),
                         InfoChip(label: bracketName, color: context.colors.warning),
                         InfoChip(label: statusName, color: context.colors.success),
-                        InfoChip(label: '${tournament.maxTeams} Đội', color: AppTheme.primary),
-                        if (tournament.maxPlayersPerTeam != null) 
-                          InfoChip(label: '${tournament.maxPlayersPerTeam} Người/Đội', color: AppTheme.secondary),
+                        InfoChip(label: '${tournament.maxTeams} ${l10n.teamsUnit}', color: AppTheme.primary),
+                        if (tournament.maxPlayersPerTeam != null)
+                          InfoChip(label: '${tournament.maxPlayersPerTeam} ${l10n.playersPerTeam}', color: AppTheme.secondary),
                       ],
                     ),
                   ],
@@ -226,7 +230,7 @@ class _TournamentDetailScreenState
 
               // ─── Quick Actions ───
               Text(
-                'QUẢN LÝ',
+                l10n.managementTitle,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -237,8 +241,8 @@ class _TournamentDetailScreenState
               const SizedBox(height: 12),
               AppActionButton(
                 icon: Icons.qr_code_rounded,
-                label: 'Quản lý Mã truy cập (Token)',
-                subtitle: 'Xem QR Code, Refresh Token, Số người online',
+                label: l10n.manageTokens,
+                subtitle: l10n.manageTokensSubtitle,
                 color: AppTheme.adminColor,
                 isSelected: _selectedFeature == SelectedFeature.tokens,
                 onTap: () {
@@ -252,8 +256,8 @@ class _TournamentDetailScreenState
               const SizedBox(height: 8),
               AppActionButton(
                 icon: Icons.people_rounded,
-                label: 'Quản lý đội / VĐV',
-                subtitle: 'Thêm, sửa, import danh sách',
+                label: l10n.manageTeams,
+                subtitle: l10n.manageTeamsSubtitle,
                 color: AppTheme.primary,
                 isSelected: _selectedFeature == SelectedFeature.teams,
                 onTap: () {
@@ -267,8 +271,8 @@ class _TournamentDetailScreenState
               const SizedBox(height: 8),
               AppActionButton(
                 icon: Icons.casino_rounded,
-                label: 'Bốc thăm & Phân bảng',
-                subtitle: 'Tự động hoặc thủ công',
+                label: l10n.manageDraw,
+                subtitle: l10n.manageDrawSubtitle,
                 color: context.colors.warning,
                 isSelected: _selectedFeature == SelectedFeature.draw,
                 onTap: () {
@@ -282,8 +286,8 @@ class _TournamentDetailScreenState
               const SizedBox(height: 8),
               AppActionButton(
                 icon: Icons.account_tree_rounded,
-                label: 'Xem Bracket',
-                subtitle: 'Sơ đồ thi đấu & kết quả',
+                label: l10n.viewBracket,
+                subtitle: l10n.viewBracketSubtitle,
                 color: AppTheme.secondary,
                 isSelected: _selectedFeature == SelectedFeature.bracket,
                 onTap: () {
@@ -298,17 +302,17 @@ class _TournamentDetailScreenState
                 const SizedBox(height: 8),
                 AppActionButton(
                   icon: Icons.check_circle_outline_rounded,
-                  label: 'Kết thúc giải đấu',
-                  subtitle: 'Khóa kết quả và trao giải',
+                  label: l10n.endTournament,
+                  subtitle: l10n.endTournamentSubtitle,
                   color: context.colors.success,
                   isSelected: false,
                   onTap: () async {
                     final confirm = await showConfirmDialog(
                       context: context,
-                      title: 'Xác nhận kết thúc',
-                      content: 'Bạn có chắc chắn muốn kết thúc giải đấu? Thao tác này sẽ khóa toàn bộ các trận đấu.',
-                      confirmText: 'Xác nhận kết thúc',
-                      cancelText: 'Tiếp tục',
+                      title: l10n.confirmEndTitle,
+                      content: l10n.confirmEndContent,
+                      confirmText: l10n.confirmEndButton,
+                      cancelText: l10n.continueButton,
                     );
                     if (confirm == true && context.mounted) {
                       final success = await ref
@@ -317,11 +321,11 @@ class _TournamentDetailScreenState
                       if (context.mounted) {
                         if (success) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Giải đấu đã kết thúc thành công!')),
+                            SnackBar(content: Text(l10n.tournamentEnded)),
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Có lỗi xảy ra khi kết thúc giải đấu.')),
+                            SnackBar(content: Text(l10n.endError)),
                           );
                         }
                       }
@@ -332,26 +336,26 @@ class _TournamentDetailScreenState
               const SizedBox(height: 8),
               AppActionButton(
                 icon: Icons.download_rounded,
-                label: 'Xuất dữ liệu giải đấu',
-                subtitle: 'Xuất toàn bộ kết quả ra Excel',
+                label: l10n.exportData,
+                subtitle: l10n.exportDataSubtitle,
                 color: AppTheme.primary,
                 isSelected: false,
                 onTap: () async {
                   try {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đang tạo file Excel...')),
+                      SnackBar(content: Text(l10n.exportingExcel)),
                     );
                     final matches = await ref.read(matchesProvider(widget.tournamentId).future);
                     await ExcelExportService.exportTournamentData(tournament.name, matches);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: const Text('Xuất dữ liệu thành công!'), backgroundColor: context.colors.success),
+                        SnackBar(content: Text(l10n.exportSuccess), backgroundColor: context.colors.success),
                       );
                     }
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Lỗi: $e'), backgroundColor: context.colors.error),
+                        SnackBar(content: Text('${l10n.errorPrefix}: $e'), backgroundColor: context.colors.error),
                       );
                     }
                   }

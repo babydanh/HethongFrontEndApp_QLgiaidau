@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_team_card.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TeamsTab extends StatelessWidget {
   final List<Team> teams;
@@ -19,6 +20,7 @@ class TeamsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     if (teams.isEmpty) {
       return Center(
@@ -28,7 +30,7 @@ class TeamsTab extends StatelessWidget {
             Icon(Icons.group_outlined, size: 64, color: colors.textMuted.withValues(alpha: 0.4)),
             const SizedBox(height: 16),
             Text(
-              "Chưa có đội tham gia",
+              l10n.noTeamsJoined,
               style: TextStyle(fontSize: 15, color: colors.textSecondary),
             ),
           ],
@@ -36,10 +38,10 @@ class TeamsTab extends StatelessWidget {
       );
     }
 
-    String getDivision(Team t) => t.group.isNotEmpty ? t.group : "Khác";
+    String getDivision(Team t) => t.group.isNotEmpty ? t.group : l10n.otherDivision;
 
     final matched = teams.where((t) => getDivision(t) == selectedDivision).toList();
-    final filteredTeams = (selectedDivision == "Tất cả" || selectedDivision == "all" || selectedDivision.isEmpty)
+    final filteredTeams = (selectedDivision == l10n.filterAll || selectedDivision == "all" || selectedDivision.isEmpty)
         ? teams
         : (matched.isEmpty ? teams : matched);
 
@@ -53,7 +55,7 @@ class TeamsTab extends StatelessWidget {
     if (filteredTeams.isEmpty) {
       return Center(
         child: Text(
-          "Không có đội nào",
+          l10n.noTeamsFound,
           style: TextStyle(color: colors.textSecondary),
         ),
       );

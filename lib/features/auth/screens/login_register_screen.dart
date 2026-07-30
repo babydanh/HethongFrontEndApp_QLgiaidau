@@ -12,6 +12,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/utils/token_generator.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class LoginRegisterScreen extends ConsumerStatefulWidget {
   final String? redirectPath;
@@ -76,11 +77,12 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       context.go("/login-loading", extra: widget.redirectPath);
     } else {
       final auth = ref.read(authProvider);
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
         _isLoading = false;
         _errorMessage =
             auth.errorMessage ??
-            (_isRegisterMode ? "Đăng ký thất bại" : "Đăng nhập thất bại");
+            (_isRegisterMode ? l10n.loginRegister_registerFailed : l10n.loginRegister_loginFailed);
       });
     }
   }
@@ -92,8 +94,6 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
     });
     try {
       final googleSignIn = GoogleSignIn(
-        // iOS needs its native client ID. Android must use the Android OAuth
-        // client generated for this package and signing certificate instead.
         clientId:
             defaultTargetPlatform == TargetPlatform.iOS ||
                 defaultTargetPlatform == TargetPlatform.macOS
@@ -102,7 +102,6 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
         serverClientId: dotenv.env['GOOGLE_WEB_CLIENT_ID'],
         scopes: ['email'],
       );
-      // Xoá cache tài khoản cũ để luôn hiện account picker
       await googleSignIn.signOut();
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
@@ -124,18 +123,20 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
         context.go("/login-loading", extra: widget.redirectPath);
       } else {
         final auth = ref.read(authProvider);
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
           _isLoading = false;
-          _errorMessage = auth.errorMessage ?? "Đăng nhập Google thất bại";
+          _errorMessage = auth.errorMessage ?? l10n.loginRegister_googleLoginFailed;
         });
       }
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
         _isLoading = false;
         _errorMessage = ErrorParser.parse(
           e,
-          'Không thể đăng nhập bằng Google. Vui lòng thử lại.',
+          l10n.loginRegister_googleLoginError,
         );
       });
     }
@@ -177,9 +178,10 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
         context.go("/login-loading", extra: widget.redirectPath);
       } else {
         final auth = ref.read(authProvider);
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
           _isLoading = false;
-          _errorMessage = auth.errorMessage ?? "Đăng nhập Apple thất bại";
+          _errorMessage = auth.errorMessage ?? l10n.loginRegister_appleLoginFailed;
         });
       }
     } on SignInWithAppleAuthorizationException catch (e) {
@@ -188,20 +190,22 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
         return;
       }
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
         _isLoading = false;
         _errorMessage = ErrorParser.parse(
           e,
-          'Không thể đăng nhập bằng Apple. Vui lòng thử lại.',
+          l10n.loginRegister_appleLoginError,
         );
       });
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
         _isLoading = false;
         _errorMessage = ErrorParser.parse(
           e,
-          'Không thể đăng nhập bằng Apple. Vui lòng thử lại.',
+          l10n.loginRegister_appleLoginError,
         );
       });
     }
@@ -217,12 +221,12 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
     final textSecondaryColor = colors.textSecondary;
     final ctaBgColor = AppTheme.primary;
     final ctaTextColor = Colors.white;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: primaryBgColor,
       body: Stack(
         children: [
-          // Background Radial Glow
           Positioned(
             top: -screenSize.height * 0.2,
             right: -screenSize.width * 0.3,
@@ -251,7 +255,6 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // VNSPORT Logo (Animated Hero)
                     SizedBox(
                       height: 70,
                       width: 260,
@@ -275,8 +278,8 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                       duration: const Duration(milliseconds: 300),
                       child: Text(
                         _isRegisterMode
-                            ? "Đăng ký\nthành viên"
-                            : "Đăng nhập\ntài khoản",
+                            ? l10n.registerTitle
+                            : l10n.loginTitle,
                         key: ValueKey<bool>(_isRegisterMode),
                         style: TextStyle(
                           fontSize: 34.0,
@@ -294,8 +297,8 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                       duration: const Duration(milliseconds: 300),
                       child: Text(
                         _isRegisterMode
-                            ? "Gia nhập cộng đồng thể thao VNSPORT."
-                            : "Truy cập để quản lý các giải đấu của bạn.",
+                            ? l10n.loginRegister_registerSubtitle
+                            : l10n.loginRegister_loginSubtitle,
                         key: ValueKey<bool>(_isRegisterMode),
                         style: TextStyle(
                           fontSize: 14.5,
@@ -356,14 +359,14 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                   children: [
                                     _buildTextInput(
                                       controller: _fullNameController,
-                                      label: "Họ và tên",
-                                      hint: "Nhập đầy đủ họ tên",
+                                      label: l10n.fullNameLabel,
+                                      hint: l10n.loginRegister_fullNameHint,
                                       icon: Icons.person_outline,
                                       validator: (val) {
                                         if (_isRegisterMode &&
                                             (val == null ||
                                                 val.trim().isEmpty)) {
-                                          return "Vui lòng nhập họ và tên";
+                                          return l10n.loginRegister_fullNameRequired;
                                         }
                                         return null;
                                       },
@@ -375,18 +378,18 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                         ),
                         _buildTextInput(
                           controller: _emailController,
-                          label: "Địa chỉ Email",
-                          hint: "yourname@example.com",
+                          label: l10n.emailLabel,
+                          hint: l10n.loginRegister_emailHint,
                           icon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
                           validator: (val) {
                             if (val == null || val.trim().isEmpty) {
-                              return "Vui lòng nhập email";
+                              return l10n.loginRegister_emailRequired;
                             }
                             if (!RegExp(
                               r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$",
                             ).hasMatch(val.trim())) {
-                              return "Định dạng email không hợp lệ";
+                              return l10n.loginRegister_emailInvalid;
                             }
                             return null;
                           },
@@ -394,8 +397,8 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                         const SizedBox(height: 16),
                         _buildTextInput(
                           controller: _passwordController,
-                          label: "Mật khẩu",
-                          hint: "Nhập mật khẩu của bạn",
+                          label: l10n.passwordLabel,
+                          hint: l10n.loginRegister_passwordHint,
                           icon: Icons.lock_outline,
                           obscureText: _obscurePassword,
                           suffixIcon: IconButton(
@@ -412,10 +415,10 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                           ),
                           validator: (val) {
                             if (val == null || val.isEmpty) {
-                              return "Vui lòng nhập mật khẩu";
+                              return l10n.loginRegister_passwordRequired;
                             }
                             if (val.length < 6) {
-                              return "Mật khẩu phải từ 6 ký tự trở lên";
+                              return l10n.loginRegister_passwordMinLength;
                             }
                             return null;
                           },
@@ -434,7 +437,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                   horizontal: 4,
                                 ),
                                 child: Text(
-                                  'Quên mật khẩu?',
+                                  l10n.loginRegister_forgotPassword,
                                   style: TextStyle(
                                     color: const Color(0xFF2979FF),
                                     fontSize: 13,
@@ -470,7 +473,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                 : AnimatedSwitcher(
                                     duration: const Duration(milliseconds: 200),
                                     child: Text(
-                                      _isRegisterMode ? "Đăng ký" : "Đăng nhập",
+                                      _isRegisterMode ? l10n.registerButton : l10n.loginButton,
                                       key: ValueKey<bool>(_isRegisterMode),
                                       style: TextStyle(
                                         fontSize: 16.0,
@@ -497,7 +500,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                 horizontal: 16,
                               ),
                               child: Text(
-                                "hoặc tiếp tục với",
+                                l10n.orContinueWith,
                                 style: TextStyle(
                                   color: isDark
                                       ? Colors.white38
@@ -541,7 +544,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                   height: 20,
                                 ),
                                 label: Text(
-                                  "Google",
+                                  l10n.loginRegister_googleLabel,
                                   style: TextStyle(
                                     color: textPrimaryColor,
                                     fontWeight: FontWeight.bold,
@@ -564,7 +567,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                         ? SignInWithAppleButtonStyle.white
                                         : SignInWithAppleButtonStyle.black,
                                     borderRadius: BorderRadius.circular(12.0),
-                                    text: 'Apple',
+                                    text: l10n.loginRegister_appleLabel,
                                   ),
                                 ),
                               ),
@@ -582,8 +585,8 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                       children: [
                         Text(
                           _isRegisterMode
-                              ? "Đã có tài khoản?"
-                              : "Chưa có tài khoản?",
+                              ? l10n.hasAccount
+                              : l10n.noAccount,
                           style: TextStyle(
                             color: textSecondaryColor,
                             fontSize: 14.0,
@@ -598,7 +601,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                             });
                           },
                           child: Text(
-                            _isRegisterMode ? "Đăng nhập ngay" : "Đăng ký ngay",
+                            _isRegisterMode ? l10n.loginRegister_loginNowAction : l10n.registerNow,
                             style: const TextStyle(
                               color: Color(0xFF2979FF),
                               fontWeight: FontWeight.bold,
@@ -615,7 +618,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                       child: GestureDetector(
                         onTap: () => context.go("/home"),
                         child: Text(
-                          "Khám phá không cần đăng nhập",
+                          l10n.exploreWithoutLogin,
                           style: TextStyle(
                             color: textSecondaryColor.withValues(alpha: 0.7),
                             fontSize: 13.0,

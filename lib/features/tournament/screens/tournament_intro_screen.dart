@@ -16,6 +16,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/gallery_tab.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -88,6 +89,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
   Widget _buildLoadingState() {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       child: Stack(
         children: [
@@ -99,7 +101,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 const CircularProgressIndicator(color: AppTheme.primary),
                 const SizedBox(height: 12),
                 Text(
-                  'Đang tải giải đấu...',
+                  l10n.tournamentLoading,
                   style: TextStyle(
                     color: colors.textSecondary,
                     fontWeight: FontWeight.w600,
@@ -115,6 +117,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
   Widget _buildErrorState(Object err) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       child: Stack(
         children: [
@@ -130,7 +133,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Không tải được giải đấu',
+                  l10n.tournamentLoadError,
                   style: TextStyle(
                     color: colors.textPrimary,
                     fontWeight: FontWeight.w800,
@@ -153,7 +156,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   onPressed: () => ref.invalidate(
                     tournamentIntroProvider(widget.tournamentId),
                   ),
-                  child: const Text('Thử lại'),
+                  child: Text(l10n.infoRetry),
                 ),
               ],
             ),
@@ -194,6 +197,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _buildContent(Tournament tournament, UserRole? role) {
+    final l10n = AppLocalizations.of(context)!;
     if ((_selectedDivisionId == null || _selectedDivision.isEmpty) &&
         tournament.divisions.isNotEmpty) {
       _selectedDivision = tournament.divisions.first.name;
@@ -272,7 +276,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   ),
                   error: (e, _) => Center(
                     child: Text(
-                      'Không thể tải dữ liệu đội',
+                      l10n.teamsLoadError,
                       style: TextStyle(color: colors.textSecondary),
                     ),
                   ),
@@ -293,6 +297,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _buildTopBar(Tournament tournament, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     final followedAsync = ref.watch(followedTournamentsProvider);
     final isFollowing = followedAsync.maybeWhen(
       data: (items) => items.any((t) => t.id == tournament.id),
@@ -349,7 +354,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   size: 22,
                 ),
           onPressed: _isFollowLoading ? null : () => _toggleFollow(tournament, isFollowing),
-          tooltip: isFollowing ? 'Bỏ theo dõi' : 'Theo dõi',
+          tooltip: isFollowing ? l10n.unfollow : l10n.follow,
         ),
         IconButton(
           icon: Icon(
@@ -358,7 +363,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             size: 20,
           ),
           onPressed: () => _shareTournament(tournament),
-          tooltip: 'Chia sẻ',
+          tooltip: l10n.share,
         ),
         const SizedBox(width: 4),
       ],
@@ -366,6 +371,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Future<void> _toggleFollow(Tournament tournament, bool isFollowing) async {
+    final l10n = AppLocalizations.of(context)!;
     final auth = ref.read(authProvider);
     if (!auth.isAuthenticated) {
       context.go('/login');
@@ -386,14 +392,14 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            isFollowing ? 'Đã bỏ theo dõi giải đấu' : 'Đã theo dõi giải đấu',
+            isFollowing ? l10n.unfollowedTournament : l10n.followedTournament,
           ),
         ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không thể cập nhật theo dõi: $e')),
+        SnackBar(content: Text('${l10n.followError}: $e')),
       );
     } finally {
       if (mounted) {
@@ -409,6 +415,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Future<void> _shareTournament(Tournament tournament) async {
+    final l10n = AppLocalizations.of(context)!;
     final shareUrl = tournament.isLite &&
             tournament.inviteCode != null &&
             tournament.inviteCode!.isNotEmpty
@@ -417,10 +424,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     AppShareModal.show(
       context: context,
       title: tournament.name,
-      subtitle: '${tournament.locationAddress ?? "Việt Nam"} • ${tournament.category ?? tournament.sport}',
+      subtitle: '${tournament.locationAddress ?? l10n.vietnam} • ${tournament.category ?? tournament.sport}',
       webUrl: shareUrl,
       imageUrl: tournament.logoUrl ?? tournament.bannerUrl,
-      badgeText: tournament.isLite ? 'Giải Nhanh (Lite)' : 'Giải Nâng Cao',
+      badgeText: tournament.isLite ? l10n.liteTournament : l10n.advancedTournament,
     );
   }
 
@@ -517,6 +524,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
   Widget _buildLiteTeamList(List<Team> teams) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     if (teams.isEmpty) {
       return Center(
         child: Column(
@@ -529,7 +537,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'Chưa có người tham gia',
+              l10n.noParticipants,
               style: TextStyle(fontSize: 15, color: colors.textSecondary),
             ),
           ],
@@ -600,7 +608,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      'Đã tham gia',
+                      l10n.joined,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
@@ -617,6 +625,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   }
 
   Widget _registrationButton(Tournament tournament) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final statusUpper = tournament.status.toUpperCase();
 
@@ -679,7 +688,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 context.push('/register/${tournament.id}$query');
               },
         child: Text(
-          isClosed ? "Đã đóng đăng ký" : "Đăng ký",
+          isClosed ? l10n.registrationClosed : l10n.register,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 13,
@@ -703,6 +712,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       alignment: Alignment.centerLeft,
@@ -740,11 +750,11 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
           fontWeight: FontWeight.normal,
           fontSize: 13,
         ),
-        tabs: const [
-          Tab(height: 34, text: "Giới thiệu"),
-          Tab(height: 34, text: "Danh sách đội"),
-          Tab(height: 34, text: "Bảng thi đấu"),
-          Tab(height: 34, text: "Thư viện"),
+        tabs: [
+          Tab(height: 34, text: l10n.tabAbout),
+          Tab(height: 34, text: l10n.tabTeams),
+          Tab(height: 34, text: l10n.tabBracket),
+          Tab(height: 34, text: l10n.tabGallery),
         ],
       ),
     );

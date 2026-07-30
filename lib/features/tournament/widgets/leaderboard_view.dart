@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class LeaderboardView extends StatelessWidget {
   final List<Standing> standings;
@@ -16,6 +17,7 @@ class LeaderboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (standings.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -27,7 +29,7 @@ class LeaderboardView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              "Bảng xếp hạng",
+              l10n.leaderboardTitle,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -36,7 +38,7 @@ class LeaderboardView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              "Chưa có dữ liệu thi đấu",
+              l10n.noStandings,
               style: TextStyle(
                 fontSize: 14,
                 color: context.colors.textMuted,
@@ -61,6 +63,7 @@ class LeaderboardView extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     return Container(
       padding: const EdgeInsets.all(12),
@@ -73,7 +76,7 @@ class LeaderboardView extends StatelessWidget {
           SizedBox(
             width: 32,
             child: Text(
-              "#",
+              l10n.rankHeader,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: colors.textMuted,
@@ -84,7 +87,7 @@ class LeaderboardView extends StatelessWidget {
           Expanded(
             flex: 3,
             child: Text(
-              "ĐỘI",
+              l10n.teamHeader,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: colors.textMuted,
@@ -92,12 +95,12 @@ class LeaderboardView extends StatelessWidget {
               ),
             ),
           ),
-          _statHeader("P", colors),
-          _statHeader("W", colors),
-          _statHeader("D", colors),
-          _statHeader("L", colors),
-          _statHeader("GD", colors),
-          _statHeader("PTS", colors, isHighlight: true),
+          _statHeader(l10n.playedHeader, colors),
+          _statHeader(l10n.wonHeader, colors),
+          _statHeader(l10n.drawnHeader, colors),
+          _statHeader(l10n.lostHeader, colors),
+          _statHeader(l10n.gdHeader, colors),
+          _statHeader(l10n.ptsHeader, colors, isHighlight: true),
         ],
       ),
     );

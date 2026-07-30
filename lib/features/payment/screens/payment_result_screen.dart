@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class PaymentResultScreen extends StatelessWidget {
   const PaymentResultScreen({super.key});
@@ -14,6 +15,7 @@ class PaymentResultScreen extends StatelessWidget {
     final tournamentId = extra?['tournamentId'] ?? '';
     final amount = (extra?['amount'] ?? 0).toDouble();
     final fmt = NumberFormat('#,###', 'vi_VN');
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: context.colors.bgDark,
@@ -39,14 +41,14 @@ class PaymentResultScreen extends StatelessWidget {
               ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
               const SizedBox(height: 24),
               Text(
-                isSuccess ? 'Thanh toán thành công!' : 'Thanh toán thất bại',
+                isSuccess ? l10n.paymentResult_success : l10n.paymentResult_failure,
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: context.colors.textPrimary),
               ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
               const SizedBox(height: 8),
               Text(
                 isSuccess
-                    ? 'Bạn đã thanh toán ${fmt.format(amount.ceil())}đ'
-                    : 'Giao dịch không thể hoàn tất. Vui lòng thử lại!',
+                    ? l10n.paymentResult_amount(fmt.format(amount.ceil()))
+                    : l10n.paymentResult_failureMessage,
                 style: TextStyle(fontSize: 14, color: context.colors.textSecondary),
                 textAlign: TextAlign.center,
               ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
@@ -64,7 +66,7 @@ class PaymentResultScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.emoji_events_rounded, color: context.colors.success, size: 20),
                       const SizedBox(width: 8),
-                      Text('Chúc bạn thi đấu tốt!',
+                      Text(l10n.paymentResult_goodLuck,
                           style: TextStyle(color: context.colors.success, fontWeight: FontWeight.w700, fontSize: 14)),
                     ],
                   ),
@@ -82,14 +84,14 @@ class PaymentResultScreen extends StatelessWidget {
                     }
                   },
                   icon: const Icon(Icons.arrow_forward_rounded),
-                  label: const Text('Quay lại giải đấu', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  label: Text(l10n.paymentResult_backToTournament, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
                 ),
               ),
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () => context.go('/home'),
-                child: Text('Về trang chủ', style: TextStyle(color: context.colors.textMuted)),
+                child: Text(l10n.paymentResult_backToHome, style: TextStyle(color: context.colors.textMuted)),
               ),
             ],
           ),

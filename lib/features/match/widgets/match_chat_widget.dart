@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -17,6 +17,7 @@ class MatchChatWidget extends ConsumerStatefulWidget {
 
   const MatchChatWidget({
     super.key,
+    final l10n = AppLocalizations.of(context);
     required this.matchId,
     required this.tournamentId,
   });
@@ -169,7 +170,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                       OutlinedButton.icon(
                         onPressed: _initRoom,
                         icon: const Icon(Icons.refresh_rounded, size: 16),
-                        label: const Text('Thử lại'),
+                        label: const Text(l10n.infoRetry),
                       ),
                     ],
                   ),
@@ -186,7 +187,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Chưa có tin nhắn',
+                        l10n.matchChatNoMessages,
                         style: TextStyle(fontSize: 12, color: colors.textMuted),
                       ),
                     ],
@@ -205,7 +206,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                     final sender =
                         msg['senderName'] as String? ??
                         msg['sender']?['fullName'] as String? ??
-                        'Người dùng';
+                        l10n.unnamed;
                     final content =
                         msg['content'] as String? ??
                         msg['messageText'] as String? ??
@@ -362,7 +363,7 @@ class LiveCameraPlaceholder extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Camera trực tiếp',
+              l10n.matchCamLabel,
               style: TextStyle(
                 fontSize: 14,
                 color: colors.textMuted,
@@ -380,3 +381,4 @@ class LiveCameraPlaceholder extends StatelessWidget {
     );
   }
 }
+
