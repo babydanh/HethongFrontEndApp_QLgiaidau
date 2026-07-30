@@ -220,7 +220,7 @@
   "matchesLoadError": "Không thể tải danh sách trận đấu. Hãy thử lại.",
   "matchesFilterJustEnded": "Vừa kết thúc",
   "matchesFilterOngoing": "Đang diễn ra",
-  "matchesFilterRegistration": "Mở đăng ký",
+  "matchesFilterRegistration": "Đăng ký",
   "matchesFilterScheduled": "Sắp diễn ra",
   "matchesFilterEnded": "Đã kết thúc",
   "matchesFilterSport": "Môn thể thao",

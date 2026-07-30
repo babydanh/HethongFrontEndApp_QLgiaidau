@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -771,19 +771,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     AppColorsExtension colors,
   ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: AppTheme.primary, size: 18),
-          ),
-          const SizedBox(width: 12),
+          Icon(icon, size: 16, color: colors.textMuted),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -800,7 +792,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 Text(
                   value,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13.5,
                     color: colors.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
@@ -814,8 +806,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   }
 
   Widget _divider(AppColorsExtension colors) => Padding(
-    padding: const EdgeInsets.only(left: 64),
-    child: Divider(height: 1, color: colors.borderLight),
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    child: Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
   );
 
   // ════════════════════════════════════
@@ -858,26 +850,87 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
           );
         }
+        final isAdmin = _myMembership?.role == 'OWNER' || _myMembership?.role == 'ADMIN' || _myMembership?.role == 'MODERATOR';
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-          itemCount: tourneys.length + 1,
+          itemCount: tourneys.length + (isAdmin ? 1 : 0),
           itemBuilder: (context, i) {
-            if (i == 0) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: FilledButton.icon(
-                  onPressed: () => _showCreateTournamentTypeSheet(),
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  label: Text(l10n.club_createNewTournament),
-                  style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+            if (isAdmin && i == 0) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 14),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _showCreateTournamentTypeSheet(),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 11),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primary,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primary.withValues(alpha: 0.25),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add_rounded, size: 18, color: Colors.white),
+                              SizedBox(width: 6),
+                              Text(
+                                "Tạo giải đấu",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => context.push('/club/${widget.clubId}/manage'),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 11),
+                          decoration: BoxDecoration(
+                            color: colors.bgCard,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: colors.border),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.tune_rounded, size: 16, color: colors.textPrimary),
+                              const SizedBox(width: 6),
+                              Text(
+                                "Quản lý giải",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               );
             }
-            return _buildTourneyCard(tourneys[i - 1], colors);
+            final index = isAdmin ? i - 1 : i;
+            return _buildTourneyCard(tourneys[index], colors);
           },
         );
       },
@@ -915,16 +968,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
     final isQuick = t.isLite;
     final badgeColor = isQuick ? const Color(0xFFF59E0B) : AppTheme.primary;
-    final isAdmin = _myMembership?.role == 'OWNER' || _myMembership?.role == 'ADMIN' || _myMembership?.role == 'MODERATOR';
 
     return InkWell(
-      onTap: () {
-        if (isQuick && isAdmin) {
-          context.push('/lite-manage/${t.id}');
-        } else {
-          context.push('/intro/${t.id}');
-        }
-      },
+      onTap: () => context.push('/intro/${t.id}'),
       borderRadius: BorderRadius.circular(14),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -1051,9 +1097,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       ),
                       const SizedBox(width: 2),
                       Text(
-                        isQuick
-                            ? (isAdmin ? l10n.club_liteManage : l10n.club_quickTournament)
-                            : l10n.club_advanced,
+                        isQuick ? "Nhanh (Lite)" : l10n.club_advanced,
                         style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w900,

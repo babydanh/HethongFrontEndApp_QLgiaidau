@@ -198,6 +198,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       await Future.wait([
         _fetchTournament(tournamentId),
         _fetchParticipants(tournamentId),
+        _fetchBracket(tournamentId),
       ]).timeout(const Duration(seconds: 15));
     } on TimeoutException {
       state = state.copyWith(
@@ -304,6 +305,21 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
   }
 
+  Future<void> _fetchBracket(String tournamentId) async {
+    try {
+      final res = await _dio
+          .get('/tournaments/$tournamentId/bracket')
+          .timeout(const Duration(seconds: 12));
+      final envelope = res.data;
+      final payload = envelope is Map ? envelope['data'] : envelope;
+      final stages = payload is Map ? payload['stages'] : null;
+      state = state.copyWith(hasBracket: stages is List && stages.isNotEmpty);
+    } catch (e) {
+      _log.debug('Chưa có bracket Lite hoặc chưa tải được bracket: $e');
+      state = state.copyWith(hasBracket: false);
+    }
+  }
+
   // ─── Public methods ───
 
   Future<void> refresh(String tournamentId) async {
@@ -312,6 +328,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       await Future.wait([
         _fetchTournament(tournamentId),
         _fetchParticipants(tournamentId),
+        _fetchBracket(tournamentId),
       ]).timeout(const Duration(seconds: 15));
     } on TimeoutException {
       state = state.copyWith(
@@ -395,18 +412,32 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   Future<void> createBracket(String tournamentId) async {
     state = state.copyWith(creatingBracket: true);
     try {
-      // Lite uses the same bracket generator as advanced tournaments.
-      // There is no /tournaments/lite/:id/bracket endpoint.
+      // Lite has its own guarded endpoint, backed by the same persisted generator.
       await _dio.post(
-        '/tournaments/$tournamentId/generate-bracket',
+        '/tournaments/lite/$tournamentId/bracket',
         data: {'seedingType': 'RANDOM'},
       );
       _log.success('Tạo bracket thành công');
       state = state.copyWith(creatingBracket: false, hasBracket: true);
+      await _fetchBracket(tournamentId);
     } on DioException catch (e) {
       _log.error('Lỗi tạo bracket', e);
       state = state.copyWith(creatingBracket: false);
       rethrow;
+    }
+  }
+
+  Future<void> resetBracket(String tournamentId) async {
+    state = state.copyWith(creatingBracket: true);
+    try {
+      await _dio.post('/tournaments/lite/$tournamentId/bracket/reset');
+      await _fetchBracket(tournamentId);
+      _log.success('Đã reset bracket Lite');
+    } on DioException catch (e) {
+      _log.error('Lỗi reset bracket', e);
+      rethrow;
+    } finally {
+      state = state.copyWith(creatingBracket: false);
     }
   }
 

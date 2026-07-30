@@ -23,8 +23,10 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
+import 'package:app_quanly_giaidau/core/utils/rank_tier_colors.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/locale_provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -39,6 +41,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   int _activeTab = 0;
   String _selectedSport = 'all';
   String _followedFilter = 'all';
+  late final Future<PackageInfo> _packageInfoFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _packageInfoFuture = PackageInfo.fromPlatform();
+  }
 
   Future<void> _pickImage(bool isCover) async {
     final colors = context.colors;
@@ -443,6 +452,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _buildOtherMenu(context, isDark),
             const SizedBox(height: 32),
           ],
+          FutureBuilder<PackageInfo>(
+            future: _packageInfoFuture,
+            builder: (context, snapshot) {
+              final info = snapshot.data;
+              if (info == null) return const SizedBox(height: 8);
+              final build = info.buildNumber.isEmpty ? '' : ' (${info.buildNumber})';
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 22),
+                child: Text(
+                  'Phiên bản ${info.version}$build',
+                  style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -573,6 +597,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── COVER + AVATAR ─────────────────────────────────────────────────
   Widget _buildCoverAndAvatar(BuildContext context, UserProfile profile) {
     final colors = context.colors;
+    final rankings = ref.watch(userRankingsProvider).asData?.value ?? const <PlayerRanking>[];
+    final playedRankings = rankings.where((r) => r.matchesPlayed > 0).toList()
+      ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
+    final bestRanking = playedRankings.isEmpty ? null : playedRankings.first;
+    final tierColor = RankTierColors.isRanked(bestRanking?.tierName, matchesPlayed: bestRanking?.matchesPlayed)
+        ? RankTierColors.fromTierName(bestRanking?.tierName)
+        : colors.border;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -671,9 +702,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [AppTheme.primary, AppTheme.primaryLight],
-                      ),
+                      color: colors.bgSurface,
+                      border: Border.all(color: tierColor, width: 4),
                       boxShadow: [
                         BoxShadow(
                           color: AppTheme.primary.withValues(alpha: 0.35),

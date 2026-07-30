@@ -378,7 +378,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     : _currentIndex == 3
                                     ? 'Câu lạc bộ'
                                     : _currentIndex == 4
-                                    ? 'Bảng xếp hạng ELO'
+                                    ? 'Bảng xếp hạng'
                                     : 'VNSport',
                                 style: const TextStyle(
                                   color: Colors.white,
@@ -1267,16 +1267,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildHeaderErrorState(String error) {
-    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.vnsport,
-          style: const TextStyle(
+        const Text(
+          "VNSPORT",
+          style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w900,
-            fontSize: 18,
+            fontSize: 20,
             letterSpacing: 1.2,
           ),
         ),
@@ -1284,9 +1283,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Text(
           error.contains("ThrottlerException") ||
                   error.contains("Too Many Requests")
-              ? "Hệ thống đang bận, vui lòng thử lại sau giây lát"
-              : "Không thể kết nối máy chủ",
-          style: const TextStyle(color: Colors.white70, fontSize: 12.0),
+              ? "Hệ thống đang bận, vui lòng thử lại sau"
+              : "Tìm và tham gia các giải đấu thể thao",
+          style: const TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w500),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -2252,38 +2251,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          height: 225.0,
-          child: PageView.builder(
-            controller: _carouselController,
-            physics: const BouncingScrollPhysics(),
-            itemCount: items.length,
-            onPageChanged: (index) {
-              setState(() {
-                _carouselCurrentPage = index;
-              });
-            },
-            itemBuilder: (context, i) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: FeaturedTournamentBannerCard(
-                  tournament: items[i],
-                  onTap: () => context.push("/intro/${items[i].id}"),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final cardWidth = constraints.maxWidth - 32.0; // padding 16 hai bên
+            final cardHeight = cardWidth / (16 / 9);
+            return SizedBox(
+              height: cardHeight,
+              child: PageView.builder(
+                controller: _carouselController,
+                physics: const BouncingScrollPhysics(),
+                itemCount: items.length,
+                onPageChanged: (index) {
+                  setState(() {
+                    _carouselCurrentPage = index;
+                  });
+                },
+                itemBuilder: (context, i) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: FeaturedTournamentBannerCard(
+                      tournament: items[i],
+                      onTap: () => context.push("/intro/${items[i].id}"),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(items.length, (index) {
             final isSelected = _carouselCurrentPage == index;
             return AnimatedContainer(
               duration: const Duration(milliseconds: 250),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
               width: isSelected ? 16 : 6,
               height: 6,
               decoration: BoxDecoration(
@@ -2442,7 +2448,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onChanged: (s) => setState(() => _tournamentStatus = s),
                 items: [
                   (key: "all", label: l10n.filterAll),
-                  (key: "registration", label: l10n.matchesFilterRegistration),
+                  (key: "registration", label: "Đăng ký"),
                   (key: "upcoming", label: l10n.matchesFilterScheduled),
                   (key: "in_progress", label: "Thi đấu"),
                   (key: "completed", label: l10n.matchesStatusCompleted),

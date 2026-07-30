@@ -76,7 +76,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         'limit': widget.compact ? 3 : 20,
       };
       final response = await dio.get(
-        '/rankings/leaderboard',
+        '/rankings',
         queryParameters: queryParams,
       );
       final raw = response.data;

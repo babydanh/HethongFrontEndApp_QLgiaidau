@@ -1421,7 +1421,7 @@ abstract class AppLocalizations {
   /// No description provided for @matchesFilterRegistration.
   ///
   /// In vi, this message translates to:
-  /// **'Mở đăng ký'**
+  /// **'Đăng ký'**
   String get matchesFilterRegistration;
 
   /// No description provided for @matchesFilterScheduled.

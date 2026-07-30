@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
@@ -13,6 +14,7 @@ import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/penalty_input_dialog.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/lite_score_modal.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/domain/entities/match_event.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
@@ -508,51 +510,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           ),
           onPressed: () => context.pop(),
         ),
-        actions: [
-          if (canOpenScoring)
-            matchAsync.when(
-              data: (match) {
-                if (match == null) {
-                  return const SizedBox.shrink();
-                }
-                if (match.isCompleted) {
-                  return const SizedBox.shrink();
-                }
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilledButton.tonalIcon(
-                    onPressed: () {
-                      if (match.isScheduled) {
-                        showDialog<void>(
-                          context: context,
-                          builder: (_) =>
-                              Dialog(child: _buildSetupState(match)),
-                        );
-                        return;
-                      }
-                      showOfficialScoreModal(
-                        context,
-                        tournamentId: widget.tournamentId,
-                        matchId: widget.matchId,
-                        match: match,
-                        onRecordPenalty: () => _showFoulSelectionDialog(match),
-                        onForceWin: () => _showForceWinDialog(match),
-                      );
-                    },
-                    icon: const Icon(Icons.scoreboard_rounded, size: 18),
-                    label: const Text('Tính điểm'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF2563EB),
-                      foregroundColor: Colors.white,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ),
-                );
-              },
-              loading: () => const SizedBox.shrink(),
-              error: (error, stackTrace) => const SizedBox.shrink(),
-            ),
-        ],
+        actions: const [],
       ),
       body: Stack(
         children: [
@@ -742,7 +700,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _buildSetupChip('Môn', _setupSportLabel(kind)),
+                        _buildSetupChip('Môn', AppConstants.sportNames[match.sportKey?.toLowerCase()] ?? AppConstants.sportNames[ref.watch(tournamentProvider(widget.tournamentId)).value?.sport?.toLowerCase()] ?? _setupSportLabel(kind)),
                         _buildSetupChip('Format', 'BO${config.bestOf}'),
                         _buildSetupChip('Thắng', '${config.setsToWin} set'),
                         _buildSetupChip(
@@ -1754,14 +1712,19 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       ),
                     ),
                     onPressed: () {
-                      showOfficialScoreModal(
-                        context,
-                        tournamentId: widget.tournamentId,
-                        matchId: widget.matchId,
-                        match: match,
-                        onRecordPenalty: () => _showFoulSelectionDialog(match),
-                        onForceWin: () => _showForceWinDialog(match),
-                      );
+                      final mode = match.tournamentConfig?['mode']?.toString().toUpperCase();
+                      if (mode == 'LITE') {
+                        showLiteScoreModal(context, match: match);
+                      } else {
+                        showOfficialScoreModal(
+                          context,
+                          tournamentId: widget.tournamentId,
+                          matchId: widget.matchId,
+                          match: match,
+                          onRecordPenalty: () => _showFoulSelectionDialog(match),
+                          onForceWin: () => _showForceWinDialog(match),
+                        );
+                      }
                     },
                     icon: const Icon(Icons.scoreboard_rounded, size: 18),
                     label: const Text(

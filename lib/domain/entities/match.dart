@@ -128,6 +128,7 @@ class MatchModel {
   final List<Penalty> penalties;
   final String? tournamentName;
   final String? sportKey;
+  final Map<String, dynamic>? tournamentConfig;
   // Sport-specific fields — từ BE JSONB
   final Map<String, dynamic>? sportRules;
   final Map<String, dynamic>? scoreDetails;
@@ -176,6 +177,7 @@ class MatchModel {
     this.penalties = const [],
     this.tournamentName,
     this.sportKey,
+    this.tournamentConfig,
     this.sportRules,
     this.scoreDetails,
     this.setsToWin,
@@ -286,6 +288,12 @@ class MatchModel {
       sportRules: json['tournament'] is Map
           ? (json['tournament'] as Map)['sportRules'] as Map<String, dynamic>?
           : json['sportRules'] as Map<String, dynamic>?,
+      tournamentConfig: json['tournament'] is Map &&
+              (json['tournament'] as Map)['tournamentConfig'] is Map
+          ? Map<String, dynamic>.from(
+              (json['tournament'] as Map)['tournamentConfig'] as Map,
+            )
+          : null,
       scoreDetails: json['scoreDetails'] as Map<String, dynamic>?,
       setsToWin: json['setsToWin'] as int?,
       team1Members: team1MemberInfos.map((m) => m.fullName).toList(),
@@ -386,6 +394,7 @@ class MatchModel {
     List<Penalty>? penalties,
     String? tournamentName,
     String? sportKey,
+    Map<String, dynamic>? tournamentConfig,
     Map<String, dynamic>? sportRules,
     Map<String, dynamic>? scoreDetails,
     int? setsToWin,
@@ -430,6 +439,7 @@ class MatchModel {
       penalties: penalties ?? this.penalties,
       tournamentName: tournamentName ?? this.tournamentName,
       sportKey: sportKey ?? this.sportKey,
+      tournamentConfig: tournamentConfig ?? this.tournamentConfig,
       sportRules: sportRules ?? this.sportRules,
       scoreDetails: scoreDetails ?? this.scoreDetails,
       setsToWin: setsToWin ?? this.setsToWin,

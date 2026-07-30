@@ -89,7 +89,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AspectRatio(
-        aspectRatio: 21 / 9,
+        aspectRatio: 16 / 9,
         child: Container(
           decoration: BoxDecoration(
             color: const Color(0xFF0F172A),

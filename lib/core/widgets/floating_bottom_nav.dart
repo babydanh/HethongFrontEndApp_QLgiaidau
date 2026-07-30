@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/core/utils/rank_tier_colors.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
 class BottomNavClipper extends CustomClipper<Path> {
@@ -130,6 +131,13 @@ class FloatingBottomNav extends ConsumerWidget {
     final userProfileAsync = ref.watch(userProfileProvider);
     final avatarUrl = userProfileAsync.asData?.value.avatarUrl;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final rankings = ref.watch(userRankingsProvider).asData?.value ?? const [];
+    final playedRankings = rankings.where((r) => r.matchesPlayed > 0).toList()
+      ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
+    final bestRanking = playedRankings.isEmpty ? null : playedRankings.first;
+    final tierColor = RankTierColors.isRanked(bestRanking?.tierName, matchesPlayed: bestRanking?.matchesPlayed)
+        ? RankTierColors.fromTierName(bestRanking?.tierName)
+        : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0));
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     const double navBarHeight = 66.0;
@@ -199,12 +207,7 @@ class FloatingBottomNav extends ConsumerWidget {
                           ? const LinearGradient(colors: [Color(0xFF2979FF), Color(0xFF4D88FF)])
                           : null,
                       color: currentIndex == 2 ? null : (isDark ? const Color(0xFF1A1A1A) : Colors.white),
-                      border: Border.all(
-                        color: currentIndex == 2
-                            ? const Color(0xFF2979FF)
-                            : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0)),
-                        width: currentIndex == 2 ? 0 : 1.5,
-                      ),
+                      border: Border.all(color: tierColor, width: 3),
                       boxShadow: [
                         BoxShadow(
                           color: currentIndex == 2

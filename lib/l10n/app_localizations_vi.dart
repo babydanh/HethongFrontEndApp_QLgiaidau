@@ -674,7 +674,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get matchesFilterOngoing => 'Đang diễn ra';
 
   @override
-  String get matchesFilterRegistration => 'Mở đăng ký';
+  String get matchesFilterRegistration => 'Đăng ký';
 
   @override
   String get matchesFilterScheduled => 'Sắp diễn ra';
