@@ -41,14 +41,14 @@ class PaymentResultScreen extends StatelessWidget {
               ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
               const SizedBox(height: 24),
               Text(
-                isSuccess ? l10n.paymentResult_success : l10n.paymentResult_failure,
+                isSuccess ? l10n.paymentResult_successTitle : l10n.paymentResult_failedTitle,
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: context.colors.textPrimary),
               ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
               const SizedBox(height: 8),
               Text(
                 isSuccess
-                    ? l10n.paymentResult_amount(fmt.format(amount.ceil()))
-                    : l10n.paymentResult_failureMessage,
+                    ? '${l10n.paymentResult_amountLabel}: ${fmt.format(amount.ceil())}đ'
+                    : l10n.paymentResult_failedMessage,
                 style: TextStyle(fontSize: 14, color: context.colors.textSecondary),
                 textAlign: TextAlign.center,
               ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
@@ -66,7 +66,7 @@ class PaymentResultScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.emoji_events_rounded, color: context.colors.success, size: 20),
                       const SizedBox(width: 8),
-                      Text(l10n.paymentResult_goodLuck,
+                      Text(l10n.paymentResult_successMessage,
                           style: TextStyle(color: context.colors.success, fontWeight: FontWeight.w700, fontSize: 14)),
                     ],
                   ),

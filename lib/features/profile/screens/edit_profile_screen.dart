@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class Province {
   final String code;
@@ -35,6 +36,7 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     with SingleTickerProviderStateMixin {
   static const _log = AppLogger('EditProfileScreen');
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
 
   late TabController _tabController;
 
@@ -221,7 +223,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                'Thay đổi ảnh đại diện',
+                l10n.edit_avatar_title,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -231,12 +233,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
               const SizedBox(height: 12),
               ListTile(
                 leading: const Icon(Icons.camera_alt_rounded, color: Color(0xFF2979FF)),
-                title: Text('Chụp ảnh mới', style: TextStyle(color: colors.textPrimary)),
+                title: Text(l10n.edit_take_photo, style: TextStyle(color: colors.textPrimary)),
                 onTap: () => Navigator.pop(context, ImageSource.camera),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library_rounded, color: Color(0xFF2979FF)),
-                title: Text('Chọn từ thư viện', style: TextStyle(color: colors.textPrimary)),
+                title: Text(l10n.edit_choose_from_library, style: TextStyle(color: colors.textPrimary)),
                 onTap: () => Navigator.pop(context, ImageSource.gallery),
               ),
               const SizedBox(height: 12),
@@ -264,8 +266,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Tải ảnh đại diện thành công'),
+        SnackBar(
+          content: Text(l10n.edit_avatar_upload_success),
           backgroundColor: Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
         ),
@@ -274,7 +276,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lỗi tải ảnh: ${e.toString()}'),
+          content: Text(l10n.edit_avatar_upload_error(e.toString())),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ),
@@ -290,7 +292,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     final email = _emailController.text.trim();
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập email'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(l10n.edit_email_required), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
       );
       return;
     }
@@ -298,14 +300,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
     if (!emailRegex.hasMatch(email)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email không hợp lệ'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(l10n.edit_email_invalid), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
       );
       return;
     }
 
     if (email == _originalEmail && _isEmailVerified) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email đã được xác minh'), behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(l10n.edit_email_verified_already), behavior: SnackBarBehavior.floating),
       );
       return;
     }
@@ -318,9 +320,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
       _emailChanged = true;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Email đã được xác minh thành công'),
-        backgroundColor: Color(0xFF10B981),
+      SnackBar(
+        content: Text(l10n.edit_email_verify_success),
+        backgroundColor: const Color(0xFF10B981),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -330,7 +332,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập số điện thoại'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(l10n.edit_phone_required), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
       );
       return;
     }
@@ -338,14 +340,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     final cleanedPhone = phone.replaceAll(RegExp(r'[\s\-\.]'), '');
     if (!RegExp(r'^(?:\+84|0)[3|5|7|8|9]\d{8}$').hasMatch(cleanedPhone)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Số điện thoại không hợp lệ'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(l10n.edit_phone_invalid), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
       );
       return;
     }
 
     if (phone == _originalPhone && _isPhoneVerified) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Số điện thoại đã được xác minh'), behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(l10n.edit_phone_verified_already), behavior: SnackBarBehavior.floating),
       );
       return;
     }
@@ -358,7 +360,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
       _log.error('Không thể gửi mã OTP đến SĐT', e);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không thể gửi mã OTP: $e'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(l10n.edit_otp_send_error(e.toString())), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
       );
       return;
     }
@@ -380,7 +382,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
               final token = tokenCtrl.text.trim();
               if (token.isEmpty) {
                 messenger.showSnackBar(
-                  const SnackBar(content: Text('Vui lòng nhập mã xác minh')),
+                  SnackBar(content: Text(l10n.edit_otp_enter_code)),
                 );
                 return;
               }
@@ -402,9 +404,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                     _phoneChanged = true;
                   });
                   messenger.showSnackBar(
-                    const SnackBar(
-                      content: Text('Xác minh số điện thoại thành công'),
-                      backgroundColor: Color(0xFF10B981),
+                    SnackBar(
+                      content: Text(l10n.edit_phone_verify_success),
+                      backgroundColor: const Color(0xFF10B981),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -412,7 +414,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
               } catch (e) {
                 if (!ctx.mounted) return;
                 messenger.showSnackBar(
-                  SnackBar(content: Text('Xác minh thất bại: $e')),
+                  SnackBar(content: Text(l10n.edit_phone_verify_failed(e.toString()))),
                 );
               } finally {
                 if (ctx.mounted) setDialogState(() => isSubmitting = false);
@@ -421,7 +423,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
 
             return AlertDialog(
               backgroundColor: context.colors.bgCard,
-              title: const Text('Xác minh số điện thoại'),
+              title: Text(l10n.edit_phone_verify_title),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -435,9 +437,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                     controller: tokenCtrl,
                     enabled: !isSubmitting,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Mã OTP',
-                      hintText: 'Nhập mã OTP từ tin nhắn',
+                    decoration: InputDecoration(
+                      labelText: l10n.edit_otp_label,
+                      hintText: l10n.edit_otp_hint,
                     ),
                   ),
                 ],
@@ -445,7 +447,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
               actions: [
                 TextButton(
                   onPressed: isSubmitting ? null : () => Navigator.of(ctx).pop(),
-                  child: const Text('Hủy'),
+                  child: Text(l10n.matchesCancel),
                 ),
                 FilledButton(
                   onPressed: isSubmitting ? null : submitToken,
@@ -455,7 +457,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Xác minh'),
+                      : Text(l10n.edit_verify),
                 ),
               ],
             );
@@ -485,7 +487,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
               final password = passwordCtrl.text;
               if (password.isEmpty) {
                 messenger.showSnackBar(
-                  const SnackBar(content: Text('Vui lòng nhập mật khẩu')),
+                  SnackBar(content: Text(l10n.edit_password_required)),
                 );
                 return;
               }
@@ -501,7 +503,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                 if (!ctx.mounted) return;
                 messenger.showSnackBar(
                   SnackBar(
-                    content: Text('Xoá tài khoản thất bại: ${e.toString().replaceAll("Exception: ", "")}'),
+                    content: Text(l10n.edit_delete_account_error(e.toString().replaceAll("Exception: ", ""))),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -516,7 +518,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                 children: [
                   Icon(Icons.warning_amber_rounded, color: colors.error),
                   const SizedBox(width: 8),
-                  const Text('Xoá tài khoản'),
+                  Text(l10n.edit_delete_account_title),
                 ],
               ),
               content: Column(
@@ -524,7 +526,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xoá vĩnh viễn.',
+                    l10n.edit_delete_account_confirm,
                     style: TextStyle(color: colors.textSecondary),
                   ),
                   const SizedBox(height: 16),
@@ -532,9 +534,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                     controller: passwordCtrl,
                     enabled: !isSubmitting,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Mật khẩu hiện tại',
-                      hintText: 'Nhập mật khẩu để xác nhận',
+                    decoration: InputDecoration(
+                      labelText: l10n.edit_current_password,
+                      hintText: l10n.edit_password_confirm_hint,
                     ),
                   ),
                 ],
@@ -542,7 +544,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
               actions: [
                 TextButton(
                   onPressed: isSubmitting ? null : () => Navigator.of(ctx).pop(false),
-                  child: const Text('Huỷ'),
+                  child: Text(l10n.matchesCancel),
                 ),
                 FilledButton(
                   onPressed: isSubmitting ? null : submitDelete,
@@ -553,7 +555,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('Xoá tài khoản', style: TextStyle(color: Colors.white)),
+                      : Text(l10n.edit_delete_account, style: const TextStyle(color: Colors.white)),
                 ),
               ],
             );
@@ -569,8 +571,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
       if (!mounted) return;
       context.go('/login');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Tài khoản đã được xoá'),
+        SnackBar(
+          content: Text(l10n.edit_account_deleted),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -627,7 +629,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Cập nhật thông tin thành công'),
+          content: Text(l10n.edit_update_success),
           backgroundColor: const Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -640,7 +642,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
+          content: Text(l10n.edit_update_error(e.toString().replaceAll('Exception: ', ''))),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

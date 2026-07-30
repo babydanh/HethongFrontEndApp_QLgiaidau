@@ -125,7 +125,7 @@ class FloatingBottomNav extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isLoggedIn = ref.watch(authProvider).isAuthenticated;
     final userProfileAsync = ref.watch(userProfileProvider);
     final avatarUrl = userProfileAsync.asData?.value.avatarUrl;

@@ -181,7 +181,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final themeMode = ref.watch(tp.themeProvider);
     final isDark = themeMode == ThemeMode.dark;
     final authState = ref.watch(authProvider);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     if (!authState.isAuthenticated) {
       return _buildLoginPrompt(context);
@@ -218,9 +218,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               size: 18,
               color: AppTheme.primary,
             ),
-            label: const Text(
+            label: Text(
               l10n.infoEdit,
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppTheme.primary,
                 fontWeight: FontWeight.w700,
                 fontSize: 14,
@@ -247,6 +247,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Widget _buildLoginPrompt(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: colors.bgDark,
       appBar: AppBar(
@@ -347,6 +348,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── MAIN BODY ──────────────────────────────────────────────────────
   Widget _buildBody(BuildContext context, UserProfile profile, bool isDark) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(
@@ -766,7 +768,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── USER INFO ──────────────────────────────────────────────────────
   Widget _buildUserInfo(BuildContext context, UserProfile profile) {
     final colors = context.colors;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isEmailVerified = profile.isEmailVerified == true;
 
     // Translate role to Vietnamese
@@ -1036,6 +1038,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required String nextLabel,
   }) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final isUnranked =
         ranking.matchesPlayed == 0 ||
         ranking.tierName == 'Chưa xếp hạng' ||
@@ -1129,7 +1132,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               _buildWinLossStat(
                 context,
-                label: 'Thua',
+                label: l10n.infoLoss,
                 value: losses,
                 color: lossColor,
               ),
@@ -1140,7 +1143,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Tỷ lệ thắng ',
+                '${l10n.infoWinRate} ',
                 style: TextStyle(
                   color: colors.textSecondary,
                   fontSize: 13,
@@ -2229,7 +2232,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── ACCOUNT MENU ──────────────────────────────────────────────────
   Widget _buildAccountMenu(BuildContext context) {
     final colors = context.colors;
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final items = [
       _MenuItem(Icons.dashboard_rounded, l.settingsDashboard, '/dashboard'),
       _MenuItem(
@@ -2314,7 +2317,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── OTHER MENU ────────────────────────────────────────────────────
   Widget _buildOtherMenu(BuildContext context, bool isDark) {
     final colors = context.colors;
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
@@ -2398,62 +2401,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   activeThumbColor: AppTheme.primary,
                   onChanged: (v) =>
                       ref.read(tp.themeProvider.notifier).toggleTheme(),
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: colors.borderLight, indent: 56),
-          // ── Language Selector ──────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Row(
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.language_rounded,
-                    size: 16,
-                    color: AppTheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                      l.settingsLanguage,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: ref.watch(localeProvider).languageCode,
-                      icon: const Icon(Icons.arrow_drop_down, size: 16, color: AppTheme.primary),
-                      style: const TextStyle(fontSize: 13, color: AppTheme.primary, fontWeight: FontWeight.w600),
-                      items: const [
-                        DropdownMenuItem(value: 'vi', child: Text('Tiếng Việt', style: TextStyle(fontSize: 13))),
-                        DropdownMenuItem(value: 'en', child: Text('English', style: TextStyle(fontSize: 13))),
-                      ],
-                      onChanged: (lang) {
-                        if (lang != null) {
-                          ref.read(localeProvider.notifier).changeLocale(lang);
-                        }
-                      },
-                    ),
-                  ),
                 ),
               ],
             ),

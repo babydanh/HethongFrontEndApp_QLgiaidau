@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -764,7 +764,7 @@ class _DoublesRegistrationFlowState
               _pollTimer?.cancel();
               context.go('/intro/${widget.tournamentId}');
             },
-            child: const Text(l10n.doublesRegContinueLater),
+            child: Text(l10n.doublesRegContinueLater),
           ),
         ),
       ],
@@ -823,6 +823,7 @@ class _DoublesRegistrationFlowState
   }
 
   Widget _buildStep3(Tournament t, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     final canPay =
         _entryFee != null &&
         _entryFee! > 0 &&

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Lightweight model for a Lite participant from the pairing API.
 class _LiteParticipant {
@@ -149,8 +150,9 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
     } catch (e, stack) {
       _log.error('Lỗi tải danh sách người tham gia', e, stack);
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
-          _error = 'Không thể tải danh sách người tham gia';
+          _error = l10n.lite_loadParticipantsError;
           _loading = false;
         });
       }
@@ -159,6 +161,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
 
   Future<void> _manualPair() async {
     if (_selectedIds.length != 2) return;
+    final l10n = AppLocalizations.of(context)!;
     final ids = _selectedIds.toList();
     setState(() => _pairing = true);
     try {
@@ -170,7 +173,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Ghép cặp thành công')));
+        ).showSnackBar(SnackBar(content: Text(l10n.lite_pairSuccess)));
         _fetchParticipants();
       }
     } catch (e) {
@@ -178,7 +181,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Lỗi ghép cặp: ${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
+              '${l10n.lite_pairError}${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
             ),
           ),
         );
@@ -189,23 +192,24 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
   }
 
   Future<void> _generatePairs(String strategy) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Xác nhận ghép cặp'),
+        title: Text(l10n.lite_generateConfirmTitle),
         content: Text(
           strategy == 'RANDOM'
-              ? 'Ghép ngẫu nhiên tất cả người chơi đang chờ?'
-              : 'Ghép tất cả người chơi đang chờ theo ELO cân bằng?',
+              ? l10n.lite_generateRandomConfirm
+              : l10n.lite_generateEloConfirm,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Hủy'),
+            child: Text(l10n.matchesCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Xác nhận'),
+            child: Text(l10n.lite_confirmButton),
           ),
         ],
       ),
@@ -231,8 +235,8 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
 
       if (mounted) {
         final msg = unpairedIds.isEmpty
-            ? 'Ghép cặp tự động thành công'
-            : 'Ghép cặp thành công (${unpairedIds.length} người lẻ)';
+            ? l10n.lite_autoPairSuccess
+            : l10n.lite_autoPairSuccessOdd(unpairedIds.length);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(msg)));
@@ -243,7 +247,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Lỗi sinh cặp: ${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
+              '${l10n.lite_pairGenerateError}${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
             ),
           ),
         );
@@ -259,19 +263,20 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
   }
 
   Future<void> _unpair(String participantId) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Hủy ghép cặp?'),
-        content: const Text('Hai người chơi sẽ trở lại danh sách chờ ghép.'),
+        title: Text(l10n.lite_unpairTitle),
+        content: Text(l10n.lite_unpairContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Giữ nguyên'),
+            child: Text(l10n.lite_keepPair),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Hủy ghép'),
+            child: Text(l10n.lite_unpair),
           ),
         ],
       ),
@@ -286,7 +291,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Đã hủy ghép cặp')));
+        ).showSnackBar(SnackBar(content: Text(l10n.lite_unpairSuccess)));
         _fetchParticipants();
       }
     } catch (e) {
@@ -294,7 +299,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Lỗi hủy cặp: ${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
+              '${l10n.lite_unpairErrorTitle}${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
             ),
           ),
         );
@@ -305,6 +310,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: colors.bgDark,
@@ -314,7 +320,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          _tournamentName ?? 'Ghép cặp người chơi',
+          _tournamentName ?? l10n.lite_pairingTitle,
           style: TextStyle(
             fontWeight: FontWeight.w600,
             color: colors.textPrimary,
@@ -334,6 +340,8 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
   }
 
   Widget _buildBody(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -354,7 +362,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _fetchParticipants,
-                child: const Text('Thử lại'),
+                child: Text(l10n.infoRetry),
               ),
             ],
           ),
@@ -378,12 +386,12 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
             // ─── Pending Section ───
             _sectionHeader(
               colors,
-              'Chờ ghép cặp (${pending.length})',
+              '${l10n.lite_waitingPair} (${pending.length})',
               Icons.people_outline_rounded,
             ),
             const SizedBox(height: 8),
             if (pending.isEmpty)
-              _emptyCard(colors, 'Không có người chơi đang chờ ghép cặp')
+              _emptyCard(colors, l10n.lite_noPendingPairs)
             else
               ...pending.map((p) => _pendingTile(p, colors)),
 
@@ -406,7 +414,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
                         )
                       : const Icon(Icons.link_rounded, size: 18),
                   label: Text(
-                    _pairing ? 'Đang ghép...' : 'Ghép 2 người đã chọn',
+                    _pairing ? l10n.lite_pairing : l10n.lite_pairSelected,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   style: FilledButton.styleFrom(
@@ -423,7 +431,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
               const SizedBox(height: 16),
               _sectionHeader(
                 colors,
-                'Ghép cặp tự động',
+                l10n.lite_autoPairing,
                 Icons.auto_fix_high_rounded,
               ),
               const SizedBox(height: 8),
@@ -449,7 +457,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(
-                              'Ngẫu nhiên',
+                              l10n.lite_random,
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
@@ -479,7 +487,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(
-                              'Cân bằng ELO',
+                              l10n.lite_eloBalanced,
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
@@ -513,7 +521,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Số lẻ: 1 người chơi sẽ ở lại trạng thái chờ ghép',
+                        l10n.lite_oddNotice,
                         style: TextStyle(
                           fontSize: 12,
                           color: colors.textSecondary,
@@ -530,7 +538,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
               const SizedBox(height: 24),
               _sectionHeader(
                 colors,
-                'Đã ghép cặp (${allPaired.length})',
+                '${l10n.lite_paired} (${allPaired.length})',
                 Icons.check_circle_outline_rounded,
               ),
               const SizedBox(height: 8),
@@ -539,7 +547,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
           ] else ...[
             // ─── Singles: just participant list, no pairing ───
             if (_participants.isEmpty)
-              _emptyCard(colors, 'Chưa có người tham gia')
+              _emptyCard(colors, l10n.noParticipants)
             else
               ..._participants.map((p) => _singlesTile(p, colors)),
           ],
@@ -562,9 +570,9 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : Icon(Icons.emoji_events_rounded, size: 20),
+                    : const Icon(Icons.emoji_events_rounded, size: 20),
                 label: Text(
-                  _generating ? 'Đang tạo...' : 'Tạo bracket',
+                  _generating ? l10n.lite_creating : l10n.lite_createBracket,
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 style: FilledButton.styleFrom(
@@ -581,21 +589,20 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
   }
 
   Future<void> _generateBracket() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Tạo bracket?'),
-        content: const Text(
-          'Sau khi tạo bracket, không thể ghép thêm cặp mới. Tiếp tục?',
-        ),
+        title: Text(l10n.lite_createBracketTitle),
+        content: Text(l10n.lite_createBracketConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Hủy'),
+            child: Text(l10n.matchesCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Tạo bracket'),
+            child: Text(l10n.lite_createBracket),
           ),
         ],
       ),
@@ -611,7 +618,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã tạo bracket thành công!')),
+          SnackBar(content: Text(l10n.lite_bracketCreated)),
         );
       }
     } catch (e) {
@@ -619,8 +626,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Chức năng tạo bracket sẽ khả dụng sau khi backend cập nhật. '
-              'Lỗi: ${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
+              '${l10n.lite_createBracketNotAvailable}${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
             ),
           ),
         );
@@ -668,6 +674,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
   }
 
   Widget _pendingTile(_LiteParticipant participant, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     final selected = _selectedIds.contains(participant.id);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -734,7 +741,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  'Chờ cặp',
+                  l10n.lite_pendingPair,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -750,6 +757,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
   }
 
   Widget _singlesTile(_LiteParticipant participant, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -799,7 +807,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              'Đã tham gia',
+              l10n.joined,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
@@ -813,6 +821,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
   }
 
   Widget _pairedTile(_LiteParticipant participant, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -869,7 +878,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
                   ),
                 ),
                 child: Text(
-                  'Hủy ghép',
+                  l10n.lite_unpair,
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                 ),
               ),

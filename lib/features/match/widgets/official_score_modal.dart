@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/features/match/widgets/table_tennis_score_pan
 import 'package:app_quanly_giaidau/features/match/widgets/set_history_bar.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 SportRuleKind _resolveMatchSportKind(MatchModel match) {
   final sportRules = match.sportRules;
@@ -32,6 +33,7 @@ void showOfficialScoreModal(
   VoidCallback? onRecordPenalty,
   VoidCallback? onForceWin,
 }) {
+  final l10n = AppLocalizations.of(context)!;
   final colors = Theme.of(context).extension<AppColorsExtension>()!;
   final kind = _resolveMatchSportKind(match);
   final params = (tournamentId: tournamentId, matchId: matchId);
@@ -152,7 +154,7 @@ void showOfficialScoreModal(
                         ),
                         if (config.mustWinByTwo) ...[
                           const SizedBox(width: 6),
-                          const _RuleChip(label: l10n.matchWinByTwo),
+                          _RuleChip(label: l10n.matchWinByTwo),
                         ],
                         const SizedBox(width: 6),
                         _RuleChip(
@@ -240,6 +242,7 @@ void showOfficialScoreModal(
                 // 4. BOTTOM REFEREE CONTROL BAR (HÌNH PHẠT, NGOẠI LỆ VÀ NÚT XỬ LÝ TRỌNG TÀI)
                 Consumer(
                   builder: (context, ref, _) {
+                    final l10n = AppLocalizations.of(context)!;
                     final state = ref.watch(scorePanelNotifierProvider(params));
                     final n = ref.read(
                       scorePanelNotifierProvider(params).notifier,
@@ -385,9 +388,9 @@ void showOfficialScoreModal(
                                     Icons.gavel_rounded,
                                     size: 15,
                                   ),
-                                  label: const Text(
+                                  label: Text(
                                     l10n.matchRecordPenalty,
-                                    style: TextStyle(fontSize: 11),
+                                    style: const TextStyle(fontSize: 11),
                                   ),
                                   style: OutlinedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
@@ -406,9 +409,9 @@ void showOfficialScoreModal(
                                     Icons.emoji_events_rounded,
                                     size: 15,
                                   ),
-                                  label: const Text(
+                                  label: Text(
                                     l10n.matchForceWin,
-                                    style: TextStyle(fontSize: 11),
+                                    style: const TextStyle(fontSize: 11),
                                   ),
                                   style: FilledButton.styleFrom(
                                     backgroundColor: colors.error,
@@ -431,18 +434,18 @@ void showOfficialScoreModal(
                                           final confirmed = await showDialog<bool>(
                                             context: ctx,
                                             builder: (dialogContext) => AlertDialog(
-                                              title: const Text(l10n.matchFinishSet),
+                                              title: Text(l10n.matchFinishSet),
                                               content: Text(message),
                                               actions: [
                                                 TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Hủy')),
-                                                FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text(l10n.matchFinishSet)),
+                                                FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text(l10n.matchFinishSet)),
                                               ],
                                             ),
                                           );
                                           if (confirmed == true) await n.finishSet();
                                         },
                                   icon: const Icon(Icons.flag_rounded, size: 15),
-                                  label: const Text(l10n.matchFinishSet, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  label: Text(l10n.matchFinishSet, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                 ),
                               ],
                               if (state.isMatchComplete || state.overrideEnabled) ...[
@@ -528,16 +531,16 @@ String _sportLabel(SportRuleKind kind) {
     case SportRuleKind.pickleball:
       return 'Pickleball';
     case SportRuleKind.tableTennis:
-      return l10n.sportTableTennis;
+      return 'Bóng bàn';
     case SportRuleKind.badminton:
-      return l10n.sportBadminton;
+      return 'Cầu lông';
   }
 }
 
 String _scoringModelLabel(SportScoringModel model) {
   switch (model) {
     case SportScoringModel.tennisSet:
-      return l10n.tennisFormatSets;
+      return 'Game/Set';
     case SportScoringModel.pickleballSideOut:
       return 'Pickleball side-out';
     case SportScoringModel.rallyPointSet:
@@ -552,7 +555,7 @@ class ScoreWarningBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     return Container(
       width: double.infinity,

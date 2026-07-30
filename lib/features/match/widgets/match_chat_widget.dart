@@ -4,20 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Widget chat trực tiếp cho trận đấu — gửi/nhận tin nhắn realtime.
-///
-/// - Tạo/find chat room theo matchId
-/// - Gửi tin nhắn qua REST API
-/// - Poll mỗi 5s để lấy tin nhắn mới
-/// - Hiển thị avatar + tên + nội dung + thời gian
 class MatchChatWidget extends ConsumerStatefulWidget {
   final String matchId;
   final String tournamentId;
 
   const MatchChatWidget({
     super.key,
-    final l10n = AppLocalizations.of(context);
     required this.matchId,
     required this.tournamentId,
   });
@@ -114,7 +109,6 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
       }
     } catch (e, stack) {
       _log.error('Lỗi tải tin nhắn', e, stack);
-      // Do not clear messages on a transient network/API failure.
     }
   }
 
@@ -153,6 +147,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       children: [
@@ -170,7 +165,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                       OutlinedButton.icon(
                         onPressed: _initRoom,
                         icon: const Icon(Icons.refresh_rounded, size: 16),
-                        label: const Text(l10n.infoRetry),
+                        label: Text(l10n?.infoRetry ?? 'Thử lại'),
                       ),
                     ],
                   ),
@@ -187,7 +182,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        l10n.matchChatNoMessages,
+                        l10n?.matchChatNoMessages ?? 'Chưa có tin nhắn',
                         style: TextStyle(fontSize: 12, color: colors.textMuted),
                       ),
                     ],
@@ -206,7 +201,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                     final sender =
                         msg['senderName'] as String? ??
                         msg['sender']?['fullName'] as String? ??
-                        l10n.unnamed;
+                        (l10n?.unnamed ?? '(Chưa có tên)');
                     final content =
                         msg['content'] as String? ??
                         msg['messageText'] as String? ??
@@ -342,6 +337,7 @@ class LiveCameraPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       color: colors.bgSurface,
       child: Center(
@@ -363,7 +359,7 @@ class LiveCameraPlaceholder extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              l10n.matchCamLabel,
+              l10n?.matchCamLabel ?? 'CAM 1 (SÂN CHÍNH)',
               style: TextStyle(
                 fontSize: 14,
                 color: colors.textMuted,
@@ -381,4 +377,3 @@ class LiveCameraPlaceholder extends StatelessWidget {
     );
   }
 }
-

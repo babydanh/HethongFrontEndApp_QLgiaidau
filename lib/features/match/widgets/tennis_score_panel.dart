@@ -1,10 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Tennis scoring panel với 15-30-40, Deuce/Advantage, Tiebreak mode.
 class TennisScorePanel extends ConsumerWidget {
@@ -21,7 +22,7 @@ class TennisScorePanel extends ConsumerWidget {
     final state = ref.watch(scorePanelNotifierProvider(params));
     final notifier = ref.read(scorePanelNotifierProvider(params).notifier);
     final t = state.tennis ?? const TennisGameState();
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final ts = state.config;
 
@@ -74,7 +75,7 @@ class TennisScorePanel extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         'TIEBREAK · Mỗi pha bóng được 1 điểm, chạm ${ts.tiebreakPoints ?? 7} và cách 2 để thắng set',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -128,6 +129,7 @@ class TennisScorePanel extends ConsumerWidget {
                             colors,
                             isDeuce,
                             t.isTiebreak,
+                            l10n,
                           ),
                         ),
                         Expanded(
@@ -160,6 +162,7 @@ class TennisScorePanel extends ConsumerWidget {
                             colors,
                             isDeuce,
                             t.isTiebreak,
+                            l10n,
                           ),
                         ),
                         Expanded(
@@ -294,6 +297,7 @@ class TennisScorePanel extends ConsumerWidget {
     AppColorsExtension colors,
     bool isDeuce,
     bool isTiebreak,
+    AppLocalizations l10n,
   ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -349,8 +353,7 @@ class TennisScorePanel extends ConsumerWidget {
   Widget _infoPill(String label, String value) {
     return Builder(
       builder: (context) {
-        final l10n = AppLocalizations.of(context);
-    final colors = context.colors;
+        final colors = context.colors;
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           decoration: BoxDecoration(
@@ -406,4 +409,3 @@ class TennisScorePanel extends ConsumerWidget {
     );
   }
 }
-

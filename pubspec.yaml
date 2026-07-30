@@ -1,13 +1,14 @@
 name: app_quanly_giaidau
 description: "Ứng dụng Quản lý Giải đấu Thể thao"
 publish_to: 'none'
-version: 1.0.2+3
+version: 1.0.3+4
 
 flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/logos/icon.png"
   remove_alpha_ios: true
+  min_sdk_android: 21
 
 environment:
   sdk: ^3.10.3

@@ -1,10 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Pickleball Side-Out scoring panel.
 class PickleballPanel extends ConsumerWidget {
@@ -21,7 +22,7 @@ class PickleballPanel extends ConsumerWidget {
     final state = ref.watch(scorePanelNotifierProvider(params));
     final notifier = ref.read(scorePanelNotifierProvider(params).notifier);
     final pb = state.pickleball ?? const PickleballServeState();
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
 
     // Fetch team names
@@ -162,9 +163,9 @@ class PickleballPanel extends ConsumerWidget {
                       child: OutlinedButton.icon(
                         onPressed: () => notifier.pickleballSwitchServer(),
                         icon: const Icon(Icons.swap_horiz_rounded, size: 16),
-                        label: const Text(
+                        label: Text(
                           l10n.pickleballSwitchServer,
-                          style: TextStyle(fontSize: 11),
+                          style: const TextStyle(fontSize: 11),
                         ),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -176,9 +177,9 @@ class PickleballPanel extends ConsumerWidget {
                       child: FilledButton.icon(
                         onPressed: () => notifier.pickleballSideOut(),
                         icon: const Icon(Icons.sync_alt_rounded, size: 16),
-                        label: const Text(
+                        label: Text(
                           l10n.pickleballLoseServe,
-                          style: TextStyle(fontSize: 11),
+                          style: const TextStyle(fontSize: 11),
                         ),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppTheme.primary,
@@ -322,4 +323,3 @@ class PickleballPanel extends ConsumerWidget {
     );
   }
 }
-

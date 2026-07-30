@@ -209,10 +209,17 @@ class UserPublicProfile {
       gender: json['gender'] as String?,
       bio: json['bio'] as String?,
       isVerified: json['isVerified'] == true,
-      ranks: (json['ranks'] as List<dynamic>?)
+      ranks: [
+        ...((json['ranks'] as List<dynamic>?)
               ?.map((e) => UserPublicRank.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
+              .toList() ?? []),
+        ...((json['pairRanks'] as List<dynamic>?)
+              ?.map((e) => UserPublicRank.fromJson({
+                    ...(e as Map<String, dynamic>),
+                    'matchType': e['matchType'] ?? 'DOUBLES',
+                  }))
+              .toList() ?? []),
+      ],
       achievements: (json['achievements'] as List<dynamic>?)
               ?.map((e) => UserPublicAchievement.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -254,6 +261,9 @@ class UserPublicRank {
   final String? tierName;
   final int matchesPlayed;
   final int matchesWon;
+  final String? matchType;
+  final String? partnerName;
+  final String? partnerAvatarUrl;
 
   const UserPublicRank({
     required this.categoryId,
@@ -262,6 +272,9 @@ class UserPublicRank {
     this.tierName,
     this.matchesPlayed = 0,
     this.matchesWon = 0,
+    this.matchType,
+    this.partnerName,
+    this.partnerAvatarUrl,
   });
 
   factory UserPublicRank.fromJson(Map<String, dynamic> json) {
@@ -272,6 +285,9 @@ class UserPublicRank {
       tierName: json['tierName'] as String?,
       matchesPlayed: ((json['matchesPlayed'] ?? 0) as num).toInt(),
       matchesWon: ((json['matchesWon'] ?? 0) as num).toInt(),
+      matchType: json['matchType'] as String?,
+      partnerName: json['partnerName'] as String?,
+      partnerAvatarUrl: json['partnerAvatarUrl'] as String?,
     );
   }
 }

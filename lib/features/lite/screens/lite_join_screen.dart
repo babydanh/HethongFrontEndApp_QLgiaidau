@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class LiteJoinScreen extends ConsumerStatefulWidget {
   final String inviteCode;
@@ -45,6 +46,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
   }
 
   Future<void> _handleJoin() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _joining = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
@@ -52,7 +54,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Tham gia thành công!')));
+        ).showSnackBar(SnackBar(content: Text(l10n.lite_joinSuccess)));
         final tournamentId = _status?['tournament']?['id']?.toString();
         if (tournamentId != null && tournamentId.isNotEmpty) {
           context.go('/intro/$tournamentId');
@@ -62,7 +64,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ErrorParser.parse(e, 'Không thể tham gia giải đấu.')),
+            content: Text(ErrorParser.parse(e, l10n.lite_joinError)),
           ),
         );
       }
@@ -72,6 +74,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
   }
 
   Future<void> _handleRequestClub() async {
+    final l10n = AppLocalizations.of(context)!;
     final communityId = _status?['communityId']?.toString();
     if (communityId == null || communityId.isEmpty) return;
     setState(() => _requestingClub = true);
@@ -80,7 +83,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
       await dio.post('/communities/$communityId/join');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã gửi yêu cầu vào CLB!')),
+          SnackBar(content: Text(l10n.lite_clubRequestSuccess)),
         );
         _fetchStatus();
       }
@@ -89,7 +92,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              ErrorParser.parse(e, 'Không thể gửi yêu cầu vào CLB.'),
+              ErrorParser.parse(e, l10n.lite_clubRequestError),
             ),
           ),
         );
@@ -102,6 +105,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
   @override
   Widget build(BuildContext context) {
     final isAuth = ref.watch(authProvider).isAuthenticated;
+    final l10n = AppLocalizations.of(context)!;
 
     // Not authenticated → redirect login
     if (!isAuth && !_loading) {
@@ -120,11 +124,11 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
 
     return Scaffold(
       backgroundColor: context.colors.bgDark,
-      appBar: AppBar(title: const Text('Tham gia giải'), centerTitle: true),
+      appBar: AppBar(title: Text(l10n.lite_joinButton), centerTitle: true),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : tournament == null
-          ? const Center(child: Text('Không tìm thấy giải đấu'))
+          ? Center(child: Text(l10n.tournamentNotFound))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -165,7 +169,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                       color: context.colors.success,
                     ),
                     const SizedBox(height: 12),
-                    const Text('Bạn đã tham gia giải này'),
+                    Text(l10n.lite_alreadyJoined),
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
@@ -174,7 +178,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                           final id = tournament['id']?.toString() ?? '';
                           if (id.isNotEmpty) context.go('/intro/$id');
                         },
-                        child: const Text('Xem giải đấu'),
+                        child: Text(l10n.lite_viewTournament),
                       ),
                     ),
                   ],
@@ -187,7 +191,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                       color: context.colors.warning,
                     ),
                     const SizedBox(height: 12),
-                    const Text('Giải đã đóng đăng ký'),
+                    Text(l10n.lite_registrationClosed),
                   ],
 
                   if (_status?['registrationNotOpen'] == true) ...[
@@ -197,7 +201,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                       color: context.colors.warning,
                     ),
                     const SizedBox(height: 12),
-                    const Text('Giải đấu chưa mở đăng ký'),
+                    Text(l10n.lite_registrationNotOpen),
                   ],
 
                   // Case: Tournament full
@@ -208,7 +212,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                       color: context.colors.warning,
                     ),
                     const SizedBox(height: 12),
-                    const Text('Giải đã đủ số lượng'),
+                    Text(l10n.lite_tournamentFull),
                   ],
 
                   // Case: Requires club join - OPEN
@@ -218,7 +222,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                     const SizedBox(height: 12),
                     Text.rich(
                       TextSpan(
-                        text: 'Bạn chưa là thành viên CLB ',
+                        text: l10n.lite_requiresClubPrefix,
                         children: [
                           TextSpan(
                             text: _status?['communityName'] ?? '',
@@ -239,13 +243,13 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                                 _fetchStatus();
                               },
                         child: Text(
-                          _requestingClub ? 'Đang gửi...' : 'Vào CLB',
+                          _requestingClub ? l10n.lite_sending : l10n.lite_joinClub,
                         ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Sau đó nhấn Tham gia giải bên dưới',
+                      l10n.lite_clubHintAfterJoin,
                       style: TextStyle(
                         color: context.colors.textSecondary,
                         fontSize: 12,
@@ -260,13 +264,13 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                     const SizedBox(height: 12),
                     Text.rich(
                       TextSpan(
-                        text: 'CLB ',
                         children: [
+                          TextSpan(text: '${l10n.navClubs} '),
                           TextSpan(
                             text: _status?['communityName'] ?? '',
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
-                          const TextSpan(text: ' cần duyệt thành viên'),
+                          TextSpan(text: l10n.lite_clubNeedsApprovalSuffix),
                         ],
                       ),
                       textAlign: TextAlign.center,
@@ -282,13 +286,13 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                                 _fetchStatus();
                               },
                         child: Text(
-                          _requestingClub ? 'Đang gửi...' : 'Xin vào CLB',
+                          _requestingClub ? l10n.lite_sending : l10n.lite_requestClub,
                         ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Bạn cần được duyệt trước khi tham gia giải',
+                      l10n.lite_clubApprovalHint,
                       style: TextStyle(
                         color: context.colors.textSecondary,
                         fontSize: 12,
@@ -303,15 +307,13 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                     const SizedBox(height: 12),
                     Text.rich(
                       TextSpan(
-                        text: 'CLB ',
                         children: [
+                          TextSpan(text: '${l10n.navClubs} '),
                           TextSpan(
                             text: _status?['communityName'] ?? '',
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
-                          const TextSpan(
-                            text: ' chỉ dành cho thành viên được mời',
-                          ),
+                          TextSpan(text: l10n.lite_clubInviteOnlySuffix),
                         ],
                       ),
                       textAlign: TextAlign.center,
@@ -326,7 +328,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                       color: context.colors.warning,
                     ),
                     const SizedBox(height: 12),
-                    const Text('Yêu cầu vào CLB đang chờ duyệt'),
+                    Text(l10n.lite_clubPendingApproval),
                   ],
 
                   // Case: Can join
@@ -345,7 +347,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Tên thi đấu',
+                            l10n.registerPlayerName,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -354,7 +356,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Tên tài khoản của bạn',
+                            l10n.lite_yourAccountName,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -363,7 +365,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Tên sẽ được lấy từ hồ sơ cá nhân',
+                            l10n.lite_nameFromProfile,
                             style: TextStyle(
                               color: context.colors.textSecondary,
                               fontSize: 12,
@@ -378,7 +380,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                       child: ElevatedButton(
                         onPressed: _joining ? null : _handleJoin,
                         child: Text(
-                          _joining ? 'Đang tham gia...' : 'Tham gia giải',
+                          _joining ? l10n.lite_joining : l10n.lite_joinButton,
                         ),
                       ),
                     ),

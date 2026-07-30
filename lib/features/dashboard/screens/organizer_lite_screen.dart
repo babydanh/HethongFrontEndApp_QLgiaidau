@@ -41,6 +41,7 @@ class _OrganizerLiteScreenState extends ConsumerState<OrganizerLiteScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final tournamentAsync = ref.watch(tournamentProvider(widget.tournamentId));
     final teamsAsync = ref.watch(teamsProvider(widget.tournamentId));
     final matchesAsync = ref.watch(matchesProvider(widget.tournamentId));
@@ -50,7 +51,7 @@ class _OrganizerLiteScreenState extends ConsumerState<OrganizerLiteScreen>
       loading: () => Scaffold(
         backgroundColor: context.colors.bgDark,
         appBar: AppBar(
-          title: const Text('Quản lý nhanh'),
+          title: Text(l10n.organizer_title),
           leading: IconButton(
             icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
             onPressed: () => context.pop(),
@@ -61,33 +62,33 @@ class _OrganizerLiteScreenState extends ConsumerState<OrganizerLiteScreen>
       error: (error, _) => Scaffold(
         backgroundColor: context.colors.bgDark,
         appBar: AppBar(
-          title: const Text('Quản lý nhanh'),
+          title: Text(l10n.organizer_title),
           leading: IconButton(
             icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
             onPressed: () => context.pop(),
           ),
         ),
-        body: Center(child: Text('Không thể tải giải đấu: $error')),
+        body: Center(child: Text(l10n.organizer_loadError(error.toString()))),
       ),
       data: (tournament) {
         if (tournament == null) {
           return Scaffold(
             backgroundColor: context.colors.bgDark,
             appBar: AppBar(
-              title: const Text('Quản lý nhanh'),
+              title: Text(l10n.organizer_title),
               leading: IconButton(
                 icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
                 onPressed: () => context.pop(),
               ),
             ),
-            body: const Center(child: Text('Giải đấu không tồn tại')),
+            body: Center(child: Text(l10n.organizer_notFound)),
           );
         }
 
         return Scaffold(
           backgroundColor: context.colors.bgDark,
           appBar: AppBar(
-            title: const Text('Quản lý nhanh'),
+            title: Text(l10n.organizer_title),
             leading: IconButton(
               icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
               onPressed: () => context.pop(),
@@ -98,13 +99,13 @@ class _OrganizerLiteScreenState extends ConsumerState<OrganizerLiteScreen>
               labelColor: AppTheme.primary,
               unselectedLabelColor: context.colors.textMuted,
               indicatorColor: AppTheme.primary,
-              tabs: const [
-                Tab(text: 'Tổng quan'),
-                Tab(text: 'Đội / VĐV'),
-                Tab(text: 'Lịch đấu'),
-                Tab(text: 'Trọng tài'),
-                Tab(text: 'Tài chính'),
-                Tab(text: 'Phân quyền'),
+              tabs: [
+                Tab(text: l10n.organizer_tabOverview),
+                Tab(text: l10n.organizer_tabTeams),
+                Tab(text: l10n.organizer_tabSchedule),
+                Tab(text: l10n.infoReferee),
+                Tab(text: l10n.organizer_tabFinance),
+                Tab(text: l10n.organizer_tabPermissions),
               ],
             ),
           ),
@@ -156,10 +157,11 @@ class _OrganizerHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final dateText = tournament.startDate != null
         ? DateFormatterUtils.formatDate(tournament.startDate!.toLocal())
-        : 'Chưa chốt ngày';
+        : l10n.organizer_noDate;
 
     return Container(
       width: double.infinity,
@@ -193,7 +195,7 @@ class _OrganizerHeader extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: () => context.push('/tournament/$tournamentId/bracket'),
                   icon: const Icon(Icons.account_tree_rounded, size: 18),
-                  label: const Text('Xem bracket'),
+                  label: Text(l10n.viewBracket),
                 ),
               ),
               const SizedBox(width: 10),
@@ -201,7 +203,7 @@ class _OrganizerHeader extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () => context.push('/intro/$tournamentId'),
                   icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                  label: const Text('Trang giải'),
+                  label: Text(l10n.organizer_tournamentPage),
                 ),
               ),
             ],
@@ -229,43 +231,44 @@ class _OrganizerOverview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
       children: [
         Row(
           children: [
-            Expanded(child: _MetricCard(label: 'Đội / VĐV', value: '$teamCount', color: AppTheme.primary, icon: Icons.people_rounded)),
+            Expanded(child: _MetricCard(label: l10n.organizer_tabTeams, value: '$teamCount', color: AppTheme.primary, icon: Icons.people_rounded)),
             const SizedBox(width: 10),
-            Expanded(child: _MetricCard(label: 'Trận đấu', value: '$matchCount', color: context.colors.warning, icon: Icons.scoreboard_rounded)),
+            Expanded(child: _MetricCard(label: l10n.totalMatchesLabel, value: '$matchCount', color: context.colors.warning, icon: Icons.scoreboard_rounded)),
           ],
         ),
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(child: _MetricCard(label: 'Trọng tài', value: '$refereeCount', color: AppTheme.refereeColor, icon: Icons.gavel_rounded)),
+            Expanded(child: _MetricCard(label: l10n.infoReferee, value: '$refereeCount', color: AppTheme.refereeColor, icon: Icons.gavel_rounded)),
             const SizedBox(width: 10),
-            Expanded(child: _MetricCard(label: 'Đang live', value: '$liveCount', color: const Color(0xFF10B981), icon: Icons.wifi_tethering_rounded)),
+            Expanded(child: _MetricCard(label: l10n.organizer_metricLive, value: '$liveCount', color: const Color(0xFF10B981), icon: Icons.wifi_tethering_rounded)),
           ],
         ),
         const SizedBox(height: 16),
         _QuickActionTile(
           icon: Icons.account_tree_rounded,
-          title: 'Mở sơ đồ thi đấu',
-          subtitle: 'Xem bracket hiện tại để kiểm tra nhánh và kết quả',
+          title: l10n.organizer_openBracket,
+          subtitle: l10n.organizer_openBracketSub,
           onTap: () => context.push('/tournament/$tournamentId/bracket'),
         ),
         const SizedBox(height: 10),
         _QuickActionTile(
           icon: Icons.live_tv_rounded,
-          title: 'Xem trận đang diễn ra',
-          subtitle: 'Đi vào màn live để theo dõi và điều phối nhanh',
+          title: l10n.organizer_viewLive,
+          subtitle: l10n.organizer_viewLiveSub,
           onTap: () => context.push('/live-matches/$tournamentId'),
         ),
         const SizedBox(height: 10),
         _QuickActionTile(
           icon: Icons.info_outline_rounded,
-          title: 'Mở trang giải công khai',
-          subtitle: 'Kiểm tra giao diện người xem và thông tin hiển thị',
+          title: l10n.organizer_viewPublic,
+          subtitle: l10n.organizer_viewPublicSub,
           onTap: () => context.push('/intro/$tournamentId'),
         ),
       ],
@@ -280,12 +283,13 @@ class _TeamsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return teamsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(child: Text('Không thể tải danh sách đội: $error')),
+      error: (error, _) => Center(child: Text(l10n.organizer_teamsLoadError(error.toString()))),
       data: (teams) {
         if (teams.isEmpty) {
-          return const _EmptyStateText('Chưa có đội hoặc VĐV nào trong giải.');
+          return _EmptyStateText(l10n.organizer_noTeams);
         }
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -313,7 +317,7 @@ class _TeamsTab extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    team.members.isEmpty ? 'Chưa có thành viên' : team.members.join(', '),
+                    team.members.isEmpty ? l10n.organizer_noMembers : team.members.join(', '),
                     style: TextStyle(fontSize: 12, color: context.colors.textMuted),
                   ),
                 ],
@@ -333,12 +337,13 @@ class _MatchesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return matchesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(child: Text('Không thể tải lịch đấu: $error')),
+      error: (error, _) => Center(child: Text(l10n.organizer_matchesLoadError(error.toString()))),
       data: (matches) {
         if (matches.isEmpty) {
-          return const _EmptyStateText('Chưa có trận đấu nào được tạo.');
+          return _EmptyStateText(l10n.organizer_noMatches);
         }
 
         final sortedMatches = [...matches]
@@ -356,7 +361,7 @@ class _MatchesTab extends StatelessWidget {
             final match = sortedMatches[index];
             final timeLabel = match.scheduledTime != null
                 ? DateFormatterUtils.formatDateTime(match.scheduledTime!.toLocal())
-                : 'Chưa xếp giờ';
+                : l10n.organizer_noTime;
             return InkWell(
               onTap: () => context.push('/live/${match.id}'),
               borderRadius: BorderRadius.circular(16),
@@ -375,7 +380,7 @@ class _MatchesTab extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            'Vòng ${match.round} • Trận ${match.matchNumber}',
+                            l10n.organizer_matchTitle(match.round, match.matchNumber),
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
@@ -421,20 +426,21 @@ class _RefereesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return refereesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => Padding(
         padding: const EdgeInsets.all(24),
         child: Center(
           child: Text(
-            'Không thể tải danh sách trọng tài.\n$error',
+            l10n.organizer_refereesLoadError(error.toString()),
             textAlign: TextAlign.center,
           ),
         ),
       ),
       data: (referees) {
         if (referees.isEmpty) {
-          return const _EmptyStateText('Giải này chưa có trọng tài nào được gắn.');
+          return _EmptyStateText(l10n.organizer_noReferees);
         }
         final assignedCount = matches.where((match) => (match.refereeId?.isNotEmpty ?? false)).length;
         return ListView.builder(
@@ -450,7 +456,7 @@ class _RefereesTab extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _MetricCard(
-                        label: 'Đã nhận',
+                        label: l10n.organizer_refereeAccepted,
                         value: '$acceptedCount',
                         color: const Color(0xFF10B981),
                         icon: Icons.check_circle_rounded,
@@ -459,7 +465,7 @@ class _RefereesTab extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: _MetricCard(
-                        label: 'Đã mời',
+                        label: l10n.organizer_refereeInvited,
                         value: '$invitedCount',
                         color: context.colors.warning,
                         icon: Icons.schedule_rounded,
@@ -468,7 +474,7 @@ class _RefereesTab extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: _MetricCard(
-                        label: 'Đã giao trận',
+                        label: l10n.organizer_refereeAssigned,
                         value: '$assignedCount',
                         color: AppTheme.primary,
                         icon: Icons.assignment_ind_rounded,
@@ -520,7 +526,7 @@ class _RefereesTab extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              referee.email.isNotEmpty ? referee.email : 'Chưa có email',
+                              referee.email.isNotEmpty ? referee.email : l10n.organizer_noEmail,
                               style: TextStyle(fontSize: 12, color: context.colors.textMuted),
                             ),
                             const SizedBox(height: 6),
@@ -529,17 +535,17 @@ class _RefereesTab extends StatelessWidget {
                               runSpacing: 8,
                               children: [
                                 _MiniInfoPill(
-                                  label: '${assignedMatches.length} trận',
+                                  label: l10n.organizer_matchCount(assignedMatches.length),
                                   color: AppTheme.primary,
                                 ),
                                 if (liveAssignedCount > 0)
                                   _MiniInfoPill(
-                                    label: '$liveAssignedCount đang live',
+                                    label: l10n.organizer_liveCount(liveAssignedCount),
                                     color: const Color(0xFF10B981),
                                   ),
                                 if (nextAssignedMatch != null)
                                   _MiniInfoPill(
-                                    label: _buildUpcomingRefereeLabel(nextAssignedMatch),
+                                    label: _buildUpcomingRefereeLabel(nextAssignedMatch, l10n),
                                     color: context.colors.warning,
                                   ),
                               ],
@@ -559,8 +565,8 @@ class _RefereesTab extends StatelessWidget {
                         icon: const Icon(Icons.open_in_new_rounded, size: 18),
                         label: Text(
                           assignedMatches.length == 1
-                              ? 'Mở trận đã giao'
-                              : 'Mở trận gần nhất',
+                              ? l10n.organizer_openAssignedMatch
+                              : l10n.organizer_openNearestMatch,
                         ),
                       ),
                     ),
@@ -608,9 +614,9 @@ MatchModel? _findNextAssignedMatch(List<MatchModel> matches) {
   return matches.isNotEmpty ? matches.first : null;
 }
 
-String _buildUpcomingRefereeLabel(MatchModel match) {
+String _buildUpcomingRefereeLabel(MatchModel match, AppLocalizations l10n) {
   if (match.scheduledTime == null) {
-    return 'Chưa xếp giờ';
+    return l10n.organizer_noTime;
   }
   return DateFormatterUtils.formatDateTime(match.scheduledTime!.toLocal());
 }
@@ -765,6 +771,7 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final normalized = status.toLowerCase();
     final isLive = normalized == 'live' || normalized == 'ongoing' || normalized == 'in_progress';
     final isDone = normalized == 'completed';
@@ -781,7 +788,7 @@ class _StatusPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        isLive ? 'Đang đấu' : isDone ? 'Kết thúc' : 'Sắp đấu',
+        isLive ? l10n.organizer_statusOngoing : isDone ? l10n.organizer_statusCompleted : l10n.organizer_statusScheduled,
         style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color),
       ),
     );
@@ -795,6 +802,7 @@ class _RefereeStatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final color = referee.isAccepted
         ? const Color(0xFF10B981)
         : referee.isInvited
@@ -802,10 +810,10 @@ class _RefereeStatusPill extends StatelessWidget {
             : context.colors.textMuted;
 
     final label = referee.isAccepted
-        ? 'Đã nhận'
+        ? l10n.organizer_refereeAccepted
         : referee.isInvited
-            ? 'Đã mời'
-            : 'Đã từ chối';
+            ? l10n.organizer_refereeInvited
+            : l10n.organizer_refereeDeclined;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -857,6 +865,7 @@ class _FinanceTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final fmt = NumberFormat('#,###', 'vi_VN');
     final entryFee = tournament.entryFee ?? 0.0;
@@ -896,10 +905,10 @@ class _FinanceTab extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Tổng doanh thu', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                      Text(l10n.organizer_financeTotalRevenue, style: const TextStyle(color: Colors.white70, fontSize: 11)),
                       const SizedBox(height: 4),
                       Text(
-                        hasFee ? '${fmt.format(totalRevenue.ceil())}đ' : 'Miễn phí',
+                        hasFee ? '${fmt.format(totalRevenue.ceil())}đ' : l10n.freePrice,
                         style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
                       ),
                     ],
@@ -908,15 +917,15 @@ class _FinanceTab extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               if (hasFee) ...[
-                _financeInfoRow(context, 'Phí tham gia', '${fmt.format(entryFee.ceil())}đ/đội', Colors.white70),
+                _financeInfoRow(context, l10n.entryFeeLabel, '${fmt.format(entryFee.ceil())}đ/đội', Colors.white70),
                 const SizedBox(height: 6),
-                _financeInfoRow(context, 'Số đội đã đăng ký', '$teamCount/${tournament.maxTeams}', Colors.white70),
+                _financeInfoRow(context, l10n.organizer_financeRegisteredTeams, '$teamCount/${tournament.maxTeams}', Colors.white70),
                 const SizedBox(height: 6),
-                _financeInfoRow(context, 'Doanh thu tối đa', '${fmt.format(potentialRevenue.ceil())}đ', Colors.white70),
+                _financeInfoRow(context, l10n.organizer_financeMaxRevenue, '${fmt.format(potentialRevenue.ceil())}đ', Colors.white70),
               ] else ...[
-                _financeInfoRow(context, 'Giải đấu miễn phí', 'Không thu phí tham gia', Colors.white70),
+                _financeInfoRow(context, l10n.organizer_financeFreeTournament, l10n.organizer_financeNoFee, Colors.white70),
                 const SizedBox(height: 6),
-                _financeInfoRow(context, 'Số đội đã đăng ký', '$teamCount/${tournament.maxTeams}', Colors.white70),
+                _financeInfoRow(context, l10n.organizer_financeRegisteredTeams, '$teamCount/${tournament.maxTeams}', Colors.white70),
               ],
             ],
           ),
@@ -924,7 +933,7 @@ class _FinanceTab extends StatelessWidget {
         const SizedBox(height: 16),
 
         // Revenue details
-        _sectionLabel('CHI TIẾT DOANH THU', colors),
+        _sectionLabel(l10n.organizer_financeDetailTitle, colors),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(14),
@@ -935,20 +944,20 @@ class _FinanceTab extends StatelessWidget {
           ),
           child: Column(
             children: [
-              _detailRow(context, 'Phí tham gia mỗi đội', hasFee ? '${fmt.format(entryFee.ceil())}đ' : 'Miễn phí', colors),
+              _detailRow(context, l10n.organizer_financeFeePerTeam, hasFee ? '${fmt.format(entryFee.ceil())}đ' : l10n.freePrice, colors),
               const Divider(height: 1, color: Colors.transparent),
-              _detailRow(context, 'Số đội tối đa', '${tournament.maxTeams}', colors),
+              _detailRow(context, l10n.maxTeamsLabel, '${tournament.maxTeams}', colors),
               const Divider(height: 1, color: Colors.transparent),
-              _detailRow(context, 'Đội đã đăng ký', '$teamCount', colors),
+              _detailRow(context, l10n.organizer_financeRegisteredTeamsDetail, '$teamCount', colors),
               const Divider(height: 1, color: Colors.transparent),
-              _detailRow(context, 'Còn trống', '${tournament.maxTeams - teamCount}', colors),
+              _detailRow(context, l10n.organizer_financeRemainingSlots, '${tournament.maxTeams - teamCount}', colors),
             ],
           ),
         ),
         const SizedBox(height: 16),
 
         // Status info
-        _sectionLabel('THÔNG TIN THANH TOÁN', colors),
+        _sectionLabel(l10n.organizer_financePaymentInfo, colors),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(14),
@@ -966,7 +975,7 @@ class _FinanceTab extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Quản lý thanh toán chi tiết và đối soát trên trang web để có trải nghiệm tốt nhất.',
+                      l10n.organizer_financePaymentDesc,
                       style: TextStyle(fontSize: 12, color: colors.textMuted, height: 1.4),
                     ),
                   ),
@@ -987,14 +996,14 @@ class _FinanceTab extends StatelessWidget {
                     );
                     if (!opened && context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Không thể mở trang quản lý trên web'),
+                        SnackBar(
+                          content: Text(l10n.organizer_financeWebError),
                         ),
                       );
                     }
                   },
                   icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                  label: const Text('Xem trên web'),
+                  label: Text(l10n.organizer_financeViewWeb),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.primary,
                     side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.3)),
@@ -1051,10 +1060,11 @@ class _PermissionsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
 
     // Extract staff info from tournament
-    final creatorName = tournament.creatorFullName ?? 'Chưa có';
+    final creatorName = tournament.creatorFullName ?? l10n.organizer_permissionsUnknown;
     final creatorAvatar = tournament.creatorAvatarUrl ?? '';
     final visibility = tournament.visibility ?? 'PUBLIC';
     final adminToken = tournament.adminToken ?? '';
@@ -1065,7 +1075,7 @@ class _PermissionsTab extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
         // Creator info
-        _sectionLabel('NGƯỜI TẠO GIẢI', colors),
+        _sectionLabel(l10n.organizer_permissionsCreator, colors),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(14),
@@ -1100,7 +1110,7 @@ class _PermissionsTab extends StatelessWidget {
                         color: AppTheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text('Chủ giải', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.primary)),
+                      child: Text(l10n.dashboard_organizer, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.primary)),
                     ),
                   ],
                 ),
@@ -1112,41 +1122,44 @@ class _PermissionsTab extends StatelessWidget {
         const SizedBox(height: 20),
 
         // Roles & Access
-        _sectionLabel('VAI TRÒ & TRUY CẬP', colors),
+        _sectionLabel(l10n.organizer_permissionsRoles, colors),
         const SizedBox(height: 8),
         _roleCard(
           context,
+          l10n: l10n,
           icon: Icons.shield_rounded,
-          title: 'Admin',
-          subtitle: 'Toàn quyền quản lý giải đấu',
+          title: l10n.organizer_permissionsAdmin,
+          subtitle: l10n.organizer_permissionsAdminDesc,
           color: const Color(0xFFEF4444),
           token: adminToken,
-          tokenLabel: 'Mã Admin',
+          tokenLabel: l10n.organizer_permissionsTokenAdmin,
         ),
         const SizedBox(height: 8),
         _roleCard(
           context,
+          l10n: l10n,
           icon: Icons.gavel_rounded,
-          title: 'Trọng tài',
-          subtitle: 'Cập nhật tỷ số, quản lý trận đấu',
+          title: l10n.infoReferee,
+          subtitle: l10n.organizer_permissionsRefereeDesc,
           color: AppTheme.refereeColor,
           token: refereeToken,
-          tokenLabel: 'Mã Trọng tài',
+          tokenLabel: l10n.organizer_permissionsTokenReferee,
         ),
         const SizedBox(height: 8),
         _roleCard(
           context,
+          l10n: l10n,
           icon: Icons.visibility_rounded,
-          title: 'Người xem',
-          subtitle: 'Chỉ xem kết quả và bảng xếp hạng',
+          title: l10n.organizer_permissionsViewer,
+          subtitle: l10n.organizer_permissionsViewerDesc,
           color: const Color(0xFF10B981),
           token: viewerToken,
-          tokenLabel: 'Mã Xem',
+          tokenLabel: l10n.organizer_permissionsTokenViewer,
         ),
         const SizedBox(height: 20),
 
         // Visibility setting
-        _sectionLabel('CÀI ĐẶT HIỂN THỊ', colors),
+        _sectionLabel(l10n.organizer_permissionsVisibility, colors),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(14),
@@ -1174,9 +1187,9 @@ class _PermissionsTab extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Hiển thị', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                    Text(l10n.organizer_permissionsDisplay, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
                     Text(
-                      visibility == 'PUBLIC' ? 'Công khai — Ai cũng có thể xem' : 'Riêng tư — Chỉ người có mã mới xem được',
+                      visibility == 'PUBLIC' ? l10n.organizer_permissionsPublic : l10n.organizer_permissionsPrivate,
                       style: TextStyle(fontSize: 11, color: colors.textMuted),
                     ),
                   ],
@@ -1202,7 +1215,7 @@ class _PermissionsTab extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Chia sẻ mã tương ứng để cấp quyền truy cập cho từng vai trò. Mỗi mã chỉ dùng 1 lần.',
+                  l10n.organizer_permissionsInfoNote,
                   style: TextStyle(fontSize: 12, color: const Color(0xFF93C5FD), height: 1.4),
                 ),
               ),
@@ -1222,6 +1235,7 @@ class _PermissionsTab extends StatelessWidget {
 
   Widget _roleCard(
     BuildContext context, {
+    required AppLocalizations l10n,
     required IconData icon,
     required String title,
     required String subtitle,
@@ -1287,7 +1301,7 @@ class _PermissionsTab extends StatelessWidget {
                     onTap: () {
                       Clipboard.setData(ClipboardData(text: token));
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text('Đã sao chép $tokenLabel'),
+                        content: Text(l10n.organizer_tokenCopied(tokenLabel)),
                         backgroundColor: const Color(0xFF10B981),
                         behavior: SnackBarBehavior.floating,
                         duration: const Duration(seconds: 2),

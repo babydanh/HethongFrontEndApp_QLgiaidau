@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class LiteManagementScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -41,10 +42,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       ref.read(liteManagementProvider.notifier).init(widget.tournamentId);
       _loadWatchdog = Timer(const Duration(seconds: 18), () {
         if (!mounted) return;
+        final l10n = AppLocalizations.of(context)!;
         final state = ref.read(liteManagementProvider);
         if (state.loading && state.error == null) {
           ref.read(liteManagementProvider.notifier).markLoadFailed(
-            'Không tải được dữ liệu giải Lite. Kiểm tra mạng hoặc thử lại.',
+            l10n.lite_loadFailed,
           );
         }
       });
@@ -61,6 +63,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(liteManagementProvider);
     final notifier = ref.read(liteManagementProvider.notifier);
 
@@ -72,7 +75,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           onPressed: () => context.pop(),
         ),
         title: Text(
-          state.tournamentName ?? 'Quản lý giải',
+          state.tournamentName ?? l10n.lite_managementTitle,
           style: TextStyle(
             fontWeight: FontWeight.w600,
             color: colors.textPrimary,
@@ -102,10 +105,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             fontWeight: FontWeight.w500,
           ),
           indicatorSize: TabBarIndicatorSize.tab,
-          tabs: const [
-            Tab(icon: Icon(Icons.dashboard_outlined, size: 18), text: 'Tổng quan'),
-            Tab(icon: Icon(Icons.people_outline_rounded, size: 18), text: 'Người tham gia'),
-            Tab(icon: Icon(Icons.account_tree_outlined, size: 18), text: 'Bracket & trận đấu'),
+          tabs: [
+            Tab(icon: const Icon(Icons.dashboard_outlined, size: 18), text: l10n.organizer_tabOverview),
+            Tab(icon: const Icon(Icons.people_outline_rounded, size: 18), text: l10n.lite_participantsTab),
+            Tab(icon: const Icon(Icons.account_tree_outlined, size: 18), text: l10n.lite_bracketAndMatches),
           ],
         ),
       ),
@@ -129,7 +132,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     FilledButton.icon(
                       onPressed: () => notifier.init(widget.tournamentId),
                       icon: const Icon(Icons.refresh_rounded),
-                      label: const Text('Thử lại'),
+                      label: Text(l10n.infoRetry),
                     ),
                   ],
                 ),
@@ -169,6 +172,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     LiteManagementState state,
     LiteManagementNotifier notifier,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final tournament = state.tournament;
     final sportLabel = tournament != null
         ? (AppConstants.sportNames[tournament.sport] ?? tournament.sport)
@@ -197,29 +201,29 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           // ─── Info Grid ───
           _sectionHeader(
             colors,
-            'Thông tin giải đấu',
+            l10n.lite_tournamentInfo,
             Icons.info_outline_rounded,
           ),
           const SizedBox(height: 10),
           _infoGrid(colors, [
-            ('Môn thể thao', sportLabel),
-            ('Hình thức', formatLabel),
-            ('Thể thức bảng đấu', bracketLabel),
-            ('Số đội tối đa', tournament?.maxTeams.toString() ?? '--'),
-            ('Người tham gia', '${state.participants.length}'),
-            ('Trận đấu', state.hasBracket ? 'Đã tạo' : 'Chưa tạo'),
+            (l10n.sportLabel, sportLabel),
+            (l10n.formatLabel, formatLabel),
+            (l10n.lite_bracketFormat, bracketLabel),
+            (l10n.maxTeamsLabel, tournament?.maxTeams.toString() ?? '--'),
+            (l10n.lite_participants, '${state.participants.length}'),
+            (l10n.matchesTitle, state.hasBracket ? l10n.lite_created : l10n.lite_notCreated),
           ]),
           const SizedBox(height: 24),
 
           // ─── Invite Code ───
           if (state.inviteCode != null && state.inviteCode!.isNotEmpty) ...[
-            _sectionHeader(colors, 'Mã mời tham gia', Icons.link_rounded),
+            _sectionHeader(colors, l10n.lite_inviteCodeTitle, Icons.link_rounded),
             const SizedBox(height: 10),
             _inviteCodeCard(colors, state.inviteCode!),
             const SizedBox(height: 20),
 
             // ─── QR Code ───
-            _sectionHeader(colors, 'Mã QR', Icons.qr_code_rounded),
+            _sectionHeader(colors, l10n.lite_qrCodeTitle, Icons.qr_code_rounded),
             const SizedBox(height: 10),
             _qrCodeCard(colors, state.inviteCode!),
           ],
@@ -232,11 +236,12 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     AppColorsExtension colors,
     LiteManagementState state,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final steps = [
-      ('Người tham gia', state.participants.isNotEmpty, Icons.people_outline_rounded),
-      ('Ghép cặp', state.isDoubles ? state.completeParticipants.isNotEmpty : true, Icons.link_rounded),
-      ('Tạo bracket', state.hasBracket, Icons.account_tree_outlined),
-      ('Theo dõi trận', state.hasBracket, Icons.sports_tennis_rounded),
+      (l10n.lite_participants, state.participants.isNotEmpty, Icons.people_outline_rounded),
+      (l10n.lite_stepPairing, state.isDoubles ? state.completeParticipants.isNotEmpty : true, Icons.link_rounded),
+      (l10n.lite_createBracket, state.hasBracket, Icons.account_tree_outlined),
+      (l10n.lite_stepFollowMatches, state.hasBracket, Icons.sports_tennis_rounded),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
@@ -249,7 +254,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Tiến độ giải Lite',
+            l10n.lite_progressTitle,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.textPrimary),
           ),
           const SizedBox(height: 12),
@@ -298,6 +303,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     AppColorsExtension colors,
     LiteManagementState state,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final tournament = state.tournament;
     final status = tournament?.status ?? '';
     final statusLabel = StatusHelper.getTournamentStatusLabel(status);
@@ -318,7 +324,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             children: [
               Expanded(
                 child: Text(
-                  state.tournamentName ?? 'Giải đấu',
+                  state.tournamentName ?? l10n.navTournaments,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -366,7 +372,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               ),
               const SizedBox(width: 6),
               Text(
-                state.isDoubles ? 'Đánh đôi' : 'Đánh đơn',
+                state.isDoubles ? l10n.lite_doubles : l10n.lite_singles,
                 style: TextStyle(fontSize: 13, color: colors.textSecondary),
               ),
             ],
@@ -377,7 +383,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               Icon(Icons.groups_rounded, size: 16, color: colors.textSecondary),
               const SizedBox(width: 6),
               Text(
-                'Tối đa: ${tournament?.maxTeams ?? '--'} đội',
+                '${l10n.maxTeamsLabel}: ${tournament?.maxTeams ?? '--'} ${l10n.teamsUnit}',
                 style: TextStyle(fontSize: 13, color: colors.textSecondary),
               ),
             ],
@@ -431,6 +437,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   }
 
   Widget _inviteCodeCard(AppColorsExtension colors, String inviteCode) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -446,7 +453,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Mã mời',
+                  l10n.lite_inviteCode,
                   style: TextStyle(fontSize: 12, color: colors.textMuted),
                 ),
                 const SizedBox(height: 4),
@@ -468,11 +475,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: inviteCode));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đã sao chép mã mời')),
+                  SnackBar(content: Text(l10n.lite_inviteCopied)),
                 );
               },
               icon: const Icon(Icons.copy_rounded, size: 16),
-              label: const Text('Sao chép', style: TextStyle(fontSize: 13)),
+              label: Text(l10n.lite_copy, style: const TextStyle(fontSize: 13)),
               style: FilledButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
@@ -486,6 +493,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   }
 
   Widget _qrCodeCard(AppColorsExtension colors, String inviteCode) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -512,7 +520,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Quét mã QR để tham gia giải',
+            l10n.lite_qrInstruction,
             style: TextStyle(fontSize: 12, color: colors.textMuted),
           ),
         ],
@@ -529,6 +537,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     LiteManagementState state,
     LiteManagementNotifier notifier,
   ) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (state.loading && state.participants.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -550,7 +560,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => notifier.refresh(widget.tournamentId),
-                child: const Text('Thử lại'),
+                child: Text(l10n.infoRetry),
               ),
             ],
           ),
@@ -594,7 +604,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                         color: colors.warning,
                       ),
                 label: Text(
-                  state.mockLoading ? 'Đang tạo...' : 'Tạo VĐV ảo',
+                  state.mockLoading ? l10n.lite_creating : l10n.lite_createMockPlayers,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -609,12 +619,12 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             // ─── Pending Section ───
             _sectionHeader(
               colors,
-              'Chờ ghép cặp (${pending.length})',
+              '${l10n.lite_waitingPair} (${pending.length})',
               Icons.people_outline_rounded,
             ),
             const SizedBox(height: 8),
             if (pending.isEmpty)
-              _emptyCard(colors, 'Không có người chơi đang chờ ghép cặp')
+              _emptyCard(colors, l10n.lite_noPendingPairs)
             else
               ...pending.map((p) => _pendingTile(colors, state, notifier, p)),
 
@@ -639,7 +649,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                         )
                       : const Icon(Icons.link_rounded, size: 18),
                   label: Text(
-                    state.pairing ? 'Đang ghép...' : 'Ghép 2 người đã chọn',
+                    state.pairing ? l10n.lite_pairing : l10n.lite_pairSelected,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   style: FilledButton.styleFrom(
@@ -656,7 +666,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               const SizedBox(height: 16),
               _sectionHeader(
                 colors,
-                'Ghép cặp tự động',
+                l10n.lite_autoPairing,
                 Icons.auto_fix_high_rounded,
               ),
               const SizedBox(height: 8),
@@ -687,7 +697,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(
-                              'Ngẫu nhiên',
+                              l10n.lite_random,
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
@@ -721,7 +731,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(
-                              'Cân bằng ELO',
+                              l10n.lite_eloBalanced,
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
@@ -755,7 +765,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Số lẻ: 1 người chơi sẽ ở lại trạng thái chờ ghép',
+                        l10n.lite_oddNotice,
                         style: TextStyle(
                           fontSize: 12,
                           color: colors.textSecondary,
@@ -772,7 +782,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               const SizedBox(height: 24),
               _sectionHeader(
                 colors,
-                'Đã ghép cặp (${allPaired.length})',
+                '${l10n.lite_paired} (${allPaired.length})',
                 Icons.check_circle_outline_rounded,
               ),
               const SizedBox(height: 8),
@@ -782,12 +792,12 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             // ─── Singles: just participant list ───
             _sectionHeader(
               colors,
-              'Người tham gia (${state.participants.length})',
+              '${l10n.lite_participants} (${state.participants.length})',
               Icons.people_rounded,
             ),
             const SizedBox(height: 6),
             if (state.participants.isEmpty)
-              _emptyCard(colors, 'Chưa có người tham gia')
+              _emptyCard(colors, l10n.noParticipants)
             else
               ...state.participants.map((p) => _singlesTile(colors, p)),
           ],
@@ -812,9 +822,9 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                           color: Colors.white,
                         ),
                       )
-                    : Icon(Icons.emoji_events_rounded, size: 20),
+                    : const Icon(Icons.emoji_events_rounded, size: 20),
                 label: Text(
-                  state.creatingBracket ? 'Đang tạo...' : 'Tạo bracket',
+                  state.creatingBracket ? l10n.lite_creating : l10n.lite_createBracket,
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 style: FilledButton.styleFrom(
@@ -834,23 +844,24 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     AppColorsExtension colors,
     LiteManagementNotifier notifier,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final ctrl = TextEditingController(text: '8');
     final count = await showDialog<int>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Tạo VĐV ảo'),
+        title: Text(l10n.lite_createMockPlayers),
         content: TextField(
           controller: ctrl,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Số lượng',
-            hintText: '1-50',
+          decoration: InputDecoration(
+            labelText: l10n.lite_quantity,
+            hintText: l10n.lite_quantityHint,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
+            child: Text(l10n.matchesCancel),
           ),
           FilledButton(
             onPressed: () {
@@ -858,7 +869,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               if (n < 1 || n > 50) return;
               Navigator.pop(ctx, n);
             },
-            child: const Text('Tạo'),
+            child: Text(l10n.lite_create),
           ),
         ],
       ),
@@ -872,21 +883,20 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     AppColorsExtension colors,
     LiteManagementNotifier notifier,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Tạo bracket?'),
-        content: const Text(
-          'Sau khi tạo bracket, không thể ghép thêm cặp mới. Tiếp tục?',
-        ),
+        title: Text(l10n.lite_createBracketTitle),
+        content: Text(l10n.lite_createBracketConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Hủy'),
+            child: Text(l10n.matchesCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Tạo bracket'),
+            child: Text(l10n.lite_createBracket),
           ),
         ],
       ),
@@ -897,19 +907,19 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       await notifier.createBracket(widget.tournamentId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã tạo bracket thành công!')),
+          SnackBar(content: Text(l10n.lite_bracketCreated)),
         );
       }
     } catch (e) {
       if (mounted) {
         final message = e is DioException && e.response?.statusCode == 401
-            ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại rồi thử tạo bracket.'
+            ? l10n.lite_sessionExpired
             : e is DioException && e.response?.statusCode == 403
-                ? 'Tài khoản chưa được xác thực hoặc không có quyền tạo bracket.'
+                ? l10n.lite_unauthorized
                 : e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: $message'),
+            content: Text('${l10n.errorPrefix}: $message'),
           ),
         );
       }
@@ -925,6 +935,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     LiteManagementState state,
     LiteManagementNotifier notifier,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -940,7 +951,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              state.hasBracket ? 'Bracket đã được tạo' : 'Chưa có bracket',
+              state.hasBracket ? l10n.lite_bracketCreated : l10n.lite_noBracket,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -950,8 +961,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             const SizedBox(height: 8),
             Text(
               state.hasBracket
-                  ? 'Xem sơ đồ thi đấu để theo dõi các trận đấu'
-                  : 'Tạo bracket để bắt đầu các trận đấu',
+                  ? l10n.lite_viewBracketDesc
+                  : l10n.lite_createBracketDesc,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: colors.textSecondary),
             ),
@@ -961,15 +972,13 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 onPressed: () {
                   // Navigate to bracket view (placeholder for now)
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Tính năng xem bracket sẽ được cập nhật sau',
-                      ),
+                    SnackBar(
+                      content: Text(l10n.lite_bracketComingSoon),
                     ),
                   );
                 },
                 icon: const Icon(Icons.visibility_rounded, size: 18),
-                label: const Text('Xem bracket'),
+                label: Text(l10n.viewBracket),
                 style: OutlinedButton.styleFrom(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusXL),
@@ -995,7 +1004,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                         )
                       : const Icon(Icons.add_rounded, size: 20),
                   label: Text(
-                    state.creatingBracket ? 'Đang tạo...' : 'Tạo bracket',
+                    state.creatingBracket ? l10n.lite_creating : l10n.lite_createBracket,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   style: FilledButton.styleFrom(
@@ -1017,6 +1026,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   // ═══════════════════════════════════════════
 
   Widget _buildMatchesTab(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -1030,7 +1040,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'Trận đấu',
+              l10n.matchesTitle,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -1039,7 +1049,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Danh sách trận đấu sẽ xuất hiện sau khi tạo bracket',
+              l10n.lite_matchesAfterBracket,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: colors.textSecondary),
             ),
@@ -1096,6 +1106,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     LiteManagementNotifier notifier,
     LiteParticipant participant,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final selected = state.selectedIds.contains(participant.id);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -1151,7 +1162,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                 ),
                 child: Text(
-                  'Chờ cặp',
+                  l10n.lite_pendingPair,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -1167,6 +1178,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   }
 
   Widget _singlesTile(AppColorsExtension colors, LiteParticipant participant) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -1216,7 +1228,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             ),
             child: Text(
-              'Đã tham gia',
+              l10n.joined,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
@@ -1234,6 +1246,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     LiteManagementNotifier notifier,
     LiteParticipant participant,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -1290,7 +1303,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   ),
                 ),
                 child: Text(
-                  'Hủy ghép',
+                  l10n.lite_unpair,
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -1305,19 +1318,20 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     LiteManagementNotifier notifier,
     LiteParticipant participant,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Hủy ghép cặp?'),
-        content: const Text('Hai người chơi sẽ trở lại danh sách chờ ghép.'),
+        title: Text(l10n.lite_unpairTitle),
+        content: Text(l10n.lite_unpairContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Giữ nguyên'),
+            child: Text(l10n.lite_keepPair),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Hủy ghép'),
+            child: Text(l10n.lite_unpair),
           ),
         ],
       ),
@@ -1329,7 +1343,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Đã hủy ghép cặp')));
+        ).showSnackBar(SnackBar(content: Text(l10n.lite_unpairSuccess)));
       }
     } catch (e) {
       if (mounted) {
@@ -1337,8 +1351,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           SnackBar(
             content: Text(
               e is DioException && e.response?.statusCode == 404
-                  ? 'Không tìm thấy API hủy ghép trên máy chủ. Vui lòng cập nhật backend.'
-                  : 'Không thể hủy ghép cặp. Vui lòng thử lại.',
+                  ? l10n.lite_unpairApiNotFound
+                  : l10n.lite_unpairError,
             ),
           ),
         );

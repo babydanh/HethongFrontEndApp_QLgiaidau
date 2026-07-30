@@ -119,11 +119,11 @@ class TierPalette {
     grade: 'D',
     label: 'D-',
     fullLabel: 'LOW TIER D',
-    color: Color(0xFF44403C),
-    soft: Color(0xFFF5F5F4),
+    color: Color(0xFF57534E),
+    soft: Color(0xFFF1F1F1),
     badgeBg: Color(0xFF78716C),
-    border: Color(0xFFD6D3D1),
-    gradient: LinearGradient(colors: [Color(0xFFCBD5E1), Color(0xFF64748B)]),
+    border: Color(0xFFD1D1D1),
+    gradient: LinearGradient(colors: [Color(0xFFF1F1F1), Color(0xFFD1D1D1)]),
   );
 
   /// Lấy palette theo tier (nếu null/empty → tính theo ELO).

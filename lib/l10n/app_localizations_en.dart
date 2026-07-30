@@ -48,6 +48,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orContinueWith => 'or continue with';
 
   @override
+  String get loginRegister_googleLabel => 'Google';
+
+  @override
   String get noAccount => 'Don\'t have an account?';
 
   @override
@@ -1278,7 +1281,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registerEloCheckError =>
-      'Could not check ELO. Please try again before registering.';
+      'Cannot check ELO. Please try again before registering.';
 
   @override
   String get registerInviteInvalid => 'Invite code is invalid or expired';
@@ -1373,11 +1376,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registerEloScheduleDesc =>
-      'Public bracket, automatic ELO accumulation after tournament';
+      'Public bracket, auto ELO accumulation after tournament';
 
   @override
   String get registerSupportDesc =>
-      'Fee refunds and inquiries support directly with organizers';
+      'Fee refund support & inquiries directly with Organizer';
 
   @override
   String get registerDeadline => 'REGISTRATION DEADLINE';
@@ -1599,4 +1602,1869 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get joinTeamError => 'Could not join team.';
+
+  @override
+  String get registerError => 'Cannot register. Please try again.';
+
+  @override
+  String get registerDivisionLoadError =>
+      'Cannot load divisions. Please try again.';
+
+  @override
+  String get registerTermsTitle => 'TERMS & CONDITIONS';
+
+  @override
+  String get checkout_invalidDivision => 'Invalid category code';
+
+  @override
+  String get checkout_freeConfirm => 'Free registration confirmed successfully';
+
+  @override
+  String get checkout_cannotOpenPayOS => 'Could not open PayOS link';
+
+  @override
+  String get checkout_noPaymentLink => 'Could not create payment link';
+
+  @override
+  String get checkout_createGatewayError => 'Could not create payment link';
+
+  @override
+  String get checkout_createPaymentError => 'Payment initialization error';
+
+  @override
+  String get checkout_title => 'Fee Payment';
+
+  @override
+  String get checkout_freeBadge => 'FREE';
+
+  @override
+  String get checkout_entryFeeLabel => 'ENTRY FEE';
+
+  @override
+  String get checkout_paymentMethodLabel => 'PAYMENT METHOD';
+
+  @override
+  String get checkout_payOSLabel => 'PayOS Gateway (QR Code / Bank Transfer)';
+
+  @override
+  String get checkout_payOSDescription =>
+      'Scan VietQR code for automatic matching and instant activation';
+
+  @override
+  String get checkout_confirmInstruction =>
+      'Please double check tournament info and fee amount before proceeding.';
+
+  @override
+  String get checkout_freeConfirmButton => 'CONFIRM FREE PARTICIPATION';
+
+  @override
+  String checkout_payButton(Object amount) {
+    return 'PAY $amountđ';
+  }
+
+  @override
+  String get paymentResult_successTitle => 'Payment Successful';
+
+  @override
+  String get paymentResult_failedTitle => 'Payment Failed';
+
+  @override
+  String get paymentResult_pendingTitle => 'Processing Payment';
+
+  @override
+  String get paymentResult_amountLabel => 'Amount';
+
+  @override
+  String get paymentResult_orderCodeLabel => 'Order Code';
+
+  @override
+  String get paymentResult_transactionIdLabel => 'Transaction ID';
+
+  @override
+  String get paymentResult_backToTournament => 'Back to Tournament';
+
+  @override
+  String get paymentResult_backToHome => 'Back to Home';
+
+  @override
+  String get paymentResult_failedMessage => 'Payment was cancelled or failed.';
+
+  @override
+  String get paymentResult_successMessage => 'Good luck with your tournament!';
+
+  @override
+  String get payments_title => 'Payment History';
+
+  @override
+  String get payments_noHistory => 'No payment history yet';
+
+  @override
+  String get payments_statusSuccess => 'Success';
+
+  @override
+  String get payments_statusPending => 'Pending';
+
+  @override
+  String get payments_statusFailed => 'Failed';
+
+  @override
+  String get payments_refreshTooltip => 'Refresh';
+
+  @override
+  String get payments_loadError => 'Error loading payment history:';
+
+  @override
+  String get payments_totalTransactions => 'Total Transactions';
+
+  @override
+  String payments_transactionCount(Object count) {
+    return '$count transactions';
+  }
+
+  @override
+  String payments_pendingCount(Object count) {
+    return '$count pending';
+  }
+
+  @override
+  String get payments_filterAll => 'All';
+
+  @override
+  String get payments_filterCompleted => 'Completed';
+
+  @override
+  String get payments_filterPending => 'Pending';
+
+  @override
+  String get payments_filterFailed => 'Failed';
+
+  @override
+  String get payments_emptyAll => 'No payment history yet';
+
+  @override
+  String get payments_emptyFiltered => 'No transactions found';
+
+  @override
+  String get payments_emptySubtitle => 'Your transactions will appear here';
+
+  @override
+  String get payments_defaultTournamentName => 'Unknown Tournament';
+
+  @override
+  String payments_transactionRef(Object ref) {
+    return 'TX Ref: $ref';
+  }
+
+  @override
+  String get payments_retryCta => 'Pay now';
+
+  @override
+  String get payments_detailTournament => 'Tournament';
+
+  @override
+  String get payments_detailUnknown => 'Unknown';
+
+  @override
+  String get payments_detailTeamName => 'Team / Player Name';
+
+  @override
+  String get payments_detailGateway => 'Payment Gateway';
+
+  @override
+  String get payments_detailTransactionId => 'Transaction Ref';
+
+  @override
+  String get payments_copied => 'Copied transaction reference';
+
+  @override
+  String get payments_retryPendingInfo =>
+      'Transaction pending. You can check again or retry payment.';
+
+  @override
+  String get payments_retryFailedInfo =>
+      'Transaction failed. You can reopen checkout to complete it.';
+
+  @override
+  String get payments_refreshStatus => 'Refresh Status';
+
+  @override
+  String get payments_processing => 'Processing...';
+
+  @override
+  String get payments_payNow => 'Pay Now';
+
+  @override
+  String get payments_successInfo =>
+      'This transaction has been completed successfully.';
+
+  @override
+  String get forgotPassword_title => 'Forgot Password';
+
+  @override
+  String get forgotPassword_headerTitle => 'Reset password';
+
+  @override
+  String get forgotPassword_description =>
+      'Enter the email address associated with your account to receive a password reset link.';
+
+  @override
+  String get forgotPassword_emailTip =>
+      'The system will send a verification code or link to your email. Please also check your Spam folder.';
+
+  @override
+  String get forgotPassword_emailHint => 'enter@email.com';
+
+  @override
+  String get forgotPassword_emailRequired => 'Please enter your email address';
+
+  @override
+  String get forgotPassword_emailInvalid => 'Invalid email format';
+
+  @override
+  String get forgotPassword_submitting => 'Sending...';
+
+  @override
+  String get forgotPassword_submitButton => 'Send Reset Request';
+
+  @override
+  String get forgotPassword_backToLogin => 'Back to Login';
+
+  @override
+  String get forgotPassword_sentTitle => 'Reset Email Sent';
+
+  @override
+  String get forgotPassword_checkEmail =>
+      'We have sent password reset instructions to ';
+
+  @override
+  String get forgotPassword_checkEmailSuffix => '. Please check your inbox.';
+
+  @override
+  String forgotPassword_resendTimer(Object seconds) {
+    return 'Resend in ${seconds}s';
+  }
+
+  @override
+  String get forgotPassword_canResend =>
+      'You can request to resend the email now';
+
+  @override
+  String forgotPassword_resendButtonTimer(Object seconds) {
+    return 'Resend (${seconds}s)';
+  }
+
+  @override
+  String get forgotPassword_resendButton => 'Resend reset email';
+
+  @override
+  String get forgotPassword_backToLoginButton => 'Return to Login';
+
+  @override
+  String get forgotPassword_sentSuccessMessage =>
+      'Password reset email has been sent!';
+
+  @override
+  String get forgotPassword_errorGeneric =>
+      'Could not send password reset email';
+
+  @override
+  String get notification_markAllReadError => 'Could not mark all as read.';
+
+  @override
+  String get notification_inviteAccepted => 'Invite accepted!';
+
+  @override
+  String get notification_inviteDeclined => 'Invite declined.';
+
+  @override
+  String get notification_acceptError => 'Error accepting invite.';
+
+  @override
+  String get notification_declineError => 'Error declining invite.';
+
+  @override
+  String get notification_title => 'Notifications';
+
+  @override
+  String get notification_readAll => 'Mark all read';
+
+  @override
+  String get notification_all => 'All';
+
+  @override
+  String get notification_unread => 'Unread';
+
+  @override
+  String get notification_emptyTitle => 'No notifications yet';
+
+  @override
+  String get notification_emptySubtitle =>
+      'Tournament and system updates will appear here';
+
+  @override
+  String get notification_filteredEmptyTitle =>
+      'You have read all notifications!';
+
+  @override
+  String get notification_viewAll => 'View all notifications';
+
+  @override
+  String get notification_today => 'Today';
+
+  @override
+  String get notification_yesterday => 'Yesterday';
+
+  @override
+  String get notification_thisWeek => 'This week';
+
+  @override
+  String get notification_roleBtc => 'BTC';
+
+  @override
+  String get notification_roleReferee => 'Referee';
+
+  @override
+  String get notification_rolePlayer => 'Player';
+
+  @override
+  String get notification_updateStatusError =>
+      'Error updating notification status.';
+
+  @override
+  String get notification_decline => 'Decline';
+
+  @override
+  String get notification_accept => 'Accept';
+
+  @override
+  String get payments_close => 'Close';
+
+  @override
+  String get payments_createLinkError => 'Could not create payment link.';
+
+  @override
+  String get loginRegister_forgotPassword => 'Forgot password?';
+
+  @override
+  String get loginRegister_appleLabel => 'Apple';
+
+  @override
+  String get loginRegister_loginNowAction => 'Login now';
+
+  @override
+  String get resetPassword_minLengthError =>
+      'Password must be at least 6 characters';
+
+  @override
+  String get resetPassword_mismatchError =>
+      'Password confirmation does not match';
+
+  @override
+  String get resetPassword_errorGeneric =>
+      'Could not reset password. Please try again.';
+
+  @override
+  String get resetPassword_title => 'Reset Password';
+
+  @override
+  String get resetPassword_successTitle => 'Password reset successful!';
+
+  @override
+  String get resetPassword_createNewPassword => 'Create new password';
+
+  @override
+  String get resetPassword_newPasswordLabel => 'New password';
+
+  @override
+  String get resetPassword_confirmPasswordLabel => 'Confirm new password';
+
+  @override
+  String get resetPassword_submitting => 'Processing...';
+
+  @override
+  String get resetPassword_resetButton => 'Reset Password';
+
+  @override
+  String get loginLoading_defaultUserName => 'Player';
+
+  @override
+  String get loginLoading_welcomeBack => 'Welcome back!';
+
+  @override
+  String get loginLoading_loginSuccess => 'Login successful!';
+
+  @override
+  String get loginRegister_registerFailed => 'Registration failed';
+
+  @override
+  String get loginRegister_loginFailed => 'Login failed';
+
+  @override
+  String get loginRegister_googleLoginFailed => 'Google login failed';
+
+  @override
+  String get loginRegister_googleLoginError => 'Error during Google login';
+
+  @override
+  String get loginRegister_appleLoginFailed => 'Apple login failed';
+
+  @override
+  String get loginRegister_appleLoginError => 'Error during Apple login';
+
+  @override
+  String get loginRegister_registerSubtitle =>
+      'Create a new account to join and organize professional tournaments';
+
+  @override
+  String get loginRegister_loginSubtitle =>
+      'Login to your account to access all features';
+
+  @override
+  String get loginRegister_fullNameHint => 'John Doe';
+
+  @override
+  String get loginRegister_fullNameRequired => 'Please enter your full name';
+
+  @override
+  String get loginRegister_emailHint => 'example@email.com';
+
+  @override
+  String get loginRegister_emailRequired => 'Please enter your email';
+
+  @override
+  String get loginRegister_emailInvalid => 'Invalid email address';
+
+  @override
+  String get loginRegister_passwordHint => '••••••••';
+
+  @override
+  String get loginRegister_passwordRequired => 'Please enter your password';
+
+  @override
+  String get loginRegister_passwordMinLength =>
+      'Password must be at least 6 characters';
+
+  @override
+  String get paymentsTitle => 'Payment History';
+
+  @override
+  String get paymentsRefresh => 'Refresh';
+
+  @override
+  String get paymentsTotal => 'Total Transactions';
+
+  @override
+  String get paymentsEmpty => 'No transactions yet';
+
+  @override
+  String get paymentsFilterAll => 'All';
+
+  @override
+  String get paymentsFilterSuccess => 'Successful';
+
+  @override
+  String get paymentsFilterPending => 'Processing';
+
+  @override
+  String get paymentsFilterFailed => 'Failed';
+
+  @override
+  String get paymentsRefunded => 'Refunded';
+
+  @override
+  String get checkoutTitle => 'Confirm Payment';
+
+  @override
+  String get checkoutFee => 'ENTRY FEE';
+
+  @override
+  String get checkoutFree => 'FREE';
+
+  @override
+  String get checkoutPaymentMethod => 'PAYMENT METHOD';
+
+  @override
+  String get checkoutPayos => 'PayOS Payment QR';
+
+  @override
+  String get checkoutSuccess => 'Payment Successful!';
+
+  @override
+  String get checkoutFailed => 'Payment Failed';
+
+  @override
+  String get checkoutBackToTournament => 'Back to Tournament';
+
+  @override
+  String get checkoutBackToHome => 'Back to Home';
+
+  @override
+  String get dashboard_title => 'My Dashboard';
+
+  @override
+  String get dashboard_loginPrompt => 'Log in to view your area';
+
+  @override
+  String get dashboard_user => 'User';
+
+  @override
+  String get dashboard_invites => 'Invites';
+
+  @override
+  String get dashboard_roles => 'Roles';
+
+  @override
+  String get dashboard_refereeMatchesCount => 'Matches';
+
+  @override
+  String get dashboard_pendingInvitesTitle => 'Pending Invites';
+
+  @override
+  String get dashboard_openList => 'Open List';
+
+  @override
+  String get dashboard_refereeInviteFallback => 'Referee Invitation';
+
+  @override
+  String get dashboard_inviteDate => 'Invite Date';
+
+  @override
+  String get dashboard_updateInProgress => 'Updating';
+
+  @override
+  String get dashboard_myRoles => 'My Roles';
+
+  @override
+  String get dashboard_organizer => 'Organizer';
+
+  @override
+  String get dashboard_coOrganizer => 'Co-Organizer';
+
+  @override
+  String get dashboard_noRolesDesc =>
+      'You don\'t have any roles in tournaments yet.';
+
+  @override
+  String get dashboard_assignedMatches => 'Assigned Matches';
+
+  @override
+  String get dashboard_viewInvites => 'View Invites';
+
+  @override
+  String get dashboard_noAssignedMatches => 'You have no assigned matches yet.';
+
+  @override
+  String dashboard_roundLabel(Object round) {
+    return 'Round $round';
+  }
+
+  @override
+  String get dashboard_waitingSchedule => 'Awaiting Schedule';
+
+  @override
+  String dashboard_myTournaments(Object count) {
+    return 'My Tournaments ($count)';
+  }
+
+  @override
+  String dashboard_tournamentCount(Object count) {
+    return '$count tournaments';
+  }
+
+  @override
+  String get dashboard_searchHint => 'Search tournaments...';
+
+  @override
+  String get dashboard_noSearchResults => 'No tournaments found';
+
+  @override
+  String get dashboard_noTournaments =>
+      'You haven\'t created or joined any tournaments yet.';
+
+  @override
+  String get dashboard_collapse => 'Collapse';
+
+  @override
+  String dashboard_showMore(Object count) {
+    return 'Show more ($count more tournaments)';
+  }
+
+  @override
+  String get dashboard_quickActions => 'Quick Actions';
+
+  @override
+  String get dashboard_createLite => 'Create Quick Tournament (Lite)';
+
+  @override
+  String get dashboard_createLiteSub => 'Quickly create in your club';
+
+  @override
+  String get dashboard_notificationsSub =>
+      'View invites, updates and reminders';
+
+  @override
+  String get dashboard_clubInvites => 'Club Invites';
+
+  @override
+  String get dashboard_clubInvitesSub => 'Receive and respond to club invites';
+
+  @override
+  String get dashboard_profile => 'Personal Profile';
+
+  @override
+  String get dashboard_profileSub => 'Update info and public profile';
+
+  @override
+  String get dashboard_needClubTitle => 'Club Required';
+
+  @override
+  String get dashboard_needClubContent =>
+      'You need to create or join a club before creating a Quick Tournament (Lite).';
+
+  @override
+  String get dashboard_later => 'Later';
+
+  @override
+  String get dashboard_createClubBtn => 'Create Club';
+
+  @override
+  String get dashboard_selectClub => 'Select a club to create a tournament';
+
+  @override
+  String get dashboard_registered => 'Registered';
+
+  @override
+  String get dashboard_manageAdvancedTitle => 'Manage Advanced Tournament';
+
+  @override
+  String get dashboard_manageAdvancedContent =>
+      'The app currently only supports managing Quick Tournaments (Lite). For Advanced Tournaments, please manage via the web.';
+
+  @override
+  String get dashboard_gotIt => 'Got it';
+
+  @override
+  String get dashboard_liteDesc => 'Quick (Lite) • Manage on app';
+
+  @override
+  String get dashboard_advancedDesc => 'Advanced • Full management';
+
+  @override
+  String get dashboard_loadErrorTitle => 'Could not load your area';
+
+  @override
+  String get dashboard_loadErrorDesc =>
+      'Try refreshing to sync invites, roles and assigned matches.';
+
+  @override
+  String get dashboard_retry => 'Reload';
+
+  @override
+  String get organizer_title => 'Quick Manage';
+
+  @override
+  String organizer_loadError(Object error) {
+    return 'Could not load tournament: $error';
+  }
+
+  @override
+  String get organizer_notFound => 'Tournament not found';
+
+  @override
+  String get organizer_tabOverview => 'Overview';
+
+  @override
+  String get organizer_tabTeams => 'Teams / Players';
+
+  @override
+  String get organizer_tabSchedule => 'Schedule';
+
+  @override
+  String get organizer_tabFinance => 'Finance';
+
+  @override
+  String get organizer_tabPermissions => 'Permissions';
+
+  @override
+  String get organizer_noDate => 'Date not set';
+
+  @override
+  String get organizer_tournamentPage => 'Tournament Page';
+
+  @override
+  String get organizer_metricLive => 'Live';
+
+  @override
+  String get organizer_openBracket => 'Open Bracket';
+
+  @override
+  String get organizer_openBracketSub =>
+      'View the current bracket to check branches and results';
+
+  @override
+  String get organizer_viewLive => 'View Live Matches';
+
+  @override
+  String get organizer_viewLiveSub =>
+      'Go to live screen to follow and coordinate quickly';
+
+  @override
+  String get organizer_viewPublic => 'Open Public Tournament Page';
+
+  @override
+  String get organizer_viewPublicSub =>
+      'Check the viewer interface and displayed information';
+
+  @override
+  String organizer_teamsLoadError(Object error) {
+    return 'Could not load team list: $error';
+  }
+
+  @override
+  String get organizer_noTeams => 'No teams or players in this tournament yet.';
+
+  @override
+  String get organizer_noMembers => 'No members yet';
+
+  @override
+  String organizer_matchesLoadError(Object error) {
+    return 'Could not load schedule: $error';
+  }
+
+  @override
+  String get organizer_noMatches => 'No matches have been created yet.';
+
+  @override
+  String get organizer_noTime => 'Not scheduled';
+
+  @override
+  String organizer_matchTitle(Object round, Object matchNumber) {
+    return 'Round $round • Match $matchNumber';
+  }
+
+  @override
+  String organizer_refereesLoadError(Object error) {
+    return 'Could not load referee list.\n$error';
+  }
+
+  @override
+  String get organizer_noReferees =>
+      'No referees have been assigned to this tournament yet.';
+
+  @override
+  String get organizer_refereeAccepted => 'Accepted';
+
+  @override
+  String get organizer_refereeInvited => 'Invited';
+
+  @override
+  String get organizer_refereeAssigned => 'Assigned';
+
+  @override
+  String get organizer_noEmail => 'No email';
+
+  @override
+  String organizer_matchCount(Object count) {
+    return '$count matches';
+  }
+
+  @override
+  String organizer_liveCount(Object count) {
+    return '$count live';
+  }
+
+  @override
+  String get organizer_openAssignedMatch => 'Open Assigned Match';
+
+  @override
+  String get organizer_openNearestMatch => 'Open Nearest Match';
+
+  @override
+  String get organizer_refereeDeclined => 'Declined';
+
+  @override
+  String get organizer_statusOngoing => 'Ongoing';
+
+  @override
+  String get organizer_statusCompleted => 'Completed';
+
+  @override
+  String get organizer_statusScheduled => 'Scheduled';
+
+  @override
+  String get organizer_financeTotalRevenue => 'Total Revenue';
+
+  @override
+  String get organizer_financeRegisteredTeams => 'Registered Teams';
+
+  @override
+  String get organizer_financeMaxRevenue => 'Max Revenue';
+
+  @override
+  String get organizer_financeFreeTournament => 'Free Tournament';
+
+  @override
+  String get organizer_financeNoFee => 'No entry fee charged';
+
+  @override
+  String get organizer_financeDetailTitle => 'REVENUE DETAILS';
+
+  @override
+  String get organizer_financeFeePerTeam => 'Entry Fee per Team';
+
+  @override
+  String get organizer_financeRegisteredTeamsDetail => 'Registered Teams';
+
+  @override
+  String get organizer_financeRemainingSlots => 'Available Slots';
+
+  @override
+  String get organizer_financePaymentInfo => 'PAYMENT INFO';
+
+  @override
+  String get organizer_financePaymentDesc =>
+      'Manage detailed payments and reconciliation on the website for the best experience.';
+
+  @override
+  String get organizer_financeViewWeb => 'View on Web';
+
+  @override
+  String get organizer_financeWebError =>
+      'Could not open management page on web';
+
+  @override
+  String get organizer_permissionsCreator => 'TOURNAMENT CREATOR';
+
+  @override
+  String get organizer_permissionsUnknown => 'Unknown';
+
+  @override
+  String get organizer_permissionsRoles => 'ROLES & ACCESS';
+
+  @override
+  String get organizer_permissionsAdmin => 'Admin';
+
+  @override
+  String get organizer_permissionsAdminDesc =>
+      'Full tournament management rights';
+
+  @override
+  String get organizer_permissionsRefereeDesc =>
+      'Update scores, manage matches';
+
+  @override
+  String get organizer_permissionsViewer => 'Viewer';
+
+  @override
+  String get organizer_permissionsViewerDesc =>
+      'View results and rankings only';
+
+  @override
+  String get organizer_permissionsTokenAdmin => 'Admin Code';
+
+  @override
+  String get organizer_permissionsTokenReferee => 'Referee Code';
+
+  @override
+  String get organizer_permissionsTokenViewer => 'Viewer Code';
+
+  @override
+  String get organizer_permissionsVisibility => 'VISIBILITY SETTINGS';
+
+  @override
+  String get organizer_permissionsDisplay => 'Display';
+
+  @override
+  String get organizer_permissionsPublic => 'Public — Anyone can view';
+
+  @override
+  String get organizer_permissionsPrivate =>
+      'Private — Only those with the code can view';
+
+  @override
+  String get organizer_permissionsInfoNote =>
+      'Share the corresponding code to grant access for each role. Each code can only be used once.';
+
+  @override
+  String organizer_tokenCopied(Object label) {
+    return 'Copied $label';
+  }
+
+  @override
+  String get lite_loadFailed =>
+      'Failed to load Lite tournament data. Check network or try again.';
+
+  @override
+  String get lite_managementTitle => 'Manage Tournament';
+
+  @override
+  String get lite_participantsTab => 'Participants';
+
+  @override
+  String get lite_bracketAndMatches => 'Bracket & Matches';
+
+  @override
+  String get lite_tournamentInfo => 'Tournament Information';
+
+  @override
+  String get lite_bracketFormat => 'Bracket Format';
+
+  @override
+  String get lite_participants => 'Participants';
+
+  @override
+  String get lite_created => 'Created';
+
+  @override
+  String get lite_notCreated => 'Not created';
+
+  @override
+  String get lite_inviteCodeTitle => 'Invite Code';
+
+  @override
+  String get lite_qrCodeTitle => 'QR Code';
+
+  @override
+  String get lite_stepPairing => 'Pairing';
+
+  @override
+  String get lite_stepFollowMatches => 'Follow Matches';
+
+  @override
+  String get lite_progressTitle => 'Lite Tournament Progress';
+
+  @override
+  String get lite_doubles => 'Doubles';
+
+  @override
+  String get lite_singles => 'Singles';
+
+  @override
+  String get lite_inviteCode => 'Invite Code';
+
+  @override
+  String get lite_inviteCopied => 'Invite code copied';
+
+  @override
+  String get lite_copy => 'Copy';
+
+  @override
+  String get lite_qrInstruction => 'Scan QR code to join the tournament';
+
+  @override
+  String get lite_creating => 'Creating...';
+
+  @override
+  String get lite_create => 'Create';
+
+  @override
+  String get lite_createMockPlayers => 'Create Mock Players';
+
+  @override
+  String get lite_quantity => 'Quantity';
+
+  @override
+  String get lite_quantityHint => '1-50';
+
+  @override
+  String get lite_waitingPair => 'Waiting for Pairing';
+
+  @override
+  String get lite_noPendingPairs => 'No players waiting for pairing';
+
+  @override
+  String get lite_pairing => 'Pairing...';
+
+  @override
+  String get lite_pairSelected => 'Pair 2 Selected';
+
+  @override
+  String get lite_autoPairing => 'Auto Pairing';
+
+  @override
+  String get lite_random => 'Random';
+
+  @override
+  String get lite_eloBalanced => 'ELO Balanced';
+
+  @override
+  String get lite_oddNotice => 'Odd: 1 player will remain waiting for pairing';
+
+  @override
+  String get lite_paired => 'Paired';
+
+  @override
+  String get lite_createBracketTitle => 'Create Bracket?';
+
+  @override
+  String get lite_createBracketConfirm =>
+      'After creating bracket, no more pairs can be added. Continue?';
+
+  @override
+  String get lite_createBracket => 'Create Bracket';
+
+  @override
+  String get lite_bracketCreated => 'Bracket created successfully!';
+
+  @override
+  String get lite_noBracket => 'No bracket yet';
+
+  @override
+  String get lite_viewBracketDesc => 'View the bracket to follow the matches';
+
+  @override
+  String get lite_createBracketDesc => 'Create a bracket to start the matches';
+
+  @override
+  String get lite_bracketComingSoon =>
+      'Bracket viewing will be available in a future update';
+
+  @override
+  String get lite_matchesAfterBracket =>
+      'Match list will appear after creating bracket';
+
+  @override
+  String get lite_sessionExpired =>
+      'Session expired. Please login again and try creating bracket.';
+
+  @override
+  String get lite_unauthorized =>
+      'Account not verified or not authorized to create bracket.';
+
+  @override
+  String get lite_unpairTitle => 'Unpair?';
+
+  @override
+  String get lite_unpairContent =>
+      'Both players will return to the waiting list.';
+
+  @override
+  String get lite_keepPair => 'Keep';
+
+  @override
+  String get lite_unpair => 'Unpair';
+
+  @override
+  String get lite_unpairSuccess => 'Unpaired successfully';
+
+  @override
+  String get lite_unpairApiNotFound =>
+      'Unpair API not found on server. Please update backend.';
+
+  @override
+  String get lite_unpairError => 'Could not unpair. Please try again.';
+
+  @override
+  String get lite_pendingPair => 'Pending';
+
+  @override
+  String get lite_pairingTitle => 'Pair Players';
+
+  @override
+  String get lite_loadParticipantsError => 'Could not load participant list';
+
+  @override
+  String get lite_pairSuccess => 'Pairing successful';
+
+  @override
+  String get lite_pairError => 'Pairing error: ';
+
+  @override
+  String get lite_generateConfirmTitle => 'Confirm Pairing';
+
+  @override
+  String get lite_generateRandomConfirm => 'Randomly pair all waiting players?';
+
+  @override
+  String get lite_generateEloConfirm =>
+      'Pair all waiting players by balanced ELO?';
+
+  @override
+  String get lite_confirmButton => 'Confirm';
+
+  @override
+  String get lite_autoPairSuccess => 'Auto pairing successful';
+
+  @override
+  String lite_autoPairSuccessOdd(Object count) {
+    return 'Pair successful ($count odd players)';
+  }
+
+  @override
+  String get lite_pairGenerateError => 'Pair generation error: ';
+
+  @override
+  String get lite_createBracketNotAvailable =>
+      'Bracket creation will be available after backend update. Error: ';
+
+  @override
+  String get lite_unpairErrorTitle => 'Unpair error: ';
+
+  @override
+  String get lite_joinButton => 'Join Tournament';
+
+  @override
+  String get lite_joinSuccess => 'Joined successfully!';
+
+  @override
+  String get lite_joinError => 'Could not join tournament.';
+
+  @override
+  String get lite_clubRequestSuccess => 'Club join request sent!';
+
+  @override
+  String get lite_clubRequestError => 'Could not send club join request.';
+
+  @override
+  String get lite_alreadyJoined => 'You have already joined this tournament';
+
+  @override
+  String get lite_viewTournament => 'View Tournament';
+
+  @override
+  String get lite_registrationClosed => 'Registration is closed';
+
+  @override
+  String get lite_registrationNotOpen =>
+      'Tournament registration is not open yet';
+
+  @override
+  String get lite_tournamentFull => 'Tournament is full';
+
+  @override
+  String get lite_requiresClubPrefix => 'You are not a member of ';
+
+  @override
+  String get lite_joinClub => 'Join Club';
+
+  @override
+  String get lite_clubHintAfterJoin => 'Then click Join Tournament below';
+
+  @override
+  String get lite_clubNeedsApprovalSuffix => ' requires member approval';
+
+  @override
+  String get lite_requestClub => 'Request to Join Club';
+
+  @override
+  String get lite_clubApprovalHint =>
+      'You need approval before joining the tournament';
+
+  @override
+  String get lite_clubInviteOnlySuffix => ' is invite-only';
+
+  @override
+  String get lite_clubPendingApproval => 'Club join request pending';
+
+  @override
+  String get lite_yourAccountName => 'Your account name';
+
+  @override
+  String get lite_nameFromProfile => 'Name will be taken from your profile';
+
+  @override
+  String get lite_joining => 'Joining...';
+
+  @override
+  String get lite_sending => 'Sending...';
+
+  @override
+  String get club_clubNotFound => 'Club not found';
+
+  @override
+  String get club_loadError => 'Failed to load club details';
+
+  @override
+  String get club_sportFallback => 'Sports';
+
+  @override
+  String get club_manageShort => 'Manage';
+
+  @override
+  String club_memberCount(Object count) {
+    return '$count members';
+  }
+
+  @override
+  String get club_badge => 'Club';
+
+  @override
+  String get club_joinLoading => 'Processing...';
+
+  @override
+  String get club_joined => 'Joined';
+
+  @override
+  String get club_pendingApproval => 'Pending Approval';
+
+  @override
+  String get club_joinButton => 'Join Club';
+
+  @override
+  String get club_joinSuccess => 'Joined club successfully!';
+
+  @override
+  String get club_joinFailed => 'Failed to join club';
+
+  @override
+  String get club_infoSection => 'INFORMATION';
+
+  @override
+  String get club_memberInfo => 'Members';
+
+  @override
+  String get club_location => 'Location';
+
+  @override
+  String get club_joinModeLabel => 'Join Policy';
+
+  @override
+  String get club_joinModeOpen => 'Open';
+
+  @override
+  String get club_joinModeApprovalNeeded => 'Approval Required';
+
+  @override
+  String get club_joinModeInvite => 'Invite Only';
+
+  @override
+  String get club_sportLabel => 'Sports';
+
+  @override
+  String get club_noTournaments => 'No tournaments yet';
+
+  @override
+  String get club_createTournament => 'Create Tournament';
+
+  @override
+  String get club_createNewTournament => '+ Create New Tournament';
+
+  @override
+  String get club_loadDataError => 'Failed to load tournament list';
+
+  @override
+  String club_teamCount(Object count, Object max) {
+    return '$count/$max teams';
+  }
+
+  @override
+  String get club_liteManage => 'Quick (Manage)';
+
+  @override
+  String get club_quickTournament => 'Quick (Lite)';
+
+  @override
+  String get club_advanced => 'Advanced';
+
+  @override
+  String get club_selectTournamentType => 'Select Tournament Type';
+
+  @override
+  String get club_selectTournamentDesc =>
+      'Please select the type of tournament to create';
+
+  @override
+  String get club_liteTournament => 'Quick Tournament (Lite)';
+
+  @override
+  String get club_30sOnApp => '30s ON APP';
+
+  @override
+  String get club_liteDesc =>
+      'Create and manage brackets directly on the mobile app';
+
+  @override
+  String get club_advancedTournament => 'Advanced Tournament (Full)';
+
+  @override
+  String get club_createOnWeb => 'CREATE ON WEB';
+
+  @override
+  String get club_advancedDesc =>
+      'Full features, entry fees, and roles managed on website';
+
+  @override
+  String get club_createAdvancedTitle => 'Create Advanced Tournament';
+
+  @override
+  String get club_advancedWebDialog =>
+      'To manage advanced tournaments (complex group stages, entry fees, custom rules...), please visit giaidau.vnvar.com on a computer.';
+
+  @override
+  String get club_copyWebLink => 'Go to Create Page';
+
+  @override
+  String get club_membersLabel => 'Member';
+
+  @override
+  String get club_owner => 'Owner';
+
+  @override
+  String get club_admin => 'Admin';
+
+  @override
+  String get club_setAdmin => 'Set as Admin';
+
+  @override
+  String get club_setMod => 'Set as Moderator';
+
+  @override
+  String get club_demoteToMember => 'Demote to Member';
+
+  @override
+  String get club_kickFromClub => 'Remove from Club';
+
+  @override
+  String get club_deleteMemberTitle => 'Confirm Removal';
+
+  @override
+  String club_deleteMemberConfirm(Object name) {
+    return 'Are you sure you want to remove $name from the club?';
+  }
+
+  @override
+  String get club_updatedMember => 'Member updated';
+
+  @override
+  String get club_inviteMember => 'Invite Member';
+
+  @override
+  String get club_searchHint => 'Search by name or email...';
+
+  @override
+  String get club_inviteSent => 'Invite sent successfully!';
+
+  @override
+  String get club_noUsersFound => 'No matching users found';
+
+  @override
+  String club_joinRequests(Object count) {
+    return 'Join Requests ($count)';
+  }
+
+  @override
+  String get club_approvedMember => 'Approved member to join club!';
+
+  @override
+  String get club_rejected => 'Rejected join request';
+
+  @override
+  String get club_approve => 'Approve';
+
+  @override
+  String get club_reject => 'Reject';
+
+  @override
+  String get club_noImages => 'No images yet';
+
+  @override
+  String get club_gallerySubtitle =>
+      'Tournament and club photos will appear here';
+
+  @override
+  String club_imageCount(Object count) {
+    return '$count images';
+  }
+
+  @override
+  String get club_tabSettings => 'Settings';
+
+  @override
+  String get club_managementTitle => 'Club Management';
+
+  @override
+  String get club_activeMembers => 'Active Members';
+
+  @override
+  String get club_pendingRequests => 'Pending';
+
+  @override
+  String get club_invited => 'Invited';
+
+  @override
+  String get club_banned => 'Banned';
+
+  @override
+  String club_joinRequestSection(Object count) {
+    return 'Join Requests ($count)';
+  }
+
+  @override
+  String get club_approvedAlert => 'Approved member!';
+
+  @override
+  String get club_rejectedAlert => 'Rejected join request.';
+
+  @override
+  String get club_ownerInviteInfo =>
+      'Owners can invite as Member or Moderator.';
+
+  @override
+  String get club_adminInviteInfo => 'Admins can invite users as Member.';
+
+  @override
+  String get club_roleLabel => 'Invite Role:';
+
+  @override
+  String get club_memberChip => 'Member';
+
+  @override
+  String get club_adminChip => 'Moderator';
+
+  @override
+  String get club_inviteButton => 'Send Invite';
+
+  @override
+  String get club_noUsersOrInClub =>
+      'No users found or they are already in the club.';
+
+  @override
+  String club_invitedSection(Object count) {
+    return 'Sent Invites ($count)';
+  }
+
+  @override
+  String get club_revokeInvite => 'Invite revoked';
+
+  @override
+  String get club_cancelInvite => 'Cancel Invite';
+
+  @override
+  String get club_aboutSection => 'About';
+
+  @override
+  String get club_active => 'Active';
+
+  @override
+  String club_bannedSection(Object count) {
+    return 'Banned Members ($count)';
+  }
+
+  @override
+  String get club_createdAt => 'Created At';
+
+  @override
+  String get club_dangerSection => 'Danger Zone';
+
+  @override
+  String get club_deleteClub => 'Delete Club';
+
+  @override
+  String get club_deleteConfirmTitle => 'Confirm Club Deletion';
+
+  @override
+  String get club_deleted => 'Club Deleted';
+
+  @override
+  String get club_deleteSubtitle => 'Permanently delete club and all data';
+
+  @override
+  String club_deleteWarning(Object name) {
+    return 'Are you sure you want to delete $name?';
+  }
+
+  @override
+  String get club_editInfo => 'Edit Info';
+
+  @override
+  String get club_editInfoSubtitle => 'Update name, description, avatar';
+
+  @override
+  String get club_joinModeApproval => 'Approval Required';
+
+  @override
+  String get club_joinModeSection => 'Join Mode';
+
+  @override
+  String get club_label => 'Club';
+
+  @override
+  String get club_loadImagesError => 'Could not load images';
+
+  @override
+  String get club_loadListError => 'Could not load list';
+
+  @override
+  String get club_manageClub => 'Manage Club';
+
+  @override
+  String get club_manageClubSubtitle => 'Approve members, update settings';
+
+  @override
+  String get club_noMembers => 'No members yet';
+
+  @override
+  String get club_noSport => 'No sport selected';
+
+  @override
+  String get club_pending => 'Pending';
+
+  @override
+  String get club_sectionInfo => 'Club Info';
+
+  @override
+  String get club_statsSection => 'Statistics';
+
+  @override
+  String get club_statusLabel => 'Status';
+
+  @override
+  String get club_tabAbout => 'About';
+
+  @override
+  String get club_tabGallery => 'Gallery';
+
+  @override
+  String get club_tabMembers => 'Members';
+
+  @override
+  String get club_tabRankings => 'Rankings';
+
+  @override
+  String get club_tabTournaments => 'Tournaments';
+
+  @override
+  String get club_unban => 'Unban';
+
+  @override
+  String get club_unbanned => 'Member unbanned';
+
+  @override
+  String get edit_tab_profile => 'Profile';
+
+  @override
+  String get edit_tab_bank => 'Bank';
+
+  @override
+  String get edit_tab_security => 'Security';
+
+  @override
+  String edit_profile_load_error(Object error) {
+    return 'Profile load error: $error';
+  }
+
+  @override
+  String get edit_avatar_title => 'Change Avatar';
+
+  @override
+  String get edit_take_photo => 'Take Photo';
+
+  @override
+  String get edit_choose_from_library => 'Choose from Library';
+
+  @override
+  String get edit_avatar_upload_success => 'Avatar uploaded successfully';
+
+  @override
+  String edit_avatar_upload_error(Object error) {
+    return 'Upload error: $error';
+  }
+
+  @override
+  String get edit_full_name_hint => 'Enter your full name';
+
+  @override
+  String get edit_full_name_required => 'Please enter your full name';
+
+  @override
+  String get edit_email_label => 'Email';
+
+  @override
+  String get edit_email_hint => 'example@domain.com';
+
+  @override
+  String get edit_email_required => 'Please enter your email';
+
+  @override
+  String get edit_email_invalid => 'Invalid email';
+
+  @override
+  String get edit_email_verified_already => 'Email already verified';
+
+  @override
+  String get edit_email_verify_success => 'Email verified successfully';
+
+  @override
+  String get edit_phone_hint => '0987654321';
+
+  @override
+  String get edit_phone_required => 'Please enter your phone number';
+
+  @override
+  String get edit_phone_invalid => 'Invalid phone number';
+
+  @override
+  String get edit_phone_verified_already => 'Phone already verified';
+
+  @override
+  String get edit_otp_send_failed => 'Could not send OTP to phone';
+
+  @override
+  String edit_otp_send_error(Object error) {
+    return 'Could not send OTP: $error';
+  }
+
+  @override
+  String get edit_otp_enter_code => 'Please enter the verification code';
+
+  @override
+  String get edit_otp_label => 'OTP Code';
+
+  @override
+  String get edit_otp_hint => 'Enter OTP from SMS';
+
+  @override
+  String get edit_phone_verify_title => 'Verify Phone Number';
+
+  @override
+  String get edit_phone_verify_success => 'Phone verified successfully';
+
+  @override
+  String edit_phone_verify_failed(Object error) {
+    return 'Verification failed: $error';
+  }
+
+  @override
+  String get edit_password_required => 'Please enter your password';
+
+  @override
+  String get edit_current_password => 'Current Password';
+
+  @override
+  String get edit_password_confirm_hint => 'Enter password to confirm';
+
+  @override
+  String get edit_delete_account_title => 'Delete Account';
+
+  @override
+  String get edit_delete_account_confirm =>
+      'This action cannot be undone. All your data will be permanently deleted.';
+
+  @override
+  String edit_delete_account_error(Object error) {
+    return 'Delete account failed: $error';
+  }
+
+  @override
+  String get edit_account_deleted => 'Account has been deleted';
+
+  @override
+  String get edit_update_success => 'Profile updated successfully';
+
+  @override
+  String edit_update_error(Object error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get edit_save_changes => 'Save Changes';
+
+  @override
+  String get edit_saved_changes => 'Changes saved';
+
+  @override
+  String get edit_bio_label => 'Bio';
+
+  @override
+  String get edit_bio_hint => 'A short introduction about yourself...';
+
+  @override
+  String get edit_address_hint => 'Enter your address';
+
+  @override
+  String get edit_bank_account_title => 'Prize Bank Account';
+
+  @override
+  String get edit_bank_account_desc =>
+      'Used by organizers to transfer tournament prizes.';
+
+  @override
+  String get edit_bank_name => 'Bank Name';
+
+  @override
+  String get edit_bank_name_hint => 'E.g. Vietcombank, Techcombank...';
+
+  @override
+  String get edit_bank_account_number => 'Account Number';
+
+  @override
+  String get edit_bank_account_hint => 'Enter account number';
+
+  @override
+  String get edit_bank_account_name => 'Account Holder';
+
+  @override
+  String get edit_bank_account_name_hint =>
+      'Enter account holder name (UPPERCASE no accent)';
+
+  @override
+  String get edit_security_account => 'Account Security';
+
+  @override
+  String get edit_change_password_desc => 'Update your login password';
+
+  @override
+  String get edit_delete_account => 'Delete Account';
+
+  @override
+  String get edit_delete_account_warning =>
+      'Permanently delete your account and personal data.';
+
+  @override
+  String get edit_bank_saved => 'Bank info saved';
+
+  @override
+  String get edit_bank_load_error => 'Could not load bank info';
+
+  @override
+  String get edit_bank_account_name_hint_short => 'Enter account holder name';
+
+  @override
+  String get edit_bank_info_desc =>
+      'Bank info is used to receive tournament prizes. Data is secured and not shown publicly.';
+
+  @override
+  String get edit_verification_status => 'Verification Status';
+
+  @override
+  String get edit_verify_email => 'Verify Email';
+
+  @override
+  String get edit_verify_email_desc => 'Send verification code to your email';
+
+  @override
+  String get edit_verification_load_error => 'Could not load status';
+
+  @override
+  String get edit_strong_password => 'Strong Password';
+
+  @override
+  String get edit_strong_password_desc =>
+      'At least 6 characters, should include uppercase and numbers';
+
+  @override
+  String get edit_sessions => 'Login Sessions';
+
+  @override
+  String get edit_current_device => 'Current Device';
+
+  @override
+  String get edit_active => 'Active';
+
+  @override
+  String get edit_bio_label_short => 'Biography';
+
+  @override
+  String get edit_bio_hint_short => 'Introduce yourself...';
+
+  @override
+  String get edit_phone_hint_inline => 'Enter phone number';
+
+  @override
+  String get edit_full_name_hint_short => 'Enter full name';
+
+  @override
+  String get edit_full_name_required_short => 'Please enter full name';
+
+  @override
+  String get edit_overview => 'Overview';
+
+  @override
+  String get edit_achievements => 'Achievements';
+
+  @override
+  String get edit_elo_tab => 'ELO';
+
+  @override
+  String get edit_rank_by_sport => 'Rankings by Sport';
+
+  @override
+  String get edit_matches_load_error => 'Could not load match history';
+
+  @override
+  String get edit_no_public_matches => 'No public matches';
+
+  @override
+  String get edit_not_played => 'Not yet played';
+
+  @override
+  String get edit_achievements_highlight => 'Achievements';
+
+  @override
+  String get edit_no_achievements => 'No achievements yet';
+
+  @override
+  String get edit_champion => 'Champion';
+
+  @override
+  String get edit_runner_up => 'Runner-up';
+
+  @override
+  String get edit_third_place => 'Third Place';
+
+  @override
+  String get edit_no_user_data => 'No user data';
+
+  @override
+  String get edit_view_history_detail => 'View Detailed History';
+
+  @override
+  String get edit_sport_count => 'Sports';
+
+  @override
+  String get edit_total_elo => 'Total ELO';
+
+  @override
+  String get edit_avg_elo => 'Avg ELO';
+
+  @override
+  String get edit_total_matches => 'Total Matches';
+
+  @override
+  String get edit_elo_chart => 'ELO Chart';
+
+  @override
+  String get edit_detailed_stats => 'Detailed Stats';
+
+  @override
+  String get edit_coach => 'Coach';
+
+  @override
+  String get edit_cannot_load_info => 'Could not load info';
+
+  @override
+  String get edit_no_rank_data => 'No ranking data';
+
+  @override
+  String get edit_profile_athlete => 'Athlete Profile';
+
+  @override
+  String get edit_profile_card => 'Player Card & ELO';
+
+  @override
+  String get edit_verify => 'Verify';
+
+  @override
+  String get rank_current_elo => 'Current ELO';
+
+  @override
+  String get rank_no_history => 'No ELO history';
+
+  @override
+  String get rank_no_history_desc => 'Join ranked matches to earn ELO points';
+
+  @override
+  String get rank_peak_elo => 'Peak ELO';
+
+  @override
+  String get rank_public => 'Public';
+
+  @override
+  String get rank_activity => 'ACTIVITY';
+
+  @override
+  String get rank_decay => 'ELO Decay (inactive)';
+
+  @override
+  String get rank_update => 'ELO Update';
 }

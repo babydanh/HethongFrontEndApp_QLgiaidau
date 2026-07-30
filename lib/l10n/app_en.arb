@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "en",
   "navExplore": "Explore",
   "navTournaments": "Tournaments",
@@ -13,6 +13,7 @@
   "loginButton": "Sign In",
   "registerButton": "Sign Up",
   "orContinueWith": "or continue with",
+  "loginRegister_googleLabel": "Google",
   "noAccount": "Don't have an account?",
   "hasAccount": "Already have an account?",
   "registerNow": "Sign up now",
@@ -64,10 +65,6 @@
   "infoMyClubsEmpty": "You haven't created or joined any clubs yet.",
   "infoCreateClub": "Create New Club",
   "infoFollowedEmpty": "You haven't followed any tournaments yet.",
-  "navExplore": "Explore",
-  "navTournaments": "Tournaments",
-  "navRankings": "Rankings",
-  "navClubs": "Clubs",
   "vietnam": "Vietnam",
   "freePrice": "Free",
   "viewAll": "View All",
@@ -406,7 +403,7 @@
   "registerGenderErrorFemale": "This category is for Women only",
   "registerEloTooLow": "Your ELO ({elo}) is below the minimum requirement ({min})",
   "registerEloTooHigh": "Your ELO ({elo}) exceeds the maximum requirement ({max})",
-  "registerEloCheckError": "Could not check ELO. Please try again before registering.",
+  "registerEloCheckError": "Cannot check ELO. Please try again before registering.",
   "registerInviteInvalid": "Invite code is invalid or expired",
   "registerInviteTooShort": "Invite code must be at least 6 characters",
   "registerAlreadyRegistered": "You have already registered for this tournament.",
@@ -435,8 +432,8 @@
   "registerNotScheduled": "Not scheduled",
   "registerSupportTitle": "Player Support",
   "registerEloSchedule": "Schedule & ELO",
-  "registerEloScheduleDesc": "Public bracket, automatic ELO accumulation after tournament",
-  "registerSupportDesc": "Fee refunds and inquiries support directly with organizers",
+  "registerEloScheduleDesc": "Public bracket, auto ELO accumulation after tournament",
+  "registerSupportDesc": "Fee refund support & inquiries directly with Organizer",
   "registerDeadline": "REGISTRATION DEADLINE",
   "registerDeadlineExpired": "Registration deadline has passed",
   "registerOpenTag": "OPEN",
@@ -505,146 +502,892 @@
   "joinTeamViewTournament": "View Tournament",
   "joinTeamError": "Could not join team.",
   "registerError": "Cannot register. Please try again.",
-  "registerEloCheckError": "Cannot check ELO. Please try again before registering.",
   "registerDivisionLoadError": "Cannot load divisions. Please try again.",
   "registerTermsTitle": "TERMS & CONDITIONS",
-  "registerDeadline": "REGISTRATION DEADLINE",
-  "registerEloScheduleDesc": "Public bracket, auto ELO accumulation after tournament",
-  "registerSupportDesc": "Fee refund support & inquiries directly with Organizer"
-,
   "@matchesCount": {
     "placeholders": {
       "count": {}
-    ,
+    }
+  },
   "@matchRecordedPenalty": {
     "placeholders": {
       "name": {}
-    ,
+    }
+  },
   "@matchCeilingScore": {
     "placeholders": {
       "max": {}
-    ,
+    }
+  },
   "@matchRound": {
     "placeholders": {
       "round": {}
-    ,
+    }
+  },
   "@matchCourt": {
     "placeholders": {
       "court": {}
-    ,
+    }
+  },
   "@matchWinSets": {
     "placeholders": {
       "sets": {}
-    ,
+    }
+  },
   "@matchPointsPerSet": {
     "placeholders": {
       "points": {}
-    ,
+    }
+  },
   "@matchGamesPerSet": {
     "placeholders": {
       "games": {}
-    ,
+    }
+  },
   "@rallyPointsPerSet": {
     "placeholders": {
       "points": {}
-    ,
+    }
+  },
   "@rallyBestOf": {
     "placeholders": {
       "bestOf": {}
-    ,
+    }
+  },
   "@rallyRemainingPoints": {
     "placeholders": {
       "points": {}
-    ,
+    }
+  },
   "@pickleballServingTeam": {
     "placeholders": {
       "name": {}
-    ,
+    }
+  },
   "@pickleballServerNumber": {
     "placeholders": {
       "number": {}
-    ,
+    }
+  },
   "@tennisTiebreakInfo": {
     "placeholders": {
       "points": {}
-    ,
+    }
+  },
   "@tennisFormatSets": {
     "placeholders": {
       "sets": {}
-    ,
+    }
+  },
   "@tennisCurrentPoint": {
     "placeholders": {
       "points": {}
-    ,
+    }
+  },
   "@registerEloRange": {
     "placeholders": {
-      "min": {}
-      "max": {,
+      "min": {},
+      "max": {}
+    }
+  },
   "@registerMaxTeams": {
     "placeholders": {
       "max": {}
-    ,
+    }
+  },
   "@registerEloTooLow": {
     "placeholders": {
-      "elo": {}
-      "min": {,
+      "elo": {},
+      "min": {}
+    }
+  },
   "@registerEloTooHigh": {
     "placeholders": {
-      "elo": {}
-      "max": {,
+      "elo": {},
+      "max": {}
+    }
+  },
   "@registerFeePending": {
     "placeholders": {
       "fee": {}
-    ,
+    }
+  },
   "@registerSubmitFee": {
     "placeholders": {
-      "label": {}
-      "fee": {,
+      "label": {},
+      "fee": {}
+    }
+  },
   "@registerSubmitFree": {
     "placeholders": {
       "label": {}
-    ,
+    }
+  },
   "@doublesRegSpotReserved": {
     "placeholders": {
       "time": {}
-    ,
+    }
+  },
   "@doublesRegYourTeam": {
     "placeholders": {
       "name": {}
-    ,
+    }
+  },
   "@doublesRegWithPartner": {
     "placeholders": {
       "name": {}
-    ,
+    }
+  },
   "@doublesRegEntryFee": {
     "placeholders": {
       "fee": {}
     }
+  },
+  "checkout_invalidDivision": "Invalid category code",
+  "checkout_freeConfirm": "Free registration confirmed successfully",
+  "checkout_cannotOpenPayOS": "Could not open PayOS link",
+  "checkout_noPaymentLink": "Could not create payment link",
+  "checkout_createGatewayError": "Could not create payment link",
+  "checkout_createPaymentError": "Payment initialization error",
+  "checkout_title": "Fee Payment",
+  "checkout_freeBadge": "FREE",
+  "checkout_entryFeeLabel": "ENTRY FEE",
+  "checkout_paymentMethodLabel": "PAYMENT METHOD",
+  "checkout_payOSLabel": "PayOS Gateway (QR Code / Bank Transfer)",
+  "checkout_payOSDescription": "Scan VietQR code for automatic matching and instant activation",
+  "checkout_confirmInstruction": "Please double check tournament info and fee amount before proceeding.",
+  "checkout_freeConfirmButton": "CONFIRM FREE PARTICIPATION",
+  "checkout_payButton": "PAY {amount}đ",
+  "@checkout_payButton": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "paymentResult_successTitle": "Payment Successful",
+  "paymentResult_failedTitle": "Payment Failed",
+  "paymentResult_pendingTitle": "Processing Payment",
+  "paymentResult_amountLabel": "Amount",
+  "paymentResult_orderCodeLabel": "Order Code",
+  "paymentResult_transactionIdLabel": "Transaction ID",
+  "paymentResult_backToTournament": "Back to Tournament",
+  "paymentResult_backToHome": "Back to Home",
+  "paymentResult_failedMessage": "Payment was cancelled or failed.",
+  "paymentResult_successMessage": "Good luck with your tournament!",
+  "payments_title": "Payment History",
+  "payments_noHistory": "No payment history yet",
+  "payments_statusSuccess": "Success",
+  "payments_statusPending": "Pending",
+  "payments_statusFailed": "Failed",
+  "payments_refreshTooltip": "Refresh",
+  "payments_loadError": "Error loading payment history:",
+  "payments_totalTransactions": "Total Transactions",
+  "payments_transactionCount": "{count} transactions",
+  "@payments_transactionCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "payments_pendingCount": "{count} pending",
+  "@payments_pendingCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "payments_filterAll": "All",
+  "payments_filterCompleted": "Completed",
+  "payments_filterPending": "Pending",
+  "payments_filterFailed": "Failed",
+  "payments_emptyAll": "No payment history yet",
+  "payments_emptyFiltered": "No transactions found",
+  "payments_emptySubtitle": "Your transactions will appear here",
+  "payments_defaultTournamentName": "Unknown Tournament",
+  "payments_transactionRef": "TX Ref: {ref}",
+  "@payments_transactionRef": {
+    "placeholders": {
+      "ref": {}
+    }
+  },
+  "payments_retryCta": "Pay now",
+  "payments_detailTournament": "Tournament",
+  "payments_detailUnknown": "Unknown",
+  "payments_detailTeamName": "Team / Player Name",
+  "payments_detailGateway": "Payment Gateway",
+  "payments_detailTransactionId": "Transaction Ref",
+  "payments_copied": "Copied transaction reference",
+  "payments_retryPendingInfo": "Transaction pending. You can check again or retry payment.",
+  "payments_retryFailedInfo": "Transaction failed. You can reopen checkout to complete it.",
+  "payments_refreshStatus": "Refresh Status",
+  "payments_processing": "Processing...",
+  "payments_payNow": "Pay Now",
+  "payments_successInfo": "This transaction has been completed successfully.",
+  "forgotPassword_title": "Forgot Password",
+  "forgotPassword_headerTitle": "Reset password",
+  "forgotPassword_description": "Enter the email address associated with your account to receive a password reset link.",
+  "forgotPassword_emailTip": "The system will send a verification code or link to your email. Please also check your Spam folder.",
+  "forgotPassword_emailHint": "enter@email.com",
+  "forgotPassword_emailRequired": "Please enter your email address",
+  "forgotPassword_emailInvalid": "Invalid email format",
+  "forgotPassword_submitting": "Sending...",
+  "forgotPassword_submitButton": "Send Reset Request",
+  "forgotPassword_backToLogin": "Back to Login",
+  "forgotPassword_sentTitle": "Reset Email Sent",
+  "forgotPassword_checkEmail": "We have sent password reset instructions to ",
+  "forgotPassword_checkEmailSuffix": ". Please check your inbox.",
+  "forgotPassword_resendTimer": "Resend in {seconds}s",
+  "@forgotPassword_resendTimer": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
+  "forgotPassword_canResend": "You can request to resend the email now",
+  "forgotPassword_resendButtonTimer": "Resend ({seconds}s)",
+  "@forgotPassword_resendButtonTimer": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
+  "forgotPassword_resendButton": "Resend reset email",
+  "forgotPassword_backToLoginButton": "Return to Login",
+  "forgotPassword_sentSuccessMessage": "Password reset email has been sent!",
+  "forgotPassword_errorGeneric": "Could not send password reset email",
+  "notification_markAllReadError": "Could not mark all as read.",
+  "notification_inviteAccepted": "Invite accepted!",
+  "notification_inviteDeclined": "Invite declined.",
+  "notification_acceptError": "Error accepting invite.",
+  "notification_declineError": "Error declining invite.",
+  "notification_title": "Notifications",
+  "notification_readAll": "Mark all read",
+  "notification_all": "All",
+  "notification_unread": "Unread",
+  "notification_emptyTitle": "No notifications yet",
+  "notification_emptySubtitle": "Tournament and system updates will appear here",
+  "notification_filteredEmptyTitle": "You have read all notifications!",
+  "notification_viewAll": "View all notifications",
+  "notification_today": "Today",
+  "notification_yesterday": "Yesterday",
+  "notification_thisWeek": "This week",
+  "notification_roleBtc": "BTC",
+  "notification_roleReferee": "Referee",
+  "notification_rolePlayer": "Player",
+  "notification_updateStatusError": "Error updating notification status.",
+  "notification_decline": "Decline",
+  "notification_accept": "Accept",
+  "payments_close": "Close",
+  "payments_createLinkError": "Could not create payment link.",
+  "loginRegister_forgotPassword": "Forgot password?",
+  "loginRegister_appleLabel": "Apple",
+  "loginRegister_loginNowAction": "Login now",
+  "resetPassword_minLengthError": "Password must be at least 6 characters",
+  "resetPassword_mismatchError": "Password confirmation does not match",
+  "resetPassword_errorGeneric": "Could not reset password. Please try again.",
+  "resetPassword_title": "Reset Password",
+  "resetPassword_successTitle": "Password reset successful!",
+  "resetPassword_createNewPassword": "Create new password",
+  "resetPassword_newPasswordLabel": "New password",
+  "resetPassword_confirmPasswordLabel": "Confirm new password",
+  "resetPassword_submitting": "Processing...",
+  "resetPassword_resetButton": "Reset Password",
+  "loginLoading_defaultUserName": "Player",
+  "loginLoading_welcomeBack": "Welcome back!",
+  "loginLoading_loginSuccess": "Login successful!",
+  "loginRegister_registerFailed": "Registration failed",
+  "loginRegister_loginFailed": "Login failed",
+  "loginRegister_googleLoginFailed": "Google login failed",
+  "loginRegister_googleLoginError": "Error during Google login",
+  "loginRegister_appleLoginFailed": "Apple login failed",
+  "loginRegister_appleLoginError": "Error during Apple login",
+  "loginRegister_registerSubtitle": "Create a new account to join and organize professional tournaments",
+  "loginRegister_loginSubtitle": "Login to your account to access all features",
+  "loginRegister_fullNameHint": "John Doe",
+  "loginRegister_fullNameRequired": "Please enter your full name",
+  "loginRegister_emailHint": "example@email.com",
+  "loginRegister_emailRequired": "Please enter your email",
+  "loginRegister_emailInvalid": "Invalid email address",
+  "loginRegister_passwordHint": "••••••••",
+  "loginRegister_passwordRequired": "Please enter your password",
+  "loginRegister_passwordMinLength": "Password must be at least 6 characters",
+  "paymentsTitle": "Payment History",
+  "paymentsRefresh": "Refresh",
+  "paymentsTotal": "Total Transactions",
+  "paymentsEmpty": "No transactions yet",
+  "paymentsFilterAll": "All",
+  "paymentsFilterSuccess": "Successful",
+  "paymentsFilterPending": "Processing",
+  "paymentsFilterFailed": "Failed",
+  "paymentsRefunded": "Refunded",
+  "checkoutTitle": "Confirm Payment",
+  "checkoutFee": "ENTRY FEE",
+  "checkoutFree": "FREE",
+  "checkoutPaymentMethod": "PAYMENT METHOD",
+  "checkoutPayos": "PayOS Payment QR",
+  "checkoutSuccess": "Payment Successful!",
+  "checkoutFailed": "Payment Failed",
+  "checkoutBackToTournament": "Back to Tournament",
+  "checkoutBackToHome": "Back to Home",
+  "dashboard_title": "My Dashboard",
+  "dashboard_loginPrompt": "Log in to view your area",
+  "dashboard_user": "User",
+  "dashboard_invites": "Invites",
+  "dashboard_roles": "Roles",
+  "dashboard_refereeMatchesCount": "Matches",
+  "dashboard_pendingInvitesTitle": "Pending Invites",
+  "dashboard_openList": "Open List",
+  "dashboard_refereeInviteFallback": "Referee Invitation",
+  "dashboard_inviteDate": "Invite Date",
+  "dashboard_updateInProgress": "Updating",
+  "dashboard_myRoles": "My Roles",
+  "dashboard_organizer": "Organizer",
+  "dashboard_coOrganizer": "Co-Organizer",
+  "dashboard_noRolesDesc": "You don't have any roles in tournaments yet.",
+  "dashboard_assignedMatches": "Assigned Matches",
+  "dashboard_viewInvites": "View Invites",
+  "dashboard_noAssignedMatches": "You have no assigned matches yet.",
+  "dashboard_roundLabel": "Round {round}",
+  "dashboard_waitingSchedule": "Awaiting Schedule",
+  "dashboard_myTournaments": "My Tournaments ({count})",
+  "dashboard_tournamentCount": "{count} tournaments",
+  "dashboard_searchHint": "Search tournaments...",
+  "dashboard_noSearchResults": "No tournaments found",
+  "dashboard_noTournaments": "You haven't created or joined any tournaments yet.",
+  "dashboard_collapse": "Collapse",
+  "dashboard_showMore": "Show more ({count} more tournaments)",
+  "dashboard_quickActions": "Quick Actions",
+  "dashboard_createLite": "Create Quick Tournament (Lite)",
+  "dashboard_createLiteSub": "Quickly create in your club",
+  "dashboard_notificationsSub": "View invites, updates and reminders",
+  "dashboard_clubInvites": "Club Invites",
+  "dashboard_clubInvitesSub": "Receive and respond to club invites",
+  "dashboard_profile": "Personal Profile",
+  "dashboard_profileSub": "Update info and public profile",
+  "dashboard_needClubTitle": "Club Required",
+  "dashboard_needClubContent": "You need to create or join a club before creating a Quick Tournament (Lite).",
+  "dashboard_later": "Later",
+  "dashboard_createClubBtn": "Create Club",
+  "dashboard_selectClub": "Select a club to create a tournament",
+  "dashboard_registered": "Registered",
+  "dashboard_manageAdvancedTitle": "Manage Advanced Tournament",
+  "dashboard_manageAdvancedContent": "The app currently only supports managing Quick Tournaments (Lite). For Advanced Tournaments, please manage via the web.",
+  "dashboard_gotIt": "Got it",
+  "dashboard_liteDesc": "Quick (Lite) • Manage on app",
+  "dashboard_advancedDesc": "Advanced • Full management",
+  "dashboard_loadErrorTitle": "Could not load your area",
+  "dashboard_loadErrorDesc": "Try refreshing to sync invites, roles and assigned matches.",
+  "dashboard_retry": "Reload",
+  "@dashboard_roundLabel": {
+    "placeholders": {
+      "round": {}
+    }
+  },
+  "@dashboard_myTournaments": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@dashboard_tournamentCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@dashboard_showMore": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "organizer_title": "Quick Manage",
+  "organizer_loadError": "Could not load tournament: {error}",
+  "organizer_notFound": "Tournament not found",
+  "organizer_tabOverview": "Overview",
+  "organizer_tabTeams": "Teams / Players",
+  "organizer_tabSchedule": "Schedule",
+  "organizer_tabFinance": "Finance",
+  "organizer_tabPermissions": "Permissions",
+  "organizer_noDate": "Date not set",
+  "organizer_tournamentPage": "Tournament Page",
+  "organizer_metricLive": "Live",
+  "organizer_openBracket": "Open Bracket",
+  "organizer_openBracketSub": "View the current bracket to check branches and results",
+  "organizer_viewLive": "View Live Matches",
+  "organizer_viewLiveSub": "Go to live screen to follow and coordinate quickly",
+  "organizer_viewPublic": "Open Public Tournament Page",
+  "organizer_viewPublicSub": "Check the viewer interface and displayed information",
+  "organizer_teamsLoadError": "Could not load team list: {error}",
+  "organizer_noTeams": "No teams or players in this tournament yet.",
+  "organizer_noMembers": "No members yet",
+  "organizer_matchesLoadError": "Could not load schedule: {error}",
+  "organizer_noMatches": "No matches have been created yet.",
+  "organizer_noTime": "Not scheduled",
+  "organizer_matchTitle": "Round {round} • Match {matchNumber}",
+  "organizer_refereesLoadError": "Could not load referee list.\n{error}",
+  "organizer_noReferees": "No referees have been assigned to this tournament yet.",
+  "organizer_refereeAccepted": "Accepted",
+  "organizer_refereeInvited": "Invited",
+  "organizer_refereeAssigned": "Assigned",
+  "organizer_noEmail": "No email",
+  "organizer_matchCount": "{count} matches",
+  "organizer_liveCount": "{count} live",
+  "organizer_openAssignedMatch": "Open Assigned Match",
+  "organizer_openNearestMatch": "Open Nearest Match",
+  "organizer_refereeDeclined": "Declined",
+  "organizer_statusOngoing": "Ongoing",
+  "organizer_statusCompleted": "Completed",
+  "organizer_statusScheduled": "Scheduled",
+  "organizer_financeTotalRevenue": "Total Revenue",
+  "organizer_financeRegisteredTeams": "Registered Teams",
+  "organizer_financeMaxRevenue": "Max Revenue",
+  "organizer_financeFreeTournament": "Free Tournament",
+  "organizer_financeNoFee": "No entry fee charged",
+  "organizer_financeDetailTitle": "REVENUE DETAILS",
+  "organizer_financeFeePerTeam": "Entry Fee per Team",
+  "organizer_financeRegisteredTeamsDetail": "Registered Teams",
+  "organizer_financeRemainingSlots": "Available Slots",
+  "organizer_financePaymentInfo": "PAYMENT INFO",
+  "organizer_financePaymentDesc": "Manage detailed payments and reconciliation on the website for the best experience.",
+  "organizer_financeViewWeb": "View on Web",
+  "organizer_financeWebError": "Could not open management page on web",
+  "organizer_permissionsCreator": "TOURNAMENT CREATOR",
+  "organizer_permissionsUnknown": "Unknown",
+  "organizer_permissionsRoles": "ROLES & ACCESS",
+  "organizer_permissionsAdmin": "Admin",
+  "organizer_permissionsAdminDesc": "Full tournament management rights",
+  "organizer_permissionsRefereeDesc": "Update scores, manage matches",
+  "organizer_permissionsViewer": "Viewer",
+  "organizer_permissionsViewerDesc": "View results and rankings only",
+  "organizer_permissionsTokenAdmin": "Admin Code",
+  "organizer_permissionsTokenReferee": "Referee Code",
+  "organizer_permissionsTokenViewer": "Viewer Code",
+  "organizer_permissionsVisibility": "VISIBILITY SETTINGS",
+  "organizer_permissionsDisplay": "Display",
+  "organizer_permissionsPublic": "Public — Anyone can view",
+  "organizer_permissionsPrivate": "Private — Only those with the code can view",
+  "organizer_permissionsInfoNote": "Share the corresponding code to grant access for each role. Each code can only be used once.",
+  "organizer_tokenCopied": "Copied {label}",
+  "@organizer_loadError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@organizer_teamsLoadError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@organizer_matchesLoadError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@organizer_matchTitle": {
+    "placeholders": {
+      "round": {},
+      "matchNumber": {}
+    }
+  },
+  "@organizer_refereesLoadError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@organizer_matchCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@organizer_liveCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@organizer_tokenCopied": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "lite_loadFailed": "Failed to load Lite tournament data. Check network or try again.",
+  "lite_managementTitle": "Manage Tournament",
+  "lite_participantsTab": "Participants",
+  "lite_bracketAndMatches": "Bracket & Matches",
+  "lite_tournamentInfo": "Tournament Information",
+  "lite_bracketFormat": "Bracket Format",
+  "lite_participants": "Participants",
+  "lite_created": "Created",
+  "lite_notCreated": "Not created",
+  "lite_inviteCodeTitle": "Invite Code",
+  "lite_qrCodeTitle": "QR Code",
+  "lite_stepPairing": "Pairing",
+  "lite_stepFollowMatches": "Follow Matches",
+  "lite_progressTitle": "Lite Tournament Progress",
+  "lite_doubles": "Doubles",
+  "lite_singles": "Singles",
+  "lite_inviteCode": "Invite Code",
+  "lite_inviteCopied": "Invite code copied",
+  "lite_copy": "Copy",
+  "lite_qrInstruction": "Scan QR code to join the tournament",
+  "lite_creating": "Creating...",
+  "lite_create": "Create",
+  "lite_createMockPlayers": "Create Mock Players",
+  "lite_quantity": "Quantity",
+  "lite_quantityHint": "1-50",
+  "lite_waitingPair": "Waiting for Pairing",
+  "lite_noPendingPairs": "No players waiting for pairing",
+  "lite_pairing": "Pairing...",
+  "lite_pairSelected": "Pair 2 Selected",
+  "lite_autoPairing": "Auto Pairing",
+  "lite_random": "Random",
+  "lite_eloBalanced": "ELO Balanced",
+  "lite_oddNotice": "Odd: 1 player will remain waiting for pairing",
+  "lite_paired": "Paired",
+  "lite_createBracketTitle": "Create Bracket?",
+  "lite_createBracketConfirm": "After creating bracket, no more pairs can be added. Continue?",
+  "lite_createBracket": "Create Bracket",
+  "lite_bracketCreated": "Bracket created successfully!",
+  "lite_noBracket": "No bracket yet",
+  "lite_viewBracketDesc": "View the bracket to follow the matches",
+  "lite_createBracketDesc": "Create a bracket to start the matches",
+  "lite_bracketComingSoon": "Bracket viewing will be available in a future update",
+  "lite_matchesAfterBracket": "Match list will appear after creating bracket",
+  "lite_sessionExpired": "Session expired. Please login again and try creating bracket.",
+  "lite_unauthorized": "Account not verified or not authorized to create bracket.",
+  "lite_unpairTitle": "Unpair?",
+  "lite_unpairContent": "Both players will return to the waiting list.",
+  "lite_keepPair": "Keep",
+  "lite_unpair": "Unpair",
+  "lite_unpairSuccess": "Unpaired successfully",
+  "lite_unpairApiNotFound": "Unpair API not found on server. Please update backend.",
+  "lite_unpairError": "Could not unpair. Please try again.",
+  "lite_pendingPair": "Pending",
+  "lite_pairingTitle": "Pair Players",
+  "lite_loadParticipantsError": "Could not load participant list",
+  "lite_pairSuccess": "Pairing successful",
+  "lite_pairError": "Pairing error: ",
+  "lite_generateConfirmTitle": "Confirm Pairing",
+  "lite_generateRandomConfirm": "Randomly pair all waiting players?",
+  "lite_generateEloConfirm": "Pair all waiting players by balanced ELO?",
+  "lite_confirmButton": "Confirm",
+  "lite_autoPairSuccess": "Auto pairing successful",
+  "lite_autoPairSuccessOdd": "Pair successful ({count} odd players)",
+  "lite_pairGenerateError": "Pair generation error: ",
+  "lite_createBracketNotAvailable": "Bracket creation will be available after backend update. Error: ",
+  "lite_unpairErrorTitle": "Unpair error: ",
+  "lite_joinButton": "Join Tournament",
+  "lite_joinSuccess": "Joined successfully!",
+  "lite_joinError": "Could not join tournament.",
+  "lite_clubRequestSuccess": "Club join request sent!",
+  "lite_clubRequestError": "Could not send club join request.",
+  "lite_alreadyJoined": "You have already joined this tournament",
+  "lite_viewTournament": "View Tournament",
+  "lite_registrationClosed": "Registration is closed",
+  "lite_registrationNotOpen": "Tournament registration is not open yet",
+  "lite_tournamentFull": "Tournament is full",
+  "lite_requiresClubPrefix": "You are not a member of ",
+  "lite_joinClub": "Join Club",
+  "lite_clubHintAfterJoin": "Then click Join Tournament below",
+  "lite_clubNeedsApprovalSuffix": " requires member approval",
+  "lite_requestClub": "Request to Join Club",
+  "lite_clubApprovalHint": "You need approval before joining the tournament",
+  "lite_clubInviteOnlySuffix": " is invite-only",
+  "lite_clubPendingApproval": "Club join request pending",
+  "lite_yourAccountName": "Your account name",
+  "lite_nameFromProfile": "Name will be taken from your profile",
+  "lite_joining": "Joining...",
+  "lite_sending": "Sending...",
+  "club_clubNotFound": "Club not found",
+  "club_loadError": "Failed to load club details",
+  "club_sportFallback": "Sports",
+  "club_manageShort": "Manage",
+  "club_memberCount": "{count} members",
+  "club_badge": "Club",
+  "club_joinLoading": "Processing...",
+  "club_joined": "Joined",
+  "club_pendingApproval": "Pending Approval",
+  "club_joinButton": "Join Club",
+  "club_joinSuccess": "Joined club successfully!",
+  "club_joinFailed": "Failed to join club",
+  "club_infoSection": "INFORMATION",
+  "club_memberInfo": "Members",
+  "club_location": "Location",
+  "club_joinModeLabel": "Join Policy",
+  "club_joinModeOpen": "Open",
+  "club_joinModeApprovalNeeded": "Approval Required",
+  "club_joinModeInvite": "Invite Only",
+  "club_sportLabel": "Sports",
+  "club_noTournaments": "No tournaments yet",
+  "club_createTournament": "Create Tournament",
+  "club_createNewTournament": "+ Create New Tournament",
+  "club_loadDataError": "Failed to load tournament list",
+  "club_teamCount": "{count}/{max} teams",
+  "club_liteManage": "Quick (Manage)",
+  "club_quickTournament": "Quick (Lite)",
+  "club_advanced": "Advanced",
+  "club_selectTournamentType": "Select Tournament Type",
+  "club_selectTournamentDesc": "Please select the type of tournament to create",
+  "club_liteTournament": "Quick Tournament (Lite)",
+  "club_30sOnApp": "30s ON APP",
+  "club_liteDesc": "Create and manage brackets directly on the mobile app",
+  "club_advancedTournament": "Advanced Tournament (Full)",
+  "club_createOnWeb": "CREATE ON WEB",
+  "club_advancedDesc": "Full features, entry fees, and roles managed on website",
+  "club_createAdvancedTitle": "Create Advanced Tournament",
+  "club_advancedWebDialog": "To manage advanced tournaments (complex group stages, entry fees, custom rules...), please visit giaidau.vnvar.com on a computer.",
+  "club_copyWebLink": "Go to Create Page",
+  "club_membersLabel": "Member",
+  "club_owner": "Owner",
+  "club_admin": "Admin",
+  "club_setAdmin": "Set as Admin",
+  "club_setMod": "Set as Moderator",
+  "club_demoteToMember": "Demote to Member",
+  "club_kickFromClub": "Remove from Club",
+  "club_deleteMemberTitle": "Confirm Removal",
+  "club_deleteMemberConfirm": "Are you sure you want to remove {name} from the club?",
+  "club_updatedMember": "Member updated",
+  "club_inviteMember": "Invite Member",
+  "club_searchHint": "Search by name or email...",
+  "club_inviteSent": "Invite sent successfully!",
+  "club_noUsersFound": "No matching users found",
+  "club_joinRequests": "Join Requests ({count})",
+  "club_approvedMember": "Approved member to join club!",
+  "club_rejected": "Rejected join request",
+  "club_approve": "Approve",
+  "club_reject": "Reject",
+  "club_noImages": "No images yet",
+  "club_gallerySubtitle": "Tournament and club photos will appear here",
+  "club_imageCount": "{count} images",
+  "club_tabSettings": "Settings",
+  "club_managementTitle": "Club Management",
+  "club_activeMembers": "Active Members",
+  "club_pendingRequests": "Pending",
+  "club_invited": "Invited",
+  "club_banned": "Banned",
+  "club_joinRequestSection": "Join Requests ({count})",
+  "club_approvedAlert": "Approved member!",
+  "club_rejectedAlert": "Rejected join request.",
+  "club_ownerInviteInfo": "Owners can invite as Member or Moderator.",
+  "club_adminInviteInfo": "Admins can invite users as Member.",
+  "club_roleLabel": "Invite Role:",
+  "club_memberChip": "Member",
+  "club_adminChip": "Moderator",
+  "club_inviteButton": "Send Invite",
+  "club_noUsersOrInClub": "No users found or they are already in the club.",
+  "club_invitedSection": "Sent Invites ({count})",
+  "club_revokeInvite": "Invite revoked",
+  "club_cancelInvite": "Cancel Invite",
+  "@club_memberCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@club_teamCount": {
+    "placeholders": {
+      "count": {},
+      "max": {}
+    }
+  },
+  "@club_deleteMemberConfirm": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@club_joinRequests": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@club_joinRequestSection": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@club_invitedSection": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@club_imageCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@lite_autoPairSuccessOdd": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "club_aboutSection": "About",
+  "club_active": "Active",
+  "club_bannedSection": "Banned Members ({count})",
+  "@club_bannedSection": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "club_createdAt": "Created At",
+  "club_dangerSection": "Danger Zone",
+  "club_deleteClub": "Delete Club",
+  "club_deleteConfirmTitle": "Confirm Club Deletion",
+  "club_deleted": "Club Deleted",
+  "club_deleteSubtitle": "Permanently delete club and all data",
+  "club_deleteWarning": "Are you sure you want to delete {name}?",
+  "@club_deleteWarning": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "club_editInfo": "Edit Info",
+  "club_editInfoSubtitle": "Update name, description, avatar",
+  "club_joinModeApproval": "Approval Required",
+  "club_joinModeSection": "Join Mode",
+  "club_label": "Club",
+  "club_loadImagesError": "Could not load images",
+  "club_loadListError": "Could not load list",
+  "club_manageClub": "Manage Club",
+  "club_manageClubSubtitle": "Approve members, update settings",
+  "club_noMembers": "No members yet",
+  "club_noSport": "No sport selected",
+  "club_pending": "Pending",
+  "club_sectionInfo": "Club Info",
+  "club_statsSection": "Statistics",
+  "club_statusLabel": "Status",
+  "club_tabAbout": "About",
+  "club_tabGallery": "Gallery",
+  "club_tabMembers": "Members",
+  "club_tabRankings": "Rankings",
+  "club_tabTournaments": "Tournaments",
+  "club_unban": "Unban",
+  "club_unbanned": "Member unbanned",
+  "edit_tab_profile": "Profile",
+  "edit_tab_bank": "Bank",
+  "edit_tab_security": "Security",
+  "edit_profile_load_error": "Profile load error: {error}",
+  "edit_avatar_title": "Change Avatar",
+  "edit_take_photo": "Take Photo",
+  "edit_choose_from_library": "Choose from Library",
+  "edit_avatar_upload_success": "Avatar uploaded successfully",
+  "edit_avatar_upload_error": "Upload error: {error}",
+  "edit_full_name_hint": "Enter your full name",
+  "edit_full_name_required": "Please enter your full name",
+  "edit_email_label": "Email",
+  "edit_email_hint": "example@domain.com",
+  "edit_email_required": "Please enter your email",
+  "edit_email_invalid": "Invalid email",
+  "edit_email_verified_already": "Email already verified",
+  "edit_email_verify_success": "Email verified successfully",
+  "edit_phone_hint": "0987654321",
+  "edit_phone_required": "Please enter your phone number",
+  "edit_phone_invalid": "Invalid phone number",
+  "edit_phone_verified_already": "Phone already verified",
+  "edit_otp_send_failed": "Could not send OTP to phone",
+  "edit_otp_send_error": "Could not send OTP: {error}",
+  "edit_otp_enter_code": "Please enter the verification code",
+  "edit_otp_label": "OTP Code",
+  "edit_otp_hint": "Enter OTP from SMS",
+  "edit_phone_verify_title": "Verify Phone Number",
+  "edit_phone_verify_success": "Phone verified successfully",
+  "edit_phone_verify_failed": "Verification failed: {error}",
+  "edit_password_required": "Please enter your password",
+  "edit_current_password": "Current Password",
+  "edit_password_confirm_hint": "Enter password to confirm",
+  "edit_delete_account_title": "Delete Account",
+  "edit_delete_account_confirm": "This action cannot be undone. All your data will be permanently deleted.",
+  "edit_delete_account_error": "Delete account failed: {error}",
+  "edit_account_deleted": "Account has been deleted",
+  "edit_update_success": "Profile updated successfully",
+  "edit_update_error": "Error: {error}",
+  "edit_save_changes": "Save Changes",
+  "edit_saved_changes": "Changes saved",
+  "edit_bio_label": "Bio",
+  "edit_bio_hint": "A short introduction about yourself...",
+  "edit_address_hint": "Enter your address",
+  "edit_bank_account_title": "Prize Bank Account",
+  "edit_bank_account_desc": "Used by organizers to transfer tournament prizes.",
+  "edit_bank_name": "Bank Name",
+  "edit_bank_name_hint": "E.g. Vietcombank, Techcombank...",
+  "edit_bank_account_number": "Account Number",
+  "edit_bank_account_hint": "Enter account number",
+  "edit_bank_account_name": "Account Holder",
+  "edit_bank_account_name_hint": "Enter account holder name (UPPERCASE no accent)",
+  "edit_security_account": "Account Security",
+  "edit_change_password_desc": "Update your login password",
+  "edit_delete_account": "Delete Account",
+  "edit_delete_account_warning": "Permanently delete your account and personal data.",
+  "edit_bank_saved": "Bank info saved",
+  "edit_bank_load_error": "Could not load bank info",
+  "edit_bank_account_name_hint_short": "Enter account holder name",
+  "edit_bank_info_desc": "Bank info is used to receive tournament prizes. Data is secured and not shown publicly.",
+  "edit_verification_status": "Verification Status",
+  "edit_verify_email": "Verify Email",
+  "edit_verify_email_desc": "Send verification code to your email",
+  "edit_verification_load_error": "Could not load status",
+  "edit_strong_password": "Strong Password",
+  "edit_strong_password_desc": "At least 6 characters, should include uppercase and numbers",
+  "edit_sessions": "Login Sessions",
+  "edit_current_device": "Current Device",
+  "edit_active": "Active",
+  "edit_bio_label_short": "Biography",
+  "edit_bio_hint_short": "Introduce yourself...",
+  "edit_phone_hint_inline": "Enter phone number",
+  "edit_full_name_hint_short": "Enter full name",
+  "edit_full_name_required_short": "Please enter full name",
+  "edit_overview": "Overview",
+  "edit_achievements": "Achievements",
+  "edit_elo_tab": "ELO",
+  "edit_rank_by_sport": "Rankings by Sport",
+  "edit_matches_load_error": "Could not load match history",
+  "edit_no_public_matches": "No public matches",
+  "edit_not_played": "Not yet played",
+  "edit_achievements_highlight": "Achievements",
+  "edit_no_achievements": "No achievements yet",
+  "edit_champion": "Champion",
+  "edit_runner_up": "Runner-up",
+  "edit_third_place": "Third Place",
+  "edit_no_user_data": "No user data",
+  "edit_view_history_detail": "View Detailed History",
+  "edit_sport_count": "Sports",
+  "edit_total_elo": "Total ELO",
+  "edit_avg_elo": "Avg ELO",
+  "edit_total_matches": "Total Matches",
+  "edit_elo_chart": "ELO Chart",
+  "edit_detailed_stats": "Detailed Stats",
+  "edit_coach": "Coach",
+  "edit_cannot_load_info": "Could not load info",
+  "edit_no_rank_data": "No ranking data",
+  "edit_profile_athlete": "Athlete Profile",
+  "edit_profile_card": "Player Card & ELO",
+  "edit_verify": "Verify",
+  "rank_current_elo": "Current ELO",
+  "rank_no_history": "No ELO history",
+  "rank_no_history_desc": "Join ranked matches to earn ELO points",
+  "rank_peak_elo": "Peak ELO",
+  "rank_public": "Public",
+  "rank_activity": "ACTIVITY",
+  "rank_decay": "ELO Decay (inactive)",
+  "rank_update": "ELO Update",
+  "@edit_profile_load_error": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@edit_avatar_upload_error": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@edit_otp_send_error": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@edit_phone_verify_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@edit_delete_account_error": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@edit_update_error": {
+    "placeholders": {
+      "error": {}
+    }
+  }
 }
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-

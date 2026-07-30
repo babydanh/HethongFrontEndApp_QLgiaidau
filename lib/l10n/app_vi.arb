@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "vi",
   "navExplore": "Khám phá",
   "navTournaments": "Giải đấu",
@@ -13,6 +13,7 @@
   "loginButton": "Đăng nhập",
   "registerButton": "Đăng ký",
   "orContinueWith": "hoặc tiếp tục với",
+  "loginRegister_googleLabel": "Google",
   "noAccount": "Chưa có tài khoản?",
   "hasAccount": "Đã có tài khoản?",
   "registerNow": "Đăng ký ngay",
@@ -64,10 +65,6 @@
   "infoMyClubsEmpty": "Bạn chưa tạo hoặc tham gia câu lạc bộ nào.",
   "infoCreateClub": "Tạo CLB mới",
   "infoFollowedEmpty": "Bạn chưa theo dõi giải nào.",
-  "navExplore": "Khám phá",
-  "navTournaments": "Giải đấu",
-  "navRankings": "Xếp hạng",
-  "navClubs": "CLB",
   "vietnam": "Việt Nam",
   "freePrice": "Miễn phí",
   "viewAll": "Xem tất cả",
@@ -505,146 +502,892 @@
   "joinTeamViewTournament": "Xem giải đấu",
   "joinTeamError": "Không thể tham gia đội.",
   "registerError": "Không thể đăng ký. Vui lòng thử lại.",
-  "registerEloCheckError": "Không thể kiểm tra ELO. Vui lòng thử lại trước khi đăng ký.",
   "registerDivisionLoadError": "Không thể tải nội dung thi đấu. Hãy thử lại.",
   "registerTermsTitle": "QUYỀN LỢI & QUY ĐỊNH THAM GIA",
-  "registerDeadline": "HẠN ĐĂNG KÝ CÒN LẠI",
-  "registerEloScheduleDesc": "Sơ đồ thi đấu công khai, tích lũy điểm ELO tự động sau giải",
-  "registerSupportDesc": "Hỗ trợ hoàn hủy lệ phí & thắc mắc trực tiếp với Ban tổ chức"
-,
   "@matchesCount": {
     "placeholders": {
       "count": {}
-    ,
+    }
+  },
   "@matchRecordedPenalty": {
     "placeholders": {
       "name": {}
-    ,
+    }
+  },
   "@matchCeilingScore": {
     "placeholders": {
       "max": {}
-    ,
+    }
+  },
   "@matchRound": {
     "placeholders": {
       "round": {}
-    ,
+    }
+  },
   "@matchCourt": {
     "placeholders": {
       "court": {}
-    ,
+    }
+  },
   "@matchWinSets": {
     "placeholders": {
       "sets": {}
-    ,
+    }
+  },
   "@matchPointsPerSet": {
     "placeholders": {
       "points": {}
-    ,
+    }
+  },
   "@matchGamesPerSet": {
     "placeholders": {
       "games": {}
-    ,
+    }
+  },
   "@rallyPointsPerSet": {
     "placeholders": {
       "points": {}
-    ,
+    }
+  },
   "@rallyBestOf": {
     "placeholders": {
       "bestOf": {}
-    ,
+    }
+  },
   "@rallyRemainingPoints": {
     "placeholders": {
       "points": {}
-    ,
+    }
+  },
   "@pickleballServingTeam": {
     "placeholders": {
       "name": {}
-    ,
+    }
+  },
   "@pickleballServerNumber": {
     "placeholders": {
       "number": {}
-    ,
+    }
+  },
   "@tennisTiebreakInfo": {
     "placeholders": {
       "points": {}
-    ,
+    }
+  },
   "@tennisFormatSets": {
     "placeholders": {
       "sets": {}
-    ,
+    }
+  },
   "@tennisCurrentPoint": {
     "placeholders": {
       "points": {}
-    ,
+    }
+  },
   "@registerEloRange": {
     "placeholders": {
-      "min": {}
-      "max": {,
+      "min": {},
+      "max": {}
+    }
+  },
   "@registerMaxTeams": {
     "placeholders": {
       "max": {}
-    ,
+    }
+  },
   "@registerEloTooLow": {
     "placeholders": {
-      "elo": {}
-      "min": {,
+      "elo": {},
+      "min": {}
+    }
+  },
   "@registerEloTooHigh": {
     "placeholders": {
-      "elo": {}
-      "max": {,
+      "elo": {},
+      "max": {}
+    }
+  },
   "@registerFeePending": {
     "placeholders": {
       "fee": {}
-    ,
+    }
+  },
   "@registerSubmitFee": {
     "placeholders": {
-      "label": {}
-      "fee": {,
+      "label": {},
+      "fee": {}
+    }
+  },
   "@registerSubmitFree": {
     "placeholders": {
       "label": {}
-    ,
+    }
+  },
   "@doublesRegSpotReserved": {
     "placeholders": {
       "time": {}
-    ,
+    }
+  },
   "@doublesRegYourTeam": {
     "placeholders": {
       "name": {}
-    ,
+    }
+  },
   "@doublesRegWithPartner": {
     "placeholders": {
       "name": {}
-    ,
+    }
+  },
   "@doublesRegEntryFee": {
     "placeholders": {
       "fee": {}
     }
+  },
+  "checkout_invalidDivision": "Mã nội dung không hợp lệ",
+  "checkout_freeConfirm": "Xác nhận đăng ký miễn phí thành công",
+  "checkout_cannotOpenPayOS": "Không thể mở liên kết PayOS",
+  "checkout_noPaymentLink": "Hệ thống chưa tạo được link thanh toán",
+  "checkout_createGatewayError": "Không thể tạo liên kết thanh toán",
+  "checkout_createPaymentError": "Lỗi khởi tạo thanh toán",
+  "checkout_title": "Thanh toán lệ phí",
+  "checkout_freeBadge": "MIỄN PHÍ",
+  "checkout_entryFeeLabel": "LỆ PHÍ THAM GIA",
+  "checkout_paymentMethodLabel": "PHƯƠNG THỨC THANH TOÁN",
+  "checkout_payOSLabel": "Cổng PayOS (QR Code / Ngân hàng)",
+  "checkout_payOSDescription": "Quét mã VietQR tự động khớp đơn và kích hoạt ngay",
+  "checkout_confirmInstruction": "Vui lòng kiểm tra lại thông tin giải đấu và số tiền trước khi tiến hành thanh toán.",
+  "checkout_freeConfirmButton": "XÁC NHẬN THAM GIA MIỄN PHÍ",
+  "checkout_payButton": "THANH TOÁN {amount}đ",
+  "@checkout_payButton": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "paymentResult_successTitle": "Thanh toán thành công",
+  "paymentResult_failedTitle": "Thanh toán thất bại",
+  "paymentResult_pendingTitle": "Đang xử lý thanh toán",
+  "paymentResult_amountLabel": "Số tiền",
+  "paymentResult_orderCodeLabel": "Mã đơn hàng",
+  "paymentResult_transactionIdLabel": "Mã giao dịch",
+  "paymentResult_backToTournament": "Quay lại giải đấu",
+  "paymentResult_backToHome": "Về trang chủ",
+  "paymentResult_failedMessage": "Thao tác thanh toán bị hủy hoặc không thành công.",
+  "paymentResult_successMessage": "Chúc bạn thi đấu tốt!",
+  "payments_title": "Lịch sử thanh toán",
+  "payments_noHistory": "Chưa có lịch sử thanh toán",
+  "payments_statusSuccess": "Thành công",
+  "payments_statusPending": "Đang chờ",
+  "payments_statusFailed": "Thất bại",
+  "payments_refreshTooltip": "Làm mới",
+  "payments_loadError": "Lỗi tải lịch sử thanh toán:",
+  "payments_totalTransactions": "Tổng giao dịch",
+  "payments_transactionCount": "{count} giao dịch",
+  "@payments_transactionCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "payments_pendingCount": "{count} chờ xử lý",
+  "@payments_pendingCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "payments_filterAll": "Tất cả",
+  "payments_filterCompleted": "Thành công",
+  "payments_filterPending": "Đang chờ",
+  "payments_filterFailed": "Thất bại",
+  "payments_emptyAll": "Chưa có lịch sử thanh toán",
+  "payments_emptyFiltered": "Không tìm thấy giao dịch",
+  "payments_emptySubtitle": "Các giao dịch của bạn sẽ hiển thị ở đây",
+  "payments_defaultTournamentName": "Giải đấu không xác định",
+  "payments_transactionRef": "Mã GD: {ref}",
+  "@payments_transactionRef": {
+    "placeholders": {
+      "ref": {}
+    }
+  },
+  "payments_retryCta": "Thanh toán ngay",
+  "payments_detailTournament": "Giải đấu",
+  "payments_detailUnknown": "Không xác định",
+  "payments_detailTeamName": "Tên đội / VĐV",
+  "payments_detailGateway": "Cổng thanh toán",
+  "payments_detailTransactionId": "Mã giao dịch",
+  "payments_copied": "Đã sao chép mã giao dịch",
+  "payments_retryPendingInfo": "Giao dịch đang chờ xử lý. Bạn có thể kiểm tra lại hoặc thực hiện lại thanh toán.",
+  "payments_retryFailedInfo": "Giao dịch không thành công. Bạn có thể mở lại trang thanh toán để hoàn tất.",
+  "payments_refreshStatus": "Cập nhật trạng thái",
+  "payments_processing": "Đang xử lý...",
+  "payments_payNow": "Thanh toán ngay",
+  "payments_successInfo": "Giao dịch này đã thành công hoàn tất.",
+  "forgotPassword_title": "Quên Mật Khẩu",
+  "forgotPassword_headerTitle": "Đặt lại mật khẩu",
+  "forgotPassword_description": "Nhập địa chỉ email liên kết với tài khoản của bạn để nhận liên kết khôi phục mật khẩu.",
+  "forgotPassword_emailTip": "Hệ thống sẽ gửi một mã hoặc đường dẫn xác thực tới email của bạn. Vui lòng kiểm tra kỹ cả hộp thư Hòm thư rác (Spam).",
+  "forgotPassword_emailHint": "nhap@email.com",
+  "forgotPassword_emailRequired": "Vui lòng nhập địa chỉ email",
+  "forgotPassword_emailInvalid": "Email không hợp lệ",
+  "forgotPassword_submitting": "Đang gửi...",
+  "forgotPassword_submitButton": "Gửi Yêu Cầu Khôi Phục",
+  "forgotPassword_backToLogin": "Quay lại Đăng nhập",
+  "forgotPassword_sentTitle": "Đã Gửi Email Khôi Phục",
+  "forgotPassword_checkEmail": "Chúng tôi đã gửi hướng dẫn đặt lại mật khẩu tới ",
+  "forgotPassword_checkEmailSuffix": ". Vui lòng kiểm tra hộp thư của bạn.",
+  "forgotPassword_resendTimer": "Gửi lại sau {seconds}s",
+  "@forgotPassword_resendTimer": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
+  "forgotPassword_canResend": "Bạn có thể yêu cầu gửi lại email bây giờ",
+  "forgotPassword_resendButtonTimer": "Gửi lại ({seconds}s)",
+  "@forgotPassword_resendButtonTimer": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
+  "forgotPassword_resendButton": "Gửi lại email khôi phục",
+  "forgotPassword_backToLoginButton": "Trở về Đăng nhập",
+  "forgotPassword_sentSuccessMessage": "Email khôi phục mật khẩu đã được gửi!",
+  "forgotPassword_errorGeneric": "Không thể gửi email khôi phục mật khẩu",
+  "notification_markAllReadError": "Không thể đánh dấu tất cả là đã đọc.",
+  "notification_inviteAccepted": "Đã chấp nhận lời mời!",
+  "notification_inviteDeclined": "Đã từ chối lời mời.",
+  "notification_acceptError": "Lỗi khi chấp nhận lời mời.",
+  "notification_declineError": "Lỗi khi từ chối lời mời.",
+  "notification_title": "Thông báo",
+  "notification_readAll": "Đọc tất cả",
+  "notification_all": "Tất cả",
+  "notification_unread": "Chưa đọc",
+  "notification_emptyTitle": "Chưa có thông báo nào",
+  "notification_emptySubtitle": "Các cập nhật giải đấu và hệ thống sẽ hiển thị tại đây",
+  "notification_filteredEmptyTitle": "Bạn đã đọc hết tất cả thông báo!",
+  "notification_viewAll": "Xem tất cả thông báo",
+  "notification_today": "Hôm nay",
+  "notification_yesterday": "Hôm qua",
+  "notification_thisWeek": "Tuần này",
+  "notification_roleBtc": "BTC",
+  "notification_roleReferee": "Trọng tài",
+  "notification_rolePlayer": "Vận động viên",
+  "notification_updateStatusError": "Lỗi cập nhật trạng thái thông báo.",
+  "notification_decline": "Từ chối",
+  "notification_accept": "Chấp nhận",
+  "payments_close": "Đóng",
+  "payments_createLinkError": "Không thể tạo liên kết thanh toán.",
+  "loginRegister_forgotPassword": "Quên mật khẩu?",
+  "loginRegister_appleLabel": "Apple",
+  "loginRegister_loginNowAction": "Đăng nhập ngay",
+  "resetPassword_minLengthError": "Mật khẩu phải có ít nhất 6 ký tự",
+  "resetPassword_mismatchError": "Mật khẩu xác nhận không khớp",
+  "resetPassword_errorGeneric": "Không thể đặt lại mật khẩu. Vui lòng thử lại.",
+  "resetPassword_title": "Đặt Lại Mật Khẩu",
+  "resetPassword_successTitle": "Đổi mật khẩu thành công!",
+  "resetPassword_createNewPassword": "Tạo mật khẩu mới",
+  "resetPassword_newPasswordLabel": "Mật khẩu mới",
+  "resetPassword_confirmPasswordLabel": "Xác nhận mật khẩu mới",
+  "resetPassword_submitting": "Đang xử lý...",
+  "resetPassword_resetButton": "Đặt Lại Mật Khẩu",
+  "loginLoading_defaultUserName": "Vận động viên",
+  "loginLoading_welcomeBack": "Chào mừng quay trở lại!",
+  "loginLoading_loginSuccess": "Đăng nhập thành công!",
+  "loginRegister_registerFailed": "Đăng ký không thành công",
+  "loginRegister_loginFailed": "Đăng nhập không thành công",
+  "loginRegister_googleLoginFailed": "Đăng nhập Google thất bại",
+  "loginRegister_googleLoginError": "Lỗi khi đăng nhập bằng Google",
+  "loginRegister_appleLoginFailed": "Đăng nhập Apple thất bại",
+  "loginRegister_appleLoginError": "Lỗi khi đăng nhập bằng Apple",
+  "loginRegister_registerSubtitle": "Tạo tài khoản mới để tham gia và tổ chức các giải đấu chuyên nghiệp",
+  "loginRegister_loginSubtitle": "Đăng nhập tài khoản của bạn để trải nghiệm dịch vụ",
+  "loginRegister_fullNameHint": "Nguyễn Văn A",
+  "loginRegister_fullNameRequired": "Vui lòng nhập họ và tên",
+  "loginRegister_emailHint": "example@email.com",
+  "loginRegister_emailRequired": "Vui lòng nhập email",
+  "loginRegister_emailInvalid": "Địa chỉ email không hợp lệ",
+  "loginRegister_passwordHint": "••••••••",
+  "loginRegister_passwordRequired": "Vui lòng nhập mật khẩu",
+  "loginRegister_passwordMinLength": "Mật khẩu tối thiểu 6 ký tự",
+  "paymentsTitle": "Lịch sử thanh toán",
+  "paymentsRefresh": "Làm mới",
+  "paymentsTotal": "Tổng giao dịch",
+  "paymentsEmpty": "Chưa có giao dịch nào",
+  "paymentsFilterAll": "Tất cả",
+  "paymentsFilterSuccess": "Thành công",
+  "paymentsFilterPending": "Đang xử lý",
+  "paymentsFilterFailed": "Thất bại",
+  "paymentsRefunded": "Đã hoàn tiền",
+  "checkoutTitle": "Xác nhận thanh toán",
+  "checkoutFee": "LỆ PHÍ THAM GIA",
+  "checkoutFree": "MIỄN PHÍ",
+  "checkoutPaymentMethod": "PHƯƠNG THỨC THANH TOÁN",
+  "checkoutPayos": "QR thanh toán PayOS",
+  "checkoutSuccess": "Thanh toán thành công!",
+  "checkoutFailed": "Thanh toán thất bại",
+  "checkoutBackToTournament": "Quay lại giải đấu",
+  "checkoutBackToHome": "Về trang chủ",
+  "dashboard_title": "Của tôi",
+  "dashboard_loginPrompt": "Đăng nhập để xem khu vực của bạn",
+  "dashboard_user": "Người dùng",
+  "dashboard_invites": "Lời mời",
+  "dashboard_roles": "Vai trò",
+  "dashboard_refereeMatchesCount": "Trận giao",
+  "dashboard_pendingInvitesTitle": "Lời mời cần xử lý",
+  "dashboard_openList": "Mở danh sách",
+  "dashboard_refereeInviteFallback": "Lời mời trọng tài",
+  "dashboard_inviteDate": "Ngày mời",
+  "dashboard_updateInProgress": "Đang cập nhật",
+  "dashboard_myRoles": "Vai trò của tôi",
+  "dashboard_organizer": "Chủ giải",
+  "dashboard_coOrganizer": "Ban tổ chức",
+  "dashboard_noRolesDesc": "Bạn chưa có vai trò nào trong giải đấu.",
+  "dashboard_assignedMatches": "Trận được phân công",
+  "dashboard_viewInvites": "Xem lời mời",
+  "dashboard_noAssignedMatches": "Bạn chưa có trận nào được phân công.",
+  "dashboard_roundLabel": "Vòng {round}",
+  "dashboard_waitingSchedule": "Chờ sắp lịch",
+  "dashboard_myTournaments": "Giải đấu của tôi ({count})",
+  "dashboard_tournamentCount": "{count} giải",
+  "dashboard_searchHint": "Tìm kiếm giải đấu...",
+  "dashboard_noSearchResults": "Không tìm thấy giải đấu phù hợp",
+  "dashboard_noTournaments": "Bạn chưa tạo hoặc tham gia giải đấu nào",
+  "dashboard_collapse": "Thu gọn",
+  "dashboard_showMore": "Xem thêm ({count} giải khác)",
+  "dashboard_quickActions": "Tiện ích nhanh",
+  "dashboard_createLite": "Tạo giải nhanh (Lite)",
+  "dashboard_createLiteSub": "Tạo nhanh trong câu lạc bộ của bạn",
+  "dashboard_notificationsSub": "Xem mời giải, cập nhật và nhắc việc",
+  "dashboard_clubInvites": "Lời mời câu lạc bộ",
+  "dashboard_clubInvitesSub": "Nhận và phản hồi lời mời CLB",
+  "dashboard_profile": "Hồ sơ cá nhân",
+  "dashboard_profileSub": "Cập nhật thông tin và hồ sơ công khai",
+  "dashboard_needClubTitle": "Cần có câu lạc bộ",
+  "dashboard_needClubContent": "Bạn cần tạo hoặc tham gia câu lạc bộ trước khi tạo giải nhanh (Lite).",
+  "dashboard_later": "Để sau",
+  "dashboard_createClubBtn": "Tạo câu lạc bộ",
+  "dashboard_selectClub": "Chọn câu lạc bộ tạo giải",
+  "dashboard_registered": "Đã đăng ký",
+  "dashboard_manageAdvancedTitle": "Quản lý giải Nâng Cao",
+  "dashboard_manageAdvancedContent": "App hiện chỉ hỗ trợ quản lý giải nhanh (Lite). Giải Nâng Cao vui lòng quản lý trên web.",
+  "dashboard_gotIt": "Đã hiểu",
+  "dashboard_liteDesc": "Giải nhanh (Lite) • Quản lý trên app",
+  "dashboard_advancedDesc": "Giải nâng cao • Quản lý đầy đủ",
+  "dashboard_loadErrorTitle": "Không thể tải khu vực của bạn",
+  "dashboard_loadErrorDesc": "Hãy thử tải lại để đồng bộ lời mời, vai trò và các trận được giao.",
+  "dashboard_retry": "Tải lại",
+  "@dashboard_roundLabel": {
+    "placeholders": {
+      "round": {}
+    }
+  },
+  "@dashboard_myTournaments": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@dashboard_tournamentCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@dashboard_showMore": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "organizer_title": "Quản lý nhanh",
+  "organizer_loadError": "Không thể tải giải đấu: {error}",
+  "organizer_notFound": "Giải đấu không tồn tại",
+  "organizer_tabOverview": "Tổng quan",
+  "organizer_tabTeams": "Đội / VĐV",
+  "organizer_tabSchedule": "Lịch đấu",
+  "organizer_tabFinance": "Tài chính",
+  "organizer_tabPermissions": "Phân quyền",
+  "organizer_noDate": "Chưa chốt ngày",
+  "organizer_tournamentPage": "Trang giải",
+  "organizer_metricLive": "Đang live",
+  "organizer_openBracket": "Mở sơ đồ thi đấu",
+  "organizer_openBracketSub": "Xem bracket hiện tại để kiểm tra nhánh và kết quả",
+  "organizer_viewLive": "Xem trận đang diễn ra",
+  "organizer_viewLiveSub": "Đi vào màn live để theo dõi và điều phối nhanh",
+  "organizer_viewPublic": "Mở trang giải công khai",
+  "organizer_viewPublicSub": "Kiểm tra giao diện người xem và thông tin hiển thị",
+  "organizer_teamsLoadError": "Không thể tải danh sách đội: {error}",
+  "organizer_noTeams": "Chưa có đội hoặc VĐV nào trong giải.",
+  "organizer_noMembers": "Chưa có thành viên",
+  "organizer_matchesLoadError": "Không thể tải lịch đấu: {error}",
+  "organizer_noMatches": "Chưa có trận đấu nào được tạo.",
+  "organizer_noTime": "Chưa xếp giờ",
+  "organizer_matchTitle": "Vòng {round} • Trận {matchNumber}",
+  "organizer_refereesLoadError": "Không thể tải danh sách trọng tài.\n{error}",
+  "organizer_noReferees": "Giải này chưa có trọng tài nào được gắn.",
+  "organizer_refereeAccepted": "Đã nhận",
+  "organizer_refereeInvited": "Đã mời",
+  "organizer_refereeAssigned": "Đã giao trận",
+  "organizer_noEmail": "Chưa có email",
+  "organizer_matchCount": "{count} trận",
+  "organizer_liveCount": "{count} đang live",
+  "organizer_openAssignedMatch": "Mở trận đã giao",
+  "organizer_openNearestMatch": "Mở trận gần nhất",
+  "organizer_refereeDeclined": "Đã từ chối",
+  "organizer_statusOngoing": "Đang đấu",
+  "organizer_statusCompleted": "Kết thúc",
+  "organizer_statusScheduled": "Sắp đấu",
+  "organizer_financeTotalRevenue": "Tổng doanh thu",
+  "organizer_financeRegisteredTeams": "Số đội đã đăng ký",
+  "organizer_financeMaxRevenue": "Doanh thu tối đa",
+  "organizer_financeFreeTournament": "Giải đấu miễn phí",
+  "organizer_financeNoFee": "Không thu phí tham gia",
+  "organizer_financeDetailTitle": "CHI TIẾT DOANH THU",
+  "organizer_financeFeePerTeam": "Phí tham gia mỗi đội",
+  "organizer_financeRegisteredTeamsDetail": "Đội đã đăng ký",
+  "organizer_financeRemainingSlots": "Còn trống",
+  "organizer_financePaymentInfo": "THÔNG TIN THANH TOÁN",
+  "organizer_financePaymentDesc": "Quản lý thanh toán chi tiết và đối soát trên trang web để có trải nghiệm tốt nhất.",
+  "organizer_financeViewWeb": "Xem trên web",
+  "organizer_financeWebError": "Không thể mở trang quản lý trên web",
+  "organizer_permissionsCreator": "NGƯỜI TẠO GIẢI",
+  "organizer_permissionsUnknown": "Chưa có",
+  "organizer_permissionsRoles": "VAI TRÒ & TRUY CẬP",
+  "organizer_permissionsAdmin": "Admin",
+  "organizer_permissionsAdminDesc": "Toàn quyền quản lý giải đấu",
+  "organizer_permissionsRefereeDesc": "Cập nhật tỷ số, quản lý trận đấu",
+  "organizer_permissionsViewer": "Người xem",
+  "organizer_permissionsViewerDesc": "Chỉ xem kết quả và bảng xếp hạng",
+  "organizer_permissionsTokenAdmin": "Mã Admin",
+  "organizer_permissionsTokenReferee": "Mã Trọng tài",
+  "organizer_permissionsTokenViewer": "Mã Xem",
+  "organizer_permissionsVisibility": "CÀI ĐẶT HIỂN THỊ",
+  "organizer_permissionsDisplay": "Hiển thị",
+  "organizer_permissionsPublic": "Công khai — Ai cũng có thể xem",
+  "organizer_permissionsPrivate": "Riêng tư — Chỉ người có mã mới xem được",
+  "organizer_permissionsInfoNote": "Chia sẻ mã tương ứng để cấp quyền truy cập cho từng vai trò. Mỗi mã chỉ dùng 1 lần.",
+  "organizer_tokenCopied": "Đã sao chép {label}",
+  "@organizer_loadError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@organizer_teamsLoadError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@organizer_matchesLoadError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@organizer_matchTitle": {
+    "placeholders": {
+      "round": {},
+      "matchNumber": {}
+    }
+  },
+  "@organizer_refereesLoadError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@organizer_matchCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@organizer_liveCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@organizer_tokenCopied": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "lite_loadFailed": "Không tải được dữ liệu giải Lite. Kiểm tra mạng hoặc thử lại.",
+  "lite_managementTitle": "Quản lý giải",
+  "lite_participantsTab": "Người tham gia",
+  "lite_bracketAndMatches": "Bracket & trận đấu",
+  "lite_tournamentInfo": "Thông tin giải đấu",
+  "lite_bracketFormat": "Thể thức bảng đấu",
+  "lite_participants": "Người tham gia",
+  "lite_created": "Đã tạo",
+  "lite_notCreated": "Chưa tạo",
+  "lite_inviteCodeTitle": "Mã mời tham gia",
+  "lite_qrCodeTitle": "Mã QR",
+  "lite_stepPairing": "Ghép cặp",
+  "lite_stepFollowMatches": "Theo dõi trận",
+  "lite_progressTitle": "Tiến độ giải Lite",
+  "lite_doubles": "Đánh đôi",
+  "lite_singles": "Đánh đơn",
+  "lite_inviteCode": "Mã mời",
+  "lite_inviteCopied": "Đã sao chép mã mời",
+  "lite_copy": "Sao chép",
+  "lite_qrInstruction": "Quét mã QR để tham gia giải",
+  "lite_creating": "Đang tạo...",
+  "lite_create": "Tạo",
+  "lite_createMockPlayers": "Tạo VĐV ảo",
+  "lite_quantity": "Số lượng",
+  "lite_quantityHint": "1-50",
+  "lite_waitingPair": "Chờ ghép cặp",
+  "lite_noPendingPairs": "Không có người chơi đang chờ ghép cặp",
+  "lite_pairing": "Đang ghép...",
+  "lite_pairSelected": "Ghép 2 người đã chọn",
+  "lite_autoPairing": "Ghép cặp tự động",
+  "lite_random": "Ngẫu nhiên",
+  "lite_eloBalanced": "Cân bằng ELO",
+  "lite_oddNotice": "Số lẻ: 1 người chơi sẽ ở lại trạng thái chờ ghép",
+  "lite_paired": "Đã ghép cặp",
+  "lite_createBracketTitle": "Tạo bracket?",
+  "lite_createBracketConfirm": "Sau khi tạo bracket, không thể ghép thêm cặp mới. Tiếp tục?",
+  "lite_createBracket": "Tạo bracket",
+  "lite_bracketCreated": "Đã tạo bracket thành công!",
+  "lite_noBracket": "Chưa có bracket",
+  "lite_viewBracketDesc": "Xem sơ đồ thi đấu để theo dõi các trận đấu",
+  "lite_createBracketDesc": "Tạo bracket để bắt đầu các trận đấu",
+  "lite_bracketComingSoon": "Tính năng xem bracket sẽ được cập nhật sau",
+  "lite_matchesAfterBracket": "Danh sách trận đấu sẽ xuất hiện sau khi tạo bracket",
+  "lite_sessionExpired": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại rồi thử tạo bracket.",
+  "lite_unauthorized": "Tài khoản chưa được xác thực hoặc không có quyền tạo bracket.",
+  "lite_unpairTitle": "Hủy ghép cặp?",
+  "lite_unpairContent": "Hai người chơi sẽ trở lại danh sách chờ ghép.",
+  "lite_keepPair": "Giữ nguyên",
+  "lite_unpair": "Hủy ghép",
+  "lite_unpairSuccess": "Đã hủy ghép cặp",
+  "lite_unpairApiNotFound": "Không tìm thấy API hủy ghép trên máy chủ. Vui lòng cập nhật backend.",
+  "lite_unpairError": "Không thể hủy ghép cặp. Vui lòng thử lại.",
+  "lite_pendingPair": "Chờ cặp",
+  "lite_pairingTitle": "Ghép cặp người chơi",
+  "lite_loadParticipantsError": "Không thể tải danh sách người tham gia",
+  "lite_pairSuccess": "Ghép cặp thành công",
+  "lite_pairError": "Lỗi ghép cặp: ",
+  "lite_generateConfirmTitle": "Xác nhận ghép cặp",
+  "lite_generateRandomConfirm": "Ghép ngẫu nhiên tất cả người chơi đang chờ?",
+  "lite_generateEloConfirm": "Ghép tất cả người chơi đang chờ theo ELO cân bằng?",
+  "lite_confirmButton": "Xác nhận",
+  "lite_autoPairSuccess": "Ghép cặp tự động thành công",
+  "lite_autoPairSuccessOdd": "Ghép cặp thành công ({count} người lẻ)",
+  "lite_pairGenerateError": "Lỗi sinh cặp: ",
+  "lite_createBracketNotAvailable": "Chức năng tạo bracket sẽ khả dụng sau khi backend cập nhật. Lỗi: ",
+  "lite_unpairErrorTitle": "Lỗi hủy cặp: ",
+  "lite_joinButton": "Tham gia giải",
+  "lite_joinSuccess": "Tham gia thành công!",
+  "lite_joinError": "Không thể tham gia giải đấu.",
+  "lite_clubRequestSuccess": "Đã gửi yêu cầu vào CLB!",
+  "lite_clubRequestError": "Không thể gửi yêu cầu vào CLB.",
+  "lite_alreadyJoined": "Bạn đã tham gia giải này",
+  "lite_viewTournament": "Xem giải đấu",
+  "lite_registrationClosed": "Giải đã đóng đăng ký",
+  "lite_registrationNotOpen": "Giải đấu chưa mở đăng ký",
+  "lite_tournamentFull": "Giải đã đủ số lượng",
+  "lite_requiresClubPrefix": "Bạn chưa là thành viên CLB ",
+  "lite_joinClub": "Vào CLB",
+  "lite_clubHintAfterJoin": "Sau đó nhấn Tham gia giải bên dưới",
+  "lite_clubNeedsApprovalSuffix": " cần duyệt thành viên",
+  "lite_requestClub": "Xin vào CLB",
+  "lite_clubApprovalHint": "Bạn cần được duyệt trước khi tham gia giải",
+  "lite_clubInviteOnlySuffix": " chỉ dành cho thành viên được mời",
+  "lite_clubPendingApproval": "Yêu cầu vào CLB đang chờ duyệt",
+  "lite_yourAccountName": "Tên tài khoản của bạn",
+  "lite_nameFromProfile": "Tên sẽ được lấy từ hồ sơ cá nhân",
+  "lite_joining": "Đang tham gia...",
+  "lite_sending": "Đang gửi...",
+  "club_clubNotFound": "Không tìm thấy câu lạc bộ",
+  "club_loadError": "Không thể tải thông tin câu lạc bộ",
+  "club_sportFallback": "Thể thao",
+  "club_manageShort": "Quản lý",
+  "club_memberCount": "{count} thành viên",
+  "club_badge": "Câu Lạc Bộ",
+  "club_joinLoading": "Đang xử lý...",
+  "club_joined": "Đã tham gia",
+  "club_pendingApproval": "Chờ phê duyệt",
+  "club_joinButton": "Tham gia CLB",
+  "club_joinSuccess": "Tham gia câu lạc bộ thành công!",
+  "club_joinFailed": "Không thể tham gia câu lạc bộ",
+  "club_infoSection": "THÔNG TIN",
+  "club_memberInfo": "Số thành viên",
+  "club_location": "Địa điểm",
+  "club_joinModeLabel": "Hình thức tham gia",
+  "club_joinModeOpen": "Tự do",
+  "club_joinModeApprovalNeeded": "Cần phê duyệt",
+  "club_joinModeInvite": "Chỉ mời",
+  "club_sportLabel": "Môn thi đấu",
+  "club_noTournaments": "Chưa có giải đấu nào",
+  "club_createTournament": "Tạo giải đấu",
+  "club_createNewTournament": "+ Tạo giải đấu mới",
+  "club_loadDataError": "Không thể tải danh sách giải đấu",
+  "club_teamCount": "{count}/{max} đội",
+  "club_liteManage": "Nhanh (Quản lý)",
+  "club_quickTournament": "Nhanh (Lite)",
+  "club_advanced": "Nâng cao",
+  "club_selectTournamentType": "Chọn loại giải đấu",
+  "club_selectTournamentDesc": "Vui lòng chọn hình thức giải đấu muốn tạo",
+  "club_liteTournament": "Giải Nhanh (Lite)",
+  "club_30sOnApp": "30s TRÊN APP",
+  "club_liteDesc": "Tạo và quản lý sơ đồ thi đấu ngay trên app điện thoại",
+  "club_advancedTournament": "Giải Nâng Cao (Full)",
+  "club_createOnWeb": "TẠO TRÊN WEB",
+  "club_advancedDesc": "Quản lý đầy đủ tính năng, lệ phí, phân quyền trên website",
+  "club_createAdvancedTitle": "Tạo Giải Nâng Cao",
+  "club_advancedWebDialog": "Để quản lý giải đấu nâng cao (phân chia bảng đấu phức tạp, thu lệ phí, tùy chỉnh luật...), vui lòng truy cập website giaidau.vnvar.com trên máy tính.",
+  "club_copyWebLink": "Đến trang tạo",
+  "club_membersLabel": "Thành viên",
+  "club_owner": "Chủ sở hữu",
+  "club_admin": "Quản trị viên",
+  "club_setAdmin": "Đặt làm Quản trị viên",
+  "club_setMod": "Đặt làm Điều hành viên",
+  "club_demoteToMember": "Chuyển thành Thành viên",
+  "club_kickFromClub": "Xóa khỏi câu lạc bộ",
+  "club_deleteMemberTitle": "Xác nhận xóa",
+  "club_deleteMemberConfirm": "Bạn có chắc muốn xóa {name} khỏi câu lạc bộ?",
+  "club_updatedMember": "Đã cập nhật thành viên",
+  "club_inviteMember": "Mời thành viên",
+  "club_searchHint": "Tìm theo tên hoặc email...",
+  "club_inviteSent": "Đã gửi lời mời thành công!",
+  "club_noUsersFound": "Không tìm thấy người dùng phù hợp",
+  "club_joinRequests": "Yêu cầu tham gia ({count})",
+  "club_approvedMember": "Đã duyệt tham gia câu lạc bộ!",
+  "club_rejected": "Đã từ chối yêu cầu tham gia",
+  "club_approve": "Duyệt",
+  "club_reject": "Từ chối",
+  "club_noImages": "Chưa có hình ảnh nào",
+  "club_gallerySubtitle": "Hình ảnh giải đấu và câu lạc bộ sẽ hiển thị ở đây",
+  "club_imageCount": "{count} hình ảnh",
+  "club_tabSettings": "Cài đặt",
+  "club_managementTitle": "Điều phối Câu Lạc Bộ",
+  "club_activeMembers": "Thành viên",
+  "club_pendingRequests": "Chờ duyệt",
+  "club_invited": "Đã mời",
+  "club_banned": "Bị cấm",
+  "club_joinRequestSection": "Đơn xin gia nhập ({count})",
+  "club_approvedAlert": "Đã chấp nhận thành viên!",
+  "club_rejectedAlert": "Đã từ chối đơn gia nhập.",
+  "club_ownerInviteInfo": "Chủ sở hữu có thể mời với vai trò Thành viên hoặc Điều hành viên.",
+  "club_adminInviteInfo": "Quản trị viên có thể mời người dùng tham gia làm Thành viên.",
+  "club_roleLabel": "Vai trò mời:",
+  "club_memberChip": "Thành viên",
+  "club_adminChip": "Điều hành viên",
+  "club_inviteButton": "Gửi lời mời",
+  "club_noUsersOrInClub": "Không tìm thấy người dùng hoặc họ đã ở trong CLB.",
+  "club_invitedSection": "Lời mời đã gửi ({count})",
+  "club_revokeInvite": "Đã thu hồi lời mời",
+  "club_cancelInvite": "Hủy lời mời",
+  "@club_memberCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@club_teamCount": {
+    "placeholders": {
+      "count": {},
+      "max": {}
+    }
+  },
+  "@club_deleteMemberConfirm": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@club_joinRequests": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@club_joinRequestSection": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@club_invitedSection": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@club_imageCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@lite_autoPairSuccessOdd": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "club_aboutSection": "Giới thiệu",
+  "club_active": "Hoạt động",
+  "club_bannedSection": "Thành viên bị cấm ({count})",
+  "@club_bannedSection": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "club_createdAt": "Ngày tạo",
+  "club_dangerSection": "Khu vực nguy hiểm",
+  "club_deleteClub": "Xóa CLB",
+  "club_deleteConfirmTitle": "Xác nhận xóa CLB",
+  "club_deleted": "Đã xóa CLB",
+  "club_deleteSubtitle": "Xóa vĩnh viễn câu lạc bộ và toàn bộ dữ liệu",
+  "club_deleteWarning": "Bạn có chắc muốn xóa {name}?",
+  "@club_deleteWarning": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "club_editInfo": "Chỉnh sửa thông tin",
+  "club_editInfoSubtitle": "Cập nhật tên, mô tả, ảnh đại diện",
+  "club_joinModeApproval": "Xét duyệt",
+  "club_joinModeSection": "Hình thức tham gia",
+  "club_label": "CLB",
+  "club_loadImagesError": "Không thể tải ảnh",
+  "club_loadListError": "Không thể tải danh sách",
+  "club_manageClub": "Quản lý CLB",
+  "club_manageClubSubtitle": "Duyệt thành viên, cập nhật cài đặt",
+  "club_noMembers": "Chưa có thành viên",
+  "club_noSport": "Chưa có môn thể thao",
+  "club_pending": "Chờ duyệt",
+  "club_sectionInfo": "Thông tin CLB",
+  "club_statsSection": "Thống kê",
+  "club_statusLabel": "Trạng thái",
+  "club_tabAbout": "Giới thiệu",
+  "club_tabGallery": "Thư viện",
+  "club_tabMembers": "Thành viên",
+  "club_tabRankings": "Xếp hạng",
+  "club_tabTournaments": "Giải đấu",
+  "club_unban": "Bỏ cấm",
+  "club_unbanned": "Đã bỏ cấm thành viên",
+  "edit_tab_profile": "Hồ sơ",
+  "edit_tab_bank": "Ngân hàng",
+  "edit_tab_security": "Bảo mật",
+  "edit_profile_load_error": "Lỗi tải hồ sơ: {error}",
+  "edit_avatar_title": "Thay đổi ảnh đại diện",
+  "edit_take_photo": "Chụp ảnh mới",
+  "edit_choose_from_library": "Chọn từ thư viện",
+  "edit_avatar_upload_success": "Tải ảnh đại diện thành công",
+  "edit_avatar_upload_error": "Lỗi tải ảnh: {error}",
+  "edit_full_name_hint": "Nhập họ và tên của bạn",
+  "edit_full_name_required": "Vui lòng nhập họ và tên",
+  "edit_email_label": "Email",
+  "edit_email_hint": "example@domain.com",
+  "edit_email_required": "Vui lòng nhập email",
+  "edit_email_invalid": "Email không hợp lệ",
+  "edit_email_verified_already": "Email đã được xác minh",
+  "edit_email_verify_success": "Email đã được xác minh thành công",
+  "edit_phone_hint": "0987654321",
+  "edit_phone_required": "Vui lòng nhập số điện thoại",
+  "edit_phone_invalid": "Số điện thoại không hợp lệ",
+  "edit_phone_verified_already": "Số điện thoại đã được xác minh",
+  "edit_otp_send_failed": "Không thể gửi mã OTP đến SĐT",
+  "edit_otp_send_error": "Không thể gửi mã OTP: {error}",
+  "edit_otp_enter_code": "Vui lòng nhập mã xác minh",
+  "edit_otp_label": "Mã OTP",
+  "edit_otp_hint": "Nhập mã OTP từ tin nhắn",
+  "edit_phone_verify_title": "Xác minh số điện thoại",
+  "edit_phone_verify_success": "Xác minh số điện thoại thành công",
+  "edit_phone_verify_failed": "Xác minh thất bại: {error}",
+  "edit_password_required": "Vui lòng nhập mật khẩu",
+  "edit_current_password": "Mật khẩu hiện tại",
+  "edit_password_confirm_hint": "Nhập mật khẩu để xác nhận",
+  "edit_delete_account_title": "Xoá tài khoản",
+  "edit_delete_account_confirm": "Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xoá vĩnh viễn.",
+  "edit_delete_account_error": "Xoá tài khoản thất bại: {error}",
+  "edit_account_deleted": "Tài khoản đã được xoá",
+  "edit_update_success": "Cập nhật thông tin thành công",
+  "edit_update_error": "Lỗi: {error}",
+  "edit_save_changes": "Lưu thay đổi",
+  "edit_saved_changes": "Đã lưu thay đổi",
+  "edit_bio_label": "Giới thiệu (bio)",
+  "edit_bio_hint": "Giới thiệu ngắn về bản thân...",
+  "edit_address_hint": "Nhập địa chỉ",
+  "edit_bank_account_title": "Tài khoản ngân hàng nhận thưởng",
+  "edit_bank_account_desc": "Dùng để ban tổ chức chuyển khoản giải thưởng từ các giải đấu.",
+  "edit_bank_name": "Tên ngân hàng",
+  "edit_bank_name_hint": "VD: Vietcombank, Techcombank...",
+  "edit_bank_account_number": "Số tài khoản",
+  "edit_bank_account_hint": "Nhập số tài khoản",
+  "edit_bank_account_name": "Chủ tài khoản",
+  "edit_bank_account_name_hint": "Nhập tên chủ tài khoản (Viết hoa không dấu)",
+  "edit_security_account": "Bảo mật tài khoản",
+  "edit_change_password_desc": "Cập nhật mật khẩu đăng nhập của bạn",
+  "edit_delete_account": "Xoá tài khoản",
+  "edit_delete_account_warning": "Xoá vĩnh viễn tài khoản và dữ liệu cá nhân của bạn.",
+  "edit_bank_saved": "Đã lưu thông tin ngân hàng",
+  "edit_bank_load_error": "Không thể tải thông tin ngân hàng",
+  "edit_bank_account_name_hint_short": "Nhập tên chủ tài khoản",
+  "edit_bank_info_desc": "Thông tin ngân hàng dùng để nhận tiền thưởng giải đấu. Dữ liệu được bảo mật và không hiển thị công khai.",
+  "edit_verification_status": "Trạng thái xác thực",
+  "edit_verify_email": "Xác minh Email",
+  "edit_verify_email_desc": "Gửi mã xác minh tới email đang dùng",
+  "edit_verification_load_error": "Không thể tải trạng thái",
+  "edit_strong_password": "Mật khẩu mạnh",
+  "edit_strong_password_desc": "Tối thiểu 6 ký tự, nên có chữ hoa và số",
+  "edit_sessions": "Phiên đăng nhập",
+  "edit_current_device": "Thiết bị hiện tại",
+  "edit_active": "Đang hoạt động",
+  "edit_bio_label_short": "Tiểu sử",
+  "edit_bio_hint_short": "Giới thiệu bản thân...",
+  "edit_phone_hint_inline": "Nhập số điện thoại",
+  "edit_full_name_hint_short": "Nhập họ tên",
+  "edit_full_name_required_short": "Vui lòng nhập họ tên",
+  "edit_overview": "Tổng quan",
+  "edit_achievements": "Danh hiệu",
+  "edit_elo_tab": "ELO",
+  "edit_rank_by_sport": "Xếp hạng theo bộ môn",
+  "edit_matches_load_error": "Chưa tải được lịch sử trận đấu",
+  "edit_no_public_matches": "Chưa có trận đấu công khai",
+  "edit_not_played": "Chưa diễn ra",
+  "edit_achievements_highlight": "Thành tích nổi bật",
+  "edit_no_achievements": "Chưa có thành tích nào",
+  "edit_champion": "Quán quân",
+  "edit_runner_up": "Á quân",
+  "edit_third_place": "Hạng ba",
+  "edit_no_user_data": "Không có dữ liệu người dùng",
+  "edit_view_history_detail": "Xem lịch sử chi tiết",
+  "edit_sport_count": "Bộ môn",
+  "edit_total_elo": "Tổng ELO",
+  "edit_avg_elo": "ELO TB",
+  "edit_total_matches": "Tổng trận",
+  "edit_elo_chart": "Biểu đồ ELO",
+  "edit_detailed_stats": "Thống kê chi tiết",
+  "edit_coach": "Huấn luyện viên",
+  "edit_cannot_load_info": "Không thể tải thông tin",
+  "edit_no_rank_data": "Chưa có dữ liệu xếp hạng",
+  "edit_profile_athlete": "Hồ sơ Vận động viên",
+  "edit_profile_card": "Thẻ VĐV & ELO",
+  "edit_verify": "Xác minh",
+  "rank_current_elo": "ELO hiện tại",
+  "rank_no_history": "Chưa có lịch sử biến động ELO",
+  "rank_no_history_desc": "Hãy tham gia các trận đấu xếp hạng để ghi nhận điểm ELO",
+  "rank_peak_elo": "Peak ELO (Cao nhất)",
+  "rank_public": "Công khai",
+  "rank_activity": "HOẠT ĐỘNG",
+  "rank_decay": "Suy giảm ELO (không thi đấu)",
+  "rank_update": "Cập nhật ELO",
+  "@edit_profile_load_error": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@edit_avatar_upload_error": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@edit_otp_send_error": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@edit_phone_verify_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@edit_delete_account_error": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@edit_update_error": {
+    "placeholders": {
+      "error": {}
+    }
+  }
 }
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-

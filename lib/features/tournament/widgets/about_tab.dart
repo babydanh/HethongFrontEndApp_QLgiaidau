@@ -223,7 +223,7 @@ class AboutTab extends StatelessWidget {
                 // ── Contact Section ──
                 _buildSectionHeader(colors, l10n.sectionContact),
                 const SizedBox(height: 12),
-                _buildContactCard(tournament.contactInfo, colors),
+                _buildContactCard(tournament.contactInfo, colors, l10n),
               ],
             ),
           ),
@@ -326,7 +326,7 @@ class AboutTab extends StatelessWidget {
   }
 
   Widget _buildContactCard(
-      Map<String, dynamic>? contactInfo, AppColorsExtension colors) {
+      Map<String, dynamic>? contactInfo, AppColorsExtension colors, AppLocalizations l10n) {
     if (contactInfo == null || contactInfo.isEmpty) {
       return Text(
         l10n.notUpdated,
@@ -461,7 +461,7 @@ class AboutTab extends StatelessWidget {
           ],
           // Slot progress bar
           if (tournament.maxTeams > 0) ...[
-            _buildSlotProgressBar(slotsFilled, tournament.maxTeams, colors),
+            _buildSlotProgressBar(slotsFilled, tournament.maxTeams, colors, l10n),
             const SizedBox(height: 16),
           ],
           // Countdown & Register button
@@ -564,7 +564,7 @@ class AboutTab extends StatelessWidget {
   }
 
   Widget _buildSlotProgressBar(
-      int filled, int max, AppColorsExtension colors) {
+      int filled, int max, AppColorsExtension colors, AppLocalizations l10n) {
     final ratio = max > 0 ? filled / max : 0.0;
     final progressColor = ratio >= 0.9
         ? colors.error

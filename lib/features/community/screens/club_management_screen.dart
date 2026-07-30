@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -79,6 +80,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: colors.bgDark,
@@ -86,7 +88,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary), onPressed: () => context.pop()),
-        title: const Text('Điều phối CLB', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+        title: Text(l10n.club_managementTitle, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
         centerTitle: true,
         actions: _isLoading
             ? []
@@ -122,11 +124,12 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
 
   // ─── Stats ───────────────────────────────────────────────────
   Widget _buildStatsRow(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     final stats = [
-      ('Đang hoạt động', '$_activeCount', colors.textPrimary),
-      ('Chờ duyệt', '${_joinRequests.length}', const Color(0xFFF59E0B)),
-      ('Đã mời', '${_invitedMembers.length}', const Color(0xFF6366F1)),
-      ('Đã cấm', '${_bannedMembers.length}', const Color(0xFFEF4444)),
+      (l10n.club_activeMembers, '$_activeCount', colors.textPrimary),
+      (l10n.club_pendingRequests, '${_joinRequests.length}', const Color(0xFFF59E0B)),
+      (l10n.club_invited, '${_invitedMembers.length}', const Color(0xFF6366F1)),
+      (l10n.club_banned, '${_bannedMembers.length}', const Color(0xFFEF4444)),
     ];
     return Row(
       children: stats.map((s) => Expanded(
@@ -148,12 +151,13 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
 
   // ─── Join Requests ───────────────────────────────────────────
   Widget _buildJoinRequestsSection(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     if (_joinRequests.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader('Đơn xin tham gia (${_joinRequests.length})', const Color(0xFFF59E0B), colors),
+        _sectionHeader(l10n.club_joinRequestSection(_joinRequests.length), const Color(0xFFF59E0B), colors),
         const SizedBox(height: 8),
         ..._joinRequests.map((req) => _buildRequestCard(req, colors)),
       ],
@@ -161,6 +165,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   }
 
   Widget _buildRequestCard(CommunityMemberModel req, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -175,40 +180,42 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             child: Text((req.userFullName?.isNotEmpty == true ? req.userFullName![0] : '?').toUpperCase(),
                 style: const TextStyle(color: Color(0xFFF59E0B), fontWeight: FontWeight.w800, fontSize: 14))),
           const SizedBox(width: 12),
-          Expanded(child: Text(req.userFullName ?? 'Người dùng', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: colors.textPrimary))),
-          _actionBtn('Duyệt', const Color(0xFF10B981), () => _review(req, 'APPROVE', colors)),
+          Expanded(child: Text(req.userFullName ?? l10n.dashboard_user, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: colors.textPrimary))),
+          _actionBtn(l10n.club_approve, const Color(0xFF10B981), () => _review(req, 'APPROVE', colors)),
           const SizedBox(width: 6),
-          _actionBtn('Từ chối', colors.textSecondary, () => _review(req, 'REJECT', colors), outlined: true),
+          _actionBtn(l10n.club_reject, colors.textSecondary, () => _review(req, 'REJECT', colors), outlined: true),
         ],
       ),
     );
   }
 
   Future<void> _review(CommunityMemberModel req, String action, AppColorsExtension colors) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await ref.read(communityRepositoryProvider).reviewJoinRequest(widget.clubId, req.id.isNotEmpty ? req.id : req.userId, action);
       _loadData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(action == 'APPROVE' ? 'Đã duyệt thành viên!' : 'Đã từ chối đơn'),
+          content: Text(action == 'APPROVE' ? l10n.club_approvedAlert : l10n.club_rejectedAlert),
           backgroundColor: action == 'APPROVE' ? const Color(0xFF10B981) : Colors.orange,
           behavior: SnackBarBehavior.floating,
         ));
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.errorPrefix}: $e'), backgroundColor: Colors.red));
     }
   }
 
   // ─── Invite ──────────────────────────────────────────────────
   Widget _buildInviteSection(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: colors.bgCard, borderRadius: BorderRadius.circular(20), border: Border.all(color: colors.border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader('Mời thành viên', AppTheme.primary, colors),
+          _sectionHeader(l10n.club_inviteMember, AppTheme.primary, colors),
           const SizedBox(height: 8),
           // Role info
           Container(
@@ -216,23 +223,23 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(10), border: Border.all(color: colors.borderLight)),
             child: Text(
               widget.isOwner
-                  ? 'Chủ sở hữu có thể mời vào vai trò Thành viên hoặc Quản trị viên.'
-                  : 'Quản trị viên chỉ có thể mời vào vai trò Thành viên.',
+                  ? l10n.club_ownerInviteInfo
+                  : l10n.club_adminInviteInfo,
               style: TextStyle(fontSize: 11, color: colors.textSecondary, height: 1.4),
             ),
           ),
           const SizedBox(height: 12),
           // Role selector (only for owner)
           if (widget.isOwner) ...[
-            Text('Vai trò khi mời', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: colors.textSecondary)),
+            Text(l10n.club_roleLabel, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: colors.textSecondary)),
             const SizedBox(height: 6),
             Container(
               decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(10)),
               child: Row(
                 children: [
-                  _roleChip('Thành viên', 'MEMBER', colors),
+                  _roleChip(l10n.club_memberChip, 'MEMBER', colors),
                   const SizedBox(width: 4),
-                  _roleChip('Quản trị viên', 'MODERATOR', colors),
+                  _roleChip(l10n.club_adminChip, 'MODERATOR', colors),
                 ],
               ),
             ),
@@ -244,7 +251,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             onChanged: _searchUsers,
             style: TextStyle(color: colors.textPrimary, fontSize: 13),
             decoration: InputDecoration(
-              hintText: 'Nhập tên hoặc email...',
+              hintText: l10n.club_searchHint,
               hintStyle: TextStyle(color: colors.textMuted, fontSize: 12),
               prefixIcon: Icon(Icons.search_rounded, color: colors.textMuted, size: 20),
               suffixIcon: _isSearching
@@ -278,7 +285,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                        child: const Text('Mời', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w800, fontSize: 11)),
+                        child: Text(l10n.club_inviteButton, style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w800, fontSize: 11)),
                       ),
                     ),
                   );
@@ -288,7 +295,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
           if (_searchCtrl.text.trim().length >= 2 && _searchResults.isEmpty && !_isSearching)
             Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: Text('Không tìm thấy người dùng hoặc họ đã ở trong CLB', style: TextStyle(color: colors.textMuted, fontSize: 11)),
+              child: Text(l10n.club_noUsersOrInClub, style: TextStyle(color: colors.textMuted, fontSize: 11)),
             ),
         ],
       ),
@@ -343,28 +350,30 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   }
 
   Future<void> _inviteUser(UserSearchResult user, AppColorsExtension colors) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await ref.read(communityRepositoryProvider).inviteMember(widget.clubId, user.id, role: _inviteRole);
       _searchCtrl.clear();
       setState(() => _searchResults = []);
       _loadData();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Đã gửi lời mời!'), backgroundColor: Color(0xFF10B981), behavior: SnackBarBehavior.floating,
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(l10n.club_inviteSent), backgroundColor: const Color(0xFF10B981), behavior: SnackBarBehavior.floating,
         ));
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.errorPrefix}: $e'), backgroundColor: Colors.red));
     }
   }
 
   // ─── Invited List ─────────────────────────────────────────────
   Widget _buildInvitedSection(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     if (_invitedMembers.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader('Lời mời đã gửi (${_invitedMembers.length})', const Color(0xFF6366F1), colors),
+        _sectionHeader(l10n.club_invitedSection(_invitedMembers.length), const Color(0xFF6366F1), colors),
         const SizedBox(height: 8),
         ..._invitedMembers.map((m) => _buildInvitedCard(m, colors)),
       ],
@@ -372,6 +381,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   }
 
   Widget _buildInvitedCard(CommunityMemberModel m, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -382,29 +392,29 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             child: Text((m.userFullName?.isNotEmpty == true ? m.userFullName![0] : '?').toUpperCase(),
                 style: const TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.w800, fontSize: 12))),
           const SizedBox(width: 12),
-          Expanded(child: Text(m.userFullName ?? 'Người dùng', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: colors.textPrimary))),
+          Expanded(child: Text(m.userFullName ?? l10n.dashboard_user, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: colors.textPrimary))),
           GestureDetector(
             onTap: () async {
               try {
                 await ref.read(communityRepositoryProvider).removeMember(widget.clubId, m.userId);
                 _loadData();
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Đã thu hồi lời mời'),
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(l10n.club_revokeInvite),
                     backgroundColor: Colors.orange,
                     behavior: SnackBarBehavior.floating,
                   ));
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.errorPrefix}: $e'), backgroundColor: Colors.red));
                 }
               }
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(8), border: Border.all(color: colors.border)),
-              child: Text('Huỷ', style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w700, fontSize: 11)),
+              child: Text(l10n.club_cancelInvite, style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w700, fontSize: 11)),
             ),
           ),
         ],
@@ -414,11 +424,12 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
 
   // ─── Banned List ──────────────────────────────────────────────
   Widget _buildBannedSection(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     if (_bannedMembers.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader('Thành viên bị cấm (${_bannedMembers.length})', const Color(0xFFEF4444), colors),
+        _sectionHeader(l10n.club_bannedSection(_bannedMembers.length), const Color(0xFFEF4444), colors),
         const SizedBox(height: 8),
         ..._bannedMembers.map((m) => _buildBannedCard(m, colors)),
       ],
@@ -426,6 +437,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   }
 
   Widget _buildBannedCard(CommunityMemberModel m, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -440,29 +452,29 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             child: Text((m.userFullName?.isNotEmpty == true ? m.userFullName![0] : '?').toUpperCase(),
                 style: const TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.w800, fontSize: 12))),
           const SizedBox(width: 12),
-          Expanded(child: Text(m.userFullName ?? 'Người dùng', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: colors.textPrimary))),
+          Expanded(child: Text(m.userFullName ?? l10n.dashboard_user, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: colors.textPrimary))),
           GestureDetector(
             onTap: () async {
               try {
                 await ref.read(communityRepositoryProvider).unbanMember(widget.clubId, m.userId);
                 _loadData();
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Đã gỡ cấm thành viên'),
-                    backgroundColor: Color(0xFF10B981),
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(l10n.club_unbanned),
+                    backgroundColor: const Color(0xFF10B981),
                     behavior: SnackBarBehavior.floating,
                   ));
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.errorPrefix}: $e'), backgroundColor: Colors.red));
                 }
               }
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(8)),
-              child: const Text('Gỡ cấm', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11)),
+              child: Text(l10n.club_unban, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11)),
             ),
           ),
         ],

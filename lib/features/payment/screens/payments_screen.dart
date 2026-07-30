@@ -67,26 +67,29 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       body: paymentsAsync.when(
         data: (payments) => _buildContent(context, ref, payments, l10n),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline_rounded, size: 48, color: colors.error),
-              const SizedBox(height: 12),
-              Text(
-                '${l10n.payments_loadError} $e',
-                style: TextStyle(color: colors.error, fontSize: 14),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () => ref.refresh(myPaymentsProvider),
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: Text(l10n.infoRetry),
-              ),
-            ],
-          ),
-        ),
+        error: (e, _) {
+          final l10n = AppLocalizations.of(context)!;
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline_rounded, size: 48, color: colors.error),
+                const SizedBox(height: 12),
+                Text(
+                  '${l10n.payments_loadError} $e',
+                  style: TextStyle(color: colors.error, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () => ref.refresh(myPaymentsProvider),
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: Text(l10n.infoRetry),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

@@ -47,7 +47,6 @@ import 'package:app_quanly_giaidau/features/live/screens/live_match_screen.dart'
 
 import 'package:app_quanly_giaidau/features/register/screens/tournament_register_screen.dart';
 import 'package:app_quanly_giaidau/features/register/screens/doubles_registration_screen.dart';
-import 'package:app_quanly_giaidau/features/register/screens/join_invite_screen.dart';
 import 'package:app_quanly_giaidau/features/register/screens/join_team_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_join_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_pairing_screen.dart';
@@ -475,7 +474,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/join/:inviteCode',
         builder: (context, state) {
           final code = state.pathParameters['inviteCode']!;
-          return JoinInviteScreen(inviteCode: code);
+          return TournamentRegisterScreen(tournamentId: '', inviteCode: code);
         },
       ),
       GoRoute(

@@ -1,15 +1,13 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Rally Point scoring panel — cho Badminton, Table Tennis, Pickleball Rally.
-///
-/// Grid 2 cột đối xứng với nút +/− dạng tròn 48×48, touch target lớn.
-/// Font số tabular-nums để không nhảy layout (9→10).
 class RallyScorePanel extends ConsumerWidget {
   final MatchControlParams params;
   final bool isReadOnly;
@@ -24,7 +22,7 @@ class RallyScorePanel extends ConsumerWidget {
     final state = ref.watch(scorePanelNotifierProvider(params));
     final notifier = ref.read(scorePanelNotifierProvider(params).notifier);
     final r = state.rally ?? const RallySetState();
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final ts = state.config;
 
@@ -93,6 +91,7 @@ class RallyScorePanel extends ConsumerWidget {
                                 isTeam1: true,
                                 score: r.currentP1,
                                 colors: colors,
+                                l10n: l10n,
                                 onIncrement: () => notifier.rallyAddPoint(true),
                                 onDecrement: () =>
                                     notifier.rallyRemovePoint(true),
@@ -108,6 +107,7 @@ class RallyScorePanel extends ConsumerWidget {
                                 isTeam1: false,
                                 score: r.currentP2,
                                 colors: colors,
+                                l10n: l10n,
                                 onIncrement: () =>
                                     notifier.rallyAddPoint(false),
                                 onDecrement: () =>
@@ -127,6 +127,7 @@ class RallyScorePanel extends ConsumerWidget {
                                 isTeam1: true,
                                 score: r.currentP1,
                                 colors: colors,
+                                l10n: l10n,
                                 onIncrement: () => notifier.rallyAddPoint(true),
                                 onDecrement: () =>
                                     notifier.rallyRemovePoint(true),
@@ -152,6 +153,7 @@ class RallyScorePanel extends ConsumerWidget {
                                 isTeam1: false,
                                 score: r.currentP2,
                                 colors: colors,
+                                l10n: l10n,
                                 onIncrement: () =>
                                     notifier.rallyAddPoint(false),
                                 onDecrement: () =>
@@ -177,6 +179,7 @@ class RallyScorePanel extends ConsumerWidget {
     required bool isTeam1,
     required int score,
     required AppColorsExtension colors,
+    required AppLocalizations l10n,
     required VoidCallback onIncrement,
     required VoidCallback onDecrement,
     required String teamName,
@@ -294,8 +297,7 @@ class RallyScorePanel extends ConsumerWidget {
   Widget _topPill(String label) {
     return Builder(
       builder: (context) {
-        final l10n = AppLocalizations.of(context);
-    final colors = context.colors;
+        final colors = context.colors;
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
@@ -316,4 +318,3 @@ class RallyScorePanel extends ConsumerWidget {
     );
   }
 }
-

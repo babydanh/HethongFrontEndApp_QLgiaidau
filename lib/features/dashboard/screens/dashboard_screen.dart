@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.da
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_card.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +19,7 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final profileAsync = ref.watch(userProfileProvider);
     final rankingsAsync = ref.watch(userRankingsProvider);
     final workspaceAsync = ref.watch(myTournamentWorkspaceProvider);
@@ -27,7 +29,7 @@ class DashboardScreen extends ConsumerWidget {
       return Scaffold(
         backgroundColor: context.colors.bgDark,
         appBar: AppBar(
-          title: const Text('Của tôi'),
+          title: Text(l10n.dashboard_title),
           centerTitle: true,
           leading: IconButton(
             icon: Icon(
@@ -63,15 +65,15 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'Đăng nhập để xem khu vực của bạn',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                Text(
+                  l10n.dashboard_loginPrompt,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
                   onPressed: () => context.push('/login'),
                   icon: const Icon(Icons.login),
-                  label: const Text('Đăng nhập'),
+                  label: Text(l10n.loginButton),
                 ),
               ],
             ),
@@ -83,7 +85,7 @@ class DashboardScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: context.colors.bgDark,
       appBar: AppBar(
-        title: const Text('Của tôi'),
+        title: Text(l10n.dashboard_title),
         centerTitle: true,
         leading: IconButton(
           icon: Icon(
@@ -158,7 +160,8 @@ class _DashboardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = profileAsync.asData?.value.fullName ?? 'Người dùng';
+    final l10n = AppLocalizations.of(context)!;
+    final name = profileAsync.asData?.value.fullName ?? l10n.dashboard_user;
     final email = profileAsync.asData?.value.email as String?;
     final avatarUrl = profileAsync.asData?.value.avatarUrl as String?;
     final rankings = rankingsAsync.asData?.value ?? const [];
@@ -180,13 +183,14 @@ class _WorkspaceOverview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
           child: _OverviewMetric(
             icon: Icons.notifications_active_rounded,
             color: context.colors.warning,
-            label: 'Lời mời',
+            label: l10n.dashboard_invites,
             value: '${workspace.pendingInviteCount}',
           ),
         ),
@@ -195,7 +199,7 @@ class _WorkspaceOverview extends StatelessWidget {
           child: _OverviewMetric(
             icon: Icons.verified_user_rounded,
             color: AppTheme.primary,
-            label: 'Vai trò',
+            label: l10n.dashboard_roles,
             value: '${workspace.activeRoleCount}',
           ),
         ),
@@ -204,7 +208,7 @@ class _WorkspaceOverview extends StatelessWidget {
           child: _OverviewMetric(
             icon: Icons.sports_score_rounded,
             color: const Color(0xFF10B981),
-            label: 'Trận giao',
+            label: l10n.dashboard_refereeMatchesCount,
             value: '${workspace.refereeMatches.length}',
           ),
         ),
@@ -269,6 +273,7 @@ class _PendingInviteSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final pendingInvites = workspace.refereeInvites
         .where((invite) => invite.isPending)
         .toList();
@@ -278,8 +283,8 @@ class _PendingInviteSection extends StatelessWidget {
 
     final latestInvite = pendingInvites.first;
     return _SectionCard(
-      title: 'Lời mời cần xử lý',
-      actionLabel: 'Mở danh sách',
+      title: l10n.dashboard_pendingInvitesTitle,
+      actionLabel: l10n.dashboard_openList,
       onTap: () => context.push('/referee/invites'),
       child: Column(
         children: [
@@ -288,17 +293,17 @@ class _PendingInviteSection extends StatelessWidget {
             label: latestInvite.tournamentName,
             value: latestInvite.categoryName.isNotEmpty
                 ? latestInvite.categoryName
-                : 'Lời mời trọng tài',
+                : l10n.dashboard_refereeInviteFallback,
           ),
           const SizedBox(height: 10),
           _InfoRow(
             icon: Icons.schedule_rounded,
-            label: 'Ngày mời',
+            label: l10n.dashboard_inviteDate,
             value: latestInvite.assignedAt != null
                 ? DateFormatterUtils.formatDateTime(
                     latestInvite.assignedAt!.toLocal(),
                   )
-                : 'Đang cập nhật',
+                : l10n.dashboard_updateInProgress,
           ),
         ],
       ),
@@ -313,41 +318,42 @@ class _RoleSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final items = <Widget>[
       if (workspace.organizedTournaments.isNotEmpty)
         _RoleChip(
           icon: Icons.workspace_premium_rounded,
-          label: 'Chủ giải',
+          label: l10n.dashboard_organizer,
           count: workspace.organizedTournaments.length,
           color: const Color(0xFF10B981),
         ),
       if (workspace.coOrganizerTournaments.isNotEmpty)
         _RoleChip(
           icon: Icons.groups_rounded,
-          label: 'Ban tổ chức',
+          label: l10n.dashboard_coOrganizer,
           count: workspace.coOrganizerTournaments.length,
           color: AppTheme.primary,
         ),
       if (workspace.refereeTournaments.isNotEmpty)
         _RoleChip(
           icon: Icons.gavel_rounded,
-          label: 'Trọng tài',
+          label: l10n.infoReferee,
           count: workspace.refereeTournaments.length,
           color: AppTheme.refereeColor,
         ),
       if (workspace.participatingTournaments.isNotEmpty)
         _RoleChip(
           icon: Icons.sports_tennis_rounded,
-          label: 'Vận động viên',
+          label: l10n.infoPlayer,
           count: workspace.participatingTournaments.length,
           color: context.colors.info,
         ),
     ];
 
     return _SectionCard(
-      title: 'Vai trò của tôi',
+      title: l10n.dashboard_myRoles,
       child: items.isEmpty
-          ? const _EmptySectionText('Bạn chưa có vai trò nào trong giải đấu.')
+          ? _EmptySectionText(l10n.dashboard_noRolesDesc)
           : Wrap(spacing: 10, runSpacing: 10, children: items),
     );
   }
@@ -360,21 +366,22 @@ class _AssignedMatchesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final matches = workspace.refereeMatches.take(3).toList();
     return _SectionCard(
-      title: 'Trận được phân công',
-      actionLabel: workspace.refereeMatches.isNotEmpty ? 'Xem lời mời' : null,
+      title: l10n.dashboard_assignedMatches,
+      actionLabel: workspace.refereeMatches.isNotEmpty ? l10n.dashboard_viewInvites : null,
       onTap: workspace.refereeMatches.isNotEmpty
           ? () => context.push('/referee/invites')
           : null,
       child: matches.isEmpty
-          ? const _EmptySectionText('Bạn chưa có trận nào được phân công.')
+          ? _EmptySectionText(l10n.dashboard_noAssignedMatches)
           : Column(
               children: matches.map((match) {
                 final subtitle = [
                   if (match.stageName.isNotEmpty) match.stageName,
                   if (match.groupName.isNotEmpty) match.groupName,
-                  'Vòng ${match.roundNumber}',
+                  l10n.dashboard_roundLabel(match.roundNumber),
                 ].join(' • ');
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -382,7 +389,7 @@ class _AssignedMatchesSection extends StatelessWidget {
                     title: match.tournamentName,
                     subtitle: subtitle,
                     participants: match.participantLabel,
-                    meta: _formatMatchMeta(match),
+                    meta: _formatMatchMeta(match, l10n),
                     onTap: () => context.push('/live/${match.id}'),
                   ),
                 );
@@ -391,7 +398,7 @@ class _AssignedMatchesSection extends StatelessWidget {
     );
   }
 
-  String _formatMatchMeta(TournamentAssignedMatch match) {
+  String _formatMatchMeta(TournamentAssignedMatch match, AppLocalizations l10n) {
     final parts = <String>[];
     if (match.courtName.isNotEmpty) {
       parts.add(match.courtName);
@@ -401,7 +408,7 @@ class _AssignedMatchesSection extends StatelessWidget {
         DateFormatterUtils.formatDateTime(match.scheduledAt!.toLocal()),
       );
     }
-    return parts.isEmpty ? 'Chờ sắp lịch' : parts.join(' • ');
+    return parts.isEmpty ? l10n.dashboard_waitingSchedule : parts.join(' • ');
   }
 }
 
@@ -427,6 +434,7 @@ class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> 
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final workspace = widget.workspace;
 
@@ -478,7 +486,7 @@ class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> 
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Giải đấu của tôi (${allTournaments.length})',
+                l10n.dashboard_myTournaments(allTournaments.length),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -487,7 +495,7 @@ class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> 
               ),
               if (allTournaments.isNotEmpty)
                 Text(
-                  '${allTournaments.length} giải',
+                  l10n.dashboard_tournamentCount(allTournaments.length),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -512,7 +520,7 @@ class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> 
                 onChanged: (val) => setState(() => _searchQuery = val),
                 style: TextStyle(fontSize: 13, color: colors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'Tìm kiếm giải đấu...',
+                  hintText: l10n.dashboard_searchHint,
                   hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
                   prefixIcon: Icon(Icons.search_rounded, size: 18, color: colors.textMuted),
                   suffixIcon: _searchQuery.isNotEmpty
@@ -543,8 +551,8 @@ class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> 
                     const SizedBox(height: 8),
                     Text(
                       _searchQuery.isNotEmpty
-                          ? 'Không tìm thấy giải đấu phù hợp'
-                          : 'Bạn chưa tạo hoặc tham gia giải đấu nào',
+                          ? l10n.dashboard_noSearchResults
+                          : l10n.dashboard_noTournaments,
                       style: TextStyle(fontSize: 13, color: colors.textSecondary),
                     ),
                   ],
@@ -587,8 +595,8 @@ class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> 
                   ),
                   label: Text(
                     _isExpanded
-                        ? 'Thu gọn'
-                        : 'Xem thêm ($remainingCount giải khác)',
+                        ? l10n.dashboard_collapse
+                        : l10n.dashboard_showMore(remainingCount),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -614,6 +622,7 @@ class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> 
 class _QuickActions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -625,7 +634,7 @@ class _QuickActions extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Tiện ích nhanh',
+            l10n.dashboard_quickActions,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w800,
@@ -635,29 +644,29 @@ class _QuickActions extends ConsumerWidget {
           const SizedBox(height: 16),
           _QuickActionRow(
             icon: Icons.bolt_rounded,
-            title: 'Tạo giải nhanh (Lite)',
-            subtitle: 'Tạo nhanh trong câu lạc bộ của bạn',
+            title: l10n.dashboard_createLite,
+            subtitle: l10n.dashboard_createLiteSub,
             onTap: () => _openLiteCreation(context, ref),
           ),
           const Divider(height: 24),
           _QuickActionRow(
             icon: Icons.notifications_rounded,
-            title: 'Thông báo',
-            subtitle: 'Xem mời giải, cập nhật và nhắc việc',
+            title: l10n.settingsNotifications,
+            subtitle: l10n.dashboard_notificationsSub,
             onTap: () => context.push('/notifications'),
           ),
           const Divider(height: 24),
           _QuickActionRow(
             icon: Icons.groups_rounded,
-            title: 'Lời mời câu lạc bộ',
-            subtitle: 'Nhận và phản hồi lời mời CLB',
+            title: l10n.dashboard_clubInvites,
+            subtitle: l10n.dashboard_clubInvitesSub,
             onTap: () => context.push('/club-invites'),
           ),
           const Divider(height: 24),
           _QuickActionRow(
             icon: Icons.person_rounded,
-            title: 'Hồ sơ cá nhân',
-            subtitle: 'Cập nhật thông tin và hồ sơ công khai',
+            title: l10n.dashboard_profile,
+            subtitle: l10n.dashboard_profileSub,
             onTap: () => context.push('/profile'),
           ),
         ],
@@ -666,6 +675,7 @@ class _QuickActions extends ConsumerWidget {
   }
 
   Future<void> _openLiteCreation(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     final communities = await ref.read(myCommunitiesProvider.future);
     if (!context.mounted) return;
 
@@ -673,21 +683,19 @@ class _QuickActions extends ConsumerWidget {
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Cần có câu lạc bộ'),
-          content: const Text(
-            'Bạn cần tạo hoặc tham gia câu lạc bộ trước khi tạo giải nhanh (Lite).',
-          ),
+          title: Text(l10n.dashboard_needClubTitle),
+          content: Text(l10n.dashboard_needClubContent),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Để sau'),
+              child: Text(l10n.dashboard_later),
             ),
             FilledButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
                 context.push('/club/create');
               },
-              child: const Text('Tạo câu lạc bộ'),
+              child: Text(l10n.dashboard_createClubBtn),
             ),
           ],
         ),
@@ -708,11 +716,11 @@ class _QuickActions extends ConsumerWidget {
           shrinkWrap: true,
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
           children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 12),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
               child: Text(
-                'Chọn câu lạc bộ tạo giải',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                l10n.dashboard_selectClub,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
               ),
             ),
             ...communities.map(
@@ -979,20 +987,21 @@ class _TournamentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
 
-    String badgeText = 'Đã đăng ký';
+    String badgeText = l10n.dashboard_registered;
     Color badgeBg = const Color(0xFFECFDF5);
     Color badgeTextCol = const Color(0xFF059669);
     Color badgeBorder = const Color(0xFFA7F3D0);
 
     if (isOwner) {
-      badgeText = 'Chủ giải';
+      badgeText = l10n.dashboard_organizer;
       badgeBg = const Color(0xFFEFF6FF);
       badgeTextCol = const Color(0xFF2563EB);
       badgeBorder = const Color(0xFFBFDBFE);
     } else if (isCoOrg) {
-      badgeText = 'Ban tổ chức';
+      badgeText = l10n.dashboard_coOrganizer;
       badgeBg = const Color(0xFFF3E8FF);
       badgeTextCol = const Color(0xFF9333EA);
       badgeBorder = const Color(0xFFE9D5FF);
@@ -1007,15 +1016,12 @@ class _TournamentTile extends StatelessWidget {
               showDialog<void>(
                 context: context,
                 builder: (dialogContext) => AlertDialog(
-                  title: const Text('Quản lý giải Nâng Cao'),
-                  content: const Text(
-                    'App hiện chỉ hỗ trợ quản lý giải nhanh (Lite). '
-                    'Giải Nâng Cao vui lòng quản lý trên web.',
-                  ),
+                  title: Text(l10n.dashboard_manageAdvancedTitle),
+                  content: Text(l10n.dashboard_manageAdvancedContent),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(dialogContext),
-                      child: const Text('Đã hiểu'),
+                      child: Text(l10n.dashboard_gotIt),
                     ),
                   ],
                 ),
@@ -1076,8 +1082,8 @@ class _TournamentTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     tournament.isLite
-                        ? 'Giải nhanh (Lite) • Quản lý trên app'
-                        : 'Giải nâng cao • Quản lý đầy đủ',
+                        ? l10n.dashboard_liteDesc
+                        : l10n.dashboard_advancedDesc,
                     style: TextStyle(
                       fontSize: 9,
                       color: tournament.isLite
@@ -1108,7 +1114,7 @@ class _TournamentTile extends StatelessWidget {
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
-                          _buildTournamentMeta(tournament),
+                          _buildTournamentMeta(tournament, l10n),
                           style: TextStyle(fontSize: 11, color: colors.textMuted),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -1131,7 +1137,7 @@ class _TournamentTile extends StatelessWidget {
     );
   }
 
-  String _buildTournamentMeta(Tournament tournament) {
+  String _buildTournamentMeta(Tournament tournament, AppLocalizations l10n) {
     final parts = <String>[];
     if (tournament.sport.isNotEmpty) {
       parts.add(tournament.sport);
@@ -1139,7 +1145,7 @@ class _TournamentTile extends StatelessWidget {
     if (tournament.startDate != null) {
       parts.add(DateFormatterUtils.formatDate(tournament.startDate!.toLocal()));
     }
-    return parts.isEmpty ? 'Đang cập nhật' : parts.join(' • ');
+    return parts.isEmpty ? l10n.dashboard_updateInProgress : parts.join(' • ');
   }
 }
 
@@ -1223,6 +1229,7 @@ class _DashboardErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     return Container(
       width: double.infinity,
@@ -1236,7 +1243,7 @@ class _DashboardErrorCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Không thể tải khu vực của bạn',
+            l10n.dashboard_loadErrorTitle,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
@@ -1245,11 +1252,11 @@ class _DashboardErrorCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Hãy thử tải lại để đồng bộ lời mời, vai trò và các trận được giao.',
+            l10n.dashboard_loadErrorDesc,
             style: TextStyle(fontSize: 12, color: colors.textMuted),
           ),
           const SizedBox(height: 14),
-          FilledButton(onPressed: onRetry, child: const Text('Tải lại')),
+          FilledButton(onPressed: onRetry, child: Text(l10n.dashboard_retry)),
         ],
       ),
     );

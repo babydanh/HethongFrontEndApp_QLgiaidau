@@ -1,7 +1,7 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'
-import 'package:app_quanly_giaidau/l10n/app_localizations.dart';;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -88,6 +88,7 @@ class _TournamentRegisterScreenState
   String? _divisionError;
   bool _submitting = false;
   bool _success = false;
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
   String? _genderError;
   String? _eloError;
   bool _eloChecking = false;
@@ -228,7 +229,7 @@ class _TournamentRegisterScreenState
   Future<void> _register() async {
     if (_alreadyRegistered) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(l10n.registerAlreadyRegistered)),
+        SnackBar(content: Text(l10n.registerAlreadyRegistered)),
       );
       return;
     }
@@ -240,7 +241,7 @@ class _TournamentRegisterScreenState
         user?.gender == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(l10n.registerProfileIncomplete),
           ),
         );
@@ -388,19 +389,15 @@ class _TournamentRegisterScreenState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final isAuth = ref.watch(authProvider).isAuthenticated;
     final tAsync = ref.watch(tournamentIntroProvider(widget.tournamentId));
     final divAsync = ref.watch(_divisionsProvider(widget.tournamentId));
-    final isAuth = ref.watch(authProvider).isAuthenticated;
 
-    if (_success) {
-      final t = tAsync.asData?.value;
-      return _buildSuccess(t);
-    }
     return Scaffold(
       backgroundColor: context.colors.bgDark,
       appBar: AppBar(
-        title: Text(_getRegistrationCta(tAsync.asData?.value)),
+        title: Text(l10n.registerTitle),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -409,7 +406,7 @@ class _TournamentRegisterScreenState
         child: tAsync.when(
           data: (t) {
             if (t == null) {
-              return const Center(child: Text(l10n.registerTournamentNotFound));
+              return Center(child: Text(l10n.registerTournamentNotFound));
             }
             if (!isAuth) return _buildLoginPrompt(t);
             if (_checkingRegistration) {
@@ -569,7 +566,7 @@ class _TournamentRegisterScreenState
             width: double.infinity,
             child: OutlinedButton(
               onPressed: () => context.go('/intro/${tournament.id}'),
-              child: const Text(l10n.registerViewDetail),
+              child: Text(l10n.registerViewDetail),
             ),
           ),
         ],
@@ -628,7 +625,7 @@ class _TournamentRegisterScreenState
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () => context.go('/intro/${widget.tournamentId}'),
-              child: const Text(l10n.registerViewDetail),
+              child: Text(l10n.registerViewDetail),
             ),
             const SizedBox(height: 12),
             TextButton.icon(
@@ -841,7 +838,7 @@ class _TournamentRegisterScreenState
               color: context.colors.textMuted,
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               l10n.registerLoginPrompt,
               textAlign: TextAlign.center,
             ),
@@ -863,7 +860,7 @@ class _TournamentRegisterScreenState
                 );
               },
               icon: const Icon(Icons.login),
-              label: const Text(l10n.registerLoginButton),
+              label: Text(l10n.registerLoginButton),
             ),
           ],
         ),
@@ -893,6 +890,7 @@ class _TournamentRegisterScreenState
         t.status == 'COMPLETED' ||
         t.status == 'CANCELLED' ||
         (t.registrationEndDate != null && now.isAfter(t.registrationEndDate!)));
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -962,9 +960,9 @@ class _TournamentRegisterScreenState
                       size: 20,
                     ),
                     const SizedBox(width: 8),
-                    const Text(
+                    Text(
                       l10n.registerProfileIncompleteTitle,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 14,
                       ),
@@ -986,9 +984,9 @@ class _TournamentRegisterScreenState
                   child: OutlinedButton.icon(
                     onPressed: () => context.push('/profile/edit'),
                     icon: const Icon(Icons.edit_rounded, size: 16),
-                    label: const Text(
+                    label: Text(
                       l10n.registerUpdateProfile,
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
@@ -1014,9 +1012,9 @@ class _TournamentRegisterScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   l10n.registerInfoTitle,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1,
@@ -1078,7 +1076,7 @@ class _TournamentRegisterScreenState
                           color: AppTheme.primary.withValues(alpha: 0.2),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         l10n.registerTeamNameNext,
                       ),
                     ),
@@ -1096,7 +1094,7 @@ class _TournamentRegisterScreenState
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           l10n.registerContentTitle,
                           style: TextStyle(
                             fontSize: 12,
@@ -1316,8 +1314,8 @@ class _TournamentRegisterScreenState
                             ),
                           ),
                         if (_eloChecking)
-                          const Padding(
-                            padding: EdgeInsets.only(top: 8),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
                             child: Row(
                               children: [
                                 SizedBox(
@@ -1330,7 +1328,7 @@ class _TournamentRegisterScreenState
                                 SizedBox(width: 8),
                                 Text(
                                   l10n.registerEloSchedule,
-                                  style: TextStyle(fontSize: 12),
+                                  style: const TextStyle(fontSize: 12),
                                 ),
                               ],
                             ),
@@ -1350,7 +1348,7 @@ class _TournamentRegisterScreenState
                       color: context.colors.error.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Text(
+                    child: Text(
                       l10n.registerDivisionLoadError,
                     ),
                   ),
@@ -1410,6 +1408,7 @@ class _TournamentRegisterScreenState
   }
 
   Widget _buildTournamentHighlightsCard(Tournament t) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final startDateStr = t.startDate != null
         ? DateFormat('dd/MM/yyyy').format(t.startDate!)
@@ -1557,7 +1556,7 @@ class _RegistrationCountdownCardState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
 
     if (_remaining == Duration.zero) {
