@@ -5,7 +5,30 @@ class ErrorParser {
   static String parse(dynamic error, [String fallback = 'Đã xảy ra lỗi hệ thống']) {
     if (error is! DioException) {
       if (error is Exception) {
-        return error.toString().replaceFirst('Exception: ', '');
+        final raw = error.toString();
+        final lower = raw.toLowerCase();
+        if (lower.contains('canceled') || lower.contains('cancelled') ||
+            lower.contains('user_cancelled') || lower.contains('sign_in_canceled')) {
+          return 'Bạn đã hủy thao tác đăng nhập.';
+        }
+        if (lower.contains('google') &&
+            (lower.contains('sign in') || lower.contains('signin') ||
+                lower.contains('platformexception'))) {
+          return 'Không thể đăng nhập bằng Google. Vui lòng thử lại hoặc kiểm tra cấu hình Google Sign-In.';
+        }
+        if (lower.contains('apple') &&
+            (lower.contains('authorization') || lower.contains('credential') ||
+                lower.contains('platformexception'))) {
+          return 'Không thể đăng nhập bằng Apple. Vui lòng thử lại hoặc kiểm tra cấu hình Apple Sign-In.';
+        }
+        if (lower.contains('divisionid must be a uuid') ||
+            lower.contains('division id must be a uuid')) {
+          return 'Hạng mục thi đấu không hợp lệ. Vui lòng quay lại chọn lại hạng mục.';
+        }
+        if (lower.contains('no space left on device')) {
+          return 'Thiết bị không còn đủ dung lượng. Vui lòng giải phóng bộ nhớ rồi thử lại.';
+        }
+        return fallback;
       }
       return fallback;
     }

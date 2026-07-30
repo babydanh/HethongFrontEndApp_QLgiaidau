@@ -171,6 +171,41 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
 
     final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl ?? widget.tournament.creatorAvatarUrl);
     final hasLogo = resolvedLogoUrl.isNotEmpty;
+    final hideFeaturedCardText = widget.tournament.hideFeaturedCardText;
+
+    if (hideFeaturedCardText) {
+      return GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          margin: widget.margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: AspectRatio(
+              aspectRatio: 21 / 9,
+              child: hasBanner
+                  ? Image.network(
+                      resolvedBannerUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox.expand(),
+                    )
+                  : const SizedBox.expand(),
+            ),
+          ),
+        ),
+      );
+    }
 
     return GestureDetector(
       onTap: widget.onTap,

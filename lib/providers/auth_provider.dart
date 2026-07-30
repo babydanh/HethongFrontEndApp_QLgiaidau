@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/auth_session.dart';
 import 'package:app_quanly_giaidau/providers/saved_tournaments_provider.dart';
 
@@ -227,7 +228,7 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi đăng nhập', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+        errorMessage: ErrorParser.parse(e, 'Đăng nhập thất bại. Vui lòng thử lại.'),
       );
       return false;
     }
@@ -254,7 +255,7 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi đăng nhập Google', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+        errorMessage: ErrorParser.parse(e, 'Đăng nhập Google thất bại. Vui lòng thử lại.'),
       );
       return false;
     }
@@ -281,7 +282,7 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi đăng nhập Apple', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+        errorMessage: ErrorParser.parse(e, 'Đăng nhập Apple thất bại. Vui lòng thử lại.'),
       );
       return false;
     }
@@ -308,7 +309,7 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi đăng nhập Facebook', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+        errorMessage: ErrorParser.parse(e, 'Đăng nhập Facebook thất bại. Vui lòng thử lại.'),
       );
       return false;
     }
@@ -339,7 +340,7 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi đăng ký', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+        errorMessage: ErrorParser.parse(e, 'Đăng ký thất bại. Vui lòng kiểm tra thông tin và thử lại.'),
       );
       return false;
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
@@ -29,7 +30,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       await ref.read(dioClientProvider).dio.post('/auth/reset-password', data: {'token': widget.token, 'password': _pwCtrl.text});
       setState(() => _success = true);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorParser.parse(e, 'Không thể đổi mật khẩu. Vui lòng thử lại.'))));
     } finally { if (mounted) setState(() => _submitting = false); }
   }
 

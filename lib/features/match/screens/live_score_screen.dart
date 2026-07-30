@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
@@ -603,7 +604,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       color: context.colors.error,
                     ),
                     const SizedBox(height: 12),
-                    Text('Lỗi: $e', style: const TextStyle(color: Colors.red)),
+                    Text(ErrorParser.parse(e, 'Không thể tải dữ liệu trận đấu.'), style: const TextStyle(color: Colors.red)),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () => context.pop(),
@@ -1446,7 +1447,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 if (mounted) {
                   ScaffoldMessenger.of(
                     context,
-                  ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+                  ).showSnackBar(SnackBar(content: Text(ErrorParser.parse(e, 'Không thể cập nhật điểm trận đấu. Vui lòng thử lại.'))));
                 }
               }
             },

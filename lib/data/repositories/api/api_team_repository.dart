@@ -44,9 +44,15 @@ class ApiTeamRepository implements ITeamRepository {
 
   @override
   Stream<List<Team>> watchByTournament(String tournamentId) async* {
-    yield await getAllByTournament(tournamentId);
-    yield* Stream.periodic(const Duration(seconds: 12))
-        .asyncMap((_) => getAllByTournament(tournamentId));
+    // Do not replace a valid participant snapshot with [] on a transient
+    // network/rate-limit error.
+    var lastKnown = await getAllByTournament(tournamentId);
+    yield lastKnown;
+    yield* Stream.periodic(const Duration(seconds: 15)).asyncMap((_) async {
+      final updated = await getAllByTournament(tournamentId);
+      if (updated.isNotEmpty || lastKnown.isEmpty) lastKnown = updated;
+      return lastKnown;
+    });
   }
 
   @override

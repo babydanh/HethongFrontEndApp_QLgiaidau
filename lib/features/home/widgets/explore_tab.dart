@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:math' as math;
 
@@ -1182,7 +1183,7 @@ class _TournamentLiveMatchesSection extends ConsumerWidget {
   }
 }
 
-class MatchExploreCard extends StatefulWidget {
+class MatchExploreCard extends ConsumerStatefulWidget {
   final MatchModel match;
   final Tournament? tournament;
 
@@ -1193,12 +1194,51 @@ class MatchExploreCard extends StatefulWidget {
   });
 
   @override
-  State<MatchExploreCard> createState() => _MatchExploreCardState();
+  ConsumerState<MatchExploreCard> createState() => _MatchExploreCardState();
 }
 
-class _MatchExploreCardState extends State<MatchExploreCard> {
+class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
   int cheerCount = 0;
   bool isCheered = false;
+  bool _cheerInFlight = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCheerCount();
+  }
+
+  Future<void> _loadCheerCount() async {
+    try {
+      final count = await ref.read(matchRepositoryProvider).getCheerCount(widget.match.id);
+      if (mounted) setState(() => cheerCount = count);
+    } catch (_) {
+      // Keep the card usable when the count endpoint is temporarily unavailable.
+    }
+  }
+
+  Future<void> _cheer() async {
+    if (_cheerInFlight) return;
+    setState(() => _cheerInFlight = true);
+    try {
+      await ref.read(matchRepositoryProvider).cheerMatch(widget.match.id);
+      final count = await ref.read(matchRepositoryProvider).getCheerCount(widget.match.id);
+      if (mounted) {
+        setState(() {
+          cheerCount = count;
+          isCheered = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chưa thể gửi cổ vũ. Vui lòng thử lại.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _cheerInFlight = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1468,16 +1508,7 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
               // Button 1: Cổ vũ
               Expanded(
                 child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      isCheered = !isCheered;
-                      if (isCheered) {
-                        cheerCount++;
-                      } else {
-                        cheerCount--;
-                      }
-                    });
-                  },
+                  onTap: _cheerInFlight ? null : _cheer,
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1491,7 +1522,13 @@ class _MatchExploreCardState extends State<MatchExploreCard> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
+                        _cheerInFlight
+                            ? const SizedBox(
+                                width: 15,
+                                height: 15,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Icon(
                           isCheered ? Icons.favorite : Icons.favorite_border,
                           size: 15,
                           color: isCheered ? const Color(0xFFDC2626) : const Color(0xFFE11D48),

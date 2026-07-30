@@ -32,6 +32,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
   List<Map<String, dynamic>> _messages = [];
   String? _roomId;
   bool _isLoading = true;
+  String? _errorMessage;
   Timer? _pollTimer;
 
   @override
@@ -49,6 +50,13 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
   }
 
   Future<void> _initRoom() async {
+    _pollTimer?.cancel();
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
     try {
       final dio = ref.read(dioProvider);
       // Tìm hoặc tạo room cho match này
@@ -79,11 +87,15 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
       if (_roomId != null) await _loadMessages();
     } catch (e, stack) {
       _log.error('Lỗi khởi tạo chat room', e, stack);
+      if (mounted) {
+        setState(() => _errorMessage = 'Không thể kết nối phòng chat. Vui lòng thử lại.');
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
 
     // Poll every 5 seconds
+    if (_roomId == null) return;
     _pollTimer = Timer.periodic(
       const Duration(seconds: 5),
       (_) => _loadMessages(),
@@ -99,7 +111,10 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
       if (mounted) {
         setState(() => _messages = data.cast<Map<String, dynamic>>());
       }
-    } catch (_) {}
+    } catch (e, stack) {
+      _log.error('Lỗi tải tin nhắn', e, stack);
+      // Do not clear messages on a transient network/API failure.
+    }
   }
 
   Future<void> _sendMessage() async {
@@ -125,6 +140,12 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
       });
     } catch (e, stack) {
       _log.error('Lỗi gửi tin nhắn', e, stack);
+      if (mounted) {
+        _msgCtrl.text = text;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể gửi tin nhắn. Vui lòng thử lại.')),
+        );
+      }
     }
   }
 
@@ -138,6 +159,21 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
         Expanded(
           child: _isLoading
               ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+              : _errorMessage != null
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_errorMessage!, style: TextStyle(fontSize: 12, color: colors.textMuted)),
+                      const SizedBox(height: 10),
+                      OutlinedButton.icon(
+                        onPressed: _initRoom,
+                        icon: const Icon(Icons.refresh_rounded, size: 16),
+                        label: const Text('Thử lại'),
+                      ),
+                    ],
+                  ),
+                )
               : _messages.isEmpty
               ? Center(
                   child: Column(

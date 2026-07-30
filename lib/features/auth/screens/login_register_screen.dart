@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -11,6 +12,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/utils/token_generator.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 
 class LoginRegisterScreen extends ConsumerStatefulWidget {
   final String? redirectPath;
@@ -91,7 +93,12 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
     });
     try {
       final googleSignIn = GoogleSignIn(
-        clientId: dotenv.env['GOOGLE_IOS_CLIENT_ID'],
+        // iOS needs its native client ID. Android must use the Android OAuth
+        // client generated for this package and signing certificate instead.
+        clientId: defaultTargetPlatform == TargetPlatform.iOS ||
+                defaultTargetPlatform == TargetPlatform.macOS
+            ? dotenv.env['GOOGLE_IOS_CLIENT_ID']
+            : null,
         serverClientId: dotenv.env['GOOGLE_WEB_CLIENT_ID'],
         scopes: ['email'],
       );
@@ -126,7 +133,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = "Lỗi Google Sign-In: ${e.toString()}";
+        _errorMessage = ErrorParser.parse(e, 'Không thể đăng nhập bằng Google. Vui lòng thử lại.');
       });
     }
   }
@@ -175,13 +182,13 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = "Lỗi Apple Sign-In: ${e.message}";
+        _errorMessage = ErrorParser.parse(e, 'Không thể đăng nhập bằng Apple. Vui lòng thử lại.');
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = "Lỗi Apple Sign-In: ${e.toString()}";
+        _errorMessage = ErrorParser.parse(e, 'Không thể đăng nhập bằng Apple. Vui lòng thử lại.');
       });
     }
   }

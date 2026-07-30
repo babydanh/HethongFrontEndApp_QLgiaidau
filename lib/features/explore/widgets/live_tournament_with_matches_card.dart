@@ -32,6 +32,7 @@ class LiveTournamentWithMatchesCard extends ConsumerStatefulWidget {
 class _LiveTournamentWithMatchesCardState
     extends ConsumerState<LiveTournamentWithMatchesCard> {
   final Map<String, int> _cheerCounts = {};
+  final Set<String> _cheerInFlight = {};
   int _currentMatchIndex = 0;
   static const int _pageSize = 4;
 
@@ -570,12 +571,26 @@ class _LiveTournamentWithMatchesCardState
               Expanded(
                 child: InkWell(
                   onTap: () async {
+                    if (_cheerInFlight.contains(match.id)) return;
+                    _cheerInFlight.add(match.id);
+                    final previousCount = _cheerCounts[match.id] ?? 0;
                     setState(() {
-                      _cheerCounts[match.id] = (_cheerCounts[match.id] ?? 0) + 1;
+                      _cheerCounts[match.id] = previousCount + 1;
                     });
                     try {
                       await ref.read(matchRepositoryProvider).cheerMatch(match.id);
-                    } catch (_) {}
+                      final count = await ref.read(matchRepositoryProvider).getCheerCount(match.id);
+                      if (mounted) setState(() => _cheerCounts[match.id] = count);
+                    } catch (_) {
+                      if (mounted) {
+                        setState(() => _cheerCounts[match.id] = previousCount);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Chưa thể gửi cổ vũ. Vui lòng thử lại.')),
+                        );
+                      }
+                    } finally {
+                      _cheerInFlight.remove(match.id);
+                    }
                   },
                   borderRadius: BorderRadius.circular(10),
                   child: Container(

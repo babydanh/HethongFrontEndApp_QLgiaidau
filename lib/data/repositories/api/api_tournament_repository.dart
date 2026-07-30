@@ -299,9 +299,18 @@ class ApiTournamentRepository implements ITournamentRepository {
 
   @override
   Stream<Tournament?> watch(String id) async* {
-    yield await getById(id);
-    yield* Stream.periodic(const Duration(seconds: 10))
-        .asyncMap((_) => getById(id));
+    // A transient timeout/429 must not turn a visible tournament into
+    // "not found". Keep the last confirmed snapshot while polling.
+    Tournament? lastKnown;
+    final initial = await getById(id);
+    if (initial != null) lastKnown = initial;
+    yield lastKnown;
+
+    yield* Stream.periodic(const Duration(seconds: 15)).asyncMap((_) async {
+      final updated = await getById(id);
+      if (updated != null) lastKnown = updated;
+      return lastKnown;
+    });
   }
 
   List<Tournament> _parseTournamentList(dynamic rawData) {

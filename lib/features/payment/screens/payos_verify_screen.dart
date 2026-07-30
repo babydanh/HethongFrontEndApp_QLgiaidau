@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -108,7 +109,7 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
       if (!silent && mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Có lỗi xảy ra: $e')));
+        ).showSnackBar(SnackBar(content: Text(ErrorParser.parse(e, 'Không thể xác minh thanh toán. Vui lòng thử lại.'))));
       }
     } finally {
       if (!silent && mounted) {
