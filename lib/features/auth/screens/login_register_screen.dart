@@ -537,31 +537,13 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                             if (defaultTargetPlatform == TargetPlatform.iOS) ...[
                               const SizedBox(width: 12),
                               Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: _isLoading ? null : _submitApple,
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize: const Size.fromHeight(52),
-                                    side: BorderSide(
-                                      color: isDark ? Colors.white24 : Colors.black12,
-                                      width: 1.2,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                    ),
-                                    backgroundColor: Colors.transparent,
-                                  ),
-                                  icon: Icon(
-                                    Icons.apple,
-                                    color: textPrimaryColor,
-                                    size: 24,
-                                  ),
-                                  label: Text(
-                                    "Apple",
-                                    style: TextStyle(
-                                      color: textPrimaryColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15.0,
-                                    ),
+                                child: SizedBox(
+                                  height: 52,
+                                  child: SignInWithAppleButton(
+                                    onPressed: _isLoading ? () {} : _submitApple,
+                                    style: isDark ? SignInWithAppleButtonStyle.white : SignInWithAppleButtonStyle.black,
+                                    borderRadius: BorderRadius.circular(12.0),
+                                    text: 'Apple',
                                   ),
                                 ),
                               ),
