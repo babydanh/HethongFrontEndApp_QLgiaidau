@@ -51,17 +51,4 @@ class PaymentRepository {
       rethrow;
     }
   }
-
-  Future<bool> mockVerify(String paymentId) async {
-    try {
-      final response = await _dioClient.dio.post(
-        '/payments/mock-verify',
-        data: {'paymentId': paymentId},
-      );
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e, stack) {
-      _log.error('Error verifying payment', e, stack);
-      return false;
-    }
-  }
 }

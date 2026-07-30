@@ -6,7 +6,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
-import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -95,7 +94,8 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       final googleSignIn = GoogleSignIn(
         // iOS needs its native client ID. Android must use the Android OAuth
         // client generated for this package and signing certificate instead.
-        clientId: defaultTargetPlatform == TargetPlatform.iOS ||
+        clientId:
+            defaultTargetPlatform == TargetPlatform.iOS ||
                 defaultTargetPlatform == TargetPlatform.macOS
             ? dotenv.env['GOOGLE_IOS_CLIENT_ID']
             : null,
@@ -133,7 +133,10 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = ErrorParser.parse(e, 'Không thể đăng nhập bằng Google. Vui lòng thử lại.');
+        _errorMessage = ErrorParser.parse(
+          e,
+          'Không thể đăng nhập bằng Google. Vui lòng thử lại.',
+        );
       });
     }
   }
@@ -156,12 +159,17 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       if (idToken == null) {
         throw Exception("Không nhận được ID Token từ Apple");
       }
-      final fullName = [credential.givenName, credential.familyName]
-          .where((s) => s != null && s.trim().isNotEmpty)
-          .join(' ');
+      final fullName = [
+        credential.givenName,
+        credential.familyName,
+      ].where((s) => s != null && s.trim().isNotEmpty).join(' ');
       bool success = await ref
           .read(authProvider.notifier)
-          .loginWithApple(idToken, nonce: nonce, fullName: fullName.isNotEmpty ? fullName : null);
+          .loginWithApple(
+            idToken,
+            nonce: nonce,
+            fullName: fullName.isNotEmpty ? fullName : null,
+          );
       if (!mounted) return;
       if (success) {
         ref.invalidate(userProfileProvider);
@@ -182,13 +190,19 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = ErrorParser.parse(e, 'Không thể đăng nhập bằng Apple. Vui lòng thử lại.');
+        _errorMessage = ErrorParser.parse(
+          e,
+          'Không thể đăng nhập bằng Apple. Vui lòng thử lại.',
+        );
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = ErrorParser.parse(e, 'Không thể đăng nhập bằng Apple. Vui lòng thử lại.');
+        _errorMessage = ErrorParser.parse(
+          e,
+          'Không thể đăng nhập bằng Apple. Vui lòng thử lại.',
+        );
       });
     }
   }
@@ -511,7 +525,9 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                 style: OutlinedButton.styleFrom(
                                   minimumSize: const Size.fromHeight(52),
                                   side: BorderSide(
-                                    color: isDark ? Colors.white24 : Colors.black12,
+                                    color: isDark
+                                        ? Colors.white24
+                                        : Colors.black12,
                                     width: 1.2,
                                   ),
                                   shape: RoundedRectangleBorder(
@@ -534,14 +550,19 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                 ),
                               ),
                             ),
-                            if (defaultTargetPlatform == TargetPlatform.iOS) ...[
+                            if (defaultTargetPlatform ==
+                                TargetPlatform.iOS) ...[
                               const SizedBox(width: 12),
                               Expanded(
                                 child: SizedBox(
                                   height: 52,
                                   child: SignInWithAppleButton(
-                                    onPressed: _isLoading ? () {} : _submitApple,
-                                    style: isDark ? SignInWithAppleButtonStyle.white : SignInWithAppleButtonStyle.black,
+                                    onPressed: _isLoading
+                                        ? () {}
+                                        : _submitApple,
+                                    style: isDark
+                                        ? SignInWithAppleButtonStyle.white
+                                        : SignInWithAppleButtonStyle.black,
                                     borderRadius: BorderRadius.circular(12.0),
                                     text: 'Apple',
                                   ),

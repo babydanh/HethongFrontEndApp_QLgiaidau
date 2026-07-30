@@ -221,17 +221,20 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                         children: [
                           CircleAvatar(
                             radius: 14,
-                            backgroundColor: AppTheme.primary.withValues(
-                              alpha: 0.1,
-                            ),
-                            child: Text(
-                              sender.isNotEmpty ? sender[0].toUpperCase() : '?',
-                              style: const TextStyle(
-                                color: AppTheme.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 10,
-                              ),
-                            ),
+                            backgroundColor: colors.border.withValues(alpha: 0.3),
+                            backgroundImage: (msg['senderAvatar'] != null && (msg['senderAvatar'] as String).isNotEmpty)
+                                ? NetworkImage(msg['senderAvatar'] as String)
+                                : null,
+                            child: (msg['senderAvatar'] == null || (msg['senderAvatar'] as String).isEmpty)
+                                ? Text(
+                                    sender.isNotEmpty ? sender[0].toUpperCase() : '?',
+                                    style: TextStyle(
+                                      color: colors.textPrimary,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 10,
+                                    ),
+                                  )
+                                : null,
                           ),
                           const SizedBox(width: 8),
                           Expanded(

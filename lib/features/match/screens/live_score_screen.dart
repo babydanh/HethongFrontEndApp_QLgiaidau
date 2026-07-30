@@ -125,7 +125,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     _spawnHeart();
     try {
       await ref.read(matchRepositoryProvider).cheerMatch(widget.matchId);
-    } catch (_) {}
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Chưa thể gửi cổ vũ. Vui lòng thử lại.')),
+      );
+    }
   }
 
   @override
@@ -520,17 +525,18 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       if (match.isScheduled) {
                         showDialog<void>(
                           context: context,
-                          builder: (_) => Dialog(child: _buildSetupState(match)),
+                          builder: (_) =>
+                              Dialog(child: _buildSetupState(match)),
                         );
                         return;
                       }
                       showOfficialScoreModal(
-                      context,
-                      tournamentId: widget.tournamentId,
-                      matchId: widget.matchId,
-                      match: match,
-                      onRecordPenalty: () => _showFoulSelectionDialog(match),
-                      onForceWin: () => _showForceWinDialog(match),
+                        context,
+                        tournamentId: widget.tournamentId,
+                        matchId: widget.matchId,
+                        match: match,
+                        onRecordPenalty: () => _showFoulSelectionDialog(match),
+                        onForceWin: () => _showForceWinDialog(match),
                       );
                     },
                     icon: const Icon(Icons.scoreboard_rounded, size: 18),
@@ -604,7 +610,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       color: context.colors.error,
                     ),
                     const SizedBox(height: 12),
-                    Text(ErrorParser.parse(e, 'Không thể tải dữ liệu trận đấu.'), style: const TextStyle(color: Colors.red)),
+                    Text(
+                      ErrorParser.parse(e, 'Không thể tải dữ liệu trận đấu.'),
+                      style: const TextStyle(color: Colors.red),
+                    ),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () => context.pop(),
@@ -756,30 +765,31 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               const SizedBox(height: 18),
               if (false)
                 TextField(
-                controller: _refereeController,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: context.colors.textPrimary,
+                  controller: _refereeController,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: context.colors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Tên trọng tài hoặc ghi chú nhanh',
+                    helperText:
+                        'Không bắt buộc. Chỉ hiển thị trong app nếu có.',
+                    prefixIcon: Icon(
+                      Icons.person_outline_rounded,
+                      color: context.colors.textMuted,
+                    ),
+                    filled: true,
+                    fillColor: context.colors.bgDark,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: context.colors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: context.colors.border),
+                    ),
+                  ),
                 ),
-                decoration: InputDecoration(
-                  labelText: 'Tên trọng tài hoặc ghi chú nhanh',
-                  helperText: 'Không bắt buộc. Chỉ hiển thị trong app nếu có.',
-                  prefixIcon: Icon(
-                    Icons.person_outline_rounded,
-                    color: context.colors.textMuted,
-                  ),
-                  filled: true,
-                  fillColor: context.colors.bgDark,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: context.colors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: context.colors.border),
-                  ),
-                ),
-              ),
               const SizedBox(height: 24),
               SizedBox(
                 height: 52,
@@ -1445,9 +1455,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     );
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(ErrorParser.parse(e, 'Không thể cập nhật điểm trận đấu. Vui lòng thử lại.'))));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        ErrorParser.parse(
+                          e,
+                          'Không thể cập nhật điểm trận đấu. Vui lòng thử lại.',
+                        ),
+                      ),
+                    ),
+                  );
                 }
               }
             },

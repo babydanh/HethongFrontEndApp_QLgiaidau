@@ -47,8 +47,11 @@ class EloProgressChart extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.show_chart_outlined,
-                      size: 40, color: colors.textMuted.withValues(alpha: 0.5)),
+                  Icon(
+                    Icons.show_chart_outlined,
+                    size: 40,
+                    color: colors.textMuted.withValues(alpha: 0.5),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     'Chưa có dữ liệu biểu đồ ELO',
@@ -81,8 +84,11 @@ class EloProgressChart extends StatelessWidget {
             padding: const EdgeInsets.only(left: 8, bottom: 16),
             child: Row(
               children: [
-                Icon(Icons.trending_up_rounded,
-                    size: 18, color: colors.success),
+                Icon(
+                  Icons.trending_up_rounded,
+                  size: 18,
+                  color: colors.success,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'TIẾN TRÌNH ELO',
@@ -94,8 +100,10 @@ class EloProgressChart extends StatelessWidget {
                 ),
                 const Spacer(),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
@@ -106,8 +114,11 @@ class EloProgressChart extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.emoji_events_rounded,
-                          size: 14, color: colors.warning),
+                      Icon(
+                        Icons.emoji_events_rounded,
+                        size: 14,
+                        color: colors.warning,
+                      ),
                       const SizedBox(width: 5),
                       Text(
                         NumberFormat('#,###', 'vi_VN').format(currentElo),
@@ -163,9 +174,10 @@ class EloProgressChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 28,
-                      interval: (data.length / 4)
-                          .ceilToDouble()
-                          .clamp(1, double.infinity),
+                      interval: (data.length / 4).ceilToDouble().clamp(
+                        1,
+                        double.infinity,
+                      ),
                       getTitlesWidget: (value, meta) {
                         final index = value.toInt();
                         if (index < 0 || index >= data.length) {
@@ -206,7 +218,10 @@ class EloProgressChart extends StatelessWidget {
                 lineBarsData: [
                   LineChartBarData(
                     spots: data.asMap().entries.map((entry) {
-                      return FlSpot(entry.key.toDouble(), entry.value.$2.toDouble());
+                      return FlSpot(
+                        entry.key.toDouble(),
+                        entry.value.$2.toDouble(),
+                      );
                     }).toList(),
                     isCurved: true,
                     preventCurveOverShooting: true,
@@ -265,32 +280,4 @@ class EloProgressChart extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Generate mock ELO history data from a single current ELO value.
-///
-/// Useful when the real API endpoint is not available yet.
-/// Produces 6 data points spanning the last few months.
-List<(String label, int elo)> generateMockEloHistory(int currentElo) {
-  final months = [
-    'T1', 'T2', 'T3', 'T4', 'T5', 'T6',
-    'T7', 'T8', 'T9', 'T10', 'T11', 'T12',
-  ];
-  final now = DateTime.now();
-  final currentMonth = now.month;
-
-  final history = <(String, int)>[];
-  var elo = (currentElo * 0.7).round(); // Start at 70% of current
-  final step = ((currentElo - elo) / 6).round().clamp(1, 50);
-
-  for (var i = 0; i < 6; i++) {
-    final monthIndex = (currentMonth - 6 + i) % 12;
-    final monthLabel = months[monthIndex >= 0 ? monthIndex : monthIndex + 12];
-    elo += step + (i % 3 == 0 ? 10 : -5); // Some variation
-    history.add((monthLabel, elo.clamp(100, 3000)));
-  }
-  // Ensure last point matches current ELO
-  history.last = (months[(currentMonth - 1) % 12], currentElo);
-
-  return history;
 }

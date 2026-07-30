@@ -29,7 +29,6 @@ import 'package:app_quanly_giaidau/features/community/screens/club_invites_scree
 import 'package:app_quanly_giaidau/features/community/screens/edit_club_screen.dart';
 import 'package:app_quanly_giaidau/features/payment/screens/payments_screen.dart';
 import 'package:app_quanly_giaidau/features/payment/screens/checkout_screen.dart';
-import 'package:app_quanly_giaidau/features/payment/screens/mock_gateway_screen.dart';
 import 'package:app_quanly_giaidau/features/payment/screens/payos_verify_screen.dart';
 import 'package:app_quanly_giaidau/features/payment/screens/payment_result_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/profile_screen.dart';
@@ -629,10 +628,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             tournamentName: extra?['tournamentName']?.toString(),
           );
         },
-      ),
-      GoRoute(
-        path: '/payment/mock-gateway',
-        builder: (context, state) => const MockGatewayScreen(),
       ),
       GoRoute(
         path: '/payment/payos-verify',

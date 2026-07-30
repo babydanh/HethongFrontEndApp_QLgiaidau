@@ -123,9 +123,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
 
     // Khóa cứng màn hình dọc (Portrait) cho Trang chủ
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   }
 
   void _startCarouselTimer(int itemCount) {
@@ -674,7 +672,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 for (final s in club.sports) {
                   final sTrim = s.trim();
                   if (sTrim.isEmpty) continue;
-                  final mapped = AppConstants.sportNames[sTrim] ?? AppConstants.sportNames[sTrim.toLowerCase()] ?? sTrim;
+                  final mapped =
+                      AppConstants.sportNames[sTrim] ??
+                      AppConstants.sportNames[sTrim.toLowerCase()] ??
+                      sTrim;
                   if (!sportsList.contains(mapped)) sportsList.add(mapped);
                 }
               }
@@ -682,8 +683,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 sportsList.add('THỂ THAO');
               }
 
-              final displayMemberCount = club.memberCount > 0 ? club.memberCount : 2;
-              final locationText = (club.locationAddress != null && club.locationAddress!.trim().isNotEmpty)
+              final displayMemberCount = club.memberCount > 0
+                  ? club.memberCount
+                  : 2;
+              final locationText =
+                  (club.locationAddress != null &&
+                      club.locationAddress!.trim().isNotEmpty)
                   ? club.locationAddress!.trim()
                   : 'Việt Nam';
 
@@ -700,7 +705,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       decoration: BoxDecoration(
                         color: colors.bgCard,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+                        border: Border.all(
+                          color: colors.border.withValues(alpha: 0.8),
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.08),
@@ -725,7 +732,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           ? Image.network(
                                               resolvedBanner,
                                               fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) => _buildCommunityBannerFallback(),
+                                              errorBuilder: (_, __, ___) =>
+                                                  _buildCommunityBannerFallback(),
                                             )
                                           : _buildCommunityBannerFallback(),
                                     ),
@@ -736,8 +744,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                             begin: Alignment.topCenter,
                                             end: Alignment.bottomCenter,
                                             colors: [
-                                              Colors.black.withValues(alpha: 0.15),
-                                              Colors.black.withValues(alpha: 0.45),
+                                              Colors.black.withValues(
+                                                alpha: 0.15,
+                                              ),
+                                              Colors.black.withValues(
+                                                alpha: 0.45,
+                                              ),
                                             ],
                                           ),
                                         ),
@@ -750,10 +762,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               // 2. Card Body Content
                               Expanded(
                                 child: Padding(
-                                  padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
+                                  padding: const EdgeInsets.fromLTRB(
+                                    10,
+                                    20,
+                                    10,
+                                    10,
+                                  ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       // Title
                                       Text(
@@ -774,11 +793,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         child: Row(
                                           children: sportsList.map((s) {
                                             return Container(
-                                              margin: const EdgeInsets.only(right: 4),
-                                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                              margin: const EdgeInsets.only(
+                                                right: 4,
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 5,
+                                                    vertical: 1.5,
+                                                  ),
                                               decoration: BoxDecoration(
-                                                color: AppTheme.primary.withValues(alpha: 0.12),
-                                                borderRadius: BorderRadius.circular(4),
+                                                color: AppTheme.primary
+                                                    .withValues(alpha: 0.12),
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
                                               ),
                                               child: Text(
                                                 s.toUpperCase(),
@@ -853,7 +880,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: colors.bgSurface,
-                                border: Border.all(color: colors.bgCard, width: 2),
+                                border: Border.all(
+                                  color: colors.bgCard,
+                                  width: 2,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withValues(alpha: 0.15),
@@ -868,7 +898,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         resolvedLogo,
                                         fit: BoxFit.cover,
                                         errorBuilder: (_, __, ___) => Container(
-                                          color: AppTheme.primary.withValues(alpha: 0.15),
+                                          color: AppTheme.primary.withValues(
+                                            alpha: 0.15,
+                                          ),
                                           child: const Icon(
                                             Icons.groups_rounded,
                                             color: AppTheme.primary,
@@ -877,7 +909,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         ),
                                       )
                                     : Container(
-                                        color: AppTheme.primary.withValues(alpha: 0.15),
+                                        color: AppTheme.primary.withValues(
+                                          alpha: 0.15,
+                                        ),
                                         child: const Icon(
                                           Icons.groups_rounded,
                                           color: AppTheme.primary,
@@ -911,11 +945,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1E3A8A),
-            Color(0xFF2563EB),
-            Color(0xFF3B82F6),
-          ],
+          colors: [Color(0xFF1E3A8A), Color(0xFF2563EB), Color(0xFF3B82F6)],
         ),
       ),
       child: Center(
@@ -930,7 +960,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildNotificationBellHeader() {
     final unreadAsync = ref.watch(unreadCountProvider);
-    final unread = unreadAsync.value ?? 3; // Default show live badge
+    final unread = unreadAsync.value ?? 0;
     return GestureDetector(
       onTap: () => context.push("/notifications"),
       child: Container(
@@ -954,7 +984,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               top: -2.0,
               right: -2.0,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 1.5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEF4444),
                   borderRadius: BorderRadius.circular(10),
@@ -1069,26 +1102,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return rankingsAsync.when(
           data: (rankings) {
             // Lấy môn có số trận thi đấu nhiều nhất / ELO cao nhất
-            final playedRankings = rankings.where((r) => r.matchesPlayed > 0).toList()
-              ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
+            final playedRankings =
+                rankings.where((r) => r.matchesPlayed > 0).toList()
+                  ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
 
-            final bestRank = playedRankings.isNotEmpty ? playedRankings.first : null;
+            final bestRank = playedRankings.isNotEmpty
+                ? playedRankings.first
+                : null;
             final hasPlayed = bestRank != null && bestRank.matchesPlayed > 0;
 
             final sportName = hasPlayed
-                ? (bestRank.categoryName?.trim().isNotEmpty == true ? bestRank.categoryName!.trim() : 'Pickleball')
+                ? (bestRank.categoryName?.trim().isNotEmpty == true
+                      ? bestRank.categoryName!.trim()
+                      : 'Pickleball')
                 : (_activeSportFilter != 'all'
-                    ? (AppConstants.sportNames[_activeSportFilter] ?? 'Pickleball')
-                    : 'Pickleball');
+                      ? (AppConstants.sportNames[_activeSportFilter] ??
+                            'Pickleball')
+                      : 'Pickleball');
 
             final tierName = EloHelpers.getRankTierName(bestRank);
             final elo = hasPlayed ? bestRank.eloPoints : 1000;
             final wins = hasPlayed ? bestRank.matchesWon : 0;
             final totalMatches = hasPlayed ? bestRank.matchesPlayed : 0;
-            final winRate = totalMatches > 0 ? ((wins / totalMatches) * 100).round() : 0;
+            final winRate = totalMatches > 0
+                ? ((wins / totalMatches) * 100).round()
+                : 0;
 
             final progressInfo = EloHelpers.getEloProgressInfo(elo);
-            final progressPercent = hasPlayed ? (progressInfo.percent / 100.0).clamp(0.0, 1.0) : 0.0;
+            final progressPercent = hasPlayed
+                ? (progressInfo.percent / 100.0).clamp(0.0, 1.0)
+                : 0.0;
             final progressLabel = hasPlayed
                 ? progressInfo.label
                 : 'Đánh 1 trận xếp hạng để bắt đầu tiến trình ELO';
@@ -1123,7 +1166,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.18),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withOpacity(0.32), width: 1.2),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.32),
+                      width: 1.2,
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.08),
@@ -1160,7 +1206,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ],
                           ),
                           const Spacer(),
-                          _buildStatTableRow("Trận", "$totalMatches", Colors.white),
+                          _buildStatTableRow(
+                            "Trận",
+                            "$totalMatches",
+                            Colors.white,
+                          ),
                           const SizedBox(width: 14),
                           _buildStatTableRow("Thắng", "$wins", Colors.white),
                           const SizedBox(width: 14),
@@ -1178,7 +1228,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: LinearProgressIndicator(
                           value: progressPercent,
                           backgroundColor: Colors.white.withOpacity(0.2),
-                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFFFFD700),
+                          ),
                           minHeight: 4,
                         ),
                       ),
@@ -2745,149 +2797,169 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
 
-              // ─── Content Area ───
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 30, 14, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Club name (no fake verified tick)
-                    Text(
-                      club.name,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: context.colors.textPrimary,
-                        letterSpacing: -0.2,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-
-                    // Stats (Members & Location)
-                    Row(
+                  // ─── Content Area ───
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 30, 14, 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.people_rounded,
-                          size: 14,
-                          color: context.colors.textSecondary,
-                        ),
-                        const SizedBox(width: 4),
+                        // Club name (no fake verified tick)
                         Text(
-                          "${club.memberCount > 0 ? club.memberCount : 2} thành viên",
+                          club.name,
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: context.colors.textSecondary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: context.colors.textPrimary,
+                            letterSpacing: -0.2,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(width: 16),
-                        Icon(
-                          Icons.location_on_rounded,
-                          size: 14,
-                          color: context.colors.textMuted,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            (club.locationAddress != null && club.locationAddress!.trim().isNotEmpty)
-                                ? club.locationAddress!.trim()
-                                : "Việt Nam",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.colors.textMuted,
-                              fontWeight: FontWeight.w600,
+                        const SizedBox(height: 6),
+
+                        // Stats (Members & Location)
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.people_rounded,
+                              size: 14,
+                              color: context.colors.textSecondary,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            const SizedBox(width: 4),
+                            Text(
+                              "${club.memberCount > 0 ? club.memberCount : 2} thành viên",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: context.colors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Icon(
+                              Icons.location_on_rounded,
+                              size: 14,
+                              color: context.colors.textMuted,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                (club.locationAddress != null &&
+                                        club.locationAddress!.trim().isNotEmpty)
+                                    ? club.locationAddress!.trim()
+                                    : "Việt Nam",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: context.colors.textMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+
+                        // All Sports Tags (Pills)
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: Row(
+                            children: (() {
+                              final List<String> sports = [];
+                              if (club.sports.isNotEmpty) {
+                                for (final s in club.sports) {
+                                  final sTrim = s.trim();
+                                  if (sTrim.isEmpty) continue;
+                                  final mapped =
+                                      AppConstants.sportNames[sTrim] ??
+                                      AppConstants.sportNames[sTrim
+                                          .toLowerCase()] ??
+                                      sTrim;
+                                  if (!sports.contains(mapped))
+                                    sports.add(mapped);
+                                }
+                              }
+                              if (sports.isEmpty) {
+                                sports.add('THỂ THAO');
+                              }
+                              return sports.map((sName) {
+                                return Container(
+                                  margin: const EdgeInsets.only(right: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 9,
+                                    vertical: 3.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: sportColor.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: sportColor.withValues(alpha: 0.25),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    sName.toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w900,
+                                      color: sportColor,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                );
+                              }).toList();
+                            })(),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
-
-                    // All Sports Tags (Pills)
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      child: Row(
-                        children: (() {
-                          final List<String> sports = [];
-                          if (club.sports.isNotEmpty) {
-                            for (final s in club.sports) {
-                              final sTrim = s.trim();
-                              if (sTrim.isEmpty) continue;
-                              final mapped = AppConstants.sportNames[sTrim] ?? AppConstants.sportNames[sTrim.toLowerCase()] ?? sTrim;
-                              if (!sports.contains(mapped)) sports.add(mapped);
-                            }
-                          }
-                          if (sports.isEmpty) {
-                            sports.add('THỂ THAO');
-                          }
-                          return sports.map((sName) {
-                            return Container(
-                              margin: const EdgeInsets.only(right: 6),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 9,
-                                vertical: 3.5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: sportColor.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: sportColor.withValues(alpha: 0.25),
-                                ),
-                              ),
-                              child: Text(
-                                sName.toUpperCase(),
-                                style: TextStyle(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w900,
-                                  color: sportColor,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            );
-                          }).toList();
-                        })(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          // Floating Logo — rendered ON TOP of Column & Content Area (top: 114)
-          Positioned(
-            top: 114,
-            left: 14,
-            child: Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                color: context.colors.bgCard,
-                border: Border.all(
-                  color: context.colors.bgCard,
-                  width: 2.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
-              child: club.logoUrl != null && club.logoUrl!.isNotEmpty
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        club.logoUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
+
+              // Floating Logo — rendered ON TOP of Column & Content Area (top: 114)
+              Positioned(
+                top: 114,
+                left: 14,
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    color: context.colors.bgCard,
+                    border: Border.all(
+                      color: context.colors.bgCard,
+                      width: 2.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: club.logoUrl != null && club.logoUrl!.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            club.logoUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              decoration: BoxDecoration(
+                                color: sportColor,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  emoji,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      : Container(
                           decoration: BoxDecoration(
                             color: sportColor,
                             borderRadius: BorderRadius.circular(12),
@@ -2899,28 +2971,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ),
                         ),
-                      ),
-                    )
-                  : Container(
-                      decoration: BoxDecoration(
-                        color: sportColor,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: Text(
-                          emoji,
-                          style: const TextStyle(fontSize: 20),
-                        ),
-                      ),
-                    ),
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-    ),
-  ),
-);
-}
+    );
+  }
 
   Widget _buildCardBannerFallback(Color sportColor, String emoji) {
     return Container(
@@ -2928,11 +2986,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1E3A8A),
-            Color(0xFF2563EB),
-            Color(0xFF3B82F6),
-          ],
+          colors: [Color(0xFF1E3A8A), Color(0xFF2563EB), Color(0xFF3B82F6)],
         ),
       ),
       child: Center(
