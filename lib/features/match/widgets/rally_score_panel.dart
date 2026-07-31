@@ -34,219 +34,143 @@ class RallyScorePanel extends ConsumerWidget {
     final team1Name = matchAsync.value?.team1Name ?? l10n.pickleballTeam1;
     final team2Name = matchAsync.value?.team2Name ?? l10n.pickleballTeam2;
 
-    return OrientationBuilder(
-      builder: (context, orientation) {
-        final isLandscape = orientation == Orientation.landscape;
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Đội 1 (Bên trái)
-              Expanded(
-                child: _buildSideLayout(
-                  isTeam1: true,
-                  score: r.currentP1,
-                  colors: colors,
-                  teamName: team1Name,
-                  isLandscape: isLandscape,
-                  onIncrement: () => notifier.rallyAddPoint(true),
-                  onDecrement: () => notifier.rallyRemovePoint(true),
-                ),
-              ),
-              const SizedBox(width: 10),
-              // Đường gạch giữa phân cách 2 đội
-              Container(
-                width: 1.5,
-                margin: const EdgeInsets.symmetric(vertical: 20),
-                color: colors.border.withValues(alpha: 0.6),
-              ),
-              const SizedBox(width: 10),
-              // Đội 2 (Bên phải)
-              Expanded(
-                child: _buildSideLayout(
-                  isTeam1: false,
-                  score: r.currentP2,
-                  colors: colors,
-                  teamName: team2Name,
-                  isLandscape: isLandscape,
-                  onIncrement: () => notifier.rallyAddPoint(false),
-                  onDecrement: () => notifier.rallyRemovePoint(false),
-                ),
-              ),
-            ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      child: Column(
+        children: [
+          // ĐỘI 1 (BLUE - NẰM Ở Ô TRÊN)
+          Expanded(
+            child: _buildTeamCardHorizontalScore(
+              isTeam1: true,
+              score: r.currentP1,
+              colors: colors,
+              teamName: team1Name,
+              onIncrement: () => notifier.rallyAddPoint(true),
+              onDecrement: () => notifier.rallyRemovePoint(true),
+            ),
           ),
-        );
-      },
+          const SizedBox(height: 10),
+          // ĐỘI 2 (RED - NẰM Ở Ô DƯỚI)
+          Expanded(
+            child: _buildTeamCardHorizontalScore(
+              isTeam1: false,
+              score: r.currentP2,
+              colors: colors,
+              teamName: team2Name,
+              onIncrement: () => notifier.rallyAddPoint(false),
+              onDecrement: () => notifier.rallyRemovePoint(false),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildSideLayout({
+  Widget _buildTeamCardHorizontalScore({
     required bool isTeam1,
     required int score,
     required AppColorsExtension colors,
     required String teamName,
-    required bool isLandscape,
     required VoidCallback onIncrement,
     required VoidCallback onDecrement,
   }) {
     final color = isTeam1 ? const Color(0xFF2979FF) : const Color(0xFFEA580C);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.35), width: 1.8),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.06),
-            blurRadius: 12,
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 14,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
-          // Tên vận động viên (cho xuống dòng to rõ)
-          SizedBox(
-            height: 42,
-            child: Center(
-              child: Text(
-                teamName,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: colors.textPrimary,
-                  height: 1.2,
-                  letterSpacing: -0.2,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+          // Tên vận động viên / Đội (NẰM Ở TRÊN CÙNG MỖI Ô)
+          Text(
+            teamName,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: colors.textPrimary,
+              height: 1.2,
             ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          
-          if (isLandscape) ...[
-            // MÀN HÌNH NGANG (LANDSCAPE): [-]  [ SỐ 0 ]  [+]
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  if (!isReadOnly)
-                    GestureDetector(
-                      onTap: onDecrement,
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: colors.bgSurface,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: colors.border, width: 1.2),
-                        ),
-                        child: Icon(
-                          Icons.remove_rounded,
-                          size: 24,
-                          color: colors.textSecondary,
-                        ),
+          const SizedBox(height: 8),
+
+          // HÀNG NGANG: [- SÁT VIỀN TRÁI] | [SỐ 0 Ở GIỮA] | [+ SÁT VIỀN PHẢI]
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // NÚT - (SÁT VIỀN TRÁI)
+                if (!isReadOnly)
+                  GestureDetector(
+                    onTap: onDecrement,
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: colors.bgSurface,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: colors.border, width: 1.5),
                       ),
-                    ),
-                  Expanded(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(
-                          '$score',
-                          style: TextStyle(
-                            fontSize: 72,
-                            fontWeight: FontWeight.w900,
-                            color: color,
-                            height: 1.0,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                      child: Icon(
+                        Icons.remove_rounded,
+                        size: 28,
+                        color: colors.textSecondary,
                       ),
                     ),
                   ),
-                  if (!isReadOnly)
-                    GestureDetector(
-                      onTap: onIncrement,
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
+
+                // SỐ ĐIỂM 0 (NẰM NỔI BẬT NẰM NGANG SONG SONG Ở CHÍNH GIỮA)
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        '$score',
+                        style: TextStyle(
+                          fontSize: 84,
+                          fontWeight: FontWeight.w900,
+                          color: color,
+                          height: 1.0,
                         ),
-                        child: Icon(Icons.add_rounded, size: 28, color: color),
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                ],
-              ),
-            ),
-          ] else ...[
-            // MÀN HÌNH ĐỨNG (PORTRAIT): NÚT + TRÊN | SỐ 0 GIỮA | NÚT - DƯỚI
-            Expanded(
-              child: Center(
-                child: isReadOnly
-                    ? const SizedBox.shrink()
-                    : GestureDetector(
-                        onTap: onIncrement,
-                        child: Container(
-                          width: 52,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: color.withValues(alpha: 0.4), width: 1.8),
-                          ),
-                          child: Icon(Icons.add_rounded, size: 30, color: color),
-                        ),
-                      ),
-              ),
-            ),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                '$score',
-                style: TextStyle(
-                  fontSize: 72,
-                  fontWeight: FontWeight.w900,
-                  color: color,
-                  height: 1.0,
+                  ),
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            Expanded(
-              child: Center(
-                child: isReadOnly
-                    ? const SizedBox.shrink()
-                    : GestureDetector(
-                        onTap: onDecrement,
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: colors.bgSurface,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: colors.border, width: 1.2),
-                          ),
-                          child: Icon(
-                            Icons.remove_rounded,
-                            size: 24,
-                            color: colors.textSecondary,
-                          ),
-                        ),
+
+                // NÚT + (SÁT VIỀN PHẢI)
+                if (!isReadOnly)
+                  GestureDetector(
+                    onTap: onIncrement,
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.16),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: color.withValues(alpha: 0.45), width: 1.8),
                       ),
-              ),
+                      child: Icon(Icons.add_rounded, size: 34, color: color),
+                    ),
+                  ),
+              ],
             ),
-          ],
+          ),
         ],
       ),
     );

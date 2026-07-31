@@ -222,7 +222,9 @@ class PickleballPanel extends ConsumerWidget {
               color: colors.bgCard,
               borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               border: Border.all(
-                color: isServing ? const Color(0xFFFFA500) : color.withValues(alpha: 0.3),
+                color: isServing
+                    ? const Color(0xFFFFA500)
+                    : color.withValues(alpha: 0.3),
                 width: isServing ? 2.0 : 1.5,
               ),
               boxShadow: [
@@ -283,7 +285,10 @@ class PickleballPanel extends ConsumerWidget {
                               decoration: BoxDecoration(
                                 color: colors.bgSurface,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: colors.border, width: 1.2),
+                                border: Border.all(
+                                  color: colors.border,
+                                  width: 1.2,
+                                ),
                               ),
                               child: Icon(
                                 Icons.remove_rounded,
@@ -296,7 +301,9 @@ class PickleballPanel extends ConsumerWidget {
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
                               child: Text(
                                 '$score',
                                 style: TextStyle(
@@ -319,9 +326,16 @@ class PickleballPanel extends ConsumerWidget {
                               decoration: BoxDecoration(
                                 color: color.withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
-                                border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
+                                border: Border.all(
+                                  color: color.withValues(alpha: 0.4),
+                                  width: 1.5,
+                                ),
                               ),
-                              child: Icon(Icons.add_rounded, size: 28, color: color),
+                              child: Icon(
+                                Icons.add_rounded,
+                                size: 28,
+                                color: color,
+                              ),
                             ),
                           ),
                       ],
@@ -334,16 +348,24 @@ class PickleballPanel extends ConsumerWidget {
                       child: isReadOnly
                           ? const SizedBox.shrink()
                           : GestureDetector(
-                              onTap: () => notifier.pickleballAwardPoint(isTeam1),
+                              onTap: () =>
+                                  notifier.pickleballAwardPoint(isTeam1),
                               child: Container(
                                 width: 52,
                                 height: 52,
                                 decoration: BoxDecoration(
                                   color: color.withValues(alpha: 0.15),
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: color.withValues(alpha: 0.4), width: 1.8),
+                                  border: Border.all(
+                                    color: color.withValues(alpha: 0.4),
+                                    width: 1.8,
+                                  ),
                                 ),
-                                child: Icon(Icons.add_rounded, size: 30, color: color),
+                                child: Icon(
+                                  Icons.add_rounded,
+                                  size: 30,
+                                  color: color,
+                                ),
                               ),
                             ),
                     ),
@@ -373,7 +395,10 @@ class PickleballPanel extends ConsumerWidget {
                                 decoration: BoxDecoration(
                                   color: colors.bgSurface,
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: colors.border, width: 1.2),
+                                  border: Border.all(
+                                    color: colors.border,
+                                    width: 1.2,
+                                  ),
                                 ),
                                 child: Icon(
                                   Icons.remove_rounded,
