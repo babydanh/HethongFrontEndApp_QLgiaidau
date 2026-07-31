@@ -16,39 +16,6 @@ class TableTennisScorePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: colors.warning.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-            border: Border.all(color: colors.warning.withValues(alpha: 0.22)),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.sports_score_rounded, size: 18, color: colors.warning),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Bóng bàn dùng rally point: thường chạm 11, thắng cách 2; lưu ý đổi giao bóng theo luật giải nếu cần.',
-                  style: TextStyle(
-                    fontSize: 11,
-                    height: 1.35,
-                    color: colors.textSecondary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        RallyScorePanel(params: params, isReadOnly: isReadOnly),
-      ],
-    );
+    return RallyScorePanel(params: params, isReadOnly: isReadOnly);
   }
 }

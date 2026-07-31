@@ -91,11 +91,11 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 1. TOP HEADER BAR: Match Title & Quick Status
+                  // 1. TOP HEADER BAR: Match Title & Info Popup Button
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 8,
+                      vertical: 10,
                     ),
                     color: colors.bgSurface,
                     child: Row(
@@ -111,31 +111,19 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
+                        // NÚT ICON (i) ĐỂ HIỂN THỊ POPUP THÔNG TIN CÀI ĐẶT GIẢI
+                        IconButton(
+                          icon: Icon(
+                            Icons.info_outline_rounded,
+                            size: 22,
+                            color: AppTheme.primary,
                           ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusMedium,
-                            ),
-                            border: Border.all(
-                              color: AppTheme.primary.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Text(
-                            _sportLabel(kind).toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.primary,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
+                          tooltip: 'Cài đặt & Luật giải',
+                          onPressed: () {
+                            _showMatchInfoDialog(context, widget.match, config, kind, colors, l10n);
+                          },
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 4),
                         IconButton(
                           icon: const Icon(Icons.close_rounded, size: 22),
                           onPressed: () {
@@ -143,49 +131,6 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                           },
                         ),
                       ],
-                    ),
-                  ),
-
-                  // 2. CONFIG BAR (ĐẨY HẾT NẰM NGANG TRÊN CÙNG)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 6,
-                    ),
-                    color: colors.bgSurface.withValues(alpha: 0.5),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _RuleChip(label: 'BO${config.bestOf}'),
-                          const SizedBox(width: 6),
-                          _RuleChip(label: 'Thắng ${config.setsToWin} set'),
-                          const SizedBox(width: 6),
-                          _RuleChip(
-                            label:
-                                '${config.pointsPerSet} ${kind == SportRuleKind.tennis ? 'game/set' : 'điểm/set'}',
-                          ),
-                          if (config.mustWinByTwo) ...[
-                            const SizedBox(width: 6),
-                            _RuleChip(label: l10n.matchWinByTwo),
-                          ],
-                          const SizedBox(width: 6),
-                          _RuleChip(
-                            label: _scoringModelLabel(config.scoringModel),
-                          ),
-                          if (config.maxPoints > config.pointsPerSet) ...[
-                            const SizedBox(width: 6),
-                            _RuleChip(label: 'Trần điểm ${config.maxPoints}'),
-                          ],
-                          if (widget.match.court.isNotEmpty) ...[
-                            const SizedBox(width: 6),
-                            _RuleChip(label: 'Sân: ${widget.match.court}'),
-                          ],
-                          const SizedBox(width: 6),
-                          _RuleChip(label: 'Vòng ${widget.match.round}'),
-                        ],
-                      ),
                     ),
                   ),
                   const Divider(height: 1, thickness: 1),
@@ -311,256 +256,254 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                 ),
                               ),
                             ],
-                            Row(
-                              children: [
-                                // Toggle Ngoại lệ
-                                FilterChip(
-                                  selected: state.overrideEnabled,
-                                  onSelected: (sel) =>
-                                      n.setOverride(sel, state.overrideReason),
-                                  label: Text(
-                                    state.overrideEnabled
-                                        ? 'Ngoại lệ: BẬT'
-                                        : l10n.matchOverrideLabel,
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  // Toggle Ngoại lệ
+                                  FilterChip(
+                                    selected: state.overrideEnabled,
+                                    onSelected: (sel) =>
+                                        n.setOverride(sel, state.overrideReason),
+                                    label: Text(
+                                      state.overrideEnabled
+                                          ? 'Ngoại lệ: BẬT'
+                                          : l10n.matchOverrideLabel,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: state.overrideEnabled
+                                            ? colors.warning
+                                            : colors.textMuted,
+                                      ),
+                                    ),
+                                    selectedColor: colors.warning.withValues(
+                                      alpha: 0.16,
+                                    ),
+                                    backgroundColor: colors.bgCard,
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  // Tag Hình phạt theo môn
+                                  Text(
+                                    'Phạt: ',
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
-                                      color: state.overrideEnabled
-                                          ? colors.warning
-                                          : colors.textMuted,
+                                      color: colors.textMuted,
                                     ),
                                   ),
-                                  selectedColor: colors.warning.withValues(
-                                    alpha: 0.16,
-                                  ),
-                                  backgroundColor: colors.bgCard,
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                                const SizedBox(width: 8),
-                                // Tag Hình phạt theo môn
-                                Text(
-                                  'Phạt: ',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: colors.textMuted,
-                                  ),
-                                ),
-                                const SizedBox(width: 2),
-                                Expanded(
-                                  child: SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      children: strategy
-                                          .getOptions()
-                                          .take(4)
-                                          .map((option) {
-                                            return Container(
-                                              margin: const EdgeInsets.only(
-                                                right: 6,
-                                              ),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 4,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: option.color.withValues(
-                                                  alpha: 0.12,
+                                  const SizedBox(width: 2),
+                                  Row(
+                                    children: strategy
+                                        .getOptions()
+                                        .take(4)
+                                        .map((option) {
+                                          return Container(
+                                            margin: const EdgeInsets.only(
+                                              right: 6,
+                                            ),
+                                            padding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 4,
                                                 ),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      AppTheme.radiusSmall,
-                                                    ),
+                                            decoration: BoxDecoration(
+                                              color: option.color.withValues(
+                                                alpha: 0.12,
                                               ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    option.icon,
-                                                    size: 12,
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppTheme.radiusSmall,
+                                                  ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  option.icon,
+                                                  size: 12,
+                                                  color: option.color,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  option.name,
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight:
+                                                        FontWeight.w700,
                                                     color: option.color,
                                                   ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    option.name,
-                                                    style: TextStyle(
-                                                      fontSize: 10,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color: option.color,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          })
-                                          .toList(),
-                                    ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        })
+                                        .toList(),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                // Action buttons
-                                if (widget.onRecordPenalty != null)
-                                  OutlinedButton.icon(
-                                    onPressed: widget.onRecordPenalty,
-                                    icon: const Icon(
-                                      Icons.gavel_rounded,
-                                      size: 15,
-                                    ),
-                                    label: Text(
-                                      l10n.matchRecordPenalty,
-                                      style: const TextStyle(fontSize: 11),
-                                    ),
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 8,
+                                  const SizedBox(width: 8),
+                                  // Action buttons
+                                  if (widget.onRecordPenalty != null)
+                                    OutlinedButton.icon(
+                                      onPressed: widget.onRecordPenalty,
+                                      icon: const Icon(
+                                        Icons.gavel_rounded,
+                                        size: 15,
                                       ),
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                  ),
-                                if (widget.onRecordPenalty != null &&
-                                    widget.onForceWin != null)
-                                  const SizedBox(width: 6),
-                                if (widget.onForceWin != null)
-                                  FilledButton.icon(
-                                    onPressed: widget.onForceWin,
-                                    icon: const Icon(
-                                      Icons.emoji_events_rounded,
-                                      size: 15,
-                                    ),
-                                    label: Text(
-                                      l10n.matchForceWin,
-                                      style: const TextStyle(fontSize: 11),
-                                    ),
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: colors.error,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 8,
+                                      label: Text(
+                                        l10n.matchRecordPenalty,
+                                        style: const TextStyle(fontSize: 11),
                                       ),
-                                      visualDensity: VisualDensity.compact,
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        visualDensity: VisualDensity.compact,
+                                      ),
                                     ),
-                                  ),
-                                if (!state.isMatchComplete &&
-                                    n.finishSetConfirmMessage() != null) ...[
-                                  const SizedBox(width: 6),
-                                  OutlinedButton.icon(
-                                    onPressed: state.isSubmitting
-                                        ? null
-                                        : () async {
-                                            final message = n
-                                                .finishSetConfirmMessage();
-                                            if (message == null) return;
-                                            final confirmed =
-                                                await showDialog<bool>(
-                                                  context: context,
-                                                  builder: (dialogContext) =>
-                                                      AlertDialog(
-                                                        title: Text(
-                                                          l10n.matchFinishSet,
+                                  if (widget.onRecordPenalty != null &&
+                                      widget.onForceWin != null)
+                                    const SizedBox(width: 6),
+                                  if (widget.onForceWin != null)
+                                    FilledButton.icon(
+                                      onPressed: widget.onForceWin,
+                                      icon: const Icon(
+                                        Icons.emoji_events_rounded,
+                                        size: 15,
+                                      ),
+                                      label: Text(
+                                        l10n.matchForceWin,
+                                        style: const TextStyle(fontSize: 11),
+                                      ),
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: colors.error,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        visualDensity: VisualDensity.compact,
+                                      ),
+                                    ),
+                                  if (!state.isMatchComplete &&
+                                      n.finishSetConfirmMessage() != null) ...[
+                                    const SizedBox(width: 6),
+                                    OutlinedButton.icon(
+                                      onPressed: state.isSubmitting
+                                          ? null
+                                          : () async {
+                                              final message = n
+                                                  .finishSetConfirmMessage();
+                                              if (message == null) return;
+                                              final confirmed =
+                                                  await showDialog<bool>(
+                                                    context: context,
+                                                    builder: (dialogContext) =>
+                                                        AlertDialog(
+                                                          title: Text(
+                                                            l10n.matchFinishSet,
+                                                          ),
+                                                          content: Text(message),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                    dialogContext,
+                                                                    false,
+                                                                  ),
+                                                              child: const Text(
+                                                                'Hủy',
+                                                              ),
+                                                            ),
+                                                            FilledButton(
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                    dialogContext,
+                                                                    true,
+                                                                  ),
+                                                              child: Text(
+                                                                l10n.matchFinishSet,
+                                                              ),
+                                                            ),
+                                                          ],
                                                         ),
-                                                        content: Text(message),
-                                                        actions: [
-                                                          TextButton(
-                                                            onPressed: () =>
-                                                                Navigator.pop(
-                                                                  dialogContext,
-                                                                  false,
-                                                                ),
-                                                            child: const Text(
-                                                              'Hủy',
-                                                            ),
-                                                          ),
-                                                          FilledButton(
-                                                            onPressed: () =>
-                                                                Navigator.pop(
-                                                                  dialogContext,
-                                                                  true,
-                                                                ),
-                                                            child: Text(
-                                                              l10n.matchFinishSet,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                );
-                                            if (confirmed == true)
-                                              await n.finishSet();
-                                          },
-                                    icon: const Icon(
-                                      Icons.flag_rounded,
-                                      size: 15,
-                                    ),
-                                    label: Text(
-                                      l10n.matchFinishSet,
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
+                                                  );
+                                              if (confirmed == true)
+                                                await n.finishSet();
+                                            },
+                                      icon: const Icon(
+                                        Icons.flag_rounded,
+                                        size: 15,
+                                      ),
+                                      label: Text(
+                                        l10n.matchFinishSet,
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                  ],
+                                  if (state.isMatchComplete ||
+                                      state.overrideEnabled) ...[
+                                    const SizedBox(width: 6),
+                                    FilledButton.icon(
+                                      onPressed:
+                                          state.isSubmitting ||
+                                              (state.overrideEnabled &&
+                                                  state.overrideReason
+                                                      .trim()
+                                                      .isEmpty)
+                                          ? null
+                                          : () async {
+                                              final winnerTeam =
+                                                  state.winnerTeam != 0
+                                                  ? state.winnerTeam
+                                                  : (state.team1SetWins >=
+                                                            state.team2SetWins
+                                                        ? 1
+                                                        : 2);
+                                              await n.completeMatch(winnerTeam);
+                                              final latest = ref.read(
+                                                scorePanelNotifierProvider(
+                                                  params,
+                                                ),
+                                              );
+                                              if (context.mounted &&
+                                                  !latest.isSubmitting &&
+                                                  latest.errorMessage == null) {
+                                                Navigator.of(context).pop();
+                                              }
+                                            },
+                                      icon: const Icon(
+                                        Icons.check_circle_rounded,
+                                        size: 15,
+                                      ),
+                                      label: Text(
+                                        state.isSubmitting
+                                            ? 'Đang lưu...'
+                                            : (state.isMatchComplete
+                                                  ? l10n.matchSaveMatch
+                                                  : l10n.matchSaveResult),
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: state.isMatchComplete
+                                            ? colors.success
+                                            : colors.warning,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        visualDensity: VisualDensity.compact,
+                                      ),
+                                    ),
+                                  ],
                                 ],
-                                if (state.isMatchComplete ||
-                                    state.overrideEnabled) ...[
-                                  const SizedBox(width: 6),
-                                  FilledButton.icon(
-                                    onPressed:
-                                        state.isSubmitting ||
-                                            (state.overrideEnabled &&
-                                                state.overrideReason
-                                                    .trim()
-                                                    .isEmpty)
-                                        ? null
-                                        : () async {
-                                            final winnerTeam =
-                                                state.winnerTeam != 0
-                                                ? state.winnerTeam
-                                                : (state.team1SetWins >=
-                                                          state.team2SetWins
-                                                      ? 1
-                                                      : 2);
-                                            await n.completeMatch(winnerTeam);
-                                            final latest = ref.read(
-                                              scorePanelNotifierProvider(
-                                                params,
-                                              ),
-                                            );
-                                            if (context.mounted &&
-                                                !latest.isSubmitting &&
-                                                latest.errorMessage == null) {
-                                              Navigator.of(context).pop();
-                                            }
-                                          },
-                                    icon: const Icon(
-                                      Icons.check_circle_rounded,
-                                      size: 15,
-                                    ),
-                                    label: Text(
-                                      state.isSubmitting
-                                          ? 'Đang lưu...'
-                                          : (state.isMatchComplete
-                                                ? l10n.matchSaveMatch
-                                                : l10n.matchSaveResult),
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: state.isMatchComplete
-                                          ? colors.success
-                                          : colors.warning,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 8,
-                                      ),
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                  ),
-                                ],
-                              ],
+                              ),
                             ),
                           ],
                         ),
@@ -651,6 +594,79 @@ class ScoreWarningBox extends StatelessWidget {
       ),
     );
   }
+}
+
+void _showMatchInfoDialog(
+  BuildContext context,
+  MatchModel match,
+  SportConfig config,
+  SportRuleKind kind,
+  AppColorsExtension colors,
+  AppLocalizations l10n,
+) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: colors.bgCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+      ),
+      title: Row(
+        children: [
+          Icon(Icons.info_outline_rounded, color: AppTheme.primary, size: 22),
+          const SizedBox(width: 8),
+          Text(
+            'Thông tin & Cài đặt trận đấu',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: colors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${match.team1Name} vs ${match.team2Name}',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.primary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              _RuleChip(label: 'Môn: ${_sportLabel(kind)}'),
+              _RuleChip(label: 'Thể thức: BO${config.bestOf}'),
+              _RuleChip(label: 'Số set thắng: ${config.setsToWin} set'),
+              _RuleChip(
+                label:
+                    'Mốc set: ${config.pointsPerSet} ${kind == SportRuleKind.tennis ? 'game/set' : 'điểm/set'}',
+              ),
+              if (config.mustWinByTwo) _RuleChip(label: l10n.matchWinByTwo),
+              _RuleChip(label: _scoringModelLabel(config.scoringModel)),
+              if (config.maxPoints > config.pointsPerSet)
+                _RuleChip(label: 'Trần điểm: ${config.maxPoints}'),
+              if (match.court.isNotEmpty) _RuleChip(label: 'Sân: ${match.court}'),
+              _RuleChip(label: 'Vòng: ${match.round}'),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('Đóng'),
+        ),
+      ],
+    ),
+  );
 }
 
 class _RuleChip extends StatelessWidget {

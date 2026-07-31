@@ -24,9 +24,7 @@ class RallyScorePanel extends ConsumerWidget {
     final r = state.rally ?? const RallySetState();
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    final ts = state.config;
 
-    // Fetch team names
     final matchAsync = ref.watch(
       singleMatchProvider((
         tournamentId: params.tournamentId,
@@ -36,285 +34,157 @@ class RallyScorePanel extends ConsumerWidget {
     final team1Name = matchAsync.value?.team1Name ?? l10n.pickleballTeam1;
     final team2Name = matchAsync.value?.team2Name ?? l10n.pickleballTeam2;
 
-    final isLandscape =
-        MediaQuery.of(context).orientation == Orientation.landscape;
-
-    return SizedBox(
-      height: isLandscape ? double.infinity : 520,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = !isLandscape && constraints.maxWidth < 620;
-          final maxLivePoint = r.currentP1 > r.currentP2
-              ? r.currentP1
-              : r.currentP2;
-          final nearSetPoint = maxLivePoint >= ts.tiebreakAt;
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: Column(
-              children: [
-                if (!isLandscape) ...[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: nearSetPoint
-                          ? colors.warning.withValues(alpha: 0.12)
-                          : colors.bgSurface,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                      border: Border.all(
-                        color: nearSetPoint
-                            ? colors.warning.withValues(alpha: 0.3)
-                            : colors.border,
-                      ),
-                    ),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        _topPill('${ts.pointsPerSet} điểm/set'),
-                        _topPill(ts.bestOf > 1 ? 'BO${ts.bestOf}' : '1 set'),
-                        if (ts.mustWinByTwo) _topPill(l10n.matchWinByTwo),
-                        if (nearSetPoint) _topPill(l10n.rallyNearSetPoint),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                Expanded(
-                  child: compact
-                      ? Column(
-                          children: [
-                            Expanded(
-                              child: _buildSide(
-                                isTeam1: true,
-                                score: r.currentP1,
-                                colors: colors,
-                                l10n: l10n,
-                                onIncrement: () => notifier.rallyAddPoint(true),
-                                onDecrement: () =>
-                                    notifier.rallyRemovePoint(true),
-                                teamName: team1Name,
-                                compact: compact,
-                                isLandscape: isLandscape,
-                                targetPoint: ts.pointsPerSet,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Expanded(
-                              child: _buildSide(
-                                isTeam1: false,
-                                score: r.currentP2,
-                                colors: colors,
-                                l10n: l10n,
-                                onIncrement: () =>
-                                    notifier.rallyAddPoint(false),
-                                onDecrement: () =>
-                                    notifier.rallyRemovePoint(false),
-                                teamName: team2Name,
-                                compact: compact,
-                                isLandscape: isLandscape,
-                                targetPoint: ts.pointsPerSet,
-                              ),
-                            ),
-                          ],
-                        )
-                      : Row(
-                          children: [
-                            Expanded(
-                              child: _buildSide(
-                                isTeam1: true,
-                                score: r.currentP1,
-                                colors: colors,
-                                l10n: l10n,
-                                onIncrement: () => notifier.rallyAddPoint(true),
-                                onDecrement: () =>
-                                    notifier.rallyRemovePoint(true),
-                                teamName: team1Name,
-                                compact: compact,
-                                isLandscape: isLandscape,
-                                targetPoint: ts.pointsPerSet,
-                              ),
-                            ),
-                            Container(
-                              width: 3,
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 16,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.border,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            Expanded(
-                              child: _buildSide(
-                                isTeam1: false,
-                                score: r.currentP2,
-                                colors: colors,
-                                l10n: l10n,
-                                onIncrement: () =>
-                                    notifier.rallyAddPoint(false),
-                                onDecrement: () =>
-                                    notifier.rallyRemovePoint(false),
-                                teamName: team2Name,
-                                compact: compact,
-                                isLandscape: isLandscape,
-                                targetPoint: ts.pointsPerSet,
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
-              ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Row(
+        children: [
+          // Đội 1 (Trái)
+          Expanded(
+            child: _buildSideVerticalLayout(
+              isTeam1: true,
+              score: r.currentP1,
+              colors: colors,
+              teamName: team1Name,
+              onIncrement: () => notifier.rallyAddPoint(true),
+              onDecrement: () => notifier.rallyRemovePoint(true),
             ),
-          );
-        },
+          ),
+          const SizedBox(width: 12),
+          // Đường phân cách giữa 2 đội
+          Container(
+            width: 1.5,
+            height: 220,
+            color: colors.border.withValues(alpha: 0.6),
+          ),
+          const SizedBox(width: 12),
+          // Đội 2 (Phải)
+          Expanded(
+            child: _buildSideVerticalLayout(
+              isTeam1: false,
+              score: r.currentP2,
+              colors: colors,
+              teamName: team2Name,
+              onIncrement: () => notifier.rallyAddPoint(false),
+              onDecrement: () => notifier.rallyRemovePoint(false),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildSide({
+  Widget _buildSideVerticalLayout({
     required bool isTeam1,
     required int score,
     required AppColorsExtension colors,
-    required AppLocalizations l10n,
+    required String teamName,
     required VoidCallback onIncrement,
     required VoidCallback onDecrement,
-    required String teamName,
-    required bool compact,
-    required bool isLandscape,
-    required int targetPoint,
   }) {
     final color = isTeam1 ? const Color(0xFF2979FF) : const Color(0xFFEA580C);
-    final distance = targetPoint - score;
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: compact ? 0 : 2),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withValues(alpha: 0.14),
-            color.withValues(alpha: 0.05),
-          ],
-        ),
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: color.withValues(alpha: 0.18)),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            teamName,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: colors.textPrimary,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              distance > 0
-                  ? 'Còn $distance điểm tới mốc set'
-                  : l10n.rallyReachedThreshold,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: colors.textMuted,
-              ),
-            ),
-          ),
-          Expanded(
+          // Tên vận động viên (cho xuống dòng to rõ dễ đọc)
+          SizedBox(
+            height: 42,
             child: Center(
               child: Text(
-                '$score',
+                teamName,
                 style: TextStyle(
-                  fontSize: isLandscape ? 38 : (compact ? 54 : 64),
-                  fontWeight: FontWeight.w700,
-                  color: color,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                  height: 1.2,
+                  letterSpacing: -0.2,
                 ),
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
-          if (!isReadOnly) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+          const SizedBox(height: 16),
+
+          // NẰM NGANG SONG SONG: [-]  [ SỐ 0 ]  [+]
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Nút - (Bên trái số 0)
+              if (!isReadOnly)
                 GestureDetector(
                   onTap: onDecrement,
                   child: Container(
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: colors.bgCard,
+                      color: colors.bgSurface,
                       shape: BoxShape.circle,
-                      border: Border.all(color: colors.border),
+                      border: Border.all(color: colors.border, width: 1.2),
                     ),
                     child: Icon(
                       Icons.remove_rounded,
-                      size: 20,
+                      size: 24,
                       color: colors.textSecondary,
                     ),
                   ),
                 ),
-                const SizedBox(width: 14),
+
+              // SỐ ĐIỂM 0 (Ở GIỮA NẰM NGANG NỐI VỚI + VÀ -)
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      '$score',
+                      style: TextStyle(
+                        fontSize: 64,
+                        fontWeight: FontWeight.w900,
+                        color: color,
+                        height: 1.0,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Nút + (Bên phải số 0)
+              if (!isReadOnly)
                 GestureDetector(
                   onTap: onIncrement,
                   child: Container(
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.16),
+                      color: color.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
-                      border: Border.all(color: color.withValues(alpha: 0.3)),
+                      border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
                     ),
-                    child: Icon(Icons.add_rounded, size: 24, color: color),
+                    child: Icon(Icons.add_rounded, size: 28, color: color),
                   ),
                 ),
-              ],
-            ),
-          ],
-          const SizedBox(height: 4),
+            ],
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _topPill(String label) {
-    return Builder(
-      builder: (context) {
-        final colors = context.colors;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: colors.border),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: colors.textSecondary,
-            ),
-          ),
-        );
-      },
     );
   }
 }
