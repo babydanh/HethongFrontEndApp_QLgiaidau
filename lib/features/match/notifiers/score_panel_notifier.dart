@@ -32,7 +32,28 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         _updateStateFromMatch(match);
       }
     }, fireImmediately: true);
-    return ScorePanelState(config: config);
+
+    final initialMatch = ref.read(singleMatchProvider(arg)).value;
+    var initialState = ScorePanelState(config: config);
+    if (initialMatch != null) {
+      final details = initialMatch.scoreDetails;
+      final rawSets = (details?['sets'] as List?) ?? [];
+      final allSets = rawSets
+          .map((s) => SetScoreData.fromJson(s as Map<String, dynamic>))
+          .toList();
+      final finishedSets = allSets.where((set) => set.isFinished).toList();
+      final activeSet = allSets.where((s) => !s.isFinished).firstOrNull;
+
+      int p1 = activeSet?.score1 ?? initialMatch.team1Score;
+      int p2 = activeSet?.score2 ?? initialMatch.team2Score;
+
+      initialState = initialState.copyWith(
+        finishedSets: finishedSets,
+        rally: RallySetState(currentP1: p1, currentP2: p2),
+      );
+    }
+
+    return initialState;
   }
 
   void _updateStateFromMatch(MatchModel match) {
@@ -42,7 +63,13 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       SportRuleKind.fromString(match.sportKey),
     );
     if (details == null) {
-      state = state.copyWith(config: config);
+      state = state.copyWith(
+        config: config,
+        rally: RallySetState(
+          currentP1: match.team1Score,
+          currentP2: match.team2Score,
+        ),
+      );
       return;
     }
 
@@ -100,23 +127,53 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       );
     }
 
+    // 2. Tennis point state
+    TennisGameState? tennisState;
+    final liveState = details['liveState'] as Map<String, dynamic>?;
+    final rawTennis = liveState?['tennisPointState'] as Map<String, dynamic>?;
+    if (rawTennis != null) {
+      final mode = rawTennis['mode']?.toString();
+      final isTiebreak = mode == 'tiebreak';
+
+      int parseTennisPoint(dynamic val) {
+        if (val is int) return val;
+        final s = val.toString();
+        switch (s) {
+          case '15':
+            return 1;
+          case '30':
+            return 2;
+          case '40':
+            return 3;
+          case 'A':
+            return 4;
+          default:
+            return 0;
+        }
+      }
+
+      tennisState = TennisGameState(
+        team1GamePoints: parseTennisPoint(rawTennis['team1Point']),
+        team2GamePoints: parseTennisPoint(rawTennis['team2Point']),
+        isTiebreak: isTiebreak,
+      );
+    }
+
+    // 3. Pickleball serve state
+    PickleballServeState? pbState;
+    final rawPb = liveState?['sideOutState'] as Map<String, dynamic>?;
+    if (rawPb != null) {
+      pbState = PickleballServeState(
+        isTeam1Serving: rawPb['servingTeam'] == 1,
+        serverNumber: rawPb['serverNumber'] as int? ?? 1,
+      );
+    }
+
     // 4. Rally Point state
     RallySetState? rallyState;
     if (state.config.scoringModel == SportScoringModel.rallyPointSet ||
         state.config.scoringModel == SportScoringModel.pickleballSideOut) {
       final activeSet = allSets.where((s) => !s.isFinished).firstOrNull;
-      if (activeSet != null) {
-        rallyState = RallySetState(
-          currentP1: activeSet.score1,
-          currentP2: activeSet.score2,
-        );
-      } else {
-        rallyState = const RallySetState();
-      }
-    }
-
-    state = state.copyWith(
-      config: config,
       finishedSets: finishedSets,
       tennis: tennisState,
       pickleball: pbState,
