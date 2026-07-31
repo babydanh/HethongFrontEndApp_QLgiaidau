@@ -130,8 +130,8 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         );
       } else {
         rallyState = RallySetState(
-          currentP1: details['p1SetsWon'] as int? ?? match.team1Score,
-          currentP2: details['p2SetsWon'] as int? ?? match.team2Score,
+          currentP1: details['p1SetsWon'] as int? ?? 0,
+          currentP2: details['p2SetsWon'] as int? ?? 0,
         );
       }
     }
