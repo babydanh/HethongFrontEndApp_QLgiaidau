@@ -120,9 +120,29 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
     // 4. Rally Point state
     RallySetState? rallyState;
-    if (state.config.scoringModel == SportScoringModel.rallyPointSet ||
-        state.config.scoringModel == SportScoringModel.pickleballSideOut) {
+    if (config.scoringModel == SportScoringModel.rallyPointSet ||
+        config.scoringModel == SportScoringModel.pickleballSideOut) {
       final activeSet = allSets.where((s) => !s.isFinished).firstOrNull;
+      if (activeSet != null) {
+        rallyState = RallySetState(
+          currentP1: activeSet.score1,
+          currentP2: activeSet.score2,
+        );
+      } else {
+        rallyState = RallySetState(
+          currentP1: details['p1SetsWon'] as int? ?? match.team1Score,
+          currentP2: details['p2SetsWon'] as int? ?? match.team2Score,
+        );
+      }
+    }
+
+    state = state.copyWith(
+      config: config,
+      finishedSets: finishedSets,
+      tennis: tennisState,
+      pickleball: pbState,
+      rally: rallyState,
+    );
   }
 
   static SportConfig _initConfig(Ref ref, MatchControlParams arg) {
