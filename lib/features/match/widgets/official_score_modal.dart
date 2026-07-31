@@ -68,26 +68,6 @@ class OfficialScorePage extends StatefulWidget {
 
 class _OfficialScorePageState extends State<OfficialScorePage> {
   @override
-  void initState() {
-    super.initState();
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-  }
-
-  @override
-  void dispose() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = Theme.of(context).extension<AppColorsExtension>()!;
@@ -102,13 +82,15 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
     return Scaffold(
       backgroundColor: colors.bgCard,
       body: SafeArea(
-        child: SizedBox.expand(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+        child: OrientationBuilder(
+          builder: (context, orientation) {
+            final isLandscape = orientation == Orientation.landscape;
+            Widget content = SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                   // 1. TOP HEADER BAR: Match Title & Quick Status
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -587,12 +569,14 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                   ),
                 ],
               ),
-            ),
-          ),
+            );
+            return content;
+          },
         ),
-      );
-    }
+      ),
+    );
   }
+}
 
 String _sportKeyForKind(SportRuleKind kind) {
   switch (kind) {

@@ -602,6 +602,18 @@ class ApiTournamentRepository implements ITournamentRepository {
     final scoreDetails = json['scoreDetails'] is Map
         ? Map<String, dynamic>.from(json['scoreDetails'] as Map)
         : null;
+    Map<String, dynamic>? asMap(dynamic value) {
+      return value is Map ? Map<String, dynamic>.from(value) : null;
+    }
+
+    final tournamentJson = asMap(json['tournament']);
+    final stageJson = asMap(rawStage);
+    final sportRules = asMap(json['sportRules']) ??
+        asMap(tournamentJson?['sportRules']) ??
+        asMap(stageJson?['sportRules']) ??
+        asMap(json['matchConfig']);
+    final tournamentConfig = asMap(json['tournamentConfig']) ??
+        asMap(tournamentJson?['tournamentConfig']);
     final rawSets = scoreDetails?['sets'] as List<dynamic>? ?? const [];
     final sets = rawSets.whereType<Map>().map((rawSet) {
       return SetScore(
@@ -641,9 +653,15 @@ class ApiTournamentRepository implements ITournamentRepository {
           ? DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
       refereeId: json['refereeId']?.toString(),
+      sportRules: sportRules,
+      tournamentConfig: tournamentConfig,
       scoreDetails: scoreDetails,
       setsToWin: json['setsToWin'] is num
           ? (json['setsToWin'] as num).toInt()
+          : sportRules?['setsToWin'] is num
+              ? (sportRules?['setsToWin'] as num).toInt()
+              : sportRules?['sets_to_win'] is num
+                  ? (sportRules?['sets_to_win'] as num).toInt()
           : null,
       team1Members: team1Members,
       team2Members: team2Members,

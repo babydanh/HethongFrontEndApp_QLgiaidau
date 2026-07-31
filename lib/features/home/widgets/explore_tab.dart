@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'dart:math' as math;
 
 // ─── Wave Header Painter ───
@@ -177,21 +178,28 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
     }).toList();
   }
 
-  List<Tournament> get _upcomingTournaments => _filtered
-      .where((t) =>
-          t.status == AppConstants.statusRegistration ||
-          t.status == AppConstants.statusDraft ||
-          t.status == AppConstants.statusDrawing)
-      .toList();
+  List<Tournament> get _upcomingTournaments {
+    final list = _filtered
+        .where(
+          (t) =>
+              t.status == AppConstants.statusRegistration ||
+              t.status == AppConstants.statusDraft ||
+              t.status == AppConstants.statusDrawing,
+        )
+        .toList();
+    return list.isNotEmpty ? list : _filtered;
+  }
 
   List<Tournament> get _liveTournaments => _filtered
       .where((t) => t.status == AppConstants.statusInProgress)
       .toList();
 
-  List<Tournament> get _completedTournaments => _filtered
-      .where((t) => t.status == AppConstants.statusCompleted)
-      .toList()
-    ..sort((a, b) => _completedTimestamp(b).compareTo(_completedTimestamp(a)));
+  List<Tournament> get _completedTournaments {
+    final list = _filtered
+        .where((t) => t.status == AppConstants.statusCompleted)
+        .toList();
+    return list.isNotEmpty ? list : _filtered;
+  }
 
   DateTime _completedTimestamp(Tournament tournament) {
     return tournament.endDate ?? tournament.updatedAt;
@@ -226,43 +234,81 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
             SliverToBoxAdapter(child: _buildTournamentHorizontal(_upcomingTournaments)),
           ],
 
-          // ── SECTION: Trận đấu đang diễn ra (Chuẩn Hình 1) ──
-          if (_liveTournaments.isNotEmpty || _upcomingTournaments.isNotEmpty) ...[
-            SliverToBoxAdapter(
-              child: _buildSectionHeader(
-                icon: Icons.sensors_rounded,
-                iconColor: const Color(0xFFEF4444),
-                title: 'Trận đấu đang diễn ra',
-                badge: 'LIVE',
-              ),
+          // ── SECTION 1: Trận đấu đang diễn ra ──
+          SliverToBoxAdapter(
+            child: _buildSectionHeader(
+              icon: Icons.sensors_rounded,
+              iconColor: const Color(0xFFEF4444),
+              title: 'Trận đấu đang diễn ra',
+              badge: 'LIVE',
             ),
+          ),
+          if (_liveTournaments.isEmpty)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: Text(
+                    'Chưa có trận đấu nào đang diễn ra',
+                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                  ),
+                ),
+              ),
+            )
+          else
             SliverList(
               delegate: SliverChildBuilderDelegate(
-                (ctx, i) {
-                  final list = _liveTournaments.isNotEmpty ? _liveTournaments : _upcomingTournaments;
-                  return _TournamentLiveMatchesSection(tournament: list[i]);
-                },
-                childCount: (_liveTournaments.isNotEmpty ? _liveTournaments : _upcomingTournaments).length,
+                (ctx, i) => LiveTournamentWithMatchesCard(
+                  tournament: _liveTournaments[i],
+                  filterStatus: 'live',
+                ),
+                childCount: _liveTournaments.length,
               ),
             ),
-          ],
 
-          // ── SECTION: Đã kết thúc ──
-          if (_completedTournaments.isNotEmpty) ...[
-            SliverToBoxAdapter(
-              child: _buildSectionHeader(
-                icon: Icons.history_rounded,
-                iconColor: const Color(0xFF94A3B8),
-                title: 'Đã hoàn thành',
-              ),
+          // ── SECTION 2: Kết quả trận đấu vừa qua (CỰC KỲ ĐẦY ĐỦ TRẬN) ──
+          SliverToBoxAdapter(
+            child: _buildSectionHeader(
+              icon: Icons.check_circle_outline_rounded,
+              iconColor: const Color(0xFF2563EB),
+              title: 'Kết quả trận đấu vừa qua',
             ),
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (ctx, i) => _buildCompactTournamentRow(_completedTournaments[i]),
-                childCount: _completedTournaments.length,
-              ),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (ctx, i) {
+                final list = widget.tournaments.isNotEmpty ? widget.tournaments : _filtered;
+                if (list.isEmpty) return const SizedBox.shrink();
+                return LiveTournamentWithMatchesCard(
+                  tournament: list[i % list.length],
+                  filterStatus: 'completed',
+                );
+              },
+              childCount: widget.tournaments.isNotEmpty ? widget.tournaments.length.clamp(1, 3) : 1,
             ),
-          ],
+          ),
+
+          // ── SECTION 3: Lịch thi đấu sắp diễn ra ──
+          SliverToBoxAdapter(
+            child: _buildSectionHeader(
+              icon: Icons.calendar_today_rounded,
+              iconColor: const Color(0xFF16A34A),
+              title: 'Lịch thi đấu sắp diễn ra',
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (ctx, i) {
+                final list = widget.tournaments.isNotEmpty ? widget.tournaments : _filtered;
+                if (list.isEmpty) return const SizedBox.shrink();
+                return LiveTournamentWithMatchesCard(
+                  tournament: list[i % list.length],
+                  filterStatus: 'scheduled',
+                );
+              },
+              childCount: widget.tournaments.isNotEmpty ? 1 : 0,
+            ),
+          ),
 
           // ── Empty State ──
           if (_filtered.isEmpty)

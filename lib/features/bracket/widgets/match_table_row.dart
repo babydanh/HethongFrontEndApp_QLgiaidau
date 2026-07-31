@@ -259,7 +259,7 @@ class MatchTableRow extends StatelessWidget {
                     // Status Badge
                     if (match.isBye || match.team1Name.toUpperCase() == 'BYE' || match.team2Name.toUpperCase() == 'BYE')
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: const Color(0xFF16A34A).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
@@ -276,7 +276,7 @@ class MatchTableRow extends StatelessWidget {
                       )
                     else if (isLive)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: const Color(0xFFDC2626).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
@@ -293,14 +293,14 @@ class MatchTableRow extends StatelessWidget {
                                 color: Color(0xFFEF4444),
                               ),
                             ),
-                            SizedBox(width: 3),
-                            Icon(Icons.sensors, size: 10, color: Color(0xFFEF4444)),
+                            SizedBox(width: 2),
+                            Icon(Icons.sensors, size: 9, color: Color(0xFFEF4444)),
                           ],
                         ),
                       )
                     else if (isCompleted)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: const Color(0xFF16A34A).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
@@ -317,7 +317,7 @@ class MatchTableRow extends StatelessWidget {
                       )
                     else
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: colors.bgSurface,
                           borderRadius: BorderRadius.circular(12),
@@ -332,40 +332,53 @@ class MatchTableRow extends StatelessWidget {
                           ),
                         ),
                       ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 4),
 
                     // Time
-                    Icon(Icons.access_time_rounded, size: 11, color: colors.textMuted),
-                    const SizedBox(width: 3),
+                    Icon(Icons.access_time_rounded, size: 10, color: colors.textMuted),
+                    const SizedBox(width: 2),
                     Text(
                       timeStr,
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight: FontWeight.w600,
                         color: colors.textSecondary,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 4),
 
                     // Court
-                    Icon(Icons.grid_view_rounded, size: 11, color: colors.textMuted),
-                    const SizedBox(width: 3),
-                    Text(
-                      match.court.isNotEmpty ? match.court : 'Chưa xếp sân',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: colors.textSecondary,
+                    Flexible(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.grid_view_rounded, size: 10, color: colors.textMuted),
+                          const SizedBox(width: 2),
+                          Flexible(
+                            child: Text(
+                              match.court.isNotEmpty ? match.court : 'Chưa xếp sân',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w500,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
-                    const Spacer(),
+                    const SizedBox(width: 4),
 
                     // Round / Match Number
                     Text(
                       roundLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight: FontWeight.w600,
                         color: colors.textMuted,
                       ),

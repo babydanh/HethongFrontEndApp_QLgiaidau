@@ -134,6 +134,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                     error: (context, error) => const SizedBox(height: 52),
                   ),
                   const SizedBox(height: 8),
+                  _buildEloRulesCard(colors),
+                  const SizedBox(height: 8),
                   rankingsAsync.when(
                     data: (rankings) => _buildRankingsList(
                       rankings,
@@ -179,6 +181,60 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     if (matchType == 'DOUBLES' && gender == 'FEMALE') return 'Đôi nữ';
     if (matchType == 'MIXED_DOUBLES') return 'Đôi nam nữ';
     return 'ELO toàn quốc';
+  }
+
+  Widget _buildEloRulesCard(AppColorsExtension colors) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.border),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14),
+          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+          leading: Icon(Icons.info_outline_rounded, color: AppTheme.primary),
+          title: Text(
+            'Quy luật ELO',
+            style: TextStyle(
+              color: colors.textPrimary,
+              fontWeight: FontWeight.w800,
+              fontSize: 14,
+            ),
+          ),
+          subtitle: Text(
+            'Cách tính điểm và quy định không thi đấu',
+            style: TextStyle(color: colors.textMuted, fontSize: 12),
+          ),
+          children: [
+            _ruleText(colors, '• Người mới bắt đầu từ 1000 ELO.'),
+            _ruleText(colors, '• ELO chỉ thay đổi sau trận đấu chính thức đã hoàn tất.'),
+            _ruleText(colors, '• Đánh đôi: ELO được tính theo sức mạnh trung bình của hai đội rồi phân bổ cho từng người.'),
+            _ruleText(colors, '• Không thi đấu trong 1 tháng liên tục: dưới 1400 ELO giữ nguyên; từ 1400 trở lên giảm theo tier: 2%, 3%, 4% hoặc 5% mỗi tháng.'),
+            _ruleText(colors, '• Khiên ELO cũng bảo vệ khi decay làm rơi qua mốc: giữ mốc một lần rồi tiêu thụ khiên.'),
+            _ruleText(colors, '• Đánh đôi có rank riêng cho từng cặp, bắt đầu từ 1000 ELO; không lấy trung bình ELO cá nhân.'),
+            _ruleText(colors, '• Khi thi đấu lại, mốc giảm ELO được tính lại từ đầu; không trừ dồn các tháng trước.'),
+            _ruleText(colors, '• Tier được cập nhật tự động khi ELO thay đổi.'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _ruleText(AppColorsExtension colors, String text) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 7),
+        child: Text(
+          text,
+          style: TextStyle(color: colors.textSecondary, fontSize: 12, height: 1.35),
+        ),
+      ),
+    );
   }
 
   Widget _buildRankingFilters(AppColorsExtension colors) {

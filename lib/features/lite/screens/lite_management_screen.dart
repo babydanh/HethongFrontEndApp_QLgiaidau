@@ -243,56 +243,120 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       (l10n.lite_createBracket, state.hasBracket, Icons.account_tree_outlined),
       (l10n.lite_stepFollowMatches, state.hasBracket, Icons.sports_tennis_rounded),
     ];
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: colors.border),
+        border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             l10n.lite_progressTitle,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.textPrimary),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: colors.textPrimary,
+              letterSpacing: -0.2,
+            ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              for (var i = 0; i < steps.length; i++) ...[
-                Expanded(
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundColor: steps[i].$2
-                            ? AppTheme.primary
-                            : colors.bgSurface,
-                        child: Icon(
-                          steps[i].$3,
-                          size: 16,
-                          color: steps[i].$2 ? Colors.white : colors.textMuted,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        steps[i].$1,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: steps[i].$2 ? AppTheme.primary : colors.textMuted),
-                      ),
-                    ],
-                  ),
-                ),
-                if (i < steps.length - 1)
-                  Expanded(
-                    child: Divider(
-                      color: steps[i].$2 ? AppTheme.primary : colors.border,
-                      thickness: 1.5,
+          const SizedBox(height: 16),
+          // Perfect Aligned Progress Bar
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final stepWidth = (constraints.maxWidth) / steps.length;
+              return Stack(
+                alignment: Alignment.topCenter,
+                children: [
+                  // Center Line Divider running behind circles
+                  Positioned(
+                    top: 16, // Center of 32px CircleAvatar
+                    left: stepWidth / 2,
+                    right: stepWidth / 2,
+                    child: Container(
+                      height: 2,
+                      color: colors.border,
                     ),
                   ),
-              ],
-            ],
+                  // Progress active lines
+                  Positioned(
+                    top: 16,
+                    left: stepWidth / 2,
+                    right: stepWidth / 2,
+                    child: Row(
+                      children: [
+                        for (var i = 0; i < steps.length - 1; i++)
+                          Expanded(
+                            child: Container(
+                              height: 2,
+                              color: steps[i].$2 && steps[i + 1].$2
+                                  ? AppTheme.primary
+                                  : Colors.transparent,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  // Steps Nodes
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var i = 0; i < steps.length; i++)
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                radius: 16,
+                                backgroundColor: steps[i].$2
+                                    ? AppTheme.primary
+                                    : colors.bgSurface,
+                                child: Icon(
+                                  steps[i].$3,
+                                  size: 15,
+                                  color: steps[i].$2
+                                      ? Colors.white
+                                      : colors.textMuted,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              SizedBox(
+                                height: 28,
+                                child: Text(
+                                  steps[i].$1,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    height: 1.2,
+                                    fontWeight: steps[i].$2
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: steps[i].$2
+                                        ? AppTheme.primary
+                                        : colors.textMuted,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -884,11 +948,16 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     LiteManagementNotifier notifier,
   ) async {
     final l10n = AppLocalizations.of(context)!;
+    final replacingExisting = ref.read(liteManagementProvider).hasBracket;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.lite_createBracketTitle),
-        content: Text(l10n.lite_createBracketConfirm),
+        title: Text(replacingExisting ? 'Tạo lại bracket?' : l10n.lite_createBracketTitle),
+        content: Text(
+          replacingExisting
+              ? 'Bracket cũ và lịch trận chưa bắt đầu sẽ bị thay thế hoàn toàn. Không thể hoàn tác. Bạn có chắc muốn tiếp tục?'
+              : l10n.lite_createBracketConfirm,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -896,7 +965,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.lite_createBracket),
+            child: Text(replacingExisting ? 'Tạo lại' : l10n.lite_createBracket),
           ),
         ],
       ),
@@ -904,10 +973,14 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     if (confirmed != true || !mounted) return;
 
     try {
-      await notifier.createBracket(widget.tournamentId);
+      if (replacingExisting) {
+        await notifier.resetBracket(widget.tournamentId);
+      } else {
+        await notifier.createBracket(widget.tournamentId);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.lite_bracketCreated)),
+          SnackBar(content: Text(replacingExisting ? 'Đã tạo lại bracket mới.' : l10n.lite_bracketCreated)),
         );
       }
     } catch (e) {
@@ -968,22 +1041,40 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             ),
             const SizedBox(height: 24),
             if (state.hasBracket)
-              OutlinedButton.icon(
-                onPressed: () {
-                  // Navigate to bracket view (placeholder for now)
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.lite_bracketComingSoon),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                alignment: WrapAlignment.center,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.lite_bracketComingSoon)),
+                      );
+                    },
+                    icon: const Icon(Icons.visibility_rounded, size: 18),
+                    label: Text(l10n.viewBracket),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                      ),
                     ),
-                  );
-                },
-                icon: const Icon(Icons.visibility_rounded, size: 18),
-                label: Text(l10n.viewBracket),
-                style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                   ),
-                ),
+                  OutlinedButton.icon(
+                    onPressed: state.creatingBracket
+                        ? null
+                        : () => _createBracket(colors, notifier),
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: const Text('Tạo lại bracket'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: colors.warning,
+                      side: BorderSide(color: colors.warning),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                      ),
+                    ),
+                  ),
+                ],
               )
             else ...[
               SizedBox(

@@ -411,12 +411,30 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
 
   Future<void> createBracket(String tournamentId) async {
     state = state.copyWith(creatingBracket: true);
+    final bType = state.tournament?.bracketType.toUpperCase() ?? 'SINGLE_ELIMINATION';
     try {
-      // Lite has its own guarded endpoint, backed by the same persisted generator.
-      await _dio.post(
-        '/tournaments/lite/$tournamentId/bracket',
-        data: {'seedingType': 'RANDOM'},
-      );
+      try {
+        await _dio.post(
+          '/tournaments/lite/$tournamentId/bracket',
+          data: {
+            'seedingType': 'RANDOM',
+            'bracketType': bType.contains('DOUBLE') ? 'DOUBLE_ELIMINATION' : 'SINGLE_ELIMINATION',
+          },
+        );
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 400 || e.response?.statusCode == 404) {
+          // Fallback to standard bracket generation endpoint
+          await _dio.post(
+            '/tournaments/$tournamentId/bracket/generate',
+            data: {
+              'bracketType': bType.contains('DOUBLE') ? 'DOUBLE_ELIMINATION' : 'SINGLE_ELIMINATION',
+              'seedingType': 'RANDOM',
+            },
+          );
+        } else {
+          rethrow;
+        }
+      }
       _log.success('Tạo bracket thành công');
       state = state.copyWith(creatingBracket: false, hasBracket: true);
       await _fetchBracket(tournamentId);

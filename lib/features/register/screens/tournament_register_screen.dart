@@ -303,6 +303,10 @@ class _TournamentRegisterScreenState
             inviteCode: _localInviteCode ?? widget.inviteCode,
           );
       if (!mounted) return;
+      // Refresh the detail streams so the participant count reflects the
+      // successful registration when the user returns to the tournament.
+      ref.invalidate(tournamentProvider(widget.tournamentId));
+      ref.invalidate(tournamentIntroProvider(widget.tournamentId));
       final t = ref.read(tournamentProvider(widget.tournamentId)).asData?.value;
       final effectiveFee = result.entryFee;
       _registrationTeamStatus = result.teamStatus;

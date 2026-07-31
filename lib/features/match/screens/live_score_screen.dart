@@ -1616,126 +1616,212 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 width: 1.5,
               ),
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: match.isScheduled
-                        ? const Color(0xFF16A34A)
-                        : const Color(0xFF2563EB),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    match.isScheduled
-                        ? Icons.play_arrow_rounded
-                        : Icons.gavel_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 360;
+                if (isNarrow) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        match.isScheduled
-                            ? 'BÀN TRỌNG TÀI - CHƯA BẮT ĐẦU'
-                            : 'BÀN TRỌNG TÀI - ĐANG THI ĐẤU',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: context.colors.textPrimary,
-                          letterSpacing: 0.3,
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: match.isScheduled
+                                  ? const Color(0xFF16A34A)
+                                  : const Color(0xFF2563EB),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              match.isScheduled
+                                  ? Icons.play_arrow_rounded
+                                  : Icons.gavel_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  match.isScheduled
+                                      ? 'BÀN TRỌNG TÀI - CHƯA BẮT ĐẦU'
+                                      : 'BÀN TRỌNG TÀI - ĐANG THI ĐẤU',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: context.colors.textPrimary,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  match.isScheduled
+                                      ? 'Bấm nút để bắt đầu & chấm điểm'
+                                      : 'Mở bàn chấm điểm để ghi nhận tỉ số',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: context.colors.textSecondary,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        match.isScheduled
-                            ? 'Bấm nút để bắt đầu trận đấu & mở bàn chấm điểm'
-                            : 'Mở bàn chấm điểm để ghi nhận tỉ số & thẻ phạt',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: context.colors.textSecondary,
-                          height: 1.35,
+                      const SizedBox(height: 10),
+                      if (match.isScheduled)
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF16A34A),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final controller = ref.read(matchControllerProvider(params));
+                            await controller.startMatch();
+                          },
+                          icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                          label: const Text('BẮT ĐẦU TRẬN ĐẤU', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                        )
+                      else
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2563EB),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                            ),
+                          ),
+                          onPressed: () {
+                            final mode = match.tournamentConfig?['mode']?.toString().toUpperCase();
+                            if (mode == 'LITE') {
+                              showLiteScoreModal(context, match: match);
+                            } else {
+                              showOfficialScoreModal(
+                                context,
+                                tournamentId: widget.tournamentId,
+                                matchId: widget.matchId,
+                                match: match,
+                                onRecordPenalty: () => _showFoulSelectionDialog(match),
+                                onForceWin: () => _showForceWinDialog(match),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.scoreboard_rounded, size: 18),
+                          label: const Text('MỞ BẢNG CHẤM ĐIỂM', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
                         ),
-                      ),
                     ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                if (match.isScheduled)
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF16A34A),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: match.isScheduled
+                            ? const Color(0xFF16A34A)
+                            : const Color(0xFF2563EB),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppTheme.radiusMedium,
+                      child: Icon(
+                        match.isScheduled
+                            ? Icons.play_arrow_rounded
+                            : Icons.gavel_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            match.isScheduled
+                                ? 'BÀN TRỌNG TÀI - CHƯA BẮT ĐẦU'
+                                : 'BÀN TRỌNG TÀI - ĐANG THI ĐẤU',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: context.colors.textPrimary,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            match.isScheduled
+                                ? 'Bấm nút để bắt đầu trận đấu'
+                                : 'Mở bàn chấm điểm & thẻ phạt',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.colors.textSecondary,
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (match.isScheduled)
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF16A34A),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                          ),
                         ),
-                      ),
-                    ),
-                    onPressed: () async {
-                      final controller = ref.read(
-                        matchControllerProvider(params),
-                      );
-                      await controller.startMatch();
-                    },
-                    icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                    label: const Text(
-                      'BẮT ĐẦU TRẬN ĐẤU',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  )
-                else
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2563EB),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppTheme.radiusMedium,
+                        onPressed: () async {
+                          final controller = ref.read(matchControllerProvider(params));
+                          await controller.startMatch();
+                        },
+                        icon: const Icon(Icons.play_arrow_rounded, size: 16),
+                        label: const Text('BẮT ĐẦU', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11)),
+                      )
+                    else
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2563EB),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                          ),
                         ),
+                        onPressed: () {
+                          final mode = match.tournamentConfig?['mode']?.toString().toUpperCase();
+                          if (mode == 'LITE') {
+                            showLiteScoreModal(context, match: match);
+                          } else {
+                            showOfficialScoreModal(
+                              context,
+                              tournamentId: widget.tournamentId,
+                              matchId: widget.matchId,
+                              match: match,
+                              onRecordPenalty: () => _showFoulSelectionDialog(match),
+                              onForceWin: () => _showForceWinDialog(match),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.scoreboard_rounded, size: 16),
+                        label: const Text('MỞ BẢNG', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11)),
                       ),
-                    ),
-                    onPressed: () {
-                      final mode = match.tournamentConfig?['mode']?.toString().toUpperCase();
-                      if (mode == 'LITE') {
-                        showLiteScoreModal(context, match: match);
-                      } else {
-                        showOfficialScoreModal(
-                          context,
-                          tournamentId: widget.tournamentId,
-                          matchId: widget.matchId,
-                          match: match,
-                          onRecordPenalty: () => _showFoulSelectionDialog(match),
-                          onForceWin: () => _showForceWinDialog(match),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.scoreboard_rounded, size: 18),
-                    label: const Text(
-                      'MỞ BẢNG CHẤM ĐIỂM',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-              ],
+                  ],
+                );
+              },
             ),
           ),
 
