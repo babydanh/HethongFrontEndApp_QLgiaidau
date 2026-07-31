@@ -35,10 +35,11 @@ class RallyScorePanel extends ConsumerWidget {
     final team2Name = matchAsync.value?.team2Name ?? l10n.pickleballTeam2;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Đội 1 (Trái)
+          // Đội 1 (Bên trái)
           Expanded(
             child: _buildSideVerticalLayout(
               isTeam1: true,
@@ -49,15 +50,15 @@ class RallyScorePanel extends ConsumerWidget {
               onDecrement: () => notifier.rallyRemovePoint(true),
             ),
           ),
-          const SizedBox(width: 12),
-          // Đường phân cách giữa 2 đội
+          const SizedBox(width: 10),
+          // Đường gạch giữa phân cách 2 đội
           Container(
             width: 1.5,
-            height: 220,
+            margin: const EdgeInsets.symmetric(vertical: 20),
             color: colors.border.withValues(alpha: 0.6),
           ),
-          const SizedBox(width: 12),
-          // Đội 2 (Phải)
+          const SizedBox(width: 10),
+          // Đội 2 (Bên phải)
           Expanded(
             child: _buildSideVerticalLayout(
               isTeam1: false,
@@ -84,30 +85,29 @@ class RallyScorePanel extends ConsumerWidget {
     final color = isTeam1 ? const Color(0xFF2979FF) : const Color(0xFFEA580C);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.05),
-            blurRadius: 10,
+            color: color.withValues(alpha: 0.06),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Tên vận động viên (cho xuống dòng to rõ dễ đọc)
+          // Tên vận động viên (cho xuống dòng to rõ)
           SizedBox(
-            height: 42,
+            height: 48,
             child: Center(
               child: Text(
                 teamName,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 16,
                   fontWeight: FontWeight.w800,
                   color: colors.textPrimary,
                   height: 1.2,
@@ -119,69 +119,66 @@ class RallyScorePanel extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-
-          // NẰM NGANG SONG SONG: [-]  [ SỐ 0 ]  [+]
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Nút - (Bên trái số 0)
-              if (!isReadOnly)
-                GestureDetector(
-                  onTap: onDecrement,
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: colors.bgSurface,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: colors.border, width: 1.2),
-                    ),
-                    child: Icon(
-                      Icons.remove_rounded,
-                      size: 24,
-                      color: colors.textSecondary,
-                    ),
-                  ),
-                ),
-
-              // SỐ ĐIỂM 0 (Ở GIỮA NẰM NGANG NỐI VỚI + VÀ -)
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Text(
-                      '$score',
-                      style: TextStyle(
-                        fontSize: 64,
-                        fontWeight: FontWeight.w900,
-                        color: color,
-                        height: 1.0,
+          
+          // NÚT + (NẰM Ở TRÊN SỐ 0)
+          Expanded(
+            child: Center(
+              child: isReadOnly
+                  ? const SizedBox.shrink()
+                  : GestureDetector(
+                      onTap: onIncrement,
+                      child: Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: color.withValues(alpha: 0.4), width: 1.8),
+                        ),
+                        child: Icon(Icons.add_rounded, size: 34, color: color),
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                  ),
-                ),
-              ),
+            ),
+          ),
 
-              // Nút + (Bên phải số 0)
-              if (!isReadOnly)
-                GestureDetector(
-                  onTap: onIncrement,
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
+          // SỐ ĐIỂM 0 (NẰM Ở GIỮA SỐ CỰC TO ĐẸP)
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '$score',
+              style: TextStyle(
+                fontSize: 80,
+                fontWeight: FontWeight.w900,
+                color: color,
+                height: 1.0,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // NÚT - (NẰM Ở DƯỚI SỐ 0)
+          Expanded(
+            child: Center(
+              child: isReadOnly
+                  ? const SizedBox.shrink()
+                  : GestureDetector(
+                      onTap: onDecrement,
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: colors.bgSurface,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: colors.border, width: 1.2),
+                        ),
+                        child: Icon(
+                          Icons.remove_rounded,
+                          size: 26,
+                          color: colors.textSecondary,
+                        ),
+                      ),
                     ),
-                    child: Icon(Icons.add_rounded, size: 28, color: color),
-                  ),
-                ),
-            ],
+            ),
           ),
         ],
       ),

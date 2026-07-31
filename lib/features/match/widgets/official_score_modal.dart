@@ -85,87 +85,86 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
         child: OrientationBuilder(
           builder: (context, orientation) {
             final isLandscape = orientation == Orientation.landscape;
-            Widget content = SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // 1. TOP HEADER BAR: Match Title & Info Popup Button
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    color: colors.bgSurface,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${widget.match.team1Name} vs ${widget.match.team2Name}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textPrimary,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        // NÚT ICON (i) ĐỂ HIỂN THỊ POPUP THÔNG TIN CÀI ĐẶT GIẢI
-                        IconButton(
-                          icon: Icon(
-                            Icons.info_outline_rounded,
-                            size: 22,
-                            color: AppTheme.primary,
-                          ),
-                          tooltip: 'Cài đặt & Luật giải',
-                          onPressed: () {
-                            _showMatchInfoDialog(context, widget.match, config, kind, colors, l10n);
-                          },
-                        ),
-                        const SizedBox(width: 4),
-                        IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 22),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    ),
+            Widget content = Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 1. TOP HEADER BAR: Match Title & Info Popup Button
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
                   ),
-                  const Divider(height: 1, thickness: 1),
+                  color: colors.bgSurface,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${widget.match.team1Name} vs ${widget.match.team2Name}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      // NÚT ICON (i) ĐỂ HIỂN THỊ POPUP THÔNG TIN CÀI ĐẶT GIẢI
+                      IconButton(
+                        icon: Icon(
+                          Icons.info_outline_rounded,
+                          size: 22,
+                          color: AppTheme.primary,
+                        ),
+                        tooltip: 'Cài đặt & Luật giải',
+                        onPressed: () {
+                          _showMatchInfoDialog(context, widget.match, config, kind, colors, l10n);
+                        },
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 22),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1, thickness: 1),
 
-                  // 3. CENTER SCORE ARENA (BẢNG TÍNH ĐIỂM CHÍNH)
-                  Padding(
+                // 2. CENTER SCORE ARENA (BẢNG TÍNH ĐIỂM CHÍNH - GIÃN FULL CHIỀU CAO NGHỆ THUẬT)
+                Expanded(
+                  child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 8,
                     ),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        kind == SportRuleKind.tennis
-                            ? TennisScorePanel(
-                                params: params,
-                                isReadOnly: false,
-                              )
-                            : usePickleballSideOutPanel
-                            ? PickleballPanel(params: params, isReadOnly: false)
-                            : kind == SportRuleKind.badminton
-                            ? BadmintonScorePanel(
-                                params: params,
-                                isReadOnly: false,
-                              )
-                            : kind == SportRuleKind.tableTennis
-                            ? TableTennisScorePanel(
-                                params: params,
-                                isReadOnly: false,
-                              )
-                            : RallyScorePanel(
-                                params: params,
-                                isReadOnly: false,
-                              ),
-                        const SizedBox(height: 8),
+                        Expanded(
+                          child: kind == SportRuleKind.tennis
+                              ? TennisScorePanel(
+                                  params: params,
+                                  isReadOnly: false,
+                                )
+                              : usePickleballSideOutPanel
+                              ? PickleballPanel(params: params, isReadOnly: false)
+                              : kind == SportRuleKind.badminton
+                              ? BadmintonScorePanel(
+                                  params: params,
+                                  isReadOnly: false,
+                                )
+                              : kind == SportRuleKind.tableTennis
+                              ? TableTennisScorePanel(
+                                  params: params,
+                                  isReadOnly: false,
+                                )
+                              : RallyScorePanel(
+                                  params: params,
+                                  isReadOnly: false,
+                                ),
+                        ),
+                        const SizedBox(height: 6),
                         Consumer(
                           builder: (context, ref, _) {
                             final state = ref.watch(
@@ -191,7 +190,8 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                       ],
                     ),
                   ),
-                  const Divider(height: 1, thickness: 1),
+                ),
+                const Divider(height: 1, thickness: 1),
 
                   // 4. BOTTOM REFEREE CONTROL BAR (HÌNH PHẠT, NGOẠI LỆ VÀ NÚT XỬ LÝ TRỌNG TÀI)
                   Consumer(
@@ -511,8 +511,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                     },
                   ),
                 ],
-              ),
-            );
+              );
             return content;
           },
         ),
