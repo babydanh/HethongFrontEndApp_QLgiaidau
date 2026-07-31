@@ -34,58 +34,67 @@ class RallyScorePanel extends ConsumerWidget {
     final team1Name = matchAsync.value?.team1Name ?? l10n.pickleballTeam1;
     final team2Name = matchAsync.value?.team2Name ?? l10n.pickleballTeam2;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Đội 1 (Bên trái)
-          Expanded(
-            child: _buildSideVerticalLayout(
-              isTeam1: true,
-              score: r.currentP1,
-              colors: colors,
-              teamName: team1Name,
-              onIncrement: () => notifier.rallyAddPoint(true),
-              onDecrement: () => notifier.rallyRemovePoint(true),
-            ),
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        final isLandscape = orientation == Orientation.landscape;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Đội 1 (Bên trái)
+              Expanded(
+                child: _buildSideLayout(
+                  isTeam1: true,
+                  score: r.currentP1,
+                  colors: colors,
+                  teamName: team1Name,
+                  isLandscape: isLandscape,
+                  onIncrement: () => notifier.rallyAddPoint(true),
+                  onDecrement: () => notifier.rallyRemovePoint(true),
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Đường gạch giữa phân cách 2 đội
+              Container(
+                width: 1.5,
+                margin: const EdgeInsets.symmetric(vertical: 20),
+                color: colors.border.withValues(alpha: 0.6),
+              ),
+              const SizedBox(width: 10),
+              // Đội 2 (Bên phải)
+              Expanded(
+                child: _buildSideLayout(
+                  isTeam1: false,
+                  score: r.currentP2,
+                  colors: colors,
+                  teamName: team2Name,
+                  isLandscape: isLandscape,
+                  onIncrement: () => notifier.rallyAddPoint(false),
+                  onDecrement: () => notifier.rallyRemovePoint(false),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
-          // Đường gạch giữa phân cách 2 đội
-          Container(
-            width: 1.5,
-            margin: const EdgeInsets.symmetric(vertical: 20),
-            color: colors.border.withValues(alpha: 0.6),
-          ),
-          const SizedBox(width: 10),
-          // Đội 2 (Bên phải)
-          Expanded(
-            child: _buildSideVerticalLayout(
-              isTeam1: false,
-              score: r.currentP2,
-              colors: colors,
-              teamName: team2Name,
-              onIncrement: () => notifier.rallyAddPoint(false),
-              onDecrement: () => notifier.rallyRemovePoint(false),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildSideVerticalLayout({
+  Widget _buildSideLayout({
     required bool isTeam1,
     required int score,
     required AppColorsExtension colors,
     required String teamName,
+    required bool isLandscape,
     required VoidCallback onIncrement,
     required VoidCallback onDecrement,
   }) {
     final color = isTeam1 ? const Color(0xFF2979FF) : const Color(0xFFEA580C);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
@@ -102,12 +111,12 @@ class RallyScorePanel extends ConsumerWidget {
         children: [
           // Tên vận động viên (cho xuống dòng to rõ)
           SizedBox(
-            height: 48,
+            height: 42,
             child: Center(
               child: Text(
                 teamName,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.w800,
                   color: colors.textPrimary,
                   height: 1.2,
@@ -120,52 +129,19 @@ class RallyScorePanel extends ConsumerWidget {
             ),
           ),
           
-          // NÚT + (NẰM Ở TRÊN SỐ 0)
-          Expanded(
-            child: Center(
-              child: isReadOnly
-                  ? const SizedBox.shrink()
-                  : GestureDetector(
-                      onTap: onIncrement,
-                      child: Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: color.withValues(alpha: 0.4), width: 1.8),
-                        ),
-                        child: Icon(Icons.add_rounded, size: 34, color: color),
-                      ),
-                    ),
-            ),
-          ),
-
-          // SỐ ĐIỂM 0 (NẰM Ở GIỮA SỐ CỰC TO ĐẸP)
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              '$score',
-              style: TextStyle(
-                fontSize: 80,
-                fontWeight: FontWeight.w900,
-                color: color,
-                height: 1.0,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // NÚT - (NẰM Ở DƯỚI SỐ 0)
-          Expanded(
-            child: Center(
-              child: isReadOnly
-                  ? const SizedBox.shrink()
-                  : GestureDetector(
+          if (isLandscape) ...[
+            // MÀN HÌNH NGANG (LANDSCAPE): [-]  [ SỐ 0 ]  [+]
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (!isReadOnly)
+                    GestureDetector(
                       onTap: onDecrement,
                       child: Container(
-                        width: 48,
-                        height: 48,
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
                           color: colors.bgSurface,
                           shape: BoxShape.circle,
@@ -173,13 +149,104 @@ class RallyScorePanel extends ConsumerWidget {
                         ),
                         child: Icon(
                           Icons.remove_rounded,
-                          size: 26,
+                          size: 24,
                           color: colors.textSecondary,
                         ),
                       ),
                     ),
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Text(
+                          '$score',
+                          style: TextStyle(
+                            fontSize: 72,
+                            fontWeight: FontWeight.w900,
+                            color: color,
+                            height: 1.0,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (!isReadOnly)
+                    GestureDetector(
+                      onTap: onIncrement,
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
+                        ),
+                        child: Icon(Icons.add_rounded, size: 28, color: color),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
+          ] else ...[
+            // MÀN HÌNH ĐỨNG (PORTRAIT): NÚT + TRÊN | SỐ 0 GIỮA | NÚT - DƯỚI
+            Expanded(
+              child: Center(
+                child: isReadOnly
+                    ? const SizedBox.shrink()
+                    : GestureDetector(
+                        onTap: onIncrement,
+                        child: Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: color.withValues(alpha: 0.4), width: 1.8),
+                          ),
+                          child: Icon(Icons.add_rounded, size: 30, color: color),
+                        ),
+                      ),
+              ),
+            ),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                '$score',
+                style: TextStyle(
+                  fontSize: 72,
+                  fontWeight: FontWeight.w900,
+                  color: color,
+                  height: 1.0,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Expanded(
+              child: Center(
+                child: isReadOnly
+                    ? const SizedBox.shrink()
+                    : GestureDetector(
+                        onTap: onDecrement,
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: colors.bgSurface,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: colors.border, width: 1.2),
+                          ),
+                          child: Icon(
+                            Icons.remove_rounded,
+                            size: 24,
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+          ],
         ],
       ),
     );

@@ -211,121 +211,185 @@ class PickleballPanel extends ConsumerWidget {
     final isServing = pb.isTeam1Serving == isTeam1;
     final color = isTeam1 ? const Color(0xFF2979FF) : const Color(0xFFEA580C);
 
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-          border: Border.all(
-            color: isServing ? const Color(0xFFFFA500) : color.withValues(alpha: 0.3),
-            width: isServing ? 2.0 : 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        final isLandscape = orientation == Orientation.landscape;
+
+        return Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+              border: Border.all(
+                color: isServing ? const Color(0xFFFFA500) : color.withValues(alpha: 0.3),
+                width: isServing ? 2.0 : 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // Tên đội (cho xuống dòng to rõ)
-            SizedBox(
-              height: 48,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (isServing)
-                    const Icon(
-                      Icons.volunteer_activism_rounded,
-                      size: 16,
-                      color: Color(0xFFFFA500),
+            child: Column(
+              children: [
+                // Tên đội (cho xuống dòng to rõ)
+                SizedBox(
+                  height: 42,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isServing)
+                        const Icon(
+                          Icons.volunteer_activism_rounded,
+                          size: 16,
+                          color: Color(0xFFFFA500),
+                        ),
+                      if (isServing) const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          teamName,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: colors.textPrimary,
+                            height: 1.2,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                if (isLandscape) ...[
+                  // MÀN HÌNH NGANG (LANDSCAPE): [-]  [ SỐ 0 ]  [+]
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (!isReadOnly)
+                          GestureDetector(
+                            onTap: () => notifier.rallyRemovePoint(isTeam1),
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: colors.bgSurface,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: colors.border, width: 1.2),
+                              ),
+                              child: Icon(
+                                Icons.remove_rounded,
+                                size: 24,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        Expanded(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: Text(
+                                '$score',
+                                style: TextStyle(
+                                  fontSize: 72,
+                                  fontWeight: FontWeight.w900,
+                                  color: color,
+                                  height: 1.0,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (!isReadOnly)
+                          GestureDetector(
+                            onTap: () => notifier.pickleballAwardPoint(isTeam1),
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.15),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
+                              ),
+                              child: Icon(Icons.add_rounded, size: 28, color: color),
+                            ),
+                          ),
+                      ],
                     ),
-                  if (isServing) const SizedBox(width: 4),
-                  Flexible(
+                  ),
+                ] else ...[
+                  // MÀN HÌNH ĐỨNG (PORTRAIT): NÚT + TRÊN | SỐ 0 GIỮA | NÚT - DƯỚI
+                  Expanded(
+                    child: Center(
+                      child: isReadOnly
+                          ? const SizedBox.shrink()
+                          : GestureDetector(
+                              onTap: () => notifier.pickleballAwardPoint(isTeam1),
+                              child: Container(
+                                width: 52,
+                                height: 52,
+                                decoration: BoxDecoration(
+                                  color: color.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: color.withValues(alpha: 0.4), width: 1.8),
+                                ),
+                                child: Icon(Icons.add_rounded, size: 30, color: color),
+                              ),
+                            ),
+                    ),
+                  ),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
                     child: Text(
-                      teamName,
+                      '$score',
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: colors.textPrimary,
-                        height: 1.2,
+                        fontSize: 72,
+                        fontWeight: FontWeight.w900,
+                        color: color,
+                        height: 1.0,
                       ),
                       textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: isReadOnly
+                          ? const SizedBox.shrink()
+                          : GestureDetector(
+                              onTap: () => notifier.rallyRemovePoint(isTeam1),
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: colors.bgSurface,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: colors.border, width: 1.2),
+                                ),
+                                child: Icon(
+                                  Icons.remove_rounded,
+                                  size: 24,
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                            ),
                     ),
                   ),
                 ],
-              ),
+              ],
             ),
-
-            // NÚT + (NẰM Ở TRÊN SỐ 0)
-            Expanded(
-              child: Center(
-                child: isReadOnly
-                    ? const SizedBox.shrink()
-                    : GestureDetector(
-                        onTap: () => notifier.pickleballAwardPoint(isTeam1),
-                        child: Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: color.withValues(alpha: 0.4), width: 1.8),
-                          ),
-                          child: Icon(Icons.add_rounded, size: 34, color: color),
-                        ),
-                      ),
-              ),
-            ),
-
-            // SỐ ĐIỂM 0 (NẰM Ở GIỮA SỐ CỰC TO ĐẸP)
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                '$score',
-                style: TextStyle(
-                  fontSize: 80,
-                  fontWeight: FontWeight.w900,
-                  color: color,
-                  height: 1.0,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-
-            // NÚT - (NẰM Ở DƯỚI SỐ 0)
-            Expanded(
-              child: Center(
-                child: isReadOnly
-                    ? const SizedBox.shrink()
-                    : GestureDetector(
-                        onTap: () => notifier.rallyRemovePoint(isTeam1),
-                        child: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: colors.bgSurface,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: colors.border, width: 1.2),
-                          ),
-                          child: Icon(
-                            Icons.remove_rounded,
-                            size: 26,
-                            color: colors.textSecondary,
-                          ),
-                        ),
-                      ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
