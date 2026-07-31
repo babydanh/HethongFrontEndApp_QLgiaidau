@@ -103,6 +103,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                 categoryId: categoryId,
                 matchType: _selectedMatchType,
                 genderRestriction: _selectedGender,
+                eloPoints: 1000,
                 tierName: 'Chưa xếp hạng',
               ),
             )

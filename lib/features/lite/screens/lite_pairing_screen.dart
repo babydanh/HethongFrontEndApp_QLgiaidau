@@ -612,10 +612,9 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
     setState(() => _generating = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
-      await dio.post(
-        '/tournaments/${widget.tournamentId}/generate-bracket',
-        data: {'seedingType': 'RANDOM'},
-      );
+      // Lite has a protected endpoint with its own participant/bracket gate.
+      // The generic endpoint is for advanced tournaments and rejects Lite data.
+      await dio.post('/tournaments/lite/${widget.tournamentId}/bracket');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.lite_bracketCreated)),

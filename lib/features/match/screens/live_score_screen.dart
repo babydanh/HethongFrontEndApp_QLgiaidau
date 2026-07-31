@@ -14,7 +14,6 @@ import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/penalty_input_dialog.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
-import 'package:app_quanly_giaidau/features/match/widgets/lite_score_modal.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/domain/entities/match_event.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
@@ -800,7 +799,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final kind = SportRuleKind.fromString(match.sportKey);
     final config = resolveSportConfig(match.sportRules, kind);
     _ensureSetupControlsSeeded(match, config);
-    if (match.id.isNotEmpty || match.id.isEmpty) {
+    final tournamentMode = match.tournamentConfig?['mode']
+        ?.toString()
+        .toUpperCase();
+    if (tournamentMode == 'LITE') {
       return _buildLiteSetupState(match, kind, config);
     }
     final scoreLabel = _setupScoreLabel(kind, config);
@@ -1703,19 +1705,14 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             ),
                           ),
                           onPressed: () {
-                            final mode = match.tournamentConfig?['mode']?.toString().toUpperCase();
-                            if (mode == 'LITE') {
-                              showLiteScoreModal(context, match: match);
-                            } else {
-                              showOfficialScoreModal(
-                                context,
-                                tournamentId: widget.tournamentId,
-                                matchId: widget.matchId,
-                                match: match,
-                                onRecordPenalty: () => _showFoulSelectionDialog(match),
-                                onForceWin: () => _showForceWinDialog(match),
-                              );
-                            }
+                            showOfficialScoreModal(
+                              context,
+                              tournamentId: widget.tournamentId,
+                              matchId: widget.matchId,
+                              match: match,
+                              onRecordPenalty: () => _showFoulSelectionDialog(match),
+                              onForceWin: () => _showForceWinDialog(match),
+                            );
                           },
                           icon: const Icon(Icons.scoreboard_rounded, size: 18),
                           label: const Text('MỞ BẢNG CHẤM ĐIỂM', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
@@ -1802,19 +1799,14 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           ),
                         ),
                         onPressed: () {
-                          final mode = match.tournamentConfig?['mode']?.toString().toUpperCase();
-                          if (mode == 'LITE') {
-                            showLiteScoreModal(context, match: match);
-                          } else {
-                            showOfficialScoreModal(
-                              context,
-                              tournamentId: widget.tournamentId,
-                              matchId: widget.matchId,
-                              match: match,
-                              onRecordPenalty: () => _showFoulSelectionDialog(match),
-                              onForceWin: () => _showForceWinDialog(match),
-                            );
-                          }
+                          showOfficialScoreModal(
+                            context,
+                            tournamentId: widget.tournamentId,
+                            matchId: widget.matchId,
+                            match: match,
+                            onRecordPenalty: () => _showFoulSelectionDialog(match),
+                            onForceWin: () => _showForceWinDialog(match),
+                          );
                         },
                         icon: const Icon(Icons.scoreboard_rounded, size: 16),
                         label: const Text('MỞ BẢNG', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11)),

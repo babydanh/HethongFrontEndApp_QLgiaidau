@@ -1184,7 +1184,6 @@ class _TournamentLiveMatchesSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final matchesAsync = ref.watch(matchesProvider(tournament.id));
-    final teamsAsync = ref.watch(teamsProvider(tournament.id));
 
     return matchesAsync.when(
       data: (matches) {
@@ -1193,7 +1192,7 @@ class _TournamentLiveMatchesSection extends ConsumerWidget {
             children: matches.map((m) => MatchExploreCard(match: m, tournament: tournament)).toList(),
           );
         }
-        return teamsAsync.when(
+        return const SizedBox.shrink(); /*
           data: (teams) {
             final t1 = teams.isNotEmpty ? teams[0].name : 'Nguyễn Minh Danh - Phạm Hải Dũng';
             final t2 = teams.length >= 2 ? teams[1].name : 'Vũ Quốc Phong - Đặng Khánh Linh';
@@ -1216,7 +1215,7 @@ class _TournamentLiveMatchesSection extends ConsumerWidget {
           },
           loading: () => const SizedBox.shrink(),
           error: (e, s) => const SizedBox.shrink(),
-        );
+        ); */
       },
       loading: () => const Center(
         child: Padding(

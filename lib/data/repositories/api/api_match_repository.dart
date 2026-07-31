@@ -23,7 +23,13 @@ Map<String, dynamic>? _readSportRules(Map<String, dynamic> json) {
     return matchRules;
   }
   final tournament = asMap(json['tournament']);
-  return asMap(tournament?['sportRules']);
+  return asMap(tournament?['sportRules']) ??
+      asMap(tournament?['tournamentConfig'] is Map
+          ? (tournament?['tournamentConfig'] as Map)['sportRules']
+          : null) ??
+      asMap(json['tournamentConfig'] is Map
+          ? (json['tournamentConfig'] as Map)['sportRules']
+          : null);
 }
 
 class ApiMatchRepository implements IMatchRepository {
@@ -276,7 +282,22 @@ class ApiMatchRepository implements IMatchRepository {
       refereeId: json['refereeId']?.toString(),
       refereeName: json['refereeName']?.toString(),
       sportRules: _readSportRules(json),
-      scoreDetails: json['scoreDetails'] as Map<String, dynamic>?,
+      tournamentConfig: json['tournamentConfig'] is Map
+          ? Map<String, dynamic>.from(json['tournamentConfig'] as Map)
+          : json['tournament'] is Map &&
+                  (json['tournament'] as Map)['tournamentConfig'] is Map
+              ? Map<String, dynamic>.from(
+                  (json['tournament'] as Map)['tournamentConfig'] as Map,
+                )
+              : null,
+      scoreDetails: json['scoreDetails'] is Map
+          ? Map<String, dynamic>.from(json['scoreDetails'] as Map)
+          : null,
+      sportKey: json['sport']?.toString() ??
+          json['sportKey']?.toString() ??
+          (json['tournament'] is Map
+              ? (json['tournament'] as Map)['sport']?.toString()
+              : null),
       setsToWin: json['setsToWin'] as int?,
       team1Members: team1Members,
       team2Members: team2Members,
@@ -308,15 +329,7 @@ class ApiMatchRepository implements IMatchRepository {
           if (data['id'] == matchId && !controller.isClosed) {
             _log.info('Score update received for $matchId via socket');
             final newMatch = _parseMatch(data);
-            final mergedMatch = newMatch.copyWith(
-              team1Id: newMatch.team1Id.isEmpty && latestMatch != null ? latestMatch!.team1Id : newMatch.team1Id,
-              team2Id: newMatch.team2Id.isEmpty && latestMatch != null ? latestMatch!.team2Id : newMatch.team2Id,
-              team1Name: newMatch.team1Name == 'TBD' && latestMatch != null ? latestMatch!.team1Name : newMatch.team1Name,
-              team2Name: newMatch.team2Name == 'TBD' && latestMatch != null ? latestMatch!.team2Name : newMatch.team2Name,
-              tournamentName: newMatch.tournamentName ?? latestMatch?.tournamentName,
-              sportKey: newMatch.sportKey ?? latestMatch?.sportKey,
-              sportRules: newMatch.sportRules ?? latestMatch?.sportRules,
-            );
+            final mergedMatch = _mergeMatchUpdate(newMatch, latestMatch, data);
             latestMatch = mergedMatch;
             controller.add(mergedMatch);
           }
@@ -326,15 +339,7 @@ class ApiMatchRepository implements IMatchRepository {
           if (data['id'] == matchId && !controller.isClosed) {
             _log.info('Status update received for $matchId via socket');
             final newMatch = _parseMatch(data);
-            final mergedMatch = newMatch.copyWith(
-              team1Id: newMatch.team1Id.isEmpty && latestMatch != null ? latestMatch!.team1Id : newMatch.team1Id,
-              team2Id: newMatch.team2Id.isEmpty && latestMatch != null ? latestMatch!.team2Id : newMatch.team2Id,
-              team1Name: newMatch.team1Name == 'TBD' && latestMatch != null ? latestMatch!.team1Name : newMatch.team1Name,
-              team2Name: newMatch.team2Name == 'TBD' && latestMatch != null ? latestMatch!.team2Name : newMatch.team2Name,
-              tournamentName: newMatch.tournamentName ?? latestMatch?.tournamentName,
-              sportKey: newMatch.sportKey ?? latestMatch?.sportKey,
-              sportRules: newMatch.sportRules ?? latestMatch?.sportRules,
-            );
+            final mergedMatch = _mergeMatchUpdate(newMatch, latestMatch, data);
             latestMatch = mergedMatch;
             controller.add(mergedMatch);
           }
@@ -350,6 +355,41 @@ class ApiMatchRepository implements IMatchRepository {
     );
 
     return controller.stream;
+  }
+
+  MatchModel _mergeMatchUpdate(
+    MatchModel incoming,
+    MatchModel? previous,
+    Map<String, dynamic> payload,
+  ) {
+    if (previous == null) return incoming;
+    final hasScorePayload = payload.containsKey('scoreDetails') ||
+        payload.containsKey('p1SetsWon') ||
+        payload.containsKey('p2SetsWon') ||
+        payload.containsKey('score1') ||
+        payload.containsKey('score2') ||
+        payload.containsKey('participant1Score') ||
+        payload.containsKey('participant2Score');
+    return incoming.copyWith(
+      team1Id: incoming.team1Id.isEmpty ? previous.team1Id : incoming.team1Id,
+      team2Id: incoming.team2Id.isEmpty ? previous.team2Id : incoming.team2Id,
+      team1Name: incoming.team1Name == 'TBD' ? previous.team1Name : incoming.team1Name,
+      team2Name: incoming.team2Name == 'TBD' ? previous.team2Name : incoming.team2Name,
+      tournamentName: incoming.tournamentName ?? previous.tournamentName,
+      sportKey: incoming.sportKey ?? previous.sportKey,
+      sportRules: incoming.sportRules ?? previous.sportRules,
+      tournamentConfig: incoming.tournamentConfig ?? previous.tournamentConfig,
+      scoreDetails: hasScorePayload ? incoming.scoreDetails : previous.scoreDetails,
+      score1: hasScorePayload ? incoming.score1 : previous.score1,
+      score2: hasScorePayload ? incoming.score2 : previous.score2,
+      sets: hasScorePayload ? incoming.sets : previous.sets,
+      setsToWin: incoming.setsToWin ?? previous.setsToWin,
+      maxScore: incoming.maxScore ?? previous.maxScore,
+      timeLimitMinutes: incoming.timeLimitMinutes ?? previous.timeLimitMinutes,
+      refereeName: incoming.refereeName ?? previous.refereeName,
+      refereeId: incoming.refereeId ?? previous.refereeId,
+      startedAt: incoming.startedAt ?? previous.startedAt,
+    );
   }
 
 

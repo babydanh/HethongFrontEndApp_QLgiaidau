@@ -77,7 +77,10 @@ class _LiveTournamentWithMatchesCardState
           return true;
         }).toList();
 
-        List<MatchModel> displayMatches = validMatches.isNotEmpty ? validMatches : matches;
+        // Match sections must render only persisted matches matching the
+        // requested status. Never fall back to another status or fake scores.
+        if (validMatches.isEmpty) return const SizedBox.shrink();
+        List<MatchModel> displayMatches = validMatches;
 
         if (displayMatches.isEmpty) {
           displayMatches = [
