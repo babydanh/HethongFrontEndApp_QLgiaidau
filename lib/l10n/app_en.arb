@@ -4781,5 +4781,9 @@
   "devicePairingUnavailable": "Pairing failed. Check your connection and try again.",
   "devicePairingFingerprintUnavailable": "Could not identify this device.",
   "devicePairingCameraPermission": "Camera permission is required to scan the pairing code.",
-  "devicePairingClose": "Close"
+  "devicePairingClose": "Close",
+  "createClubTournament_advancedOptions": "More options",
+  "createClubTournament_advancedOptionsDescription": "Schedule, bracket, description and ranking. Skip them to create faster.",
+  "createClubTournament_showAdvancedOptions": "Show",
+  "createClubTournament_hideAdvancedOptions": "Hide"
 }

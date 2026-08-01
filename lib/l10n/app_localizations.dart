@@ -20883,6 +20883,30 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đóng'**
   String get devicePairingClose;
+
+  /// No description provided for @createClubTournament_advancedOptions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tùy chọn thêm'**
+  String get createClubTournament_advancedOptions;
+
+  /// No description provided for @createClubTournament_advancedOptionsDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch thi đấu, bracket, mô tả và xếp hạng. Có thể bỏ qua để tạo nhanh.'**
+  String get createClubTournament_advancedOptionsDescription;
+
+  /// No description provided for @createClubTournament_showAdvancedOptions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở rộng'**
+  String get createClubTournament_showAdvancedOptions;
+
+  /// No description provided for @createClubTournament_hideAdvancedOptions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu gọn'**
+  String get createClubTournament_hideAdvancedOptions;
 }
 
 class _AppLocalizationsDelegate

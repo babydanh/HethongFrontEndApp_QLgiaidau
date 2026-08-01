@@ -11466,4 +11466,17 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devicePairingClose => 'Đóng';
+
+  @override
+  String get createClubTournament_advancedOptions => 'Tùy chọn thêm';
+
+  @override
+  String get createClubTournament_advancedOptionsDescription =>
+      'Lịch thi đấu, bracket, mô tả và xếp hạng. Có thể bỏ qua để tạo nhanh.';
+
+  @override
+  String get createClubTournament_showAdvancedOptions => 'Mở rộng';
+
+  @override
+  String get createClubTournament_hideAdvancedOptions => 'Thu gọn';
 }

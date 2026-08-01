@@ -4781,5 +4781,9 @@
   "devicePairingUnavailable": "Ghép nối thất bại. Hãy kiểm tra kết nối và thử lại.",
   "devicePairingFingerprintUnavailable": "Không thể xác định thiết bị này.",
   "devicePairingCameraPermission": "Cần cấp quyền camera để quét mã ghép nối.",
-  "devicePairingClose": "Đóng"
+  "devicePairingClose": "Đóng",
+  "createClubTournament_advancedOptions": "Tùy chọn thêm",
+  "createClubTournament_advancedOptionsDescription": "Lịch thi đấu, bracket, mô tả và xếp hạng. Có thể bỏ qua để tạo nhanh.",
+  "createClubTournament_showAdvancedOptions": "Mở rộng",
+  "createClubTournament_hideAdvancedOptions": "Thu gọn"
 }

@@ -11498,4 +11498,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devicePairingClose => 'Close';
+
+  @override
+  String get createClubTournament_advancedOptions => 'More options';
+
+  @override
+  String get createClubTournament_advancedOptionsDescription =>
+      'Schedule, bracket, description and ranking. Skip them to create faster.';
+
+  @override
+  String get createClubTournament_showAdvancedOptions => 'Show';
+
+  @override
+  String get createClubTournament_hideAdvancedOptions => 'Hide';
 }

@@ -42,6 +42,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   int _recurringAdvanceDays = 3;
   bool _isLoading = false;
   bool _isRanked = false;
+  bool _isAdvancedOptionsOpen = false;
 
   @override
   void dispose() {
@@ -90,6 +91,8 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         'format': _selectedSport == AppConstants.sportFootball
             ? AppConstants.formatDoubles
             : _selectedFormat,
+        if (_selectedFormat == AppConstants.formatMixedDoubles)
+          'genderRestriction': 'MIXED',
         'bracketType': _selectedBracket,
         'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
         'description': _descCtrl.text.trim(),
@@ -286,8 +289,9 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
               _buildFormatSelector(),
               const SizedBox(height: 20),
 
-              // ─── Thể thức ───
-              _label(l10n.createClubTournament_bracketLabel, colors),
+              if (_isAdvancedOptionsOpen) ...[
+                // ─── Thể thức ───
+                _label(l10n.createClubTournament_bracketLabel, colors),
               const SizedBox(height: 6),
               _buildBracketSelector(),
               const SizedBox(height: 20),
@@ -487,6 +491,48 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                 ),
               ),
               const SizedBox(height: 20),
+              ],
+
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: colors.bgSurface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: colors.border),
+                ),
+                child: InkWell(
+                  onTap: () => setState(() => _isAdvancedOptionsOpen = !_isAdvancedOptionsOpen),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.createClubTournament_advancedOptions,
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              l10n.createClubTournament_advancedOptionsDescription,
+                              style: TextStyle(fontSize: 11, color: colors.textMuted),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        _isAdvancedOptionsOpen
+                            ? l10n.createClubTournament_hideAdvancedOptions
+                            : l10n.createClubTournament_showAdvancedOptions,
+                        style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
 
               // ─── Nút Submit ───
               SizedBox(
@@ -571,7 +617,8 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         : [
             (AppConstants.formatSingles, l10n.createClubTournament_formatSingles),
             (AppConstants.formatDoubles, l10n.createClubTournament_formatDoubles),
-            (AppConstants.formatMixedDoubles, l10n.createClubTournament_formatMixedDoubles),
+            if (_isAdvancedOptionsOpen)
+              (AppConstants.formatMixedDoubles, l10n.createClubTournament_formatMixedDoubles),
           ];
     return Row(
       children: formats.map((f) {

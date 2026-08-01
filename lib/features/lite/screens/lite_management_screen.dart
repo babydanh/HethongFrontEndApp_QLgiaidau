@@ -57,8 +57,21 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     });
   }
 
+    @override
+  void didUpdateWidget(covariant LiteManagementScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.tournamentId == widget.tournamentId) return;
+    _formatDraft = null;
+    _loadWatchdog?.cancel();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(liteManagementProvider.notifier).init(widget.tournamentId);
+    });
+  }
+
   @override
   void dispose() {
+
     _loadWatchdog?.cancel();
     _tabController.dispose();
     super.dispose();

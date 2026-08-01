@@ -230,7 +230,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   AppLocalizations get _l10n =>
       lookupAppLocalizations(ref.read(localeProvider));
 
-    String _apiError(DioException error, String fallback) {
+  String _apiError(DioException error, String fallback) {
     final data = error.response?.data;
     if (data is Map && data['message'] != null) {
       return data['message'].toString();
@@ -402,9 +402,14 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       final payload = envelope is Map ? envelope['data'] : envelope;
       final stages = payload is Map ? payload['stages'] : null;
       state = state.copyWith(hasBracket: stages is List && stages.isNotEmpty);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        state = state.copyWith(hasBracket: false);
+      } else {
+        _log.debug('Không tải được bracket Lite, giữ snapshot hiện tại: $e');
+      }
     } catch (e) {
-      _log.debug('Chưa có bracket Lite hoặc chưa tải được bracket: $e');
-      state = state.copyWith(hasBracket: false);
+      _log.debug('Không tải được bracket Lite, giữ snapshot hiện tại: $e');
     }
   }
 
