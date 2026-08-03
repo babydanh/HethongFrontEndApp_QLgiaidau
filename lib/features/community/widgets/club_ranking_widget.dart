@@ -213,35 +213,56 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Section Header ──
-        Row(
-          children: [
-            Icon(
-              Icons.emoji_events_rounded,
-              size: 16,
-              color: colors.textSecondary,
+        // ── Section Header & Filters ──
+        if (!widget.compact)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.emoji_events_rounded,
+                  size: 16,
+                  color: colors.textSecondary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Xếp hạng CLB',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textSecondary,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _buildGenderFilter(),
+                const SizedBox(width: 6),
+                _buildRankedFilter(),
+                const SizedBox(width: 6),
+                _buildMatchTypeFilter(),
+              ],
             ),
-            const SizedBox(width: 6),
-            Text(
-              'Xếp hạng CLB',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
+          )
+        else
+          Row(
+            children: [
+              Icon(
+                Icons.emoji_events_rounded,
+                size: 16,
                 color: colors.textSecondary,
-                letterSpacing: 0.3,
               ),
-            ),
-            const Spacer(),
-            // Gender filter tabs
-            if (!widget.compact) _buildGenderFilter(),
-            if (!widget.compact) const SizedBox(width: 6),
-            // Ranked-only filter pill
-            if (!widget.compact) _buildRankedFilter(),
-            if (!widget.compact) const SizedBox(width: 6),
-            // Match type filter tabs
-            if (!widget.compact) _buildMatchTypeFilter(),
-          ],
-        ),
+              const SizedBox(width: 6),
+              Text(
+                'Xếp hạng CLB',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textSecondary,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
         const SizedBox(height: 10),
 
         // ── Podium Row (Top 3) ──
@@ -509,20 +530,20 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     final rank3 = rankings.length > 2 ? rankings[2] : null;
 
     return SizedBox(
-      height: 136,
+      height: 156,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           // Silver (rank 2) - left
           if (rank2 != null)
             Expanded(child: _buildPodiumCard(rank2, 2, isCenter: false)),
-          if (rank2 != null) const SizedBox(width: 5),
+          if (rank2 != null) const SizedBox(width: 4),
 
           // Gold (rank 1) - center, tallest
-          Expanded(flex: 12, child: _buildPodiumCard(rank1, 1, isCenter: true)),
+          Expanded(flex: 10, child: _buildPodiumCard(rank1, 1, isCenter: true)),
 
           // Bronze (rank 3) - right
-          if (rank3 != null) const SizedBox(width: 5),
+          if (rank3 != null) const SizedBox(width: 4),
           if (rank3 != null)
             Expanded(child: _buildPodiumCard(rank3, 3, isCenter: false)),
         ],
@@ -537,16 +558,14 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   }) {
     final colors = context.colors;
     final medalColors = _medalColors(rank);
-    final avatarSize = isCenter ? 42.0 : 34.0;
+    final avatarSize = isCenter ? 40.0 : 32.0;
     final tierInfo = _getEloTierInfo(player.eloPoints);
 
     return Container(
-      height: isCenter ? 128 : 112,
-      padding: EdgeInsets.only(
-        top: 10,
-        left: 6,
-        right: 6,
-        bottom: isCenter ? 14 : 8,
+      height: isCenter ? 152 : 132,
+      padding: EdgeInsets.symmetric(
+        horizontal: 4,
+        vertical: isCenter ? 8 : 6,
       ),
       decoration: BoxDecoration(
         color: medalColors.bg.withValues(alpha: 0.06),
@@ -556,86 +575,89 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
           width: isCenter ? 1.5 : 1,
         ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Rank badge
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                rank == 1
-                    ? Icons.emoji_events_rounded
-                    : rank == 2
-                    ? Icons.military_tech_rounded
-                    : Icons.workspace_premium_rounded,
-                size: isCenter ? 15 : 12,
-                color: medalColors.icon,
-              ),
-              const SizedBox(width: 2),
-              Text(
-                '#$rank',
-                style: TextStyle(
-                  fontSize: isCenter ? 12 : 10,
-                  fontWeight: FontWeight.w700,
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Rank badge
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  rank == 1
+                      ? Icons.emoji_events_rounded
+                      : rank == 2
+                      ? Icons.military_tech_rounded
+                      : Icons.workspace_premium_rounded,
+                  size: isCenter ? 14 : 11,
                   color: medalColors.icon,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-
-          _buildPodiumAvatars(player, avatarSize),
-          const SizedBox(height: 4),
-
-          // Name
-          Text(
-            player.fullName,
-            style: TextStyle(
-              fontSize: isCenter ? 11 : 10,
-              fontWeight: FontWeight.w600,
-              color: colors.textPrimary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 2),
-
-          // ELO points + Tier badge
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '${player.eloPoints}',
-                style: TextStyle(
-                  fontSize: isCenter ? 14 : 12,
-                  fontWeight: FontWeight.w700,
-                  color: medalColors.elo,
-                ),
-              ),
-              const SizedBox(width: 4),
-              // Tier badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                decoration: BoxDecoration(
-                  color: tierInfo.bgColor,
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: tierInfo.borderColor, width: 0.5),
-                ),
-                child: Text(
-                  tierInfo.label,
+                const SizedBox(width: 2),
+                Text(
+                  '#$rank',
                   style: TextStyle(
-                    fontSize: 7,
+                    fontSize: isCenter ? 11 : 9,
                     fontWeight: FontWeight.w700,
-                    color: tierInfo.textColor,
-                    letterSpacing: 0.3,
+                    color: medalColors.icon,
                   ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 4),
+
+            _buildPodiumAvatars(player, avatarSize),
+            const SizedBox(height: 4),
+
+            // Name
+            Text(
+              player.fullName,
+              style: TextStyle(
+                fontSize: isCenter ? 11 : 10,
+                fontWeight: FontWeight.w600,
+                color: colors.textPrimary,
               ),
-            ],
-          ),
-        ],
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 2),
+
+            // ELO points + Tier badge
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${player.eloPoints}',
+                  style: TextStyle(
+                    fontSize: isCenter ? 13 : 11,
+                    fontWeight: FontWeight.w700,
+                    color: medalColors.elo,
+                  ),
+                ),
+                const SizedBox(width: 3),
+                // Tier badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: tierInfo.bgColor,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: tierInfo.borderColor, width: 0.5),
+                  ),
+                  child: Text(
+                    tierInfo.label,
+                    style: TextStyle(
+                      fontSize: 7,
+                      fontWeight: FontWeight.w700,
+                      color: tierInfo.textColor,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

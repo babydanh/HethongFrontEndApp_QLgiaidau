@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 
 // ──────────────────────────────────────────────
@@ -87,6 +89,8 @@ class LiteManagementState {
   final String? tournamentName;
   final String? inviteCode;
   final bool hasBracket;
+  final List<MatchModel> matches;
+  final String? matchesError;
 
   const LiteManagementState({
     this.loading = true,
@@ -103,6 +107,8 @@ class LiteManagementState {
     this.tournamentName,
     this.inviteCode,
     this.hasBracket = false,
+    this.matches = const [],
+    this.matchesError,
   });
 
   LiteManagementState copyWith({
@@ -122,6 +128,9 @@ class LiteManagementState {
     String? tournamentName,
     String? inviteCode,
     bool? hasBracket,
+    List<MatchModel>? matches,
+    String? matchesError,
+    bool? clearMatchesError,
   }) {
     return LiteManagementState(
       loading: loading ?? this.loading,
@@ -140,6 +149,10 @@ class LiteManagementState {
       tournamentName: tournamentName ?? this.tournamentName,
       inviteCode: inviteCode ?? this.inviteCode,
       hasBracket: hasBracket ?? this.hasBracket,
+      matches: matches ?? this.matches,
+      matchesError: clearMatchesError == true
+          ? null
+          : (matchesError ?? this.matchesError),
     );
   }
 
@@ -166,6 +179,7 @@ final liteManagementProvider =
 
 class LiteManagementNotifier extends Notifier<LiteManagementState> {
   static const _log = AppLogger('LiteManage');
+  bool _loadInFlight = false;
 
   @override
   LiteManagementState build() => const LiteManagementState();
@@ -187,25 +201,37 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     if (error.response?.statusCode == 403) {
       return 'Bạn không có quyền quản lý giải Lite này.';
     }
+    if (error.response?.statusCode == 429) {
+      return 'He thong dang gioi han request tam thoi. Du lieu cu van duoc giu; vui long thu lai sau it giay.';
+    }
+    if ((error.response?.statusCode ?? 0) >= 500) {
+      return 'May chu dang ban. Du lieu cu van duoc giu; vui long thu lai sau it giay.';
+    }
     return fallback;
   }
 
   // ─── Initialize with tournament ID (called from screen) ───
 
   Future<void> init(String tournamentId) async {
+    if (_loadInFlight) return;
+    _loadInFlight = true;
     state = const LiteManagementState(loading: true);
     try {
       await Future.wait([
         _fetchTournament(tournamentId),
         _fetchParticipants(tournamentId),
         _fetchBracket(tournamentId),
+        _fetchMatches(tournamentId),
       ]).timeout(const Duration(seconds: 15));
+      _loadInFlight = false;
     } on TimeoutException {
+      _loadInFlight = false;
       state = state.copyWith(
         loading: false,
         error: 'Tải dữ liệu giải Lite quá lâu. Vui lòng thử lại.',
       );
     } catch (e, stack) {
+      _loadInFlight = false;
       _log.error('Lỗi khởi tạo quản lý Lite', e, stack);
       state = state.copyWith(
         loading: false,
@@ -273,7 +299,6 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   // ─── Fetch participants ───
 
   Future<void> _fetchParticipants(String tournamentId) async {
-    state = state.copyWith(loading: true, error: null, clearError: true);
     try {
       final res = await _dio
           .get('/tournaments/lite/$tournamentId/participants')
@@ -320,22 +345,67 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
   }
 
+  Future<void> _fetchMatches(String tournamentId) async {
+    try {
+      final matches = await ref
+          .read(matchRepositoryProvider)
+          .getAllByTournament(tournamentId);
+      state = state.copyWith(matches: matches, clearMatchesError: true);
+    } catch (e, stack) {
+      _log.error('Lỗi tải danh sách trận Lite', e, stack);
+      final message = e is DioException
+          ? _apiError(e, 'Khong the tai danh sach tran luc nay.')
+          : 'Khong the tai danh sach tran luc nay.';
+      // Preserve the last good snapshot. A transient 429/5xx must not look
+      // like the tournament has no matches.
+      state = state.copyWith(matchesError: message);
+    }
+  }
+
   // ─── Public methods ───
 
   Future<void> refresh(String tournamentId) async {
-    state = const LiteManagementState(loading: true);
+    if (_loadInFlight) return;
+    _loadInFlight = true;
+    state = state.copyWith(loading: true, clearError: true);
     try {
       await Future.wait([
         _fetchTournament(tournamentId),
         _fetchParticipants(tournamentId),
         _fetchBracket(tournamentId),
+        _fetchMatches(tournamentId),
       ]).timeout(const Duration(seconds: 15));
+      _loadInFlight = false;
     } on TimeoutException {
+      _loadInFlight = false;
       state = state.copyWith(
         loading: false,
         error: 'Tải dữ liệu giải Lite quá lâu. Vui lòng thử lại.',
       );
     }
+  }
+
+  Future<void> refreshMatches(String tournamentId) => _fetchMatches(tournamentId);
+
+  Future<void> startMatch(String tournamentId, String matchId) async {
+    await ref.read(matchRepositoryProvider).startMatch(tournamentId, matchId);
+    await _fetchMatches(tournamentId);
+  }
+
+  Future<void> applyMatchOperation(
+    String tournamentId,
+    String matchId, {
+    required String action,
+    required String reason,
+    String? winnerId,
+  }) async {
+    await ref.read(matchRepositoryProvider).matchOperation(
+      matchId,
+      action: action,
+      reason: reason,
+      winnerId: winnerId,
+    );
+    await _fetchMatches(tournamentId);
   }
 
   void toggleSelection(String id) {

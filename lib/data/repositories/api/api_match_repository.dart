@@ -59,12 +59,15 @@ class ApiMatchRepository implements IMatchRepository {
     Timer? refreshTimer;
 
     Future<void> refresh() async {
-      final updated = await getAllByTournament(tournamentId, divisionId: divisionId);
-      if (updated.isNotEmpty) {
-        _matchesCache[cacheKey] = updated;
+      List<MatchModel> updated;
+      try {
+        updated = await getAllByTournament(tournamentId, divisionId: divisionId);
+      } catch (error, stack) {
+        _log.error('Keeping cached tournament matches after refresh failure', error, stack);
+        updated = _matchesCache[cacheKey] ?? const [];
       }
       if (!controller.isClosed) {
-        controller.add(_matchesCache[cacheKey] ?? updated);
+        controller.add(updated);
       }
     }
 
@@ -96,7 +99,13 @@ class ApiMatchRepository implements IMatchRepository {
     Timer? refreshTimer;
 
     Future<void> refresh() async {
-      final currentList = await getAllByTournament(tournamentId);
+      List<MatchModel> currentList;
+      try {
+        currentList = await getAllByTournament(tournamentId);
+      } catch (error, stack) {
+        _log.error('Keeping cached live matches after refresh failure', error, stack);
+        currentList = _matchesCache['$tournamentId-all'] ?? const [];
+      }
       if (!controller.isClosed) {
         controller.add(currentList.where((m) => m.status == 'live' || m.status == 'ONGOING').toList());
       }
@@ -613,12 +622,16 @@ class ApiMatchRepository implements IMatchRepository {
       final response = await _dioClient.dio.get('/matches', queryParameters: queryParameters);
       if (response.statusCode == 200) {
         final List<dynamic> list = response.data['data'] ?? response.data ?? [];
-        return list.map((json) => _parseMatch(Map<String, dynamic>.from(json))).toList();
+        final matches = list
+            .map((json) => _parseMatch(Map<String, dynamic>.from(json)))
+            .toList();
+        _matchesCache['$tournamentId-${divisionId ?? 'all'}'] = matches;
+        return matches;
       }
-      return [];
+      throw StateError('Unexpected match response: ${response.statusCode}');
     } catch (e, stack) {
       _log.error('Error fetching matches from API', e, stack);
-      return [];
+      rethrow;
     }
   }
 

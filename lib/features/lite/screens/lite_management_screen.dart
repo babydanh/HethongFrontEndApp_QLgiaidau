@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
+import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -31,7 +32,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() {
       if (mounted) setState(() {});
     });
@@ -110,6 +111,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             Tab(icon: const Icon(Icons.dashboard_outlined, size: 18), text: l10n.organizer_tabOverview),
             Tab(icon: const Icon(Icons.people_outline_rounded, size: 18), text: l10n.lite_participantsTab),
             Tab(icon: const Icon(Icons.account_tree_outlined, size: 18), text: l10n.lite_bracketAndMatches),
+            const Tab(icon: Icon(Icons.tune_rounded, size: 18), text: 'Điều hành'),
           ],
         ),
       ),
@@ -165,6 +167,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                             isEmbedded: true,
                           ))
                         : frame(_buildBracketTab(colors, state, notifier));
+                  case 3:
+                    return frame(_buildOperationsTab(colors, state, notifier));
                   default:
                     return const SizedBox.shrink();
                 }
@@ -1157,6 +1161,160 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildOperationsTab(
+    AppColorsExtension colors,
+    LiteManagementState state,
+    LiteManagementNotifier notifier,
+  ) {
+    final matches = state.matches;
+    return RefreshIndicator(
+      onRefresh: () => notifier.refreshMatches(widget.tournamentId),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+        children: [
+          Text(
+            'Điều hành giải',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: colors.textPrimary),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Theo dõi trận, mở bảng điểm và xử lý kết quả từ một nơi.',
+            style: TextStyle(fontSize: 13, color: colors.textSecondary),
+          ),
+          if (state.matchesError != null) ...[
+            const SizedBox(height: 12),
+            _operationsNotice(colors, state.matchesError!),
+          ],
+          const SizedBox(height: 16),
+          if (matches.isEmpty)
+            _emptyCard(colors, state.matchesError == null
+                ? 'Chưa có trận đấu trong giải.'
+                : 'Chưa thể đồng bộ trận mới. Dữ liệu cũ vẫn được giữ nguyên; kéo xuống để thử lại.')
+          else
+            ...matches.map((match) => _operationMatchCard(colors, notifier, match)),
+        ],
+      ),
+    );
+  }
+
+  Widget _operationsNotice(AppColorsExtension colors, String message) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.amber.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.cloud_off_rounded, size: 18, color: Colors.amber),
+          const SizedBox(width: 8),
+          Expanded(child: Text(message, style: TextStyle(fontSize: 12, color: colors.textSecondary))),
+        ],
+      ),
+    );
+  }
+
+  Widget _operationMatchCard(
+    AppColorsExtension colors,
+    LiteManagementNotifier notifier,
+    MatchModel match,
+  ) {
+    final status = match.status.toUpperCase();
+    final canStart = match.team1Id.isNotEmpty && match.team2Id.isNotEmpty &&
+        status != 'COMPLETED' && status != 'ONGOING' && status != 'LIVE';
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: colors.border.withValues(alpha: 0.8)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(child: Text('Vòng ${match.round} · Trận ${match.matchNumber}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: colors.textMuted))),
+                _statusChip(colors, status),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text('${match.team1Name}  ${match.score1} - ${match.score2}  ${match.team2Name}', style: TextStyle(fontWeight: FontWeight.w700, color: colors.textPrimary)),
+            if (match.court.isNotEmpty || match.refereeName != null) ...[
+              const SizedBox(height: 6),
+              Text('${match.court.isEmpty ? 'Chưa xếp sân' : match.court} · ${match.refereeName ?? 'Chưa có trọng tài'}', style: TextStyle(fontSize: 12, color: colors.textSecondary)),
+            ],
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => context.push('/live/${match.id}'),
+                  icon: const Icon(Icons.scoreboard_outlined, size: 17),
+                  label: const Text('Mở bảng điểm'),
+                ),
+                if (canStart)
+                  FilledButton.icon(
+                    onPressed: () => notifier.startMatch(widget.tournamentId, match.id),
+                    icon: const Icon(Icons.play_arrow_rounded, size: 17),
+                    label: const Text('Bắt đầu'),
+                  ),
+                if (status == 'ONGOING' || status == 'LIVE')
+                  OutlinedButton.icon(
+                    onPressed: () => _showOperationDialog(notifier, match),
+                    icon: const Icon(Icons.gavel_rounded, size: 17),
+                    label: const Text('Quyết định'),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _statusChip(AppColorsExtension colors, String status) {
+    final live = status == 'LIVE' || status == 'ONGOING';
+    final completed = status == 'COMPLETED' || status == 'FINISHED';
+    final color = live ? Colors.green : completed ? colors.textMuted : AppTheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
+      child: Text(live ? 'Đang diễn ra' : completed ? 'Đã xong' : 'Chưa đấu', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+    );
+  }
+
+  Future<void> _showOperationDialog(LiteManagementNotifier notifier, MatchModel match) async {
+    const actions = <String, String>{
+      'WALKOVER': 'Xử thắng / bỏ cuộc',
+      'RETIREMENT': 'Dừng trận',
+      'DISQUALIFICATION': 'Loại khỏi giải',
+    };
+    final action = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Quyết định trận đấu'),
+        children: actions.entries.map((entry) => SimpleDialogOption(
+          onPressed: () => Navigator.pop(context, entry.key),
+          child: Text(entry.value),
+        )).toList(),
+      ),
+    );
+    if (!mounted || action == null) return;
+    await notifier.applyMatchOperation(
+      widget.tournamentId,
+      match.id,
+      action: action,
+      reason: actions[action]!,
+      winnerId: match.team1Id,
     );
   }
 
