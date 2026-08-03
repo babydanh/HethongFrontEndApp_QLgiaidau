@@ -902,7 +902,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(width: 5),
               Text(
-                'Đã tham gia từ $joinedDateText',
+                joinedDateText,
                 style: TextStyle(
                   fontSize: 12.5,
                   color: colors.textSecondary,
