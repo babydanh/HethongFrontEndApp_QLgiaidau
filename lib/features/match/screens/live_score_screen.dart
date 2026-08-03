@@ -61,6 +61,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   bool _didSeedSetupControls = false;
 
   late TabController _tabController;
+  int _selectedViewerTab = 0;
   final List<Map<String, dynamic>> _comments = [];
   bool _isLoadingComments = false;
   StreamSubscription? _commentSub;
@@ -2161,6 +2162,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           ),
           child: TabBar(
             controller: _tabController,
+            onTap: (index) {
+              if (mounted) setState(() => _selectedViewerTab = index);
+            },
             labelColor: AppTheme.primary,
             unselectedLabelColor: context.colors.textSecondary,
             indicator: BoxDecoration(
@@ -2181,25 +2185,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         ),
 
         // ─── Tab Content ───
-        SizedBox(
-          height: isLandscape ? 450 : 620,
-          child: TabBarView(
-            controller: _tabController,
-            physics: const BouncingScrollPhysics(),
-            children: [
-              // Tab 1: Score (Premium Viewer Scoreboard)
-              Consumer(
-                builder: (context, ref, _) {
-                  final state = ref.watch(scorePanelNotifierProvider(params));
-                  return _buildViewerScoreboard(match, state);
-                },
-              ),
-
-              // Tab 2: Chat
-              _buildChatTab(match),
-            ],
-          ),
-        ),
+        // The page owns the vertical scroll. The score tab must not create a
+        // second scroll view inside it; chat keeps its own message list.
+        if (_selectedViewerTab == 0)
+          Consumer(
+            builder: (context, ref, _) {
+              final state = ref.watch(scorePanelNotifierProvider(params));
+              return _buildViewerScoreboard(match, state);
+            },
+          )
+        else
+          _buildChatTab(match),
       ],
     );
   }
@@ -2417,7 +2413,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final t1DisplayList = t1Cleaned.isNotEmpty ? t1Cleaned : [match.team1Name];
     final t2DisplayList = t2Cleaned.isNotEmpty ? t2Cleaned : [match.team2Name];
 
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

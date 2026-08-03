@@ -15,10 +15,12 @@ class Penalty {
 
   factory Penalty.fromJson(Map<String, dynamic> json) {
     return Penalty(
-      teamId: json['teamId'] ?? '',
-      type: json['type'] ?? 'warning',
-      reason: json['reason'],
-      timestamp: DateParser.parseDate(json['timestamp']),
+      // The API stores live penalties as team/kind/note/createdAt inside
+      // scoreDetails, while older app payloads use teamId/type/reason.
+      teamId: json['teamId']?.toString() ?? json['team']?.toString() ?? '',
+      type: json['type']?.toString() ?? json['kind']?.toString() ?? 'warning',
+      reason: (json['reason'] ?? json['note'])?.toString(),
+      timestamp: DateParser.parseDate(json['timestamp'] ?? json['createdAt']),
     );
   }
 

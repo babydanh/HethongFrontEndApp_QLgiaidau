@@ -226,6 +226,15 @@ class MatchModel {
       json['participant2'],
     );
 
+    final scoreDetails = json['scoreDetails'] is Map
+        ? Map<String, dynamic>.from(json['scoreDetails'] as Map)
+        : null;
+    final rawPenalties = json['penalties'] is List
+        ? json['penalties'] as List<dynamic>
+        : scoreDetails?['penalties'] is List
+        ? scoreDetails!['penalties'] as List<dynamic>
+        : <dynamic>[];
+
     return MatchModel(
       id: id,
       round: json['round'] ?? 1,
@@ -276,11 +285,10 @@ class MatchModel {
       updatedAt: DateParser.parseDate(json['updatedAt']),
       refereeName: json['refereeName'],
       refereeId: json['refereeId']?.toString(),
-      penalties:
-          (json['penalties'] as List<dynamic>?)
-              ?.map((p) => Penalty.fromJson(p as Map<String, dynamic>))
-              .toList() ??
-          [],
+      penalties: rawPenalties
+          .whereType<Map>()
+          .map((p) => Penalty.fromJson(Map<String, dynamic>.from(p)))
+          .toList(),
       tournamentName: json['tournamentName'] ?? json['tournament']?['name'],
       sportKey:
           json['sport']?.toString() ?? json['tournament']?['sport']?.toString(),
@@ -294,7 +302,7 @@ class MatchModel {
               (json['tournament'] as Map)['tournamentConfig'] as Map,
             )
           : null,
-      scoreDetails: json['scoreDetails'] as Map<String, dynamic>?,
+      scoreDetails: scoreDetails,
       setsToWin: json['setsToWin'] as int?,
       team1Members: team1MemberInfos.map((m) => m.fullName).toList(),
       team2Members: team2MemberInfos.map((m) => m.fullName).toList(),
