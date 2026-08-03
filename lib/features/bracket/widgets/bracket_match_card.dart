@@ -204,7 +204,7 @@ class BracketMatchCard extends StatelessWidget {
     }
 
     return GestureDetector(
-      onTap: () => _onTap(context),
+      onTap: isSlotEditable ? null : () => _onTap(context),
       child: Container(
         decoration: BoxDecoration(
           color: cardBgColor,

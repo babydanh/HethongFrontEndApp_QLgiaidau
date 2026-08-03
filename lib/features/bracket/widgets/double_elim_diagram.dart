@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/layout/double_elim_layout.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_match_card.dart';
+import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -25,6 +26,8 @@ class DoubleElimDiagram extends StatefulWidget {
   final String tournamentId;
   final bool isReferee;
   final bool isReadOnly;
+  final bool isEditable;
+  final BracketSlotDropCallback? onSlotDrop;
 
   const DoubleElimDiagram({
     super.key,
@@ -32,6 +35,8 @@ class DoubleElimDiagram extends StatefulWidget {
     required this.tournamentId,
     this.isReferee = false,
     this.isReadOnly = true,
+    this.isEditable = false,
+    this.onSlotDrop,
   });
 
   @override
@@ -41,6 +46,50 @@ class DoubleElimDiagram extends StatefulWidget {
 class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
   final TransformationController _tc = TransformationController();
   bool _didCenterInitialView = false;
+  BracketSlotDragData? _selectedSlot;
+  bool _isUpdating = false;
+
+  Future<void> _handleSlotDrop(
+    BracketSlotDragData source,
+    BracketSlotDragData target,
+  ) async {
+    if (_isUpdating || widget.onSlotDrop == null) return;
+    setState(() {
+      _isUpdating = true;
+      _selectedSlot = null;
+    });
+    try {
+      await widget.onSlotDrop!(source, target);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.singleElimUpdateError(error.toString()),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUpdating = false);
+    }
+  }
+
+  void _handleSlotTap(BracketSlotDragData slot) {
+    if (_isUpdating || !widget.isEditable) return;
+    final selected = _selectedSlot;
+    if (selected == null) {
+      if (!slot.hasParticipant) return;
+      setState(() => _selectedSlot = slot);
+      return;
+    }
+    if (selected == slot) {
+      setState(() => _selectedSlot = null);
+      return;
+    }
+    if (slot.isBye) return;
+    _handleSlotDrop(selected, slot);
+  }
 
   @override
   void dispose() {
@@ -269,6 +318,10 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                           isReferee: widget.isReferee,
                           isReadOnly: widget.isReadOnly,
                           isGrandFinal: match.nextMatchId.isEmpty,
+                          isSlotEditable: widget.isEditable && !_isUpdating,
+                          selectedSlot: _selectedSlot,
+                          onSlotTap: _handleSlotTap,
+                          onSlotDrop: _handleSlotDrop,
                         ),
                       );
                     }),

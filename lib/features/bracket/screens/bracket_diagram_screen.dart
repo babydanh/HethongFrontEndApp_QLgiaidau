@@ -215,6 +215,8 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         tournamentId: widget.tournamentId,
         isReferee: widget.isReferee,
         isReadOnly: widget.isReadOnly,
+        isEditable: widget.canEditBracket,
+        onSlotDrop: _updateBracketSlots,
       );
     }
 
@@ -231,6 +233,8 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
           tournamentId: widget.tournamentId,
           isReferee: widget.isReferee,
           isReadOnly: widget.isReadOnly,
+          isEditable: widget.canEditBracket,
+          onSlotDrop: _updateBracketSlots,
         );
       }
       return SingleElimDiagram(
