@@ -401,7 +401,14 @@ class MatchModel {
       stageName:
           json['stageName']?.toString() ??
           json['stage_name']?.toString() ??
-          json['stage']?.toString() ??
+          (json['stage'] is Map
+              ? (json['stage']['name'] ??
+                  json['stage']['stageName'] ??
+                  json['stage']['type'])?.toString()
+              : json['stage']?.toString()) ??
+          (json['group'] is Map && json['group']['stage'] is Map
+              ? json['group']['stage']['name']?.toString()
+              : null) ??
           json['stageType']?.toString(),
       stageType:
           json['stageType']?.toString() ??

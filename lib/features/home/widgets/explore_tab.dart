@@ -1262,9 +1262,17 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
         : m.isCompleted
         ? (l10n.exploreMatchStatusCompleted(m.round))
         : (l10n.exploreMatchStatusScheduled(m.round));
-    final bracketText =
-        m.stageName ??
-        (m.bracketPosition.bracket == 'losers'
+    String? cleanStageName = m.stageName?.trim();
+    if (cleanStageName != null &&
+        (cleanStageName.startsWith('{') || cleanStageName.contains('name:'))) {
+      cleanStageName = cleanStageName.contains('ROUND_ROBIN') ||
+              cleanStageName.contains('Vòng bảng')
+          ? l10n.exploreBracketGroup
+          : l10n.exploreBracketKnockout;
+    }
+    final bracketText = (cleanStageName != null && cleanStageName.isNotEmpty)
+        ? cleanStageName
+        : (m.bracketPosition.bracket == 'losers'
             ? (l10n.exploreBracketLosers)
             : (l10n.exploreBracketKnockout));
     final sportKey = m.sportKey ?? widget.tournament?.sport;
@@ -1364,34 +1372,40 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
               ),
 
               // Right Badge: VÒNG KNOCKOUT / VÒNG BẢNG
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3E8FF),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.emoji_events_rounded,
-                      size: 13,
-                      color: Color(0xFF9333EA),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      bracketText,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3E8FF),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.emoji_events_rounded,
+                        size: 13,
                         color: Color(0xFF9333EA),
-                        letterSpacing: 0.2,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          bracketText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF9333EA),
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

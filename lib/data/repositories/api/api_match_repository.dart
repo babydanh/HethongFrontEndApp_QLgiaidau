@@ -496,9 +496,18 @@ class ApiMatchRepository implements IMatchRepository {
     final rawStage =
         json['stageName'] ??
         json['stage_name'] ??
-        json['stage'] ??
+        (json['stage'] is Map
+            ? (json['stage']['name'] ??
+                json['stage']['stageName'] ??
+                json['stage']['type'])
+            : json['stage']) ??
+        (json['group'] is Map && json['group']['stage'] is Map
+            ? json['group']['stage']['name']
+            : null) ??
         json['stageType'];
-    final stageName = rawStage?.toString();
+    final stageName = rawStage is Map
+        ? (rawStage['name'] ?? rawStage['stageName'] ?? rawStage['type'])?.toString()
+        : rawStage?.toString();
 
     final nextMatchId = (json['nextMatchId'] ?? '').toString();
     final loserNextMatchId = (json['loserNextMatchId'] ?? '').toString();

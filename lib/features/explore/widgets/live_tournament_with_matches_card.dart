@@ -5,7 +5,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -357,13 +356,23 @@ class _LiveTournamentWithMatchesCardState
         match.team2Name.trim().toUpperCase() == 'BYE';
     final isByeMatch = match.isBye || isT1Tbd || isT2Tbd;
 
+    String? cleanStageName = match.stageName?.trim();
+    if (cleanStageName != null &&
+        (cleanStageName.startsWith('{') || cleanStageName.contains('name:'))) {
+      cleanStageName = cleanStageName.contains('ROUND_ROBIN') ||
+              cleanStageName.contains('Vòng bảng')
+          ? l10n.exploreBracketGroup
+          : l10n.exploreBracketKnockout;
+    }
+
     final bracketText =
-        match.stageName ??
-        (match.bracketPosition.bracket == 'losers'
-            ? (l10n.exploreBracketLosers)
-            : (widget.tournament.bracketType == 'round_robin'
-                  ? (l10n.exploreBracketGroup)
-                  : (l10n.exploreBracketKnockout)));
+        (cleanStageName != null && cleanStageName.isNotEmpty)
+            ? cleanStageName
+            : (match.bracketPosition.bracket == 'losers'
+                ? (l10n.exploreBracketLosers)
+                : (widget.tournament.bracketType == 'round_robin'
+                    ? (l10n.exploreBracketGroup)
+                    : (l10n.exploreBracketKnockout)));
     final sportText = l10n.sportDisplayName(
       match.sportKey ?? widget.tournament.sport,
     );
@@ -438,22 +447,26 @@ class _LiveTournamentWithMatchesCardState
                   ],
                 ),
                 if (bracketText.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3E8FF),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      bracketText,
-                      style: const TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF9333EA),
-                        letterSpacing: 0.2,
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3E8FF),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        bracketText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF9333EA),
+                          letterSpacing: 0.2,
+                        ),
                       ),
                     ),
                   ),
