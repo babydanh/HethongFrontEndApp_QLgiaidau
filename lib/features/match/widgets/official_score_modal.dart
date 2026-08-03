@@ -594,42 +594,98 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
               fontSize: 15,
             ),
           ),
-          const SizedBox(height: 8),
-          ...options.map(
-            (option) => Container(
-              margin: const EdgeInsets.only(bottom: 6),
-              decoration: BoxDecoration(
-                color: colors.bgSurface,
-                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                border: Border.all(color: option.color.withValues(alpha: 0.35)),
-              ),
-              child: ListTile(
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                leading: CircleAvatar(
-                  radius: 18,
-                  backgroundColor: option.color.withValues(alpha: 0.12),
-                  child: Icon(option.icon, color: option.color, size: 18),
-                ),
-                selected: selectedPenalty.id == option.id,
-                onTap: () => setState(() => _selectedPenalty = option),
-                title: Text(
-                  option.name,
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
+          OrientationBuilder(
+            builder: (context, orientation) {
+              final isLandscape = orientation == Orientation.landscape;
+              if (isLandscape) {
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: options.map((option) {
+                    final isSelected = selectedPenalty.id == option.id;
+                    return SizedBox(
+                      width: (MediaQuery.of(context).size.width - 48) / 2,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: colors.bgSurface,
+                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                          border: Border.all(
+                            color: isSelected ? option.color : option.color.withValues(alpha: 0.35),
+                            width: isSelected ? 1.5 : 1,
+                          ),
+                        ),
+                        child: ListTile(
+                          dense: true,
+                          visualDensity: VisualDensity.compact,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                          leading: CircleAvatar(
+                            radius: 16,
+                            backgroundColor: option.color.withValues(alpha: 0.12),
+                            child: Icon(option.icon, color: option.color, size: 16),
+                          ),
+                          selected: isSelected,
+                          onTap: () => setState(() => _selectedPenalty = option),
+                          title: Text(
+                            option.name,
+                            style: TextStyle(
+                              color: colors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
+                          trailing: Icon(
+                            isSelected
+                                ? Icons.check_circle_rounded
+                                : Icons.radio_button_unchecked,
+                            color: option.color,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                );
+              }
+
+              return Column(
+                children: options.map(
+                  (option) => Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    decoration: BoxDecoration(
+                      color: colors.bgSurface,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      border: Border.all(color: option.color.withValues(alpha: 0.35)),
+                    ),
+                    child: ListTile(
+                      dense: true,
+                      visualDensity: VisualDensity.compact,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                      leading: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: option.color.withValues(alpha: 0.12),
+                        child: Icon(option.icon, color: option.color, size: 18),
+                      ),
+                      selected: selectedPenalty.id == option.id,
+                      onTap: () => setState(() => _selectedPenalty = option),
+                      title: Text(
+                        option.name,
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      trailing: Icon(
+                        selectedPenalty.id == option.id
+                            ? Icons.check_circle_rounded
+                            : Icons.radio_button_unchecked,
+                        color: option.color,
+                      ),
+                    ),
                   ),
-                ),
-                trailing: Icon(
-                  selectedPenalty.id == option.id
-                      ? Icons.check_circle_rounded
-                      : Icons.radio_button_unchecked,
-                  color: option.color,
-                ),
-              ),
-            ),
+                ).toList(),
+              );
+            },
           ),
           const SizedBox(height: 8),
           Text(
