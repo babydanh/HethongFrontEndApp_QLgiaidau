@@ -3329,6 +3329,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lite_createBracketDesc => 'Tạo bracket để bắt đầu các trận đấu';
 
   @override
+  String lite_bracketMinimumParticipants(Object count) {
+    return 'Cần ít nhất $count người tham gia hợp lệ để tạo bracket.';
+  }
+
+  @override
   String get lite_bracketComingSoon =>
       'Tính năng xem bracket sẽ được cập nhật sau';
 

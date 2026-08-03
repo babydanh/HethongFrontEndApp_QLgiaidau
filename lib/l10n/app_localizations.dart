@@ -6302,6 +6302,12 @@ abstract class AppLocalizations {
   /// **'Tạo bracket để bắt đầu các trận đấu'**
   String get lite_createBracketDesc;
 
+  /// No description provided for @lite_bracketMinimumParticipants.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần ít nhất {count} người tham gia hợp lệ để tạo bracket.'**
+  String lite_bracketMinimumParticipants(Object count);
+
   /// No description provided for @lite_bracketComingSoon.
   ///
   /// In vi, this message translates to:

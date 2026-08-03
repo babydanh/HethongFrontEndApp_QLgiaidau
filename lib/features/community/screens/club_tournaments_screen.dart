@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -22,6 +23,15 @@ class ClubTournamentsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final async = ref.watch(communityTournamentsProvider(clubId));
+    final auth = ref.watch(authProvider);
+    final membership = ref.watch(myCommunityMembershipProvider(clubId));
+    final member = membership.asData?.value;
+    final isJoinedClubManager =
+        member?.status.toUpperCase() == 'JOINED' &&
+        ['OWNER', 'MODERATOR'].contains(member?.role.toUpperCase());
+    final canCreateLite = auth.isAdmin || isJoinedClubManager;
+    final canCreateAdvanced =
+        auth.isAdmin || (auth.isOrganizer && isJoinedClubManager);
     return Scaffold(
       backgroundColor: context.colors.bgDark,
       appBar: AppBar(
@@ -30,13 +40,27 @@ class ClubTournamentsScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.add_rounded),
-            onPressed: () => _showTypeSheet(context, clubId),
+            onPressed: canCreateLite || canCreateAdvanced
+                ? () => _showTypeSheet(
+                      context,
+                      clubId,
+                      canCreateLite: canCreateLite,
+                      canCreateAdvanced: canCreateAdvanced,
+                    )
+                : null,
           ),
         ],
       ),
       body: async.when(
         data: (list) {
-          if (list.isEmpty) return _buildEmpty(context, l10n);
+          if (list.isEmpty) {
+            return _buildEmpty(
+              context,
+              l10n,
+              canCreateLite: canCreateLite,
+              canCreateAdvanced: canCreateAdvanced,
+            );
+          }
           return RefreshIndicator(
             onRefresh: () =>
                 ref.refresh(communityTournamentsProvider(clubId).future),
@@ -53,7 +77,12 @@ class ClubTournamentsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmpty(BuildContext context, AppLocalizations l10n) => Center(
+  Widget _buildEmpty(
+    BuildContext context,
+    AppLocalizations l10n, {
+    required bool canCreateLite,
+    required bool canCreateAdvanced,
+  }) => Center(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -77,7 +106,14 @@ class ClubTournamentsScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 24),
         ElevatedButton.icon(
-          onPressed: () => _showTypeSheet(context, clubId),
+          onPressed: canCreateLite || canCreateAdvanced
+              ? () => _showTypeSheet(
+                    context,
+                    clubId,
+                    canCreateLite: canCreateLite,
+                    canCreateAdvanced: canCreateAdvanced,
+                  )
+              : null,
           icon: const Icon(Icons.add),
           label: Text(l10n.clubTournamentsCreate),
         ),
@@ -224,7 +260,12 @@ class ClubTournamentsScreen extends ConsumerWidget {
     );
   }
 
-  void _showTypeSheet(BuildContext context, String clubId) {
+  void _showTypeSheet(
+    BuildContext context,
+    String clubId, {
+    required bool canCreateLite,
+    required bool canCreateAdvanced,
+  }) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
@@ -267,8 +308,9 @@ class ClubTournamentsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
 
-            // Option 1: Giải Nhanh (Lite)
-            InkWell(
+            // Option 1: Super Quick nội bộ CLB (Lite)
+            if (canCreateLite)
+              InkWell(
               onTap: () {
                 Navigator.pop(ctx);
                 context.push('/club/$clubId/create-tournament');
@@ -353,8 +395,9 @@ class ClubTournamentsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            // Option 2: Tạo nhanh theo luồng Web, vẫn thuộc CLB.
-            InkWell(
+            // Legacy web quick flow is still an organizer-level surface.
+            if (canCreateAdvanced)
+              InkWell(
               onTap: () async {
                 Navigator.pop(ctx);
                 final uri = Uri.parse(
@@ -419,8 +462,9 @@ class ClubTournamentsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            // Option 3: Giải Nâng Cao (Full) - Notice for Web
-            InkWell(
+            // Option 3: Giải Nâng Cao (Full) - Organizer/Admin only
+            if (canCreateAdvanced)
+              InkWell(
               onTap: () {
                 Navigator.pop(ctx);
                 showDialog(

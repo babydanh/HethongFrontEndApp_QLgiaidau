@@ -1324,6 +1324,7 @@
   "lite_noBracket": "No bracket yet",
   "lite_viewBracketDesc": "View the bracket to follow the matches",
   "lite_createBracketDesc": "Create a bracket to start the matches",
+  "lite_bracketMinimumParticipants": "At least {count} eligible participants are required to create a bracket.",
   "lite_bracketComingSoon": "Bracket viewing will be available in a future update",
   "lite_matchesAfterBracket": "Match list will appear after creating bracket",
   "lite_sessionExpired": "Session expired. Please login again and try creating bracket.",

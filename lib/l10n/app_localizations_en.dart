@@ -3339,6 +3339,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lite_createBracketDesc => 'Create a bracket to start the matches';
 
   @override
+  String lite_bracketMinimumParticipants(Object count) {
+    return 'At least $count eligible participants are required to create a bracket.';
+  }
+
+  @override
   String get lite_bracketComingSoon =>
       'Bracket viewing will be available in a future update';
 

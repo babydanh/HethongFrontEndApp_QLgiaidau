@@ -1271,7 +1271,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               width: double.infinity,
               height: 48,
               child: FilledButton.icon(
-                onPressed: state.creatingBracket
+                onPressed: state.creatingBracket ||
+                    state.bracketEligibleParticipants.length < 2
                     ? null
                     : () => _createBracket(colors, notifier),
                 icon: state.creatingBracket
@@ -1297,6 +1298,14 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 ),
               ),
             ),
+            if (state.bracketEligibleParticipants.length < 2) ...[
+              const SizedBox(height: 8),
+              Text(
+                l10n.lite_bracketMinimumParticipants(2),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: colors.warning),
+              ),
+            ],
           ],
         ],
       ),
@@ -1507,7 +1516,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     ),
                   ),
                   OutlinedButton.icon(
-                    onPressed: state.creatingBracket
+                    onPressed: state.creatingBracket ||
+                    state.bracketEligibleParticipants.length < 2
                         ? null
                         : () => _createBracket(colors, notifier),
                     icon: const Icon(Icons.refresh_rounded, size: 18),
@@ -1527,7 +1537,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 width: 200,
                 height: 48,
                 child: FilledButton.icon(
-                  onPressed: state.creatingBracket
+                  onPressed: state.creatingBracket ||
+                    state.bracketEligibleParticipants.length < 2
                       ? null
                       : () => _createBracket(colors, notifier),
                   icon: state.creatingBracket
@@ -1553,6 +1564,14 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   ),
                 ),
               ),
+              if (state.bracketEligibleParticipants.length < 2) ...[
+                const SizedBox(height: 8),
+                Text(
+                  l10n.lite_bracketMinimumParticipants(2),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: colors.warning),
+                ),
+              ],
             ],
           ],
         ),

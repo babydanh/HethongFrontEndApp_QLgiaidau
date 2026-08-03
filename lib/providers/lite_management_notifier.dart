@@ -186,6 +186,12 @@ class LiteManagementState {
   List<LiteParticipant> get completeParticipants =>
       participants.where((p) => p.isComplete).toList();
 
+  // Backend bracket generators only seed COMPLETE records (or mock records).
+  // Keep PENDING_APPROVAL visible in the roster, but never count it as
+  // bracket-eligible until the registration is approved.
+  List<LiteParticipant> get bracketEligibleParticipants =>
+      participants.where((p) => p.status == 'COMPLETE').toList();
+
   bool get isDoubles {
     final normalized = matchType?.toUpperCase();
     return normalized == 'DOUBLES' ||
@@ -649,6 +655,11 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   }
 
   Future<void> createBracket(String tournamentId) async {
+    if (state.bracketEligibleParticipants.length < 2) {
+      throw StateError(
+        _l10n.lite_bracketMinimumParticipants(2),
+      );
+    }
     state = state.copyWith(creatingBracket: true);
     final bType =
         state.tournament?.bracketType.toUpperCase() ?? 'SINGLE_ELIMINATION';

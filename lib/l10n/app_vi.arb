@@ -1324,6 +1324,7 @@
   "lite_noBracket": "Chưa có bracket",
   "lite_viewBracketDesc": "Xem sơ đồ thi đấu để theo dõi các trận đấu",
   "lite_createBracketDesc": "Tạo bracket để bắt đầu các trận đấu",
+  "lite_bracketMinimumParticipants": "Cần ít nhất {count} người tham gia hợp lệ để tạo bracket.",
   "lite_bracketComingSoon": "Tính năng xem bracket sẽ được cập nhật sau",
   "lite_matchesAfterBracket": "Danh sách trận đấu sẽ xuất hiện sau khi tạo bracket",
   "lite_sessionExpired": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại rồi thử tạo bracket.",
