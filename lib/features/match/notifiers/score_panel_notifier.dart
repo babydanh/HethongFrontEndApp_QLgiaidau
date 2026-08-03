@@ -161,6 +161,13 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   bool _canAddRallyPoint(int currentScore) {
     if (state.isLite || state.config.maxPoints <= 0) return true;
+    if (state.overrideEnabled && state.overrideReason.trim().isEmpty) {
+      state = state.copyWith(
+        errorMessage: 'Nhập lý do Ngoại lệ trước khi vượt trần preset.',
+      );
+      return false;
+    }
+    if (state.overrideEnabled) return true;
     if (currentScore >= state.config.maxPoints) {
       state = state.copyWith(
         errorMessage:
@@ -254,7 +261,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         ? state.finishedSets.last
         : null;
     if (curSet == null) return;
-    if (isSetComplete(curSet, state.config)) {
+    if (!state.isLite &&
+        !state.overrideEnabled &&
+        isSetComplete(curSet, state.config)) {
       final idx = state.finishedSets.length - 1;
       final newSets = [...state.finishedSets];
       newSets[idx] = newSets[idx].copyWith(isFinished: true);
@@ -322,6 +331,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   void _checkPickleballGameEnd() {
     final r = state.rally;
     if (r == null) return;
+    if (state.isLite || state.overrideEnabled) return;
     if (isSetComplete(
       SetScoreData(score1: r.currentP1, score2: r.currentP2),
       state.config,
@@ -376,6 +386,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   void _checkRallySetEnd() {
     final r = state.rally;
     if (r == null) return;
+    if (state.isLite || state.overrideEnabled) return;
     if (isSetComplete(
       SetScoreData(score1: r.currentP1, score2: r.currentP2),
       state.config,
@@ -401,6 +412,13 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   bool canCompleteAs(int winnerTeam) {
     if (winnerTeam != 1 && winnerTeam != 2) return false;
+    if (state.isLite) {
+      final (team1Wins, team2Wins) = computeMatchSetsWon(
+        _setsForSubmission(),
+      );
+      return team1Wins != team2Wins &&
+          (winnerTeam == 1 ? team1Wins > team2Wins : team2Wins > team1Wins);
+    }
     if (!state.overrideEnabled) {
       return state.isMatchComplete && state.winnerTeam == winnerTeam;
     }
@@ -495,11 +513,14 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
           : null;
       List<SetScoreData> newSets;
       if (curSet != null && !curSet.isFinished) {
+        if (!_validateSetBeforeFinish(curSet)) return;
         newSets = [
           ...state.finishedSets.sublist(0, state.finishedSets.length - 1),
           curSet.copyWith(isFinished: true),
         ];
       } else {
+        const emptySet = SetScoreData(score1: 0, score2: 0);
+        if (!_validateSetBeforeFinish(emptySet)) return;
         newSets = [
           ...state.finishedSets,
           const SetScoreData(score1: 0, score2: 0, isFinished: true),
@@ -511,13 +532,14 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       );
     } else {
       if (rally == null) return;
+      final currentSet = SetScoreData(
+        score1: rally.currentP1,
+        score2: rally.currentP2,
+      );
+      if (!_validateSetBeforeFinish(currentSet)) return;
       final newFinishedSets = [
         ...state.finishedSets,
-        SetScoreData(
-          score1: rally.currentP1,
-          score2: rally.currentP2,
-          isFinished: true,
-        ),
+        currentSet.copyWith(isFinished: true),
       ];
       state = state.copyWith(
         finishedSets: newFinishedSets,
@@ -526,6 +548,30 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     }
 
     await _syncSetsToBackend();
+  }
+
+  bool _validateSetBeforeFinish(SetScoreData set) {
+    if (state.isLite || state.overrideEnabled) return true;
+    try {
+      final label = state.config.scoringModel == SportScoringModel.tennisSet
+          ? 'Set ${state.finishedSets.length + 1}'
+          : 'Hiệp ${state.finishedSets.length + 1}';
+      switch (state.config.scoringModel) {
+        case SportScoringModel.tennisSet:
+          validateTennisSet(set, state.config, label: label);
+          break;
+        case SportScoringModel.pickleballSideOut:
+          validatePickleballSideOutSet(set, state.config, label: label);
+          break;
+        case SportScoringModel.rallyPointSet:
+          validateRallyPointSet(set, state.config, label: label);
+          break;
+      }
+      return true;
+    } on FormatException catch (error) {
+      state = state.copyWith(errorMessage: error.message);
+      return false;
+    }
   }
 
   Future<void> _syncSetsToBackend() async {

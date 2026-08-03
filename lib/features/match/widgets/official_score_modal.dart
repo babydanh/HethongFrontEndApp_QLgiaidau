@@ -241,7 +241,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (state.overrideEnabled) ...[
+                          if (!state.isLite && state.overrideEnabled) ...[
                             Padding(
                               padding: const EdgeInsets.only(bottom: 6),
                               child: Row(
@@ -291,28 +291,29 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               // Toggle Ngoại lệ
-                              FilterChip(
-                                selected: state.overrideEnabled,
-                                onSelected: (sel) =>
-                                    n.setOverride(sel, state.overrideReason),
-                                label: Text(
-                                  state.overrideEnabled
-                                      ? 'Ngoại lệ: BẬT'
-                                      : l10n.matchOverrideLabel,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: state.overrideEnabled
-                                        ? colors.warning
-                                        : colors.textMuted,
+                              if (!state.isLite)
+                                FilterChip(
+                                  selected: state.overrideEnabled,
+                                  onSelected: (sel) =>
+                                      n.setOverride(sel, state.overrideReason),
+                                  label: Text(
+                                    state.overrideEnabled
+                                        ? 'Ngoại lệ: BẬT'
+                                        : l10n.matchOverrideLabel,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: state.overrideEnabled
+                                          ? colors.warning
+                                          : colors.textMuted,
+                                    ),
                                   ),
+                                  selectedColor: colors.warning.withValues(
+                                    alpha: 0.16,
+                                  ),
+                                  backgroundColor: colors.bgCard,
+                                  visualDensity: VisualDensity.compact,
                                 ),
-                                selectedColor: colors.warning.withValues(
-                                  alpha: 0.16,
-                                ),
-                                backgroundColor: colors.bgCard,
-                                visualDensity: VisualDensity.compact,
-                              ),
 
                               // Action buttons
                               if (widget.onForceWin != null)

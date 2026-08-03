@@ -36,32 +36,46 @@ class RallyScorePanel extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      child: Column(
-        children: [
-          // ĐỘI 1 (BLUE - NẰM Ở Ô TRÊN)
-          Expanded(
-            child: _buildTeamCardHorizontalScore(
-              isTeam1: true,
-              score: r.currentP1,
-              colors: colors,
-              teamName: team1Name,
-              onIncrement: () => notifier.rallyAddPoint(true),
-              onDecrement: () => notifier.rallyRemovePoint(true),
-            ),
-          ),
-          const SizedBox(height: 10),
-          // ĐỘI 2 (RED - NẰM Ở Ô DƯỚI)
-          Expanded(
-            child: _buildTeamCardHorizontalScore(
-              isTeam1: false,
-              score: r.currentP2,
-              colors: colors,
-              teamName: team2Name,
-              onIncrement: () => notifier.rallyAddPoint(false),
-              onDecrement: () => notifier.rallyRemovePoint(false),
-            ),
-          ),
-        ],
+      child: OrientationBuilder(
+        builder: (context, orientation) {
+          final isLandscape = orientation == Orientation.landscape;
+
+          final team1Widget = _buildTeamCardHorizontalScore(
+            isTeam1: true,
+            score: r.currentP1,
+            colors: colors,
+            teamName: team1Name,
+            onIncrement: () => notifier.rallyAddPoint(true),
+            onDecrement: () => notifier.rallyRemovePoint(true),
+          );
+
+          final team2Widget = _buildTeamCardHorizontalScore(
+            isTeam1: false,
+            score: r.currentP2,
+            colors: colors,
+            teamName: team2Name,
+            onIncrement: () => notifier.rallyAddPoint(false),
+            onDecrement: () => notifier.rallyRemovePoint(false),
+          );
+
+          if (isLandscape) {
+            return Row(
+              children: [
+                Expanded(child: team1Widget),
+                const SizedBox(width: 10),
+                Expanded(child: team2Widget),
+              ],
+            );
+          }
+
+          return Column(
+            children: [
+              Expanded(child: team1Widget),
+              const SizedBox(height: 10),
+              Expanded(child: team2Widget),
+            ],
+          );
+        },
       ),
     );
   }
