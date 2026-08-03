@@ -1389,36 +1389,6 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   ) async {
     final l10n = AppLocalizations.of(context)!;
     final replacingExisting = ref.read(liteManagementProvider).hasBracket;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(
-          replacingExisting
-              ? l10n.lite_recreateBracketTitle
-              : l10n.lite_createBracketTitle,
-        ),
-        content: Text(
-          replacingExisting
-              ? l10n.lite_recreateBracketConfirm
-              : l10n.lite_createBracketConfirm,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.matchesCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(
-              replacingExisting
-                  ? l10n.lite_recreateBracket
-                  : l10n.lite_createBracket,
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
 
     try {
       if (replacingExisting) {
@@ -1434,6 +1404,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   ? l10n.lite_recreatedBracket
                   : l10n.lite_bracketCreated,
             ),
+            backgroundColor: colors.success,
           ),
         );
       }
@@ -1448,7 +1419,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   .replaceAll('Exception: ', '')
                   .replaceAll('DioException: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.errorPrefix}: $message')),
+          SnackBar(
+            content: Text('${l10n.errorPrefix}: $message'),
+            backgroundColor: colors.error,
+          ),
         );
       }
     }
@@ -1516,12 +1490,21 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     ),
                   ),
                   OutlinedButton.icon(
-                    onPressed: state.creatingBracket ||
-                    state.bracketEligibleParticipants.length < 2
+                    onPressed: state.creatingBracket
                         ? null
                         : () => _createBracket(colors, notifier),
-                    icon: const Icon(Icons.refresh_rounded, size: 18),
-                    label: Text(l10n.lite_recreateBracket),
+                    icon: state.creatingBracket
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh_rounded, size: 18),
+                    label: Text(
+                      state.creatingBracket
+                          ? l10n.lite_creating
+                          : l10n.lite_recreateBracket,
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: colors.warning,
                       side: BorderSide(color: colors.warning),

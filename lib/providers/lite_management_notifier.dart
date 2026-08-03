@@ -287,8 +287,9 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       await Future.wait([
         _fetchTournament(tournamentId),
         _fetchParticipants(tournamentId),
-        _fetchBracket(tournamentId),
+
       ]).timeout(const Duration(seconds: 15));
+      await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
       _loadInFlight = false;
     } on TimeoutException {
       _loadInFlight = false;
@@ -399,10 +400,19 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
   }
 
-  Future<void> _fetchBracket(String tournamentId) async {
+  String? get _liteDivisionId {
+    final divisions = state.tournament?.divisions ?? const <TournamentDivision>[];
+    final divisionId = divisions.isNotEmpty ? divisions.first.id.trim() : '';
+    return divisionId.isEmpty ? null : divisionId;
+  }
+
+  Future<void> _fetchBracket(String tournamentId, {String? divisionId}) async {
     try {
       final res = await _dio
-          .get('/tournaments/$tournamentId/bracket')
+          .get(
+            '/tournaments/$tournamentId/bracket',
+            queryParameters: divisionId == null ? null : {'divisionId': divisionId},
+          )
           .timeout(const Duration(seconds: 12));
       final envelope = res.data;
       final payload = envelope is Map ? envelope['data'] : envelope;
@@ -446,8 +456,9 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       await Future.wait([
         _fetchTournament(tournamentId),
         _fetchParticipants(tournamentId),
-        _fetchBracket(tournamentId),
+
       ]).timeout(const Duration(seconds: 15));
+      await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
       _loadInFlight = false;
     } on TimeoutException {
       _loadInFlight = false;
@@ -668,6 +679,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         await _dio.post(
           '/tournaments/lite/$tournamentId/bracket',
           data: {
+            if (_liteDivisionId != null) 'divisionId': _liteDivisionId,
             'seedingType': 'RANDOM',
             'bracketType': bType.contains('DOUBLE')
                 ? 'DOUBLE_ELIMINATION'
@@ -680,6 +692,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
           await _dio.post(
             '/tournaments/$tournamentId/bracket/generate',
             data: {
+              if (_liteDivisionId != null) 'divisionId': _liteDivisionId,
               'bracketType': bType.contains('DOUBLE')
                   ? 'DOUBLE_ELIMINATION'
                   : 'SINGLE_ELIMINATION',
@@ -692,7 +705,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       }
       _log.success('Tạo bracket thành công');
       state = state.copyWith(creatingBracket: false, hasBracket: true);
-      await _fetchBracket(tournamentId);
+      await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
     } on DioException catch (e) {
       _log.error('Lỗi tạo bracket', e);
       state = state.copyWith(creatingBracket: false);
@@ -703,8 +716,13 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   Future<void> resetBracket(String tournamentId) async {
     state = state.copyWith(creatingBracket: true);
     try {
-      await _dio.post('/tournaments/lite/$tournamentId/bracket/reset');
-      await _fetchBracket(tournamentId);
+      await _dio.post(
+        '/tournaments/lite/$tournamentId/bracket/reset',
+        data: {
+          if (_liteDivisionId != null) 'divisionId': _liteDivisionId,
+        },
+      );
+      await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
       _log.success('Đã reset bracket Lite');
     } on DioException catch (e) {
       _log.error('Lỗi reset bracket', e);
