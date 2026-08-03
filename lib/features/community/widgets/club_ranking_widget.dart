@@ -353,32 +353,6 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
 
   // ─── Gender Filter ───
 
-  Widget _buildRankedFilter() {
-    final isActive = _showRankedOnly;
-    return GestureDetector(
-      onTap: () => setState(() => _showRankedOnly = !_showRankedOnly),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: isActive ? AppTheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-          border: Border.all(
-            color: isActive ? AppTheme.primary : AppTheme.primary.withValues(alpha: 0.3),
-            width: 1,
-          ),
-        ),
-        child: Text(
-          'Đã xếp hạng',
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: isActive ? Colors.white : AppTheme.primary,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildMyRankingCard(
     PlayerRanking ranking,
     int? rank,
