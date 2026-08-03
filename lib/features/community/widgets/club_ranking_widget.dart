@@ -234,11 +234,10 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                     letterSpacing: 0.3,
                   ),
                 ),
-                const SizedBox(width: 12),
-                _buildGenderFilter(),
-                const SizedBox(width: 6),
-                _buildRankedFilter(),
-                const SizedBox(width: 6),
+                if (_selectedMatchType != 'MIXED_DOUBLES') ...[
+                  _buildGenderFilter(),
+                  const SizedBox(width: 6),
+                ],
                 _buildMatchTypeFilter(),
               ],
             ),
@@ -490,6 +489,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         children: [
           _matchTypeTab('Đơn', 'SINGLES'),
           _matchTypeTab('Đôi', 'DOUBLES'),
+          _matchTypeTab('Đôi nam nữ', 'MIXED_DOUBLES'),
         ],
       ),
     );
@@ -500,7 +500,12 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     return GestureDetector(
       onTap: () {
         if (_selectedMatchType != value) {
-          setState(() => _selectedMatchType = value);
+          setState(() {
+            _selectedMatchType = value;
+            if (value == 'MIXED_DOUBLES') {
+              _selectedGender = 'MALE';
+            }
+          });
           _fetchRankings();
         }
       },
