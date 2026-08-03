@@ -17,6 +17,7 @@ import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.d
 import 'package:app_quanly_giaidau/core/strategy/penalty_strategy.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/domain/entities/match_event.dart';
+import 'package:app_quanly_giaidau/domain/entities/penalty.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:intl/intl.dart';
@@ -2195,7 +2196,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             },
           )
         else
-          _buildChatTab(match),
+          SizedBox(
+            height: isLandscape ? 450 : 620,
+            child: _buildChatTab(match),
+          ),
       ],
     );
   }
@@ -2362,6 +2366,125 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
+      ),
+    );
+  }
+
+  String _penaltyLabel(Penalty penalty) {
+    switch (penalty.type.toUpperCase()) {
+      case 'YELLOW_CARD':
+      case 'YELLOW':
+        return 'Thẻ vàng';
+      case 'RED_CARD':
+      case 'RED':
+        return 'Thẻ đỏ';
+      case 'POINT_PENALTY':
+        return 'Phạt điểm';
+      case 'GAME_PENALTY':
+        return 'Phạt game';
+      case 'SERVICE_FAULT':
+        return 'Lỗi giao bóng';
+      case 'MISCONDUCT':
+        return 'Hành vi không đúng mực';
+      case 'WARNING':
+        return 'Nhắc nhở';
+      default:
+        return penalty.type;
+    }
+  }
+
+  Widget _buildViewerPenaltyLog(MatchModel match) {
+    if (match.penalties.isEmpty) return const SizedBox.shrink();
+
+    final colors = context.colors;
+    final penalties = match.penalties.take(6).toList();
+    String teamLabel(Penalty penalty) {
+      if (penalty.teamId == '1') return match.team1Name;
+      if (penalty.teamId == '2') return match.team2Name;
+      return 'Trận đấu';
+    }
+
+    Color penaltyColor(Penalty penalty) {
+      final type = penalty.type.toUpperCase();
+      if (type.contains('RED')) return const Color(0xFFDC2626);
+      if (type.contains('YELLOW') || type == 'WARNING') {
+        return const Color(0xFFD97706);
+      }
+      return AppTheme.primary;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.gavel_rounded, size: 18, color: colors.textSecondary),
+              const SizedBox(width: 8),
+              Text(
+                'Phạt và thẻ',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${match.penalties.length} ghi nhận',
+                style: TextStyle(fontSize: 11, color: colors.textMuted),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...penalties.map((penalty) {
+            final color = penaltyColor(penalty);
+            return Container(
+              margin: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: color.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.flag_rounded, size: 16, color: color),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${_penaltyLabel(penalty)} • ${teamLabel(penalty)}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  if (penalty.reason?.trim().isNotEmpty == true)
+                    Flexible(
+                      child: Text(
+                        penalty.reason!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
+                        style: TextStyle(fontSize: 11, color: colors.textMuted),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -2784,6 +2907,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               );
             }),
           ),
+
+          _buildViewerPenaltyLog(match),
 
           // Match details expansion card
           const SizedBox(height: 24),

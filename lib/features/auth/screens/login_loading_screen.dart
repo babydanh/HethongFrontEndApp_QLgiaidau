@@ -48,7 +48,7 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
           Hero(
             tag: "vnsport_header_bg",
             child: CustomPaint(
-              size: Size(double.infinity, size.height * 0.68),
+              size: Size(double.infinity, size.height * 0.78),
               painter: VnsportHeaderPainter(isLoggedIn: true, colors: colors),
             ),
           ),
