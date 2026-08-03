@@ -246,18 +246,12 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 6,
+                        vertical: 8,
                       ),
                       color: colors.bgSurface,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // 1. SET HISTORY BAR MOVED TO FOOTER
-                          SetHistoryBar(
-                            finishedSets: state.finishedSets,
-                            team1SetWins: state.team1SetWins,
-                            team2SetWins: state.team2SetWins,
-                          ),
                           if (!state.isLite && state.overrideEnabled) ...[
                             Padding(
                               padding: const EdgeInsets.only(bottom: 6),
@@ -300,214 +294,218 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                               ),
                             ),
                           ],
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 8,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            alignment: WrapAlignment.center,
+                          Row(
                             children: [
-                              // Toggle Ngoại lệ
-                              if (!state.isLite)
-                                FilterChip(
-                                  selected: state.overrideEnabled,
-                                  onSelected: (sel) =>
-                                      n.setOverride(sel, state.overrideReason),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
+                              // SetHistoryBar on the left
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: SetHistoryBar(
+                                    finishedSets: state.finishedSets,
+                                    team1SetWins: state.team1SetWins,
+                                    team2SetWins: state.team2SetWins,
                                   ),
-                                  label: Text(
-                                    state.overrideEnabled
-                                        ? 'Ngoại lệ: BẬT'
-                                        : l10n.matchOverrideLabel,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: state.overrideEnabled
-                                          ? colors.warning
-                                          : colors.textMuted,
-                                    ),
-                                  ),
-                                  selectedColor: colors.warning.withValues(
-                                    alpha: 0.16,
-                                  ),
-                                  backgroundColor: colors.bgCard,
-                                  visualDensity: VisualDensity.compact,
                                 ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Buttons on the right (without icons)
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 6,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                alignment: WrapAlignment.end,
+                                children: [
+                                  // Toggle Ngoại lệ
+                                  if (!state.isLite)
+                                    FilterChip(
+                                      selected: state.overrideEnabled,
+                                      onSelected: (sel) =>
+                                          n.setOverride(sel, state.overrideReason),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      label: Text(
+                                        state.overrideEnabled
+                                            ? 'Ngoại lệ: BẬT'
+                                            : l10n.matchOverrideLabel,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: state.overrideEnabled
+                                              ? colors.warning
+                                              : colors.textMuted,
+                                        ),
+                                      ),
+                                      selectedColor: colors.warning.withValues(
+                                        alpha: 0.16,
+                                      ),
+                                      backgroundColor: colors.bgCard,
+                                      visualDensity: VisualDensity.compact,
+                                    ),
 
-                              // Action buttons
-                              if (widget.onForceWin != null)
-                                FilledButton.icon(
-                                  onPressed: widget.onForceWin,
-                                  icon: const Icon(
-                                    Icons.emoji_events_rounded,
-                                    size: 15,
-                                  ),
-                                  label: Text(
-                                    l10n.matchForceWin,
-                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                                  ),
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: colors.error,
-                                    minimumSize: const Size(0, 36),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 0,
+                                  if (widget.onForceWin != null)
+                                    FilledButton(
+                                      onPressed: widget.onForceWin,
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: colors.error,
+                                        minimumSize: const Size(0, 36),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 0,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        l10n.matchForceWin,
+                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                      ),
                                     ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                ),
-                              if (!state.isMatchComplete &&
-                                  n.finishSetConfirmMessage() != null)
-                                OutlinedButton.icon(
-                                  onPressed: state.isSubmitting
-                                      ? null
-                                      : () async {
-                                          final message = n
-                                              .finishSetConfirmMessage();
-                                          if (message == null) {
-                                            return;
-                                          }
-                                          final confirmed =
-                                              await showDialog<bool>(
-                                                context: context,
-                                                builder: (dialogContext) =>
-                                                    AlertDialog(
-                                                      title: Text(
-                                                        l10n.matchFinishSet,
-                                                      ),
-                                                      content: Text(message),
-                                                      actions: [
-                                                        TextButton(
-                                                          onPressed: () =>
-                                                              Navigator.pop(
-                                                                dialogContext,
-                                                                false,
-                                                              ),
-                                                          child: const Text(
-                                                            'Hủy',
-                                                          ),
-                                                        ),
-                                                        FilledButton(
-                                                          onPressed: () =>
-                                                              Navigator.pop(
-                                                                dialogContext,
-                                                                true,
-                                                              ),
-                                                          child: Text(
+                                  if (!state.isMatchComplete &&
+                                      n.finishSetConfirmMessage() != null)
+                                    OutlinedButton(
+                                      onPressed: state.isSubmitting
+                                          ? null
+                                          : () async {
+                                              final message = n
+                                                  .finishSetConfirmMessage();
+                                              if (message == null) {
+                                                return;
+                                              }
+                                              final confirmed =
+                                                  await showDialog<bool>(
+                                                    context: context,
+                                                    builder: (dialogContext) =>
+                                                        AlertDialog(
+                                                          title: Text(
                                                             l10n.matchFinishSet,
                                                           ),
+                                                          content: Text(message),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                    dialogContext,
+                                                                    false,
+                                                                  ),
+                                                              child: const Text(
+                                                                'Hủy',
+                                                              ),
+                                                            ),
+                                                            FilledButton(
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                    dialogContext,
+                                                                    true,
+                                                                  ),
+                                                              child: Text(
+                                                                l10n.matchFinishSet,
+                                                              ),
+                                                            ),
+                                                          ],
                                                         ),
-                                                      ],
+                                                  );
+                                              if (confirmed == true) {
+                                                await n.finishSet();
+                                              }
+                                            },
+                                      style: OutlinedButton.styleFrom(
+                                        minimumSize: const Size(0, 36),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 0,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        l10n.matchFinishSet,
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  if (state.isMatchComplete ||
+                                      state.overrideEnabled ||
+                                      (state.isLite &&
+                                          state.finishedSets.isNotEmpty))
+                                    FilledButton(
+                                      onPressed:
+                                          state.isSubmitting ||
+                                              (state.overrideEnabled &&
+                                                  state.overrideReason
+                                                      .trim()
+                                                      .isEmpty) ||
+                                              !canSaveResult
+                                          ? null
+                                          : () async {
+                                              final winnerTeam = selectedWinner;
+                                              final confirmed = await showDialog<bool>(
+                                                context: context,
+                                                builder: (dialogContext) => AlertDialog(
+                                                  title: Text(
+                                                    state.isMatchComplete
+                                                        ? 'Chốt kết quả trận đấu'
+                                                        : 'Xác nhận lưu kết quả',
+                                                  ),
+                                                  content: Text(
+                                                    state.isMatchComplete
+                                                        ? 'Kết quả đã đủ điều kiện. Chốt trận để công khai điểm và cập nhật giải đấu?'
+                                                        : 'Lưu kết quả hiện tại theo ngoại lệ của trọng tài? Hành động này sẽ được ghi vào lịch sử trận.',
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () => Navigator.pop(dialogContext, false),
+                                                      child: const Text('Hủy'),
                                                     ),
+                                                    FilledButton(
+                                                      onPressed: () => Navigator.pop(dialogContext, true),
+                                                      child: const Text('Xác nhận'),
+                                                    ),
+                                                  ],
+                                                ),
                                               );
-                                          if (confirmed == true) {
-                                            await n.finishSet();
-                                          }
-                                        },
-                                  icon: const Icon(
-                                    Icons.flag_rounded,
-                                    size: 15,
-                                  ),
-                                  label: Text(
-                                    l10n.matchFinishSet,
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
+                                              if (confirmed != true) return;
+                                              await n.completeMatch(winnerTeam);
+                                              final latest = ref.read(
+                                                scorePanelNotifierProvider(params),
+                                              );
+                                              if (context.mounted &&
+                                                  !latest.isSubmitting &&
+                                                  latest.errorMessage == null) {
+                                                Navigator.of(context).pop();
+                                              }
+                                            },
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: state.isMatchComplete
+                                            ? colors.success
+                                            : colors.warning,
+                                        minimumSize: const Size(0, 36),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 0,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        state.isSubmitting
+                                            ? 'Đang lưu...'
+                                            : (state.isMatchComplete
+                                                  ? l10n.matchSaveMatch
+                                                  : l10n.matchSaveResult),
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize: const Size(0, 36),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 0,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                ),
-                              if (state.isMatchComplete ||
-                                  state.overrideEnabled ||
-                                  (state.isLite &&
-                                      state.finishedSets.isNotEmpty))
-                                FilledButton.icon(
-                                  onPressed:
-                                      state.isSubmitting ||
-                                          (state.overrideEnabled &&
-                                              state.overrideReason
-                                                  .trim()
-                                                  .isEmpty) ||
-                                          !canSaveResult
-                                      ? null
-                                      : () async {
-                                          final winnerTeam = selectedWinner;
-                                          final confirmed = await showDialog<bool>(
-                                            context: context,
-                                            builder: (dialogContext) => AlertDialog(
-                                              title: Text(
-                                                state.isMatchComplete
-                                                    ? 'Chốt kết quả trận đấu'
-                                                    : 'Xác nhận lưu kết quả',
-                                              ),
-                                              content: Text(
-                                                state.isMatchComplete
-                                                    ? 'Kết quả đã đủ điều kiện. Chốt trận để công khai điểm và cập nhật giải đấu?'
-                                                    : 'Lưu kết quả hiện tại theo ngoại lệ của trọng tài? Hành động này sẽ được ghi vào lịch sử trận.',
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () => Navigator.pop(dialogContext, false),
-                                                  child: const Text('Hủy'),
-                                                ),
-                                                FilledButton(
-                                                  onPressed: () => Navigator.pop(dialogContext, true),
-                                                  child: const Text('Xác nhận'),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                          if (confirmed != true) return;
-                                          await n.completeMatch(winnerTeam);
-                                          final latest = ref.read(
-                                            scorePanelNotifierProvider(params),
-                                          );
-                                          if (context.mounted &&
-                                              !latest.isSubmitting &&
-                                              latest.errorMessage == null) {
-                                            Navigator.of(context).pop();
-                                          }
-                                        },
-                                  icon: const Icon(
-                                    Icons.check_circle_rounded,
-                                    size: 15,
-                                  ),
-                                  label: Text(
-                                    state.isSubmitting
-                                        ? 'Đang lưu...'
-                                        : (state.isMatchComplete
-                                              ? l10n.matchSaveMatch
-                                              : l10n.matchSaveResult),
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: state.isMatchComplete
-                                        ? colors.success
-                                        : colors.warning,
-                                    minimumSize: const Size(0, 36),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 0,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                ),
+                                ],
+                              ),
                             ],
                           ),
                         ],
@@ -615,18 +613,20 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
               fontSize: 15,
             ),
           ),
-          OrientationBuilder(
-            builder: (context, orientation) {
+          LayoutBuilder(
+            builder: (context, constraints) {
               final size = MediaQuery.of(context).size;
-              final isLandscape = orientation == Orientation.landscape || size.width > size.height;
+              final isLandscape = size.width > size.height;
+              final availableWidth = constraints.maxWidth;
               if (isLandscape) {
+                final cardWidth = (availableWidth - 8) / 2;
                 return Wrap(
                   spacing: 8,
                   runSpacing: 6,
                   children: options.map((option) {
                     final isSelected = selectedPenalty.id == option.id;
                     return SizedBox(
-                      width: (size.width - 48) / 2,
+                      width: cardWidth,
                       child: Container(
                         decoration: BoxDecoration(
                           color: colors.bgSurface,
