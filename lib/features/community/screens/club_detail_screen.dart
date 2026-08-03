@@ -31,6 +31,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   late TabController _tabController;
   CommunityMemberModel? _myMembership;
   bool _isJoinLoading = false;
+  String _tournamentStatusFilter = 'ALL';
+  String _tournamentTypeFilter = 'ALL';
+  String _tournamentSportFilter = 'ALL';
 
   @override
   void initState() {
@@ -813,6 +816,66 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   // ════════════════════════════════════
   //  TAB 2: GIẢI ĐẤU
   // ════════════════════════════════════
+  bool _matchesTournamentStatus(String status, String filter) {
+    if (filter == 'ALL') return true;
+    if (filter == 'UPCOMING') {
+      return StatusHelper.isTournamentUpcoming(status) ||
+          StatusHelper.isTournamentRegistration(status);
+    }
+    if (filter == 'ONGOING') return StatusHelper.isTournamentInProgress(status);
+    if (filter == 'COMPLETED') return StatusHelper.isTournamentCompleted(status);
+    return true;
+  }
+
+  String _tournamentSportLabel(String sport) {
+    final key = sport.trim().toLowerCase();
+    return AppConstants.sportNames[key] ??
+        (key.isEmpty ? 'Khác' : key.replaceAll('_', ' '));
+  }
+
+  Widget _buildTournamentFilters(AppColorsExtension colors, List<String> sports) {
+    Widget chips(List<(String, String)> options, String selected, ValueChanged<String> onChanged) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: options.map((option) => Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(option.$2, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+              selected: selected == option.$1,
+              onSelected: (_) => onChanged(option.$1),
+              selectedColor: AppTheme.primary.withValues(alpha: 0.14),
+              side: BorderSide(color: selected == option.$1 ? AppTheme.primary : colors.border),
+              labelStyle: TextStyle(color: selected == option.$1 ? AppTheme.primary : colors.textSecondary),
+            ),
+          )).toList(),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 14, bottom: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text('Lọc giải đấu', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: colors.textPrimary)),
+          ),
+          const SizedBox(height: 8),
+          chips(const [('ALL', 'Tất cả giải'), ('CLUB', 'Nội bộ CLB'), ('PUBLIC', 'Mở rộng')], _tournamentTypeFilter, (v) => setState(() => _tournamentTypeFilter = v)),
+          const SizedBox(height: 4),
+          chips(const [('ALL', 'Mọi trạng thái'), ('UPCOMING', 'Sắp diễn ra'), ('ONGOING', 'Đang diễn ra'), ('COMPLETED', 'Đã kết thúc')], _tournamentStatusFilter, (v) => setState(() => _tournamentStatusFilter = v)),
+          if (sports.length > 1) ...[
+            const SizedBox(height: 4),
+            chips([('ALL', 'Mọi môn'), ...sports.map((sport) => (sport, _tournamentSportLabel(sport)))], _tournamentSportFilter, (v) => setState(() => _tournamentSportFilter = v)),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildTournamentsTab(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     final tourneysAsync = ref.watch(
@@ -851,9 +914,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           );
         }
         final isAdmin = _myMembership?.role == 'OWNER' || _myMembership?.role == 'ADMIN' || _myMembership?.role == 'MODERATOR';
+        final sports = tourneys.map((t) => t.sport).where((s) => s.isNotEmpty).toSet().toList();
+        final filteredTourneys = tourneys.where((t) {
+          if (!isAdmin && StatusHelper.isTournamentDraft(t.status)) return false;
+          if (_tournamentTypeFilter != 'ALL' && t.tournamentType != _tournamentTypeFilter) return false;
+          if (_tournamentSportFilter != 'ALL' && t.sport != _tournamentSportFilter) return false;
+          return _matchesTournamentStatus(t.status, _tournamentStatusFilter);
+        }).toList();
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-          itemCount: tourneys.length + (isAdmin ? 1 : 0),
+          itemCount: filteredTourneys.length + (isAdmin ? 2 : 1) + (filteredTourneys.isEmpty ? 1 : 0),
           itemBuilder: (context, i) {
             if (isAdmin && i == 0) {
               return Container(
@@ -929,8 +999,25 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 ),
               );
             }
-            final index = isAdmin ? i - 1 : i;
-            return _buildTourneyCard(tourneys[index], colors);
+            final filterIndex = isAdmin ? 1 : 0;
+            if (i == filterIndex) {
+              return _buildTournamentFilters(colors, sports);
+            }
+            if (filteredTourneys.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 40),
+                child: Column(
+                  children: [
+                    Icon(Icons.filter_alt_off_rounded, size: 42, color: colors.textMuted),
+                    const SizedBox(height: 10),
+                    Text('Không có giải phù hợp với bộ lọc', style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
+                    TextButton(onPressed: () => setState(() { _tournamentStatusFilter = 'ALL'; _tournamentTypeFilter = 'ALL'; _tournamentSportFilter = 'ALL'; }), child: const Text('Xóa bộ lọc')),
+                  ],
+                ),
+              );
+            }
+            final index = i - filterIndex - 1;
+            return _buildTourneyCard(filteredTourneys[index], colors);
           },
         );
       },
@@ -1004,6 +1091,22 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Wrap(
+                    spacing: 5,
+                    runSpacing: 4,
+                    children: [
+                      _tournamentBadge(
+                        t.tournamentType == 'CLUB' ? 'Nội bộ CLB' : 'Mở rộng',
+                        t.tournamentType == 'CLUB' ? const Color(0xFFD97706) : AppTheme.primary,
+                      ),
+                      _tournamentBadge(
+                        t.isRanked ? 'Xếp hạng ELO' : 'Phong trào',
+                        t.isRanked ? const Color(0xFFB45309) : colors.textSecondary,
+                      ),
+                      if (t.parentId != null) _tournamentBadge('Chuỗi giải', const Color(0xFF2563EB)),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
                   Text(
                     t.name,
                     style: TextStyle(
@@ -1112,6 +1215,18 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _tournamentBadge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Text(label, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w800)),
     );
   }
 

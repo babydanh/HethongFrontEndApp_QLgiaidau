@@ -11,6 +11,12 @@ class CommunityTournamentModel {
   final String? locationAddress;
   final String? bannerUrl;
   final bool isLite;
+  final String tournamentType;
+  final bool isRanked;
+  final String? parentId;
+  final String categoryName;
+  final int entryFee;
+  final String? endDate;
 
   const CommunityTournamentModel({
     required this.id,
@@ -24,6 +30,12 @@ class CommunityTournamentModel {
     this.locationAddress,
     this.bannerUrl,
     this.isLite = false,
+    this.tournamentType = 'PUBLIC',
+    this.isRanked = false,
+    this.parentId,
+    this.categoryName = '',
+    this.entryFee = 0,
+    this.endDate,
   });
 
   factory CommunityTournamentModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +44,9 @@ class CommunityTournamentModel {
     if (sport.isEmpty && json['category'] is Map) {
       sport = (json['category'] as Map)['slug']?.toString() ?? '';
     }
+    final categoryName = json['category'] is Map
+        ? ((json['category'] as Map)['name']?.toString() ?? sport)
+        : sport;
 
     // maxTeams từ tournamentConfig hoặc trực tiếp
     int maxTeams = 16;
@@ -61,6 +76,12 @@ class CommunityTournamentModel {
       isLite = mode == 'LITE';
     }
 
+    final entryFee = int.tryParse(
+          (json['entryFee'] ?? json['registrationFee'] ?? json['fee'] ?? 0)
+              .toString(),
+        ) ??
+        0;
+
     return CommunityTournamentModel(
       id: json['id']?.toString() ?? '',
       name: json['name'] ?? '',
@@ -75,6 +96,14 @@ class CommunityTournamentModel {
           json['venue']?['locationAddress']?.toString(),
       bannerUrl: json['bannerUrl']?.toString(),
       isLite: isLite,
+      tournamentType: (json['tournamentType'] ?? json['type'] ?? 'PUBLIC')
+          .toString()
+          .toUpperCase(),
+      isRanked: json['isRanked'] == true || json['is_ranked'] == true,
+      parentId: json['parentId']?.toString() ?? json['parentTournamentId']?.toString(),
+      categoryName: categoryName,
+      entryFee: entryFee,
+      endDate: json['endDate']?.toString(),
     );
   }
 }

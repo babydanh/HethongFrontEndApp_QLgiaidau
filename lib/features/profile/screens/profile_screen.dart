@@ -2164,7 +2164,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           if (t.isLite == true) {
             context.push('/lite-manage/${t.id}');
           } else {
-            _showAdvancedManagementUnsupported(context);
+            // Advanced tournaments use the full management workspace.
+            context.push('/admin/tournament/${t.id}');
           }
         },
         child: Padding(
