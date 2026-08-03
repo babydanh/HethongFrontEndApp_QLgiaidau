@@ -34,7 +34,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     });
 
     final initialMatch = ref.read(singleMatchProvider(arg)).value;
-    var initialState = ScorePanelState(config: config);
+    var initialState = ScorePanelState(
+      config: config,
+      isLite: _isLiteMatch(initialMatch),
+    );
     if (initialMatch != null) {
       initialState = _hydrateState(initialState, initialMatch);
     }
@@ -55,6 +58,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     if (details == null) {
       return current.copyWith(
         config: config,
+        isLite: _isLiteMatch(match),
       );
     }
 
@@ -134,6 +138,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
     return current.copyWith(
       config: config,
+      isLite: _isLiteMatch(match),
       finishedSets: finishedSets,
       tennis: tennisState,
       pickleball: pbState,
@@ -147,6 +152,23 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       return resolveSportConfig(match.sportRules);
     }
     return resolveSportConfig(null, SportRuleKind.badminton);
+  }
+
+  static bool _isLiteMatch(MatchModel? match) {
+    final mode = match?.tournamentConfig?['mode']?.toString().toUpperCase();
+    return mode == 'LITE';
+  }
+
+  bool _canAddRallyPoint(int currentScore) {
+    if (state.isLite || state.config.maxPoints <= 0) return true;
+    if (currentScore >= state.config.maxPoints) {
+      state = state.copyWith(
+        errorMessage:
+            'Đã chạm trần ${state.config.maxPoints} điểm của môn này. Bật Ngoại lệ nếu BTC cần ghi khác preset.',
+      );
+      return false;
+    }
+    return true;
   }
 
   // ════════════════ TENNIS ════════════════
@@ -262,6 +284,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       return false;
     }
     final r = state.rally ?? const RallySetState();
+    if (!_canAddRallyPoint(isTeam1 ? r.currentP1 : r.currentP2)) return false;
     state = state.copyWith(
       rally: RallySetState(
         currentP1: isTeam1 ? r.currentP1 + 1 : r.currentP1,
@@ -322,6 +345,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   void rallyAddPoint(bool isTeam1) {
     final r = state.rally ?? const RallySetState();
+    if (!_canAddRallyPoint(isTeam1 ? r.currentP1 : r.currentP2)) return;
     state = state.copyWith(
       rally: RallySetState(
         currentP1: isTeam1 ? r.currentP1 + 1 : r.currentP1,

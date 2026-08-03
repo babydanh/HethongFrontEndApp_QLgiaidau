@@ -64,6 +64,7 @@ class ScorePanelState {
   final String? errorMessage;
   final bool overrideEnabled;
   final String overrideReason;
+  final bool isLite;
 
   const ScorePanelState({
     required this.config,
@@ -75,6 +76,7 @@ class ScorePanelState {
     this.errorMessage,
     this.overrideEnabled = false,
     this.overrideReason = '',
+    this.isLite = false,
   });
 
   /// Số set thắng.
@@ -115,6 +117,7 @@ class ScorePanelState {
     String? errorMessage,
     bool? overrideEnabled,
     String? overrideReason,
+    bool? isLite,
   }) => ScorePanelState(
     config: config ?? this.config,
     finishedSets: finishedSets ?? this.finishedSets,
@@ -125,5 +128,6 @@ class ScorePanelState {
     errorMessage: errorMessage,
     overrideEnabled: overrideEnabled ?? this.overrideEnabled,
     overrideReason: overrideReason ?? this.overrideReason,
+    isLite: isLite ?? this.isLite,
   );
 }

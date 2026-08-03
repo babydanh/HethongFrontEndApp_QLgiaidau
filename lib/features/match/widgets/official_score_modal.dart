@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -22,7 +23,6 @@ SportRuleKind _resolveMatchSportKind(MatchModel match) {
   return SportRuleKind.fromString(match.sportKey);
 }
 
-/// Hiển thị OfficialScoreModal (modal chấm điểm trọng tài)
 /// Tự động chọn panel theo môn: Tennis / Pickleball / Rally (badminton, table tennis)
 void showOfficialScoreModal(
   BuildContext context, {
@@ -81,8 +81,23 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
   final _penaltyReasonController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
+  @override
   void dispose() {
     _penaltyReasonController.dispose();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     super.dispose();
   }
   @override
