@@ -102,6 +102,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
     ]);
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -126,7 +127,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
-                    vertical: 10,
+                    vertical: 4,
                   ),
                   color: colors.bgSurface,
                   child: Row(
@@ -135,7 +136,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                         child: Text(
                           '${widget.match.team1Name} vs ${widget.match.team2Name}',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: colors.textPrimary,
                           ),
@@ -146,10 +147,13 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                       IconButton(
                         icon: Icon(
                           Icons.info_outline_rounded,
-                          size: 22,
+                          size: 20,
                           color: AppTheme.primary,
                         ),
                         tooltip: 'Cài đặt & Luật giải',
+                        visualDensity: VisualDensity.compact,
+                        constraints: const BoxConstraints(),
+                        padding: const EdgeInsets.all(6),
                         onPressed: () {
                           _showMatchInfoDialog(
                             context,
@@ -161,9 +165,12 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                           );
                         },
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 8),
                       IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 22),
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                        visualDensity: VisualDensity.compact,
+                        constraints: const BoxConstraints(),
+                        padding: const EdgeInsets.all(6),
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
@@ -180,25 +187,23 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                     child: Column(
                       children: [
                         SizedBox(
-                          height: 52,
+                          height: 38,
                           child: TabBar(
-                          indicatorSize: TabBarIndicatorSize.label,
-                          labelPadding: const EdgeInsets.symmetric(horizontal: 12),
-                          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-                          unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                          labelColor: AppTheme.primary,
-                          unselectedLabelColor: colors.textMuted,
-                          indicatorColor: AppTheme.primary,
-                          tabs: const [
-                            Tab(
-                              icon: Icon(Icons.scoreboard_rounded, size: 16),
-                              text: 'Tính điểm',
-                            ),
-                            Tab(
-                              icon: Icon(Icons.gavel_rounded, size: 16),
-                              text: 'Phạm lỗi',
-                            ),
-                          ],
+                            indicatorSize: TabBarIndicatorSize.label,
+                            labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+                            labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                            unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                            labelColor: AppTheme.primary,
+                            unselectedLabelColor: colors.textMuted,
+                            indicatorColor: AppTheme.primary,
+                            tabs: const [
+                              Tab(
+                                text: 'Tính điểm',
+                              ),
+                              Tab(
+                                text: 'Phạm lỗi',
+                              ),
+                            ],
                           ),
                         ),
                         Expanded(
@@ -241,12 +246,18 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 8,
+                        vertical: 6,
                       ),
                       color: colors.bgSurface,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // 1. SET HISTORY BAR MOVED TO FOOTER
+                          SetHistoryBar(
+                            finishedSets: state.finishedSets,
+                            team1SetWins: state.team1SetWins,
+                            team2SetWins: state.team2SetWins,
+                          ),
                           if (!state.isLite && state.overrideEnabled) ...[
                             Padding(
                               padding: const EdgeInsets.only(bottom: 6),
@@ -275,9 +286,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                           alpha: 0.1,
                                         ),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            AppTheme.radiusMedium,
-                                          ),
+                                          borderRadius: BorderRadius.circular(8),
                                           borderSide: BorderSide(
                                             color: colors.warning.withValues(
                                               alpha: 0.4,
@@ -292,9 +301,10 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                             ),
                           ],
                           Wrap(
-                            spacing: 8,
+                            spacing: 10,
                             runSpacing: 8,
                             crossAxisAlignment: WrapCrossAlignment.center,
+                            alignment: WrapAlignment.center,
                             children: [
                               // Toggle Ngoại lệ
                               if (!state.isLite)
@@ -302,6 +312,9 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                   selected: state.overrideEnabled,
                                   onSelected: (sel) =>
                                       n.setOverride(sel, state.overrideReason),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                   label: Text(
                                     state.overrideEnabled
                                         ? 'Ngoại lệ: BẬT'
@@ -331,15 +344,18 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                   ),
                                   label: Text(
                                     l10n.matchForceWin,
-                                    style: const TextStyle(fontSize: 11),
+                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                                   ),
                                   style: FilledButton.styleFrom(
                                     backgroundColor: colors.error,
+                                    minimumSize: const Size(0, 36),
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
+                                      horizontal: 14,
+                                      vertical: 0,
                                     ),
-                                    visualDensity: VisualDensity.compact,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
                                   ),
                                 ),
                               if (!state.isMatchComplete &&
@@ -399,6 +415,16 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                     style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: const Size(0, 36),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 0,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
                                   ),
                                 ),
@@ -472,11 +498,14 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                     backgroundColor: state.isMatchComplete
                                         ? colors.success
                                         : colors.warning,
+                                    minimumSize: const Size(0, 36),
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
+                                      horizontal: 14,
+                                      vertical: 0,
                                     ),
-                                    visualDensity: VisualDensity.compact,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
                                   ),
                                 ),
                             ],
@@ -520,20 +549,12 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
           Consumer(
             builder: (context, ref, _) {
               final state = ref.watch(scorePanelNotifierProvider(params));
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (state.errorMessage != null &&
-                      state.errorMessage!.trim().isNotEmpty) ...[
-                    ScoreWarningBox(message: state.errorMessage!),
-                    const SizedBox(height: 4),
-                  ],
-                  SetHistoryBar(
-                    finishedSets: state.finishedSets,
-                    team1SetWins: state.team1SetWins,
-                    team2SetWins: state.team2SetWins,
-                  ),
-                ],
+              if (state.errorMessage == null || state.errorMessage!.trim().isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: ScoreWarningBox(message: state.errorMessage!),
               );
             },
           ),
