@@ -38,7 +38,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
       )),
     );
 
-    final loadedStandings = standingsAsync.valueOrNull ?? const [];
+    final loadedStandings = standingsAsync.asData?.value ?? standingsAsync.value ?? const [];
     final standings = loadedStandings.isNotEmpty
         ? loadedStandings
         : _buildFallbackStandingsFromMatches(widget.matches, l10n);
