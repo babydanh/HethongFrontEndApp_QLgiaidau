@@ -59,10 +59,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      if (_tabController.indexIsChanging) return;
-      if (mounted) setState(() {});
-    });
+    _tabController.addListener(_handleTabChange);
 
     if (!widget.isEmbedded) {
       SystemChrome.setPreferredOrientations([
@@ -73,8 +70,14 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     }
   }
 
+  void _handleTabChange() {
+    if (_tabController.indexIsChanging) return;
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
     _searchController.dispose();
 
@@ -179,37 +182,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                   ),
                 ),
                 const SizedBox(height: 8),
-                ListenableBuilder(
-                  listenable: _tabController,
-                  builder: (context, _) {
-                    switch (_tabController.index) {
-                      case 0:
-                        return Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: CrossTableView(
-                            matches: matches,
-                            tournamentId: widget.tournamentId,
-                            divisionId: widget.divisionId,
-                            configuredLegs: widget.configuredLegs,
-                          ),
-                        );
-                      case 1:
-                        return StandingsView(
-                          matches: matches,
-                          tournamentId: widget.tournamentId,
-                          divisionId: widget.divisionId,
-                        );
-                      case 2:
-                        return _buildKnockoutMatchTable(
-                          matches,
-                          bracketType,
-                          auth.role == UserRole.viewer,
-                          auth.role == UserRole.admin || widget.isReferee,
-                        );
-                      default:
-                        return const SizedBox.shrink();
-                    }
-                  },
+                _buildEmbeddedTabContent(
+                  matches,
+                  bracketType,
+                  auth,
                 ),
               ],
             );
@@ -438,6 +414,40 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildEmbeddedTabContent(
+    List<MatchModel> matches,
+    String bracketType,
+    AuthState auth,
+  ) {
+    switch (_tabController.index) {
+      case 0:
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: CrossTableView(
+            matches: matches,
+            tournamentId: widget.tournamentId,
+            divisionId: widget.divisionId,
+            configuredLegs: widget.configuredLegs,
+          ),
+        );
+      case 1:
+        return StandingsView(
+          matches: matches,
+          tournamentId: widget.tournamentId,
+          divisionId: widget.divisionId,
+        );
+      case 2:
+        return _buildKnockoutMatchTable(
+          matches,
+          bracketType,
+          auth.role == UserRole.viewer,
+          auth.role == UserRole.admin || widget.isReferee,
+        );
+      default:
+        return const SizedBox.shrink();
+    }
   }
 
   Widget _buildKnockoutMatchTable(
