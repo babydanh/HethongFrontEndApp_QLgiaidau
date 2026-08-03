@@ -308,7 +308,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                           bracketType: tournament.divisions
                               .where((d) => d.id == _selectedDivisionId)
                               .firstOrNull
-                              ?.bracketType,
+                              ?.bracketType ??
+                          tournament.bracketType,
                           configuredLegs:
                               tournament.divisions
                                   .where((d) => d.id == _selectedDivisionId)

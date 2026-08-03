@@ -143,17 +143,52 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
           );
         }
 
-        final bracketType =
-            (widget.bracketType ??
-                    tournamentAsync.value?.bracketType ??
-                    AppConstants.bracketSingleElimination)
-                .trim()
-                .toLowerCase();
-        final isRoundRobin = bracketType == AppConstants.bracketRoundRobin;
-        final isGroupStageKnockout =
-            bracketType == AppConstants.bracketGroupStageKnockout;
+        final divisionBracketType = tournamentAsync.value?.divisions
+            .where((d) => d.id == widget.divisionId)
+            .firstOrNull
+            ?.bracketType;
 
-        if (isRoundRobin || isGroupStageKnockout) {
+        final rawType = (widget.bracketType ??
+                divisionBracketType ??
+                tournamentAsync.value?.bracketType ??
+                '')
+            .trim()
+            .toLowerCase();
+
+        final hasDoubleElimMatches = matches.any(isDoubleEliminationMatch);
+        final hasGroupMatches = matches.any(isGroupStageMatch);
+        final hasKnockoutMatches = matches.any(isKnockoutMatch);
+
+        final String effectiveBracketType;
+        if (hasDoubleElimMatches ||
+            rawType == 'double_elimination' ||
+            rawType == 'doubleelimination') {
+          effectiveBracketType = AppConstants.bracketDoubleElimination;
+        } else if (rawType == 'single_elimination' ||
+            rawType == 'singleelimination' ||
+            rawType == 'knockout') {
+          effectiveBracketType = AppConstants.bracketSingleElimination;
+        } else if (rawType == 'round_robin' || rawType == 'roundrobin') {
+          effectiveBracketType = AppConstants.bracketRoundRobin;
+        } else if (rawType == 'group_stage_knockout' ||
+            rawType == 'groupstageknockout') {
+          effectiveBracketType = AppConstants.bracketGroupStageKnockout;
+        } else if (hasGroupMatches && hasKnockoutMatches) {
+          effectiveBracketType = AppConstants.bracketGroupStageKnockout;
+        } else if (hasGroupMatches) {
+          effectiveBracketType = AppConstants.bracketRoundRobin;
+        } else {
+          effectiveBracketType = AppConstants.bracketSingleElimination;
+        }
+
+        final isRoundRobin =
+            effectiveBracketType == AppConstants.bracketRoundRobin;
+        final isGroupStageKnockout =
+            effectiveBracketType == AppConstants.bracketGroupStageKnockout;
+        final hasGroupStage =
+            isRoundRobin || (isGroupStageKnockout && hasGroupMatches);
+
+        if (hasGroupStage) {
           if (widget.isEmbedded) {
             return Column(
               mainAxisSize: MainAxisSize.min,
@@ -184,7 +219,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                 const SizedBox(height: 8),
                 _buildEmbeddedTabContent(
                   matches,
-                  bracketType,
+                  effectiveBracketType,
                   auth,
                 ),
               ],
@@ -236,7 +271,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                     ),
                     _buildKnockoutMatchTable(
                       matches,
-                      bracketType,
+                      effectiveBracketType,
                       auth.role == UserRole.viewer,
                       auth.role == UserRole.admin || widget.isReferee,
                     ),
@@ -248,7 +283,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
         } else {
           return _buildKnockoutMatchTable(
             matches,
-            bracketType,
+            effectiveBracketType,
             auth.role == UserRole.viewer,
             auth.role == UserRole.admin || widget.isReferee,
           );
