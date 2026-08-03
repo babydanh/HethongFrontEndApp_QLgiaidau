@@ -20,6 +20,7 @@ class BracketDiagramScreen extends ConsumerStatefulWidget {
   final String tournamentId;
   final String? divisionId;
   final String bracketType;
+  final List<MatchModel>? initialMatches;
   final bool isReferee;
   final bool isReadOnly;
   final bool canEditBracket;
@@ -29,6 +30,7 @@ class BracketDiagramScreen extends ConsumerStatefulWidget {
     required this.tournamentId,
     this.divisionId,
     required this.bracketType,
+    this.initialMatches,
     this.isReferee = false,
     this.isReadOnly = true,
     this.canEditBracket = false,
@@ -47,6 +49,8 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
   @override
   void initState() {
     super.initState();
+    _bracketMatches = widget.initialMatches;
+    _loading = widget.initialMatches == null || widget.initialMatches!.isEmpty;
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
@@ -70,7 +74,10 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          // If we already have initialMatches, do not show error screen
+          if (_bracketMatches == null || _bracketMatches!.isEmpty) {
+            _error = e.toString();
+          }
           _loading = false;
         });
       }

@@ -809,11 +809,16 @@ class ApiTournamentRepository implements ITournamentRepository {
         if (divOptions.isNotEmpty) {
           final aggregatedMatches = <MatchModel>[];
           final matchIds = <String>{};
-          for (final div in divOptions) {
-            final divMatches = await getBracketMatches(
-              tournamentId,
-              divisionId: div.id,
-            );
+          final results = await Future.wait(
+            divOptions.map(
+              (div) => getBracketMatches(
+                tournamentId,
+                divisionId: div.id,
+                allowAggregateFallback: false,
+              ),
+            ),
+          );
+          for (final divMatches in results) {
             for (final m in divMatches) {
               if (matchIds.add(m.id)) {
                 aggregatedMatches.add(m);

@@ -677,6 +677,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                           tournamentId: widget.tournamentId,
                           divisionId: widget.divisionId,
                           bracketType: bracketType,
+                          initialMatches: matches,
                           isReferee: widget.isReferee,
                           isReadOnly: isReadOnly,
                           canEditBracket: widget.canEditBracket,
