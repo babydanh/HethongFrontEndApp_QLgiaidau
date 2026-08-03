@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
-import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/domain/entities/team.dart';
+import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
 final standingsProvider = StreamProvider.family<List<Standing>, String>((ref, tournamentId) async* {
   final asyncVal = ref.watch(standingsWithDivisionProvider((
@@ -22,22 +24,42 @@ final standingsProvider = StreamProvider.family<List<Standing>, String>((ref, to
 
 final standingsWithDivisionProvider = StreamProvider.family<
     List<Standing>, ({String tournamentId, String? divisionId})>((ref, params) async* {
-  while (true) {
-    final apiStandings = await _fetchApiStandings(
+  List<Standing> initialStandings = const [];
+  try {
+    initialStandings = await _fetchApiStandings(
       ref,
       params.tournamentId,
       divisionId: params.divisionId,
-    );
-    if (apiStandings.isNotEmpty) {
-      yield apiStandings;
-    } else {
-      yield await _calculateClientStandings(
+    ).timeout(const Duration(seconds: 3), onTimeout: () => const []);
+  } catch (_) {}
+
+  if (initialStandings.isNotEmpty) {
+    yield initialStandings;
+  } else {
+    try {
+      final clientStandings = await _calculateClientStandings(
         ref,
         params.tournamentId,
         divisionId: params.divisionId,
-      );
+      ).timeout(const Duration(seconds: 3), onTimeout: () => const []);
+      yield clientStandings;
+    } catch (_) {
+      yield const [];
     }
-    await Future<void>.delayed(const Duration(seconds: 30));
+  }
+
+  while (true) {
+    await Future<void>.delayed(const Duration(seconds: 20));
+    try {
+      final apiStandings = await _fetchApiStandings(
+        ref,
+        params.tournamentId,
+        divisionId: params.divisionId,
+      ).timeout(const Duration(seconds: 3), onTimeout: () => const []);
+      if (apiStandings.isNotEmpty) {
+        yield apiStandings;
+      }
+    } catch (_) {}
   }
 });
 
@@ -140,11 +162,20 @@ Future<List<Standing>> _calculateClientStandings(
   String tournamentId, {
   String? divisionId,
 }) async {
-  final teams = await ref.read(teamsProvider(tournamentId).future);
-  final matches = await ref.read(matchesWithDivisionProvider((
-    tournamentId: tournamentId,
-    divisionId: divisionId,
-  )).future);
+  List<Team> teams = const [];
+  List<MatchModel> matches = const [];
+  try {
+    final teamRepo = ref.read(teamRepositoryProvider);
+    final matchRepo = ref.read(matchRepositoryProvider);
+    teams = await teamRepo
+        .getAllByTournament(tournamentId)
+        .catchError((_) => <Team>[])
+        .timeout(const Duration(seconds: 3), onTimeout: () => <Team>[]);
+    matches = await matchRepo
+        .getAllByTournament(tournamentId, divisionId: divisionId)
+        .catchError((_) => <MatchModel>[])
+        .timeout(const Duration(seconds: 3), onTimeout: () => <MatchModel>[]);
+  } catch (_) {}
 
   var winPoints = 3;
   var drawPoints = 1;

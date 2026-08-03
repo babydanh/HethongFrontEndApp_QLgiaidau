@@ -38,99 +38,121 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
       )),
     );
 
-    return standingsAsync.when(
-      data: (standings) {
-        if (standings.isEmpty) {
-          return _buildEmptyState(context, l10n.crossTableEmpty);
-        }
+    final loadedStandings = standingsAsync.valueOrNull ?? const [];
+    final standings = loadedStandings.isNotEmpty
+        ? loadedStandings
+        : _buildFallbackStandingsFromMatches(widget.matches, l10n);
 
-        final groupedStandings = _groupStandings(standings, l10n);
-        final matchSnapshot = ref
-            .watch(
-              matchesWithDivisionProvider((
-                tournamentId: widget.tournamentId,
-                divisionId: widget.divisionId,
-              )),
-            )
-            .maybeWhen(
-              data: (matches) => matches,
-              orElse: () => widget.matches,
-            );
-        final groupNames = groupedStandings.keys.toList()..sort();
+    if (standings.isEmpty) {
+      if (standingsAsync.isLoading && widget.matches.isEmpty) {
+        return const Center(
+          child: CircularProgressIndicator(color: AppTheme.primary),
+        );
+      }
+      return _buildEmptyState(context, l10n.crossTableEmpty);
+    }
 
-        return ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 16),
-          itemCount: groupNames.length,
-          itemBuilder: (context, index) {
-            final groupName = groupNames[index];
-            final groupRows = groupedStandings[groupName]!;
-            final allGroupMatches = _matchesForGroup(
-              groupRows,
-              groupName,
-              groupNames.length == 1,
-              matchSnapshot,
-            );
-            final maxLeg = allGroupMatches.fold<int>(
-              widget.configuredLegs.clamp(1, 5),
-              (currentMax, match) {
-                final leg = _legForMatch(match, groupRows.length);
-                return leg > currentMax ? leg : currentMax;
-              },
-            );
-            final currentLeg = (_groupLegs[groupName] ?? 1).clamp(1, maxLeg);
-            final groupMatches = allGroupMatches
-                .where(
-                  (match) =>
-                      _legForMatch(match, groupRows.length) == currentLeg,
-                )
-                .toList();
+    final groupedStandings = _groupStandings(standings, l10n);
+    final matchSnapshot = ref
+        .watch(
+          matchesWithDivisionProvider((
+            tournamentId: widget.tournamentId,
+            divisionId: widget.divisionId,
+          )),
+        )
+        .maybeWhen(
+          data: (matches) => matches,
+          orElse: () => widget.matches,
+        );
+    final groupNames = groupedStandings.keys.toList()..sort();
 
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: index == groupNames.length - 1 ? 0 : 20,
-              ),
-              child: _GroupCrossTable(
-                l10n: l10n,
-                title: groupName,
-                standings: groupRows,
-                matches: groupMatches,
-                currentLeg: currentLeg,
-                maxLeg: maxLeg,
-                onPrevLeg: currentLeg > 1
-                    ? () =>
-                          setState(() => _groupLegs[groupName] = currentLeg - 1)
-                    : null,
-                onNextLeg: currentLeg < maxLeg
-                    ? () =>
-                          setState(() => _groupLegs[groupName] = currentLeg + 1)
-                    : null,
-              ),
-            );
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 16),
+      itemCount: groupNames.length,
+      itemBuilder: (context, index) {
+        final groupName = groupNames[index];
+        final groupRows = groupedStandings[groupName]!;
+        final allGroupMatches = _matchesForGroup(
+          groupRows,
+          groupName,
+          groupNames.length == 1,
+          matchSnapshot,
+        );
+        final maxLeg = allGroupMatches.fold<int>(
+          widget.configuredLegs.clamp(1, 5),
+          (currentMax, match) {
+            final leg = _legForMatch(match, groupRows.length);
+            return leg > currentMax ? leg : currentMax;
           },
         );
+        final currentLeg = (_groupLegs[groupName] ?? 1).clamp(1, maxLeg);
+        final groupMatches = allGroupMatches
+            .where(
+              (match) =>
+                  _legForMatch(match, groupRows.length) == currentLeg,
+            )
+            .toList();
+
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: index == groupNames.length - 1 ? 0 : 20,
+          ),
+          child: _GroupCrossTable(
+            l10n: l10n,
+            title: groupName,
+            standings: groupRows,
+            matches: groupMatches,
+            currentLeg: currentLeg,
+            maxLeg: maxLeg,
+            onPrevLeg: currentLeg > 1
+                ? () =>
+                      setState(() => _groupLegs[groupName] = currentLeg - 1)
+                : null,
+            onNextLeg: currentLeg < maxLeg
+                ? () =>
+                      setState(() => _groupLegs[groupName] = currentLeg + 1)
+                : null,
+          ),
+        );
       },
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: AppTheme.primary),
-      ),
-      error: (e, _) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 48, color: context.colors.error),
-            const SizedBox(height: 12),
-            Text(
-              l10n.crossTableError(e.toString()),
-              style: TextStyle(
-                color: context.colors.textSecondary,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
+  }
+
+  List<Standing> _buildFallbackStandingsFromMatches(
+    List<MatchModel> matches,
+    AppLocalizations l10n,
+  ) {
+    final standingsMap = <String, Standing>{};
+    for (final m in matches) {
+      final grp = (m.groupName != null && m.groupName!.isNotEmpty)
+          ? m.groupName!
+          : l10n.crossTableDefaultGroup;
+      if (m.team1Name.isNotEmpty && m.team1Name != 'TBD' && m.team1Name != 'BYE') {
+        final key = m.team1Id.isNotEmpty ? m.team1Id : m.team1Name;
+        standingsMap.putIfAbsent(
+          key,
+          () => Standing(
+            id: key,
+            teamName: m.team1Name,
+            group: grp,
+          ),
+        );
+      }
+      if (m.team2Name.isNotEmpty && m.team2Name != 'TBD' && m.team2Name != 'BYE') {
+        final key = m.team2Id.isNotEmpty ? m.team2Id : m.team2Name;
+        standingsMap.putIfAbsent(
+          key,
+          () => Standing(
+            id: key,
+            teamName: m.team2Name,
+            group: grp,
+          ),
+        );
+      }
+    }
+    return standingsMap.values.toList();
   }
 
   Map<String, List<Standing>> _groupStandings(
