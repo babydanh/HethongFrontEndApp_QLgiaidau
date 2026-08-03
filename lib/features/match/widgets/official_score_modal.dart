@@ -84,6 +84,8 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
   void initState() {
     super.initState();
     SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
@@ -232,6 +234,10 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                     final n = ref.read(
                       scorePanelNotifierProvider(params).notifier,
                     );
+                    final selectedWinner = state.winnerTeam != 0
+                        ? state.winnerTeam
+                        : (state.team1SetWins >= state.team2SetWins ? 1 : 2);
+                    final canSaveResult = n.canCompleteAs(selectedWinner);
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -397,23 +403,20 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                   ),
                                 ),
                               if (state.isMatchComplete ||
-                                  state.overrideEnabled)
+                                  state.overrideEnabled ||
+                                  (state.isLite &&
+                                      state.finishedSets.isNotEmpty))
                                 FilledButton.icon(
                                   onPressed:
                                       state.isSubmitting ||
                                           (state.overrideEnabled &&
                                               state.overrideReason
                                                   .trim()
-                                                  .isEmpty)
+                                                  .isEmpty) ||
+                                          !canSaveResult
                                       ? null
                                       : () async {
-                                          final winnerTeam =
-                                              state.winnerTeam != 0
-                                              ? state.winnerTeam
-                                              : (state.team1SetWins >=
-                                                        state.team2SetWins
-                                                    ? 1
-                                                    : 2);
+                                          final winnerTeam = selectedWinner;
                                           final confirmed = await showDialog<bool>(
                                             context: context,
                                             builder: (dialogContext) => AlertDialog(
