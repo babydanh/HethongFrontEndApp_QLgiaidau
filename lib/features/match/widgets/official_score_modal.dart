@@ -617,7 +617,8 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
           ),
           OrientationBuilder(
             builder: (context, orientation) {
-              final isLandscape = orientation == Orientation.landscape;
+              final size = MediaQuery.of(context).size;
+              final isLandscape = orientation == Orientation.landscape || size.width > size.height;
               if (isLandscape) {
                 return Wrap(
                   spacing: 8,
@@ -625,7 +626,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                   children: options.map((option) {
                     final isSelected = selectedPenalty.id == option.id;
                     return SizedBox(
-                      width: (MediaQuery.of(context).size.width - 48) / 2,
+                      width: (size.width - 48) / 2,
                       child: Container(
                         decoration: BoxDecoration(
                           color: colors.bgSurface,
