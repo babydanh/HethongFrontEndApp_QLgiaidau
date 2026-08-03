@@ -294,11 +294,15 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                               ),
                             ),
                           ],
-                          Row(
+                          Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAlignment: WrapCrossAlignment.center,
+                            spacing: 12,
+                            runSpacing: 8,
                             children: [
-                              // SetHistoryBar on the left
-                              Expanded(
-                                child: SingleChildScrollView(
+                              // SetHistoryBar with fallback
+                              if (state.finishedSets.isNotEmpty)
+                                SingleChildScrollView(
                                   scrollDirection: Axis.horizontal,
                                   child: SetHistoryBar(
                                     finishedSets: state.finishedSets,
@@ -306,9 +310,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                     team2SetWins: state.team2SetWins,
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              // Buttons on the right (without icons)
+                              // Action Buttons
                               Wrap(
                                 spacing: 8,
                                 runSpacing: 6,
