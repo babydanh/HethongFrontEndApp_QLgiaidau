@@ -45,10 +45,9 @@ class BracketViewScreen extends ConsumerStatefulWidget {
   ConsumerState<BracketViewScreen> createState() => _BracketViewScreenState();
 }
 
-class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
-    with TickerProviderStateMixin {
-  late TabController _tabController;
+class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
   final TextEditingController _searchController = TextEditingController();
+  int _selectedGroupTab = 0;
   String _searchQuery = '';
   int _selectedRound = 0;
   String _matchFilter = '';
@@ -58,8 +57,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(_handleTabChange);
 
     if (!widget.isEmbedded) {
       SystemChrome.setPreferredOrientations([
@@ -70,15 +67,8 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     }
   }
 
-  void _handleTabChange() {
-    if (_tabController.indexIsChanging) return;
-    if (mounted) setState(() {});
-  }
-
   @override
   void dispose() {
-    _tabController.removeListener(_handleTabChange);
-    _tabController.dispose();
     _searchController.dispose();
 
     if (!widget.isEmbedded) {
@@ -189,95 +179,25 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             isRoundRobin || (isGroupStageKnockout && hasGroupMatches);
 
         if (hasGroupStage) {
-          if (widget.isEmbedded) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  height: 34,
-                  child: TabBar(
-                    controller: _tabController,
-                    labelColor: AppTheme.primary,
-                    unselectedLabelColor: context.colors.textSecondary,
-                    indicatorColor: AppTheme.primary,
-                    indicatorWeight: 2,
-                    labelStyle: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    unselectedLabelStyle: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.normal,
-                    ),
-                    tabs: [
-                      Tab(height: 30, text: l10n.bracketView_crossTable),
-                      Tab(height: 30, text: l10n.bracketView_standings),
-                      Tab(height: 30, text: l10n.bracketView_schedule),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildEmbeddedTabContent(
+          return Column(
+            mainAxisSize: widget.isEmbedded ? MainAxisSize.min : MainAxisSize.max,
+            children: [
+              _buildGroupStageTabBar(l10n),
+              const SizedBox(height: 8),
+              if (widget.isEmbedded)
+                _buildGroupTabContent(
                   matches,
                   effectiveBracketType,
                   auth,
-                ),
-              ],
-            );
-          }
-
-          return Column(
-            children: [
-              SizedBox(
-                height: 34,
-                child: TabBar(
-                  controller: _tabController,
-                  labelColor: AppTheme.primary,
-                  unselectedLabelColor: context.colors.textSecondary,
-                  indicatorColor: AppTheme.primary,
-                  indicatorWeight: 2,
-                  labelStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
+                )
+              else
+                Expanded(
+                  child: _buildGroupTabContent(
+                    matches,
+                    effectiveBracketType,
+                    auth,
                   ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.normal,
-                  ),
-                  tabs: [
-                    Tab(height: 30, text: l10n.bracketView_crossTable),
-                    Tab(height: 30, text: l10n.bracketView_standings),
-                    Tab(height: 30, text: l10n.bracketView_schedule),
-                  ],
                 ),
-              ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: CrossTableView(
-                        matches: matches,
-                        tournamentId: widget.tournamentId,
-                        divisionId: widget.divisionId,
-                        configuredLegs: widget.configuredLegs,
-                      ),
-                    ),
-                    StandingsView(
-                      matches: matches,
-                      tournamentId: widget.tournamentId,
-                      divisionId: widget.divisionId,
-                    ),
-                    _buildKnockoutMatchTable(
-                      matches,
-                      effectiveBracketType,
-                      auth.role == UserRole.viewer,
-                      auth.role == UserRole.admin || widget.isReferee,
-                    ),
-                  ],
-                ),
-              ),
             ],
           );
         } else {
@@ -451,12 +371,69 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     );
   }
 
-  Widget _buildEmbeddedTabContent(
+  Widget _buildGroupStageTabBar(AppLocalizations l10n) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: context.colors.bgSurface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: context.colors.border),
+      ),
+      child: Row(
+        children: [
+          _buildGroupTabItem(0, l10n.bracketView_crossTable),
+          _buildGroupTabItem(1, l10n.bracketView_standings),
+          _buildGroupTabItem(2, l10n.bracketView_schedule),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupTabItem(int index, String title) {
+    final isSelected = _selectedGroupTab == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          if (_selectedGroupTab != index) {
+            setState(() => _selectedGroupTab = index);
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 7),
+          decoration: BoxDecoration(
+            color: isSelected ? AppTheme.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppTheme.primary.withValues(alpha: 0.25),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+              color: isSelected ? Colors.white : context.colors.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGroupTabContent(
     List<MatchModel> matches,
     String bracketType,
     AuthState auth,
   ) {
-    switch (_tabController.index) {
+    switch (_selectedGroupTab) {
       case 0:
         return Padding(
           padding: const EdgeInsets.all(16.0),

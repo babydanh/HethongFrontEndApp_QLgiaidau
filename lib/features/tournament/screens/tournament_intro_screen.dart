@@ -37,32 +37,12 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(_handleTabChanged);
   }
 
   void _handleTabChanged() {
     if (mounted) setState(() {});
-  }
-
-  void _syncSponsorTab(bool hasSponsors) {
-    final desiredLength = hasSponsors ? 5 : 4;
-    if (_tabController.length == desiredLength) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _tabController.length == desiredLength) return;
-      final previousController = _tabController;
-      final nextIndex = previousController.index < desiredLength
-          ? previousController.index
-          : desiredLength - 1;
-      previousController.removeListener(_handleTabChanged);
-      _tabController = TabController(
-        length: desiredLength,
-        vsync: this,
-        initialIndex: nextIndex,
-      )..addListener(_handleTabChanged);
-      previousController.dispose();
-      if (mounted) setState(() {});
-    });
   }
 
   @override
@@ -231,8 +211,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
   Widget _buildContent(Tournament tournament, UserRole? role) {
     final l10n = AppLocalizations.of(context)!;
-    final controllerHasSponsors = _tabController.length == 5;
-    _syncSponsorTab(tournament.sponsors.isNotEmpty);
     if ((_selectedDivisionId == null || _selectedDivision.isEmpty) &&
         tournament.divisions.isNotEmpty) {
       _selectedDivision = tournament.divisions.first.name;
@@ -270,7 +248,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     delegate: _TabBarDelegate(
                       tabController: _tabController,
                       colors: colors,
-                      showSponsors: controllerHasSponsors,
                     ),
                   ),
                 ],
@@ -306,10 +283,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                           tournamentId: widget.tournamentId,
                           selectedDivisionId: _selectedDivisionId,
                           bracketType: tournament.divisions
-                              .where((d) => d.id == _selectedDivisionId)
-                              .firstOrNull
-                              ?.bracketType ??
-                          tournament.bracketType,
+                                  .where((d) => d.id == _selectedDivisionId)
+                                  .firstOrNull
+                                  ?.bracketType ??
+                              tournament.bracketType,
                           configuredLegs:
                               tournament.divisions
                                   .where((d) => d.id == _selectedDivisionId)
@@ -326,12 +303,11 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                           resolveImageUrl: _resolveImageUrl,
                         ),
                       ),
-                      if (controllerHasSponsors)
-                        SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.only(bottom: 160),
-                          child: SponsorsTab(sponsors: tournament.sponsors),
-                        ),
+                      SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 160),
+                        child: SponsorsTab(sponsors: tournament.sponsors),
+                      ),
                     ],
                   ),
                   loading: () => const Center(
@@ -686,12 +662,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabController tabController;
   final AppColorsExtension colors;
-  final bool showSponsors;
 
   _TabBarDelegate({
     required this.tabController,
     required this.colors,
-    required this.showSponsors,
   });
 
   @override
@@ -738,7 +712,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
           Tab(height: 34, text: l10n.tabTeams),
           Tab(height: 34, text: l10n.tabBracket),
           Tab(height: 34, text: l10n.tabGallery),
-          if (showSponsors) Tab(height: 34, text: l10n.tabSponsors),
+          Tab(height: 34, text: l10n.tabSponsors),
         ],
       ),
     );
