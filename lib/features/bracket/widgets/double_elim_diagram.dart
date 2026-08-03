@@ -55,21 +55,9 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
     _didCenterInitialView = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      // Compute scale to fit canvas within viewport with 85% margin
-      final scaleX = viewport.width / canvas.width;
-      final scaleY = viewport.height / canvas.height;
-      final fitScale = (scaleX < scaleY ? scaleX : scaleY) * 0.85;
-
-      final dx = ((viewport.width - canvas.width * fitScale) / 2).clamp(
-        16.0,
-        double.infinity,
-      );
-      final dy = ((viewport.height - canvas.height * fitScale) / 2).clamp(
-        16.0,
-        double.infinity,
-      );
+      final fitScale = (viewport.height / canvas.height).clamp(0.65, 1.0);
       _tc.value = Matrix4.identity()
-        ..translateByDouble(dx.toDouble(), dy.toDouble(), 0, 1)
+        ..translateByDouble(16.0, 16.0, 0, 1)
         ..scaleByDouble(fitScale, fitScale, 1, 1);
     });
   }

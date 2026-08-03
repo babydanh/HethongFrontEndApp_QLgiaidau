@@ -52,6 +52,8 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
     _bracketMatches = widget.initialMatches;
     _loading = widget.initialMatches == null || widget.initialMatches!.isEmpty;
     SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
