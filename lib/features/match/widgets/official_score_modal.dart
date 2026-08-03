@@ -77,6 +77,7 @@ class OfficialScorePage extends StatefulWidget {
 class _OfficialScorePageState extends State<OfficialScorePage> {
   String? _selectedPenaltyTeam;
   PenaltyOption? _selectedPenalty;
+  bool _penaltySelectionError = false;
   final _penaltyReasonController = TextEditingController();
 
   @override
@@ -161,20 +162,27 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                     length: 2,
                     child: Column(
                       children: [
-                        TabBar(
+                        SizedBox(
+                          height: 52,
+                          child: TabBar(
+                          indicatorSize: TabBarIndicatorSize.label,
+                          labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+                          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                          unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                           labelColor: AppTheme.primary,
                           unselectedLabelColor: colors.textMuted,
                           indicatorColor: AppTheme.primary,
                           tabs: const [
                             Tab(
-                              icon: Icon(Icons.scoreboard_rounded, size: 18),
+                              icon: Icon(Icons.scoreboard_rounded, size: 16),
                               text: 'Tính điểm',
                             ),
                             Tab(
-                              icon: Icon(Icons.gavel_rounded, size: 18),
+                              icon: Icon(Icons.gavel_rounded, size: 16),
                               text: 'Phạm lỗi',
                             ),
                           ],
+                          ),
                         ),
                         Expanded(
                           child: TabBarView(
@@ -289,59 +297,6 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                 ),
                                 backgroundColor: colors.bgCard,
                                 visualDensity: VisualDensity.compact,
-                              ),
-
-                              // Tag Hình phạt theo môn
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'Phạt: ',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: colors.textMuted,
-                                    ),
-                                  ),
-                                  ...strategy.getOptions().take(4).map((
-                                    option,
-                                  ) {
-                                    return Container(
-                                      margin: const EdgeInsets.only(right: 4),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: option.color.withValues(
-                                          alpha: 0.12,
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                          AppTheme.radiusSmall,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            option.icon,
-                                            size: 12,
-                                            color: option.color,
-                                          ),
-                                          const SizedBox(width: 3),
-                                          Text(
-                                            option.name,
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w700,
-                                              color: option.color,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }),
-                                ],
                               ),
 
                               // Action buttons
@@ -623,7 +578,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
           const SizedBox(height: 8),
           ...options.map(
             (option) => Container(
-              margin: const EdgeInsets.only(bottom: 8),
+              margin: const EdgeInsets.only(bottom: 6),
               decoration: BoxDecoration(
                 color: colors.bgSurface,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -631,7 +586,10 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
               ),
               child: ListTile(
                 dense: true,
+                visualDensity: VisualDensity.compact,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                 leading: CircleAvatar(
+                  radius: 18,
                   backgroundColor: option.color.withValues(alpha: 0.12),
                   child: Icon(option.icon, color: option.color, size: 18),
                 ),
@@ -642,11 +600,8 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                   style: TextStyle(
                     color: colors.textPrimary,
                     fontWeight: FontWeight.w700,
+                    fontSize: 14,
                   ),
-                ),
-                subtitle: Text(
-                  'Chọn đội bị phạt và xác nhận trước khi ghi nhận',
-                  style: TextStyle(color: colors.textMuted, fontSize: 12),
                 ),
                 trailing: Icon(
                   selectedPenalty.id == option.id
@@ -674,7 +629,10 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                 child: Padding(
                   padding: EdgeInsets.only(right: team == teams.last ? 0 : 8),
                   child: OutlinedButton(
-                    onPressed: () => setState(() => _selectedPenaltyTeam = team),
+                    onPressed: () => setState(() {
+                      _selectedPenaltyTeam = team;
+                      _penaltySelectionError = false;
+                    }),
                     style: OutlinedButton.styleFrom(
                       backgroundColor: selected
                           ? AppTheme.primary.withValues(alpha: 0.1)
@@ -695,6 +653,14 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
               );
             }).toList(),
           ),
+          if (_penaltySelectionError)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                'Vui lòng chọn đội bị phạt trước khi ghi nhận.',
+                style: TextStyle(color: colors.error, fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+            ),
           const SizedBox(height: 12),
           TextField(
             controller: _penaltyReasonController,
@@ -707,9 +673,11 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
-            onPressed: _selectedPenaltyTeam == null
-                ? null
-                : () async {
+            onPressed: () async {
+                    if (_selectedPenaltyTeam == null) {
+                      setState(() => _penaltySelectionError = true);
+                      return;
+                    }
                     final confirmed = await showDialog<bool>(
                       context: context,
                       builder: (dialogContext) => AlertDialog(
@@ -744,6 +712,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                     if (context.mounted) {
                       setState(() {
                         _selectedPenaltyTeam = null;
+                        _penaltySelectionError = false;
                         _penaltyReasonController.clear();
                       });
                     }

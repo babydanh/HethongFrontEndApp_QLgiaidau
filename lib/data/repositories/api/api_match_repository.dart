@@ -52,35 +52,75 @@ class ApiMatchRepository implements IMatchRepository {
   final Map<String, List<MatchModel>> _matchesCache = {};
 
   @override
-  Stream<List<MatchModel>> watchByTournament(String tournamentId, {String? divisionId}) async* {
+  Stream<List<MatchModel>> watchByTournament(String tournamentId, {String? divisionId}) {
     final cacheKey = '$tournamentId-${divisionId ?? 'all'}';
-    final initial = await getAllByTournament(tournamentId, divisionId: divisionId);
-    if (initial.isNotEmpty) {
-      _matchesCache[cacheKey] = initial;
-      yield initial;
-    } else {
-      yield _matchesCache[cacheKey] ?? [];
-    }
+    late StreamController<List<MatchModel>> controller;
+    StreamSubscription? socketSub;
+    Timer? refreshTimer;
 
-    yield* Stream.periodic(const Duration(seconds: 10)).asyncMap((_) async {
+    Future<void> refresh() async {
       final updated = await getAllByTournament(tournamentId, divisionId: divisionId);
       if (updated.isNotEmpty) {
         _matchesCache[cacheKey] = updated;
-        return updated;
       }
-      return _matchesCache[cacheKey] ?? [];
-    });
+      if (!controller.isClosed) {
+        controller.add(_matchesCache[cacheKey] ?? updated);
+      }
+    }
+
+    controller = StreamController<List<MatchModel>>(
+      onListen: () {
+        _socketService.connect(null, joinMatch: false);
+        _socketService.joinTournament(tournamentId);
+        unawaited(refresh());
+        socketSub = _socketService.onTournamentMatchUpdate.listen((_) {
+          unawaited(refresh());
+        });
+        refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+          unawaited(refresh());
+        });
+      },
+      onCancel: () {
+        socketSub?.cancel();
+        refreshTimer?.cancel();
+        _socketService.leaveTournament(tournamentId);
+      },
+    );
+    return controller.stream;
   }
 
   @override
-  Stream<List<MatchModel>> watchLive(String tournamentId) async* {
-    final list = await getAllByTournament(tournamentId);
-    yield list.where((m) => m.status == 'live' || m.status == 'ONGOING').toList();
-    yield* Stream.periodic(const Duration(seconds: 8))
-        .asyncMap((_) async {
-          final currentList = await getAllByTournament(tournamentId);
-          return currentList.where((m) => m.status == 'live' || m.status == 'ONGOING').toList();
+  Stream<List<MatchModel>> watchLive(String tournamentId) {
+    late StreamController<List<MatchModel>> controller;
+    StreamSubscription? socketSub;
+    Timer? refreshTimer;
+
+    Future<void> refresh() async {
+      final currentList = await getAllByTournament(tournamentId);
+      if (!controller.isClosed) {
+        controller.add(currentList.where((m) => m.status == 'live' || m.status == 'ONGOING').toList());
+      }
+    }
+
+    controller = StreamController<List<MatchModel>>(
+      onListen: () {
+        _socketService.connect(null, joinMatch: false);
+        _socketService.joinTournament(tournamentId);
+        unawaited(refresh());
+        socketSub = _socketService.onTournamentMatchUpdate.listen((_) {
+          unawaited(refresh());
         });
+        refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+          unawaited(refresh());
+        });
+      },
+      onCancel: () {
+        socketSub?.cancel();
+        refreshTimer?.cancel();
+        _socketService.leaveTournament(tournamentId);
+      },
+    );
+    return controller.stream;
   }
 
   Future<MatchModel?> _getMatchById(String matchId) async {
@@ -311,6 +351,8 @@ class ApiMatchRepository implements IMatchRepository {
     late StreamController<MatchModel?> controller;
     StreamSubscription? scoreSub;
     StreamSubscription? statusSub;
+    StreamSubscription? tournamentUpdateSub;
+    Timer? reconciliationTimer;
     MatchModel? latestMatch;
 
     controller = StreamController<MatchModel?>(
@@ -344,12 +386,34 @@ class ApiMatchRepository implements IMatchRepository {
             controller.add(mergedMatch);
           }
         });
+
+        tournamentUpdateSub = _socketService.onTournamentMatchUpdate.listen((data) {
+          if (data['id'] == matchId && !controller.isClosed) {
+            final newMatch = _parseMatch(data);
+            final mergedMatch = _mergeMatchUpdate(newMatch, latestMatch, data);
+            latestMatch = mergedMatch;
+            controller.add(mergedMatch);
+          }
+        });
+
+        // Socket is the fast path; reconcile periodically so a dropped event or
+        // a proxy that temporarily falls back to polling cannot leave stale score.
+        reconciliationTimer = Timer.periodic(const Duration(seconds: 12), (_) async {
+          final refreshed = await _getMatchById(matchId);
+          if (refreshed != null && !controller.isClosed) {
+            latestMatch = refreshed;
+            controller.add(refreshed);
+          }
+        });
       },
       onCancel: () {
         _log.info('Disconnecting socket listener for match $matchId');
         scoreSub?.cancel();
         statusSub?.cancel();
+        tournamentUpdateSub?.cancel();
+        reconciliationTimer?.cancel();
         _socketService.leave(matchId);
+        _socketService.leaveTournament(tournamentId);
         controller.close();
       },
     );
