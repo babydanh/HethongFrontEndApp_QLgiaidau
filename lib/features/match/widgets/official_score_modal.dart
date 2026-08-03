@@ -296,7 +296,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                           ],
                           Wrap(
                             alignment: WrapAlignment.spaceBetween,
-                            crossAlignment: WrapCrossAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             spacing: 12,
                             runSpacing: 8,
                             children: [
