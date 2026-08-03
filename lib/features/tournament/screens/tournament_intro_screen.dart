@@ -27,10 +27,32 @@ class TournamentIntroScreen extends ConsumerStatefulWidget {
       _TournamentIntroScreenState();
 }
 
-class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen> {
+class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
+    with TickerProviderStateMixin {
+  TabController? _tabController;
+  int _currentTabCount = 0;
   String _selectedDivision = "";
   String? _selectedDivisionId;
   bool _isFollowLoading = false;
+
+  void _updateTabController(int count) {
+    if (_tabController != null && _currentTabCount == count) return;
+    final prev = _tabController;
+    final prevIndex = prev?.index ?? 0;
+    _currentTabCount = count;
+    _tabController = TabController(
+      length: count,
+      vsync: this,
+      initialIndex: prevIndex < count ? prevIndex : 0,
+    );
+    prev?.dispose();
+  }
+
+  @override
+  void dispose() {
+    _tabController?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -189,6 +211,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen> {
     final l10n = AppLocalizations.of(context)!;
     final hasSponsors = tournament.sponsors.isNotEmpty;
     final tabCount = hasSponsors ? 5 : 4;
+    _updateTabController(tabCount);
+    final controller = _tabController!;
+
     if ((_selectedDivisionId == null || _selectedDivision.isEmpty) &&
         tournament.divisions.isNotEmpty) {
       _selectedDivision = tournament.divisions.first.name;
@@ -197,123 +222,121 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen> {
     final teamsAsync = ref.watch(introTeamsProvider(widget.tournamentId));
     final colors = context.colors;
 
-    return DefaultTabController(
-      key: ValueKey('tournament-tabs-${tournament.id}-$hasSponsors'),
-      length: tabCount,
-      child: Stack(
-        children: [
-          Column(
-            children: [
-              _buildTopBar(tournament, colors),
-              Expanded(
-                child: NestedScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                    SliverToBoxAdapter(
-                      child: TournamentHeaderView(
-                        tournament: tournament,
-                        colors: colors,
-                        compact: false,
-                        selectedDivision: _selectedDivision,
-                        selectedDivisionId: _selectedDivisionId,
-                        onChangedDivision: (div) {
-                          setState(() {
-                            _selectedDivision = div.name;
-                            _selectedDivisionId = div.id;
-                          });
-                        },
+    return Stack(
+      children: [
+        Column(
+          children: [
+            _buildTopBar(tournament, colors),
+            Expanded(
+              child: NestedScrollView(
+                physics: const BouncingScrollPhysics(),
+                headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                  SliverToBoxAdapter(
+                    child: TournamentHeaderView(
+                      tournament: tournament,
+                      colors: colors,
+                      compact: false,
+                      selectedDivision: _selectedDivision,
+                      selectedDivisionId: _selectedDivisionId,
+                      onChangedDivision: (div) {
+                        setState(() {
+                          _selectedDivision = div.name;
+                          _selectedDivisionId = div.id;
+                        });
+                      },
+                    ),
+                  ),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _TabBarDelegate(
+                      tabController: controller,
+                      colors: colors,
+                      showSponsors: hasSponsors,
+                    ),
+                  ),
+                ],
+                body: teamsAsync.when(
+                  data: (teams) => TabBarView(
+                    controller: controller,
+                    children: [
+                      SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 160),
+                        child: AboutTab(
+                          tournament: tournament,
+                          teamCount: teams.length,
+                          resolveImageUrl: _resolveImageUrl,
+                        ),
                       ),
-                    ),
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _TabBarDelegate(
-                        colors: colors,
-                        showSponsors: hasSponsors,
+                      SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 160),
+                        child: tournament.isClubLite
+                            ? _buildLiteTeamList(teams)
+                            : TeamsTab(
+                                teams: teams,
+                                selectedDivision: _selectedDivision,
+                                selectedDivisionId: _selectedDivisionId,
+                              ),
                       ),
-                    ),
-                  ],
-                  body: teamsAsync.when(
-                    data: (teams) => TabBarView(
-                      children: [
-                        SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.only(bottom: 160),
-                          child: AboutTab(
-                            tournament: tournament,
-                            teamCount: teams.length,
-                            resolveImageUrl: _resolveImageUrl,
-                          ),
+                      SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 160),
+                        child: BracketTab(
+                          key: ValueKey('bracket-$_selectedDivisionId'),
+                          tournamentId: widget.tournamentId,
+                          selectedDivisionId: _selectedDivisionId,
+                          bracketType: tournament.divisions
+                                  .where((d) => d.id == _selectedDivisionId)
+                                  .firstOrNull
+                                  ?.bracketType ??
+                              tournament.bracketType,
+                          configuredLegs:
+                              tournament.divisions
+                                  .where((d) => d.id == _selectedDivisionId)
+                                  .firstOrNull
+                                  ?.roundRobinLegs ??
+                              1,
                         ),
-                        SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.only(bottom: 160),
-                          child: tournament.isClubLite
-                              ? _buildLiteTeamList(teams)
-                              : TeamsTab(
-                                  teams: teams,
-                                  selectedDivision: _selectedDivision,
-                                  selectedDivisionId: _selectedDivisionId,
-                                ),
-                        ),
-                        SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.only(bottom: 160),
-                          child: BracketTab(
-                            key: ValueKey('bracket-$_selectedDivisionId'),
-                            tournamentId: widget.tournamentId,
-                            selectedDivisionId: _selectedDivisionId,
-                            bracketType: tournament.divisions
-                                    .where((d) => d.id == _selectedDivisionId)
-                                    .firstOrNull
-                                    ?.bracketType ??
-                                tournament.bracketType,
-                            configuredLegs:
-                                tournament.divisions
-                                    .where((d) => d.id == _selectedDivisionId)
-                                    .firstOrNull
-                                    ?.roundRobinLegs ??
-                                1,
-                          ),
-                        ),
-                        SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.only(bottom: 160),
-                          child: GalleryTab(
-                            galleryImages: tournament.galleryImages,
-                            resolveImageUrl: _resolveImageUrl,
-                          ),
-                        ),
-                        if (hasSponsors)
-                          SingleChildScrollView(
-                            physics: const BouncingScrollPhysics(),
-                            padding: const EdgeInsets.only(bottom: 160),
-                            child: SponsorsTab(sponsors: tournament.sponsors),
-                          ),
-                      ],
-                    ),
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(color: AppTheme.primary),
-                    ),
-                    error: (e, _) => Center(
-                      child: Text(
-                        l10n.teamsLoadError,
-                        style: TextStyle(color: colors.textSecondary),
                       ),
+                      SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 160),
+                        child: GalleryTab(
+                          galleryImages: tournament.galleryImages,
+                          resolveImageUrl: _resolveImageUrl,
+                        ),
+                      ),
+                      if (hasSponsors)
+                        SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.only(bottom: 160),
+                          child: SponsorsTab(sponsors: tournament.sponsors),
+                        ),
+                    ],
+                  ),
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(color: AppTheme.primary),
+                  ),
+                  error: (e, _) => Center(
+                    child: Text(
+                      l10n.teamsLoadError,
+                      style: TextStyle(color: colors.textSecondary),
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
 
-          // Floating Registration Button (Active or Disabled if closed)
-          Positioned(
-            right: 16,
-            bottom: 88,
-            child: _registrationButton(tournament),
-          ),
-        ],
-      ),
+        // Floating Registration Button (Active or Disabled if closed)
+        Positioned(
+          right: 16,
+          bottom: 88,
+          child: _registrationButton(tournament),
+        ),
+      ],
     );
   }
 
@@ -642,10 +665,12 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen> {
 }
 
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabController tabController;
   final AppColorsExtension colors;
   final bool showSponsors;
 
   _TabBarDelegate({
+    required this.tabController,
     required this.colors,
     required this.showSponsors,
   });
@@ -670,6 +695,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
         ),
       ),
       child: TabBar(
+        controller: tabController,
         isScrollable: true,
         tabAlignment: TabAlignment.start,
         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -707,5 +733,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_TabBarDelegate oldDelegate) =>
-      showSponsors != oldDelegate.showSponsors || colors != oldDelegate.colors;
+      tabController != oldDelegate.tabController ||
+      showSponsors != oldDelegate.showSponsors ||
+      colors != oldDelegate.colors;
 }
