@@ -52,8 +52,8 @@ class LanguageSettingCard extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   locale.languageCode == 'en'
-                      ? (l10n!.languageEn)
-                      : (l10n!.languageVi),
+                      ? (l10n.languageEn)
+                      : (l10n.languageVi),
                   style: TextStyle(color: colors.textSecondary, fontSize: 12),
                 ),
               ],
@@ -73,11 +73,11 @@ class LanguageSettingCard extends ConsumerWidget {
               items: [
                 DropdownMenuItem(
                   value: 'vi',
-                  child: Text(l10n!.languageVi),
+                  child: Text(l10n.languageVi),
                 ),
                 DropdownMenuItem(
                   value: 'en',
-                  child: Text(l10n!.languageEn),
+                  child: Text(l10n.languageEn),
                 ),
               ],
               onChanged: (languageCode) {

@@ -667,8 +667,9 @@ class _GroupCrossTable extends StatelessWidget {
     final p2 = football['team2Goals'] ?? football['p2Goals'];
     final score1 = p1 is num ? p1.toInt() : int.tryParse(p1?.toString() ?? '');
     final score2 = p2 is num ? p2.toInt() : int.tryParse(p2?.toString() ?? '');
-    if (score1 == null || score2 == null || score1 < 0 || score2 < 0)
+    if (score1 == null || score2 == null || score1 < 0 || score2 < 0) {
       return null;
+    }
     return (score1, score2);
   }
 }

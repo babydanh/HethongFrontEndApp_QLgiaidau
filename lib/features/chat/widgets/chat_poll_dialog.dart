@@ -189,7 +189,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                           controller: controller,
                           style: const TextStyle(fontSize: 14),
                           decoration: InputDecoration(
-                            hintText: l10n!.chatPollOptionHint(idx + 1),
+                            hintText: l10n.chatPollOptionHint(idx + 1),
                             hintStyle: TextStyle(color: colors.textMuted),
                             filled: true,
                             fillColor: isDark
@@ -224,7 +224,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                   onPressed: _addOption,
                   icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
                   label: Text(
-                    l10n!.chatPollAddOption,
+                    l10n.chatPollAddOption,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -232,7 +232,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
               // Multiple Answers Switch
               SwitchListTile.adaptive(
                 title: Text(
-                  l10n!.chatPollAllowMultiple,
+                  l10n.chatPollAllowMultiple,
                   style: const TextStyle(fontSize: 14),
                 ),
                 value: _allowMultiple,
@@ -253,7 +253,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                     ),
                   ),
                   child: Text(
-                    l10n!.chatPollSubmit,
+                    l10n.chatPollSubmit,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,

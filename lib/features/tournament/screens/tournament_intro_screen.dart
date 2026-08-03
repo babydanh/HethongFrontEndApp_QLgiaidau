@@ -178,10 +178,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen> {
   }
 
   void _goBack() {
-    final auth = ref.read(authProvider);
-    if (auth.tokenCode != null && auth.tokenCode != 'SESSION') {
-      ref.read(authProvider.notifier).signOut();
-    }
     if (context.canPop()) {
       context.pop();
     } else {
