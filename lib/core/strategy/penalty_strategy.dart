@@ -22,58 +22,72 @@ abstract class IPenaltyStrategy {
 
 class BadmintonPenaltyStrategy implements IPenaltyStrategy {
   @override
-  List<PenaltyOption> getOptions() => [
-        const PenaltyOption(id: 'yellow_card', name: 'Thẻ Vàng (Cảnh cáo)', color: Colors.amber, icon: Icons.style),
-        const PenaltyOption(id: 'red_card', name: 'Thẻ Đỏ (Phạt điểm)', color: Colors.red, icon: Icons.style),
-        const PenaltyOption(id: 'black_card', name: 'Thẻ Đen (Truất quyền)', color: Colors.black, icon: Icons.style),
-      ];
+  List<PenaltyOption> getOptions() => const [
+    PenaltyOption(id: 'WARNING', name: 'Nhắc nhở', color: Colors.amber, icon: Icons.warning_rounded),
+    PenaltyOption(id: 'SERVICE_FAULT', name: 'Lỗi giao cầu', color: Colors.orange, icon: Icons.sports_score),
+    PenaltyOption(id: 'MISCONDUCT', name: 'Hành vi không đúng mực', color: Colors.deepOrange, icon: Icons.gavel_rounded),
+    PenaltyOption(id: 'YELLOW_CARD', name: 'Thẻ vàng', color: Colors.amber, icon: Icons.style),
+    PenaltyOption(id: 'RED_CARD', name: 'Thẻ đỏ', color: Colors.red, icon: Icons.style),
+  ];
 
   @override
-  String getRulesDescription() => 
-      '1. Thẻ Vàng: Cảnh cáo cho lỗi hành vi lần đầu.\n'
-      '2. Thẻ Đỏ: Phạt 1 điểm cho đối phương (nếu tái phạm).\n'
-      '3. Thẻ Đen: Truất quyền thi đấu ngay lập tức (lỗi cực kỳ nghiêm trọng).';
+  String getRulesDescription() =>
+      'Cảnh báo, lỗi kỹ thuật và thẻ được ghi theo quyết định của trọng tài/BTC.';
 }
-
-
 
 class TennisPenaltyStrategy implements IPenaltyStrategy {
   @override
-  List<PenaltyOption> getOptions() => [
-        const PenaltyOption(id: 'warning', name: 'Cảnh cáo', color: Colors.amber, icon: Icons.warning_rounded),
-        const PenaltyOption(id: 'point_penalty', name: 'Phạt điểm', color: Colors.orange, icon: Icons.remove_circle_outline),
-        const PenaltyOption(id: 'game_penalty', name: 'Phạt Game/Match', color: Colors.red, icon: Icons.cancel_outlined),
-      ];
+  List<PenaltyOption> getOptions() => const [
+    PenaltyOption(id: 'WARNING', name: 'Nhắc nhở', color: Colors.amber, icon: Icons.warning_rounded),
+    PenaltyOption(id: 'CODE_VIOLATION', name: 'Vi phạm tác phong', color: Colors.orange, icon: Icons.gavel_rounded),
+    PenaltyOption(id: 'POINT_PENALTY', name: 'Phạt 1 điểm', color: Colors.deepOrange, icon: Icons.remove_circle_outline),
+    PenaltyOption(id: 'GAME_PENALTY', name: 'Phạt 1 game', color: Colors.red, icon: Icons.cancel_outlined),
+  ];
 
   @override
-  String getRulesDescription() => 
-      '1. Cảnh cáo (Warning): Lần vi phạm đầu tiên.\n'
-      '2. Phạt điểm (Point Penalty): Lần vi phạm thứ 2.\n'
-      '3. Phạt Game/Truất quyền: Lần vi phạm thứ 3 trở đi.';
+  String getRulesDescription() =>
+      'Tennis không dùng thẻ màu riêng; có cảnh báo, vi phạm tác phong, phạt điểm và phạt game.';
 }
 
 class PickleballPenaltyStrategy implements IPenaltyStrategy {
   @override
-  List<PenaltyOption> getOptions() => [
-        const PenaltyOption(id: 'tech_warning', name: 'Technical Warning', color: Colors.amber, icon: Icons.warning_rounded),
-        const PenaltyOption(id: 'tech_foul', name: 'Technical Foul', color: Colors.red, icon: Icons.sports_score),
-      ];
+  List<PenaltyOption> getOptions() => const [
+    PenaltyOption(id: 'WARNING', name: 'Cảnh cáo', color: Colors.amber, icon: Icons.warning_rounded),
+    PenaltyOption(id: 'SERVICE_FAULT', name: 'Lỗi giao bóng', color: Colors.orange, icon: Icons.sports_score),
+    PenaltyOption(id: 'TECHNICAL_FAULT', name: 'Lỗi kỹ thuật', color: Colors.red, icon: Icons.gavel_rounded),
+    PenaltyOption(id: 'UNSPORTSMANLIKE', name: 'Thi đấu thiếu fair-play', color: Colors.deepOrange, icon: Icons.sports_kabaddi_rounded),
+  ];
 
   @override
-  String getRulesDescription() => 
-      '1. Technical Warning: Cảnh cáo hành vi không chuẩn mực (không bị phạt điểm).\n'
-      '2. Technical Foul: Lỗi kỹ thuật nghiêm trọng hoặc tái phạm (bị trừ điểm hoặc đối phương được cộng điểm).';
+  String getRulesDescription() =>
+      'Lỗi kỹ thuật được ghi nhận riêng; không tự động cộng điểm khi chưa có quyết định xử điểm.';
+}
+
+class TableTennisPenaltyStrategy implements IPenaltyStrategy {
+  @override
+  List<PenaltyOption> getOptions() => const [
+    PenaltyOption(id: 'WARNING', name: 'Nhắc nhở', color: Colors.amber, icon: Icons.warning_rounded),
+    PenaltyOption(id: 'SERVICE_FAULT', name: 'Lỗi giao bóng', color: Colors.orange, icon: Icons.sports_score),
+    PenaltyOption(id: 'MISCONDUCT', name: 'Hành vi không đúng mực', color: Colors.deepOrange, icon: Icons.gavel_rounded),
+    PenaltyOption(id: 'YELLOW_CARD', name: 'Thẻ vàng', color: Colors.amber, icon: Icons.style),
+    PenaltyOption(id: 'RED_CARD', name: 'Thẻ đỏ', color: Colors.red, icon: Icons.style),
+  ];
+
+  @override
+  String getRulesDescription() =>
+      'Cảnh báo, lỗi kỹ thuật và thẻ được ghi theo preset bóng bàn của hệ thống.';
 }
 
 class DefaultPenaltyStrategy implements IPenaltyStrategy {
   @override
-  List<PenaltyOption> getOptions() => [
-        const PenaltyOption(id: 'warning', name: 'Cảnh cáo', color: Colors.amber, icon: Icons.warning_rounded),
-        const PenaltyOption(id: 'foul', name: 'Lỗi / Truất quyền', color: Colors.red, icon: Icons.gavel),
-      ];
+  List<PenaltyOption> getOptions() => const [
+    PenaltyOption(id: 'WARNING', name: 'Nhắc nhở', color: Colors.amber, icon: Icons.warning_rounded),
+    PenaltyOption(id: 'FOUL', name: 'Lỗi / Truất quyền', color: Colors.red, icon: Icons.gavel_rounded),
+  ];
 
   @override
-  String getRulesDescription() => 'Tùy theo quy định cụ thể của giải đấu và ban tổ chức.';
+  String getRulesDescription() =>
+      'Áp dụng theo quy định cụ thể của giải đấu và ban tổ chức.';
 }
 
 class PenaltyStrategyFactory {
@@ -82,8 +96,9 @@ class PenaltyStrategyFactory {
       case AppConstants.sportBadminton:
         return BadmintonPenaltyStrategy();
       case AppConstants.sportTennis:
-      case AppConstants.sportTableTennis:
         return TennisPenaltyStrategy();
+      case AppConstants.sportTableTennis:
+        return TableTennisPenaltyStrategy();
       case AppConstants.sportPickleball:
         return PickleballPenaltyStrategy();
       default:

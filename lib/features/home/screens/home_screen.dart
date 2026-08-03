@@ -123,8 +123,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref.read(authProvider.notifier).init();
     });
 
-    // Khóa cứng màn hình dọc (Portrait) cho Trang chủ
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    // Home supports landscape/tablet layouts; do not force portrait here.
   }
 
   void _startCarouselTimer(int itemCount) {
@@ -197,9 +196,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       controller.dispose();
     }
     _searchFocusNode.dispose();
-
-    // Đảm bảo duy trì hướng màn hình dọc (Portrait)
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
     super.dispose();
   }
@@ -274,9 +270,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             // Body Content filling top to bottom
             Positioned.fill(
-              child: _buildCurrentTabContent(
-                tournamentsAsync,
-                activeHeaderHeight,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1280),
+                  child: _buildCurrentTabContent(
+                    tournamentsAsync,
+                    activeHeaderHeight,
+                  ),
+                ),
               ),
             ),
             // Shared Floating Top Header Stack

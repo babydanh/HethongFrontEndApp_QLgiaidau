@@ -51,6 +51,7 @@ abstract class IMatchRepository {
     required int p1SetsWon,
     required int p2SetsWon,
     required List<SetScoreData> scoreDetails,
+    Map<String, dynamic>? scoreDetailsExtras,
     String? winnerId,
     String? overrideReason,
   });

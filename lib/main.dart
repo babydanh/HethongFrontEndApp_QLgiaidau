@@ -1,7 +1,5 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:app_quanly_giaidau/core/config/global_error_handler.dart';
@@ -24,11 +22,6 @@ void main() async {
 
   // Khởi tạo hệ thống Lỗi Toàn Cục (Global Error Handler)
   GlobalErrorHandler.init();
-
-  // Khóa màn hình dọc (Portrait) cho ứng dụng theo chuẩn
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-  ]);
 
   runApp(
     const ProviderScope(

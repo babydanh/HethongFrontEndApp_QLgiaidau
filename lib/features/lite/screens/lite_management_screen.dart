@@ -93,6 +93,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
           indicatorColor: AppTheme.primary,
           labelColor: AppTheme.primary,
           unselectedLabelColor: colors.textMuted,
@@ -141,20 +142,29 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           : AnimatedBuilder(
               animation: _tabController,
               builder: (context, _) {
+                Widget frame(Widget child) {
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1180),
+                      child: child,
+                    ),
+                  );
+                }
+
                 switch (_tabController.index) {
                   case 0:
-                    return _buildOverviewTab(colors, state, notifier);
+                    return frame(_buildOverviewTab(colors, state, notifier));
                   case 1:
-                    return _buildParticipantsTab(colors, state, notifier);
+                    return frame(_buildParticipantsTab(colors, state, notifier));
                   case 2:
                     // Do not call the public bracket endpoint before the organizer
                     // has created a Lite bracket.
                     return state.hasBracket
-                        ? BracketViewScreen(
+                        ? frame(BracketViewScreen(
                             tournamentId: widget.tournamentId,
                             isEmbedded: true,
-                          )
-                        : _buildBracketTab(colors, state, notifier);
+                          ))
+                        : frame(_buildBracketTab(colors, state, notifier));
                   default:
                     return const SizedBox.shrink();
                 }

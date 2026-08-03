@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_card.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -108,43 +109,84 @@ class DashboardScreen extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _DashboardHeader(
-                profileAsync: profileAsync,
-                rankingsAsync: rankingsAsync,
-              ),
-              const SizedBox(height: 16),
-              workspaceAsync.when(
-                loading: () => const _DashboardLoadingCard(),
-                error: (error, _) => _DashboardErrorCard(
-                  onRetry: () => ref
-                      .read(myTournamentWorkspaceProvider.notifier)
-                      .refresh(),
-                ),
-                data: (workspace) => Column(
+          padding: EdgeInsets.zero,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1180),
+              child: Padding(
+                padding: AppResponsive.padding(MediaQuery.sizeOf(context).width),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _WorkspaceOverview(workspace: workspace),
+                    _DashboardHeader(
+                      profileAsync: profileAsync,
+                      rankingsAsync: rankingsAsync,
+                    ),
                     const SizedBox(height: 16),
-                    _PendingInviteSection(workspace: workspace),
+                    workspaceAsync.when(
+                      loading: () => const _DashboardLoadingCard(),
+                      error: (error, _) => _DashboardErrorCard(
+                        onRetry: () => ref
+                            .read(myTournamentWorkspaceProvider.notifier)
+                            .refresh(),
+                      ),
+                      data: (workspace) => _WorkspaceDashboardContent(
+                        workspace: workspace,
+                      ),
+                    ),
                     const SizedBox(height: 16),
-                    _RoleSection(workspace: workspace),
-                    const SizedBox(height: 16),
-                    _AssignedMatchesSection(workspace: workspace),
-                    const SizedBox(height: 16),
-                    _UnifiedTournamentsSection(workspace: workspace),
+                    _QuickActions(),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              _QuickActions(),
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _WorkspaceDashboardContent extends StatelessWidget {
+  const _WorkspaceDashboardContent({required this.workspace});
+
+  final TournamentWorkspace workspace;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 860;
+        final roleSummary = Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _PendingInviteSection(workspace: workspace)),
+            const SizedBox(width: 16),
+            Expanded(child: _RoleSection(workspace: workspace)),
+          ],
+        );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _WorkspaceOverview(workspace: workspace),
+            const SizedBox(height: 16),
+            wide
+                ? roleSummary
+                : Column(
+                    children: [
+                      _PendingInviteSection(workspace: workspace),
+                      const SizedBox(height: 16),
+                      _RoleSection(workspace: workspace),
+                    ],
+                  ),
+            const SizedBox(height: 16),
+            _AssignedMatchesSection(workspace: workspace),
+            const SizedBox(height: 16),
+            _UnifiedTournamentsSection(workspace: workspace),
+          ],
+        );
+      },
     );
   }
 }

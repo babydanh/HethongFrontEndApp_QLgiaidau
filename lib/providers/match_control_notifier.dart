@@ -81,13 +81,34 @@ class MatchController {
     final m = match;
     if (m == null) return;
 
-    _log.warning(
-      'addPenalty: Chỉ có score1/score2 flat (không có scoreDetails) — '
-      'backend yêu cầu p1SetsWon/p2SetsWon/scoreDetails.',
-    );
-    throw UnsupportedError(
-      'addPenalty() không được backend hỗ trợ. '
-      'Gửi penalty kèm scoreDetails đầy đủ qua updateSetsWithDetails().',
+    final rawSets = m.scoreDetails?['sets'];
+    final sets = rawSets is List
+        ? rawSets
+            .whereType<Map>()
+            .map((set) => SetScoreData.fromJson(Map<String, dynamic>.from(set)))
+            .toList()
+        : m.sets
+            .map((set) => SetScoreData(score1: set.score1, score2: set.score2, isFinished: true))
+            .toList();
+    final (p1Sets, p2Sets) = computeMatchSetsWon(sets);
+    final existingPenalties = m.scoreDetails?['penalties'];
+    final penalties = existingPenalties is List
+        ? existingPenalties.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList()
+        : <Map<String, dynamic>>[];
+    penalties.insert(0, {
+      'id': const Uuid().v4(),
+      'team': isTeam1 ? 1 : 2,
+      'kind': penaltyId,
+      'label': penaltyName,
+      'note': reason.trim().isEmpty ? null : reason.trim(),
+      'createdAt': DateTime.now().toIso8601String(),
+    });
+
+    await updateSetsWithDetails(
+      p1SetsWon: p1Sets,
+      p2SetsWon: p2Sets,
+      scoreDetails: sets,
+      scoreDetailsExtras: {'penalties': penalties},
     );
   }
 
@@ -124,6 +145,7 @@ class MatchController {
     required int p1SetsWon,
     required int p2SetsWon,
     required List<SetScoreData> scoreDetails,
+    Map<String, dynamic>? scoreDetailsExtras,
     String? winnerId,
     String? overrideReason,
   }) async {
@@ -134,6 +156,7 @@ class MatchController {
       p1SetsWon: p1SetsWon,
       p2SetsWon: p2SetsWon,
       scoreDetails: scoreDetails,
+      scoreDetailsExtras: scoreDetailsExtras,
       winnerId: winnerId,
       overrideReason: overrideReason,
     );

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -31,6 +30,8 @@ void showOfficialScoreModal(
   required String matchId,
   required MatchModel match,
   VoidCallback? onRecordPenalty,
+  Future<void> Function(String teamName, PenaltyOption option, String reason)?
+      onSubmitPenalty,
   VoidCallback? onForceWin,
 }) {
   Navigator.of(context).push(
@@ -40,6 +41,7 @@ void showOfficialScoreModal(
         matchId: matchId,
         match: match,
         onRecordPenalty: onRecordPenalty,
+        onSubmitPenalty: onSubmitPenalty,
         onForceWin: onForceWin,
       ),
     ),
@@ -51,6 +53,11 @@ class OfficialScorePage extends StatefulWidget {
   final String matchId;
   final MatchModel match;
   final VoidCallback? onRecordPenalty;
+  final Future<void> Function(
+    String teamName,
+    PenaltyOption option,
+    String reason,
+  )? onSubmitPenalty;
   final VoidCallback? onForceWin;
 
   const OfficialScorePage({
@@ -59,6 +66,7 @@ class OfficialScorePage extends StatefulWidget {
     required this.matchId,
     required this.match,
     this.onRecordPenalty,
+    this.onSubmitPenalty,
     this.onForceWin,
   });
 
@@ -67,6 +75,15 @@ class OfficialScorePage extends StatefulWidget {
 }
 
 class _OfficialScorePageState extends State<OfficialScorePage> {
+  String? _selectedPenaltyTeam;
+  PenaltyOption? _selectedPenalty;
+  final _penaltyReasonController = TextEditingController();
+
+  @override
+  void dispose() {
+    _penaltyReasonController.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -84,7 +101,6 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
       body: SafeArea(
         child: OrientationBuilder(
           builder: (context, orientation) {
-            final isLandscape = orientation == Orientation.landscape;
             Widget content = Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -141,61 +157,43 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
 
                 // 2. CENTER SCORE ARENA (BẢNG TÍNH ĐIỂM CHÍNH - GIÃN FULL CHIỀU CAO NGHỆ THUẬT)
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                  child: DefaultTabController(
+                    length: 2,
                     child: Column(
                       children: [
-                        Expanded(
-                          child: kind == SportRuleKind.tennis
-                              ? TennisScorePanel(
-                                  params: params,
-                                  isReadOnly: false,
-                                )
-                              : usePickleballSideOutPanel
-                              ? PickleballPanel(
-                                  params: params,
-                                  isReadOnly: false,
-                                )
-                              : kind == SportRuleKind.badminton
-                              ? BadmintonScorePanel(
-                                  params: params,
-                                  isReadOnly: false,
-                                )
-                              : kind == SportRuleKind.tableTennis
-                              ? TableTennisScorePanel(
-                                  params: params,
-                                  isReadOnly: false,
-                                )
-                              : RallyScorePanel(
-                                  params: params,
-                                  isReadOnly: false,
-                                ),
+                        TabBar(
+                          labelColor: AppTheme.primary,
+                          unselectedLabelColor: colors.textMuted,
+                          indicatorColor: AppTheme.primary,
+                          tabs: const [
+                            Tab(
+                              icon: Icon(Icons.scoreboard_rounded, size: 18),
+                              text: 'Tính điểm',
+                            ),
+                            Tab(
+                              icon: Icon(Icons.gavel_rounded, size: 18),
+                              text: 'Phạm lỗi',
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 6),
-                        Consumer(
-                          builder: (context, ref, _) {
-                            final state = ref.watch(
-                              scorePanelNotifierProvider(params),
-                            );
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (state.errorMessage != null &&
-                                    state.errorMessage!.trim().isNotEmpty) ...[
-                                  ScoreWarningBox(message: state.errorMessage!),
-                                  const SizedBox(height: 4),
-                                ],
-                                SetHistoryBar(
-                                  finishedSets: state.finishedSets,
-                                  team1SetWins: state.team1SetWins,
-                                  team2SetWins: state.team2SetWins,
-                                ),
-                              ],
-                            );
-                          },
+                        Expanded(
+                          child: TabBarView(
+                            children: [
+                              _buildScoreTab(
+                                context,
+                                params,
+                                kind,
+                                usePickleballSideOutPanel,
+                              ),
+                              _buildFoulTab(
+                                context,
+                                strategy,
+                                config,
+                                colors,
+                                l10n,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -347,25 +345,6 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                               ),
 
                               // Action buttons
-                              if (widget.onRecordPenalty != null)
-                                OutlinedButton.icon(
-                                  onPressed: widget.onRecordPenalty,
-                                  icon: const Icon(
-                                    Icons.gavel_rounded,
-                                    size: 15,
-                                  ),
-                                  label: Text(
-                                    l10n.matchRecordPenalty,
-                                    style: const TextStyle(fontSize: 11),
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    visualDensity: VisualDensity.compact,
-                                  ),
-                                ),
                               if (widget.onForceWin != null)
                                 FilledButton.icon(
                                   onPressed: widget.onForceWin,
@@ -394,7 +373,9 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                       : () async {
                                           final message = n
                                               .finishSetConfirmMessage();
-                                          if (message == null) return;
+                                          if (message == null) {
+                                            return;
+                                          }
                                           final confirmed =
                                               await showDialog<bool>(
                                                 context: context,
@@ -428,8 +409,9 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                                       ],
                                                     ),
                                               );
-                                          if (confirmed == true)
+                                          if (confirmed == true) {
                                             await n.finishSet();
+                                          }
                                         },
                                   icon: const Icon(
                                     Icons.flag_rounded,
@@ -461,6 +443,32 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                                         state.team2SetWins
                                                     ? 1
                                                     : 2);
+                                          final confirmed = await showDialog<bool>(
+                                            context: context,
+                                            builder: (dialogContext) => AlertDialog(
+                                              title: Text(
+                                                state.isMatchComplete
+                                                    ? 'Chốt kết quả trận đấu'
+                                                    : 'Xác nhận lưu kết quả',
+                                              ),
+                                              content: Text(
+                                                state.isMatchComplete
+                                                    ? 'Kết quả đã đủ điều kiện. Chốt trận để công khai điểm và cập nhật giải đấu?'
+                                                    : 'Lưu kết quả hiện tại theo ngoại lệ của trọng tài? Hành động này sẽ được ghi vào lịch sử trận.',
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(dialogContext, false),
+                                                  child: const Text('Hủy'),
+                                                ),
+                                                FilledButton(
+                                                  onPressed: () => Navigator.pop(dialogContext, true),
+                                                  child: const Text('Xác nhận'),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                          if (confirmed != true) return;
                                           await n.completeMatch(winnerTeam);
                                           final latest = ref.read(
                                             scorePanelNotifierProvider(params),
@@ -509,6 +517,246 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
             return content;
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildScoreTab(
+    BuildContext context,
+    ({String tournamentId, String matchId}) params,
+    SportRuleKind kind,
+    bool usePickleballSideOutPanel,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Column(
+        children: [
+          Expanded(
+            child: kind == SportRuleKind.tennis
+                ? TennisScorePanel(params: params, isReadOnly: false)
+                : usePickleballSideOutPanel
+                ? PickleballPanel(params: params, isReadOnly: false)
+                : kind == SportRuleKind.badminton
+                ? BadmintonScorePanel(params: params, isReadOnly: false)
+                : kind == SportRuleKind.tableTennis
+                ? TableTennisScorePanel(params: params, isReadOnly: false)
+                : RallyScorePanel(params: params, isReadOnly: false),
+          ),
+          const SizedBox(height: 6),
+          Consumer(
+            builder: (context, ref, _) {
+              final state = ref.watch(scorePanelNotifierProvider(params));
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (state.errorMessage != null &&
+                      state.errorMessage!.trim().isNotEmpty) ...[
+                    ScoreWarningBox(message: state.errorMessage!),
+                    const SizedBox(height: 4),
+                  ],
+                  SetHistoryBar(
+                    finishedSets: state.finishedSets,
+                    team1SetWins: state.team1SetWins,
+                    team2SetWins: state.team2SetWins,
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFoulTab(
+    BuildContext context,
+    IPenaltyStrategy strategy,
+    SportConfig config,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
+    final options = strategy.getOptions();
+    final selectedPenalty = _selectedPenalty ?? options.first;
+    final teams = [widget.match.team1Name, widget.match.team2Name];
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+              border: Border.all(
+                color: AppTheme.primary.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.rule_rounded, color: AppTheme.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Lỗi được áp dụng theo luật môn và cấu hình giải. BO${config.bestOf} · ${config.pointsPerSet} điểm/set',
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Mức phạt được phép chọn',
+            style: TextStyle(
+              color: colors.textPrimary,
+              fontWeight: FontWeight.w800,
+              fontSize: 15,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...options.map(
+            (option) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                border: Border.all(color: option.color.withValues(alpha: 0.35)),
+              ),
+              child: ListTile(
+                dense: true,
+                leading: CircleAvatar(
+                  backgroundColor: option.color.withValues(alpha: 0.12),
+                  child: Icon(option.icon, color: option.color, size: 18),
+                ),
+                selected: selectedPenalty.id == option.id,
+                onTap: () => setState(() => _selectedPenalty = option),
+                title: Text(
+                  option.name,
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                subtitle: Text(
+                  'Chọn đội bị phạt và xác nhận trước khi ghi nhận',
+                  style: TextStyle(color: colors.textMuted, fontSize: 12),
+                ),
+                trailing: Icon(
+                  selectedPenalty.id == option.id
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked,
+                  color: option.color,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Đội bị phạt',
+            style: TextStyle(
+              color: colors.textPrimary,
+              fontWeight: FontWeight.w800,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: teams.map((team) {
+              final selected = _selectedPenaltyTeam == team;
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(right: team == teams.last ? 0 : 8),
+                  child: OutlinedButton(
+                    onPressed: () => setState(() => _selectedPenaltyTeam = team),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: selected
+                          ? AppTheme.primary.withValues(alpha: 0.1)
+                          : colors.bgSurface,
+                      side: BorderSide(
+                        color: selected ? AppTheme.primary : colors.border,
+                        width: selected ? 1.5 : 1,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      team,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _penaltyReasonController,
+            maxLines: 2,
+            decoration: const InputDecoration(
+              labelText: 'Lý do / ghi chú',
+              hintText: 'Nhập lý do nếu cần',
+              alignLabelWithHint: true,
+            ),
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: _selectedPenaltyTeam == null
+                ? null
+                : () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        title: const Text('Xác nhận ghi phạt'),
+                        content: Text(
+                          '${selectedPenalty.name} cho ${_selectedPenaltyTeam!}. Tiếp tục ghi nhận?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext, false),
+                            child: const Text('Hủy'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(dialogContext, true),
+                            child: const Text('Xác nhận'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed != true || !context.mounted) return;
+                    final option = selectedPenalty;
+                    final reason = _penaltyReasonController.text.trim();
+                    if (widget.onSubmitPenalty != null) {
+                      await widget.onSubmitPenalty!.call(
+                        _selectedPenaltyTeam!,
+                        option,
+                        reason,
+                      );
+                    } else {
+                      widget.onRecordPenalty?.call();
+                    }
+                    if (context.mounted) {
+                      setState(() {
+                        _selectedPenaltyTeam = null;
+                        _penaltyReasonController.clear();
+                      });
+                    }
+                  },
+            icon: const Icon(Icons.gavel_rounded),
+            label: Text(l10n.matchRecordPenalty),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            strategy.getRulesDescription(),
+            style: TextStyle(color: colors.textSecondary, fontSize: 12, height: 1.4),
+          ),
+        ],
       ),
     );
   }

@@ -14,6 +14,7 @@ import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/penalty_input_dialog.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
+import 'package:app_quanly_giaidau/core/strategy/penalty_strategy.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/domain/entities/match_event.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
@@ -294,6 +295,33 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             );
           }
         },
+      ),
+    );
+  }
+
+  Future<void> _submitPenalty(
+    MatchModel match,
+    String teamName,
+    PenaltyOption option,
+    String reason,
+  ) async {
+    final tournamentAsync = ref.read(tournamentProvider(widget.tournamentId));
+    final sport = match.sportKey ?? tournamentAsync.value?.sport ?? 'other';
+    final isTeam1 = teamName == match.team1Name;
+    await ref
+        .read(
+          matchControllerProvider((
+            tournamentId: widget.tournamentId,
+            matchId: widget.matchId,
+          )),
+        )
+        .addPenalty(isTeam1, sport, option.id, option.name, reason);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Đã ghi nhận ${option.name} cho $teamName.'),
+        backgroundColor: context.colors.success,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -768,6 +796,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         status: 'ONGOING',
                         startedAt: DateTime.now(),
                       ),
+                      onSubmitPenalty: (teamName, option, reason) =>
+                          _submitPenalty(match, teamName, option, reason),
+                      onRecordPenalty: () => _showFoulSelectionDialog(match),
                     );
                   },
                   icon: const Icon(Icons.play_arrow_rounded, size: 22),
@@ -1711,6 +1742,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               matchId: widget.matchId,
                               match: match,
                               onRecordPenalty: () => _showFoulSelectionDialog(match),
+                              onSubmitPenalty: (teamName, option, reason) =>
+                                  _submitPenalty(match, teamName, option, reason),
                               onForceWin: () => _showForceWinDialog(match),
                             );
                           },
@@ -1805,6 +1838,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             matchId: widget.matchId,
                             match: match,
                             onRecordPenalty: () => _showFoulSelectionDialog(match),
+                            onSubmitPenalty: (teamName, option, reason) =>
+                                _submitPenalty(match, teamName, option, reason),
                             onForceWin: () => _showForceWinDialog(match),
                           );
                         },

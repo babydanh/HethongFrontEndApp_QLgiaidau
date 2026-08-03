@@ -493,6 +493,7 @@ class ApiMatchRepository implements IMatchRepository {
     required int p1SetsWon,
     required int p2SetsWon,
     required List<SetScoreData> scoreDetails,
+    Map<String, dynamic>? scoreDetailsExtras,
     String? winnerId,
     String? overrideReason,
   }) async {
@@ -501,6 +502,7 @@ class ApiMatchRepository implements IMatchRepository {
       'p1SetsWon': p1SetsWon,
       'p2SetsWon': p2SetsWon,
       'scoreDetails': {
+        ...?scoreDetailsExtras,
         'sets': scoreDetails.map((s) => s.toJson()).toList(),
       },
     };
