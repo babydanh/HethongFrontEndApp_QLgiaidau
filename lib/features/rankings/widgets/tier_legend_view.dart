@@ -81,6 +81,16 @@ class TierLegendView extends StatelessWidget {
                           style: TextStyle(fontSize: 12, color: colors.textMuted, height: 1.4),
                         ),
                         const SizedBox(height: 16),
+                        Text(
+                          'HỆ THỐNG BẬC TRÌNH ĐỘ (TIERS)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: colors.textMuted,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
                         ...sortedTiers.map((t) {
                           final palette = TierPalette.from(t);
                           final eloRangeText = (t.maxElo > 5000 || t.minElo >= 1800)
@@ -127,6 +137,27 @@ class TierLegendView extends StatelessWidget {
                             ),
                           );
                         }),
+                        const SizedBox(height: 16),
+                        Divider(color: colors.border.withValues(alpha: 0.5)),
+                        const SizedBox(height: 12),
+                        Text(
+                          'QUY LUẬT & TÍNH ĐIỂM ELO',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: colors.textMuted,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _ruleItem(colors, 'Người mới bắt đầu từ 1000 ELO.'),
+                        _ruleItem(colors, 'ELO chỉ thay đổi sau trận đấu chính thức đã hoàn tất.'),
+                        _ruleItem(colors, 'Đánh đôi: ELO được tính theo sức mạnh trung bình hai đội rồi phân bổ cho từng người.'),
+                        _ruleItem(colors, 'Không thi đấu trong 1 tháng liên tục: dưới 1400 ELO giữ nguyên; từ 1400 trở lên giảm theo tier: 2%, 3%, 4% hoặc 5% mỗi tháng.'),
+                        _ruleItem(colors, 'Khiên ELO bảo vệ khi decay làm rơi qua mốc: giữ mốc một lần rồi tiêu thụ khiên.'),
+                        _ruleItem(colors, 'Đánh đôi có rank riêng cho từng cặp, bắt đầu từ 1000 ELO; không lấy trung bình ELO cá nhân.'),
+                        _ruleItem(colors, 'Khi thi đấu lại, mốc giảm ELO được tính lại từ đầu; không trừ dồn các tháng trước.'),
+                        _ruleItem(colors, 'Tier được cập nhật tự động khi ELO thay đổi.'),
                         const SizedBox(height: 12),
                       ],
                     ),
@@ -223,7 +254,22 @@ class TierLegendView extends StatelessWidget {
             ),
           ),
         ],
+  Widget _ruleItem(AppColorsExtension colors, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('• ', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 12)),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(color: colors.textSecondary, fontSize: 12, height: 1.35),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
+
