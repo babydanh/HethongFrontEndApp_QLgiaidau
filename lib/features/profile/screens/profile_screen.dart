@@ -2137,6 +2137,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required IconData roleIcon,
     }
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final rawStatus = t.status?.toString() ?? 'draft';
     final statusLabel = StatusHelper.getTournamentStatusLabel(rawStatus);
     final String? logoUrl = t is Tournament
@@ -2191,8 +2192,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           if (t.isLite == true) {
             context.push('/lite-manage/${t.id}');
           } else {
-            // Advanced tournaments use the full management workspace.
-            context.push('/admin/tournament/${t.id}');
+            // Advanced management is intentionally web-only. Do not route to
+            // the legacy in-app admin screen, which exposes the wrong flow.
+            showDialog<void>(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: Text(l10n.dashboard_manageAdvancedTitle),
+                content: Text(l10n.dashboard_manageAdvancedContent),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: Text(l10n.dashboard_gotIt),
+                  ),
+                ],
+              ),
+            );
           }
         },
         child: Padding(

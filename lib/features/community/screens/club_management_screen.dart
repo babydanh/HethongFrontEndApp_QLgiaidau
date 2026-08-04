@@ -153,6 +153,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
 
   // ─── Tournament Management ────────────────────────────────────
   Widget _buildTournamentsManagementSection(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     final tourneysAsync = ref.watch(communityTournamentsProvider(widget.clubId));
 
     return Container(
@@ -519,7 +520,19 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   if (isQuick) {
                                     context.push('/lite-manage/${t.id}');
                                   } else {
-                                    context.push('/admin/tournament/${t.id}');
+                                    showDialog<void>(
+                                      context: context,
+                                      builder: (dialogContext) => AlertDialog(
+                                        title: Text(l10n.dashboard_manageAdvancedTitle),
+                                        content: Text(l10n.dashboard_manageAdvancedContent),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(dialogContext),
+                                            child: Text(l10n.dashboard_gotIt),
+                                          ),
+                                        ],
+                                      ),
+                                    );
                                   }
                                 },
                                 icon: Icon(isQuick ? Icons.bolt_rounded : Icons.settings_rounded, size: 14),
