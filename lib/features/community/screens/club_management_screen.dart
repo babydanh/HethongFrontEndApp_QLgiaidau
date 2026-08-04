@@ -24,6 +24,7 @@ class ClubManagementScreen extends ConsumerStatefulWidget {
 
 class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   static const _log = AppLogger('ClubManagement');
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
   List<CommunityMemberModel> _allMembers = [];
   List<CommunityMemberModel> _joinRequests = [];
   List<CommunityMemberModel> _invitedMembers = [];
@@ -523,12 +524,12 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                     showDialog<void>(
                                       context: context,
                                       builder: (dialogContext) => AlertDialog(
-                                        title: Text(l10n.dashboard_manageAdvancedTitle),
-                                        content: Text(l10n.dashboard_manageAdvancedContent),
+                                        title: Text(_l10n.dashboard_manageAdvancedTitle),
+                                        content: Text(_l10n.dashboard_manageAdvancedContent),
                                         actions: [
                                           TextButton(
                                             onPressed: () => Navigator.pop(dialogContext),
-                                            child: Text(l10n.dashboard_gotIt),
+                                            child: Text(_l10n.dashboard_gotIt),
                                           ),
                                         ],
                                       ),
