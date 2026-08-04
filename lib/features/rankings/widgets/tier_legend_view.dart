@@ -44,122 +44,124 @@ class TierLegendView extends StatelessWidget {
                       color: colors.bgCard,
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primary.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primary.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.info_outline_rounded, color: AppTheme.primary, size: 20),
                               ),
-                              child: const Icon(Icons.info_outline_rounded, color: AppTheme.primary, size: 20),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Hệ thống phân hạng ELO',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: colors.textPrimary,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Hệ thống phân hạng ELO',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: colors.textPrimary,
+                                  ),
                                 ),
                               ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close_rounded),
-                              onPressed: () => Navigator.pop(ctx),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Điểm ELO tích lũy sau mỗi trận đấu chính thức sẽ xếp người chơi vào các Tier trình độ tương ứng. Chi tiết dải điểm:',
-                          style: TextStyle(fontSize: 12, color: colors.textMuted, height: 1.4),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'HỆ THỐNG BẬC TRÌNH ĐỘ (TIERS)',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: colors.textMuted,
-                            letterSpacing: 0.5,
+                              IconButton(
+                                icon: const Icon(Icons.close_rounded),
+                                onPressed: () => Navigator.pop(ctx),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        ...sortedTiers.map((t) {
-                          final palette = TierPalette.from(t);
-                          final eloRangeText = (t.maxElo > 5000 || t.minElo >= 1800)
-                              ? '${t.minElo}+ ELO'
-                              : '${t.minElo} - ${t.maxElo} ELO';
-
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: palette.soft,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: palette.border, width: 1.2),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Điểm ELO tích lũy sau mỗi trận đấu chính thức sẽ xếp người chơi vào các Tier trình độ tương ứng. Chi tiết dải điểm:',
+                            style: TextStyle(fontSize: 12, color: colors.textMuted, height: 1.4),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'HỆ THỐNG BẬC TRÌNH ĐỘ (TIERS)',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: colors.textMuted,
+                              letterSpacing: 0.5,
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: palette.badgeBg,
-                                    borderRadius: BorderRadius.circular(5),
-                                  ),
-                                  child: Text(
-                                    palette.fullLabel,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 10,
-                                      letterSpacing: 0.5,
+                          ),
+                          const SizedBox(height: 8),
+                          ...sortedTiers.map((t) {
+                            final palette = TierPalette.from(t);
+                            final eloRangeText = (t.maxElo > 5000 || t.minElo >= 1800)
+                                ? '${t.minElo}+ ELO'
+                                : '${t.minElo} - ${t.maxElo} ELO';
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: palette.soft,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: palette.border, width: 1.2),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: palette.badgeBg,
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                    child: Text(
+                                      palette.fullLabel,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 10,
+                                        letterSpacing: 0.5,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  eloRangeText,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 12,
-                                    color: palette.color,
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    eloRangeText,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12,
+                                      color: palette.color,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 16),
+                          Divider(color: colors.border.withValues(alpha: 0.5)),
+                          const SizedBox(height: 12),
+                          Text(
+                            'QUY LUẬT & TÍNH ĐIỂM ELO',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: colors.textMuted,
+                              letterSpacing: 0.5,
                             ),
-                          );
-                        }),
-                        const SizedBox(height: 16),
-                        Divider(color: colors.border.withValues(alpha: 0.5)),
-                        const SizedBox(height: 12),
-                        Text(
-                          'QUY LUẬT & TÍNH ĐIỂM ELO',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: colors.textMuted,
-                            letterSpacing: 0.5,
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        _ruleItem(colors, 'Người mới bắt đầu từ 1000 ELO.'),
-                        _ruleItem(colors, 'ELO chỉ thay đổi sau trận đấu chính thức đã hoàn tất.'),
-                        _ruleItem(colors, 'Đánh đôi: ELO được tính theo sức mạnh trung bình hai đội rồi phân bổ cho từng người.'),
-                        _ruleItem(colors, 'Không thi đấu trong 1 tháng liên tục: dưới 1400 ELO giữ nguyên; từ 1400 trở lên giảm theo tier: 2%, 3%, 4% hoặc 5% mỗi tháng.'),
-                        _ruleItem(colors, 'Khiên ELO bảo vệ khi decay làm rơi qua mốc: giữ mốc một lần rồi tiêu thụ khiên.'),
-                        _ruleItem(colors, 'Đánh đôi có rank riêng cho từng cặp, bắt đầu từ 1000 ELO; không lấy trung bình ELO cá nhân.'),
-                        _ruleItem(colors, 'Khi thi đấu lại, mốc giảm ELO được tính lại từ đầu; không trừ dồn các tháng trước.'),
-                        _ruleItem(colors, 'Tier được cập nhật tự động khi ELO thay đổi.'),
-                        const SizedBox(height: 12),
-                      ],
+                          const SizedBox(height: 8),
+                          _ruleItem(colors, 'Người mới bắt đầu từ 1000 ELO.'),
+                          _ruleItem(colors, 'ELO chỉ thay đổi sau trận đấu chính thức đã hoàn tất.'),
+                          _ruleItem(colors, 'Đánh đôi: ELO được tính theo sức mạnh trung bình hai đội rồi phân bổ cho từng người.'),
+                          _ruleItem(colors, 'Không thi đấu trong 1 tháng liên tục: dưới 1400 ELO giữ nguyên; từ 1400 trở lên giảm theo tier: 2%, 3%, 4% hoặc 5% mỗi tháng.'),
+                          _ruleItem(colors, 'Khiên ELO bảo vệ khi decay làm rơi qua mốc: giữ mốc một lần rồi tiêu thụ khiên.'),
+                          _ruleItem(colors, 'Đánh đôi có rank riêng cho từng cặp, bắt đầu từ 1000 ELO; không lấy trung bình ELO cá nhân.'),
+                          _ruleItem(colors, 'Khi thi đấu lại, mốc giảm ELO được tính lại từ đầu; không trừ dồn các tháng trước.'),
+                          _ruleItem(colors, 'Tier được cập nhật tự động khi ELO thay đổi.'),
+                          const SizedBox(height: 12),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -254,13 +256,17 @@ class TierLegendView extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
   Widget _ruleItem(AppColorsExtension colors, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('• ', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 12)),
+          const Text('• ', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 12)),
           Expanded(
             child: Text(
               text,
@@ -272,4 +278,3 @@ class TierLegendView extends StatelessWidget {
     );
   }
 }
-
