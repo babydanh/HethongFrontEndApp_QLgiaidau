@@ -24,6 +24,15 @@ class TokenGenerator {
     return '$prefix-$part1-$part2';
   }
 
+  /// Raw nonce for Sign in with Apple. The plugin hashes this value before
+  /// placing it in the identity token; the backend verifies the same hash.
+  static String generateAppleNonce([int length = 32]) {
+    return List.generate(
+      length,
+      (_) => _chars[_random.nextInt(_chars.length)],
+    ).join();
+  }
+
   /// Sinh cả bộ 3 token cho 1 giải đấu
   static Map<String, String> generateAll() {
     return {

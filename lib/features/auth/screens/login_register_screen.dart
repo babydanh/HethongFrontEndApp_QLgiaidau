@@ -148,7 +148,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       _errorMessage = null;
     });
     try {
-      final nonce = TokenGenerator.generate('APPLE');
+      final nonce = TokenGenerator.generateAppleNonce();
       final credential = await SignInWithApple.getAppleIDCredential(
         nonce: nonce,
         scopes: [
