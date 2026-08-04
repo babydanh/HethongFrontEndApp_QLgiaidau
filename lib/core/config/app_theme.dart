@@ -96,7 +96,7 @@ extension AppThemeContext on BuildContext {
   LinearGradient get primaryGradient => const LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [AppTheme.primary, Color(0xFF3B82F6)],
+    colors: [AppTheme.primary, AppTheme.primaryLight],
   );
 
   LinearGradient get cardGradient => LinearGradient(
@@ -114,9 +114,9 @@ extension AppThemeContext on BuildContext {
 
 class AppTheme {
   // ─── Brand Colors ───
-  static const Color primary = Color(0xFF0052FF);
-  static const Color primaryLight = Color(0xFF4D88FF);
-  static const Color primaryDark = Color(0xFF003BB3);
+  static const Color primary = Color(0xFF3AB5F6);     // VNSport logo cyan
+  static const Color primaryLight = Color(0xFF90D8FD); // tint
+  static const Color primaryDark = Color(0xFF0D8FD4);  // hover / dark
 
   static const Color secondary = Color(0xFF0F172A);
   static const Color secondaryLight = Color(0xFF1E293B);
@@ -128,7 +128,7 @@ class AppTheme {
   // ─── Role Colors ───
   static const Color adminColor = Color(0xFFEF4444);
   static const Color refereeColor = Color(0xFFF59E0B);
-  static const Color viewerColor = Color(0xFF3B82F6);
+  static const Color viewerColor = Color(0xFF3AB5F6);  // VNSport logo cyan
 
   // ─── Constants ───
   static const double radiusSmall = 6.0;
