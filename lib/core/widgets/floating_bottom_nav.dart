@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/core/utils/rank_tier_colors.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
 class BottomNavClipper extends CustomClipper<Path> {
   @override
@@ -143,7 +144,7 @@ class FloatingBottomNav extends ConsumerWidget {
     const double navBarHeight = 66.0;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    const activeColor = Color(0xFF2979FF);
+    const activeColor = AppTheme.primary;
     final inactiveColor = isDark ? Colors.white.withValues(alpha: 0.4) : const Color(0xFF94A3B8);
     final bgColor = isDark ? const Color(0xFF0A0A0A).withValues(alpha: 0.92) : Colors.white.withValues(alpha: 0.92);
     final borderSide = isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.06);
@@ -204,14 +205,14 @@ class FloatingBottomNav extends ConsumerWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: currentIndex == 2
-                          ? const LinearGradient(colors: [Color(0xFF2979FF), Color(0xFF4D88FF)])
+                          ? const LinearGradient(colors: [AppTheme.primaryDark, AppTheme.primary])
                           : null,
                       color: currentIndex == 2 ? null : (isDark ? const Color(0xFF1A1A1A) : Colors.white),
                       border: Border.all(color: tierColor, width: 3),
                       boxShadow: [
                         BoxShadow(
                           color: currentIndex == 2
-                              ? const Color(0xFF2979FF).withValues(alpha: 0.35)
+                              ? AppTheme.primary.withValues(alpha: 0.35)
                               : Colors.black.withValues(alpha: 0.06),
                           blurRadius: currentIndex == 2 ? 12 : 6,
                           offset: const Offset(0, 3),
@@ -227,11 +228,11 @@ class FloatingBottomNav extends ConsumerWidget {
                   height: 3,
                   width: currentIndex == 2 ? 14 : 0,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2979FF),
+                    color: AppTheme.primary,
                     borderRadius: BorderRadius.circular(2),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF2979FF).withValues(alpha: 0.5),
+                        color: AppTheme.primary.withValues(alpha: 0.5),
                         blurRadius: 4,
                       ),
                     ],

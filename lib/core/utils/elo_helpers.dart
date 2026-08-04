@@ -32,7 +32,8 @@ class ShieldStatus {
 
 class EloHelpers {
   static const thresholds = <EloTierThreshold>[
-    EloTierThreshold(minElo: 0, name: 'Low Tier D'),
+    // ELO below 1000 is clamped to the product floor and is not a separate tier.
+    EloTierThreshold(minElo: 1000, name: 'Low Tier D'),
     EloTierThreshold(minElo: 1100, name: 'High Tier D'),
     EloTierThreshold(minElo: 1200, name: 'Low Tier C'),
     EloTierThreshold(minElo: 1300, name: 'High Tier C'),
@@ -84,13 +85,16 @@ class EloHelpers {
         : ranks.where((rank) => rank.categoryId == categoryId).toList();
     if (candidates.isEmpty) return null;
 
-    final sorted = [...candidates]
-      ..sort((a, b) {
-        final byMatches = b.matchesPlayed.compareTo(a.matchesPlayed);
-        if (byMatches != 0) return byMatches;
+    final active = candidates.where((rank) => rank.matchesPlayed > 0).toList();
+    if (active.isEmpty) return null;
 
+    final sorted = [...active]
+      ..sort((a, b) {
         final byElo = b.eloPoints.compareTo(a.eloPoints);
         if (byElo != 0) return byElo;
+
+        final byMatches = b.matchesPlayed.compareTo(a.matchesPlayed);
+        if (byMatches != 0) return byMatches;
 
         return (b.updatedAt ?? '').compareTo(a.updatedAt ?? '');
       });
@@ -117,7 +121,7 @@ class EloHelpers {
   }
 
   static int findTierIndex(int elo) {
-    final safeElo = elo < 0 ? 0 : elo;
+    final safeElo = elo < 1000 ? 1000 : elo;
     for (var i = thresholds.length - 1; i >= 0; i--) {
       if (safeElo >= thresholds[i].minElo) return i;
     }
@@ -125,7 +129,7 @@ class EloHelpers {
   }
 
   static EloProgressInfo getEloProgressInfo(int elo) {
-    final safeElo = elo < 0 ? 0 : elo;
+    final safeElo = elo < 1000 ? 1000 : elo;
     final index = findTierIndex(safeElo);
     if (index == thresholds.length - 1) {
       return const EloProgressInfo(

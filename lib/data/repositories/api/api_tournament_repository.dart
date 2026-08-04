@@ -373,6 +373,10 @@ class ApiTournamentRepository implements ITournamentRepository {
             _log.error('Error polling public tournaments', e, stack);
           }
           return cache;
+        }).handleError((error, stack) {
+          // Keep the stream alive after a transient network failure. The next
+          // polling tick will retry without forcing the screen to reload.
+          _log.error('Public tournament stream recovered from polling error', error, stack);
         });
   }
 

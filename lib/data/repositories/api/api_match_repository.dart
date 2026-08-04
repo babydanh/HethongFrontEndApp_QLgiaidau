@@ -51,6 +51,19 @@ class ApiMatchRepository implements IMatchRepository {
 
   final Map<String, List<MatchModel>> _matchesCache = {};
 
+  List<dynamic> _extractList(dynamic payload) {
+    dynamic value = payload;
+    for (var i = 0; i < 3; i++) {
+      if (value is List) return value;
+      if (value is Map && value['data'] != null) {
+        value = value['data'];
+      } else {
+        break;
+      }
+    }
+    return value is List ? value : const <dynamic>[];
+  }
+
   @override
   Stream<List<MatchModel>> watchByTournament(String tournamentId, {String? divisionId}) {
     final cacheKey = '$tournamentId-${divisionId ?? 'all'}';
@@ -62,6 +75,13 @@ class ApiMatchRepository implements IMatchRepository {
       List<MatchModel> updated;
       try {
         updated = await getAllByTournament(tournamentId, divisionId: divisionId);
+        // A successful empty response is still a valid snapshot (for example
+        // after a bracket is reset), so replace the cache on success only.
+        if (updated.isNotEmpty || !_matchesCache.containsKey(cacheKey)) {
+          _matchesCache[cacheKey] = updated;
+        } else {
+          updated = _matchesCache[cacheKey]!;
+        }
       } catch (error, stack) {
         _log.error('Keeping cached tournament matches after refresh failure', error, stack);
         updated = _matchesCache[cacheKey] ?? const [];
@@ -80,6 +100,11 @@ class ApiMatchRepository implements IMatchRepository {
           unawaited(refresh());
         });
         refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+          // Socket.IO may exhaust its reconnect attempts while the app is
+          // backgrounded. Re-entering the connect path is idempotent and
+          // restores the room before refreshing the authoritative snapshot.
+          _socketService.connect(null, joinMatch: false);
+          _socketService.joinTournament(tournamentId);
           unawaited(refresh());
         });
       },
@@ -102,6 +127,7 @@ class ApiMatchRepository implements IMatchRepository {
       List<MatchModel> currentList;
       try {
         currentList = await getAllByTournament(tournamentId);
+        _matchesCache['$tournamentId-all'] = currentList;
       } catch (error, stack) {
         _log.error('Keeping cached live matches after refresh failure', error, stack);
         currentList = _matchesCache['$tournamentId-all'] ?? const [];
@@ -120,6 +146,8 @@ class ApiMatchRepository implements IMatchRepository {
           unawaited(refresh());
         });
         refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+          _socketService.connect(null, joinMatch: false);
+          _socketService.joinTournament(tournamentId);
           unawaited(refresh());
         });
       },
@@ -621,7 +649,7 @@ class ApiMatchRepository implements IMatchRepository {
       }
       final response = await _dioClient.dio.get('/matches', queryParameters: queryParameters);
       if (response.statusCode == 200) {
-        final List<dynamic> list = response.data['data'] ?? response.data ?? [];
+        final List<dynamic> list = _extractList(response.data);
         final matches = list
             .map((json) => _parseMatch(Map<String, dynamic>.from(json)))
             .toList();
@@ -649,7 +677,7 @@ class ApiMatchRepository implements IMatchRepository {
       if (publicOnly != null) queryParams['publicOnly'] = publicOnly;
       final response = await _dioClient.dio.get('/matches', queryParameters: queryParams);
       if (response.statusCode == 200) {
-        final List<dynamic> list = response.data['data'] ?? response.data ?? [];
+        final List<dynamic> list = _extractList(response.data);
         return list.map((json) => _parseMatch(Map<String, dynamic>.from(json))).toList();
       }
       return [];

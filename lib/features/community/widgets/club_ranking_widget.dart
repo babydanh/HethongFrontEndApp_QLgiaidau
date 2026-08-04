@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 
 class ClubRankingWidget extends ConsumerStatefulWidget {
   final String clubId;
@@ -678,11 +679,11 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
 
           // Đôi hiển thị đủ avatar của cả hai người trong cùng một hạng.
           if (player.partnerName != null) ...[
-            _buildMiniAvatar(player.fullName.split(' / ').first, player.avatarUrl),
+            _buildMiniAvatar(player.fullName.split(' / ').first, player.avatarUrl, player),
             const SizedBox(width: 2),
-            _buildMiniAvatar(player.partnerName!, player.partnerAvatarUrl),
+            _buildMiniAvatar(player.partnerName!, player.partnerAvatarUrl, player),
           ] else
-            _buildMiniAvatar(player.fullName, player.avatarUrl),
+            _buildMiniAvatar(player.fullName, player.avatarUrl, player),
           const SizedBox(width: 7),
 
           // Name
@@ -791,32 +792,25 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     );
   }
 
-  Widget _buildMiniAvatar(String name, String? avatarUrl) {
-    return CircleAvatar(
-      radius: 11,
-      backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-      backgroundImage:
-          avatarUrl != null && avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
-      child: avatarUrl == null || avatarUrl.isEmpty
-          ? Text(
-              name.isNotEmpty ? name[0].toUpperCase() : '?',
-              style: const TextStyle(
-                color: AppTheme.primary,
-                fontWeight: FontWeight.w600,
-                fontSize: 8,
-              ),
-            )
-          : null,
+  Widget _buildMiniAvatar(String name, String? avatarUrl, PlayerRanking player) {
+    return RankAvatar(
+      imageUrl: avatarUrl,
+      name: name,
+      elo: player.eloPoints,
+      tierName: player.tierName,
+      matchesPlayed: player.matchesPlayed,
+      size: 24,
+      ringWidth: 1.5,
     );
   }
 
   Widget _buildPodiumAvatars(PlayerRanking player, double avatarSize) {
     final firstName = player.fullName.split(' / ').first;
     final avatars = <Widget>[
-      _buildMiniAvatar(firstName, player.avatarUrl),
+      _buildMiniAvatar(firstName, player.avatarUrl, player),
     ];
     if (player.partnerName != null) {
-      avatars.add(_buildMiniAvatar(player.partnerName!, player.partnerAvatarUrl));
+      avatars.add(_buildMiniAvatar(player.partnerName!, player.partnerAvatarUrl, player));
     }
     return Row(
       mainAxisSize: MainAxisSize.min,

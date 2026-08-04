@@ -343,7 +343,7 @@ class VnsportHeaderPainter extends CustomPainter {
     final Rect rect = Offset.zero & size;
     final gradientColors = _isDark
         ? const [Color(0xFF000000), Color(0xFF131313)]
-        : const [Color(0xFF2563EB), Color(0xFF1D4ED8)];
+        : const [AppTheme.primary, AppTheme.primaryDark];
 
     final Paint bgPaint = Paint()
       ..shader = LinearGradient(
@@ -443,7 +443,7 @@ class VnsportHeaderPainter extends CustomPainter {
 
     final Color w1Color = _isDark
         ? const Color(0xFF161616).withValues(alpha: 0.5)
-        : const Color(0xFF1D4ED8).withValues(alpha: 0.5);
+        : AppTheme.primaryDark.withValues(alpha: 0.5);
 
     final Color w2Color = _isDark
         ? const Color(0xFF222222).withValues(alpha: 0.3)

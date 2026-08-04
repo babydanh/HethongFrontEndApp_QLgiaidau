@@ -111,7 +111,9 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
     final params = (tournamentId: widget.tournamentId, matchId: widget.matchId);
     final config = resolveSportConfig(widget.match.sportRules, kind);
     final strategy = PenaltyStrategyFactory.getStrategy(_sportKeyForKind(kind));
+    final isLite = widget.match.tournamentConfig?['mode']?.toString().toUpperCase() == 'LITE';
     final usePickleballSideOutPanel =
+        !isLite &&
         kind == SportRuleKind.pickleball &&
         config.scoringModel == SportScoringModel.pickleballSideOut;
 

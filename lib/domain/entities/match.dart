@@ -137,6 +137,9 @@ class MatchModel {
   final List<String>? team2Members;
   final List<MatchMemberInfo> team1MemberInfos;
   final List<MatchMemberInfo> team2MemberInfos;
+  /// Ranking value for the whole team. For doubles this is pairRanks.eloPoints.
+  final int? team1EloPoints;
+  final int? team2EloPoints;
 
   final String? groupName;
   final String? stageName;
@@ -185,6 +188,8 @@ class MatchModel {
     this.team2Members = const [],
     this.team1MemberInfos = const [],
     this.team2MemberInfos = const [],
+    this.team1EloPoints,
+    this.team2EloPoints,
     this.groupName,
     this.stageName,
     this.stageType,
@@ -199,7 +204,7 @@ class MatchModel {
       final source = explicitMembers is List
           ? explicitMembers
           : participant is Map<String, dynamic>
-          ? participant['rosters'] as List<dynamic>?
+          ? (participant['rosters'] ?? participant['members']) as List<dynamic>?
           : null;
       if (source == null) return const [];
       return source
@@ -225,6 +230,11 @@ class MatchModel {
       json['team2MemberInfos'] ?? json['team2Members'],
       json['participant2'],
     );
+    int? participantElo(dynamic participant) {
+      if (participant is! Map) return null;
+      final value = participant['eloPoints'];
+      return value is num ? value.toInt() : int.tryParse(value?.toString() ?? '');
+    }
 
     final scoreDetails = json['scoreDetails'] is Map
         ? Map<String, dynamic>.from(json['scoreDetails'] as Map)
@@ -308,6 +318,8 @@ class MatchModel {
       team2Members: team2MemberInfos.map((m) => m.fullName).toList(),
       team1MemberInfos: team1MemberInfos,
       team2MemberInfos: team2MemberInfos,
+      team1EloPoints: participantElo(json['participant1']),
+      team2EloPoints: participantElo(json['participant2']),
       groupName:
           json['groupName']?.toString() ??
           json['group_name']?.toString() ??
@@ -363,6 +375,8 @@ class MatchModel {
       'team2Members': team2Members,
       'team1MemberInfos': team1MemberInfos.map((m) => m.toJson()).toList(),
       'team2MemberInfos': team2MemberInfos.map((m) => m.toJson()).toList(),
+      if (team1EloPoints != null) 'team1EloPoints': team1EloPoints,
+      if (team2EloPoints != null) 'team2EloPoints': team2EloPoints,
       if (groupName != null) 'groupName': groupName,
       if (stageName != null) 'stageName': stageName,
       if (stageType != null) 'stageType': stageType,
@@ -410,6 +424,8 @@ class MatchModel {
     List<String>? team2Members,
     List<MatchMemberInfo>? team1MemberInfos,
     List<MatchMemberInfo>? team2MemberInfos,
+    int? team1EloPoints,
+    int? team2EloPoints,
     String? groupName,
     String? stageName,
     String? stageType,
@@ -455,6 +471,8 @@ class MatchModel {
       team2Members: team2Members ?? this.team2Members,
       team1MemberInfos: team1MemberInfos ?? this.team1MemberInfos,
       team2MemberInfos: team2MemberInfos ?? this.team2MemberInfos,
+      team1EloPoints: team1EloPoints ?? this.team1EloPoints,
+      team2EloPoints: team2EloPoints ?? this.team2EloPoints,
       groupName: groupName ?? this.groupName,
       stageName: stageName ?? this.stageName,
       stageType: stageType ?? this.stageType,

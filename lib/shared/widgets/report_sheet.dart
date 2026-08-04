@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
@@ -23,6 +26,13 @@ const _reportReasons = [
   ReportReason(key: 'cheating', label: 'Gian lận', icon: Icons.gavel_rounded),
   ReportReason(key: 'other', label: 'Khác', icon: Icons.more_horiz_rounded),
 ];
+
+String _categoryForReason(String key) => switch (key) {
+  'cheating' => 'CHEATING',
+  'inappropriate' => 'ABUSIVE_BEHAVIOR',
+  'spam' => 'OTHER',
+  _ => 'OTHER',
+};
 
 /// Hiển thị bottom sheet báo cáo vi phạm.
 ///
@@ -62,6 +72,8 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
   String _selectedReason = '';
   final _reasonController = TextEditingController();
   bool _isSubmitting = false;
+  bool _isUploading = false;
+  final List<String> _evidenceUrls = [];
 
   @override
   void dispose() {
@@ -78,11 +90,13 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
 
     try {
       final dio = ref.read(dioClientProvider).dio;
+      final description = _reasonController.text.trim();
       await dio.post('/reports', data: {
         'targetId': widget.targetId,
-        'targetType': widget.targetType,
-        'reason': _selectedReason,
-        'description': _reasonController.text.trim(),
+        'targetType': widget.targetType.toUpperCase(),
+        'category': _categoryForReason(_selectedReason),
+        'reason': description.isEmpty ? 'Báo cáo: $_selectedReason' : description,
+        'evidenceUrls': _evidenceUrls,
       });
 
       _log.info('Báo cáo thành công: ${widget.targetType}/${widget.targetId}');
@@ -108,6 +122,38 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
         );
       }
     }
+  }
+
+  Future<void> _pickEvidence() async {
+    if (_isUploading || _evidenceUrls.length >= 5) return;
+    final result = await FilePicker.pickFiles();
+    final file = result?.files.single;
+    if (file == null) return;
+    final bytes = await file.readAsBytes();
+    if (file.size > 15 * 1024 * 1024) {
+      _showMessage('Tệp tối đa 15MB.');
+      return;
+    }
+    setState(() => _isUploading = true);
+    try {
+      final response = await ref.read(dioClientProvider).dio.post(
+        '/upload/image',
+          data: FormData.fromMap({'file': MultipartFile.fromBytes(bytes, filename: file.name)}),
+        options: Options(contentType: 'multipart/form-data'),
+      );
+      final url = response.data['url']?.toString();
+      if (url == null || url.isEmpty) throw Exception('Không nhận được liên kết tệp');
+      if (mounted) setState(() => _evidenceUrls.add(url));
+    } catch (_) {
+      _showMessage('Tải tệp thất bại. Vui lòng thử lại.');
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -205,6 +251,44 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
               ),
             ),
             const SizedBox(height: 20),
+
+            Row(
+              children: [
+                Expanded(child: Text('Minh chứng (không bắt buộc)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.textSecondary))),
+                TextButton.icon(
+                  onPressed: _isUploading || _evidenceUrls.length >= 5 ? null : _pickEvidence,
+                  icon: _isUploading ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.upload_file_rounded, size: 18),
+                  label: const Text('Tải tệp'),
+                ),
+              ],
+            ),
+            if (_evidenceUrls.isNotEmpty)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: List.generate(_evidenceUrls.length, (index) {
+                  final url = _evidenceUrls[index];
+                  final isImage = RegExp(r'\.(png|jpe?g|webp)(\?|$)', caseSensitive: false).hasMatch(url);
+                  return Stack(
+                    children: [
+                      Container(
+                        width: 76,
+                        height: 76,
+                        clipBehavior: Clip.antiAlias,
+                        decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(10), border: Border.all(color: colors.border)),
+                        child: InkWell(
+                          onTap: isImage ? null : () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+                          child: isImage ? Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_outlined)) : const Icon(Icons.insert_drive_file_outlined, size: 30),
+                        ),
+                      ),
+                      Positioned(right: 2, top: 2, child: InkWell(onTap: () => setState(() => _evidenceUrls.removeAt(index)), child: const CircleAvatar(radius: 10, backgroundColor: Colors.black54, child: Icon(Icons.close, size: 13, color: Colors.white)))),
+                    ],
+                  );
+                }),
+              ),
+            const SizedBox(height: 8),
+            Text('${_evidenceUrls.length}/5 tệp đã tải lên', style: TextStyle(fontSize: 12, color: colors.textMuted)),
+            const SizedBox(height: 12),
 
             // Submit button
             SizedBox(

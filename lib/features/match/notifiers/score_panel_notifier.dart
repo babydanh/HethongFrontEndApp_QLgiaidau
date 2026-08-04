@@ -286,7 +286,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   bool pickleballAwardPoint(bool isTeam1) {
     final pb = state.pickleball ?? const PickleballServeState();
-    if (pb.isTeam1Serving != isTeam1) {
+    if (!state.isLite && pb.isTeam1Serving != isTeam1) {
       state = state.copyWith(
         errorMessage: 'Chỉ đội giao bóng mới được ghi điểm!',
       );

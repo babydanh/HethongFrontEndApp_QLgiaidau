@@ -2215,8 +2215,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   String _teamMemberSummary(
     List<MatchMemberInfo> memberInfos,
     List<String> displayList,
+    int? teamEloPoints,
   ) {
     final bool isDoubles = displayList.length >= 2 || memberInfos.length >= 2;
+    if (isDoubles) {
+      return 'ELO đôi: ${teamEloPoints ?? 'Chưa có'}';
+    }
     final realMembers = memberInfos
         .where((member) => member.fullName.trim().isNotEmpty)
         .toList();
@@ -2232,15 +2236,23 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   Widget _teamMemberSummaryWidget(
     List<MatchMemberInfo> memberInfos,
     List<String> displayList,
+    int? teamEloPoints,
     TextStyle style,
   ) {
     final bool isDoubles = displayList.length >= 2 || memberInfos.length >= 2;
+    if (isDoubles) {
+      return Text(
+        'ELO đôi: ${teamEloPoints ?? 'Chưa có'}',
+        style: style.copyWith(fontWeight: FontWeight.w700),
+        textAlign: TextAlign.center,
+      );
+    }
     final realMembers = memberInfos
         .where((member) => member.fullName.trim().isNotEmpty)
         .toList();
     if (realMembers.isEmpty) {
       return Text(
-        _teamMemberSummary(memberInfos, displayList),
+        _teamMemberSummary(memberInfos, displayList, teamEloPoints),
         style: style,
         textAlign: TextAlign.center,
       );
@@ -2664,6 +2676,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           _teamMemberSummaryWidget(
                             match.team1MemberInfos,
                             t1DisplayList,
+                            match.team1EloPoints,
                             TextStyle(
                               fontSize: 11,
                               color: colors.textMuted,
@@ -2799,6 +2812,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           _teamMemberSummaryWidget(
                             match.team2MemberInfos,
                             t2DisplayList,
+                            match.team2EloPoints,
                             TextStyle(
                               fontSize: 11,
                               color: colors.textMuted,

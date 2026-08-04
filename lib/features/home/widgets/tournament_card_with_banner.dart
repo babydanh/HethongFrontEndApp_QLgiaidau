@@ -210,7 +210,7 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                                 gradient: LinearGradient(
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
-                                  colors: [Color(0xFF2979FF), Color(0xFF1565C0)],
+                                  colors: [AppTheme.primary, AppTheme.primaryDark],
                                 ),
                               ),
                               child: Center(
@@ -228,7 +228,7 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
-                                colors: [Color(0xFF2979FF), Color(0xFF1565C0)],
+                                colors: [AppTheme.primary, AppTheme.primaryDark],
                               ),
                             ),
                             child: Center(
@@ -429,7 +429,7 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                             resolvedLogoUrl,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
-                              color: const Color(0xFF2979FF).withValues(alpha: 0.1),
+                              color: AppTheme.primary.withValues(alpha: 0.1),
                               padding: const EdgeInsets.all(8),
                               child: SvgPicture.asset(
                                 "assets/images/vndcsport.svg",
@@ -438,7 +438,7 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                             ),
                           )
                         : Container(
-                            color: const Color(0xFF2979FF).withValues(alpha: 0.1),
+                            color: AppTheme.primary.withValues(alpha: 0.1),
                             padding: const EdgeInsets.all(8),
                             child: SvgPicture.asset(
                               "assets/images/vndcsport.svg",

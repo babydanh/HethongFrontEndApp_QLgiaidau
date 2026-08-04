@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'dart:async';
 import 'package:intl/intl.dart';
 
 /// Trang hiển thị danh sách trận đấu với filter và search.
@@ -17,7 +18,8 @@ class MatchesListScreen extends ConsumerStatefulWidget {
   ConsumerState<MatchesListScreen> createState() => _MatchesListScreenState();
 }
 
-class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
+class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
+    with WidgetsBindingObserver {
   final _searchController = TextEditingController();
   String _selectedSport = '';
   String _selectedStatus = '';
@@ -27,6 +29,8 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   List<MatchModel> _allMatches = [];
   List<MatchModel> _filteredMatches = [];
   String? _error;
+  Timer? _refreshTimer;
+  bool _requestInFlight = false;
 
   String _statusLabel(String? status) {
     final l10n = AppLocalizations.of(context)!;
@@ -43,20 +47,37 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _searchController.addListener(_applyFilters);
     _loadData();
+    _refreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      _loadData();
+    });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _refreshTimer?.cancel();
     _searchController.removeListener(_applyFilters);
     _searchController.dispose();
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadData();
+    }
+  }
+
   Future<void> _loadData() async {
+    if (_requestInFlight) return;
+    _requestInFlight = true;
+
     setState(() {
-      _isLoading = true;
+      // Keep the last successful list visible during background refreshes.
+      _isLoading = _allMatches.isEmpty;
       _error = null;
     });
 
@@ -78,10 +99,16 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'Không thể tải danh sách trận đấu. Hãy thử lại.';
+          // A transient timeout/429 must not replace valid data with an error
+          // screen. The timer and lifecycle callbacks retry automatically.
+          _error = _allMatches.isEmpty
+              ? 'Không thể tải danh sách trận đấu. Hãy thử lại.'
+              : null;
           _isLoading = false;
         });
       }
+    } finally {
+      _requestInFlight = false;
     }
   }
 

@@ -68,7 +68,14 @@ class _LiveTournamentWithMatchesCardState
           if (isT1Tbd && isT2Tbd) return false;
 
           final status = m.status.toUpperCase();
-          final isDone = m.isCompleted || status == 'COMPLETED' || status == 'FINISHED' || m.isByeMatch || m.isBye;
+          final isDone = m.isCompleted ||
+              status == 'COMPLETED' ||
+              status == 'FINISHED' ||
+              status == 'DONE' ||
+              status == 'ENDED' ||
+              m.completedAt != null ||
+              m.isByeMatch ||
+              m.isBye;
           final isOngoing = m.isLive || status == 'ONGOING' || status == 'LIVE' || status == 'IN_PROGRESS';
 
           if (widget.filterStatus == 'live') return isOngoing;

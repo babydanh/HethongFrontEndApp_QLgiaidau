@@ -49,9 +49,16 @@ class ApiTeamRepository implements ITeamRepository {
     var lastKnown = await getAllByTournament(tournamentId);
     yield lastKnown;
     yield* Stream.periodic(const Duration(seconds: 15)).asyncMap((_) async {
-      final updated = await getAllByTournament(tournamentId);
-      if (updated.isNotEmpty || lastKnown.isEmpty) lastKnown = updated;
+      try {
+        final updated = await getAllByTournament(tournamentId);
+        lastKnown = updated;
+      } catch (error, stack) {
+        _log.error('Keeping cached teams after polling failure', error, stack);
+      }
       return lastKnown;
+    }).handleError((error, stack) {
+      // Do not terminate the provider on one failed polling tick.
+      _log.error('Team stream recovered from polling error', error, stack);
     });
   }
 

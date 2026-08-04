@@ -32,7 +32,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       if (mounted) setState(() {});
     });
@@ -111,7 +111,6 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             Tab(icon: const Icon(Icons.dashboard_outlined, size: 18), text: l10n.organizer_tabOverview),
             Tab(icon: const Icon(Icons.people_outline_rounded, size: 18), text: l10n.lite_participantsTab),
             Tab(icon: const Icon(Icons.account_tree_outlined, size: 18), text: l10n.lite_bracketAndMatches),
-            const Tab(icon: Icon(Icons.tune_rounded, size: 18), text: 'Điều hành'),
           ],
         ),
       ),
@@ -167,8 +166,6 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                             isEmbedded: true,
                           ))
                         : frame(_buildBracketTab(colors, state, notifier));
-                  case 3:
-                    return frame(_buildOperationsTab(colors, state, notifier));
                   default:
                     return const SizedBox.shrink();
                 }

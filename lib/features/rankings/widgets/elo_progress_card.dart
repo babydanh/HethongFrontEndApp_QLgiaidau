@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 ///
 /// Giữ style hiện tại của app (dark premium card), chỉ bổ sung thông tin web có:
 /// rank nổi bật, progress tier, peak ELO, loại đánh và trạng thái khiên.
-class EloProgressCard extends StatelessWidget {
+class EloProgressCard extends StatefulWidget {
   final String userName;
   final String? userEmail;
   final String? avatarUrl;
@@ -24,8 +24,23 @@ class EloProgressCard extends StatelessWidget {
   });
 
   @override
+  State<EloProgressCard> createState() => _EloProgressCardState();
+}
+
+class _EloProgressCardState extends State<EloProgressCard> {
+  String? _selectedCategoryId;
+
+  @override
   Widget build(BuildContext context) {
-    final activeRank = EloHelpers.getBestRankForCategory(rankings);
+    final categoryOptions = <String, String>{
+      for (final rank in widget.rankings)
+        if (rank.categoryId != null && rank.categoryName != null)
+          rank.categoryId!: rank.categoryName!,
+    };
+    final activeRanks = _selectedCategoryId == null
+        ? widget.rankings
+        : widget.rankings.where((rank) => rank.categoryId == _selectedCategoryId).toList();
+    final activeRank = EloHelpers.getBestRankForCategory(activeRanks);
     final hasRank = activeRank != null && activeRank.matchesPlayed > 0;
     final eloPoints = activeRank?.eloPoints ?? 1000;
     final matchesPlayed = activeRank?.matchesPlayed ?? 0;
@@ -52,14 +67,14 @@ class EloProgressCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              _Avatar(name: userName, avatarUrl: avatarUrl),
+              _Avatar(name: widget.userName, avatarUrl: widget.avatarUrl),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      userName.isNotEmpty ? userName : 'Người dùng',
+                      widget.userName.isNotEmpty ? widget.userName : 'Người dùng',
                       style: TextStyle(
                         color: context.colors.textPrimary,
                         fontSize: 18,
@@ -68,10 +83,10 @@ class EloProgressCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (userEmail?.isNotEmpty == true) ...[
+                    if (widget.userEmail?.isNotEmpty == true) ...[
                       const SizedBox(height: 2),
                       Text(
-                        userEmail!,
+                        widget.userEmail!,
                         style: TextStyle(
                           color: context.colors.textMuted,
                           fontSize: 12,
@@ -84,9 +99,9 @@ class EloProgressCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (onTapProfile != null)
+              if (widget.onTapProfile != null)
                 IconButton(
-                  onPressed: onTapProfile,
+                  onPressed: widget.onTapProfile,
                   icon: Icon(
                     Icons.chevron_right_rounded,
                     color: context.colors.textMuted,
@@ -95,6 +110,31 @@ class EloProgressCard extends StatelessWidget {
                 ),
             ],
           ),
+          if (categoryOptions.length > 1) ...[
+            const SizedBox(height: 10),
+            Text(
+              'Môn xếp hạng',
+              style: TextStyle(
+                color: context.colors.textMuted,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                ...categoryOptions.entries.map(
+                  (entry) => ChoiceChip(
+                    label: Text(entry.value),
+                    selected: _selectedCategoryId == entry.key,
+                    onSelected: (_) => setState(() => _selectedCategoryId = entry.key),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 16),
           Container(
             width: double.infinity,

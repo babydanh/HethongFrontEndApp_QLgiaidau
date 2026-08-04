@@ -28,9 +28,9 @@ class _WaveHeaderPainter extends CustomPainter {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: const [
-          Color(0xFF4DA6FF), // Xanh nhạt trên
-          Color(0xFF1A78FF), // Xanh vừa
-          Color(0xFF0052FF), // Xanh đậm
+          AppTheme.primary,
+          AppTheme.primaryDark,
+          Color(0xFF020617),
         ],
         stops: const [0.0, 0.5, 1.0],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
@@ -274,17 +274,9 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
               title: 'Kết quả trận đấu vừa qua',
             ),
           ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (ctx, i) {
-                final list = widget.tournaments.isNotEmpty ? widget.tournaments : _filtered;
-                if (list.isEmpty) return const SizedBox.shrink();
-                return LiveTournamentWithMatchesCard(
-                  tournament: list[i % list.length],
-                  filterStatus: 'completed',
-                );
-              },
-              childCount: widget.tournaments.isNotEmpty ? widget.tournaments.length.clamp(1, 3) : 1,
+          SliverToBoxAdapter(
+            child: _RecentCompletedMatches(
+              tournaments: _filtered,
             ),
           ),
 
@@ -605,7 +597,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0052FF).withValues(alpha: 0.10),
+              color: AppTheme.primary.withValues(alpha: 0.10),
               blurRadius: 20,
               offset: const Offset(0, 4),
             ),
@@ -954,7 +946,7 @@ class _TournamentCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0052FF).withValues(alpha: 0.10),
+              color: AppTheme.primary.withValues(alpha: 0.10),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),
@@ -972,8 +964,8 @@ class _TournamentCard extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: [
                       Color(0xFF1E3A8A),
-                      Color(0xFF1D4ED8),
-                      Color(0xFF3B82F6),
+                      AppTheme.primaryDark,
+                      AppTheme.primary,
                     ],
                   ),
                 ),
@@ -1745,6 +1737,53 @@ class _DoubleAvatar extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _RecentCompletedMatches extends ConsumerWidget {
+  final List<Tournament> tournaments;
+
+  const _RecentCompletedMatches({required this.tournaments});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final completedTournaments = <Tournament>[];
+    for (final tournament in tournaments) {
+      final matches = ref.watch(matchesProvider(tournament.id)).value ?? const <MatchModel>[];
+      final hasCompleted = matches.any((match) {
+        final status = match.status.toUpperCase();
+        return !match.isByeMatch &&
+            (match.isCompleted ||
+                status == 'COMPLETED' ||
+                status == 'FINISHED' ||
+                status == 'DONE' ||
+                status == 'ENDED' ||
+                match.completedAt != null);
+      });
+      if (hasCompleted) completedTournaments.add(tournament);
+      if (completedTournaments.length == 3) break;
+    }
+
+    if (completedTournaments.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(
+          child: Text(
+            'Chưa có trận nào kết thúc gần đây',
+            style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: completedTournaments
+          .map((tournament) => LiveTournamentWithMatchesCard(
+                tournament: tournament,
+                filterStatus: 'completed',
+              ))
+          .toList(),
     );
   }
 }

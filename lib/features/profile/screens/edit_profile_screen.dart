@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -252,7 +253,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
 
     try {
       final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(source: source);
+      final pickedFile = await picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 1600,
+      );
       if (pickedFile == null) return;
 
       setState(() => _isLoading = true);
@@ -271,6 +276,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
           backgroundColor: Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
         ),
+      );
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      final message = e.code == 'camera_access_denied'
+          ? 'Bạn chưa cấp quyền camera cho VNSport.'
+          : e.code == 'photo_access_denied'
+              ? 'Bạn chưa cấp quyền thư viện ảnh cho VNSport.'
+              : 'Không thể mở camera hoặc thư viện ảnh.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
       );
     } catch (e) {
       if (!mounted) return;

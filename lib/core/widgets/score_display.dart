@@ -84,7 +84,7 @@ class TennisGamePoint extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (team1Points > team2Points) ...[
-            _point('Ad', const Color(0xFF2979FF)),
+            _point('Ad', AppTheme.primary),
             const SizedBox(width: 4),
             Text('T1', style: TextStyle(fontSize: 10, color: colors.textMuted)),
           ] else ...[
@@ -99,7 +99,7 @@ class TennisGamePoint extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _point(tennisPointLabel(team1Points), const Color(0xFF2979FF)),
+        _point(tennisPointLabel(team1Points), AppTheme.primary),
         const SizedBox(width: 6),
         Text('-', style: TextStyle(color: colors.textMuted, fontSize: 16, fontWeight: FontWeight.w900)),
         const SizedBox(width: 6),

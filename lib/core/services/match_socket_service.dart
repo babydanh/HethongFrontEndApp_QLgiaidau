@@ -85,7 +85,9 @@ class MatchSocketService {
         io.OptionBuilder()
             .setTransports(['websocket', 'polling'])
             .enableReconnection()
-            .setReconnectionAttempts(5)
+            // Mobile networks can disappear for minutes. Keep the socket
+            // recoverable while the screen remains open.
+            .setReconnectionAttempts(20)
             .setReconnectionDelay(1000)
             .setTimeout(8000)
             .disableAutoConnect()

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/di/socket_providers.dart';
@@ -5,6 +7,9 @@ import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/entities/app_notification.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/notification_provider.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 
 /// Widget quản lý lifecycle kết nối WebSocket dựa trên trạng thái đăng nhập.
 ///
@@ -22,6 +27,7 @@ class SocketObserver extends ConsumerStatefulWidget {
 
 class _SocketObserverState extends ConsumerState<SocketObserver> with WidgetsBindingObserver {
   static const _log = AppLogger('SocketObserver');
+  bool _recoveringAfterResume = false;
 
   @override
   void initState() {
@@ -41,6 +47,26 @@ class _SocketObserverState extends ConsumerState<SocketObserver> with WidgetsBin
     // Khi app resume, kiểm tra lại kết nối socket
     if (state == AppLifecycleState.resumed) {
       _syncSocket();
+      unawaited(_recoverDataAfterResume());
+    }
+  }
+
+  Future<void> _recoverDataAfterResume() async {
+    if (_recoveringAfterResume || !mounted) return;
+    _recoveringAfterResume = true;
+    try {
+      // Give the OS a moment to restore Wi-Fi/mobile data before refetching.
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      if (!mounted || !ref.read(authProvider).isAuthenticated) return;
+
+      // These providers are shared by profile, home and the management area.
+      // Invalidating them reconnects the current screens without restarting app.
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(unreadCountProvider);
+      ref.invalidate(myTournamentWorkspaceProvider);
+      ref.invalidate(tournamentsProvider);
+    } finally {
+      _recoveringAfterResume = false;
     }
   }
 

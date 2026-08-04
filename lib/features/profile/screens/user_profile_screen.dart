@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_history_log.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
@@ -573,34 +574,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     );
   }
 
-  String _formatTierName(String? rawTier, int elo, int matchesPlayed) {
-    if (rawTier != null && rawTier.trim().isNotEmpty) {
-      final t = rawTier.trim().toUpperCase();
-      if (t != 'UNRANKED' && t != 'CHƯA XẾP HẠNG') {
-        if (t.contains('TIER S') || t == 'S') return 'Hạng S (Cao thủ)';
-        if (t.contains('HIGH TIER A') || t == 'A+') return 'Hạng A+ (Xuất sắc)';
-        if (t.contains('LOW TIER A') || t == 'A-') return 'Hạng A- (Khá giỏi)';
-        if (t.contains('HIGH TIER B') || t == 'B+') return 'Hạng B+ (Trung bình khá)';
-        if (t.contains('LOW TIER B') || t == 'B-') return 'Hạng B- (Trung bình)';
-        if (t.contains('HIGH TIER C') || t == 'C+') return 'Hạng C+ (Phong trào)';
-        if (t.contains('LOW TIER C') || t == 'C-') return 'Hạng C- (Phong trào)';
-        if (t.contains('HIGH TIER D') || t == 'D+') return 'Hạng D+ (Tập sự)';
-        if (t.contains('LOW TIER D') || t == 'D-') return 'Hạng D- (Tân thủ)';
-        return rawTier;
-      }
-    }
-
-    if (elo >= 1800) return 'Hạng S (Cao thủ)';
-    if (elo >= 1700) return 'Hạng A+ (Xuất sắc)';
-    if (elo >= 1600) return 'Hạng A- (Khá giỏi)';
-    if (elo >= 1500) return 'Hạng B+ (Trung bình khá)';
-    if (elo >= 1400) return 'Hạng B- (Trung bình)';
-    if (elo >= 1300) return 'Hạng C+ (Phong trào)';
-    if (elo >= 1200) return 'Hạng C- (Phong trào)';
-    if (elo >= 1100) return 'Hạng D+ (Tập sự)';
-    return matchesPlayed == 0 ? 'Tân thủ ($elo ELO)' : 'Hạng D- (Tân thủ)';
-  }
-
   String _formatUserRole(String? role) {
     if (role == null || role.trim().isEmpty) return 'Vận động viên';
     final r = role.trim().toUpperCase();
@@ -629,35 +602,24 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   // ─── USER INFO HEADER ───────────────────────────────────────
   Widget _buildUserInfoHeader(BuildContext context, UserPublicProfile profile, AppColorsExtension colors) {
     final roleText = _formatUserRole(null); // default fallback
+    final featuredRank = profile.ranks.where((rank) => rank.matchesPlayed > 0).fold<UserPublicRank?>(
+      null,
+      (best, rank) => best == null || rank.eloPoints > best.eloPoints ? rank : best,
+    );
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Avatar
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(colors: [AppTheme.primary, AppTheme.primaryLight]),
-              boxShadow: [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.3), blurRadius: 14, offset: const Offset(0, 4))],
-            ),
-            child: Center(
-              child: Container(
-                width: 74,
-                height: 74,
-                decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF161616)),
-                child: profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(37),
-                        child: Image.network(profile.avatarUrl!, fit: BoxFit.cover,
-                          errorBuilder: (ctx, err, stack) => _avatarFallback(profile.fullName, colors),
-                        ),
-                      )
-                    : _avatarFallback(profile.fullName, colors),
-              ),
-            ),
+          RankAvatar(
+            imageUrl: profile.avatarUrl,
+            name: profile.fullName,
+            elo: featuredRank?.eloPoints ?? 0,
+            tierName: featuredRank?.tierName,
+            matchesPlayed: featuredRank?.matchesPlayed ?? 0,
+            size: 80,
+            ringWidth: 3,
           ),
           const SizedBox(width: 16),
           // Name + Role + Bio + Gender
@@ -898,15 +860,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     );
   }
 
-  Widget _avatarFallback(String name, AppColorsExtension colors) {
-    return Center(
-      child: Text(
-        _initials(name),
-        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: colors.textSecondary),
-      ),
-    );
-  }
-
   Widget _buildError(BuildContext context, AppColorsExtension colors, String message) {
     return Center(
       child: Padding(
@@ -927,11 +880,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     );
   }
 
-  String _initials(String name) {
-    final p = name.trim().split(' ');
-    if (p.length >= 2) return '${p[p.length - 2][0]}${p[p.length - 1][0]}'.toUpperCase();
-    return name.isNotEmpty ? name[0].toUpperCase() : '?';
-  }
 }
 
 // ─── SHIMMER ───────────────────────────────────────────────────

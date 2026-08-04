@@ -7,6 +7,8 @@ import 'package:app_quanly_giaidau/core/services/token_manager.dart';
 
 class DioClient {
   static const _log = AppLogger('DioClient');
+  static const _retryCountKey = '__transient_retry_count';
+  static const _maxTransientRetries = 2;
   late final Dio _dio;
   final TokenManager _tokenManager;
   final Map<String, _CachedGetResponse> _getCache = {};
@@ -150,14 +152,50 @@ class DioClient {
               error.type == DioExceptionType.sendTimeout ||
               error.type == DioExceptionType.receiveTimeout ||
               error.type == DioExceptionType.connectionError ||
+              (statusCode != null && statusCode >= 500);
+
+          // GET requests are safe to retry. Do not retry writes or 429 responses:
+          // the former may duplicate mutations and the latter would amplify a
+          // server throttle. The request returns to the provider after the
+          // bounded retry window, where the UI can keep showing cached data.
+          final method = error.requestOptions.method.toUpperCase();
+          final retryCount =
+              (error.requestOptions.extra[_retryCountKey] as int?) ?? 0;
+          if (method == 'GET' && isTransient && retryCount < _maxTransientRetries) {
+            final nextRetryCount = retryCount + 1;
+            final delay = Duration(milliseconds: 350 * (1 << retryCount));
+            _log.warning(
+              'Retrying GET ${error.requestOptions.path} '
+              '($nextRetryCount/$_maxTransientRetries)',
+            );
+            await Future<void>.delayed(delay);
+            final retryOptions = error.requestOptions.copyWith(
+              extra: {
+                ...error.requestOptions.extra,
+                _retryCountKey: nextRetryCount,
+              },
+            );
+            try {
+              final retryResponse = await _dio.fetch<dynamic>(retryOptions);
+              return handler.resolve(retryResponse);
+            } on DioException catch (retryError) {
+              error = retryError;
+            }
+          }
+
+          final canUseStaleCache =
+              error.type == DioExceptionType.connectionTimeout ||
+              error.type == DioExceptionType.sendTimeout ||
+              error.type == DioExceptionType.receiveTimeout ||
+              error.type == DioExceptionType.connectionError ||
               statusCode == 429 ||
               (statusCode != null && statusCode >= 500);
           if (error.requestOptions.method.toUpperCase() == 'GET' &&
-              isTransient) {
+              canUseStaleCache) {
             final cached = _getCache[_cacheKey(error.requestOptions)];
             if (cached != null &&
                 DateTime.now().difference(cached.savedAt) <
-                    const Duration(minutes: 3)) {
+                    const Duration(minutes: 10)) {
               _log.warning(
                 'Using recent cached response for ${error.requestOptions.path}',
               );

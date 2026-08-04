@@ -507,7 +507,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Positioned.fill(
           child: RefreshIndicator(
             onRefresh: () async => ref.refresh(tournamentsProvider),
-            color: const Color(0xFF2979FF),
+            color: AppTheme.primary,
             child: tournamentsAsync.when(
               data: (tournamentsList) {
                 final allTournaments = tournamentsList.where((t) {
@@ -592,6 +592,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       tournaments: allTournaments,
                       filterStatus: 'scheduled',
                       emptyMessage: l10n.noUpcomingMatches,
+                    ),
+                    SliverToBoxAdapter(
+                      child: _buildSectionTitle(
+                        title: 'Trận đấu vừa kết thúc',
+                      ),
+                    ),
+                    _TournamentSectionList(
+                      tournaments: allTournaments,
+                      filterStatus: 'completed',
+                      emptyMessage: 'Chưa có trận đấu vừa kết thúc',
                     ),
                     // ── Section 5: Cộng đồng câu lạc bộ ──
                     SliverToBoxAdapter(
@@ -950,7 +960,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1E3A8A), Color(0xFF2563EB), Color(0xFF3B82F6)],
+          colors: [AppTheme.primaryDark, AppTheme.primary, Color(0xFF3AB5F6)],
         ),
       ),
       child: Center(
@@ -1027,7 +1037,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             label,
             style: TextStyle(
               color: isSelected
-                  ? const Color(0xFF2979FF)
+                  ? AppTheme.primary
                   : context.colors.textPrimary,
               fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
               fontSize: 13,
@@ -1035,7 +1045,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           if (isSelected) ...[
             const Spacer(),
-            const Icon(Icons.check_rounded, color: Color(0xFF2979FF), size: 16),
+            const Icon(Icons.check_rounded, color: AppTheme.primary, size: 16),
           ],
         ],
       ),
@@ -1382,7 +1392,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           fontWeight: FontWeight.normal,
           color: context.colors.textPrimary,
         ),
-        cursorColor: const Color(0xFF2979FF),
+        cursorColor: AppTheme.primary,
         textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
           hintText: _searchHintForTab(),
@@ -1413,7 +1423,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     icon: Icon(
                       Icons.tune_rounded,
                       color: filterCount > 0
-                          ? const Color(0xFF2979FF)
+                          ? AppTheme.primary
                           : context.colors.textSecondary,
                       size: 20.0,
                     ),
@@ -1427,7 +1437,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         width: 8,
                         height: 8,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF2979FF),
+                          color: AppTheme.primary,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -1564,7 +1574,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Navigator.pop(ctx);
                         },
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF2979FF),
+                          backgroundColor: AppTheme.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -1875,7 +1885,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             Navigator.pop(ctx);
                           },
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF2979FF),
+                            backgroundColor: AppTheme.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -1980,7 +1990,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Navigator.pop(ctx);
                         },
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF2979FF),
+                            backgroundColor: AppTheme.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -2081,7 +2091,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Navigator.pop(ctx);
                         },
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF2979FF),
+                          backgroundColor: AppTheme.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -2122,10 +2132,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
             decoration: BoxDecoration(
-              color: isSel ? const Color(0xFF2979FF) : context.colors.bgCard,
+              color: isSel ? AppTheme.primary : context.colors.bgCard,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isSel ? const Color(0xFF2979FF) : context.colors.border,
+                color: isSel ? AppTheme.primary : context.colors.border,
               ),
             ),
             child: Text(
@@ -2206,7 +2216,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Text(
                     actionLabel,
                     style: const TextStyle(
-                      color: Color(0xFF2979FF),
+                      color: AppTheme.primary,
                       fontSize: 13.0,
                       fontWeight: FontWeight.w700,
                     ),
@@ -2215,7 +2225,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 12.0,
-                    color: Color(0xFF2979FF),
+                    color: AppTheme.primary,
                   ),
                 ],
               ),
@@ -3006,7 +3016,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1E3A8A), Color(0xFF2563EB), Color(0xFF3B82F6)],
+          colors: [AppTheme.primaryDark, AppTheme.primary, Color(0xFF3AB5F6)],
         ),
       ),
       child: Center(
@@ -3025,7 +3035,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildLoadingState() {
     return const Center(
       child: CircularProgressIndicator(
-        color: Color(0xFF2979FF),
+        color: AppTheme.primary,
         strokeWidth: 2.5,
       ),
     );
@@ -3070,7 +3080,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2979FF),
+                  color: AppTheme.primary,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -3319,7 +3329,7 @@ class _TournamentCard extends StatelessWidget {
                             child: Text(
                               div,
                               style: const TextStyle(
-                                color: Color(0xFF2563EB),
+                                color: AppTheme.primary,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -3381,7 +3391,7 @@ class _TournamentCard extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+          colors: [AppTheme.primary, AppTheme.primaryDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -3440,7 +3450,7 @@ class _TournamentListCard extends StatelessWidget {
               ),
               child: const Icon(
                 Icons.emoji_events_rounded,
-                color: Color(0xFF2979FF),
+                color: AppTheme.primary,
                 size: 24,
               ),
             ),
