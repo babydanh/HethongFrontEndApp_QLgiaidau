@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
@@ -113,7 +114,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (source == null) return;
 
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source);
+    XFile? pickedFile;
+    try {
+      pickedFile = await picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 1600,
+      );
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      final message = e.code == 'camera_access_denied'
+          ? 'Bạn chưa cấp quyền camera cho VNSport.'
+          : e.code == 'photo_access_denied'
+              ? 'Bạn chưa cấp quyền thư viện ảnh cho VNSport.'
+              : 'Không thể mở camera hoặc thư viện ảnh.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+      );
+      return;
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Không thể mở camera hoặc thư viện ảnh.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     if (pickedFile == null) return;
 
     final bytes = await pickedFile.readAsBytes();
@@ -1667,8 +1695,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         club.myRole == 'LEADER' ||
         club.myRole == 'CREATOR' ||
         club.myRole == 'HOST' ||
-        (currentUserId != null && club.ownerId == currentUserId) ||
-        (club.myRole != 'MEMBER' && club.myRole != 'JOINED');
+        (currentUserId != null && club.ownerId == currentUserId);
 
     final isAdmin =
         !isOwner && (club.myRole == 'ADMIN' || club.myRole == 'MODERATOR');
