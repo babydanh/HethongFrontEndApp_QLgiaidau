@@ -603,15 +603,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       filterStatus: 'completed',
                       emptyMessage: 'Chưa có trận đấu vừa kết thúc',
                     ),
-                    // ── Section 5: Cộng đồng câu lạc bộ ──
-                    SliverToBoxAdapter(
-                      child: _buildSectionTitle(
-                        title: l10n.clubCommunity,
-                        actionLabel: l10n.viewAll,
-                        onAction: () => _switchTab(3),
-                      ),
-                    ),
-                    SliverToBoxAdapter(child: _buildClubsHorizontalList()),
+
                     if (allTournaments.isEmpty)
                       SliverFillRemaining(child: _buildEmpty()),
                     const SliverToBoxAdapter(child: SizedBox(height: 100)),
