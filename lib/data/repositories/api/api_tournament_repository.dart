@@ -317,8 +317,11 @@ class ApiTournamentRepository implements ITournamentRepository {
     if (rawData == null) return [];
     List<dynamic> list = [];
     if (rawData is Map) {
-      if (rawData['data'] is List) {
-        list = rawData['data'] as List<dynamic>;
+      final dataField = rawData['data'];
+      if (dataField is List) {
+        list = dataField;
+      } else if (dataField is Map && dataField['data'] is List) {
+        list = dataField['data'] as List<dynamic>;
       } else if (rawData['items'] is List) {
         list = rawData['items'] as List<dynamic>;
       }
@@ -337,6 +340,7 @@ class ApiTournamentRepository implements ITournamentRepository {
         _log.warning('Skipping malformed tournament item: $err');
       }
     }
+    _log.info('_parseTournamentList: Extracted ${result.length} tournaments');
     return result;
   }
 
