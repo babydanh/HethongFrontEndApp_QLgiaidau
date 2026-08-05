@@ -132,7 +132,7 @@ class MatchTableRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── TOP SECTION: TEAMS & REAL API SET SCORE COLUMNS ──
+                // ── TOP SECTION: TEAMS & SCORES (ALIGNED VERTICALLY WITH TEAM NAMES) ──
                 Row(
                   children: [
                     // Team Names Column
@@ -163,6 +163,64 @@ class MatchTableRow extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              const SizedBox(width: 8),
+                              // Điểm set mới nhất & Tổng set của Team 1
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (sets.isNotEmpty) ...[
+                                    // Điểm số set mới nhất (ví dụ: 17)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: isLive ? const Color(0xFFEF4444).withValues(alpha: 0.1) : colors.bgSurface,
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: isLive ? const Color(0xFFEF4444).withValues(alpha: 0.3) : colors.border.withValues(alpha: 0.5),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        '${sets.last.score1}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          color: sets.last.score1 > sets.last.score2
+                                              ? const Color(0xFF2563EB)
+                                              : colors.textSecondary,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                  ],
+                                  // Tổng số set thắng của Team 1 (Tỷ số trận)
+                                  Container(
+                                    minWidth: 26,
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: setsWon1 > setsWon2
+                                          ? const Color(0xFF2563EB).withValues(alpha: 0.12)
+                                          : colors.bgSurface,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: setsWon1 > setsWon2
+                                            ? const Color(0xFF2563EB).withValues(alpha: 0.4)
+                                            : colors.border,
+                                      ),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '$setsWon1',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w900,
+                                        color: setsWon1 > setsWon2
+                                            ? const Color(0xFF2563EB)
+                                            : colors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                           const SizedBox(height: 10),
@@ -190,61 +248,68 @@ class MatchTableRow extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              const SizedBox(width: 8),
+                              // Điểm set mới nhất & Tổng set của Team 2
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (sets.isNotEmpty) ...[
+                                    // Điểm số set mới nhất (ví dụ: 21)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: isLive ? const Color(0xFFEF4444).withValues(alpha: 0.1) : colors.bgSurface,
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: isLive ? const Color(0xFFEF4444).withValues(alpha: 0.3) : colors.border.withValues(alpha: 0.5),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        '${sets.last.score2}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          color: sets.last.score2 > sets.last.score1
+                                              ? const Color(0xFF2563EB)
+                                              : colors.textSecondary,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                  ],
+                                  // Tổng số set thắng của Team 2 (Tỷ số trận)
+                                  Container(
+                                    minWidth: 26,
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: setsWon2 > setsWon1
+                                          ? const Color(0xFF2563EB).withValues(alpha: 0.12)
+                                          : colors.bgSurface,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: setsWon2 > setsWon1
+                                            ? const Color(0xFF2563EB).withValues(alpha: 0.4)
+                                            : colors.border,
+                                      ),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '$setsWon2',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w900,
+                                        color: setsWon2 > setsWon1
+                                            ? const Color(0xFF2563EB)
+                                            : colors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 6),
-
-                    // ── ALWAYS RENDER SET SCORE COLUMNS (S1, S2, S3...) ──
-                    Row(
-                      children: [
-                        ...List.generate(totalColumnsToShow, (index) {
-                          final idx = index + 1;
-                          final hasSetData = index < sets.length;
-                          final s = hasSetData ? sets[index] : null;
-                          final score1Str = s != null ? '${s.score1}' : '-';
-                          final score2Str = s != null ? '${s.score2}' : '-';
-                          final isT1Win = s != null && s.score1 > s.score2;
-                          final isT2Win = s != null && s.score2 > s.score1;
-
-                          return Container(
-                            margin: const EdgeInsets.only(left: 4),
-                            width: 28,
-                            child: Column(
-                              children: [
-                                Text(
-                                  'S$idx',
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w700,
-                                    color: colors.textMuted,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  score1Str,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: isT1Win ? FontWeight.w900 : FontWeight.w500,
-                                    color: isT1Win ? const Color(0xFF3B82F6) : colors.textSecondary,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  score2Str,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: isT2Win ? FontWeight.w900 : FontWeight.w500,
-                                    color: isT2Win ? const Color(0xFF3B82F6) : colors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
-                      ],
                     ),
                   ],
                 ),
