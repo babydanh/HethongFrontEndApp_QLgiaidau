@@ -248,6 +248,25 @@ class MatchModel {
         ? scoreDetails!['penalties'] as List<dynamic>
         : <dynamic>[];
 
+    List<SetScore> parsedSets = [];
+    if (json['sets'] is List && (json['sets'] as List).isNotEmpty) {
+      parsedSets = (json['sets'] as List)
+          .map((s) => SetScore.fromJson(s as Map<String, dynamic>))
+          .toList();
+    } else if (scoreDetails != null && scoreDetails['scores'] is List) {
+      parsedSets = (scoreDetails['scores'] as List).map((s) {
+        if (s is Map) {
+          final t1 = s['team1Score'] ?? s['score1'] ?? 0;
+          final t2 = s['team2Score'] ?? s['score2'] ?? 0;
+          return SetScore(
+            score1: t1 is num ? t1.toInt() : int.tryParse(t1.toString()) ?? 0,
+            score2: t2 is num ? t2.toInt() : int.tryParse(t2.toString()) ?? 0,
+          );
+        }
+        return const SetScore(score1: 0, score2: 0);
+      }).toList();
+    }
+
     return MatchModel(
       id: id,
       round: json['round'] ?? 1,
@@ -264,11 +283,7 @@ class MatchModel {
       team2Name: json['team2Name'] ?? 'TBD',
       score1: json['score1'] ?? 0,
       score2: json['score2'] ?? 0,
-      sets:
-          (json['sets'] as List<dynamic>?)
-              ?.map((s) => SetScore.fromJson(s as Map<String, dynamic>))
-              .toList() ??
-          [],
+      sets: parsedSets,
       winnerId: json['winnerId'] ?? '',
       loserId: json['loserId'] ?? '',
       status: (json['status'] as String?)?.toLowerCase() ?? 'scheduled',
