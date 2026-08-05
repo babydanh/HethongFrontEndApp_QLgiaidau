@@ -17,7 +17,17 @@ class ClubRankingWidget extends ConsumerStatefulWidget {
   final String clubId;
   final bool compact;
 
-  const ClubRankingWidget({super.key, required this.clubId, this.compact = false});
+  /// Các môn thể thao CLB đã đăng ký (key như 'pickleball', 'tennis'...).
+  /// Nếu có, bộ lọc Môn chỉ hiện các môn này (giống web dùng
+  /// `community.categories`); rỗng/null → hiện toàn bộ môn toàn cục.
+  final List<String>? clubSportKeys;
+
+  const ClubRankingWidget({
+    super.key,
+    required this.clubId,
+    this.compact = false,
+    this.clubSportKeys,
+  });
 
   @override
   ConsumerState<ClubRankingWidget> createState() => _ClubRankingWidgetState();
@@ -30,11 +40,20 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   String _selectedMatchType = 'SINGLES';
   String _selectedGender = 'MALE';
   String? _selectedCategoryId;
-  bool _showRankedOnly = false;
   List<dynamic> _availableCategories = const [];
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   Timer? _pollingTimer;
+
+  /// Số bộ lọc đang lệch mặc định (để hiện chấm badge trên icon bộ lọc).
+  int get _activeFilterCount =>
+      (_selectedMatchType != 'SINGLES' ? 1 : 0) +
+      (_selectedGender != 'MALE' ? 1 : 0) +
+      (_selectedCategoryId != null &&
+              _availableCategories.isNotEmpty &&
+              _selectedCategoryId != _availableCategories.first.id
+          ? 1
+          : 0);
 
   @override
   void initState() {
@@ -62,7 +81,23 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     }
     try {
       final dio = ref.read(dioProvider);
-      final categories = await ref.read(categoriesProvider.future);
+      final allCategories = await ref.read(categoriesProvider.future);
+      // Lọc Môn theo setting CLB (clubSportKeys), fallback toàn bộ nếu không
+      // khớp — giống web dùng community.categories.
+      var categories = allCategories;
+      final clubKeys = widget.clubSportKeys;
+      if (clubKeys != null && clubKeys.isNotEmpty) {
+        final norm = clubKeys
+            .map((k) => k.toLowerCase().replaceAll(' ', ''))
+            .where((k) => k.isNotEmpty)
+            .toSet();
+        final matched = allCategories.where((c) {
+          final slug = c.slug.toLowerCase().replaceAll(' ', '');
+          final name = c.name.toLowerCase().replaceAll(' ', '');
+          return norm.contains(slug) || norm.contains(name);
+        }).toList();
+        if (matched.isNotEmpty) categories = matched;
+      }
       _availableCategories = categories;
       final categoryId = _selectedCategoryId ??
           (categories.isNotEmpty ? categories.first.id : null);
@@ -150,62 +185,17 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
       );
     }
 
-    if (_error != null || _rankings == null || _rankings!.isEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.emoji_events_rounded, size: 16, color: context.colors.textSecondary),
-              const SizedBox(width: 6),
-              Text('Xếp hạng CLB', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary, letterSpacing: 0.3)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-            decoration: BoxDecoration(
-              color: context.colors.bgCard,
-              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-              border: Border.all(color: context.colors.border),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(3, (i) => Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 8),
-                    width: i == 1 ? 52 : 44,
-                    height: i == 1 ? 52 : 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: context.colors.borderLight, width: 1.5),
-                      color: context.colors.bgSurface,
-                    ),
-                    child: Center(child: Text('#${i + 1}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.textMuted))),
-                  )),
-                ),
-                const SizedBox(height: 10),
-                Text('Chưa có dữ liệu xếp hạng', style: TextStyle(fontSize: 12, color: context.colors.textMuted)),
-                Text('Tham gia thi đấu để có ELO', style: TextStyle(fontSize: 11, color: context.colors.textMuted.withValues(alpha: 0.7))),
-              ],
-            ),
-          ),
-        ],
-      );
-    }
-
-    final allRankings = _rankings!;
+    // Không early-return khi rỗng/lỗi: header + thanh tìm kiếm + icon bộ lọc
+    // phải LUÔN hiện để người dùng đổi được bộ lọc (chỉ phần danh sách
+    // chuyển sang khung "Chưa có dữ liệu" bên dưới).
+    final allRankings = _rankings ?? const <PlayerRanking>[];
     final query = _searchQuery.trim().toLowerCase();
     final rankings = query.isEmpty
         ? allRankings
         : allRankings
             .where((ranking) => ranking.fullName.toLowerCase().contains(query))
             .toList();
-    final filteredRankings = _showRankedOnly
-        ? rankings.where((r) => r.matchesPlayed > 0).toList()
-        : rankings;
+    final filteredRankings = rankings;
     final isSearching = query.isNotEmpty;
     final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
     final myRanking = currentUserId == null
@@ -216,64 +206,34 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Section Header & Filters ──
-        if (!widget.compact)
-          Row(
-            children: [
-                Icon(
-                  Icons.emoji_events_rounded,
-                  size: 16,
-                  color: colors.textSecondary,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Xếp hạng CLB',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textSecondary,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              const Spacer(),
-              IconButton(
-                tooltip: 'Bộ lọc xếp hạng',
-                visualDensity: VisualDensity.compact,
-                onPressed: _openFilterSheet,
-                icon: const Icon(Icons.tune_rounded, size: 19),
-              ),
-            ],
-          )
-        else
-          Row(
-            children: [
-              Icon(
-                Icons.emoji_events_rounded,
-                size: 16,
+        // ── Section Header ──
+        Row(
+          children: [
+            Icon(
+              Icons.emoji_events_rounded,
+              size: 16,
+              color: colors.textSecondary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'Xếp hạng CLB',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
                 color: colors.textSecondary,
+                letterSpacing: 0.3,
               ),
-              const SizedBox(width: 6),
-              Text(
-                'Xếp hạng CLB',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: colors.textSecondary,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
+        ),
         const SizedBox(height: 10),
 
         // ── Podium Row (Top 3) ──
         if (!widget.compact) ...[
-          Row(
-            children: [
-              Expanded(child: TextField(
-                controller: _searchController,
-                onChanged: (value) => setState(() => _searchQuery = value),
-                decoration: InputDecoration(
+          TextField(
+            controller: _searchController,
+            onChanged: (value) => setState(() => _searchQuery = value),
+            decoration: InputDecoration(
               hintText: 'Tìm thành viên trong top 20...',
               prefixIcon: const Icon(Icons.search_rounded, size: 18),
               isDense: true,
@@ -287,45 +247,57 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(color: colors.border),
               ),
-                ),
-              )),
-              const SizedBox(width: 6),
-              IconButton(
+              suffixIcon: IconButton(
                 tooltip: 'Bộ lọc xếp hạng',
                 visualDensity: VisualDensity.compact,
                 onPressed: _openFilterSheet,
-                icon: const Icon(Icons.tune_rounded, size: 19),
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.tune_rounded, size: 19),
+                    if (_activeFilterCount > 0)
+                      Positioned(
+                        top: -3,
+                        right: -3,
+                        child: Container(
+                          width: 7,
+                          height: 7,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
           if (myRanking != null) ...[
             const SizedBox(height: 8),
             _buildMyRankingCard(myRanking, myRank, colors),
           ],
         ],
-        if (!isSearching && filteredRankings.isNotEmpty) _buildPodiumRow(filteredRankings),
-
-        // ── Ranks 4-10 List ──
-        if (!widget.compact && filteredRankings.length > (isSearching ? 0 : 3)) ...[
-          const SizedBox(height: 10),
-          ...List.generate(filteredRankings.length - (isSearching ? 0 : 3), (i) {
-            final index = isSearching ? i : i + 3;
-            final r = filteredRankings[index];
-            final actualRank = allRankings.indexOf(r) + 1;
-            return _buildListRow(r, actualRank, colors);
-          }),
+        // ── Nội dung: dữ liệu / trống / lỗi (search + filter luôn hiện) ──
+        if (_error != null)
+          _buildEmptyRanking(colors, error: true)
+        else if (allRankings.isEmpty)
+          _buildEmptyRanking(colors)
+        else if (filteredRankings.isEmpty)
+          _buildEmptyRanking(colors, searching: true)
+        else ...[
+          if (!isSearching) _buildPodiumRow(filteredRankings),
+          // ── Ranks 4-10 List ──
+          if (!widget.compact && filteredRankings.length > (isSearching ? 0 : 3)) ...[
+            const SizedBox(height: 10),
+            ...List.generate(filteredRankings.length - (isSearching ? 0 : 3), (i) {
+              final index = isSearching ? i : i + 3;
+              final r = filteredRankings[index];
+              final actualRank = allRankings.indexOf(r) + 1;
+              return _buildListRow(r, actualRank, colors);
+            }),
+          ],
         ],
-        // ── Empty state when filtered ──
-        if (_showRankedOnly && filteredRankings.isEmpty && !isSearching) ...[
-          const SizedBox(height: 16),
-          Center(
-            child: Text(
-              'Chưa có VĐV nào thi đấu',
-              style: TextStyle(fontSize: 12, color: colors.textMuted),
-            ),
-          ),
-        ],
-
         // ── Xem tất cả (compact mode) ──
         if (!widget.compact) ...[
           const SizedBox(height: 8),
@@ -467,96 +439,65 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     );
   }
 
-  Widget _buildGenderFilter() {
+  // ─── Empty / Error card (hiện dưới thanh tìm kiếm khi không có dữ liệu) ───
+
+  Widget _buildEmptyRanking(
+    AppColorsExtension colors, {
+    bool error = false,
+    bool searching = false,
+  }) {
     return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        border: Border.all(color: colors.border),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Column(
         children: [
-          _genderTab('Nam', 'MALE'),
-          _genderTab('Nữ', 'FEMALE'),
-        ],
-      ),
-    );
-  }
-
-  Widget _genderTab(String label, String value) {
-    final isActive = _selectedGender == value;
-    return GestureDetector(
-      onTap: () {
-        if (_selectedGender != value) {
-          setState(() => _selectedGender = value);
-          _fetchRankings();
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: isActive ? AppTheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppTheme.radiusSmall - 1),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: isActive ? Colors.white : AppTheme.primary,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(3, (i) => Container(
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              width: i == 1 ? 52 : 44,
+              height: i == 1 ? 52 : 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: colors.borderLight, width: 1.5),
+                color: colors.bgSurface,
+              ),
+              child: Center(
+                child: Text(
+                  '#${i + 1}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textMuted,
+                  ),
+                ),
+              ),
+            )),
           ),
-        ),
-      ),
-    );
-  }
-
-  // ─── Match Type Filter ───
-
-  Widget _buildMatchTypeFilter() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _matchTypeTab('Đơn', 'SINGLES'),
-          _matchTypeTab('Đôi', 'DOUBLES'),
-          _matchTypeTab('Đôi nam nữ', 'MIXED_DOUBLES'),
-        ],
-      ),
-    );
-  }
-
-  Widget _matchTypeTab(String label, String value) {
-    final isActive = _selectedMatchType == value;
-    return GestureDetector(
-      onTap: () {
-        if (_selectedMatchType != value) {
-          setState(() {
-            _selectedMatchType = value;
-            if (value == 'MIXED_DOUBLES') {
-              _selectedGender = 'MALE';
-            }
-          });
-          _fetchRankings();
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: isActive ? AppTheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppTheme.radiusSmall - 1),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: isActive ? Colors.white : AppTheme.primary,
+          const SizedBox(height: 10),
+          Text(
+            error
+                ? 'Không thể tải xếp hạng'
+                : searching
+                    ? 'Không tìm thấy thành viên'
+                    : 'Chưa có dữ liệu xếp hạng',
+            style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
           ),
-        ),
+          Text(
+            error
+                ? 'Vui lòng thử lại sau'
+                : 'Chọn bộ lọc khác hoặc tham gia thi đấu để có ELO',
+            style: TextStyle(
+              fontSize: 11,
+              color: colors.textMuted.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -568,23 +509,30 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     final rank2 = rankings.length > 1 ? rankings[1] : null;
     final rank3 = rankings.length > 2 ? rankings[2] : null;
 
-    return SizedBox(
-      height: 156,
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      height: 164,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           // Silver (rank 2) - left
           if (rank2 != null)
-            Expanded(child: _buildPodiumCard(rank2, 2, isCenter: false)),
-          if (rank2 != null) const SizedBox(width: 4),
+            Expanded(flex: 3, child: _buildPodiumCard(rank2, 2, isCenter: false))
+          else
+            const Expanded(flex: 3, child: SizedBox()),
+
+          const SizedBox(width: 6),
 
           // Gold (rank 1) - center, tallest
-          Expanded(flex: 10, child: _buildPodiumCard(rank1, 1, isCenter: true)),
+          Expanded(flex: 4, child: _buildPodiumCard(rank1, 1, isCenter: true)),
+
+          const SizedBox(width: 6),
 
           // Bronze (rank 3) - right
-          if (rank3 != null) const SizedBox(width: 4),
           if (rank3 != null)
-            Expanded(child: _buildPodiumCard(rank3, 3, isCenter: false)),
+            Expanded(flex: 3, child: _buildPodiumCard(rank3, 3, isCenter: false))
+          else
+            const Expanded(flex: 3, child: SizedBox()),
         ],
       ),
     );
@@ -597,87 +545,102 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   }) {
     final colors = context.colors;
     final medalColors = _medalColors(rank);
-    final avatarSize = isCenter ? 40.0 : 32.0;
+    final avatarSize = isCenter ? 42.0 : 34.0;
     final tierInfo = _getEloTierInfo(player.eloPoints);
 
     return Container(
-      height: isCenter ? 152 : 132,
+      height: isCenter ? 160 : 138,
       padding: EdgeInsets.symmetric(
-        horizontal: 4,
+        horizontal: 6,
         vertical: isCenter ? 8 : 6,
       ),
       decoration: BoxDecoration(
-        color: medalColors.bg.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        color: medalColors.bg.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
         border: Border.all(
-          color: medalColors.border.withValues(alpha: 0.25),
+          color: medalColors.border.withValues(alpha: 0.4),
           width: isCenter ? 1.5 : 1,
         ),
+        boxShadow: isCenter
+            ? [
+                BoxShadow(
+                  color: medalColors.border.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ]
+            : null,
       ),
-      child: SingleChildScrollView(
-        physics: const NeverScrollableScrollPhysics(),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Rank badge
-            Row(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Rank badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+            decoration: BoxDecoration(
+              color: medalColors.border.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   rank == 1
                       ? Icons.emoji_events_rounded
                       : rank == 2
-                      ? Icons.military_tech_rounded
-                      : Icons.workspace_premium_rounded,
-                  size: isCenter ? 14 : 11,
+                          ? Icons.military_tech_rounded
+                          : Icons.workspace_premium_rounded,
+                  size: isCenter ? 13 : 11,
                   color: medalColors.icon,
                 ),
                 const SizedBox(width: 2),
                 Text(
                   '#$rank',
                   style: TextStyle(
-                    fontSize: isCenter ? 11 : 9,
-                    fontWeight: FontWeight.w700,
+                    fontSize: isCenter ? 11 : 9.5,
+                    fontWeight: FontWeight.w900,
                     color: medalColors.icon,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+          ),
+          const SizedBox(height: 5),
 
-            _buildPodiumAvatars(player, avatarSize),
-            const SizedBox(height: 4),
+          _buildPodiumAvatars(player, avatarSize),
+          const SizedBox(height: 5),
 
-            // Name
-            Text(
-              player.fullName,
-              style: TextStyle(
-                fontSize: isCenter ? 11 : 10,
-                fontWeight: FontWeight.w600,
-                color: colors.textPrimary,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
+          // Name
+          Text(
+            player.fullName,
+            style: TextStyle(
+              fontSize: isCenter ? 11.5 : 10,
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
             ),
-            const SizedBox(height: 2),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 3),
 
-            // ELO points + Tier badge
-            Row(
+          // ELO points + Tier badge
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   '${player.eloPoints}',
                   style: TextStyle(
                     fontSize: isCenter ? 13 : 11,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w900,
                     color: medalColors.elo,
                   ),
                 ),
                 const SizedBox(width: 3),
-                // Tier badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                   decoration: BoxDecoration(
                     color: tierInfo.bgColor,
                     borderRadius: BorderRadius.circular(4),
@@ -686,17 +649,16 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                   child: Text(
                     tierInfo.label,
                     style: TextStyle(
-                      fontSize: 7,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 7.5,
+                      fontWeight: FontWeight.w800,
                       color: tierInfo.textColor,
-                      letterSpacing: 0.3,
                     ),
                   ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
