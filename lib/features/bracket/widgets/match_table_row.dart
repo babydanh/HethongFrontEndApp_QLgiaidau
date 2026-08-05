@@ -83,12 +83,8 @@ class MatchTableRow extends StatelessWidget {
         ? DateFormat('HH:mm').format(match.scheduledTime!.toLocal())
         : '--:--';
 
-    // Calculate set score columns based on tournament settings (default 3 sets: S1, S2, S3)
+    // Calculate set score and sets won
     final sets = match.sets;
-    final int maxSetColumns = (match.setsToWin != null && match.setsToWin! > 0)
-        ? (match.setsToWin! * 2 - 1)
-        : 3;
-    final int totalColumnsToShow = sets.length > maxSetColumns ? sets.length : maxSetColumns;
 
     int setsWon1 = 0;
     int setsWon2 = 0;
@@ -194,7 +190,7 @@ class MatchTableRow extends StatelessWidget {
                                   ],
                                   // Tổng số set thắng của Team 1 (Tỷ số trận)
                                   Container(
-                                    minWidth: 26,
+                                    constraints: const BoxConstraints(minWidth: 26),
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                     decoration: BoxDecoration(
                                       color: setsWon1 > setsWon2
@@ -279,7 +275,7 @@ class MatchTableRow extends StatelessWidget {
                                   ],
                                   // Tổng số set thắng của Team 2 (Tỷ số trận)
                                   Container(
-                                    minWidth: 26,
+                                    constraints: const BoxConstraints(minWidth: 26),
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                     decoration: BoxDecoration(
                                       color: setsWon2 > setsWon1
