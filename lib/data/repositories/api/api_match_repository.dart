@@ -75,13 +75,10 @@ class ApiMatchRepository implements IMatchRepository {
       List<MatchModel> updated;
       try {
         updated = await getAllByTournament(tournamentId, divisionId: divisionId);
-        // A successful empty response is still a valid snapshot (for example
-        // after a bracket is reset), so replace the cache on success only.
-        if (updated.isNotEmpty || !_matchesCache.containsKey(cacheKey)) {
-          _matchesCache[cacheKey] = updated;
-        } else {
-          updated = _matchesCache[cacheKey]!;
-        }
+        // getAllByTournament only returns after a successful 200 response.
+        // An empty 200 is therefore a real snapshot, not a transient error;
+        // keeping an old empty cache here made new matches stay invisible.
+        _matchesCache[cacheKey] = updated;
       } catch (error, stack) {
         _log.error('Keeping cached tournament matches after refresh failure', error, stack);
         updated = _matchesCache[cacheKey] ?? const [];
@@ -99,7 +96,7 @@ class ApiMatchRepository implements IMatchRepository {
         socketSub = _socketService.onTournamentMatchUpdate.listen((_) {
           unawaited(refresh());
         });
-        refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+        refreshTimer = Timer.periodic(const Duration(seconds: 45), (_) {
           // Socket.IO may exhaust its reconnect attempts while the app is
           // backgrounded. Re-entering the connect path is idempotent and
           // restores the room before refreshing the authoritative snapshot.
@@ -647,6 +644,7 @@ class ApiMatchRepository implements IMatchRepository {
       if (divisionId != null) {
         queryParameters['divisionId'] = divisionId;
       }
+      queryParameters['publicOnly'] = true;
       final response = await _dioClient.dio.get('/matches', queryParameters: queryParameters);
       if (response.statusCode == 200) {
         final List<dynamic> list = _extractList(response.data);

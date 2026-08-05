@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/notification_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/regions_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/core/widgets/vnsport_header.dart';
@@ -17,6 +18,7 @@ import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_ban
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
@@ -68,16 +70,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String _tournamentSport = 'all';
   String _tournamentStatus = 'all';
   String _clubSport = 'all';
+  String? _clubProvinceCode;
   String _rankingsSport = 'all';
   String _tournamentContent = 'all';
   String _tournamentBracket = 'all';
   String _tournamentRanked = 'all';
-  String _tournamentLocation = '';
+  String _tournamentProvince = ''; // tên tỉnh — để so khớp locationAddress
+  String _tournamentProvinceCode = ''; // mã tỉnh — để tải quận/huyện
+  String _tournamentDistrict = ''; // tên quận/huyện
   DateTime? _tournamentStartDate;
   DateTime? _tournamentEndDate;
 
+  // Khám phá (tab 0) không có thanh search — ấn search ở đó chỉ chuyển sang
+  // Giải đấu (tab 1), gây rối. Chỉ hiện search ở 3 tab còn lại.
   bool get _shouldShowSearchBar =>
-      _currentIndex == 0 ||
       _currentIndex == 1 ||
       _currentIndex == 3 ||
       _currentIndex == 4;
@@ -217,18 +223,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _submitSearch() {
-    if (_currentIndex != 0) return;
-
-    final query = _activeSearchQuery.trim();
-    if (query.isEmpty) return;
-
-    _searchQueries[1] = query;
-    _searchControllers[1]!.value = TextEditingValue(
-      text: query,
-      selection: TextSelection.collapsed(offset: query.length),
-    );
+    // Khám phá không còn search — việc "chuyển sang tab Giải đấu" đã bỏ.
+    // Ở các tab còn lại, lọc chạy trực tiếp theo từng ký tự (onChanged),
+    // nên ấn tìm chỉ cần đóng bàn phím.
     _searchFocusNode.unfocus();
-    _switchTab(1);
   }
 
   void _showTokenSheet() {
@@ -524,9 +522,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       tSport == selSport ||
                       tSport.contains(selSport) ||
                       selSport.contains(tSport);
-                  final q = _normalizedQuery(_searchQueries[0]);
-                  return sportMatch &&
-                      (q.isEmpty || t.name.toLowerCase().contains(q));
+                  return sportMatch;
                 }).toList();
 
                 final now = DateTime.now();
@@ -537,7 +533,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     return now.difference(endedDate).inDays <= 14;
                   }
                   return true;
-                }).toList();
+                }).take(10).toList();
 
                 return CustomScrollView(
                   controller: _scrollController,
@@ -637,7 +633,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildClubsHorizontalList() {
     final l10n = AppLocalizations.of(context)!;
-    final communitiesAsync = ref.watch(communitiesProvider(null));
+    final communitiesAsync = ref.watch(communitiesProvider((search: null, provinceCode: null)));
     final colors = context.colors;
     final cardWidth = (MediaQuery.of(context).size.width - 44) / 2.05;
 
@@ -1322,7 +1318,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   String _searchHintForTab() {
     return switch (_currentIndex) {
-      0 => 'Tìm giải, trận nổi bật...',
       1 => 'Tìm kiếm giải đấu...',
       3 => 'Tìm kiếm câu lạc bộ...',
       4 => 'Tìm vận động viên...',
@@ -1345,11 +1340,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             (_tournamentContent != 'all' ? 1 : 0) +
             (_tournamentBracket != 'all' ? 1 : 0) +
             (_tournamentRanked != 'all' ? 1 : 0) +
-            (_tournamentLocation.trim().isNotEmpty ? 1 : 0) +
+            (_tournamentProvinceCode.isNotEmpty ? 1 : 0) +
             (_tournamentStartDate != null ? 1 : 0) +
             (_tournamentEndDate != null ? 1 : 0);
       case 3:
-        return _clubSport != 'all' ? 1 : 0;
+        return (_clubSport != 'all' ? 1 : 0) +
+            (_clubProvinceCode != null ? 1 : 0);
       case 4:
         return _rankingsSport != 'all' ? 1 : 0;
       default:
@@ -1607,7 +1603,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         String localContent = _tournamentContent;
         String localBracket = _tournamentBracket;
         String localRanked = _tournamentRanked;
-        String localLocation = _tournamentLocation;
+        String localProvince = _tournamentProvince;
+        String localProvinceCode = _tournamentProvinceCode;
+        String localDistrict = _tournamentDistrict;
         DateTime? localStartDate = _tournamentStartDate;
         DateTime? localEndDate = _tournamentEndDate;
         return StatefulBuilder(
@@ -1748,16 +1746,147 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  TextFormField(
-                    initialValue: localLocation,
-                    onChanged: (v) => localLocation = v,
-                    decoration: InputDecoration(
-                      hintText: 'Nhập tỉnh/thành, quận/huyện...',
-                      isDense: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  Text(
+                    'Tỉnh/Thành',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: context.colors.bgCard,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: context.colors.border),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: localProvinceCode.isEmpty
+                            ? null
+                            : localProvinceCode,
+                        isExpanded: true,
+                        hint: Text(
+                          'Tất cả',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: context.colors.textSecondary,
+                          ),
+                        ),
+                        icon: Icon(
+                          Icons.arrow_drop_down_rounded,
+                          color: context.colors.textMuted,
+                        ),
+                        dropdownColor: context.colors.bgCard,
+                        items: [
+                          DropdownMenuItem<String>(
+                            value: '',
+                            child: Text(
+                              'Tất cả',
+                              style: TextStyle(
+                                color: context.colors.textSecondary,
+                              ),
+                            ),
+                          ),
+                          ...ProvinceData.all.map(
+                            (p) => DropdownMenuItem<String>(
+                              value: p.code,
+                              child: Text(
+                                p.name,
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ),
+                          ),
+                        ],
+                        onChanged: (v) => setSheetState(() {
+                          localProvinceCode = v ?? '';
+                          localProvince =
+                              ProvinceData.all.firstWhere(
+                                    (p) => p.code == localProvinceCode,
+                                    orElse: () => ProvinceData(
+                                      code: localProvinceCode,
+                                      name: '',
+                                    ),
+                                  )
+                                  .name;
+                          localDistrict = '';
+                        }),
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Quận/Huyện',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final districts =
+                          ref.watch(districtsProvider(localProvinceCode));
+                      final districtsList = districts.value ?? const [];
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: context.colors.bgCard,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: context.colors.border),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: localDistrict.isEmpty
+                                ? null
+                                : localDistrict,
+                            isExpanded: true,
+                            hint: Text(
+                              localProvinceCode.isEmpty
+                                  ? 'Chọn Tỉnh/Thành trước'
+                                  : 'Tất cả',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: context.colors.textSecondary,
+                              ),
+                            ),
+                            icon: Icon(
+                              Icons.arrow_drop_down_rounded,
+                              color: context.colors.textMuted,
+                            ),
+                            dropdownColor: context.colors.bgCard,
+                            items: [
+                              DropdownMenuItem<String>(
+                                value: '',
+                                child: Text(
+                                  'Tất cả',
+                                  style: TextStyle(
+                                    color: context.colors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                              ...districtsList.map(
+                                (d) => DropdownMenuItem<String>(
+                                  value: d.name,
+                                  child: Text(
+                                    d.name,
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            onChanged: localProvinceCode.isEmpty
+                                ? null
+                                : (v) => setSheetState(
+                                      () => localDistrict = v ?? '',
+                                    ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -1841,7 +1970,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               localContent = 'all';
                               localBracket = 'all';
                               localRanked = 'all';
-                              localLocation = '';
+                              localProvince = '';
+                              localProvinceCode = '';
+                              localDistrict = '';
                               localStartDate = null;
                               localEndDate = null;
                             });
@@ -1870,7 +2001,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               _tournamentContent = localContent;
                               _tournamentBracket = localBracket;
                               _tournamentRanked = localRanked;
-                              _tournamentLocation = localLocation.trim();
+                              _tournamentProvince = localProvince;
+                              _tournamentProvinceCode = localProvinceCode;
+                              _tournamentDistrict = localDistrict;
                               _tournamentStartDate = localStartDate;
                               _tournamentEndDate = localEndDate;
                             });
@@ -1914,6 +2047,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       builder: (ctx) {
         String localSport = _clubSport;
+        String? localProvinceCode = _clubProvinceCode;
         return StatefulBuilder(
           builder: (ctx, setSheetState) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -1950,13 +2084,74 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   selected: localSport,
                   onSelected: (v) => setSheetState(() => localSport = v),
                 ),
+                const SizedBox(height: 16),
+                Text(
+                  'Tỉnh/Thành',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: context.colors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: context.colors.bgCard,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: context.colors.border),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String?>(
+                      value: localProvinceCode,
+                      isExpanded: true,
+                      hint: Text(
+                        'Tất cả',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.colors.textSecondary,
+                        ),
+                      ),
+                      icon: Icon(
+                        Icons.arrow_drop_down_rounded,
+                        color: context.colors.textMuted,
+                      ),
+                      dropdownColor: context.colors.bgCard,
+                      items: [
+                        DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text(
+                            'Tất cả',
+                            style: TextStyle(
+                              color: context.colors.textSecondary,
+                            ),
+                          ),
+                        ),
+                        ...ProvinceData.all.map(
+                          (p) => DropdownMenuItem<String?>(
+                            value: p.code,
+                            child: Text(
+                              p.name,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        ),
+                      ],
+                      onChanged: (v) =>
+                          setSheetState(() => localProvinceCode = v),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 24),
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () {
-                          setSheetState(() => localSport = 'all');
+                          setSheetState(() {
+                            localSport = 'all';
+                            localProvinceCode = null;
+                          });
                         },
                         style: OutlinedButton.styleFrom(
                           foregroundColor: context.colors.textSecondary,
@@ -1978,6 +2173,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         onPressed: () {
                           setState(() {
                             _clubSport = localSport;
+                            _clubProvinceCode = localProvinceCode;
                           });
                           Navigator.pop(ctx);
                         },
@@ -2345,24 +2541,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  /// Lọc "Nội dung thi đấu" — khớp chuẩn web: ưu tiên lọc theo từng division
+  /// (match_type + gender_restriction, giống server-side web), fallback về
+  /// format cấp cao nhất khi giải không có divisions.
   bool _matchesTournamentContent(Tournament t) {
-    final format = t.format.toLowerCase();
-    return switch (_tournamentContent) {
-      'SINGLE_MALE' =>
-        format.contains('đơn nam') ||
-            (format.contains('single') && format.contains('male')),
-      'SINGLE_FEMALE' =>
-        format.contains('đơn nữ') ||
-            (format.contains('single') && format.contains('female')),
-      'DOUBLE_MALE' =>
-        format.contains('đôi nam') ||
-            (format.contains('double') && format.contains('male')),
-      'DOUBLE_FEMALE' =>
-        format.contains('đôi nữ') ||
-            (format.contains('double') && format.contains('female')),
-      'DOUBLE_MIXED' => format.contains('nam nữ') || format.contains('mixed'),
-      _ => true,
-    };
+    final sel = _tournamentContent;
+    if (sel == 'all') return true;
+
+    // 1) Lọc theo từng division (chuẩn tournament_divisions).
+    for (final div in t.divisions) {
+      if (_contentKey(div.matchType, div.genderRestriction) == sel) return true;
+    }
+
+    // 2) Fallback: giải đơn — dựa trên format top-level.
+    return _contentKeyFromFormat(t.format) == sel;
+  }
+
+  /// Map (matchType, genderRestriction) → key nội dung thi đấu (SINGLE_MALE...).
+  String? _contentKey(String? matchType, String? gender) {
+    final mt = (matchType ?? '').toUpperCase();
+    final gr = (gender ?? '').toUpperCase();
+    if (mt.contains('MIXED')) return 'DOUBLE_MIXED';
+    if (mt.contains('SINGLE')) {
+      return gr == 'FEMALE' ? 'SINGLE_FEMALE' : 'SINGLE_MALE';
+    }
+    if (mt.contains('DOUBLE')) {
+      if (gr == 'FEMALE') return 'DOUBLE_FEMALE';
+      if (gr == 'MIXED') return 'DOUBLE_MIXED';
+      return 'DOUBLE_MALE';
+    }
+    return null;
+  }
+
+  /// Map chuỗi format (men_doubles, women_singles, ...) → key nội dung.
+  String? _contentKeyFromFormat(String format) {
+    final f = format.toLowerCase();
+    if (f.contains('mixed')) return 'DOUBLE_MIXED';
+    if (f.contains('doubles')) {
+      if (f.contains('women')) return 'DOUBLE_FEMALE';
+      return 'DOUBLE_MALE';
+    }
+    if (f.contains('singles')) {
+      if (f.contains('women')) return 'SINGLE_FEMALE';
+      return 'SINGLE_MALE';
+    }
+    return null;
   }
 
   // ═══════════════════════════════════════════════════════
@@ -2372,23 +2595,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final l10n = AppLocalizations.of(context)!;
     final String q = _normalizedQuery(_searchQueries[1]);
     final List<Tournament> filtered = tournaments.where((t) {
+      final normalizedStatus = t.status.trim().toLowerCase();
       if (_tournamentSport != "all" && t.sport != _tournamentSport) {
         return false;
       }
       if (_tournamentStatus == "registration" &&
-          t.status != "registration" &&
-          t.status != "draft") {
+          normalizedStatus != "registration" &&
+          normalizedStatus != "registration_open" &&
+          normalizedStatus != "draft") {
         return false;
       }
       if (_tournamentStatus == "upcoming" &&
-          t.status != "upcoming" &&
-          t.status != "scheduled") {
+          normalizedStatus != "upcoming" &&
+          normalizedStatus != "scheduled" &&
+          normalizedStatus != "pending") {
         return false;
       }
-      if (_tournamentStatus == "in_progress" && t.status != "in_progress") {
+      if (_tournamentStatus == "in_progress" &&
+          normalizedStatus != "in_progress" &&
+          normalizedStatus != "ongoing" &&
+          normalizedStatus != "live") {
         return false;
       }
-      if (_tournamentStatus == "completed" && t.status != "completed") {
+      if (_tournamentStatus == "completed" &&
+          normalizedStatus != "completed" &&
+          normalizedStatus != "finished" &&
+          normalizedStatus != "done") {
         return false;
       }
       if (_tournamentContent != 'all' && !_matchesTournamentContent(t)) {
@@ -2404,11 +2636,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (_tournamentRanked == 'unranked' && t.isRanked) {
         return false;
       }
-      if (_tournamentLocation.trim().isNotEmpty) {
-        final loc = (t.locationAddress ?? '').toLowerCase();
-        if (!loc.contains(_normalizedQuery(_tournamentLocation))) {
-          return false;
-        }
+      if (_tournamentProvince.isNotEmpty &&
+          !(t.locationAddress ?? '')
+              .toLowerCase()
+              .contains(_tournamentProvince.toLowerCase())) {
+        return false;
+      }
+      if (_tournamentDistrict.isNotEmpty &&
+          !(t.locationAddress ?? '')
+              .toLowerCase()
+              .contains(_tournamentDistrict.toLowerCase())) {
+        return false;
       }
       if (_tournamentStartDate != null &&
           (t.startDate == null ||
@@ -2512,7 +2750,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildClubListWithApi() {
     final l10n = AppLocalizations.of(context)!;
-    final communitiesAsync = ref.watch(communitiesProvider(null));
+    final communitiesAsync = ref.watch(
+      communitiesProvider((search: null, provinceCode: _clubProvinceCode)),
+    );
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
@@ -2637,7 +2877,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(height: 8),
                     TextButton(
-                      onPressed: () => ref.refresh(communitiesProvider(null)),
+                      onPressed: () => ref.refresh(
+                        communitiesProvider(
+                          (search: null, provinceCode: _clubProvinceCode),
+                        ),
+                      ),
                       child: Text(l10n.matchesRetry),
                     ),
                   ],
@@ -3660,10 +3904,13 @@ class _TournamentSectionList extends ConsumerWidget {
         if (isT1Tbd && isT2Tbd) return false;
 
         if (filterStatus == 'live') return m.isLive;
-        if (filterStatus == 'completed')
-          return m.isCompleted || m.isByeMatch || m.isBye;
-        if (filterStatus == 'scheduled')
-          return m.isScheduled || (!m.isLive && !m.isCompleted);
+        if (filterStatus == 'completed') return m.isCompleted;
+        if (filterStatus == 'scheduled') {
+          // Do not classify an unknown/failed response as scheduled. Only
+          // persisted not-started matches belong in the upcoming section.
+          return m.isScheduled ||
+              (m.scheduledTime != null && !m.isLive && !m.isCompleted);
+        }
         return true;
       });
 
@@ -3691,15 +3938,17 @@ class _TournamentSectionList extends ConsumerWidget {
       );
     }
 
+    final visibleTournaments = activeTournaments.take(6).toList();
+
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) => LiveTournamentWithMatchesCard(
-            tournament: activeTournaments[index],
+            tournament: visibleTournaments[index],
             filterStatus: filterStatus,
           ),
-          childCount: activeTournaments.length,
+          childCount: visibleTournaments.length,
         ),
       ),
     );

@@ -343,11 +343,18 @@ class ApiTournamentRepository implements ITournamentRepository {
   Stream<List<Tournament>> watchAll() async* {
     List<Tournament> cache = [];
     try {
-      final response = await _dioClient.dio.get('/tournaments/public');
+      final response = await _dioClient.dio.get(
+        '/tournaments/public',
+        queryParameters: const {
+          'limit': 20,
+          'publicOnly': true,
+        },
+      );
       if (response.statusCode == 200) {
         final raw = response.data['data'];
         final parsed = _parseTournamentList(raw);
-        if (parsed.isNotEmpty) cache = parsed;
+        // A successful empty response is an authoritative public snapshot.
+        cache = parsed;
         yield cache;
       } else {
         yield cache;
@@ -357,16 +364,21 @@ class ApiTournamentRepository implements ITournamentRepository {
       yield cache;
     }
 
-    yield* Stream.periodic(const Duration(seconds: 15))
+    yield* Stream.periodic(const Duration(seconds: 45))
         .asyncMap((_) async {
           try {
-            final response = await _dioClient.dio.get('/tournaments/public');
+            final response = await _dioClient.dio.get(
+              '/tournaments/public',
+              queryParameters: const {
+                'limit': 20,
+                'publicOnly': true,
+              },
+            );
             if (response.statusCode == 200) {
               final raw = response.data['data'];
               final parsed = _parseTournamentList(raw);
-              if (parsed.isNotEmpty) {
-                cache = parsed;
-              }
+              // Do not merge stale results into a newer server snapshot.
+              cache = parsed;
               return cache;
             }
           } catch (e, stack) {

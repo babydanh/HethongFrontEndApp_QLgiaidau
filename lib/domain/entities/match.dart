@@ -123,6 +123,8 @@ class MatchModel {
   final DateTime? completedAt;
   final int? timeLimitMinutes;
   final DateTime updatedAt;
+  /// Monotonic version from backend (optimistic lock + realtime ordering, NOTE-7).
+  final int? revision;
   final String? refereeName;
   final String? refereeId;
   final List<Penalty> penalties;
@@ -175,6 +177,7 @@ class MatchModel {
     this.completedAt,
     this.timeLimitMinutes,
     required this.updatedAt,
+    this.revision,
     this.refereeName,
     this.refereeId,
     this.penalties = const [],
@@ -294,6 +297,7 @@ class MatchModel {
       timeLimitMinutes: json['timeLimitMinutes'] as int?,
       updatedAt: DateParser.parseDate(json['updatedAt']),
       refereeName: json['refereeName'],
+      revision: json['revision'] as int?,
       refereeId: json['refereeId']?.toString(),
       penalties: rawPenalties
           .whereType<Map>()
@@ -366,6 +370,7 @@ class MatchModel {
       'completedAt': completedAt?.toIso8601String(),
       'timeLimitMinutes': timeLimitMinutes,
       'updatedAt': updatedAt.toIso8601String(),
+      if (revision != null) 'revision': revision,
       if (refereeName != null) 'refereeName': refereeName,
       if (refereeId != null) 'refereeId': refereeId,
       'penalties': penalties.map((p) => p.toJson()).toList(),
@@ -411,6 +416,7 @@ class MatchModel {
     DateTime? completedAt,
     int? timeLimitMinutes,
     DateTime? updatedAt,
+    int? revision,
     String? refereeName,
     String? refereeId,
     List<Penalty>? penalties,
@@ -458,6 +464,7 @@ class MatchModel {
       completedAt: completedAt ?? this.completedAt,
       timeLimitMinutes: timeLimitMinutes ?? this.timeLimitMinutes,
       updatedAt: updatedAt ?? this.updatedAt,
+      revision: revision ?? this.revision,
       refereeName: refereeName ?? this.refereeName,
       refereeId: refereeId ?? this.refereeId,
       penalties: penalties ?? this.penalties,
@@ -480,10 +487,29 @@ class MatchModel {
     );
   }
 
-  bool get isLive =>
-      status == 'live' || status == 'ongoing' || status == 'in_progress';
-  bool get isCompleted => status == 'completed';
-  bool get isScheduled => status == 'scheduled';
+  String get normalizedStatus => status.trim().toUpperCase();
+
+  // The API has historically returned both enum casing and legacy aliases.
+  // Keep these predicates as the single source of truth for every surface.
+  bool get isLive => const {
+        'LIVE',
+        'ONGOING',
+        'IN_PROGRESS',
+      }.contains(normalizedStatus);
+  bool get isCompleted => const {
+        'COMPLETED',
+        'FINISHED',
+        'DONE',
+        'ENDED',
+        'WALKOVER',
+        'RETIRED',
+        'DISQUALIFIED',
+      }.contains(normalizedStatus) || completedAt != null;
+  bool get isScheduled => const {
+        'SCHEDULED',
+        'PENDING',
+        'NOT_STARTED',
+      }.contains(normalizedStatus);
   bool get isWalkover => status == 'walkover';
   bool get hasTeams => team1Id.isNotEmpty && team2Id.isNotEmpty;
   bool get isByeMatch =>

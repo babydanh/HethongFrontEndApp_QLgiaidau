@@ -15,11 +15,19 @@ class ApiCommunityRepository implements ICommunityRepository {
   ApiCommunityRepository(this._dioClient);
 
   @override
-  Future<List<Community>> getCommunities({String? search, int page = 1, int limit = 20}) async {
-    _log.info('Lấy danh sách CLB: search=$search, page=$page');
+  Future<List<Community>> getCommunities({
+    String? search,
+    String? provinceCode,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    _log.info('Lấy danh sách CLB: search=$search, provinceCode=$provinceCode, page=$page');
     try {
       final params = <String, dynamic>{'page': page, 'limit': limit};
       if (search != null && search.isNotEmpty) params['search'] = search;
+      if (provinceCode != null && provinceCode.isNotEmpty) {
+        params['provinceCode'] = provinceCode;
+      }
 
       final response = await _dioClient.dio.get('/communities', queryParameters: params);
       if (response.statusCode == 200) {

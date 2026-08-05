@@ -7,7 +7,12 @@ import 'package:app_quanly_giaidau/data/models/community_invite_model.dart';
 
 /// Interface cho Community Repository — DIP
 abstract class ICommunityRepository {
-  Future<List<Community>> getCommunities({String? search, int page = 1, int limit = 20});
+  Future<List<Community>> getCommunities({
+    String? search,
+    String? provinceCode,
+    int page = 1,
+    int limit = 20,
+  });
   Future<List<Community>> getMyCommunities();
   Future<Community?> getCommunityById(String id);
   Future<List<CommunityMemberModel>> getMembers(String communityId, {int page = 1, int limit = 50});

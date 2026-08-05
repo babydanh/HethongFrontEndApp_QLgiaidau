@@ -13,10 +13,18 @@ final communityRepositoryProvider = Provider<ICommunityRepository>((ref) {
   return ApiCommunityRepository(ref.watch(dioClientProvider));
 });
 
+/// Bộ lọc danh sách CLB (search + tỉnh/thành — server-side như web).
+typedef CommunityQuery = ({String? search, String? provinceCode});
+
 /// Provider danh sách CLB có filter + search
-final communitiesProvider = FutureProvider.family<List<Community>, String?>((ref, search) async {
+final communitiesProvider = FutureProvider.family<List<Community>, CommunityQuery>((ref, query) async {
   final repo = ref.watch(communityRepositoryProvider);
-  return repo.getCommunities(search: search, page: 1, limit: 50);
+  return repo.getCommunities(
+    search: query.search,
+    provinceCode: query.provinceCode,
+    page: 1,
+    limit: 50,
+  );
 });
 
 /// Provider CLB của tôi

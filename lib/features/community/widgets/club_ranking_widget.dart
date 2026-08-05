@@ -31,6 +31,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   String _selectedGender = 'MALE';
   String? _selectedCategoryId;
   bool _showRankedOnly = false;
+  List<dynamic> _availableCategories = const [];
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   Timer? _pollingTimer;
@@ -62,6 +63,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     try {
       final dio = ref.read(dioProvider);
       final categories = await ref.read(categoriesProvider.future);
+      _availableCategories = categories;
       final categoryId = _selectedCategoryId ??
           (categories.isNotEmpty ? categories.first.id : null);
       if (categoryId == null || categoryId.isEmpty) {
@@ -216,10 +218,8 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
       children: [
         // ── Section Header & Filters ──
         if (!widget.compact)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
+          Row(
+            children: [
                 Icon(
                   Icons.emoji_events_rounded,
                   size: 16,
@@ -235,13 +235,14 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                     letterSpacing: 0.3,
                   ),
                 ),
-                if (_selectedMatchType != 'MIXED_DOUBLES') ...[
-                  _buildGenderFilter(),
-                  const SizedBox(width: 6),
-                ],
-                _buildMatchTypeFilter(),
-              ],
-            ),
+              const Spacer(),
+              IconButton(
+                tooltip: 'Bộ lọc xếp hạng',
+                visualDensity: VisualDensity.compact,
+                onPressed: _openFilterSheet,
+                icon: const Icon(Icons.tune_rounded, size: 19),
+              ),
+            ],
           )
         else
           Row(
@@ -267,10 +268,12 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
 
         // ── Podium Row (Top 3) ──
         if (!widget.compact) ...[
-          TextField(
-            controller: _searchController,
-            onChanged: (value) => setState(() => _searchQuery = value),
-            decoration: InputDecoration(
+          Row(
+            children: [
+              Expanded(child: TextField(
+                controller: _searchController,
+                onChanged: (value) => setState(() => _searchQuery = value),
+                decoration: InputDecoration(
               hintText: 'Tìm thành viên trong top 20...',
               prefixIcon: const Icon(Icons.search_rounded, size: 18),
               isDense: true,
@@ -284,7 +287,16 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(color: colors.border),
               ),
-            ),
+                ),
+              )),
+              const SizedBox(width: 6),
+              IconButton(
+                tooltip: 'Bộ lọc xếp hạng',
+                visualDensity: VisualDensity.compact,
+                onPressed: _openFilterSheet,
+                icon: const Icon(Icons.tune_rounded, size: 19),
+              ),
+            ],
           ),
           if (myRanking != null) ...[
             const SizedBox(height: 8),
@@ -351,6 +363,53 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
       ],
     );
   }
+
+  void _openFilterSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => SafeArea(
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 520),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          decoration: BoxDecoration(color: context.colors.bgCard, borderRadius: const BorderRadius.vertical(top: Radius.circular(22))),
+          child: StatefulBuilder(
+            builder: (context, setSheetState) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [Expanded(child: Text('Bộ lọc xếp hạng', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: context.colors.textPrimary))), IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded))]),
+                Text('Chọn môn, thể thức và giới tính', style: TextStyle(fontSize: 12, color: context.colors.textMuted)),
+                const SizedBox(height: 16),
+                if (_availableCategories.length > 1) ...[
+                  Text('Môn thể thao', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
+                  const SizedBox(height: 8),
+                  Wrap(spacing: 8, runSpacing: 8, children: _availableCategories.map((category) => ChoiceChip(label: Text(category.name), selected: _selectedCategoryId == category.id, onSelected: (_) { setState(() => _selectedCategoryId = category.id); setSheetState(() {}); _fetchRankings(); })).toList()),
+                  const SizedBox(height: 16),
+                ],
+                Text('Thể thức', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
+                const SizedBox(height: 8),
+                Wrap(spacing: 8, runSpacing: 8, children: [_filterChoice('Đơn', 'SINGLES', setSheetState), _filterChoice('Đôi', 'DOUBLES', setSheetState), _filterChoice('Đôi nam nữ', 'MIXED_DOUBLES', setSheetState)]),
+                if (_selectedMatchType != 'MIXED_DOUBLES') ...[
+                  const SizedBox(height: 16),
+                  Text('Giới tính', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
+                  const SizedBox(height: 8),
+                  Wrap(spacing: 8, children: [_genderChoice('Nam', 'MALE', setSheetState), _genderChoice('Nữ', 'FEMALE', setSheetState)]),
+                ],
+                const SizedBox(height: 18),
+                SizedBox(width: double.infinity, child: FilledButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Áp dụng'))),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _filterChoice(String label, String value, StateSetter setSheetState) => ChoiceChip(label: Text(label), selected: _selectedMatchType == value, onSelected: (_) { setState(() { _selectedMatchType = value; if (value == 'MIXED_DOUBLES') _selectedGender = 'MALE'; }); setSheetState(() {}); _fetchRankings(); });
+
+  Widget _genderChoice(String label, String value, StateSetter setSheetState) => ChoiceChip(label: Text(label), selected: _selectedGender == value, onSelected: (_) { setState(() => _selectedGender = value); setSheetState(() {}); _fetchRankings(); });
 
   // ─── Gender Filter ───
 
