@@ -556,14 +556,15 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Social Buttons
-                        Row(
+                        // Social Buttons (Nằm dọc)
+                        Column(
                           children: [
-                            Expanded(
+                            SizedBox(
+                              width: double.infinity,
+                              height: 52,
                               child: OutlinedButton.icon(
                                 onPressed: _isLoading ? null : _submitGoogle,
                                 style: OutlinedButton.styleFrom(
-                                  minimumSize: const Size.fromHeight(52),
                                   side: BorderSide(
                                     color: isDark
                                         ? Colors.white24
@@ -590,16 +591,12 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                 ),
                               ),
                             ),
-                            if (defaultTargetPlatform ==
-                                TargetPlatform.iOS) ...[
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: SizedBox(
-                                  height: 52,
-                                  child: _buildAppleSignInButton(),
-                                ),
-                              ),
-                            ],
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 52,
+                              child: _buildAppleSignInButton(),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
