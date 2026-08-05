@@ -581,14 +581,24 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       if (state.isMatchComplete) {
         await completeMatch(state.winnerTeam);
       } else {
+        final rev = ref.read(singleMatchProvider(arg)).value?.revision;
         await ref.read(matchControllerProvider(arg)).updateSetsWithDetails(
           p1SetsWon: p1Sets,
           p2SetsWon: p2Sets,
           scoreDetails: setsToSubmit,
+          expectedRevision: rev,
         );
       }
-    } catch (e, stack) {
-      _log.error('Lỗi đồng bộ tỉ số set lên backend', e, stack);
+    } on Exception catch (e) {
+      final msg = e.toString();
+      if (msg.contains('409') || msg.contains('thay đổi từ thiết bị khác')) {
+        _log.warning('Conflict 409: điểm đã thay đổi từ thiết bị khác');
+        state = state.copyWith(
+          errorMessage: 'Điểm đã thay đổi từ thiết bị khác. Đã làm mới số liệu.',
+        );
+      } else {
+        _log.error('Lỗi đồng bộ tỉ số set lên backend', e);
+      }
     }
   }
 

@@ -22,6 +22,7 @@ import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
+import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/token_input_sheet.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:intl/intl.dart';
@@ -81,9 +82,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   DateTime? _tournamentStartDate;
   DateTime? _tournamentEndDate;
 
-  // Khám phá (tab 0) không có thanh search — ấn search ở đó chỉ chuyển sang
-  // Giải đấu (tab 1), gây rối. Chỉ hiện search ở 3 tab còn lại.
+  // Khám phá (tab 0) CÓ thanh search — nhưng gõ tìm sẽ lọc tại chỗ trong tab,
+  // KHÔNG tự nhảy sang tab Giải đấu nữa.
   bool get _shouldShowSearchBar =>
+      _currentIndex == 0 ||
       _currentIndex == 1 ||
       _currentIndex == 3 ||
       _currentIndex == 4;
@@ -223,9 +225,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _submitSearch() {
-    // Khám phá không còn search — việc "chuyển sang tab Giải đấu" đã bỏ.
-    // Ở các tab còn lại, lọc chạy trực tiếp theo từng ký tự (onChanged),
-    // nên ấn tìm chỉ cần đóng bàn phím.
+    // Search lọc theo từng ký tự (onChanged) ngay trong tab hiện tại.
+    // Không còn tự nhảy sang tab Giải đấu khi tìm ở Khám phá.
     _searchFocusNode.unfocus();
   }
 
@@ -522,7 +523,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       tSport == selSport ||
                       tSport.contains(selSport) ||
                       selSport.contains(tSport);
-                  return sportMatch;
+                  final q = _normalizedQuery(_searchQueries[0]);
+                  return sportMatch &&
+                      (q.isEmpty || t.name.toLowerCase().contains(q));
                 }).toList();
 
                 final now = DateTime.now();
@@ -1318,6 +1321,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   String _searchHintForTab() {
     return switch (_currentIndex) {
+      0 => 'Tìm giải đấu, trận đấu...',
       1 => 'Tìm kiếm giải đấu...',
       3 => 'Tìm kiếm câu lạc bộ...',
       4 => 'Tìm vận động viên...',
@@ -3892,10 +3896,20 @@ class _TournamentSectionList extends ConsumerWidget {
     }
 
     final activeTournaments = <Tournament>[];
+    var hasLoadingMatches = false;
+    var hasMatchError = false;
 
     for (final t in tournaments) {
       final matchesAsync = ref.watch(matchesProvider(t.id));
-      final matches = matchesAsync.value ?? [];
+      if (matchesAsync.isLoading) {
+        hasLoadingMatches = true;
+        continue;
+      }
+      if (matchesAsync.hasError) {
+        hasMatchError = true;
+        continue;
+      }
+      final matches = matchesAsync.value ?? const <MatchModel>[];
       final valid = matches.where((m) {
         final t1 = m.team1Name.trim().toUpperCase();
         final t2 = m.team2Name.trim().toUpperCase();
@@ -3925,7 +3939,11 @@ class _TournamentSectionList extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Center(
             child: Text(
-              emptyMessage,
+              hasLoadingMatches
+                  ? 'Đang tải dữ liệu trận đấu...'
+                  : hasMatchError
+                      ? 'Không tải được dữ liệu trận đấu. Vui lòng thử lại.'
+                      : emptyMessage,
               style: const TextStyle(
                 fontSize: 13,
                 color: Color(0xFF94A3B8),
