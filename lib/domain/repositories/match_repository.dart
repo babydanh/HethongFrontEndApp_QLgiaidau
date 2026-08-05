@@ -54,6 +54,7 @@ abstract class IMatchRepository {
     Map<String, dynamic>? scoreDetailsExtras,
     String? winnerId,
     String? overrideReason,
+    int? expectedRevision,
   });
 
   Future<void> advanceWinner(

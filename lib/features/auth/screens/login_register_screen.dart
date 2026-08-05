@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -33,18 +36,49 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
+  static const _appleSignInChannel = MethodChannel('vnsport/apple-sign-in-button');
 
   @override
   void initState() {
     super.initState();
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      _appleSignInChannel.setMethodCallHandler((call) async {
+        if (call.method == 'appleSignInButtonPressed' && !_isLoading) {
+          await _submitApple();
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      _appleSignInChannel.setMethodCallHandler(null);
+    }
     _emailController.dispose();
     _passwordController.dispose();
     _fullNameController.dispose();
     super.dispose();
+  }
+
+  Widget _buildAppleSignInButton() {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return const SizedBox(
+        height: 52,
+        width: double.infinity,
+        child: UiKitView(
+          viewType: 'vnsport/apple-sign-in-button',
+          creationParamsCodec: StandardMessageCodec(),
+        ),
+      );
+    }
+
+    return SignInWithAppleButton(
+      onPressed: _isLoading ? null : _submitApple,
+      style: SignInWithAppleButtonStyle.black,
+      borderRadius: BorderRadius.circular(12.0),
+      text: 'Sign in with Apple',
+    );
   }
 
   Future<void> _submit() async {
@@ -148,9 +182,12 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       _errorMessage = null;
     });
     try {
-      final nonce = TokenGenerator.generateAppleNonce();
+      // Apple expects the SHA-256 nonce in the authorization request. Keep
+      // the raw nonce for the backend so it can verify the returned token.
+      final rawNonce = TokenGenerator.generateAppleNonce();
+      final appleNonce = sha256.convert(utf8.encode(rawNonce)).toString();
       final credential = await SignInWithApple.getAppleIDCredential(
-        nonce: nonce,
+        nonce: appleNonce,
         scopes: [
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
@@ -168,7 +205,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
           .read(authProvider.notifier)
           .loginWithApple(
             idToken,
-            nonce: nonce,
+            nonce: rawNonce,
             fullName: fullName.isNotEmpty ? fullName : null,
           );
       if (!mounted) return;
@@ -559,16 +596,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                               Expanded(
                                 child: SizedBox(
                                   height: 52,
-                                  child: SignInWithAppleButton(
-                                    onPressed: _isLoading
-                                        ? () {}
-                                        : _submitApple,
-                                    style: isDark
-                                        ? SignInWithAppleButtonStyle.white
-                                        : SignInWithAppleButtonStyle.black,
-                                    borderRadius: BorderRadius.circular(12.0),
-                                    text: l10n.loginRegister_appleLabel,
-                                  ),
+                                  child: _buildAppleSignInButton(),
                                 ),
                               ),
                             ],

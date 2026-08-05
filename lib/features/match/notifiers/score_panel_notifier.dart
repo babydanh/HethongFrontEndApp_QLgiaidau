@@ -621,10 +621,12 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     ];
     final (p1Sets, p2Sets) = computeMatchSetsWon(state.finishedSets);
     try {
+      final rev = ref.read(singleMatchProvider(arg)).value?.revision;
       await ref.read(matchControllerProvider(arg)).updateSetsWithDetails(
         p1SetsWon: p1Sets,
         p2SetsWon: p2Sets,
         scoreDetails: sets,
+        expectedRevision: rev,
       );
     } catch (e, stack) {
       _log.error('Lỗi đồng bộ điểm live', e, stack);

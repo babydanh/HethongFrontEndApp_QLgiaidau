@@ -148,6 +148,7 @@ class MatchController {
     Map<String, dynamic>? scoreDetailsExtras,
     String? winnerId,
     String? overrideReason,
+    int? expectedRevision,
   }) async {
     _log.info('updateSetsWithDetails: $p1SetsWon-$p2SetsWon, ${scoreDetails.length} sets');
     await ref.read(matchRepositoryProvider).updateScoreDetails(
@@ -159,6 +160,7 @@ class MatchController {
       scoreDetailsExtras: scoreDetailsExtras,
       winnerId: winnerId,
       overrideReason: overrideReason,
+      expectedRevision: expectedRevision,
     );
   }
 

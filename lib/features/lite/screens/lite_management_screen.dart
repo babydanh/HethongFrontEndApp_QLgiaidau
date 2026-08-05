@@ -1222,8 +1222,6 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     MatchModel match,
   ) {
     final status = match.status.toUpperCase();
-    final canStart = match.team1Id.isNotEmpty && match.team2Id.isNotEmpty &&
-        status != 'COMPLETED' && status != 'ONGOING' && status != 'LIVE';
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       elevation: 0,
@@ -1258,12 +1256,6 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   icon: const Icon(Icons.scoreboard_outlined, size: 17),
                   label: const Text('Mở bảng điểm'),
                 ),
-                if (canStart)
-                  FilledButton.icon(
-                    onPressed: () => notifier.startMatch(widget.tournamentId, match.id),
-                    icon: const Icon(Icons.play_arrow_rounded, size: 17),
-                    label: const Text('Bắt đầu'),
-                  ),
                 if (status == 'ONGOING' || status == 'LIVE')
                   OutlinedButton.icon(
                     onPressed: () => _showOperationDialog(notifier, match),

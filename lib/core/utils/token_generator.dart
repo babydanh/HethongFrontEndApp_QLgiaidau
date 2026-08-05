@@ -24,8 +24,8 @@ class TokenGenerator {
     return '$prefix-$part1-$part2';
   }
 
-  /// Raw nonce for Sign in with Apple. The plugin hashes this value before
-  /// placing it in the identity token; the backend verifies the same hash.
+  /// Raw nonce for Sign in with Apple. The login flow hashes this value for
+  /// Apple's request, then sends the raw value to the backend for verification.
   static String generateAppleNonce([int length = 32]) {
     return List.generate(
       length,

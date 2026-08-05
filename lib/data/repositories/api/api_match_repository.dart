@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/core/services/match_socket_service.dart';
+import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_event_model.dart';
 import 'package:app_quanly_giaidau/data/models/penalty_model.dart';
@@ -352,9 +353,13 @@ class ApiMatchRepository implements IMatchRepository {
         courtAddress: json['courtAddress']?.toString(),
       ),
       courtAddress: json['courtAddress']?.toString() ?? '',
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
-      refereeId: json['refereeId']?.toString(),
-      refereeName: json['refereeName']?.toString(),
+            scheduledTime: DateParser.parseDateOptional(json['scheduledTime'] ?? json['scheduled_at']),
+            startedAt: DateParser.parseDateOptional(json['startedAt'] ?? json['started_at']),
+            completedAt: DateParser.parseDateOptional(json['completedAt'] ?? json['completed_at']),
+            updatedAt: DateParser.parseDateOptional(json['updatedAt'] ?? json['updated_at']) ?? DateTime.now(),
+            revision: json['revision'] as int?,
+            refereeId: json['refereeId']?.toString(),
+            refereeName: json['refereeName']?.toString(),
       sportRules: _readSportRules(json),
       tournamentConfig: json['tournamentConfig'] is Map
           ? Map<String, dynamic>.from(json['tournamentConfig'] as Map)
@@ -594,6 +599,7 @@ class ApiMatchRepository implements IMatchRepository {
     Map<String, dynamic>? scoreDetailsExtras,
     String? winnerId,
     String? overrideReason,
+    int? expectedRevision,
   }) async {
     _log.info('Updating score details for match $matchId: sets=$p1SetsWon-$p2SetsWon');
     final payload = <String, dynamic>{
@@ -606,9 +612,10 @@ class ApiMatchRepository implements IMatchRepository {
     };
     if (winnerId != null) payload['winnerId'] = winnerId;
     if (overrideReason != null) payload['overrideReason'] = overrideReason;
+        if (expectedRevision != null) payload['expectedRevision'] = expectedRevision;
 
-    try {
-      await _dioClient.dio.patch('/matches/$matchId/score', data: payload);
+        try {
+          await _dioClient.dio.patch('/matches/$matchId/score', data: payload);
     } on DioException catch (error) {
       final body = error.response?.data;
       final rawMessage = body is Map ? body['message'] : null;
@@ -645,6 +652,9 @@ class ApiMatchRepository implements IMatchRepository {
         queryParameters['divisionId'] = divisionId;
       }
       queryParameters['publicOnly'] = true;
+      // Backend /matches mặc định limit=10 — phải gửi limit cao để app nhận
+      // đầy đủ trận đấu của giải (DTO không giới hạn @Max).
+      queryParameters['limit'] = 200;
       final response = await _dioClient.dio.get('/matches', queryParameters: queryParameters);
       if (response.statusCode == 200) {
         final List<dynamic> list = _extractList(response.data);

@@ -1749,8 +1749,19 @@ class _RecentCompletedMatches extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final completedTournaments = <Tournament>[];
+    var hasLoadingMatches = false;
+    var hasMatchError = false;
     for (final tournament in tournaments) {
-      final matches = ref.watch(matchesProvider(tournament.id)).value ?? const <MatchModel>[];
+      final matchesAsync = ref.watch(matchesProvider(tournament.id));
+      if (matchesAsync.isLoading) {
+        hasLoadingMatches = true;
+        continue;
+      }
+      if (matchesAsync.hasError) {
+        hasMatchError = true;
+        continue;
+      }
+      final matches = matchesAsync.value ?? const <MatchModel>[];
       final hasCompleted = matches.any((match) {
         final status = match.status.toUpperCase();
         return !match.isByeMatch &&
@@ -1765,8 +1776,20 @@ class _RecentCompletedMatches extends ConsumerWidget {
       if (completedTournaments.length == 3) break;
     }
 
-    if (completedTournaments.isEmpty) {
+    if (completedTournaments.isEmpty && hasLoadingMatches) {
       return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(child: Text('Đang tải kết quả trận đấu...')),
+      );
+    }
+    if (completedTournaments.isEmpty && hasMatchError) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(child: Text('Không tải được kết quả trận đấu. Vui lòng thử lại.')),
+      );
+    }
+    if (completedTournaments.isEmpty) {
+      return Padding(
         padding: EdgeInsets.symmetric(vertical: 16),
         child: Center(
           child: Text(

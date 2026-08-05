@@ -351,6 +351,10 @@ class ApiTournamentRepository implements ITournamentRepository {
 
   /// Tải toàn bộ giải đấu công khai theo trang (giống web), để app hiện
   /// đầy đủ giải đấu thay vì chỉ 1 trang 20 giải như trước.
+  ///
+  /// LƯU Ý: KHÔNG gửi `publicOnly` tới /tournaments/public — QueryTournamentDto
+  /// không khai báo param này, ValidationPipe toàn cục (forbidNonWhitelisted)
+  /// sẽ trả 400 làm feed trống (web cũng không gửi).
   Future<List<Tournament>> _fetchAllPublicTournaments() async {
     final List<Tournament> all = [];
     for (var page = 1; page <= _publicMaxPages; page++) {
@@ -359,7 +363,6 @@ class ApiTournamentRepository implements ITournamentRepository {
         queryParameters: {
           'limit': _publicPageSize,
           'page': page,
-          'publicOnly': true,
         },
       );
       if (response.statusCode != 200) break;
@@ -372,30 +375,12 @@ class ApiTournamentRepository implements ITournamentRepository {
 
   @override
   Stream<List<Tournament>> watchAll() async* {
-    List<Tournament> cache = [];
-    try {
-      cache = await _fetchAllPublicTournaments();
-      // A successful empty response is an authoritative public snapshot.
-      yield cache;
-    } catch (e, stack) {
-      _log.error('Error fetching initial public tournaments', e, stack);
-      yield cache;
-    }
+    // A failed request must remain an error, not an empty public snapshot.
+    yield await _fetchAllPublicTournaments();
 
     yield* Stream.periodic(const Duration(seconds: 45))
         .asyncMap((_) async {
-          try {
-            cache = await _fetchAllPublicTournaments();
-            // Do not merge stale results into a newer server snapshot.
-            return cache;
-          } catch (e, stack) {
-            _log.error('Error polling public tournaments', e, stack);
-          }
-          return cache;
-        }).handleError((error, stack) {
-          // Keep the stream alive after a transient network failure. The next
-          // polling tick will retry without forcing the screen to reload.
-          _log.error('Public tournament stream recovered from polling error', error, stack);
+          return _fetchAllPublicTournaments();
         });
   }
 

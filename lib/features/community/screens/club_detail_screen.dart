@@ -329,7 +329,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           _buildTournamentsTab(colors),
           _buildMembersTab(colors),
           _buildGalleryTab(club, colors),
-          _buildRankingsTab(colors),
+          _buildRankingsTab(colors, club),
           _buildSettingsTab(club, colors),
         ],
       ),
@@ -2394,12 +2394,13 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   // ════════════════════════════════════
   //  TAB 5: BẢNG XẾP HẠNG (Rankings)
   // ════════════════════════════════════
-  Widget _buildRankingsTab(AppColorsExtension colors) {
+  Widget _buildRankingsTab(AppColorsExtension colors, Community club) {
     // The ranking widget already contains the podium, Top 4-20 list,
     // search, polling status, and the current user's ELO card.
+    // Truyền môn của CLB để bộ lọc Môn chỉ hiện môn CLB đã đăng ký (giống web).
     return ListView(
       padding: const EdgeInsets.all(16),
-      children: [ClubRankingWidget(clubId: widget.clubId)],
+      children: [ClubRankingWidget(clubId: widget.clubId, clubSportKeys: club.sports)],
     );
 
     /*
