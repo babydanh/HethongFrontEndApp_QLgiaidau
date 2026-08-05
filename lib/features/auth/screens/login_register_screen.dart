@@ -582,10 +582,10 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                   height: 20,
                                 ),
                                 label: Text(
-                                  l10n.loginRegister_googleLabel,
+                                  'Sign in with Google',
                                   style: TextStyle(
                                     color: textPrimaryColor,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     fontSize: 15.0,
                                   ),
                                 ),
