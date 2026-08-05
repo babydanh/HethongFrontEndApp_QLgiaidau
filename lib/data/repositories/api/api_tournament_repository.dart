@@ -316,7 +316,7 @@ class ApiTournamentRepository implements ITournamentRepository {
   List<Tournament> _parseTournamentList(dynamic rawData) {
     if (rawData == null) return [];
     List<dynamic> list = [];
-    if (rawData is Map<String, dynamic>) {
+    if (rawData is Map) {
       if (rawData['data'] is List) {
         list = rawData['data'] as List<dynamic>;
       } else if (rawData['items'] is List) {
@@ -328,9 +328,10 @@ class ApiTournamentRepository implements ITournamentRepository {
     
     final List<Tournament> result = [];
     for (final item in list) {
-      if (item is! Map<String, dynamic>) continue;
+      if (item is! Map) continue;
       try {
-        final t = Tournament.fromJson(item, item['id']?.toString() ?? '');
+        final mapItem = Map<String, dynamic>.from(item);
+        final t = Tournament.fromJson(mapItem, mapItem['id']?.toString() ?? '');
         result.add(t);
       } catch (err) {
         _log.warning('Skipping malformed tournament item: $err');
@@ -339,26 +340,39 @@ class ApiTournamentRepository implements ITournamentRepository {
     return result;
   }
 
+  /// Backend giới hạn limit tối đa 50/trang (QueryTournamentDto.limit @Max(50)).
+  static const int _publicPageSize = 50;
+  /// Tối đa số trang sẽ tải — giới hạn an toàn cho feed (tối đa 500 giải).
+  static const int _publicMaxPages = 10;
+
+  /// Tải toàn bộ giải đấu công khai theo trang (giống web), để app hiện
+  /// đầy đủ giải đấu thay vì chỉ 1 trang 20 giải như trước.
+  Future<List<Tournament>> _fetchAllPublicTournaments() async {
+    final List<Tournament> all = [];
+    for (var page = 1; page <= _publicMaxPages; page++) {
+      final response = await _dioClient.dio.get(
+        '/tournaments/public',
+        queryParameters: {
+          'limit': _publicPageSize,
+          'page': page,
+          'publicOnly': true,
+        },
+      );
+      if (response.statusCode != 200) break;
+      final parsed = _parseTournamentList(response.data);
+      all.addAll(parsed);
+      if (parsed.length < _publicPageSize) break; // đã hết dữ liệu
+    }
+    return all;
+  }
+
   @override
   Stream<List<Tournament>> watchAll() async* {
     List<Tournament> cache = [];
     try {
-      final response = await _dioClient.dio.get(
-        '/tournaments/public',
-        queryParameters: const {
-          'limit': 20,
-          'publicOnly': true,
-        },
-      );
-      if (response.statusCode == 200) {
-        final raw = response.data['data'];
-        final parsed = _parseTournamentList(raw);
-        // A successful empty response is an authoritative public snapshot.
-        cache = parsed;
-        yield cache;
-      } else {
-        yield cache;
-      }
+      cache = await _fetchAllPublicTournaments();
+      // A successful empty response is an authoritative public snapshot.
+      yield cache;
     } catch (e, stack) {
       _log.error('Error fetching initial public tournaments', e, stack);
       yield cache;
@@ -367,20 +381,9 @@ class ApiTournamentRepository implements ITournamentRepository {
     yield* Stream.periodic(const Duration(seconds: 45))
         .asyncMap((_) async {
           try {
-            final response = await _dioClient.dio.get(
-              '/tournaments/public',
-              queryParameters: const {
-                'limit': 20,
-                'publicOnly': true,
-              },
-            );
-            if (response.statusCode == 200) {
-              final raw = response.data['data'];
-              final parsed = _parseTournamentList(raw);
-              // Do not merge stale results into a newer server snapshot.
-              cache = parsed;
-              return cache;
-            }
+            cache = await _fetchAllPublicTournaments();
+            // Do not merge stale results into a newer server snapshot.
+            return cache;
           } catch (e, stack) {
             _log.error('Error polling public tournaments', e, stack);
           }
