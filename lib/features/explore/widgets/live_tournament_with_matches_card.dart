@@ -546,7 +546,7 @@ class _LiveTournamentWithMatchesCardState
 
           const SizedBox(height: 14),
 
-          // ── Teams & Score Section (Exact Web Layout matching screenshot) ──
+          // ── Teams & Score Section (Vertical Layout aligned with Team Names) ──
           GestureDetector(
             onTap: () => context.push('/intro/${widget.tournament.id}'),
             child: Padding(
@@ -554,7 +554,7 @@ class _LiveTournamentWithMatchesCardState
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Left: Team 1 + vs + Team 2
+                  // Team Names & Scores Column
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -580,6 +580,50 @@ class _LiveTournamentWithMatchesCardState
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 8),
+                            if (isByeMatch && isT2Tbd && !isT1Tbd)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFDCFCE7),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  'Vô thẳng',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF15803D),
+                                  ),
+                                ),
+                              )
+                            else
+                              Container(
+                                constraints: const BoxConstraints(minWidth: 32),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
+                                      ? const Color(0xFF2563EB).withValues(alpha: 0.12)
+                                      : colors.bgSurface,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
+                                        ? const Color(0xFF2563EB).withValues(alpha: 0.4)
+                                        : colors.border,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '${match.sets.isNotEmpty ? match.sets.last.score1 : match.score1}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
+                                        ? const Color(0xFF2563EB)
+                                        : colors.textPrimary,
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
 
@@ -617,57 +661,59 @@ class _LiveTournamentWithMatchesCardState
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 8),
+                            if (isByeMatch && isT1Tbd && !isT2Tbd)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFDCFCE7),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  'Vô thẳng',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF15803D),
+                                  ),
+                                ),
+                              )
+                            else
+                              Container(
+                                constraints: const BoxConstraints(minWidth: 32),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
+                                      ? const Color(0xFF2563EB).withValues(alpha: 0.12)
+                                      : colors.bgSurface,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
+                                        ? const Color(0xFF2563EB).withValues(alpha: 0.4)
+                                        : colors.border,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '${match.sets.isNotEmpty ? match.sets.last.score2 : match.score2}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
+                                        ? const Color(0xFF2563EB)
+                                        : colors.textPrimary,
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ],
                     ),
                   ),
-
-                  const SizedBox(width: 12),
-
-                  // Right: Big Horizontal Score Display (8 - 11) matching Web spec
-                  if (isByeMatch && (isT1Tbd || isT2Tbd))
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDCFCE7),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'Vô thẳng',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF15803D),
-                        ),
-                      ),
-                    )
-                  else
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: colors.bgSurface,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: colors.border),
-                      ),
-                      child: Text(
-                        '${match.score1}  -  ${match.score2}',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
           ),
-
-          if (!isByeMatch) ...[
-            const SizedBox(height: 8),
-            _buildSetScoreStrip(context, match),
-          ],
 
           const SizedBox(height: 12),
           Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
@@ -865,111 +911,6 @@ class _LiveTournamentWithMatchesCardState
     );
   }
 
-  int _maxSetColumns(MatchModel match) {
-    int? readInt(Map<String, dynamic>? source, List<String> keys) {
-      if (source == null) return null;
-      for (final key in keys) {
-        final value = source[key];
-        if (value is num) return value.toInt();
-        final parsed = int.tryParse(value?.toString() ?? '');
-        if (parsed != null) return parsed;
-      }
-      return null;
-    }
-
-    final bestOf =
-        readInt(match.sportRules, const ['bestOf', 'best_of']) ??
-        readInt(match.tournamentConfig, const ['bestOf', 'best_of']);
-    final setsToWin =
-        match.setsToWin ??
-        readInt(match.sportRules, const ['setsToWin', 'sets_to_win']) ??
-        readInt(match.tournamentConfig, const ['setsToWin', 'sets_to_win']);
-    final configured = bestOf ?? (setsToWin != null ? setsToWin * 2 - 1 : 3);
-    final visible = match.isCompleted && match.sets.isNotEmpty
-        ? match.sets.length
-        : configured;
-    return visible.clamp(1, 5);
-  }
-
-  Widget _buildSetScoreStrip(BuildContext context, MatchModel match) {
-    final colors = context.colors;
-    final maxSets = _maxSetColumns(match);
-    Widget cell(String text, {bool header = false}) {
-      return SizedBox(
-        width: 30,
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: header ? 9 : 11,
-            fontWeight: header ? FontWeight.w700 : FontWeight.w800,
-            color: header ? colors.textMuted : colors.textPrimary,
-          ),
-        ),
-      );
-    }
-
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (var i = 0; i < maxSets; i++) cell('S${i + 1}', header: true),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (var i = 0; i < maxSets; i++)
-                Container(
-                  width: 30,
-                  margin: const EdgeInsets.only(left: 2),
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  decoration: BoxDecoration(
-                    color: colors.bgSurface,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    i < match.sets.length ? '${match.sets[i].score1}' : '-',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (var i = 0; i < maxSets; i++)
-                Container(
-                  width: 30,
-                  margin: const EdgeInsets.only(left: 2),
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  decoration: BoxDecoration(
-                    color: colors.bgSurface,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    i < match.sets.length ? '${match.sets[i].score2}' : '-',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                ),
-            ],
-          ),
         ],
       ),
     );
