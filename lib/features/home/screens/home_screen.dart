@@ -25,6 +25,7 @@ import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/token_input_sheet.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:ui';
@@ -68,6 +69,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   // ─── Per-tab filter state ───
   String _exploreSport = 'all';
   String _exploreStatus = 'all';
+  String _exploreContent = 'all';
+  String _exploreBracket = 'all';
+  String _exploreRanked = 'all';
   String _tournamentSport = 'all';
   String _tournamentStatus = 'all';
   String _clubSport = 'all';
@@ -523,9 +527,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       tSport == selSport ||
                       tSport.contains(selSport) ||
                       selSport.contains(tSport);
-                  final q = _normalizedQuery(_searchQueries[0]);
-                  return sportMatch &&
-                      (q.isEmpty || t.name.toLowerCase().contains(q));
+                  // Search on the match rows below, not only on tournament
+                  // names. This lets users find a player/team inside a group.
+                  return sportMatch;
                 }).toList();
 
                 final now = DateTime.now();
@@ -580,6 +584,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     _TournamentSectionList(
                       tournaments: allTournaments,
                       filterStatus: 'live',
+                      searchQuery: _searchQueries[0] ?? '',
+                      contentFilter: _exploreContent,
+                      bracketFilter: _exploreBracket,
+                      rankedFilter: _exploreRanked,
+                      enabled: _exploreStatus == 'all' || _exploreStatus == 'live',
                       emptyMessage: l10n.noLiveMatches,
                     ),
                     SliverToBoxAdapter(
@@ -590,6 +599,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     _TournamentSectionList(
                       tournaments: allTournaments,
                       filterStatus: 'scheduled',
+                      searchQuery: _searchQueries[0] ?? '',
+                      contentFilter: _exploreContent,
+                      bracketFilter: _exploreBracket,
+                      rankedFilter: _exploreRanked,
+                      enabled: _exploreStatus == 'all' || _exploreStatus == 'scheduled',
                       emptyMessage: l10n.noUpcomingMatches,
                     ),
                     SliverToBoxAdapter(
@@ -600,6 +614,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     _TournamentSectionList(
                       tournaments: allTournaments,
                       filterStatus: 'completed',
+                      searchQuery: _searchQueries[0] ?? '',
+                      contentFilter: _exploreContent,
+                      bracketFilter: _exploreBracket,
+                      rankedFilter: _exploreRanked,
+                      enabled: _exploreStatus == 'all' || _exploreStatus == 'completed',
                       emptyMessage: 'Chưa có trận đấu vừa kết thúc',
                     ),
 
@@ -1321,7 +1340,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   String _searchHintForTab() {
     return switch (_currentIndex) {
-      0 => 'Tìm giải đấu, trận đấu...',
+      0 => 'Tìm trận đấu, đội hoặc người chơi...',
       1 => 'Tìm kiếm giải đấu...',
       3 => 'Tìm kiếm câu lạc bộ...',
       4 => 'Tìm vận động viên...',
@@ -1337,7 +1356,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     switch (_currentIndex) {
       case 0:
         return (_exploreSport != 'all' ? 1 : 0) +
-            (_exploreStatus != 'all' ? 1 : 0);
+            (_exploreStatus != 'all' ? 1 : 0) +
+            (_exploreContent != 'all' ? 1 : 0) +
+            (_exploreBracket != 'all' ? 1 : 0) +
+            (_exploreRanked != 'all' ? 1 : 0);
       case 1:
         return (_tournamentSport != 'all' ? 1 : 0) +
             (_tournamentStatus != 'all' ? 1 : 0) +
@@ -1474,10 +1496,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (ctx) {
         String localSport = _exploreSport;
         String localStatus = _exploreStatus;
+        String localContent = _exploreContent;
+        String localBracket = _exploreBracket;
+        String localRanked = _exploreRanked;
         return StatefulBuilder(
-          builder: (ctx, setSheetState) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-            child: Column(
+          builder: (ctx, setSheetState) => Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(ctx).size.height * 0.86,
+            ),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 20,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+              ),
+              child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1525,10 +1559,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ('all', l10n.filterAll),
                     ('live', 'Trực tiếp'),
                     ('scheduled', l10n.matchesFilterScheduled),
-                    ('registration', l10n.matchesFilterRegistration),
+                    ('completed', 'Đã kết thúc'),
                   ],
                   selected: localStatus,
                   onSelected: (v) => setSheetState(() => localStatus = v),
+                ),
+                const SizedBox(height: 16),
+                _buildExploreFilterGroup(
+                  context,
+                  title: 'Nội dung',
+                  items: const [
+                    ('all', 'Tất cả'),
+                    ('SINGLE_MALE', 'Đơn nam'),
+                    ('SINGLE_FEMALE', 'Đơn nữ'),
+                    ('DOUBLE_MALE', 'Đôi nam'),
+                    ('DOUBLE_FEMALE', 'Đôi nữ'),
+                    ('DOUBLE_MIXED', 'Đôi nam nữ'),
+                  ],
+                  selected: localContent,
+                  onSelected: (v) => setSheetState(() => localContent = v),
+                ),
+                const SizedBox(height: 16),
+                _buildExploreFilterGroup(
+                  context,
+                  title: 'Thể thức',
+                  items: const [
+                    ('all', 'Tất cả'),
+                    ('SINGLE_ELIMINATION', 'Loại trực tiếp'),
+                    ('DOUBLE_ELIMINATION', 'Nhánh thắng/thua'),
+                    ('ROUND_ROBIN', 'Vòng tròn'),
+                    ('GROUP_STAGE_KNOCKOUT', 'Vòng bảng + Playoff'),
+                  ],
+                  selected: localBracket,
+                  onSelected: (v) => setSheetState(() => localBracket = v),
+                ),
+                const SizedBox(height: 16),
+                _buildExploreFilterGroup(
+                  context,
+                  title: 'Xếp hạng',
+                  items: const [
+                    ('all', 'Tất cả'),
+                    ('ranked', 'Có tính ELO'),
+                    ('unranked', 'Không tính ELO'),
+                  ],
+                  selected: localRanked,
+                  onSelected: (v) => setSheetState(() => localRanked = v),
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -1539,6 +1614,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           setSheetState(() {
                             localSport = 'all';
                             localStatus = 'all';
+                            localContent = 'all';
+                            localBracket = 'all';
+                            localRanked = 'all';
                           });
                         },
                         style: OutlinedButton.styleFrom(
@@ -1562,6 +1640,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           setState(() {
                             _exploreSport = localSport;
                             _exploreStatus = localStatus;
+                            _exploreContent = localContent;
+                            _exploreBracket = localBracket;
+                            _exploreRanked = localRanked;
                           });
                           Navigator.pop(ctx);
                         },
@@ -1587,8 +1668,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
             ),
           ),
-        );
-      },
+        ),
+      );
+    },
+  );
+  }
+
+  Widget _buildExploreFilterGroup(
+    BuildContext context, {
+    required String title,
+    required List<(String, String)> items,
+    required String selected,
+    required ValueChanged<String> onSelected,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: context.colors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _buildFilterChips(
+          items: items,
+          selected: selected,
+          onSelected: onSelected,
+        ),
+      ],
     );
   }
 
@@ -3866,16 +3976,27 @@ class _StatusFilterDelegate extends SliverPersistentHeaderDelegate {
 class _TournamentSectionList extends ConsumerWidget {
   final List<Tournament> tournaments;
   final String filterStatus;
+  final String searchQuery;
+  final String contentFilter;
+  final String bracketFilter;
+  final String rankedFilter;
+  final bool enabled;
   final String emptyMessage;
 
   const _TournamentSectionList({
     required this.tournaments,
     required this.filterStatus,
+    this.searchQuery = '',
+    this.contentFilter = 'all',
+    this.bracketFilter = 'all',
+    this.rankedFilter = 'all',
+    this.enabled = true,
     required this.emptyMessage,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!enabled) return const SliverToBoxAdapter(child: SizedBox.shrink());
     if (tournaments.isEmpty) {
       return SliverToBoxAdapter(
         child: Padding(
@@ -3917,6 +4038,15 @@ class _TournamentSectionList extends ConsumerWidget {
         final isT2Tbd = t2.isEmpty || t2 == 'TBD' || t2 == 'BYE';
         if (isT1Tbd && isT2Tbd) return false;
 
+        final q = searchQuery.trim().toLowerCase();
+        final matchText = '${m.team1Name} ${m.team2Name} ${m.tournamentName}'
+            .toLowerCase();
+        if (q.isNotEmpty && !matchText.contains(q)) return false;
+        if (!_matchesContent(t, contentFilter)) return false;
+        if (!_matchesBracket(t, m, bracketFilter)) return false;
+        if (rankedFilter == 'ranked' && !t.isRanked) return false;
+        if (rankedFilter == 'unranked' && t.isRanked) return false;
+
         if (filterStatus == 'live') return m.isLive;
         if (filterStatus == 'completed') return m.isCompleted;
         if (filterStatus == 'scheduled') {
@@ -3956,17 +4086,15 @@ class _TournamentSectionList extends ConsumerWidget {
       );
     }
 
-    final visibleTournaments = activeTournaments.take(6).toList();
-
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) => LiveTournamentWithMatchesCard(
-            tournament: visibleTournaments[index],
+            tournament: activeTournaments[index],
             filterStatus: filterStatus,
           ),
-          childCount: visibleTournaments.length,
+          childCount: activeTournaments.length,
         ),
       ),
     );
