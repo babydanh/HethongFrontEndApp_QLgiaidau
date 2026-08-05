@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/tier_legend_view.da
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/user_stats_card.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
   final String selectedSport;
@@ -150,7 +151,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       context,
                       icon: Icons.cloud_off_rounded,
                       title: 'Không thể tải bảng xếp hạng',
-                      subtitle: '$e',
+                      subtitle: ErrorParser.parse(e, 'Vui lòng kiểm tra kết nối mạng hoặc thử lại sau.'),
                       onRetry: () =>
                           ref.refresh(rankingsProvider(_rankingQuery)),
                     ),
@@ -164,7 +165,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             context,
             icon: Icons.warning_amber_rounded,
             title: 'Lỗi tải danh sách môn thể thao',
-            subtitle: e.toString(),
+            subtitle: ErrorParser.parse(e, 'Vui lòng kiểm tra lại kết nối mạng.'),
             onRetry: () => ref.refresh(categoriesProvider),
           ),
         ),
