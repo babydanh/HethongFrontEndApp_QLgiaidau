@@ -4042,10 +4042,6 @@ class _TournamentSectionList extends ConsumerWidget {
         final matchText = '${m.team1Name} ${m.team2Name} ${m.tournamentName}'
             .toLowerCase();
         if (q.isNotEmpty && !matchText.contains(q)) return false;
-        if (!_matchesContent(t, contentFilter)) return false;
-        if (!_matchesBracket(t, m, bracketFilter)) return false;
-        if (rankedFilter == 'ranked' && !t.isRanked) return false;
-        if (rankedFilter == 'unranked' && t.isRanked) return false;
 
         if (filterStatus == 'live') return m.isLive;
         if (filterStatus == 'completed') return m.isCompleted;
