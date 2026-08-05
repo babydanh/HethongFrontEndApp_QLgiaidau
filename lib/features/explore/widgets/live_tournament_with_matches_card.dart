@@ -911,11 +911,6 @@ class _LiveTournamentWithMatchesCardState
     );
   }
 
-        ],
-      ),
-    );
-  }
-
   String _getSingleInitials(String s) {
     final parts = s.trim().split(' ');
     if (parts.length >= 2) {
