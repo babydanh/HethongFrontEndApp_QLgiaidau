@@ -288,6 +288,25 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                                       letterSpacing: 0.5,
                                     ),
                                   ),
+                                  if (widget.tournament.isRanked != true) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: colors.bgSurface,
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: colors.border, width: 0.5),
+                                      ),
+                                      child: Text(
+                                        'KHÔNG TÍNH ELO',
+                                        style: TextStyle(
+                                          fontSize: 8.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: colors.textMuted,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                   if (widget.tournament.isRanked == true) ...[
                                     const SizedBox(width: 6),
                                     Container(

@@ -464,6 +464,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             ),
           ],
           overrideReason: 'Xử thắng trực tiếp (force win)',
+          expectedRevision: match?.revision,
         );
     context.pop();
   }
@@ -2125,30 +2126,49 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           ),
         ),
 
-        // ─── Floating Heart Button ───
+        // ─── Viewer Count Badge (Sockets Realtime) ───
         if (match.isLive)
           Align(
             alignment: Alignment.centerRight,
             child: Padding(
               padding: const EdgeInsets.only(right: 12, top: 4),
-              child: GestureDetector(
-                onTap: _spawnHeart,
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
+              child: Consumer(
+                builder: (context, ref, _) {
+                  final liveViewers =
+                      ref.watch(viewerCountProvider(widget.matchId)).value ?? 0;
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
                     ),
-                  ),
-                  child: const Icon(
-                    Icons.favorite_rounded,
-                    color: Color(0xFFE11D48),
-                    size: 18,
-                  ),
-                ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.remove_red_eye_rounded,
+                          color: Color(0xFFEF4444),
+                          size: 14,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          '$liveViewers đang xem',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           ),

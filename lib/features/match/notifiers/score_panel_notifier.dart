@@ -474,6 +474,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
             overrideReason: state.overrideEnabled
                 ? state.overrideReason.trim()
                 : null,
+            expectedRevision: match?.revision,
           );
       state = state.copyWith(isSubmitting: false);
     } catch (e, stack) {

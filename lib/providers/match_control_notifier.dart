@@ -171,6 +171,7 @@ class MatchController {
     required String loserId,
     required List<SetScoreData> finalSets,
     String? overrideReason,
+    int? expectedRevision,
   }) async {
     _log.info('completeMatchWithDetails: winner=$winnerId, ${finalSets.length} sets');
     final (p1Sets, p2Sets) = computeMatchSetsWon(finalSets);
@@ -184,6 +185,7 @@ class MatchController {
       scoreDetails: finalSets,
       winnerId: winnerId,
       overrideReason: overrideReason,
+      expectedRevision: expectedRevision,
     );
   }
 
