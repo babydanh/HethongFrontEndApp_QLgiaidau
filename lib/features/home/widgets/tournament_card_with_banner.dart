@@ -169,6 +169,11 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
     final hasBanner = resolvedBannerUrl.isNotEmpty;
     final categoryChips = _getCategoryChips(widget.tournament);
 
+    // Gom gọn khi giải đấu có nhiều hình thức/nội dung thi đấu
+    final displayChips = categoryChips.length > 2
+        ? [...categoryChips.take(1), '+${categoryChips.length - 1} nội dung']
+        : categoryChips;
+
     final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl ?? widget.tournament.creatorAvatarUrl);
     final hasLogo = resolvedLogoUrl.isNotEmpty;
     return GestureDetector(
@@ -177,26 +182,26 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
         margin: widget.margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: colors.bgCard,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: colors.border.withValues(alpha: 0.7), width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 12,
+              blurRadius: 10,
               offset: const Offset(0, 4),
             )
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           child: Stack(
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Banner Header (height 155)
+                  // Banner Header (tăng height ráo & cao ráo lên 185px)
                   SizedBox(
-                    height: 155,
+                    height: 185,
                     width: double.infinity,
                     child: Stack(
                       fit: StackFit.expand,
@@ -357,8 +362,8 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                                       color: colors.textMuted,
                                     ),
                                   ),
-                                  if (categoryChips.isNotEmpty)
-                                    ...categoryChips.map((chipText) => Container(
+                                  if (displayChips.isNotEmpty)
+                                    ...displayChips.map((chipText) => Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: colors.bgSurface,
@@ -404,9 +409,9 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                 ],
               ),
 
-              // Floating Logo Avatar (top: 133, left: 14)
+              // Floating Logo Avatar (top: 163 cho height 185)
               Positioned(
-                top: 133,
+                top: 163,
                 left: 14,
                 child: Container(
                   width: 42,
