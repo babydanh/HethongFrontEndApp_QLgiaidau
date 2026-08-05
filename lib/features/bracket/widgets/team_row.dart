@@ -7,12 +7,14 @@ class TeamRow extends StatelessWidget {
   final String name;
   final int score;
   final List<int>? sets;
+  final List<int>? opponentSets;
   final bool isWinner;
   final bool isLive;
   final bool isBye;
   final bool isGrandFinalWinner;
   final TextStyle? nameStyle;
   final double rowHeight;
+  final int maxSetsCount;
 
   const TeamRow({
     super.key,
@@ -22,9 +24,11 @@ class TeamRow extends StatelessWidget {
     required this.isLive,
     required this.isBye,
     this.sets,
+    this.opponentSets,
     this.isGrandFinalWinner = false,
     this.nameStyle,
     this.rowHeight = 24,
+    this.maxSetsCount = 0,
   });
 
   @override
@@ -49,8 +53,26 @@ class TeamRow extends StatelessWidget {
       textColor = colors.info;
     }
 
+    // Tính số set thắng thực tế từ các set lẻ
+    int? calculatedSetsWon;
+    if (sets != null && sets!.isNotEmpty && opponentSets != null && opponentSets!.isNotEmpty) {
+      int count = 0;
+      for (int i = 0; i < sets!.length; i++) {
+        if (i < opponentSets!.length && sets![i] > opponentSets![i]) {
+          count++;
+        }
+      }
+      calculatedSetsWon = count;
+    }
+
+    final hasSetDetails = sets != null && sets!.isNotEmpty;
+    // Nếu có điểm từng set thì số ở bên phải là số SET THẮNG (VD: 2 set), tránh lặp lại điểm set cuối
+    final displayFinalScore = isBye
+        ? ''
+        : (hasSetDetails ? '${calculatedSetsWon ?? (isWinner ? 2 : 0)}' : '$score');
+
     return Container(
-      height: rowHeight + 8, // padding top+bottom = 4+4
+      height: rowHeight + 8,
       color: rowBgColor,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -66,6 +88,7 @@ class TeamRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
+
             // Team name
             Expanded(
               child: Text(
@@ -83,37 +106,55 @@ class TeamRow extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            // Set scores
-            if (sets != null)
-              ...sets!.map((s) => Container(
-                    margin: const EdgeInsets.only(left: 2),
-                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+
+            const SizedBox(width: 4),
+
+            // Per-set score boxes (được căn chỉnh độ rộng cố định, thẳng hàng tăm tắp)
+            if (hasSetDetails)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(maxSetsCount > 0 ? maxSetsCount : sets!.length, (index) {
+                  final s = (index < sets!.length) ? sets![index] : null;
+                  return Container(
+                    width: 22,
+                    height: 18,
+                    margin: const EdgeInsets.only(left: 3),
                     decoration: BoxDecoration(
-                      color: colors.bgSurface,
-                      borderRadius: BorderRadius.circular(3),
-                      border: Border.all(color: colors.border),
+                      color: s != null ? colors.bgSurface : Colors.transparent,
+                      borderRadius: BorderRadius.circular(4),
+                      border: s != null ? Border.all(color: colors.border) : null,
                     ),
-                    child: Text(
-                      '$s',
-                      style: TextStyle(
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                        color: colors.textSecondary,
+                    child: Center(
+                      child: Text(
+                        s != null ? '$s' : '',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textSecondary,
+                        ),
                       ),
                     ),
-                  )),
+                  );
+                }),
+              ),
+
             const SizedBox(width: 6),
-            // Total score
-            Text(
-              isBye ? '' : '$score',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-                color: isLive
-                    ? colors.error
-                    : isWinner
-                        ? textColor
-                        : colors.textMuted,
+
+            // Total Score / Sets Won (Cột bên phải hiển thị số Set thắng lớn, gọn gàng)
+            SizedBox(
+              width: 18,
+              child: Text(
+                displayFinalScore,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  color: isLive
+                      ? colors.error
+                      : isWinner
+                          ? textColor
+                          : colors.textMuted,
+                ),
               ),
             ),
           ],

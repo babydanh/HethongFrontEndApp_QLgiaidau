@@ -109,6 +109,10 @@ class BracketMatchCard extends StatelessWidget {
                 sets: match.sets.isNotEmpty
                     ? match.sets.map((s) => s.score1).toList()
                     : null,
+                opponentSets: match.sets.isNotEmpty
+                    ? match.sets.map((s) => s.score2).toList()
+                    : null,
+                maxSetsCount: match.sets.length,
                 isWinner: match.isCompleted && match.winnerId == match.team1Id,
                 isLive: match.isLive,
                 isBye: isBye1,
@@ -124,6 +128,10 @@ class BracketMatchCard extends StatelessWidget {
                 sets: match.sets.isNotEmpty
                     ? match.sets.map((s) => s.score2).toList()
                     : null,
+                opponentSets: match.sets.isNotEmpty
+                    ? match.sets.map((s) => s.score1).toList()
+                    : null,
+                maxSetsCount: match.sets.length,
                 isWinner: match.isCompleted && match.winnerId == match.team2Id,
                 isLive: match.isLive,
                 isBye: isBye2,
