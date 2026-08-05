@@ -2208,8 +2208,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final name = member.fullName.trim();
     final elo = member.eloPoints;
     final typeLabel = isDoubles ? 'ELO Đôi' : 'ELO Đơn';
-    if (elo == null) return '$name • $typeLabel: Chưa có';
-    return '$name • $typeLabel: $elo';
+    final eloStr = elo != null ? '$elo' : 'Chưa có';
+    if (name.isEmpty) return '$typeLabel: $eloStr';
+    return '$typeLabel:\n$eloStr';
   }
 
   String _teamMemberSummary(
@@ -2219,7 +2220,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   ) {
     final bool isDoubles = displayList.length >= 2 || memberInfos.length >= 2;
     if (isDoubles) {
-      return 'ELO đôi: ${teamEloPoints ?? 'Chưa có'}';
+      return 'ELO Đôi:\n${teamEloPoints ?? 'Chưa có'}';
     }
     final realMembers = memberInfos
         .where((member) => member.fullName.trim().isNotEmpty)
@@ -2228,9 +2229,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       return realMembers.map((m) => _memberEloLabel(m, isDoubles)).join('\n');
     }
     final label = isDoubles ? 'ELO Đôi' : 'ELO Đơn';
-    if (displayList.length == 1)
-      return '${displayList.first} • $label: Chưa có';
-    return displayList.map((n) => '$n • $label: Chưa có').join('\n');
+    if (displayList.length == 1) {
+      return '$label:\nChưa có';
+    }
+    return displayList.map((n) => '$n\n$label: Chưa có').join('\n');
   }
 
   Widget _teamMemberSummaryWidget(
