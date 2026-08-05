@@ -33,7 +33,7 @@ class StatusHelper {
   static Color getTournamentStatusColor(String status, BuildContext context) {
     final normalized = normalizeTournamentStatus(status);
     return switch (normalized) {
-      AppConstants.statusRegistration => const Color(0xFF2563EB),
+      AppConstants.statusRegistration => AppTheme.primary,
       AppConstants.statusRegistrationClosed => const Color(0xFFEF4444),
       AppConstants.statusUpcoming => context.colors.info,
       AppConstants.statusDrawing => context.colors.warning,

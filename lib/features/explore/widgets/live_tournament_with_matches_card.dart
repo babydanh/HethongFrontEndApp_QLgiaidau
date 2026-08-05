@@ -357,7 +357,7 @@ class _LiveTournamentWithMatchesCardState
                                       height: 7,
                                       decoration: BoxDecoration(
                                         color: isSelected
-                                            ? const Color(0xFF2563EB)
+                                            ? AppTheme.primary
                                             : const Color(0xFFCBD5E1),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
@@ -603,12 +603,12 @@ class _LiveTournamentWithMatchesCardState
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
                                   color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
-                                      ? const Color(0xFF2563EB).withValues(alpha: 0.12)
+                                      ? AppTheme.primary.withValues(alpha: 0.12)
                                       : colors.bgSurface,
                                   borderRadius: BorderRadius.circular(6),
                                   border: Border.all(
                                     color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
-                                        ? const Color(0xFF2563EB).withValues(alpha: 0.4)
+                                        ? AppTheme.primary.withValues(alpha: 0.4)
                                         : colors.border,
                                   ),
                                 ),
@@ -619,7 +619,7 @@ class _LiveTournamentWithMatchesCardState
                                     fontSize: 14,
                                     fontWeight: FontWeight.w900,
                                     color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
-                                        ? const Color(0xFF2563EB)
+                                        ? AppTheme.primary
                                         : colors.textPrimary,
                                   ),
                                 ),
@@ -628,14 +628,14 @@ class _LiveTournamentWithMatchesCardState
                         ),
 
                         // VS Label
-                        const Padding(
-                          padding: EdgeInsets.only(left: 44, top: 4, bottom: 4),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 44, top: 4, bottom: 4),
                           child: Text(
                             'vs',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF2563EB),
+                              color: AppTheme.primary,
                             ),
                           ),
                         ),
@@ -684,12 +684,12 @@ class _LiveTournamentWithMatchesCardState
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
                                   color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
-                                      ? const Color(0xFF2563EB).withValues(alpha: 0.12)
+                                      ? AppTheme.primary.withValues(alpha: 0.12)
                                       : colors.bgSurface,
                                   borderRadius: BorderRadius.circular(6),
                                   border: Border.all(
                                     color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
-                                        ? const Color(0xFF2563EB).withValues(alpha: 0.4)
+                                        ? AppTheme.primary.withValues(alpha: 0.4)
                                         : colors.border,
                                   ),
                                 ),
@@ -700,7 +700,7 @@ class _LiveTournamentWithMatchesCardState
                                     fontSize: 14,
                                     fontWeight: FontWeight.w900,
                                     color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
-                                        ? const Color(0xFF2563EB)
+                                        ? AppTheme.primary
                                         : colors.textPrimary,
                                   ),
                                 ),
