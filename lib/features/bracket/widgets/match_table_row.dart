@@ -172,12 +172,12 @@ class MatchTableRow extends StatelessWidget {
                                           margin: const EdgeInsets.only(left: 4),
                                           decoration: BoxDecoration(
                                             color: isSetWon
-                                                ? const Color(0xFF2563EB).withValues(alpha: 0.12)
+                                                ? AppTheme.primary.withValues(alpha: 0.12)
                                                 : colors.bgSurface,
                                             borderRadius: BorderRadius.circular(6),
                                             border: Border.all(
                                               color: isSetWon
-                                                  ? const Color(0xFF2563EB).withValues(alpha: 0.4)
+                                                  ? AppTheme.primary.withValues(alpha: 0.4)
                                                   : colors.border.withValues(alpha: 0.5),
                                             ),
                                           ),
@@ -188,7 +188,7 @@ class MatchTableRow extends StatelessWidget {
                                               fontSize: 12,
                                               fontWeight: isSetWon ? FontWeight.w900 : FontWeight.w600,
                                               color: isSetWon
-                                                  ? const Color(0xFF2563EB)
+                                                  ? AppTheme.primary
                                                   : colors.textSecondary,
                                             ),
                                           ),
@@ -200,12 +200,12 @@ class MatchTableRow extends StatelessWidget {
                                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                           decoration: BoxDecoration(
                                             color: setsWon1 > setsWon2
-                                                ? const Color(0xFF2563EB).withValues(alpha: 0.12)
+                                                ? AppTheme.primary.withValues(alpha: 0.12)
                                                 : colors.bgSurface,
                                             borderRadius: BorderRadius.circular(6),
                                             border: Border.all(
                                               color: setsWon1 > setsWon2
-                                                  ? const Color(0xFF2563EB).withValues(alpha: 0.4)
+                                                  ? AppTheme.primary.withValues(alpha: 0.4)
                                                   : colors.border,
                                             ),
                                           ),
@@ -216,7 +216,7 @@ class MatchTableRow extends StatelessWidget {
                                               fontSize: 12,
                                               fontWeight: setsWon1 > setsWon2 ? FontWeight.w900 : FontWeight.w600,
                                               color: setsWon1 > setsWon2
-                                                  ? const Color(0xFF2563EB)
+                                                  ? AppTheme.primary
                                                   : colors.textPrimary,
                                             ),
                                           ),
@@ -233,7 +233,7 @@ class MatchTableRow extends StatelessWidget {
                               _DoubleAvatarWidget(
                                 initial1: t2Initials[0],
                                 initial2: t2Initials[1],
-                                color: const Color(0xFF16A34A),
+                                color: AppTheme.primary,
                               ),
                               const SizedBox(width: 8),
                               Expanded(
@@ -263,12 +263,12 @@ class MatchTableRow extends StatelessWidget {
                                           margin: const EdgeInsets.only(left: 4),
                                           decoration: BoxDecoration(
                                             color: isSetWon
-                                                ? const Color(0xFF2563EB).withValues(alpha: 0.12)
+                                                ? AppTheme.primary.withValues(alpha: 0.12)
                                                 : colors.bgSurface,
                                             borderRadius: BorderRadius.circular(6),
                                             border: Border.all(
                                               color: isSetWon
-                                                  ? const Color(0xFF2563EB).withValues(alpha: 0.4)
+                                                  ? AppTheme.primary.withValues(alpha: 0.4)
                                                   : colors.border.withValues(alpha: 0.5),
                                             ),
                                           ),
@@ -279,7 +279,7 @@ class MatchTableRow extends StatelessWidget {
                                               fontSize: 12,
                                               fontWeight: isSetWon ? FontWeight.w900 : FontWeight.w600,
                                               color: isSetWon
-                                                  ? const Color(0xFF2563EB)
+                                                  ? AppTheme.primary
                                                   : colors.textSecondary,
                                             ),
                                           ),
@@ -291,12 +291,12 @@ class MatchTableRow extends StatelessWidget {
                                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                           decoration: BoxDecoration(
                                             color: setsWon2 > setsWon1
-                                                ? const Color(0xFF2563EB).withValues(alpha: 0.12)
+                                                ? AppTheme.primary.withValues(alpha: 0.12)
                                                 : colors.bgSurface,
                                             borderRadius: BorderRadius.circular(6),
                                             border: Border.all(
                                               color: setsWon2 > setsWon1
-                                                  ? const Color(0xFF2563EB).withValues(alpha: 0.4)
+                                                  ? AppTheme.primary.withValues(alpha: 0.4)
                                                   : colors.border,
                                             ),
                                           ),
@@ -307,7 +307,7 @@ class MatchTableRow extends StatelessWidget {
                                               fontSize: 12,
                                               fontWeight: setsWon2 > setsWon1 ? FontWeight.w900 : FontWeight.w600,
                                               color: setsWon2 > setsWon1
-                                                  ? const Color(0xFF2563EB)
+                                                  ? AppTheme.primary
                                                   : colors.textPrimary,
                                             ),
                                           ),
