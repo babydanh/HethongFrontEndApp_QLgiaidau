@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
@@ -76,7 +78,17 @@ class MatchSocketService {
     }
 
     try {
-      final rawBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
+      var rawBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
+      // Trên Android emulator, localhost trỏ vào chính emulator, không tới host.
+      // Giống dio_client: đổi localhost/127.0.0.1 -> 10.0.2.2, nếu không socket
+      // /live không kết nối được -> lượt xem (viewer count) không bao giờ lên.
+      if (!kIsWeb && Platform.isAndroid) {
+        if (rawBaseUrl.contains('localhost')) {
+          rawBaseUrl = rawBaseUrl.replaceAll('localhost', '10.0.2.2');
+        } else if (rawBaseUrl.contains('127.0.0.1')) {
+          rawBaseUrl = rawBaseUrl.replaceAll('127.0.0.1', '10.0.2.2');
+        }
+      }
       final serverUrl = rawBaseUrl.replaceAll(RegExp(r'/api/v1/?$'), '');
       _log.info('Connecting to match socket at $serverUrl/live');
 
