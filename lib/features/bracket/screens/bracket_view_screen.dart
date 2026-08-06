@@ -801,43 +801,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
   }
 
   String _getRoundName(int round, int totalRounds) {
-    final fromEnd = totalRounds - round;
-    if (fromEnd == 0) return 'Chung kết';
-    if (fromEnd == 1) return 'Bán kết';
-    if (fromEnd == 2) return 'Tứ kết';
-    if (fromEnd == 3) return 'Vòng 1/8';
-    if (fromEnd == 4) return 'Vòng 1/16';
-    if (fromEnd == 5) return 'Vòng 1/32';
-    if (fromEnd >= 6) return 'Vòng 1/${1 << fromEnd}';
+    if (totalRounds <= 1) return 'Chung kết';
+    if (round == totalRounds) return 'Chung kết';
+    if (round == totalRounds - 1) return 'Bán kết';
+    if (round == totalRounds - 2) return 'Tứ kết';
     return 'Vòng $round';
-  }
-}
-
-class _BracketShimmerLoading extends StatelessWidget {
-  const _BracketShimmerLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Shimmer.fromColors(
-      baseColor: colors.bgSurface,
-      highlightColor: colors.bgCard,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: List.generate(
-            4,
-            (index) => Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
