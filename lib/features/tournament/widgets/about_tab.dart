@@ -146,18 +146,6 @@ class AboutTab extends StatelessWidget {
                   const SizedBox(height: 16),
                 ],
 
-                // ── Countdown (if upcoming) ──
-                if (StatusHelper.isTournamentUpcoming(tournament.status) &&
-                    tournament.registrationStartDate != null) ...[
-                  CountdownTimer(
-                    targetDate: tournament.registrationStartDate!,
-                    compact: false,
-                  ),
-                  const SizedBox(height: 16),
-                  _sectionDivider(colors),
-                  const SizedBox(height: 16),
-                ],
-
                 // ── Tournament Info Section ──
                 _buildSectionHeader(colors, l10n.sectionTournamentInfo),
                 const SizedBox(height: 12),
@@ -368,6 +356,7 @@ class AboutTab extends StatelessWidget {
       );
     }
 
+    addItem(Icons.language_rounded, 'giaidau.vnvar.com', 'Website', action: 'https://giaidau.vnvar.com');
     addItem(Icons.phone_rounded, contactInfo['phone']?.toString(), 'Phone',
         action: contactInfo['phone'] != null
             ? 'tel:${contactInfo['phone']}'
@@ -378,7 +367,9 @@ class AboutTab extends StatelessWidget {
             : null);
     addItem(Icons.chat_rounded, contactInfo['zalo']?.toString(), 'Zalo',
         action: contactInfo['zalo'] != null
-            ? 'https://zalo.me/${contactInfo['zalo']}'
+            ? (contactInfo['zalo'].toString().startsWith('http')
+                ? contactInfo['zalo'].toString()
+                : 'https://zalo.me/${contactInfo['zalo']}')
             : null);
     addItem(
         Icons.facebook_rounded,
@@ -406,9 +397,14 @@ class AboutTab extends StatelessWidget {
         ? tournament.divisions
             .fold<int>(0, (sum, d) => sum + d.participantCount)
         : 0;
-    final isRegistrationOpen =
-        StatusHelper.isTournamentRegistration(tournament.status) ||
-            StatusHelper.isTournamentUpcoming(tournament.status);
+    final now = DateTime.now();
+
+    final isBeforeStart = tournament.registrationStartDate != null &&
+        now.isBefore(tournament.registrationStartDate!);
+    final isBeforeEnd = tournament.registrationEndDate != null &&
+        now.isBefore(tournament.registrationEndDate!);
+    final isEnded = tournament.registrationEndDate != null &&
+        now.isAfter(tournament.registrationEndDate!);
 
     return Container(
       width: double.infinity,
@@ -458,16 +454,23 @@ class AboutTab extends StatelessWidget {
             _buildSlotProgressBar(slotsFilled, tournament.maxTeams, colors, l10n),
             const SizedBox(height: 16),
           ],
-          // Countdown & Register button
-          if (isRegistrationOpen) ...[
-            if (tournament.registrationStartDate != null &&
-                tournament.registrationStartDate!
-                    .isAfter(DateTime.now()))
-              CountdownTimer(
-                targetDate: tournament.registrationStartDate!,
-                compact: false,
-              ),
+          // ── Smart Countdown Logic: Mở trước -> Đóng sau ──
+          if (isBeforeStart) ...[
+            CountdownTimer(
+              targetDate: tournament.registrationStartDate!,
+              compact: false,
+            ),
             const SizedBox(height: 12),
+          ] else if (isBeforeEnd) ...[
+            CountdownTimer(
+              targetDate: tournament.registrationEndDate!,
+              compact: false,
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // Register button or Ended State
+          if (!isEnded) ...[
             SizedBox(
               width: double.infinity,
               child: Container(
@@ -498,9 +501,7 @@ class AboutTab extends StatelessWidget {
                 ),
               ),
             ),
-          ] else if (tournament.registrationEndDate != null &&
-              tournament.registrationEndDate!
-                  .isBefore(DateTime.now())) ...[
+          ] else ...[
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
