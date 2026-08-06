@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -134,16 +136,28 @@ class AboutTab extends StatelessWidget {
                   _buildSectionHeader(colors, l10n.sectionAboutTournament),
                   const SizedBox(height: 12),
                   ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 200),
+                    constraints: const BoxConstraints(maxHeight: 400),
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
-                      child: Text(
-                        _parseDescriptionText(tournament.description),
-                        style: TextStyle(
+                      child: HtmlWidget(
+                        _convertEditorJsOrHtmlToHtml(tournament.description),
+                        textStyle: TextStyle(
                           fontSize: 13,
                           color: colors.textSecondary,
                           height: 1.5,
                         ),
+                        customStylesBuilder: (element) {
+                          if (element.localName == 'img') {
+                            return {
+                              'max-width': '100%',
+                              'height': 'auto',
+                              'border-radius': '8px',
+                              'display': 'block',
+                              'margin': '8px auto',
+                            };
+                          }
+                          return null;
+                        },
                       ),
                     ),
                   ),
@@ -624,18 +638,57 @@ class AboutTab extends StatelessWidget {
     } catch (_) {}
   }
 
-  String _parseDescriptionText(String raw) {
-    if (raw.isEmpty) return '';
-    final cleanText = raw
-        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n')
-        .replaceAll(RegExp(r'</p>', caseSensitive: false), '\n')
-        .replaceAll(RegExp(r'</div>', caseSensitive: false), '\n')
-        .replaceAll(RegExp(r'<[^>]*>'), '')
-        .replaceAll('&nbsp;', ' ')
-        .replaceAll('&amp;', '&')
-        .replaceAll('&gt;', '>')
-        .replaceAll('&lt;', '<')
-        .trim();
-    return cleanText.isNotEmpty ? cleanText : raw;
+  String _convertEditorJsOrHtmlToHtml(String raw) {
+    if (raw.trim().isEmpty) return '';
+    final trimmed = raw.trim();
+
+    // Thử parse nếu là dữ liệu JSON Blocks từ Editor.js
+    if (trimmed.startsWith('{') && trimmed.contains('"blocks"')) {
+      try {
+        final Map<String, dynamic> json = jsonDecode(trimmed);
+        final blocks = json['blocks'] as List?;
+        if (blocks != null && blocks.isNotEmpty) {
+          final buffer = StringBuffer();
+          for (final block in blocks) {
+            final type = block['type'];
+            final data = block['data'] as Map?;
+            if (data == null) continue;
+
+            if (type == 'header') {
+              final level = data['level'] ?? 2;
+              buffer.write('<h$level style="margin:8px 0;font-weight:bold;">${data['text'] ?? ''}</h$level>');
+            } else if (type == 'paragraph') {
+              buffer.write('<p style="margin:6px 0;">${data['text'] ?? ''}</p>');
+            } else if (type == 'image') {
+              final url = data['file']?['url'] ?? data['url'];
+              final caption = data['caption'] ?? '';
+              if (url != null && url.toString().isNotEmpty) {
+                buffer.write('<div style="text-align:center;margin:12px 0;"><img src="$url" alt="$caption" style="max-width:100%;border-radius:8px;" />');
+                if (caption.toString().isNotEmpty) {
+                  buffer.write('<p style="font-size:11px;color:#888;margin-top:4px;">$caption</p>');
+                }
+                buffer.write('</div>');
+              }
+            } else if (type == 'list') {
+              final style = data['style'] == 'ordered' ? 'ol' : 'ul';
+              final items = data['items'] as List?;
+              if (items != null) {
+                buffer.write('<$style style="padding-left:20px;margin:6px 0;">');
+                for (final item in items) {
+                  buffer.write('<li>$item</li>');
+                }
+                buffer.write('</$style>');
+              }
+            } else if (type == 'raw' || type == 'quote') {
+              buffer.write('<blockquote style="border-left:3px solid #0066FF;padding-left:8px;margin:8px 0;color:#555;">${data['text'] ?? data['html'] ?? ''}</blockquote>');
+            }
+          }
+          final result = buffer.toString();
+          if (result.isNotEmpty) return result;
+        }
+      } catch (_) {}
+    }
+
+    return raw;
   }
 }
