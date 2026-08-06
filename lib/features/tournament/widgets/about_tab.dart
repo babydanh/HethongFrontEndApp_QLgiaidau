@@ -138,7 +138,7 @@ class AboutTab extends StatelessWidget {
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
                       child: Text(
-                        tournament.description,
+                        _parseDescriptionText(tournament.description),
                         style: TextStyle(
                           fontSize: 13,
                           color: colors.textSecondary,
@@ -622,5 +622,20 @@ class AboutTab extends StatelessWidget {
     try {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     } catch (_) {}
+  }
+
+  String _parseDescriptionText(String raw) {
+    if (raw.isEmpty) return '';
+    final cleanText = raw
+        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n')
+        .replaceAll(RegExp(r'</p>', caseSensitive: false), '\n')
+        .replaceAll(RegExp(r'</div>', caseSensitive: false), '\n')
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&lt;', '<')
+        .trim();
+    return cleanText.isNotEmpty ? cleanText : raw;
   }
 }

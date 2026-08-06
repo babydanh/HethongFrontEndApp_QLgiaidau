@@ -30,7 +30,7 @@ class _CreateClubTournamentScreenState
   final _descCtrl = TextEditingController();
   final _maxTeamsCtrl = TextEditingController(text: '16');
 
-  String _selectedSport = AppConstants.sportBadminton;
+  String? _selectedSport;
   String _selectedFormat = AppConstants.formatSingles;
   String _selectedBracket = AppConstants.bracketSingleElimination;
   bool _isLoading = false;
@@ -45,7 +45,8 @@ class _CreateClubTournamentScreenState
   }
 
   /// Map App sport slug → backend slug
-  String _mapSportSlug() {
+  String? _mapSportSlug() {
+    if (_selectedSport == null) return null;
     switch (_selectedSport) {
       case AppConstants.sportBadminton:
         return 'badminton';
@@ -56,12 +57,19 @@ class _CreateClubTournamentScreenState
       case AppConstants.sportTableTennis:
         return 'table_tennis';
       default:
-        return 'badminton';
+        return null;
     }
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final sport = _mapSportSlug();
+    if (sport == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn môn thể thao trước khi tạo giải.')),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
     try {
@@ -70,7 +78,7 @@ class _CreateClubTournamentScreenState
       final body = <String, dynamic>{
         'name': _nameCtrl.text.trim(),
         'communityId': widget.clubId,
-        'sport': _mapSportSlug(),
+        'sport': sport,
         'format': _selectedFormat,
         'bracketType': _selectedBracket,
         'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
@@ -334,8 +342,11 @@ class _CreateClubTournamentScreenState
       (AppConstants.sportPickleball, 'Pickleball', Icons.sports_tennis),
       (AppConstants.sportTableTennis, 'Bóng bàn', Icons.sports_tennis),
     ];
-    return Row(
-      children: sports.map((s) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: sports.map((s) {
         final selected = _selectedSport == s.$1;
         return Expanded(
           child: Padding(
@@ -380,7 +391,16 @@ class _CreateClubTournamentScreenState
             ),
           ),
         );
-      }).toList(),
+          }).toList(),
+        ),
+        if (_selectedSport == null) ...[
+          const SizedBox(height: 6),
+          Text(
+            'Vui lòng chọn môn thể thao',
+            style: TextStyle(color: context.colors.error, fontSize: 12),
+          ),
+        ],
+      ],
     );
   }
 

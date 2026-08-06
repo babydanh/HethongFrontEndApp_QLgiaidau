@@ -124,13 +124,14 @@ class ApiTournamentRepository implements ITournamentRepository {
           'mustWinByTwo': true,
         };
       case AppConstants.sportBadminton:
-      default:
         return {
           'kind': 'BADMINTON',
           'setsToWin': 2,
           'pointsPerSet': 21,
           'mustWinByTwo': true,
         };
+      default:
+        throw ArgumentError('Unsupported sport: $sport');
     }
   }
 
