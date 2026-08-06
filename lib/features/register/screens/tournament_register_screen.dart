@@ -103,6 +103,7 @@ class _TournamentRegisterScreenState
   String? _existingDivisionId;
   String? _existingTeamStatus;
   bool _existingIsPaid = false;
+  bool _rankingConsent = false;
 
   String _getSubmitLabel(Tournament? t) {
     if (t?.registrationMode == 'APPROVAL') return l10n.registerSubmitApproval;
@@ -264,6 +265,15 @@ class _TournamentRegisterScreenState
       }
       return;
     }
+    final tournament = ref.read(tournamentProvider(widget.tournamentId)).asData?.value;
+    if (tournament?.isRanked == true && !_rankingConsent) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vui lòng đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng.')),
+        );
+      }
+      return;
+    }
     final divisions = ref.read(_divisionsProvider(widget.tournamentId)).value;
     final divisionId =
         _selectedDiv ??
@@ -301,6 +311,7 @@ class _TournamentRegisterScreenState
             teamName: effectiveTeamName,
             divisionId: divisionId,
             inviteCode: _localInviteCode ?? widget.inviteCode,
+            rankingConsent: _rankingConsent,
           );
       if (!mounted) return;
       // Refresh the detail streams so the participant count reflects the
@@ -1357,6 +1368,25 @@ class _TournamentRegisterScreenState
                     ),
                   ),
                 ),
+                if (t.isRanked) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: context.colors.bgSurface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.colors.border),
+                    ),
+                    child: CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: _rankingConsent,
+                      onChanged: (value) => setState(() => _rankingConsent = value ?? false),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      title: const Text('Đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                      subtitle: const Text('Giải có xếp hạng chỉ ghi nhận ELO sau khi bạn đồng ý.', style: TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,

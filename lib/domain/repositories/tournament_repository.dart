@@ -19,6 +19,7 @@ abstract class ITournamentRepository {
     String? divisionId,
     String? inviteCode,
     String? partnerEmailOrPhone,
+    bool rankingConsent = false,
   });
   Stream<Tournament?> watch(String id);
   Stream<List<Tournament>> watchAll();

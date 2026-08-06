@@ -49,6 +49,7 @@ class _DoublesRegistrationFlowState
   String? _genderError;
   String? _eloError;
   bool _eloChecking = false;
+  bool _rankingConsent = false;
 
   // Step 2
   String? _teamInviteToken;
@@ -172,6 +173,11 @@ class _DoublesRegistrationFlowState
       _showError(_genderError ?? _eloError!);
       return;
     }
+    final tournament = ref.read(tournamentProvider(widget.tournamentId)).asData?.value;
+    if (tournament?.isRanked == true && !_rankingConsent) {
+      _showError('Vui lòng đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng.');
+      return;
+    }
     setState(() => _submitting = true);
     try {
       final result = await ref
@@ -184,6 +190,7 @@ class _DoublesRegistrationFlowState
             partnerEmailOrPhone:
                 _selectedPartner?.email ??
                 (_inviteLater ? null : _partnerSearchCtrl.text.trim()),
+            rankingConsent: _rankingConsent,
           );
       if (!mounted) return;
       _participantId = result.participantId;
@@ -607,6 +614,25 @@ class _DoublesRegistrationFlowState
               ),
             ),
           ],
+        ],
+        if (ref.read(tournamentProvider(widget.tournamentId)).asData?.value?.isRanked == true) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colors.bgSurface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colors.border),
+            ),
+            child: CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _rankingConsent,
+              onChanged: (value) => setState(() => _rankingConsent = value ?? false),
+              controlAffinity: ListTileControlAffinity.leading,
+              title: const Text('Đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+              subtitle: const Text('Giải có xếp hạng chỉ ghi nhận ELO sau khi bạn đồng ý.', style: TextStyle(fontSize: 12)),
+            ),
+          ),
         ],
         const SizedBox(height: 24),
         SizedBox(

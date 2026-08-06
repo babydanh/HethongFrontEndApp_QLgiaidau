@@ -249,6 +249,7 @@ class ApiTournamentRepository implements ITournamentRepository {
     String? divisionId,
     String? inviteCode,
     String? partnerEmailOrPhone,
+    bool rankingConsent = false,
   }) async {
     final queryParameters = <String, dynamic>{};
     if (inviteCode != null && inviteCode.trim().isNotEmpty) {
@@ -266,6 +267,7 @@ class ApiTournamentRepository implements ITournamentRepository {
         if (validDivisionId != null) 'divisionId': validDivisionId,
         if (partnerEmailOrPhone != null && partnerEmailOrPhone.trim().isNotEmpty)
           'partnerEmailOrPhone': partnerEmailOrPhone.trim(),
+        'rankingConsent': rankingConsent,
       },
       queryParameters: queryParameters.isNotEmpty ? queryParameters : null,
     );
