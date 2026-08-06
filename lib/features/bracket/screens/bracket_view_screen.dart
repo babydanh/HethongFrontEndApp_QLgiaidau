@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart
 import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/filter_chips.dart' show RoundFilterPill;
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
+import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 
 class BracketViewScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -82,6 +83,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
       divisionId: widget.divisionId,
     )));
     final tournamentAsync = ref.watch(tournamentProvider(widget.tournamentId));
+    final resultAsync = ref.watch(tournamentResultProvider((
+      tournamentId: widget.tournamentId,
+      divisionId: widget.divisionId,
+    )));
     final tournament = tournamentAsync.value;
     final auth = ref.watch(authProvider);
 
@@ -247,7 +252,13 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     );
 
     if (widget.isEmbedded) {
-      return bodyContent;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildResultAwards(resultAsync),
+          bodyContent,
+        ],
+      );
     }
 
     return Scaffold(
@@ -285,7 +296,87 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
               ]
             : null,
       ),
-      body: bodyContent,
+      body: Column(
+        children: [
+          _buildResultAwards(resultAsync),
+          Expanded(child: bodyContent),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultAwards(AsyncValue<Map<String, dynamic>> resultAsync) {
+    final snapshot = resultAsync.value;
+    if (snapshot == null || snapshot['finalized'] != true) {
+      return const SizedBox.shrink();
+    }
+
+    final rawAwards = snapshot['awards'];
+    if (rawAwards is! List || rawAwards.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final awards = rawAwards.whereType<Map>().map((raw) {
+      final award = Map<String, dynamic>.from(raw);
+      final participant = award['participant'];
+      final participantMap = participant is Map
+          ? Map<String, dynamic>.from(participant)
+          : const <String, dynamic>{};
+      return (
+        rank: (award['rank'] as num?)?.toInt() ?? 0,
+        shared: award['shared'] == true,
+        name: (participantMap['teamName'] ?? 'Chưa xác định').toString(),
+      );
+    }).toList();
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+      decoration: BoxDecoration(
+        color: context.colors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Kết quả chính thức',
+            style: TextStyle(
+              color: context.colors.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: awards.map((award) {
+              final label = award.shared
+                  ? 'Hạng ${award.rank} đồng hạng'
+                  : 'Hạng ${award.rank}';
+              return Container(
+                constraints: const BoxConstraints(minWidth: 130),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: TextStyle(color: AppTheme.primary, fontSize: 12, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 2),
+                    Text(award.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.textPrimary, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 
