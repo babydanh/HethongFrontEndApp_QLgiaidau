@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -131,34 +130,15 @@ class AboutTab extends StatelessWidget {
                 _sectionDivider(colors),
                 const SizedBox(height: 16),
 
-                // ── Description Section ──
+                // ── Description Section (Native Editor.js & HTML RichText Render) ──
                 if (tournament.description.isNotEmpty) ...[
                   _buildSectionHeader(colors, l10n.sectionAboutTournament),
                   const SizedBox(height: 12),
                   ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 400),
+                    constraints: const BoxConstraints(maxHeight: 500),
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
-                      child: HtmlWidget(
-                        _convertEditorJsOrHtmlToHtml(tournament.description),
-                        textStyle: TextStyle(
-                          fontSize: 13,
-                          color: colors.textSecondary,
-                          height: 1.5,
-                        ),
-                        customStylesBuilder: (element) {
-                          if (element.localName == 'img') {
-                            return {
-                              'max-width': '100%',
-                              'height': 'auto',
-                              'border-radius': '8px',
-                              'display': 'block',
-                              'margin': '8px auto',
-                            };
-                          }
-                          return null;
-                        },
-                      ),
+                      child: _buildRichDescription(context, tournament.description),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -638,57 +618,171 @@ class AboutTab extends StatelessWidget {
     } catch (_) {}
   }
 
-  String _convertEditorJsOrHtmlToHtml(String raw) {
-    if (raw.trim().isEmpty) return '';
+  // ─── Native Editor.js & RichText Renderer ───
+  Widget _buildRichDescription(BuildContext context, String raw) {
+    final colors = context.colors;
     final trimmed = raw.trim();
 
-    // Thử parse nếu là dữ liệu JSON Blocks từ Editor.js
+    // 1. Thử parse dữ liệu Editor.js JSON Blocks
     if (trimmed.startsWith('{') && trimmed.contains('"blocks"')) {
       try {
         final Map<String, dynamic> json = jsonDecode(trimmed);
         final blocks = json['blocks'] as List?;
         if (blocks != null && blocks.isNotEmpty) {
-          final buffer = StringBuffer();
+          final widgets = <Widget>[];
           for (final block in blocks) {
             final type = block['type'];
             final data = block['data'] as Map?;
             if (data == null) continue;
 
             if (type == 'header') {
-              final level = data['level'] ?? 2;
-              buffer.write('<h$level style="margin:8px 0;font-weight:bold;">${data['text'] ?? ''}</h$level>');
+              final text = (data['text'] ?? '').toString();
+              if (text.isNotEmpty) {
+                widgets.add(
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10, bottom: 6),
+                    child: Text(
+                      _stripHtml(text),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                );
+              }
             } else if (type == 'paragraph') {
-              buffer.write('<p style="margin:6px 0;">${data['text'] ?? ''}</p>');
+              final text = (data['text'] ?? '').toString();
+              if (text.isNotEmpty) {
+                widgets.add(
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _buildRichTextSpan(context, text),
+                  ),
+                );
+              }
             } else if (type == 'image') {
-              final url = data['file']?['url'] ?? data['url'];
-              final caption = data['caption'] ?? '';
-              if (url != null && url.toString().isNotEmpty) {
-                buffer.write('<div style="text-align:center;margin:12px 0;"><img src="$url" alt="$caption" style="max-width:100%;border-radius:8px;" />');
-                if (caption.toString().isNotEmpty) {
-                  buffer.write('<p style="font-size:11px;color:#888;margin-top:4px;">$caption</p>');
-                }
-                buffer.write('</div>');
+              final url = (data['file']?['url'] ?? data['url'] ?? '').toString();
+              final caption = (data['caption'] ?? '').toString();
+              if (url.isNotEmpty) {
+                widgets.add(
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            url,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                          ),
+                        ),
+                        if (caption.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            caption,
+                            style: TextStyle(fontSize: 11, color: colors.textMuted, italic: true),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
               }
             } else if (type == 'list') {
-              final style = data['style'] == 'ordered' ? 'ol' : 'ul';
               final items = data['items'] as List?;
               if (items != null) {
-                buffer.write('<$style style="padding-left:20px;margin:6px 0;">');
                 for (final item in items) {
-                  buffer.write('<li>$item</li>');
+                  widgets.add(
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, bottom: 4),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(top: 6, right: 8),
+                            width: 5,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                          Expanded(child: _buildRichTextSpan(context, item.toString())),
+                        ],
+                      ),
+                    ),
+                  );
                 }
-                buffer.write('</$style>');
               }
-            } else if (type == 'raw' || type == 'quote') {
-              buffer.write('<blockquote style="border-left:3px solid #0066FF;padding-left:8px;margin:8px 0;color:#555;">${data['text'] ?? data['html'] ?? ''}</blockquote>');
             }
           }
-          final result = buffer.toString();
-          if (result.isNotEmpty) return result;
+          if (widgets.isNotEmpty) {
+            return Column(crossAxisAlignment: CrossAxisAlignment.start, children: widgets);
+          }
         }
       } catch (_) {}
     }
 
-    return raw;
+    // 2. Nếu là HTML thô hoặc text thường
+    return _buildRichTextSpan(context, trimmed);
+  }
+
+  Widget _buildRichTextSpan(BuildContext context, String text) {
+    final colors = context.colors;
+    // Bóc tách cơ bản thẻ <b> <strong> <i> và <br>
+    final cleanText = text
+        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n')
+        .replaceAll(RegExp(r'</p>', caseSensitive: false), '\n')
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&');
+
+    final spans = <InlineSpan>[];
+    final regex = RegExp(r'<(b|strong|i)>(.*?)</\1>', caseSensitive: false);
+    int lastMatchEnd = 0;
+
+    for (final match in regex.allMatches(cleanText)) {
+      if (match.start > lastMatchEnd) {
+        spans.add(TextSpan(
+          text: _stripHtml(cleanText.substring(lastMatchEnd, match.start)),
+          style: TextStyle(color: colors.textSecondary, fontSize: 13, height: 1.5),
+        ));
+      }
+      final tag = match.group(1)?.toLowerCase();
+      final innerText = _stripHtml(match.group(2) ?? '');
+      final isBold = tag == 'b' || tag == 'strong';
+      final isItalic = tag == 'i';
+
+      spans.add(TextSpan(
+        text: innerText,
+        style: TextStyle(
+          color: colors.textPrimary,
+          fontSize: 13,
+          height: 1.5,
+          fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+          fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
+        ),
+      ));
+      lastMatchEnd = match.end;
+    }
+
+    if (lastMatchEnd < cleanText.length) {
+      spans.add(TextSpan(
+        text: _stripHtml(cleanText.substring(lastMatchEnd)),
+        style: TextStyle(color: colors.textSecondary, fontSize: 13, height: 1.5),
+      ));
+    }
+
+    return RichText(
+      text: TextSpan(children: spans),
+    );
+  }
+
+  String _stripHtml(String html) {
+    return html.replaceAll(RegExp(r'<[^>]*>'), '').trim();
   }
 }
