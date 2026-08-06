@@ -685,7 +685,7 @@ class AboutTab extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             caption,
-                            style: TextStyle(fontSize: 11, color: colors.textMuted, italic: true),
+                            style: TextStyle(fontSize: 11, color: colors.textMuted, fontStyle: FontStyle.italic),
                             textAlign: TextAlign.center,
                           ),
                         ],
