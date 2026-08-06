@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/router/app_router.dart';
 import 'package:app_quanly_giaidau/core/widgets/socket_observer.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_update_gate.dart';
 import 'package:app_quanly_giaidau/providers/theme_provider.dart';
 import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -28,7 +29,8 @@ class TournamentApp extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
 
     return SocketObserver(
-      child: MaterialApp.router(
+      child: AppUpdateGate(
+        child: MaterialApp.router(
         title: 'Quản Lý Giải Đấu',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
@@ -39,6 +41,7 @@ class TournamentApp extends ConsumerWidget {
         locale: locale,
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
+        ),
       ),
     );
   }
