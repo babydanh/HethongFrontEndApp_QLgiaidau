@@ -156,7 +156,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                   ),
                 ),
                 const SizedBox(height: 8),
-                AnimatedBuilder(
+                ListenableBuilder(
                   listenable: _tabController,
                   builder: (context, _) {
                     switch (_tabController.index) {
