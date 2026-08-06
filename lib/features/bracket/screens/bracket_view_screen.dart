@@ -149,9 +149,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                     labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                     unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.normal),
                     tabs: const [
-                      Tab(height: 30, text: 'Lịch thi đấu'),
-                      Tab(height: 30, text: 'Bảng xếp hạng'),
                       Tab(height: 30, text: 'Bảng chéo'),
+                      Tab(height: 30, text: 'Bảng xếp hạng'),
+                      Tab(height: 30, text: 'Lịch thi đấu'),
                     ],
                   ),
                 ),
@@ -161,11 +161,13 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                   builder: (context, _) {
                     switch (_tabController.index) {
                       case 0:
-                        return _buildKnockoutMatchTable(
-                          matches,
-                          bracketType,
-                          auth.role == UserRole.viewer,
-                          auth.role == UserRole.admin || widget.isReferee,
+                        return Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: CrossTableView(
+                            matches: matches,
+                            tournamentId: widget.tournamentId,
+                            divisionId: widget.divisionId,
+                          ),
                         );
                       case 1:
                         return StandingsView(
@@ -174,13 +176,11 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                           divisionId: widget.divisionId,
                         );
                       case 2:
-                        return Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: CrossTableView(
-                            matches: matches,
-                            tournamentId: widget.tournamentId,
-                            divisionId: widget.divisionId,
-                          ),
+                        return _buildKnockoutMatchTable(
+                          matches,
+                          bracketType,
+                          auth.role == UserRole.viewer,
+                          auth.role == UserRole.admin || widget.isReferee,
                         );
                       default:
                         return const SizedBox.shrink();
@@ -204,9 +204,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                   labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                   unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.normal),
                   tabs: const [
-                    Tab(height: 30, text: 'Lịch thi đấu'),
-                    Tab(height: 30, text: 'Bảng xếp hạng'),
                     Tab(height: 30, text: 'Bảng chéo'),
+                    Tab(height: 30, text: 'Bảng xếp hạng'),
+                    Tab(height: 30, text: 'Lịch thi đấu'),
                   ],
                 ),
               ),
@@ -214,17 +214,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildKnockoutMatchTable(
-                      matches,
-                      bracketType,
-                      auth.role == UserRole.viewer,
-                      auth.role == UserRole.admin || widget.isReferee,
-                    ),
-                    StandingsView(
-                      matches: matches,
-                      tournamentId: widget.tournamentId,
-                      divisionId: widget.divisionId,
-                    ),
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: CrossTableView(
@@ -232,6 +221,17 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                         tournamentId: widget.tournamentId,
                         divisionId: widget.divisionId,
                       ),
+                    ),
+                    StandingsView(
+                      matches: matches,
+                      tournamentId: widget.tournamentId,
+                      divisionId: widget.divisionId,
+                    ),
+                    _buildKnockoutMatchTable(
+                      matches,
+                      bracketType,
+                      auth.role == UserRole.viewer,
+                      auth.role == UserRole.admin || widget.isReferee,
                     ),
                   ],
                 ),

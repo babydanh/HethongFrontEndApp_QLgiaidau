@@ -135,6 +135,26 @@ Future<List<Standing>> _calculateClientStandings(
     divisionId: divisionId,
   )).future);
 
+  // API standings remain the source of truth. This is only a network fallback,
+  // so read the tournament scoring preset instead of assuming 3-1-0.
+  var winPoints = 3;
+  var drawPoints = 1;
+  var lossPoints = 0;
+  for (final match in matches) {
+    final rules = match.sportRules;
+    final scoring = rules?['scoring'] is Map
+        ? Map<String, dynamic>.from(rules!['scoring'] as Map)
+        : rules;
+    if (scoring == null) continue;
+    final win = scoring['winPoints'];
+    final draw = scoring['drawPoints'];
+    final loss = scoring['lossPoints'];
+    if (win is num) winPoints = win.toInt();
+    if (draw is num) drawPoints = draw.toInt();
+    if (loss is num) lossPoints = loss.toInt();
+    break;
+  }
+
   final standingsMap = <String, Standing>{};
   for (final team in teams) {
     if (team.id != 'BYE') {
@@ -160,7 +180,8 @@ Future<List<Standing>> _calculateClientStandings(
           pointsAgainst: current.pointsAgainst + match.score2,
           pointDifference: (current.pointsFor + match.score1) -
               (current.pointsAgainst + match.score2),
-          totalPoints: current.totalPoints + (isWin ? 3 : (isDraw ? 1 : 0)),
+          totalPoints: current.totalPoints +
+              (isWin ? winPoints : (isDraw ? drawPoints : lossPoints)),
         );
       }
 
@@ -178,7 +199,8 @@ Future<List<Standing>> _calculateClientStandings(
           pointsAgainst: current.pointsAgainst + match.score1,
           pointDifference: (current.pointsFor + match.score2) -
               (current.pointsAgainst + match.score1),
-          totalPoints: current.totalPoints + (isWin ? 3 : (isDraw ? 1 : 0)),
+          totalPoints: current.totalPoints +
+              (isWin ? winPoints : (isDraw ? drawPoints : lossPoints)),
         );
       }
     } else if (StatusHelper.isWalkover(match.status)) {
@@ -188,7 +210,7 @@ Future<List<Standing>> _calculateClientStandings(
         standingsMap[winnerId] = current.copyWith(
           played: current.played + 1,
           won: current.won + 1,
-          totalPoints: current.totalPoints + 3,
+          totalPoints: current.totalPoints + winPoints,
         );
       }
 
@@ -213,7 +235,11 @@ Future<List<Standing>> _calculateClientStandings(
     if (a.pointDifference != b.pointDifference) {
       return b.pointDifference.compareTo(a.pointDifference);
     }
-    return b.pointsFor.compareTo(a.pointsFor);
+    if (a.pointsFor != b.pointsFor) {
+      return b.pointsFor.compareTo(a.pointsFor);
+    }
+    if (a.won != b.won) return b.won.compareTo(a.won);
+    return a.id.compareTo(b.id);
   });
 
   return standingsList;
