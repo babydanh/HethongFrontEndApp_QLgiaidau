@@ -808,3 +808,29 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     return 'Vòng $round';
   }
 }
+
+class _BracketShimmerLoading extends StatelessWidget {
+  const _BracketShimmerLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return Shimmer.fromColors(
+          baseColor: context.colors.bgSurface,
+          highlightColor: context.colors.bgCard,
+          child: Container(
+            height: 80,
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: context.colors.bgCard,
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
