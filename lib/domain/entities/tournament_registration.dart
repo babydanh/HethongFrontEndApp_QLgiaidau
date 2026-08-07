@@ -22,16 +22,23 @@ class TournamentDivisionOption {
   final int? maxParticipants;
 
   factory TournamentDivisionOption.fromJson(Map<String, dynamic> json) {
+    final minElo = json['minElo'] ?? json['min_elo'];
+    final maxElo = json['maxElo'] ?? json['max_elo'];
+    final entryFee = json['entryFee'] ?? json['entry_fee'];
+    final maxParticipants =
+        json['maxParticipants'] ?? json['max_participants'];
     return TournamentDivisionOption(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
-      genderRestriction: json['genderRestriction']?.toString(),
-      matchType: json['matchType']?.toString(),
-      categoryId: json['categoryId']?.toString(),
-      minElo: (json['minElo'] as num?)?.toDouble(),
-      maxElo: (json['maxElo'] as num?)?.toDouble(),
-      entryFee: (json['entryFee'] as num?)?.toDouble(),
-      maxParticipants: json['maxParticipants'] as int?,
+      genderRestriction: (json['genderRestriction'] ??
+              json['gender_restriction'])
+          ?.toString(),
+      matchType: (json['matchType'] ?? json['match_type'])?.toString(),
+      categoryId: (json['categoryId'] ?? json['category_id'])?.toString(),
+      minElo: (minElo as num?)?.toDouble(),
+      maxElo: (maxElo as num?)?.toDouble(),
+      entryFee: (entryFee as num?)?.toDouble(),
+      maxParticipants: (maxParticipants as num?)?.toInt(),
     );
   }
 }

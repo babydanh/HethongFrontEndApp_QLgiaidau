@@ -147,11 +147,9 @@ class _TournamentRegisterScreenState
     // Check gender restriction
     final userAsync = ref.read(userProfileProvider);
     final user = userAsync.asData?.value;
-    if (user != null &&
-        div.genderRestriction != null &&
-        div.genderRestriction != 'MIXED') {
-      final userGender = user.gender?.toUpperCase();
-      final divGender = div.genderRestriction!.toUpperCase();
+    final divGender = _normalizedGender(div.genderRestriction);
+    if (user != null && divGender != null && divGender != 'MIXED') {
+      final userGender = _normalizedGender(user.gender);
       if (userGender != null && userGender != divGender) {
         setState(() {
           _genderError = divGender == 'MALE'
@@ -287,8 +285,8 @@ class _TournamentRegisterScreenState
     // If doubles division, navigate to doubles flow
     final selectedDiv = divisions?.where((d) => d.id == divisionId).firstOrNull;
     if (selectedDiv != null &&
-        (selectedDiv.matchType == 'DOUBLES' ||
-            selectedDiv.matchType == 'MIXED_DOUBLES')) {
+        (_normalizedMatchType(selectedDiv.matchType) == 'DOUBLES' ||
+            _normalizedMatchType(selectedDiv.matchType) == 'MIXED_DOUBLES')) {
       final inviteCode = _localInviteCode ?? widget.inviteCode ?? '';
       context.push(
         '/register/${widget.tournamentId}/doubles?divisionId=$divisionId&invite=$inviteCode',
@@ -361,13 +359,13 @@ class _TournamentRegisterScreenState
   }
 
   String _divisionTypeLabel(TournamentDivisionOption d) {
-    final gender = switch ((d.genderRestriction ?? '').toUpperCase()) {
+    final gender = switch (_normalizedGender(d.genderRestriction)) {
       'MALE' => 'Nam',
       'FEMALE' => l10n.registerDivFemale,
       'MIXED' => l10n.registerDivMixed,
       _ => '',
     };
-    final type = switch ((d.matchType ?? '').toUpperCase()) {
+    final type = switch (_normalizedMatchType(d.matchType)) {
       'SINGLES' => l10n.registerTypeSingles,
       'DOUBLES' => l10n.registerTypeDoubles,
       'MIXED_DOUBLES' => l10n.registerTypeMixedDoubles,
@@ -375,6 +373,34 @@ class _TournamentRegisterScreenState
     };
     if (type == l10n.registerTypeMixedDoubles || gender.isEmpty) return type;
     return '$type $gender';
+  }
+
+  String? _normalizedGender(String? value) {
+    final normalized = value
+        ?.trim()
+        .toUpperCase()
+        .replaceAll('-', '_')
+        .replaceAll(' ', '_');
+    return switch (normalized) {
+      'MALE' || 'MEN' || 'NAM' => 'MALE',
+      'FEMALE' || 'WOMEN' || 'NU' || 'NỮ' => 'FEMALE',
+      'MIXED' || 'MIXED_GENDER' || 'NAM_NU' => 'MIXED',
+      _ => null,
+    };
+  }
+
+  String? _normalizedMatchType(String? value) {
+    final normalized = value
+        ?.trim()
+        .toUpperCase()
+        .replaceAll('-', '_')
+        .replaceAll(' ', '_');
+    return switch (normalized) {
+      'SINGLE' || 'SINGLES' || 'DON' => 'SINGLES',
+      'DOUBLE' || 'DOUBLES' || 'DOI' => 'DOUBLES',
+      'MIXED_DOUBLE' || 'MIXED_DOUBLES' || 'DOI_NAM_NU' => 'MIXED_DOUBLES',
+      _ => null,
+    };
   }
 
   List<String> _divisionMeta(TournamentDivisionOption d) {
@@ -1038,7 +1064,8 @@ class _TournamentRegisterScreenState
                 const SizedBox(height: 16),
                 // Only show name input after division selected
                 if (_selectedDivision != null)
-                  if (_selectedDivision?.matchType == 'SINGLES')
+                  if (_normalizedMatchType(_selectedDivision?.matchType) ==
+                      'SINGLES')
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
@@ -1122,7 +1149,12 @@ class _TournamentRegisterScreenState
                           final id = d.id;
                           final name = d.name;
                           final sel = _selectedDiv == id;
-                          final meta = _divisionMeta(d);
+                          final formatLabel = _divisionTypeLabel(d);
+                          final hasFormatLabel =
+                              formatLabel != l10n.registerContentTitle;
+                          final meta = _divisionMeta(d)
+                              .where((label) => label != formatLabel)
+                              .toList();
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: GestureDetector(
@@ -1147,13 +1179,28 @@ class _TournamentRegisterScreenState
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            name,
+                                            hasFormatLabel ? formatLabel : name,
                                             style: TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w800,
                                               color: context.colors.textPrimary,
                                             ),
                                           ),
+                                          if (hasFormatLabel &&
+                                              name.trim().isNotEmpty &&
+                                              name.trim() != formatLabel.trim())
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                top: 3,
+                                              ),
+                                              child: Text(
+                                                name,
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: context.colors.textMuted,
+                                                ),
+                                              ),
+                                            ),
                                           const SizedBox(height: 8),
                                           Wrap(
                                             spacing: 6,
