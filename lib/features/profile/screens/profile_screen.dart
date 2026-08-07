@@ -1544,8 +1544,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   roleIcon: group.icon,
                 );
               }),
-              if (tournaments.length > 4)
-                Padding(
+              Padding(
                   padding: const EdgeInsets.all(8),
                   child: TextButton.icon(
                     onPressed: () => context.go('/dashboard'),
