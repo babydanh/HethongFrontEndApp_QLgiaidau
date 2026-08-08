@@ -730,13 +730,79 @@ class AboutTab extends StatelessWidget {
     }
 
     // 2. Nếu là HTML thô hoặc text thường
-    return _buildRichTextSpan(context, trimmed);
+    return _buildHtmlContent(context, trimmed);
+  }
+
+  Widget _buildHtmlContent(BuildContext context, String rawHtml) {
+    final decoded = _decodeHtmlEntities(rawHtml);
+    final imgRegex = RegExp(r'<img[^>]+src=["\']([^"\']+)["\'][^>]*>', caseSensitive: false);
+    final matches = imgRegex.allMatches(decoded).toList();
+
+    if (matches.isEmpty) {
+      return _buildRichTextSpan(context, decoded);
+    }
+
+    final children = <Widget>[];
+    int lastEnd = 0;
+
+    for (final match in matches) {
+      if (match.start > lastEnd) {
+        final textPart = decoded.substring(lastEnd, match.start);
+        final cleanTextPart = _stripHtml(textPart);
+        if (cleanTextPart.isNotEmpty) {
+          children.add(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _buildRichTextSpan(context, textPart),
+            ),
+          );
+        }
+      }
+
+      final imgUrl = match.group(1);
+      if (imgUrl != null && imgUrl.isNotEmpty) {
+        children.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                imgUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
+          ),
+        );
+      }
+      lastEnd = match.end;
+    }
+
+    if (lastEnd < decoded.length) {
+      final textPart = decoded.substring(lastEnd);
+      final cleanTextPart = _stripHtml(textPart);
+      if (cleanTextPart.isNotEmpty) {
+        children.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _buildRichTextSpan(context, textPart),
+          ),
+        );
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: children,
+    );
   }
 
   Widget _buildRichTextSpan(BuildContext context, String text) {
     final colors = context.colors;
+    final decodedText = _decodeHtmlEntities(text);
+
     // Bóc tách cơ bản thẻ <b> <strong> <i> và <br>
-    final cleanText = text
+    final cleanText = decodedText
         .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n')
         .replaceAll(RegExp(r'</p>', caseSensitive: false), '\n')
         .replaceAll('&nbsp;', ' ')
@@ -748,42 +814,70 @@ class AboutTab extends StatelessWidget {
 
     for (final match in regex.allMatches(cleanText)) {
       if (match.start > lastMatchEnd) {
-        spans.add(TextSpan(
-          text: _stripHtml(cleanText.substring(lastMatchEnd, match.start)),
-          style: TextStyle(color: colors.textSecondary, fontSize: 13, height: 1.5),
-        ));
+        final rawSub = cleanText.substring(lastMatchEnd, match.start);
+        final stripped = _stripHtml(rawSub);
+        if (stripped.isNotEmpty) {
+          spans.add(TextSpan(
+            text: stripped,
+            style: TextStyle(color: colors.textSecondary, fontSize: 13, height: 1.5),
+          ));
+        }
       }
       final tag = match.group(1)?.toLowerCase();
       final innerText = _stripHtml(match.group(2) ?? '');
       final isBold = tag == 'b' || tag == 'strong';
       final isItalic = tag == 'i';
 
-      spans.add(TextSpan(
-        text: innerText,
-        style: TextStyle(
-          color: colors.textPrimary,
-          fontSize: 13,
-          height: 1.5,
-          fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-          fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
-        ),
-      ));
+      if (innerText.isNotEmpty) {
+        spans.add(TextSpan(
+          text: innerText,
+          style: TextStyle(
+            color: colors.textPrimary,
+            fontSize: 13,
+            height: 1.5,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
+          ),
+        ));
+      }
       lastMatchEnd = match.end;
     }
 
     if (lastMatchEnd < cleanText.length) {
-      spans.add(TextSpan(
-        text: _stripHtml(cleanText.substring(lastMatchEnd)),
-        style: TextStyle(color: colors.textSecondary, fontSize: 13, height: 1.5),
-      ));
+      final rawSub = cleanText.substring(lastMatchEnd);
+      final stripped = _stripHtml(rawSub);
+      if (stripped.isNotEmpty) {
+        spans.add(TextSpan(
+          text: stripped,
+          style: TextStyle(color: colors.textSecondary, fontSize: 13, height: 1.5),
+        ));
+      }
     }
+
+    if (spans.isEmpty) return const SizedBox.shrink();
 
     return RichText(
       text: TextSpan(children: spans),
     );
   }
 
+  String _decodeHtmlEntities(String input) {
+    var result = input;
+    for (var i = 0; i < 2; i++) {
+      result = result
+          .replaceAll('&lt;', '<')
+          .replaceAll('&gt;', '>')
+          .replaceAll('&quot;', '"')
+          .replaceAll('&#39;', "'")
+          .replaceAll('&amp;', '&')
+          .replaceAll('&nbsp;', ' ');
+    }
+    return result;
+  }
+
   String _stripHtml(String html) {
-    return html.replaceAll(RegExp(r'<[^>]*>'), '').trim();
+    final decoded = _decodeHtmlEntities(html);
+    return decoded.replaceAll(RegExp(r'<[^>]*>'), '').trim();
   }
 }
+
