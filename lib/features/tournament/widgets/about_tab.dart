@@ -735,7 +735,7 @@ class AboutTab extends StatelessWidget {
 
   Widget _buildHtmlContent(BuildContext context, String rawHtml) {
     final decoded = _decodeHtmlEntities(rawHtml);
-    final imgRegex = RegExp(r'<img[^>]+src=["\']([^"\']+)["\'][^>]*>', caseSensitive: false);
+    final imgRegex = RegExp('<img[^>]+src=["\']([^"\']+)["\'][^>]*>', caseSensitive: false);
     final matches = imgRegex.allMatches(decoded).toList();
 
     if (matches.isEmpty) {
