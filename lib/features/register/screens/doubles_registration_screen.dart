@@ -59,7 +59,7 @@ class _DoublesRegistrationFlowState
   String? _participantId;
   Timer? _pollTimer;
   int _pollElapsed = 0;
-  static const int _pollMaxDuration = 120; // seconds before timeout
+  DateTime? _partnerInviteExpiresAt;
   bool _gatesChecked = false;
 
   // Step 3
@@ -221,6 +221,10 @@ class _DoublesRegistrationFlowState
           if (participant is Map) {
             _teamInviteToken = participant['teamInviteToken']?.toString();
             _teamInviteLink = participant['teamInviteLink']?.toString();
+            final expires = participant['partnerInviteExpiresAt']?.toString();
+            if (expires != null) {
+              _partnerInviteExpiresAt = DateTime.tryParse(expires);
+            }
           }
         }
       } catch (_) {}
@@ -249,17 +253,28 @@ class _DoublesRegistrationFlowState
 
   void _startPolling() {
     _pollTimer?.cancel();
+    _partnerInviteExpiresAt ??= DateTime.now().add(const Duration(minutes: 60));
     _pollElapsed = 0;
     _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      _pollElapsed += 1;
-      if (_pollElapsed >= _pollMaxDuration) {
+      final remaining = _partnerInviteExpiresAt!.difference(DateTime.now()).inSeconds;
+      if (remaining <= 0) {
         _pollTimer?.cancel();
         if (mounted) {
-          _showError(AppLocalizations.of(context)!.doublesRegPartnerTimeout);
+          _showError('Lời mời ghép đôi đã hết hạn hoặc giải đã đóng đăng ký.');
+          setState(() {
+            _step = 1;
+          });
         }
         return;
       }
-      _checkPartnerJoined();
+      
+      setState(() {}); // Update countdown UI
+      
+      _pollElapsed++;
+      // Check backend every 5 seconds to avoid spamming
+      if (_pollElapsed % 5 == 0) {
+        _checkPartnerJoined();
+      }
     });
   }
 
@@ -286,6 +301,14 @@ class _DoublesRegistrationFlowState
           setState(() {
             _teamStatus = teamStatus;
             _step = 3;
+          });
+        }
+      } else if (teamStatus == 'EXPIRED') {
+        _pollTimer?.cancel();
+        if (mounted) {
+          _showError('Lời mời ghép đôi đã hết hạn hoặc giải đã đóng đăng ký.');
+          setState(() {
+            _step = 1;
           });
         }
       }
@@ -915,13 +938,22 @@ class _DoublesRegistrationFlowState
     ).animate().fadeIn(duration: 300.ms);
   }
 
-  /// Countdown badge for partner invitation — shows MM:SS, pulsing red when ≤30s
+  /// Countdown badge for partner invitation — shows HH:MM:SS or MM:SS, pulsing red when ≤30s
   Widget _buildCountdownBadge(AppColorsExtension colors) {
-    final remaining = _pollMaxDuration - _pollElapsed;
-    final minutes = remaining ~/ 60;
+    int remaining = 0;
+    if (_partnerInviteExpiresAt != null) {
+      remaining = _partnerInviteExpiresAt!.difference(DateTime.now()).inSeconds;
+      if (remaining < 0) remaining = 0;
+    }
+    final hours = remaining ~/ 3600;
+    final minutes = (remaining % 3600) ~/ 60;
     final seconds = remaining % 60;
     final isUrgent = remaining <= 30;
     final badgeColor = isUrgent ? colors.error : const Color(0xFF2979FF);
+
+    final timeStr = hours > 0
+        ? '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}'
+        : '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
 
     Widget badge = Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -942,7 +974,7 @@ class _DoublesRegistrationFlowState
           ),
           const SizedBox(width: 8),
           Text(
-            'Giữ chỗ trong ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
+            'Giữ chỗ trong $timeStr',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w800,
