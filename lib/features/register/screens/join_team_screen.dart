@@ -30,13 +30,17 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
     setState(() => _submitting = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
-      await dio.post(
-        '/tournaments/${widget.tournamentId}/join-team',
-        data: {
-          'participantId': widget.participantId,
-          'teamInviteToken': widget.token,
-        },
-      );
+      if (widget.token.isEmpty) {
+        await dio.post('/tournaments/participants/${widget.participantId}/accept-partner');
+      } else {
+        await dio.post(
+          '/tournaments/${widget.tournamentId}/join-team',
+          data: {
+            'participantId': widget.participantId,
+            'teamInviteToken': widget.token,
+          },
+        );
+      }
       setState(() => _success = true);
     } catch (e) {
       if (mounted) {

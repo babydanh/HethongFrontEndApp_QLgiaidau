@@ -150,10 +150,17 @@ class ApiTournamentRepository implements ITournamentRepository {
   }
 
   @override
-  Future<Tournament?> getById(String id) async {
+  Future<Tournament?> getById(String id, {String? inviteCode}) async {
     _log.debug('Fetching tournament by id via API: $id');
     try {
-      final response = await _dioClient.dio.get('/tournaments/$id');
+      final query = <String, dynamic>{
+        if (inviteCode != null && inviteCode.trim().isNotEmpty)
+          'invite': inviteCode.trim(),
+      };
+      final response = await _dioClient.dio.get(
+        '/tournaments/$id',
+        queryParameters: query.isEmpty ? null : query,
+      );
       if (response.statusCode == 200) {
         final data = response.data['data'];
         if (data != null) {
@@ -163,6 +170,25 @@ class ApiTournamentRepository implements ITournamentRepository {
       return null;
     } catch (e, stack) {
       _log.error('Error fetching tournament by id', e, stack);
+      return null;
+    }
+  }
+
+  @override
+  Future<Tournament?> getByInviteCode(String code) async {
+    _log.debug('Resolving tournament by invite code via API: $code');
+    try {
+      final response = await _dioClient.dio.get('/tournaments/join/$code');
+      if (response.statusCode == 200) {
+        final data = response.data['data'];
+        if (data != null) {
+          final id = data['id']?.toString() ?? '';
+          return Tournament.fromJson(data, id);
+        }
+      }
+      return null;
+    } catch (e, stack) {
+      _log.error('Error resolving tournament by invite code', e, stack);
       return null;
     }
   }
@@ -378,13 +404,26 @@ class ApiTournamentRepository implements ITournamentRepository {
 
   @override
   Stream<List<Tournament>> watchAll() async* {
-    // A failed request must remain an error, not an empty public snapshot.
-    yield await _fetchAllPublicTournaments();
+    List<Tournament>? lastGoodValue;
+    var retryDelay = const Duration(seconds: 5);
 
-    yield* Stream.periodic(const Duration(seconds: 45))
-        .asyncMap((_) async {
-          return _fetchAllPublicTournaments();
-        });
+    while (true) {
+      try {
+        final value = await _fetchAllPublicTournaments();
+        lastGoodValue = value;
+        retryDelay = const Duration(seconds: 5);
+        yield value;
+        await Future<void>.delayed(const Duration(seconds: 45));
+      } catch (_) {
+        // Keep the last successful snapshot visible during a temporary outage.
+        // Do not turn a network error into a misleading empty state.
+        if (lastGoodValue != null) yield lastGoodValue!;
+        await Future<void>.delayed(retryDelay);
+        retryDelay = Duration(
+          seconds: (retryDelay.inSeconds * 2).clamp(5, 60),
+        );
+      }
+    }
   }
 
   @override

@@ -144,10 +144,8 @@ class StandingsView extends ConsumerWidget {
                                             DataColumn(label: Text('Trận')),
                                             DataColumn(label: Text('T')),
                                             DataColumn(label: Text('B')),
-                                            DataColumn(label: Text('BT')),
-                                            DataColumn(label: Text('BB')),
-                                            DataColumn(label: Text('HS')),
                                             DataColumn(label: Text('Điểm')),
+                                            DataColumn(label: Text('Hiệu số')),
                                           ],
                                           rows: List.generate(gStandings.length, (index) {
                                             final st = gStandings[index];
@@ -158,10 +156,8 @@ class StandingsView extends ConsumerWidget {
                                                 DataCell(Text('${st.played}')),
                                                 DataCell(Text('${st.won}')),
                                                 DataCell(Text('${st.lost}')),
-                                                DataCell(Text('${st.pointsFor}')),
-                                                DataCell(Text('${st.pointsAgainst}')),
-                                                DataCell(Text('${st.pointDifference > 0 ? '+' : ''}${st.pointDifference}')),
                                                 DataCell(Text('${st.totalPoints}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary))),
+                                                DataCell(Text('${st.pointDifference > 0 ? '+' : ''}${st.pointDifference}')),
                                               ],
                                             );
                                           }),
@@ -264,10 +260,8 @@ class StandingsView extends ConsumerWidget {
                               DataColumn(label: Text('Trận')),
                               DataColumn(label: Text('T')),
                               DataColumn(label: Text('B')),
-                              DataColumn(label: Text('BT')),
-                              DataColumn(label: Text('BB')),
-                              DataColumn(label: Text('HS')),
                               DataColumn(label: Text('Điểm')),
+                              DataColumn(label: Text('Hiệu số')),
                             ],
                             rows: List.generate(gStandings.length, (index) {
                               final st = gStandings[index];
@@ -307,13 +301,6 @@ class StandingsView extends ConsumerWidget {
                                   DataCell(Text('${st.played}')),
                                   DataCell(Text('${st.won}')),
                                   DataCell(Text('${st.lost}')),
-                                  DataCell(Text('${st.pointsFor}')),
-                                  DataCell(Text('${st.pointsAgainst}')),
-                                  DataCell(
-                                    Text(
-                                      '${st.pointDifference > 0 ? '+' : ''}${st.pointDifference}',
-                                    ),
-                                  ),
                                   DataCell(
                                     Text(
                                       '${st.totalPoints}',
@@ -321,6 +308,11 @@ class StandingsView extends ConsumerWidget {
                                         fontWeight: FontWeight.bold,
                                         color: AppTheme.primary,
                                       ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      '${st.pointDifference > 0 ? '+' : ''}${st.pointDifference}',
                                     ),
                                   ),
                                 ],

@@ -701,7 +701,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             _buildFilterRow(
               title: 'VÒNG ĐẤU:',
               children: availableRounds.map((r) {
-                final label = isRoundRobin ? 'Vòng $r' : _getRoundName(r, totalRounds);
+                        final label = isRoundRobin ? 'Lượt $r' : _getRoundName(r, totalRounds);
                 final count = groupScopedMatches.where((m) => m.round == r).length;
                 return RoundFilterPill(
                   isSelected: _selectedRound == r,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/token_manager.dart';
@@ -13,6 +15,9 @@ class SocketService {
   static const _log = AppLogger('SocketService');
   io.Socket? _socket;
   final TokenManager _tokenManager;
+  Timer? _reconnectTimer;
+  bool _manualDisconnect = false;
+  int _reconnectAttempt = 0;
 
   /// Callback khi có notification realtime mới.
   void Function(Map<String, dynamic> data)? onNotification;
@@ -24,6 +29,8 @@ class SocketService {
 
   /// Kết nối tới backend socket.io server.
   Future<void> connect() async {
+    _manualDisconnect = false;
+    _reconnectTimer?.cancel();
     if (_socket?.connected == true) return;
     _disconnect();
 
@@ -50,6 +57,7 @@ class SocketService {
       );
 
       _socket!.onConnect((_) {
+        _reconnectAttempt = 0;
         _log.success('Socket connected');
         // Đăng ký nhận thông báo
         _socket!.emit('subscribe');
@@ -62,8 +70,18 @@ class SocketService {
         }
       });
 
-      _socket!.onDisconnect((_) => _log.info('Socket disconnected'));
-      _socket!.onError((err) => _log.error('Socket error', err.toString()));
+      _socket!.onDisconnect((_) {
+        _log.info('Socket disconnected');
+        _scheduleReconnect();
+      });
+      _socket!.onError((err) {
+        _log.error('Socket error', err.toString());
+        _scheduleReconnect();
+      });
+      _socket!.on('connect_error', (err) {
+        _log.error('Socket connect error', err.toString());
+        _scheduleReconnect();
+      });
 
       _socket!.connect();
     } catch (e, stack) {
@@ -73,6 +91,8 @@ class SocketService {
 
   /// Ngắt kết nối.
   void disconnect() {
+    _manualDisconnect = true;
+    _reconnectTimer?.cancel();
     _disconnect();
   }
 
@@ -81,6 +101,7 @@ class SocketService {
     _socket?.off('connect');
     _socket?.off('disconnect');
     _socket?.off('error');
+    _socket?.off('connect_error');
     _socket?.disconnect();
     _socket?.close();
     _socket = null;
@@ -88,7 +109,20 @@ class SocketService {
 
   /// Làm mới kết nối (khi token thay đổi).
   Future<void> reconnect() async {
+    _manualDisconnect = false;
+    _reconnectTimer?.cancel();
     _disconnect();
     await connect();
+  }
+
+  void _scheduleReconnect() {
+    if (_manualDisconnect || _reconnectTimer?.isActive == true) return;
+    final attempt = _reconnectAttempt.clamp(0, 4).toInt();
+    final seconds = (1 << attempt).clamp(1, 30).toInt();
+    _reconnectAttempt++;
+    _reconnectTimer = Timer(Duration(seconds: seconds), () async {
+      _reconnectTimer = null;
+      await connect();
+    });
   }
 }

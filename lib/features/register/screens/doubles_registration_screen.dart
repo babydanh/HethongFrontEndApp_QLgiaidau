@@ -291,7 +291,13 @@ class _DoublesRegistrationFlowState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final tAsync = ref.watch(tournamentIntroProvider(widget.tournamentId));
+    // Tải kèm mã mời để đọc được giải PRIVATE (backend yêu cầu `?invite=`).
+    final tAsync = ref.watch(
+      registerTournamentProvider((
+        id: widget.tournamentId,
+        invite: widget.inviteCode,
+      )),
+    );
     final colors = context.colors;
 
     if (_success) return _buildSuccess(colors);

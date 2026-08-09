@@ -5,7 +5,8 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
 abstract class ITournamentRepository {
   Future<Tournament> create(Tournament tournament);
-  Future<Tournament?> getById(String id);
+  Future<Tournament?> getById(String id, {String? inviteCode});
+  Future<Tournament?> getByInviteCode(String code);
   Future<TournamentWorkspace> getMyWorkspace();
   Future<void> respondToRefereeInvite({
     required String tournamentId,

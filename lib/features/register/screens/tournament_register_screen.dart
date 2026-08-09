@@ -432,7 +432,14 @@ class _TournamentRegisterScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isAuth = ref.watch(authProvider).isAuthenticated;
-    final tAsync = ref.watch(tournamentIntroProvider(widget.tournamentId));
+    // Tải kèm mã mời để đọc được giải PRIVATE (backend yêu cầu `?invite=`).
+    // Key đổi khi `_localInviteCode` đổi → tự refetch sau khi nhập mã.
+    final tAsync = ref.watch(
+      registerTournamentProvider((
+        id: widget.tournamentId,
+        invite: _localInviteCode ?? widget.inviteCode,
+      )),
+    );
     final divAsync = ref.watch(_divisionsProvider(widget.tournamentId));
 
     return Scaffold(
@@ -447,6 +454,12 @@ class _TournamentRegisterScreenState
         child: tAsync.when(
           data: (t) {
             if (t == null) {
+              // Giải PRIVATE trả 403 (→ null) khi chưa có mã mời. Nếu chưa có
+              // mã thì hiện cổng nhập mã; chỉ báo "không tìm thấy" khi đã có
+              // mã mà vẫn tải không được (mã sai / giải không tồn tại).
+              final hasCode =
+                  widget.inviteCode != null || _localInviteCode != null;
+              if (!hasCode) return _buildInviteGate(null);
               return Center(child: Text(l10n.registerTournamentNotFound));
             }
             if (!isAuth) return _buildLoginPrompt(t);
@@ -776,7 +789,7 @@ class _TournamentRegisterScreenState
     ).animate().fadeIn(duration: 250.ms);
   }
 
-  Widget _buildInviteGate(Tournament t) => Padding(
+  Widget _buildInviteGate(Tournament? t) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,

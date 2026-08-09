@@ -99,7 +99,6 @@ class AppNotification {
         // type chứa 'GENERAL' hoặc unknown → dùng redirectUrl nếu có
         if (type.startsWith('GENERAL') || type.startsWith('SYSTEM')) {
           return _normalizeRedirectUrl(redirectUrl);
-          return null;
         }
         // REFEREE types are handled inline via isInvite/isRefereeInvite — no route
         if (isRefereeInvite) return null;
@@ -119,6 +118,16 @@ class AppNotification {
 
     if (path == '/profile' || path == '/notifications') return path;
     if (segments.length >= 2 && segments[0] == 'tournaments') {
+      if (segments.length >= 5 && segments[2] == 'participants' && segments[4] == 'accept-partner') {
+        return '/join-team?tournamentId=${segments[1]}&pid=${segments[3]}';
+      }
+      if (segments.length >= 3 && segments[2] == 'register') {
+        final divisionId = uri.queryParameters['divisionId'];
+        if (divisionId != null && divisionId.isNotEmpty) {
+           return '/register/${segments[1]}?divisionId=$divisionId';
+        }
+        return '/register/${segments[1]}';
+      }
       return '/intro/${segments[1]}';
     }
     if (segments.length >= 2 && segments[0] == 'matches') {

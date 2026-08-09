@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
+import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class LiteManagementScreen extends ConsumerStatefulWidget {
@@ -586,7 +587,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             ),
             child: QrImageView(
-              data: inviteCode,
+              // Mã QR phải chứa URL đầy đủ (mở thẳng luồng tham gia), không phải
+              // mã thô — khớp với web LiteInviteQr.
+              data: LiteTournamentCreateResult.resolveUrl(
+                '/lite/tournaments/join/$inviteCode',
+              ),
               version: QrVersions.auto,
               size: 160,
               backgroundColor: Colors.white,

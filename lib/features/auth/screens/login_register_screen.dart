@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,25 +35,14 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
-  static const _appleSignInChannel = MethodChannel('vnsport/apple-sign-in-button');
 
   @override
   void initState() {
     super.initState();
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      _appleSignInChannel.setMethodCallHandler((call) async {
-        if (call.method == 'appleSignInButtonPressed' && !_isLoading) {
-          await _submitApple();
-        }
-      });
-    }
   }
 
   @override
   void dispose() {
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      _appleSignInChannel.setMethodCallHandler(null);
-    }
     _emailController.dispose();
     _passwordController.dispose();
     _fullNameController.dispose();
@@ -62,17 +50,6 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
   }
 
   Widget _buildAppleSignInButton() {
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      return const SizedBox(
-        height: 52,
-        width: double.infinity,
-        child: UiKitView(
-          viewType: 'vnsport/apple-sign-in-button',
-          creationParamsCodec: StandardMessageCodec(),
-        ),
-      );
-    }
-
     return SignInWithAppleButton(
       onPressed: _isLoading ? null : _submitApple,
       style: SignInWithAppleButtonStyle.black,
