@@ -568,12 +568,14 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 52,
-                              child: _buildAppleSignInButton(),
-                            ),
+                            if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS) ...[
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 52,
+                                child: _buildAppleSignInButton(),
+                              ),
+                            ],
                           ],
                         ),
                         const SizedBox(height: 12),

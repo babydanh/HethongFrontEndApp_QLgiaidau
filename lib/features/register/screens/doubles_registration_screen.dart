@@ -14,6 +14,8 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:app_quanly_giaidau/shared/widgets/withdraw_sheet.dart';
 
 class DoublesRegistrationFlow extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -141,20 +143,21 @@ class _DoublesRegistrationFlowState
       final elo = response.eloPoints ?? 1000;
       if (minElo != null && elo < minElo) {
         setState(
-          () => _eloError =
-              AppLocalizations.of(context)!.registerEloTooLow(elo, minElo.toInt()),
+          () => _eloError = AppLocalizations.of(
+            context,
+          )!.registerEloTooLow(elo, minElo.toInt()),
         );
       } else if (maxElo != null && elo > maxElo) {
         setState(
-          () => _eloError =
-              AppLocalizations.of(context)!.registerEloTooHigh(elo, maxElo.toInt()),
+          () => _eloError = AppLocalizations.of(
+            context,
+          )!.registerEloTooHigh(elo, maxElo.toInt()),
         );
       }
     } catch (_) {
       if (mounted) {
         setState(
-          () => _eloError =
-              AppLocalizations.of(context)!.registerEloCheckError,
+          () => _eloError = AppLocalizations.of(context)!.registerEloCheckError,
         );
       }
     } finally {
@@ -173,9 +176,14 @@ class _DoublesRegistrationFlowState
       _showError(_genderError ?? _eloError!);
       return;
     }
-    final tournament = ref.read(tournamentProvider(widget.tournamentId)).asData?.value;
+    final tournament = ref
+        .read(tournamentProvider(widget.tournamentId))
+        .asData
+        ?.value;
     if (tournament?.isRanked == true && !_rankingConsent) {
-      _showError('Vui lòng đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng.');
+      _showError(
+        'Vui lòng đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng.',
+      );
       return;
     }
     setState(() => _submitting = true);
@@ -229,7 +237,10 @@ class _DoublesRegistrationFlowState
       }
     } catch (e) {
       _showError(
-        ErrorParser.parse(e, AppLocalizations.of(context)!.doublesRegCreateError),
+        ErrorParser.parse(
+          e,
+          AppLocalizations.of(context)!.doublesRegCreateError,
+        ),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -332,7 +343,8 @@ class _DoublesRegistrationFlowState
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('${l10n.registerTournamentNotFound}: $e')),
+        error: (e, _) =>
+            Center(child: Text('${l10n.registerTournamentNotFound}: $e')),
       ),
     );
   }
@@ -621,7 +633,12 @@ class _DoublesRegistrationFlowState
             ),
           ],
         ],
-        if (ref.read(tournamentProvider(widget.tournamentId)).asData?.value?.isRanked == true) ...[
+        if (ref
+                .read(tournamentProvider(widget.tournamentId))
+                .asData
+                ?.value
+                ?.isRanked ==
+            true) ...[
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(12),
@@ -633,10 +650,17 @@ class _DoublesRegistrationFlowState
             child: CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               value: _rankingConsent,
-              onChanged: (value) => setState(() => _rankingConsent = value ?? false),
+              onChanged: (value) =>
+                  setState(() => _rankingConsent = value ?? false),
               controlAffinity: ListTileControlAffinity.leading,
-              title: const Text('Đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-              subtitle: const Text('Giải có xếp hạng chỉ ghi nhận ELO sau khi bạn đồng ý.', style: TextStyle(fontSize: 12)),
+              title: const Text(
+                'Đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+              subtitle: const Text(
+                'Giải có xếp hạng chỉ ghi nhận ELO sau khi bạn đồng ý.',
+                style: TextStyle(fontSize: 12),
+              ),
             ),
           ),
         ],
@@ -656,7 +680,11 @@ class _DoublesRegistrationFlowState
                     ),
                   )
                 : const Icon(Icons.arrow_forward_rounded),
-            label: Text(_submitting ? l10n.doublesRegProcessing : l10n.doublesRegSubmitNext),
+            label: Text(
+              _submitting
+                  ? l10n.doublesRegProcessing
+                  : l10n.doublesRegSubmitNext,
+            ),
             style: FilledButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -745,29 +773,53 @@ class _DoublesRegistrationFlowState
             ),
           ),
           const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: inviteLink ?? _teamInviteToken!));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.doublesRegCopied),
-                    duration: const Duration(seconds: 2),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(
+                      ClipboardData(text: inviteLink ?? _teamInviteToken!),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.doublesRegCopied),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.copy_rounded, size: 16),
+                  label: Text(
+                    l10n.doublesRegCopyLink,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                );
-              },
-              icon: const Icon(Icons.copy_rounded, size: 16),
-              label: Text(
-                l10n.doublesRegCopyLink,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    // ignore: deprecated_member_use
+                    Share.share(inviteLink ?? _teamInviteToken!);
+                  },
+                  icon: const Icon(Icons.share_rounded, size: 16),
+                  label: const Text(
+                    'Chia sẻ',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
         const SizedBox(height: 24),
@@ -797,6 +849,27 @@ class _DoublesRegistrationFlowState
               context.go('/intro/${widget.tournamentId}');
             },
             child: Text(l10n.doublesRegContinueLater),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: TextButton.icon(
+            onPressed: () => WithdrawSheet.show(
+              context,
+              tournamentId: widget.tournamentId,
+              divisionId: widget.division.id,
+              hasPaid: false,
+            ),
+            icon: Icon(
+              Icons.exit_to_app_rounded,
+              size: 16,
+              color: colors.error,
+            ),
+            label: Text(
+              l10n.registerWithdraw,
+              style: TextStyle(color: colors.error, fontSize: 13),
+            ),
           ),
         ),
       ],
@@ -843,12 +916,12 @@ class _DoublesRegistrationFlowState
     );
 
     if (isUrgent) {
-      badge = badge.animate(
-        onPlay: (controller) => controller.repeat(reverse: true),
-      ).shimmer(
-        duration: 600.ms,
-        color: colors.error.withValues(alpha: 0.3),
-      );
+      badge = badge
+          .animate(onPlay: (controller) => controller.repeat(reverse: true))
+          .shimmer(
+            duration: 600.ms,
+            color: colors.error.withValues(alpha: 0.3),
+          );
     }
 
     return Center(child: badge);
@@ -971,11 +1044,34 @@ class _DoublesRegistrationFlowState
             icon: canPay
                 ? const Icon(Icons.payment_rounded)
                 : const Icon(Icons.check_rounded),
-            label: Text(canPay ? 'Tiến hành thanh toán' : l10n.doublesRegComplete),
+            label: Text(
+              canPay ? 'Tiến hành thanh toán' : l10n.doublesRegComplete,
+            ),
             style: FilledButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: TextButton.icon(
+            onPressed: () => WithdrawSheet.show(
+              context,
+              tournamentId: widget.tournamentId,
+              divisionId: widget.division.id,
+              hasPaid: false, // Tại bước 3 chưa thanh toán thành công
+            ),
+            icon: Icon(
+              Icons.exit_to_app_rounded,
+              size: 16,
+              color: colors.error,
+            ),
+            label: Text(
+              l10n.registerWithdraw,
+              style: TextStyle(color: colors.error, fontSize: 13),
             ),
           ),
         ),
@@ -1015,6 +1111,24 @@ class _DoublesRegistrationFlowState
                 onPressed: () => context.go('/intro/${widget.tournamentId}'),
                 child: const Text('Xem chi tiết'),
               ),
+              const SizedBox(height: 12),
+              TextButton.icon(
+                onPressed: () => WithdrawSheet.show(
+                  context,
+                  tournamentId: widget.tournamentId,
+                  divisionId: widget.division.id,
+                  hasPaid: _entryFee != null && _entryFee! > 0,
+                ),
+                icon: Icon(
+                  Icons.exit_to_app_rounded,
+                  size: 16,
+                  color: colors.error,
+                ),
+                label: Text(
+                  AppLocalizations.of(context)!.registerWithdraw,
+                  style: TextStyle(color: colors.error, fontSize: 13),
+                ),
+              ),
             ],
           ),
         ),
@@ -1022,4 +1136,3 @@ class _DoublesRegistrationFlowState
     );
   }
 }
-
