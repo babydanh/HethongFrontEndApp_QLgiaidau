@@ -822,6 +822,44 @@ class _DoublesRegistrationFlowState
               ),
             ],
           ),
+        ] else ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.blue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.check_circle_rounded,
+                  size: 48,
+                  color: Colors.blue,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Đã gửi thông báo ghép đội',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.blue.shade900,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Chúng tôi đã gửi thông báo lời mời đến đồng đội của bạn qua tài khoản. Hãy nhắc họ mở ứng dụng hoặc truy cập web để xác nhận tham gia.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.blue.shade700,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
         const SizedBox(height: 24),
         Row(
