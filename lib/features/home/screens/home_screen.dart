@@ -514,6 +514,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: tournamentsAsync.when(
               data: (tournamentsList) {
                 final allTournaments = tournamentsList.where((t) {
+                  final s = t.status.toUpperCase();
+                  if (['DRAFT', 'PENDING_APPROVAL', 'SUSPENDED', 'CANCELLED', 'PENDING_DELETE'].contains(s)) {
+                    return false;
+                  }
                   final tSport = t.sport
                       .toLowerCase()
                       .replaceAll('_', '')

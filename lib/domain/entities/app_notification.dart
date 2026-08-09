@@ -165,8 +165,7 @@ class AppNotification {
 
   /// Kiểm tra nếu thông báo có chứa action accept/decline
   bool get isInvite {
-    return type == 'TOURNAMENT_REGISTER_PENDING' ||
-        type == 'CLUB_INVITE' ||
+    return type == 'CLUB_INVITE' ||
         type == 'INVITE' ||
         isRefereeInvite;
   }
