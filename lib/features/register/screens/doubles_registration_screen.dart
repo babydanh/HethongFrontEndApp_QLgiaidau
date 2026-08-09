@@ -336,7 +336,7 @@ class _DoublesRegistrationFlowState
                 _buildStepIndicator(colors),
                 const SizedBox(height: 24),
                 if (_step == 1) _buildStep1(t, colors),
-                if (_step == 2) _buildStep2(colors),
+                if (_step == 2) _buildStep2(t, colors),
                 if (_step == 3) _buildStep3(t, colors),
               ],
             ),
@@ -696,7 +696,7 @@ class _DoublesRegistrationFlowState
     ).animate().fadeIn(duration: 300.ms);
   }
 
-  Widget _buildStep2(AppColorsExtension colors) {
+  Widget _buildStep2(Tournament t, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     final inviteLink =
         _teamInviteLink ??
@@ -804,8 +804,9 @@ class _DoublesRegistrationFlowState
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () {
+                    final shareText = 'Tham gia đội ${_teamNameCtrl.text} tại giải ${t.name}!\n\nNhấn vào link bên dưới để chấp nhận lời mời:\n${inviteLink ?? _teamInviteToken!}';
                     // ignore: deprecated_member_use
-                    Share.share(inviteLink ?? _teamInviteToken!);
+                    Share.share(shareText);
                   },
                   icon: const Icon(Icons.share_rounded, size: 16),
                   label: const Text(

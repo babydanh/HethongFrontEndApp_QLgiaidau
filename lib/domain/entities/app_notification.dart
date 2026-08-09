@@ -121,6 +121,11 @@ class AppNotification {
       if (segments.length >= 5 && segments[2] == 'participants' && segments[4] == 'accept-partner') {
         return '/join-team?tournamentId=${segments[1]}&pid=${segments[3]}';
       }
+      if (segments.length >= 3 && segments[2] == 'join-team') {
+        final pid = uri.queryParameters['pid'] ?? '';
+        final token = uri.queryParameters['token'] ?? '';
+        return '/join-team?tournamentId=${segments[1]}&pid=$pid&token=$token';
+      }
       if (segments.length >= 3 && segments[2] == 'register') {
         final divisionId = uri.queryParameters['divisionId'];
         if (divisionId != null && divisionId.isNotEmpty) {
