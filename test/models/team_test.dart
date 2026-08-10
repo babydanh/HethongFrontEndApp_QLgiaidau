@@ -14,7 +14,7 @@ void main() {
         'group': 'Bang A',
         'photoUrl': 'https://example.com/photo.jpg',
         'qrCode': 'VDV-001',
-        'approvalStatus': 'APPROVED',
+        'approvalStatus': 'COMPLETE',
         'contactEmail': 'contact@example.com',
         'createdAt': '2026-06-01T00:00:00Z',
       };
@@ -28,7 +28,7 @@ void main() {
       expect(team.group, 'Bang A');
       expect(team.photoUrl, 'https://example.com/photo.jpg');
       expect(team.qrCode, 'VDV-001');
-      expect(team.approvalStatus, 'APPROVED');
+      expect(team.approvalStatus, 'COMPLETE');
       expect(team.contactEmail, 'contact@example.com');
     });
 
@@ -52,15 +52,15 @@ void main() {
     });
 
     test('TC-FLUTTER-TEAMS-001: should fallback approvalStatus from status', () {
-      final json = {'name': 'A', 'status': 'APPROVED'};
+      final json = {'name': 'A', 'status': 'COMPLETE'};
       final team = Team.fromJson(json, '1');
-      expect(team.approvalStatus, 'APPROVED');
+      expect(team.approvalStatus, 'COMPLETE');
     });
   });
 
   group('TC-FLUTTER-TEAMS-004: Team getters', () {
-    test('isApproved returns true for APPROVED', () {
-      final t = Team(id: '1', name: 'A', approvalStatus: 'APPROVED', createdAt: DateTime.now());
+    test('isApproved returns true for COMPLETE', () {
+      final t = Team(id: '1', name: 'A', approvalStatus: 'COMPLETE', createdAt: DateTime.now());
       expect(t.isApproved, true);
       expect(t.isPendingApproval, false);
     });

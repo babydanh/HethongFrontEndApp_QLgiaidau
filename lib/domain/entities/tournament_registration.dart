@@ -9,6 +9,9 @@ class TournamentDivisionOption {
     this.maxElo,
     this.entryFee,
     this.maxParticipants,
+    this.bracketType,
+    this.registrationEndDate,
+    this.participantCount,
   });
 
   final String id;
@@ -20,6 +23,9 @@ class TournamentDivisionOption {
   final double? maxElo;
   final double? entryFee;
   final int? maxParticipants;
+  final String? bracketType;
+  final DateTime? registrationEndDate;
+  final int? participantCount;
 
   factory TournamentDivisionOption.fromJson(Map<String, dynamic> json) {
     final minElo = json['minElo'] ?? json['min_elo'];
@@ -27,6 +33,11 @@ class TournamentDivisionOption {
     final entryFee = json['entryFee'] ?? json['entry_fee'];
     final maxParticipants =
         json['maxParticipants'] ?? json['max_participants'];
+    final rawEndDate =
+        json['registrationEndDate'] ?? json['registration_end_date'];
+    final rawCount = json['_count'] is Map
+        ? (json['_count'] as Map)['participants']
+        : (json['participantCount'] ?? json['participant_count']);
     return TournamentDivisionOption(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
@@ -39,6 +50,11 @@ class TournamentDivisionOption {
       maxElo: (maxElo as num?)?.toDouble(),
       entryFee: (entryFee as num?)?.toDouble(),
       maxParticipants: (maxParticipants as num?)?.toInt(),
+      bracketType: (json['bracketType'] ?? json['bracket_type'])?.toString(),
+      registrationEndDate: rawEndDate is String
+          ? DateTime.tryParse(rawEndDate)
+          : null,
+      participantCount: (rawCount as num?)?.toInt(),
     );
   }
 }

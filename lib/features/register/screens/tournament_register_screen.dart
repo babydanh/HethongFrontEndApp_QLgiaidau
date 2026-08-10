@@ -59,6 +59,9 @@ class _TournamentRegisterScreenState
       final dio = ref.read(dioProvider);
       final response = await dio.get(
         '/tournaments/${widget.tournamentId}/my-registration',
+        queryParameters: widget.divisionId != null && widget.divisionId!.isNotEmpty
+            ? {'divisionId': widget.divisionId}
+            : null,
       );
       final raw = response.data;
       final payload = raw is Map && raw['data'] is Map ? raw['data'] : raw;
@@ -96,6 +99,7 @@ class _TournamentRegisterScreenState
   String? _inviteError;
   String? _localInviteCode;
   double? _registeredEntryFee;
+  TournamentDivisionOption? _registeredDivision;
   String? _registrationTeamStatus;
   bool _checkingRegistration = true;
   bool _alreadyRegistered = false;
@@ -319,10 +323,10 @@ class _TournamentRegisterScreenState
       final t = ref.read(tournamentProvider(widget.tournamentId)).asData?.value;
       final effectiveFee = result.entryFee;
       _registrationTeamStatus = result.teamStatus;
+      _registeredDivision = selectedDiv;
       final canProceedToPayment =
           !result.isWaitlisted &&
           (result.teamStatus == 'COMPLETE' ||
-              result.teamStatus == 'APPROVED' ||
               result.teamStatus == 'PENDING_APPROVAL');
 
       if (effectiveFee > 0 &&
@@ -421,6 +425,18 @@ class _TournamentRegisterScreenState
     } else {
       items.add(l10n.registerFree);
     }
+    final bracket = switch (d.bracketType?.toUpperCase()) {
+      'SINGLE_ELIMINATION' => 'Loại trực tiếp',
+      'DOUBLE_ELIMINATION' => 'Nhánh thắng/thua',
+      'ROUND_ROBIN' => 'Vòng tròn',
+      'GROUP_STAGE_KNOCKOUT' => 'Vòng bảng + loại trực tiếp',
+      _ => null,
+    };
+    if (bracket != null) items.add(bracket);
+    if (d.participantCount != null) {
+      final max = d.maxParticipants != null ? ' / ${d.maxParticipants}' : '';
+      items.add('${d.participantCount}$max hồ sơ');
+    }
     return items;
   }
 
@@ -494,6 +510,7 @@ class _TournamentRegisterScreenState
                 if (_alreadyRegistered) {
                   return _buildExistingRegistration(t, effectiveDivs);
                 }
+                if (_success) return _buildSuccess(t);
                 return _buildForm(t, AsyncValue.data(effectiveDivs));
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -514,6 +531,7 @@ class _TournamentRegisterScreenState
                 if (_alreadyRegistered) {
                   return _buildExistingRegistration(t, fallbackDivs);
                 }
+                if (_success) return _buildSuccess(t);
                 return _buildForm(t, AsyncValue.data(fallbackDivs));
               },
             );
@@ -551,11 +569,11 @@ class _TournamentRegisterScreenState
         !_existingIsPaid &&
         fee > 0 &&
         (_existingParticipantId?.isNotEmpty ?? false) &&
-        (status == 'COMPLETE' || status == 'APPROVED' || status == 'PENDING_APPROVAL');
+        (status == 'COMPLETE' || status == 'PENDING_APPROVAL');
     final statusLabel = switch (status) {
       'PENDING_PARTNER' => l10n.registerStatusPendingPartner,
       'PENDING_APPROVAL' => l10n.registerStatusPendingApproval,
-      'APPROVED' => 'Đã xét duyệt',
+
       'WAITLISTED' => l10n.registerStatusWaitlisted,
       'COMPLETE' when _existingIsPaid => l10n.registerStatusCompletePaid,
       'COMPLETE' => l10n.registerStatusCompleteUnpaid,
@@ -595,6 +613,14 @@ class _TournamentRegisterScreenState
               style: TextStyle(color: context.colors.textSecondary),
             ),
           ],
+          if (existingDivision != null) ...[
+            const SizedBox(height: 12),
+            _buildRegistrationDetails(
+              existingDivision,
+              status,
+              _existingIsPaid,
+            ),
+          ],
           if (canPay) ...[
             const SizedBox(height: 20),
             SizedBox(
@@ -618,6 +644,17 @@ class _TournamentRegisterScreenState
             ),
           ],
           const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () => WithdrawSheet.show(
+              context,
+              tournamentId: tournament.id,
+              divisionId: _existingDivisionId,
+              hasPaid: _existingIsPaid,
+            ),
+            icon: Icon(Icons.exit_to_app_rounded, color: context.colors.error),
+            label: Text(l10n.registerWithdraw, style: TextStyle(color: context.colors.error)),
+          ),
+          const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
@@ -626,6 +663,48 @@ class _TournamentRegisterScreenState
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRegistrationDetails(
+    TournamentDivisionOption division,
+    String status,
+    bool isPaid,
+  ) {
+    final rows = <String, String>{
+      'Nội dung': division.name,
+      'Hình thức': _divisionTypeLabel(division),
+      'Trạng thái hồ sơ': switch (status) {
+        'PENDING_APPROVAL' => 'Chờ BTC duyệt',
+        'WAITLISTED' => 'Danh sách chờ',
+        'COMPLETE' => 'Đã được duyệt',
+        _ => status.isEmpty ? 'Đã đăng ký' : status,
+      },
+      'Thanh toán': isPaid ? 'Đã thanh toán' : 'Chưa thanh toán',
+    };
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.colors.bgDark,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.colors.border),
+      ),
+      child: Column(
+        children: rows.entries
+            .map((entry) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: Text(entry.key, style: TextStyle(color: context.colors.textMuted, fontSize: 12))),
+                      const SizedBox(width: 12),
+                      Flexible(child: Text(entry.value, textAlign: TextAlign.right, style: TextStyle(color: context.colors.textPrimary, fontSize: 12, fontWeight: FontWeight.w700))),
+                    ],
+                  ),
+                ))
+            .toList(),
       ),
     );
   }
@@ -678,6 +757,14 @@ class _TournamentRegisterScreenState
                   ),
                 ),
               ),
+            if (_registeredDivision != null) ...[
+              const SizedBox(height: 16),
+              _buildRegistrationDetails(
+                _registeredDivision!,
+                _registrationTeamStatus ?? '',
+                false,
+              ),
+            ],
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () => context.go('/intro/${widget.tournamentId}'),

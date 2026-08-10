@@ -141,7 +141,7 @@ class Team {
     );
   }
 
-  bool get isApproved => approvalStatus == 'APPROVED' || approvalStatus == 'COMPLETE';
+  bool get isApproved => approvalStatus == 'COMPLETE';
   bool get isPendingApproval =>
       approvalStatus == 'PENDING_APPROVAL' || approvalStatus == 'PENDING';
   bool get isPendingPartner => approvalStatus == 'PENDING_PARTNER';
@@ -152,8 +152,7 @@ class Team {
     switch (approvalStatus) {
       case 'COMPLETE':
         return 'Đã duyệt';
-      case 'APPROVED':
-        return 'Đã duyệt';
+
       case 'PENDING_PARTNER':
         return 'Chờ đồng đội';
       case 'PENDING_APPROVAL':
