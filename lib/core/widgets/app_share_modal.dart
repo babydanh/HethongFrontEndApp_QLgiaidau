@@ -329,8 +329,8 @@ class AppShareModal {
       return url;
     }
     if (url.startsWith("/")) {
-      return "https://qlgiaidau.esports.vn$url";
+      return "https://giaidau.vnvar.com$url";
     }
-    return "https://qlgiaidau.esports.vn/$url";
+    return "https://giaidau.vnvar.com/$url";
   }
 }

@@ -14,8 +14,8 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:app_quanly_giaidau/shared/widgets/withdraw_sheet.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 
 class DoublesRegistrationFlow extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -721,11 +721,16 @@ class _DoublesRegistrationFlowState
 
   Widget _buildStep2(Tournament t, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    final inviteLink =
+    final rawInviteLink =
         _teamInviteLink ??
         (_teamInviteToken != null
-            ? '${Uri.base.origin}/tournaments/${widget.tournamentId}/join-team?pid=$_participantId&token=$_teamInviteToken'
+            ? '/tournaments/${widget.tournamentId}/join-team?pid=$_participantId&token=$_teamInviteToken'
             : null);
+    final inviteLink = rawInviteLink == null
+        ? null
+        : rawInviteLink.startsWith('http://') || rawInviteLink.startsWith('https://')
+            ? rawInviteLink
+            : 'https://giaidau.vnvar.com${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
     final showInvite = inviteLink != null || _teamInviteToken != null;
 
     return Column(
@@ -827,9 +832,14 @@ class _DoublesRegistrationFlowState
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    final shareText = 'Tham gia đội ${_teamNameCtrl.text} tại giải ${t.name}!\n\nNhấn vào link bên dưới để chấp nhận lời mời:\n${inviteLink ?? _teamInviteToken!}';
-                    // ignore: deprecated_member_use
-                    Share.share(shareText);
+                    AppShareModal.show(
+                      context: context,
+                      title: 'Mời tham gia đội ${_teamNameCtrl.text}',
+                      subtitle: 'Giải ${t.name}',
+                      webUrl: inviteLink ?? _teamInviteToken!,
+                      imageUrl: t.logoUrl,
+                      badgeText: 'Lời mời ghép đôi',
+                    );
                   },
                   icon: const Icon(Icons.share_rounded, size: 16),
                   label: const Text(
@@ -1006,6 +1016,12 @@ class _DoublesRegistrationFlowState
         _participantId != null &&
         (_teamStatus == 'COMPLETE' || _teamStatus == 'PENDING_APPROVAL');
     final isWaitlisted = _teamStatus == 'WAITLISTED';
+    final statusLabel = switch (_teamStatus) {
+      'PENDING_APPROVAL' => 'Đã ghép đội, đang chờ BTC duyệt',
+      'COMPLETE' => 'Đã ghép đội và được duyệt',
+      'WAITLISTED' => 'Đã ghép đội, đang ở danh sách chờ',
+      _ => 'Đã ghép đội thành công',
+    };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1019,8 +1035,8 @@ class _DoublesRegistrationFlowState
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          l10n.doublesRegComplete,
+              Text(
+                statusLabel,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
@@ -1078,6 +1094,13 @@ class _DoublesRegistrationFlowState
                       color: colors.warning,
                     ),
                   ),
+                ),
+              ],
+              if (_entryFee != null && _entryFee! > 0 && !isWaitlisted) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Trạng thái thanh toán: Chưa thanh toán',
+                  style: TextStyle(fontSize: 13, color: colors.textSecondary),
                 ),
               ],
               if (isWaitlisted) ...[

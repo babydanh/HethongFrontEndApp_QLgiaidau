@@ -39,9 +39,10 @@ class TournamentCardCarousel extends StatelessWidget {
     final List<String> chips = [];
     if (t.divisions.isNotEmpty) {
       for (var div in t.divisions) {
-        if (div.name.trim() == t.name.trim()) continue;
-        
-        final label = _getFormatLabel(div.matchType, div.genderRestriction);
+        final formatLabel = _getFormatLabel(div.matchType, div.genderRestriction);
+        final label = (div.name.trim() != t.name.trim() && div.name.trim().isNotEmpty && div.name.trim() != 'Nội dung chính')
+            ? div.name
+            : formatLabel;
         final regCount = div.participantCount;
         final maxCount = div.maxParticipants != null ? "${div.maxParticipants}" : "-";
         

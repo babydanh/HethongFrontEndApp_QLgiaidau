@@ -10,7 +10,6 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_banner
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_filter_segment.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_state_views.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
-import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/about_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
@@ -55,6 +54,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final tournamentAsync = ref.watch(
       tournamentIntroProvider(widget.tournamentId),
     );
+    final divisionsAsync = ref.watch(
+      tournamentDivisionsProvider(widget.tournamentId),
+    );
     final authRole = ref.watch(authProvider).role;
 
     return Scaffold(
@@ -66,7 +68,15 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             if (tournament == null) {
               return NotFoundView(onGoHome: () => context.go('/home'));
             }
-            return _buildContent(tournament, authRole);
+            final divisions = tournament.divisions.isNotEmpty
+                ? tournament.divisions
+                : (divisionsAsync.value ?? const <Map<String, dynamic>>[])
+                    .map(TournamentDivision.fromJson)
+                    .toList();
+            return _buildContent(
+              tournament.copyWith(divisions: divisions),
+              authRole,
+            );
           },
           loading: () => _buildLoadingState(),
           error: (err, stack) => _buildErrorState(err),
@@ -222,6 +232,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       compact: false,
                     ),
                   ),
+                  if (!tournament.isLite && tournament.divisions.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: _buildDivisionSelector(tournament),
+                    ),
                   SliverPersistentHeader(
                     pinned: true,
                     delegate: _TabBarDelegate(
@@ -367,6 +381,107 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         ),
         const SizedBox(width: 4),
       ],
+    );
+  }
+
+  Widget _buildDivisionSelector(Tournament tournament) {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final selected = tournament.divisions.where(
+      (division) => division.id == _selectedDivisionId,
+    ).firstOrNull;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+      padding: const EdgeInsets.fromLTRB(12, 7, 12, 8),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.tune_rounded, size: 17, color: AppTheme.primary),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  l10n.registerSelectDivision,
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedDivision.isEmpty ? null : _selectedDivision,
+                  isDense: true,
+                  icon: Icon(Icons.keyboard_arrow_down_rounded,
+                      color: colors.textSecondary),
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  items: tournament.divisions.map((division) {
+                    return DropdownMenuItem<String>(
+                      value: division.name,
+                      child: Text(division.name),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    final division = tournament.divisions.firstWhere(
+                      (item) => item.name == value,
+                    );
+                    setState(() {
+                      _selectedDivision = division.name;
+                      _selectedDivisionId = division.id;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+          if (selected != null)
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                _divisionBadge(colors, selected.matchType),
+                if (selected.genderRestriction != null &&
+                    selected.genderRestriction!.isNotEmpty)
+                  _divisionBadge(colors, selected.genderRestriction!),
+                _divisionBadge(
+                  colors,
+                  '${selected.participantCount}/${selected.maxParticipants ?? '-'} ${l10n.lite_participants}',
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _divisionBadge(AppColorsExtension colors, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: colors.bgDark,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: colors.textSecondary,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 

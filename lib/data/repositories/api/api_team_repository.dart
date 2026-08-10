@@ -12,7 +12,6 @@ class ApiTeamRepository implements ITeamRepository {
   @override
   Future<Team> create(String tournamentId, Team team) async {
     _log.info('Creating team via API: ${team.name} inside $tournamentId');
-    // Với backend REST API, việc đăng ký VĐV/Đội đi qua endpoint đăng ký giải đấu
     final payload = {
       'teamName': team.name,
       'contactPhone': team.contactEmail.isNotEmpty ? team.contactEmail : '0900000000',
@@ -20,7 +19,6 @@ class ApiTeamRepository implements ITeamRepository {
     };
     final response = await _dioClient.dio.post('/tournaments/$tournamentId/register', data: payload);
     if (response.statusCode == 200 || response.statusCode == 201) {
-      // Map API response back to Team model
       final data = response.data['data']['participant'] ?? response.data['data'];
       return Team.fromJson(data, data['id']);
     }
@@ -44,8 +42,6 @@ class ApiTeamRepository implements ITeamRepository {
 
   @override
   Stream<List<Team>> watchByTournament(String tournamentId) async* {
-    // Do not replace a valid participant snapshot with [] on a transient
-    // network/rate-limit error.
     var lastKnown = await getAllByTournament(tournamentId);
     yield lastKnown;
     yield* Stream.periodic(const Duration(seconds: 15)).asyncMap((_) async {
@@ -57,7 +53,6 @@ class ApiTeamRepository implements ITeamRepository {
       }
       return lastKnown;
     }).handleError((error, stack) {
-      // Do not terminate the provider on one failed polling tick.
       _log.error('Team stream recovered from polling error', error, stack);
     });
   }
@@ -66,7 +61,30 @@ class ApiTeamRepository implements ITeamRepository {
   Future<List<Team>> getAllByTournament(String tournamentId) async {
     _log.debug('Fetching all participants/teams for tournament: $tournamentId');
     try {
-      final response = await _dioClient.dio.get('/tournaments/$tournamentId/participants');
+      final results = await Future.wait([
+        _dioClient.dio.get('/tournaments/$tournamentId/participants'),
+        _dioClient.dio.get('/tournaments/$tournamentId/divisions').catchError((_) => null),
+      ]);
+
+      final response = results[0];
+      final divResponse = results[1];
+
+      final Map<String, String> divNameMap = {};
+      if (divResponse != null && divResponse.statusCode == 200) {
+        final divData = divResponse.data['data'] ?? divResponse.data;
+        if (divData is List) {
+          for (var d in divData) {
+            if (d is Map) {
+              final id = d['id']?.toString() ?? '';
+              final name = d['name']?.toString() ?? '';
+              if (id.isNotEmpty && name.isNotEmpty) {
+                divNameMap[id] = name;
+              }
+            }
+          }
+        }
+      }
+
       if (response.statusCode == 200) {
         final List<dynamic> list = response.data['data'] ?? response.data ?? [];
         return list.map((json) {
@@ -78,8 +96,12 @@ class ApiTeamRepository implements ITeamRepository {
               .where((n) => n.isNotEmpty)
               .toList();
 
-          final divisionMap = json['division'] as Map<String, dynamic>?;
-          final groupName = divisionMap?['name']?.toString() ?? json['divisionName']?.toString() ?? '';
+          final divisionMap = json['division'] as Map<String, dynamic>? ?? json['tournamentDivision'] as Map<String, dynamic>?;
+          final divId = json['tournamentDivisionId']?.toString() ?? json['divisionId']?.toString() ?? '';
+          final groupName = divisionMap?['name']?.toString() ??
+              json['divisionName']?.toString() ??
+              divNameMap[divId] ??
+              '';
 
           return Team(
             id: id,

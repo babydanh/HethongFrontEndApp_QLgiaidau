@@ -318,6 +318,11 @@ class _HeaderActionTags extends StatelessWidget {
             iconColor: primaryAction.iconColor,
           ),
         _HeaderTag(
+          tournament.isRanked ? 'XẾP HẠNG ELO' : 'PHONG TRÀO',
+          icon: tournament.isRanked ? Icons.stars_rounded : Icons.sports_score_rounded,
+          iconColor: tournament.isRanked ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
+        ),
+        _HeaderTag(
           bracketLabel.toUpperCase(),
           icon: Icons.loop_rounded,
           iconColor: const Color(0xFFD97706),
