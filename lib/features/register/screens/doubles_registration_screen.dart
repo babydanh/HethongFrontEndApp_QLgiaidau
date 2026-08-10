@@ -67,6 +67,57 @@ class _DoublesRegistrationFlowState
   String _teamStatus = '';
 
   @override
+  void initState() {
+    super.initState();
+    _checkExistingRegistration();
+  }
+
+  Future<void> _checkExistingRegistration() async {
+    try {
+      final dio = ref.read(dioClientProvider);
+      final regResp = await dio.dio.get(
+        '/tournaments/${widget.tournamentId}/my-registration',
+        queryParameters: {
+          'divisionId': widget.division.id,
+          '_t': DateTime.now().millisecondsSinceEpoch.toString(),
+        },
+      );
+      if (mounted && regResp.data['data'] is Map) {
+        final regData = regResp.data['data'] as Map;
+        if (regData['registered'] == true && regData['participant'] is Map) {
+          final participant = regData['participant'] as Map;
+          final status = participant['teamStatus']?.toString() ?? '';
+          final token = participant['teamInviteToken']?.toString();
+          final link = participant['teamInviteLink']?.toString();
+          final pId = participant['id']?.toString();
+          final name = participant['teamName']?.toString();
+
+          if (name != null && name.isNotEmpty) {
+            _teamNameCtrl.text = name;
+          }
+
+          if (status == 'PENDING_PARTNER') {
+            setState(() {
+              _participantId = pId;
+              _teamInviteToken = token;
+              _teamInviteLink = link;
+              _teamStatus = status;
+              _step = 2;
+            });
+            _startPolling();
+          } else if (status == 'COMPLETE' || status == 'PENDING_APPROVAL' || status == 'WAITLISTED') {
+            setState(() {
+              _participantId = pId;
+              _teamStatus = status;
+              _step = 3;
+            });
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  @override
   void dispose() {
     _teamNameCtrl.dispose();
     _partnerSearchCtrl.dispose();

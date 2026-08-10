@@ -498,7 +498,11 @@ class ApiTournamentRepository implements ITournamentRepository {
   /// đầy đủ roundNumber, matchOrder, bracketBranch, isBye, nextMatchId.
   /// Đây là endpoint ĐÚNG để render bracket diagram (khác với /matches flat list).
   @override
-  Future<List<MatchModel>> getBracketMatches(String tournamentId, {String? divisionId}) async {
+  Future<List<MatchModel>> getBracketMatches(
+    String tournamentId, {
+    String? divisionId,
+    bool allowAggregateFallback = true,
+  }) async {
     _log.debug('Fetching bracket matches for tournament $tournamentId (division: $divisionId)');
     try {
       final response = await _dioClient.dio.get(
@@ -557,6 +561,12 @@ class ApiTournamentRepository implements ITournamentRepository {
       // Fallback: division cụ thể không có match → thử lấy tất cả divisions
       // (tránh trả [] vô điều kiện khi bracket nằm ở division khác)
       if (divisionId != null && divisionId.isNotEmpty) {
+        // Legacy brackets may have been generated before stages stored a
+        // division id. Try the unfiltered endpoint once, without aggregation.
+        return getBracketMatches(
+          tournamentId,
+          allowAggregateFallback: false,
+        );
         final allMatches = await getBracketMatches(tournamentId);
         if (allMatches.isNotEmpty) {
           _log.info('Bracket fallback cho division $divisionId: lấy ${allMatches.length} matches từ toàn giải');
@@ -565,7 +575,7 @@ class ApiTournamentRepository implements ITournamentRepository {
       }
 
       // Fallback for "Tất cả" (divisionId == null): Query all divisions & aggregate matches
-      if (divisionId == null || divisionId.isEmpty) {
+      if (allowAggregateFallback && (divisionId == null || divisionId.isEmpty)) {
         final divOptions = await getDivisions(tournamentId);
         if (divOptions.isNotEmpty) {
           final aggregatedMatches = <MatchModel>[];

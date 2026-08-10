@@ -8,12 +8,14 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 class TeamsTab extends StatelessWidget {
   final List<Team> teams;
   final String selectedDivision;
+  final String? selectedDivisionId;
   final ScrollController? scrollController;
 
   const TeamsTab({
     super.key,
     required this.teams,
     required this.selectedDivision,
+    this.selectedDivisionId,
     this.scrollController,
   });
 
@@ -40,10 +42,18 @@ class TeamsTab extends StatelessWidget {
 
     String getDivision(Team t) => t.group.isNotEmpty ? t.group : l10n.otherDivision;
 
-    final matched = teams.where((t) => getDivision(t) == selectedDivision).toList();
-    final filteredTeams = (selectedDivision == l10n.filterAll || selectedDivision == "all" || selectedDivision.isEmpty)
-        ? teams
-        : (matched.isEmpty ? teams : matched);
+    final matched = teams.where((t) {
+      if (selectedDivisionId != null && selectedDivisionId!.isNotEmpty &&
+          t.divisionId.isNotEmpty) {
+        return t.divisionId == selectedDivisionId;
+      }
+      return getDivision(t) == selectedDivision;
+    }).toList();
+    final isAllDivisions = selectedDivision == l10n.filterAll ||
+        selectedDivision == "all" ||
+        selectedDivision.isEmpty;
+    // Never fall back to another division when the selected division has no teams.
+    final filteredTeams = isAllDivisions ? teams : matched;
 
     final grouped = <String, List<Team>>{};
     for (var t in filteredTeams) {

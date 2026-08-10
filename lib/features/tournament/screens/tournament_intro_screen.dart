@@ -262,9 +262,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                         padding: const EdgeInsets.only(bottom: 160),
                         child: tournament.isLite
                             ? _buildLiteTeamList(teams)
-                            : TeamsTab(
+                              : TeamsTab(
                                 teams: teams,
                                 selectedDivision: _selectedDivision,
+                                selectedDivisionId: _selectedDivisionId,
                               ),
                       ),
                       SingleChildScrollView(
@@ -452,10 +453,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               spacing: 6,
               runSpacing: 4,
               children: [
-                _divisionBadge(colors, selected.matchType),
-                if (selected.genderRestriction != null &&
-                    selected.genderRestriction!.isNotEmpty)
-                  _divisionBadge(colors, selected.genderRestriction!),
                 _divisionBadge(
                   colors,
                   '${selected.participantCount}/${selected.maxParticipants ?? '-'} ${l10n.lite_participants}',

@@ -8,6 +8,7 @@ class Team {
   final List<MatchMemberInfo> memberInfos;
   final int seed;
   final String group;
+  final String divisionId;
   final String photoUrl;
   final String qrCode;
   final String approvalStatus;
@@ -23,6 +24,7 @@ class Team {
     this.memberInfos = const [],
     this.seed = 0,
     this.group = '',
+    this.divisionId = '',
     this.photoUrl = '',
     this.qrCode = '',
     this.approvalStatus = 'PENDING_APPROVAL',

@@ -97,7 +97,10 @@ class ApiTeamRepository implements ITeamRepository {
               .toList();
 
           final divisionMap = json['division'] as Map<String, dynamic>? ?? json['tournamentDivision'] as Map<String, dynamic>?;
-          final divId = json['tournamentDivisionId']?.toString() ?? json['divisionId']?.toString() ?? '';
+          final divId = json['tournamentDivisionId']?.toString() ??
+              json['divisionId']?.toString() ??
+              divisionMap?['id']?.toString() ??
+              '';
           final groupName = divisionMap?['name']?.toString() ??
               json['divisionName']?.toString() ??
               divNameMap[divId] ??
@@ -107,6 +110,7 @@ class ApiTeamRepository implements ITeamRepository {
             id: id,
             name: teamName.isNotEmpty ? teamName : 'Đội $id',
             group: groupName,
+            divisionId: divId,
             members: members.isNotEmpty ? members : [teamName.isNotEmpty ? teamName : 'VĐV'],
             contactEmail: json['contactPhone']?.toString() ?? '',
             qrCode: json['qrCode']?.toString() ?? id,

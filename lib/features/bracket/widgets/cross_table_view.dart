@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
 
 class CrossTableView extends ConsumerStatefulWidget {
   final List<MatchModel> matches;
@@ -40,6 +41,13 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
         }
 
         final groupedStandings = _groupStandings(standings);
+        final matchSnapshot = ref.watch(matchesWithDivisionProvider((
+          tournamentId: widget.tournamentId,
+          divisionId: widget.divisionId,
+        ))).maybeWhen(
+          data: (matches) => matches,
+          orElse: () => widget.matches,
+        );
         final groupNames = groupedStandings.keys.toList()..sort();
         final maxLeg = groupNames.fold<int>(1, (currentMax, groupName) {
           final rows = groupedStandings[groupName]!;
@@ -47,6 +55,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
             rows,
             groupName,
             groupNames.length == 1,
+            matches: matchSnapshot,
           );
           return groupMatches.fold<int>(currentMax, (matchMax, match) {
             final leg = _legForMatch(match, rows.length);
@@ -110,6 +119,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
                           groupRows,
                           groupName,
                           groupNames.length == 1,
+                          matches: matchSnapshot,
                         )
                         .where(
                           (match) =>
@@ -172,11 +182,12 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
     List<Standing> standings,
     String groupName,
     bool allowLegacyParticipantFallback,
+    {required List<MatchModel> matches},
   ) {
     final participantIds = standings.map((s) => s.id).toSet();
     final normalizedGroupName = groupName.trim().toLowerCase();
 
-    return widget.matches.where((match) {
+    return matches.where((match) {
       if (match.isBye) return false;
 
       if (_isKnockoutMatch(match)) return false;

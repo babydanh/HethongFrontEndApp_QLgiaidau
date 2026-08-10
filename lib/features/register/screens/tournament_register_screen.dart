@@ -621,6 +621,23 @@ class _TournamentRegisterScreenState
               _existingIsPaid,
             ),
           ],
+          if (status == 'PENDING_PARTNER') ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () {
+                  final inviteCode = _localInviteCode ?? widget.inviteCode ?? '';
+                  context.push(
+                    '/register/${widget.tournamentId}/doubles?divisionId=${_existingDivisionId ?? ''}&invite=$inviteCode',
+                    extra: existingDivision,
+                  );
+                },
+                icon: const Icon(Icons.qr_code_rounded),
+                label: const Text('Xem mã mời & Link ghép đôi'),
+              ),
+            ),
+          ],
           if (canPay) ...[
             const SizedBox(height: 20),
             SizedBox(
