@@ -232,6 +232,7 @@ class _DoublesRegistrationFlowState
       if (mounted) {
         if (result.isWaitlisted ||
             result.teamStatus == 'COMPLETE' ||
+            result.teamStatus == 'APPROVED' ||
             result.teamStatus == 'PENDING_APPROVAL') {
           setState(() => _step = 3);
         } else {
@@ -294,6 +295,7 @@ class _DoublesRegistrationFlowState
       if (participant is! Map) return;
       final teamStatus = participant['teamStatus']?.toString() ?? '';
       if (teamStatus == 'COMPLETE' ||
+          teamStatus == 'APPROVED' ||
           teamStatus == 'PENDING_APPROVAL' ||
           teamStatus == 'WAITLISTED') {
         _pollTimer?.cancel();
@@ -1004,7 +1006,7 @@ class _DoublesRegistrationFlowState
         _entryFee != null &&
         _entryFee! > 0 &&
         _participantId != null &&
-        (_teamStatus == 'COMPLETE' || _teamStatus == 'PENDING_APPROVAL');
+        (_teamStatus == 'COMPLETE' || _teamStatus == 'APPROVED' || _teamStatus == 'PENDING_APPROVAL');
     final isWaitlisted = _teamStatus == 'WAITLISTED';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

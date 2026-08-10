@@ -322,6 +322,7 @@ class _TournamentRegisterScreenState
       final canProceedToPayment =
           !result.isWaitlisted &&
           (result.teamStatus == 'COMPLETE' ||
+              result.teamStatus == 'APPROVED' ||
               result.teamStatus == 'PENDING_APPROVAL');
 
       if (effectiveFee > 0 &&
@@ -550,10 +551,11 @@ class _TournamentRegisterScreenState
         !_existingIsPaid &&
         fee > 0 &&
         (_existingParticipantId?.isNotEmpty ?? false) &&
-        (status == 'COMPLETE' || status == 'PENDING_APPROVAL');
+        (status == 'COMPLETE' || status == 'APPROVED' || status == 'PENDING_APPROVAL');
     final statusLabel = switch (status) {
       'PENDING_PARTNER' => l10n.registerStatusPendingPartner,
       'PENDING_APPROVAL' => l10n.registerStatusPendingApproval,
+      'APPROVED' => 'Đã xét duyệt',
       'WAITLISTED' => l10n.registerStatusWaitlisted,
       'COMPLETE' when _existingIsPaid => l10n.registerStatusCompletePaid,
       'COMPLETE' => l10n.registerStatusCompleteUnpaid,

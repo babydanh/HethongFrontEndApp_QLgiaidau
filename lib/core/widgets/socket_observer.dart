@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/di/socket_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
@@ -91,6 +92,22 @@ class _SocketObserverState extends ConsumerState<SocketObserver> with WidgetsBin
         ref.read(notificationStateProvider.notifier).addNotification(notif);
         // Refresh unread count
         ref.invalidate(unreadCountProvider);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(notif.title),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
+              action: notif.routeTarget != null ? SnackBarAction(
+                label: 'Xem',
+                onPressed: () {
+                  context.push(notif.routeTarget!);
+                },
+              ) : null,
+            ),
+          );
+        }
       } catch (e, stack) {
         _log.error('Lỗi parse notification từ socket', e, stack);
       }
