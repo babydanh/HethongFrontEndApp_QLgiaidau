@@ -1590,9 +1590,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
               Expanded(
                 child: InkWell(
                   onTap: () {
-                    if (widget.tournament != null) {
-                      context.push('/intro/${widget.tournament!.id}');
-                    }
+                    context.push('/live/${m.id}');
                   },
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
