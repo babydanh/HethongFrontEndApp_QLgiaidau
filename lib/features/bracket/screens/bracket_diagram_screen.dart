@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
@@ -10,40 +12,68 @@ import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.da
 
 /// Full-screen bracket diagram for all 3 format types.
 /// Navigated to from the "Xem sơ đồ" button in BracketViewScreen.
-class BracketDiagramScreen extends StatefulWidget {
-  final List<MatchModel> matches;
+/// Always fetches bracket data fresh from the repository to ensure
+/// nextMatchId connectivity is correct (merged flat data may break links).
+class BracketDiagramScreen extends ConsumerStatefulWidget {
   final String tournamentId;
+  final String? divisionId;
   final String bracketType;
   final bool isReferee;
   final bool isReadOnly;
 
   const BracketDiagramScreen({
     super.key,
-    required this.matches,
     required this.tournamentId,
+    this.divisionId,
     required this.bracketType,
     this.isReferee = false,
     this.isReadOnly = true,
   });
 
   @override
-  State<BracketDiagramScreen> createState() => _BracketDiagramScreenState();
+  ConsumerState<BracketDiagramScreen> createState() => _BracketDiagramScreenState();
 }
 
-class _BracketDiagramScreenState extends State<BracketDiagramScreen> {
+class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
+  List<MatchModel>? _bracketMatches;
+  bool _loading = true;
+  String? _error;
+
   @override
   void initState() {
     super.initState();
-    // Khóa hướng màn hình ngang (Landscape) khi vào sơ đồ để tối ưu hiển thị nhánh đấu
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
+    _fetchBracket();
+  }
+
+  Future<void> _fetchBracket() async {
+    try {
+      final repo = ref.read(tournamentRepositoryProvider);
+      final matches = await repo.getBracketMatches(
+        widget.tournamentId,
+        divisionId: widget.divisionId,
+      );
+      if (mounted) {
+        setState(() {
+          _bracketMatches = matches;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
-    // Lock back to portrait when leaving
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     super.dispose();
   }
@@ -110,19 +140,24 @@ class _BracketDiagramScreenState extends State<BracketDiagramScreen> {
           ),
         ],
       ),
-      body: widget.matches.isEmpty
-          ? _buildEmpty(colors)
-          : _buildDiagram(colors, isRoundRobin, isDouble, isGroupStageKnockout),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? _buildEmpty(colors)
+              : (_bracketMatches == null || _bracketMatches!.isEmpty)
+                  ? _buildEmpty(colors)
+                  : _buildDiagram(colors, isRoundRobin, isDouble, isGroupStageKnockout),
     );
   }
 
   Widget _buildDiagram(AppColorsExtension colors, bool isRoundRobin, bool isDouble, bool isGroupStageKnockout) {
+    final matches = _bracketMatches!;
+
     if (isRoundRobin) {
-      // Round robin — show cross table
       return Padding(
         padding: const EdgeInsets.all(16),
         child: CrossTableView(
-          matches: widget.matches,
+          matches: matches,
           tournamentId: widget.tournamentId,
         ),
       );
@@ -130,31 +165,28 @@ class _BracketDiagramScreenState extends State<BracketDiagramScreen> {
 
     if (isDouble) {
       return DoubleElimDiagram(
-        matches: widget.matches,
+        matches: matches,
         tournamentId: widget.tournamentId,
         isReferee: widget.isReferee,
         isReadOnly: widget.isReadOnly,
       );
     }
 
+    // For group_stage_knockout: filter only knockout stage matches.
+    // The knockout stage may itself be a double-elimination bracket (the
+    // /bracket API reports stage.type = DOUBLE_ELIMINATION), so pick the
+    // diagram type from the actual match data, not the top-level bracketType.
     if (isGroupStageKnockout) {
-      final knockoutMatches = widget.matches.where((m) {
-        return isKnockoutMatch(m);
-      }).toList();
-/*
-        final hasNextMatch = m.nextMatchId.isNotEmpty || m.loserNextMatchId.isNotEmpty;
-        if (hasNextMatch) return true;
-
-        final isGroupStage = (m.bracketPosition.bracket == 'group_stage') ||
-            (m.stageName != null && (m.stageName!.contains('Bảng') || m.stageName!.toUpperCase().contains('GROUP'))) ||
-            (m.groupName != null &&
-                m.groupName!.isNotEmpty &&
-                !m.groupName!.toUpperCase().contains('KNOCKOUT') &&
-                !m.groupName!.toUpperCase().contains('PLAYOFF'));
-        return !isGroupStage;
-      }).toList();
-*/
-
+      final knockoutMatches = matches.where(isKnockoutMatch).toList();
+      final isDouble = knockoutMatches.any(isDoubleEliminationMatch);
+      if (isDouble) {
+        return DoubleElimDiagram(
+          matches: knockoutMatches,
+          tournamentId: widget.tournamentId,
+          isReferee: widget.isReferee,
+          isReadOnly: widget.isReadOnly,
+        );
+      }
       return SingleElimDiagram(
         matches: knockoutMatches,
         tournamentId: widget.tournamentId,
@@ -163,9 +195,9 @@ class _BracketDiagramScreenState extends State<BracketDiagramScreen> {
       );
     }
 
-    // Default: single elimination
+    // Default: single elimination — use all matches
     return SingleElimDiagram(
-      matches: widget.matches,
+      matches: matches,
       tournamentId: widget.tournamentId,
       isReferee: widget.isReferee,
       isReadOnly: widget.isReadOnly,

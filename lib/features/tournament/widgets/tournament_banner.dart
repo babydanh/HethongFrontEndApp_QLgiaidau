@@ -13,12 +13,18 @@ class TournamentHeaderView extends StatefulWidget {
   final Tournament tournament;
   final AppColorsExtension colors;
   final bool compact;
+  final String? selectedDivision;
+  final String? selectedDivisionId;
+  final ValueChanged<TournamentDivision>? onChangedDivision;
 
   const TournamentHeaderView({
     super.key,
     required this.tournament,
     required this.colors,
     this.compact = false,
+    this.selectedDivision,
+    this.selectedDivisionId,
+    this.onChangedDivision,
   });
 
   @override
@@ -47,74 +53,79 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
       curve: Curves.easeOutCubic,
       color: colors.bgDark,
       child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ClipRect(
-          child: AnimatedSize(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: SizedBox(
-              height: compact ? 0 : 185,
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 160),
-                opacity: compact ? 0 : 1,
-                child: _BannerCarousel(
-                  images: images,
-                  pageController: _pageController,
-                  currentPage: _currentPage,
-                  onPageChanged: (index) {
-                    setState(() => _currentPage = index);
-                  },
-                  showOverlay: showBannerOverlay,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRect(
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                height: compact ? 0 : 185,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 160),
+                  opacity: compact ? 0 : 1,
+                  child: _BannerCarousel(
+                    images: images,
+                    pageController: _pageController,
+                    currentPage: _currentPage,
+                    onPageChanged: (index) {
+                      setState(() => _currentPage = index);
+                    },
+                    showOverlay: showBannerOverlay,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        Container(
-          color: colors.bgDark,
-          padding: EdgeInsets.fromLTRB(14, compact ? 6 : 8, 14, 6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AnimatedSize(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOutCubic,
-                alignment: Alignment.topLeft,
-                child: compact
-                    ? const SizedBox.shrink()
-                    : Column(
-                        children: [
-                          _HeaderBadges(tournament: widget.tournament),
-                          const SizedBox(height: 8),
-                        ],
-                      ),
-              ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _TournamentLogo(
-                    tournament: widget.tournament,
-                    size: compact ? 38 : 54,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _HeaderInfo(
+          Container(
+            color: colors.bgDark,
+            padding: EdgeInsets.fromLTRB(14, compact ? 6 : 8, 14, 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topLeft,
+                  child: compact
+                      ? const SizedBox.shrink()
+                      : Column(
+                          children: [
+                            _HeaderBadges(tournament: widget.tournament),
+                            const SizedBox(height: 8),
+                          ],
+                        ),
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _TournamentLogo(
                       tournament: widget.tournament,
-                      compact: compact,
+                      size: compact ? 38 : 54,
                     ),
-                  ),
-                ],
-              ),
-              SizedBox(height: compact ? 6 : 8),
-              _HeaderMeta(tournament: widget.tournament),
-              const SizedBox(height: 6),
-              Divider(color: colors.border, height: 1),
-            ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _HeaderInfo(
+                        tournament: widget.tournament,
+                        compact: compact,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: compact ? 8 : 10),
+                _HeaderMeta(
+                  tournament: widget.tournament,
+                  selectedDivision: widget.selectedDivision,
+                  selectedDivisionId: widget.selectedDivisionId,
+                  onChangedDivision: widget.onChangedDivision,
+                ),
+                const SizedBox(height: 8),
+                Divider(color: colors.border, height: 1),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
       ),
     );
   }
@@ -245,82 +256,24 @@ class _HeaderBadges extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Row(
-      children: [
-        SportPill(sportKey: tournament.sport),
-        const SizedBox(width: 8),
-        StatusBadge(statusKey: tournament.status),
-      ],
-    );
-  }
-}
-
-class _HeaderInfo extends StatelessWidget {
-  final Tournament tournament;
-  final bool compact;
-
-  const _HeaderInfo({
-    required this.tournament,
-    required this.compact,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 140),
-          curve: Curves.easeOut,
-          style: TextStyle(
-            fontSize: compact ? 15 : 18,
-            fontWeight: FontWeight.w900,
-            color: colors.textPrimary,
-            height: 1.18,
-            letterSpacing: -0.35,
-          ),
-          child: Text(
-            tournament.name.toUpperCase(),
-            maxLines: compact ? 2 : 3,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const SizedBox(height: 6),
-        _HeaderActionTags(tournament: tournament),
-      ],
-    );
-  }
-}
-
-class _HeaderActionTags extends StatelessWidget {
-  final Tournament tournament;
-
-  const _HeaderActionTags({required this.tournament});
-
-  @override
-  Widget build(BuildContext context) {
-    final bracketLabel = AppConstants.bracketTypeNames[tournament.bracketType] ??
+    final bracketLabel =
+        AppConstants.bracketTypeNames[tournament.bracketType] ??
         tournament.bracketType.replaceAll('_', ' ').toUpperCase();
 
-    final showPrimaryAction = !StatusHelper.isTournamentInProgress(tournament.status);
-    final primaryAction = showPrimaryAction ? _resolvePrimaryActionTag(context, tournament) : null;
-
     return Wrap(
-      spacing: 7,
-      runSpacing: 7,
+      spacing: 6,
+      runSpacing: 6,
       children: [
-        if (primaryAction != null)
-          _HeaderTag(
-            primaryAction.label,
-            icon: primaryAction.icon,
-            iconColor: primaryAction.iconColor,
-          ),
+        SportPill(sportKey: tournament.sport),
+        StatusBadge(statusKey: tournament.status),
         _HeaderTag(
           tournament.isRanked ? 'XẾP HẠNG ELO' : 'PHONG TRÀO',
-          icon: tournament.isRanked ? Icons.stars_rounded : Icons.sports_score_rounded,
-          iconColor: tournament.isRanked ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
+          icon: tournament.isRanked
+              ? Icons.stars_rounded
+              : Icons.sports_score_rounded,
+          iconColor: tournament.isRanked
+              ? const Color(0xFFF59E0B)
+              : const Color(0xFF10B981),
         ),
         _HeaderTag(
           bracketLabel.toUpperCase(),
@@ -332,98 +285,168 @@ class _HeaderActionTags extends StatelessWidget {
   }
 }
 
-class _PrimaryActionTag {
-  final String label;
-  final IconData? icon;
-  final Color? iconColor;
+class _HeaderInfo extends StatelessWidget {
+  final Tournament tournament;
+  final bool compact;
 
-  const _PrimaryActionTag({
-    required this.label,
-    this.icon,
-    this.iconColor,
-  });
+  const _HeaderInfo({required this.tournament, required this.compact});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return AnimatedDefaultTextStyle(
+      duration: const Duration(milliseconds: 140),
+      curve: Curves.easeOut,
+      style: TextStyle(
+        fontSize: compact ? 15 : 18,
+        fontWeight: FontWeight.w900,
+        color: colors.textPrimary,
+        height: 1.18,
+        letterSpacing: -0.35,
+      ),
+      child: Text(
+        tournament.name.toUpperCase(),
+        maxLines: compact ? 2 : 3,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
 }
 
-_PrimaryActionTag _resolvePrimaryActionTag(
-  BuildContext context,
-  Tournament tournament,
-) {
-  final l10n = AppLocalizations.of(context)!;
-  if (StatusHelper.isTournamentInProgress(tournament.status)) {
-    return _PrimaryActionTag(
-      label: l10n.liveTag,
-      icon: Icons.play_arrow_rounded,
-      iconColor: context.colors.success,
-    );
-  }
 
-  if (StatusHelper.isTournamentCompleted(tournament.status)) {
-    return _PrimaryActionTag(
-      label: l10n.resultTag,
-      icon: Icons.emoji_events_rounded,
-      iconColor: const Color(0xFFD97706),
-    );
-  }
 
-  if (StatusHelper.isTournamentCancelled(tournament.status)) {
-    return _PrimaryActionTag(
-      label: l10n.cancelledTag,
-      icon: Icons.block_rounded,
-      iconColor: context.colors.error,
-    );
-  }
 
-  if (StatusHelper.isTournamentRegistrationClosed(tournament.status) ||
-      tournament.status.toUpperCase() == 'REGISTRATION_CLOSED' ||
-      tournament.status.toUpperCase() == 'CLOSED') {
-    return _PrimaryActionTag(
-      label: l10n.registrationClosedTag,
-      icon: Icons.lock_outline_rounded,
-      iconColor: context.colors.error,
-    );
-  }
-
-  return _PrimaryActionTag(
-    label: l10n.registrationOpenTag,
-    icon: Icons.person_add_alt_1_rounded,
-    iconColor: AppTheme.primary,
-  );
-}
 
 class _HeaderMeta extends StatelessWidget {
   final Tournament tournament;
+  final String? selectedDivision;
+  final String? selectedDivisionId;
+  final ValueChanged<TournamentDivision>? onChangedDivision;
 
-  const _HeaderMeta({required this.tournament});
+  const _HeaderMeta({
+    required this.tournament,
+    this.selectedDivision,
+    this.selectedDivisionId,
+    this.onChangedDivision,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
-    return Wrap(
-      spacing: 14,
-      runSpacing: 7,
+    final divisions = tournament.divisions;
+
+    final selected =
+        divisions
+            .where(
+              (d) => d.id == selectedDivisionId || d.name == selectedDivision,
+            )
+            .firstOrNull ??
+        divisions.firstOrNull;
+
+    final registeredCount = selected?.participantCount ?? 0;
+    final maxCount = selected?.maxParticipants ?? tournament.maxTeams;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _HeaderIconText(
-          icon: Icons.calendar_today_rounded,
-          text: _formatDateRange(
-            tournament.registrationStartDate,
-            tournament.registrationEndDate,
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 4,
+                children: [
+                  _HeaderIconText(
+                    icon: Icons.calendar_today_rounded,
+                    text: _formatDateRange(
+                      tournament.registrationStartDate,
+                      tournament.registrationEndDate,
+                    ),
+                  ),
+                  _HeaderIconText(
+                    icon: Icons.location_on_outlined,
+                    text: tournament.locationAddress ?? l10n.locationNotUpdated,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            if (divisions.length > 1 && onChangedDivision != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppTheme.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selected?.name ?? selectedDivision,
+                    isDense: true,
+                    icon: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: AppTheme.primary,
+                      size: 20,
+                    ),
+                    style: const TextStyle(
+                      color: AppTheme.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    items: divisions.map((division) {
+                      final divReg = division.participantCount;
+                      final divMax =
+                          division.maxParticipants ?? tournament.maxTeams;
+                      return DropdownMenuItem<String>(
+                        value: division.name,
+                        child: Text(
+                          '${division.name} ($divReg/$divMax)',
+                          style: TextStyle(
+                            color: colors.textPrimary,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      final div = divisions.firstWhere(
+                        (item) => item.name == value,
+                      );
+                      onChangedDivision!(div);
+                    },
+                  ),
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  selected != null
+                      ? "${selected.name} ($registeredCount/$maxCount)"
+                      : "$registeredCount / $maxCount ${l10n.teamsUnit}",
+                  style: const TextStyle(
+                    color: AppTheme.primary,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+          ],
         ),
-        _HeaderIconText(
-          icon: Icons.location_on_outlined,
-          text: tournament.locationAddress ?? l10n.locationNotUpdated,
-        ),
-        _HeaderIconText(
-          icon: Icons.group_rounded,
-          text: "0 / ${tournament.maxTeams} ${l10n.teamsUnit}",
-        ),
-      ].map((child) {
-        return DefaultTextStyle.merge(
-          style: TextStyle(color: colors.textSecondary),
-          child: child,
-        );
-      }).toList(),
+      ],
     );
   }
 }
@@ -433,35 +456,31 @@ class _HeaderTag extends StatelessWidget {
   final IconData? icon;
   final Color? iconColor;
 
-  const _HeaderTag(
-    this.text, {
-    this.icon,
-    this.iconColor,
-  });
+  const _HeaderTag(this.text, {this.icon, this.iconColor});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: colors.bgElevated,
-        borderRadius: BorderRadius.circular(7),
+        color: colors.bgSurface,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: colors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 13, color: iconColor ?? colors.textSecondary),
-            const SizedBox(width: 4),
+            Icon(icon, size: 14, color: iconColor ?? colors.textSecondary),
+            const SizedBox(width: 5),
           ],
           Text(
             text,
             style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: colors.textSecondary,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
               letterSpacing: 0.2,
             ),
           ),
@@ -471,16 +490,11 @@ class _HeaderTag extends StatelessWidget {
   }
 }
 
-
-
 class _HeaderIconText extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  const _HeaderIconText({
-    required this.icon,
-    required this.text,
-  });
+  const _HeaderIconText({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -511,10 +525,7 @@ class _TournamentLogo extends StatelessWidget {
   final Tournament tournament;
   final double size;
 
-  const _TournamentLogo({
-    required this.tournament,
-    required this.size,
-  });
+  const _TournamentLogo({required this.tournament, required this.size});
 
   @override
   Widget build(BuildContext context) {
@@ -783,15 +794,24 @@ class _TournamentBannerState extends State<TournamentBanner> {
                         Row(
                           children: [
                             _buildTag(
-                              (StatusHelper.isTournamentRegistrationClosed(widget.tournament.status) ||
-                                      widget.tournament.status.toUpperCase() == 'REGISTRATION_CLOSED' ||
-                                      widget.tournament.status.toUpperCase() == 'CLOSED')
+                              (StatusHelper.isTournamentRegistrationClosed(
+                                        widget.tournament.status,
+                                      ) ||
+                                      widget.tournament.status.toUpperCase() ==
+                                          'REGISTRATION_CLOSED' ||
+                                      widget.tournament.status.toUpperCase() ==
+                                          'CLOSED')
                                   ? l10n.registrationClosedTag
                                   : l10n.registrationOpenTag,
                               colors,
-                              color: (StatusHelper.isTournamentRegistrationClosed(widget.tournament.status) ||
-                                      widget.tournament.status.toUpperCase() == 'REGISTRATION_CLOSED' ||
-                                      widget.tournament.status.toUpperCase() == 'CLOSED')
+                              color:
+                                  (StatusHelper.isTournamentRegistrationClosed(
+                                        widget.tournament.status,
+                                      ) ||
+                                      widget.tournament.status.toUpperCase() ==
+                                          'REGISTRATION_CLOSED' ||
+                                      widget.tournament.status.toUpperCase() ==
+                                          'CLOSED')
                                   ? colors.error
                                   : null,
                             ),
@@ -821,10 +841,16 @@ class _TournamentBannerState extends State<TournamentBanner> {
                                 AppShareModal.show(
                                   context: context,
                                   title: tournament.name,
-                                  subtitle: '${tournament.locationAddress ?? l10n.vietnam} • ${tournament.category ?? tournament.sport}',
-                                  webUrl: 'https://giaidau.vnvar.com/tournaments/${tournament.id}',
-                                  imageUrl: tournament.logoUrl ?? tournament.bannerUrl,
-                                  badgeText: tournament.isLite ? l10n.liteTournament : l10n.advancedTournament,
+                                  subtitle:
+                                      '${tournament.locationAddress ?? l10n.vietnam} • ${tournament.category ?? tournament.sport}',
+                                  webUrl:
+                                      'https://giaidau.vnvar.com/tournaments/${tournament.id}',
+                                  imageUrl:
+                                      tournament.logoUrl ??
+                                      tournament.bannerUrl,
+                                  badgeText: tournament.isLite
+                                      ? l10n.liteTournament
+                                      : l10n.advancedTournament,
                                 );
                               },
                               icon: const Icon(Icons.share, size: 12),
@@ -899,7 +925,9 @@ class _TournamentBannerState extends State<TournamentBanner> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color != null ? color.withValues(alpha: 0.12) : colors.bgElevated,
+        color: color != null
+            ? color.withValues(alpha: 0.12)
+            : colors.bgElevated,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
           color: color != null ? color.withValues(alpha: 0.3) : colors.border,

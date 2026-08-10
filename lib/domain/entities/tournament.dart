@@ -397,6 +397,8 @@ class TournamentDivision {
   final String id;
   final String name;
   final String matchType;
+  final String? bracketType;
+  final int? roundRobinLegs;
   final String? genderRestriction;
   final int? maxParticipants;
   final int participantCount;
@@ -405,6 +407,8 @@ class TournamentDivision {
     required this.id,
     required this.name,
     required this.matchType,
+    this.bracketType,
+    this.roundRobinLegs,
     this.genderRestriction,
     this.maxParticipants,
     this.participantCount = 0,
@@ -418,6 +422,19 @@ class TournamentDivision {
       parsedCount =
           int.tryParse(json['_count']['participants'].toString()) ?? 0;
     }
+    final divisionConfig = json['tournamentConfig'] is Map
+        ? Map<String, dynamic>.from(json['tournamentConfig'] as Map)
+        : json['config'] is Map
+            ? Map<String, dynamic>.from(json['config'] as Map)
+            : const <String, dynamic>{};
+    final groupsConfig = divisionConfig['groupsConfig'] is Map
+        ? Map<String, dynamic>.from(divisionConfig['groupsConfig'] as Map)
+        : const <String, dynamic>{};
+    final rawLegs = json['roundRobinLegs'] ??
+        json['roundsToPlay'] ??
+        divisionConfig['roundRobinLegs'] ??
+        groupsConfig['roundsToPlay'];
+
     return TournamentDivision(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
@@ -425,6 +442,9 @@ class TournamentDivision {
           json['matchType']?.toString() ??
           json['match_type']?.toString() ??
           'SINGLES',
+      bracketType: json['bracketType']?.toString() ??
+          json['bracket_type']?.toString(),
+      roundRobinLegs: int.tryParse((rawLegs ?? '').toString()),
       genderRestriction:
           json['genderRestriction']?.toString() ??
           json['gender_restriction']?.toString(),
@@ -440,6 +460,8 @@ class TournamentDivision {
       'id': id,
       'name': name,
       'matchType': matchType,
+      'bracketType': bracketType,
+      'roundRobinLegs': roundRobinLegs,
       'genderRestriction': genderRestriction,
       'maxParticipants': maxParticipants,
       '_count': {'participants': participantCount},

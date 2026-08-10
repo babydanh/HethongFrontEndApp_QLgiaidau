@@ -4,6 +4,19 @@ String normalizeStageText(String? value) {
   return (value ?? '').trim().toUpperCase();
 }
 
+/// True khi trận thuộc nhánh loại trực tiếp kiểu DOUBLE ELIMINATION.
+/// Dùng để nhận diện knockout stage thực chất là double elimination
+/// (trong group_stage_knockout hoặc khi bracketType tổng không phản ánh đúng),
+/// giúp render đúng sơ đồ nhánh thắng / nhánh thua.
+bool isDoubleEliminationMatch(MatchModel match) {
+  final stageType = normalizeStageText(match.stageType);
+  if (stageType == 'DOUBLE_ELIMINATION') return true;
+  final branch = normalizeStageText(match.bracketPosition.bracket);
+  return branch == 'LOSERS' ||
+      branch == 'GRAND_FINAL' ||
+      branch == 'GRAND_FINAL_RESET';
+}
+
 bool isGroupStageMatch(MatchModel match) {
   final branch = normalizeStageText(match.bracketPosition.bracket);
   final stageType = normalizeStageText(match.stageType);
@@ -45,7 +58,7 @@ bool isKnockoutMatch(MatchModel match) {
     return true;
   }
   if (stageType == 'ROUND_ROBIN' || stageType == 'GROUP_STAGE') return false;
-  if (branch == 'PLAYOFF') return false;
+  if (branch == 'PLAYOFF') return true;
   if (branch == 'WINNERS' ||
       branch == 'MAIN' ||
       branch == 'GRAND_FINAL' ||

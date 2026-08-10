@@ -14,11 +14,14 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart
 import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/filter_chips.dart' show RoundFilterPill;
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
+import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 
 class BracketViewScreen extends ConsumerStatefulWidget {
   final String tournamentId;
   final String? divisionId;
+  final String? bracketType;
+  final int configuredLegs;
   final bool isReferee;
   final bool isEmbedded;
   final ScrollController? scrollController;
@@ -27,6 +30,8 @@ class BracketViewScreen extends ConsumerStatefulWidget {
     super.key,
     required this.tournamentId,
     this.divisionId,
+    this.bracketType,
+    this.configuredLegs = 1,
     this.isReferee = false,
     this.isEmbedded = false,
     this.scrollController,
@@ -127,6 +132,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
         }
 
         final bracketType =
+            widget.bracketType ??
             tournamentAsync.value?.bracketType ??
             AppConstants.bracketSingleElimination;
         final isRoundRobin = bracketType == AppConstants.bracketRoundRobin;
@@ -167,6 +173,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                             matches: matches,
                             tournamentId: widget.tournamentId,
                             divisionId: widget.divisionId,
+                            configuredLegs: widget.configuredLegs,
                           ),
                         );
                       case 1:
@@ -220,6 +227,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                         matches: matches,
                         tournamentId: widget.tournamentId,
                         divisionId: widget.divisionId,
+                        configuredLegs: widget.configuredLegs,
                       ),
                     ),
                     StandingsView(
@@ -248,7 +256,18 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
         }
       },
       loading: () => const _BracketShimmerLoading(),
-      error: (e, st) => Center(child: Text('Lỗi: $e')),
+      error: (e, st) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            e.toString().contains('429')
+                ? 'Hệ thống đang giới hạn yêu cầu. Vui lòng thử lại sau ít giây.'
+                : 'Không thể tải dữ liệu bảng thi đấu.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.colors.textSecondary),
+          ),
+        ),
+      ),
     );
 
     if (widget.isEmbedded) {
@@ -394,11 +413,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     final isRoundRobin = bracketType == AppConstants.bracketRoundRobin;
 
     // Filter valid matches
-    final validMatches = matches.where((m) {
-      final t1 = m.team1Name.trim().toUpperCase();
-      final t2 = m.team2Name.trim().toUpperCase();
-      return !(t1 == 'TBD' && t2 == 'TBD' && !m.isLive && !m.isCompleted);
-    }).toList();
+    // Keep TBD/TBD knockout slots visible. The web shows these scheduled
+    // placeholders so users can see every configured round before seeding.
+    final validMatches = matches.where((m) => !m.isBye).toList();
 
     // Status counts
     final liveCount = validMatches.where((m) => m.isLive).length;
@@ -421,6 +438,22 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
       }
       return true;
     }).toList();
+
+    // When viewing knockout stage inside group_stage_knockout, compute totalRounds
+    // only from the knockout matches so labels show 'Bán kết'/'Chung kết' correctly.
+    // If the knockout stage is double elimination, count rounds from the winners
+    // band only (roundNumber restarts per band), otherwise labels drift to
+    // 'Vòng 1/16'... because the grand final round has the highest number.
+    final effectiveTotalRounds = (isGroupStageKnockout && _selectedBranch == 'knockout')
+        ? (stageScopedMatches.isEmpty
+            ? totalRounds
+            : stageScopedMatches.any(isDoubleEliminationMatch)
+                ? stageScopedMatches
+                    .where((m) => m.bracketPosition.bracket == 'winners')
+                    .map((m) => m.round)
+                    .fold(0, (a, b) => a > b ? a : b)
+                : stageScopedMatches.map((m) => m.round).fold(0, (a, b) => a > b ? a : b))
+        : totalRounds;
 
     final groupScopedMatches =
         isGroupStageKnockout && _selectedGroup.isNotEmpty && _selectedGroup != 'all'
@@ -540,14 +573,11 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                       minimumSize: Size.zero,
                     ),
                     onPressed: () {
-                      final diagramMatches = isGroupStageKnockout
-                          ? matches.where(isKnockoutMatch).toList()
-                          : matches;
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => BracketDiagramScreen(
-                            matches: diagramMatches,
                             tournamentId: widget.tournamentId,
+                            divisionId: widget.divisionId,
                             bracketType: bracketType,
                             isReferee: widget.isReferee,
                             isReadOnly: isReadOnly,
@@ -701,7 +731,13 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             _buildFilterRow(
               title: 'VÒNG ĐẤU:',
               children: availableRounds.map((r) {
-                        final label = isRoundRobin ? 'Lượt $r' : _getRoundName(r, totalRounds);
+                final isGroupStageRound =
+                    isGroupStageKnockout && _selectedBranch != 'knockout';
+                // When showing knockout rounds in a group_stage_knockout,
+                // totalRounds must only count knockout rounds — not group stage rounds.
+                final label = isRoundRobin || isGroupStageRound
+                    ? 'Vòng $r'
+                    : MatchRoundLabel.knockoutRoundName(r, effectiveTotalRounds);
                 final count = groupScopedMatches.where((m) => m.round == r).length;
                 return RoundFilterPill(
                   isSelected: _selectedRound == r,
@@ -743,7 +779,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             MatchTableRow(
               match: match,
               isReadOnly: isReadOnly,
-              totalRounds: totalRounds,
+              totalRounds: effectiveTotalRounds,
               tournamentId: widget.tournamentId,
               isReferee: widget.isReferee,
             ),
@@ -797,16 +833,28 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
           .map((m) => m.round);
       return winnersRounds.isEmpty ? 1 : winnersRounds.reduce((a, b) => a > b ? a : b);
     }
+    if (bracketType == AppConstants.bracketGroupStageKnockout) {
+      // The knockout round count comes from the knockout matches only — the
+      // round-robin stage has its own round numbers. The backend generates
+      // exactly as many knockout rounds as the advancing-teams setting allows
+      // (advance 4 → bán kết + chung kết, advance 8 → tứ kết, advance 16 →
+      // vòng 1/8...), so counting the knockout matches keeps labels aligned
+      // with the tournament setting even when viewing the combined list.
+      final knockout = matches.where(isKnockoutMatch).toList();
+      if (knockout.isEmpty) {
+        return matches.map((m) => m.round).reduce((a, b) => a > b ? a : b);
+      }
+      if (knockout.any(isDoubleEliminationMatch)) {
+        final winnersRounds = knockout
+            .where((m) => m.bracketPosition.bracket == 'winners')
+            .map((m) => m.round);
+        return winnersRounds.isEmpty ? 1 : winnersRounds.reduce((a, b) => a > b ? a : b);
+      }
+      return knockout.map((m) => m.round).reduce((a, b) => a > b ? a : b);
+    }
     return matches.map((m) => m.round).reduce((a, b) => a > b ? a : b);
   }
 
-  String _getRoundName(int round, int totalRounds) {
-    if (totalRounds <= 1) return 'Chung kết';
-    if (round == totalRounds) return 'Chung kết';
-    if (round == totalRounds - 1) return 'Bán kết';
-    if (round == totalRounds - 2) return 'Tứ kết';
-    return 'Vòng $round';
-  }
 }
 
 class _BracketShimmerLoading extends StatelessWidget {
@@ -815,8 +863,10 @@ class _BracketShimmerLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(12),
-      itemCount: 5,
+      itemCount: 4,
       itemBuilder: (context, index) {
         return Shimmer.fromColors(
           baseColor: context.colors.bgSurface,
@@ -827,6 +877,7 @@ class _BracketShimmerLoading extends StatelessWidget {
             decoration: BoxDecoration(
               color: context.colors.bgCard,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.colors.border),
             ),
           ),
         );

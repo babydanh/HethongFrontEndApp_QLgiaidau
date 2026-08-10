@@ -10,12 +10,14 @@ class CrossTableView extends ConsumerStatefulWidget {
   final List<MatchModel> matches;
   final String tournamentId;
   final String? divisionId;
+  final int configuredLegs;
 
   const CrossTableView({
     super.key,
     required this.matches,
     required this.tournamentId,
     this.divisionId,
+    this.configuredLegs = 1,
   });
 
   @override
@@ -23,7 +25,7 @@ class CrossTableView extends ConsumerStatefulWidget {
 }
 
 class _CrossTableViewState extends ConsumerState<CrossTableView> {
-  int _selectedLeg = 1;
+  final Map<String, int> _groupLegs = {};
 
   @override
   Widget build(BuildContext context) {
@@ -49,100 +51,49 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
           orElse: () => widget.matches,
         );
         final groupNames = groupedStandings.keys.toList()..sort();
-        final maxLeg = groupNames.fold<int>(1, (currentMax, groupName) {
-          final rows = groupedStandings[groupName]!;
-          final groupMatches = _matchesForGroup(
-            rows,
-            groupName,
-            groupNames.length == 1,
-            matchSnapshot,
-          );
-          return groupMatches.fold<int>(currentMax, (matchMax, match) {
-            final leg = _legForMatch(match, rows.length);
-            return leg > matchMax ? leg : matchMax;
-          });
-        });
-        final selectedLeg = _selectedLeg.clamp(1, maxLeg);
 
-        return Column(
-          children: [
-            if (maxLeg > 1)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      tooltip: 'Lượt trước',
-                      onPressed: selectedLeg > 1
-                          ? () => setState(() => _selectedLeg = selectedLeg - 1)
-                          : null,
-                      icon: const Icon(Icons.chevron_left_rounded),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 9,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        'Lượt $selectedLeg / $maxLeg',
-                        style: const TextStyle(
-                          color: AppTheme.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'Lượt tiếp theo',
-                      onPressed: selectedLeg < maxLeg
-                          ? () => setState(() => _selectedLeg = selectedLeg + 1)
-                          : null,
-                      icon: const Icon(Icons.chevron_right_rounded),
-                    ),
-                  ],
-                ),
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 16),
+          itemCount: groupNames.length,
+          itemBuilder: (context, index) {
+            final groupName = groupNames[index];
+            final groupRows = groupedStandings[groupName]!;
+            final allGroupMatches = _matchesForGroup(
+              groupRows,
+              groupName,
+              groupNames.length == 1,
+              matchSnapshot,
+            );
+            final maxLeg = allGroupMatches.fold<int>(widget.configuredLegs.clamp(1, 5), (currentMax, match) {
+              final leg = _legForMatch(match, groupRows.length);
+              return leg > currentMax ? leg : currentMax;
+            });
+            final currentLeg = (_groupLegs[groupName] ?? 1).clamp(1, maxLeg);
+            final groupMatches = allGroupMatches
+                .where((match) => _legForMatch(match, groupRows.length) == currentLeg)
+                .toList();
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: index == groupNames.length - 1 ? 0 : 20,
               ),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.only(bottom: 16),
-              itemCount: groupNames.length,
-              itemBuilder: (context, index) {
-                final groupName = groupNames[index];
-                final groupRows = groupedStandings[groupName]!;
-                final groupMatches =
-                    _matchesForGroup(
-                          groupRows,
-                          groupName,
-                          groupNames.length == 1,
-                          matchSnapshot,
-                        )
-                        .where(
-                          (match) =>
-                              _legForMatch(match, groupRows.length) ==
-                              selectedLeg,
-                        )
-                        .toList();
-
-                return Padding(
-                  padding: EdgeInsets.only(
-                    bottom: index == groupNames.length - 1 ? 0 : 20,
-                  ),
-                  child: _GroupCrossTable(
-                    title: maxLeg > 1
-                        ? '$groupName - Lượt $selectedLeg'
-                        : groupName,
-                    standings: groupRows,
-                    matches: groupMatches,
-                  ),
-                );
-              },
-            ),
-          ],
+              child: _GroupCrossTable(
+                title: groupName,
+                standings: groupRows,
+                matches: groupMatches,
+                currentLeg: currentLeg,
+                maxLeg: maxLeg,
+                onPrevLeg: currentLeg > 1
+                    ? () => setState(() => _groupLegs[groupName] = currentLeg - 1)
+                    : null,
+                onNextLeg: currentLeg < maxLeg
+                    ? () => setState(() => _groupLegs[groupName] = currentLeg + 1)
+                    : null,
+              ),
+            );
+          },
         );
       },
       loading: () => const Center(
@@ -216,21 +167,16 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
     return stage.contains('knockout') ||
         stage.contains('playoff') ||
         stage.contains('elimination') ||
-        stage.contains('loáº¡i trá»±c tiáº¿p') ||
-        stage.contains('nhÃ¡nh tháº¯ng') ||
-        stage.contains('nhÃ¡nh thua') ||
+        stage.contains('loại trực tiếp') ||
+        stage.contains('nhánh thắng') ||
+        stage.contains('nhánh thua') ||
         stage.contains('grand final') ||
         stage.contains('semi') ||
         stage.contains('quarter');
   }
 
   int _legForMatch(MatchModel match, int participantCount) {
-    final slotCount = participantCount.isEven
-        ? participantCount
-        : participantCount + 1;
-    final roundsPerLeg = (slotCount - 1).clamp(1, 9999);
-    final round = match.round < 1 ? 1 : match.round;
-    return ((round - 1) ~/ roundsPerLeg) + 1;
+    return match.round < 1 ? 1 : match.round;
   }
 
   Widget _buildEmptyState(BuildContext context, String message) {
@@ -258,11 +204,19 @@ class _GroupCrossTable extends StatelessWidget {
   final String title;
   final List<Standing> standings;
   final List<MatchModel> matches;
+  final int currentLeg;
+  final int maxLeg;
+  final VoidCallback? onPrevLeg;
+  final VoidCallback? onNextLeg;
 
   const _GroupCrossTable({
     required this.title,
     required this.standings,
     required this.matches,
+    this.currentLeg = 1,
+    this.maxLeg = 1,
+    this.onPrevLeg,
+    this.onNextLeg,
   });
 
   @override
@@ -288,7 +242,7 @@ class _GroupCrossTable extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: AppTheme.primary.withValues(alpha: 0.08),
               borderRadius: const BorderRadius.only(
@@ -307,7 +261,7 @@ class _GroupCrossTable extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    title.toUpperCase(),
+                    maxLeg > 1 ? '$title - VÒNG $currentLeg'.toUpperCase() : title.toUpperCase(),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -316,6 +270,46 @@ class _GroupCrossTable extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (maxLeg > 1) ...[
+                  IconButton(
+                    iconSize: 18,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                    tooltip: 'Vòng trước',
+                    onPressed: onPrevLeg,
+                    icon: Icon(
+                      Icons.chevron_left_rounded,
+                      color: onPrevLeg != null ? AppTheme.primary : colors.textMuted.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Vòng $currentLeg / $maxLeg',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    iconSize: 18,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                    tooltip: 'Vòng tiếp theo',
+                    onPressed: onNextLeg,
+                    icon: Icon(
+                      Icons.chevron_right_rounded,
+                      color: onNextLeg != null ? AppTheme.primary : colors.textMuted.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 Text(
                   '${standings.length} đội',
                   style: TextStyle(
@@ -574,8 +568,8 @@ class _GroupCrossTable extends StatelessWidget {
   _MatchResult _resultFor(MatchModel match, String participantId) {
     if (match.winnerId.isNotEmpty) {
       return match.winnerId == participantId
-          ? _MatchResult.win
-          : _MatchResult.loss;
+        ? _MatchResult.win
+        : _MatchResult.loss;
     }
     if (match.score1 == match.score2) {
       return _MatchResult.draw;

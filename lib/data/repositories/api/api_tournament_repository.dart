@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart'
 class ApiTournamentRepository implements ITournamentRepository {
   static const _log = AppLogger('ApiTournamentRepo');
   final DioClient _dioClient;
+  final Map<String, Tournament> _tournamentCache = {};
 
   ApiTournamentRepository(this._dioClient);
 
@@ -181,13 +182,17 @@ class ApiTournamentRepository implements ITournamentRepository {
               data['divisions'] = divData;
             }
           }
-          return Tournament.fromJson(data, id);
+          final tournament = Tournament.fromJson(data, id);
+          _tournamentCache[id] = tournament;
+          return tournament;
         }
       }
       return null;
     } catch (e, stack) {
       _log.error('Error fetching tournament by id', e, stack);
-      return null;
+      // Rate limits and transient network errors must not turn an existing
+      // tournament into a false "not found" screen.
+      return _tournamentCache[id];
     }
   }
 
@@ -558,20 +563,9 @@ class ApiTournamentRepository implements ITournamentRepository {
         }
       }
 
-      // Fallback: division cụ thể không có match → thử lấy tất cả divisions
-      // (tránh trả [] vô điều kiện khi bracket nằm ở division khác)
+      // If a specific divisionId was queried and has no matches, return [] directly.
       if (divisionId != null && divisionId.isNotEmpty) {
-        // Legacy brackets may have been generated before stages stored a
-        // division id. Try the unfiltered endpoint once, without aggregation.
-        return getBracketMatches(
-          tournamentId,
-          allowAggregateFallback: false,
-        );
-        final allMatches = await getBracketMatches(tournamentId);
-        if (allMatches.isNotEmpty) {
-          _log.info('Bracket fallback cho division $divisionId: lấy ${allMatches.length} matches từ toàn giải');
-          return allMatches;
-        }
+        return [];
       }
 
       // Fallback for "Tất cả" (divisionId == null): Query all divisions & aggregate matches
@@ -609,7 +603,7 @@ class ApiTournamentRepository implements ITournamentRepository {
   @override
   Stream<List<MatchModel>> watchBracketMatches(String tournamentId, {String? divisionId}) async* {
     yield await getBracketMatches(tournamentId, divisionId: divisionId);
-    yield* Stream.periodic(const Duration(seconds: 10))
+    yield* Stream.periodic(const Duration(seconds: 30))
         .asyncMap((_) => getBracketMatches(tournamentId, divisionId: divisionId));
   }
 

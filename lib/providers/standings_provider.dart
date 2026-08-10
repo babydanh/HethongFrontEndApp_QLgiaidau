@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
-import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 
 final standingsProvider =
     FutureProvider.family<List<Standing>, String>((ref, tournamentId) {
@@ -163,68 +162,66 @@ Future<List<Standing>> _calculateClientStandings(
   }
 
   for (final match in matches) {
-    if (StatusHelper.isCompleted(match.status)) {
-      final isDraw = match.score1 == match.score2 && match.winnerId.isEmpty;
+    if (match.status.toLowerCase() != 'completed') continue;
 
-      if (standingsMap.containsKey(match.team1Id)) {
-        final current = standingsMap[match.team1Id]!;
-        final isWin = match.winnerId == match.team1Id;
-        final isLoss = !isWin && !isDraw;
-
-        standingsMap[match.team1Id] = current.copyWith(
-          played: current.played + 1,
-          won: current.won + (isWin ? 1 : 0),
-          lost: current.lost + (isLoss ? 1 : 0),
-          drawn: current.drawn + (isDraw ? 1 : 0),
-          pointsFor: current.pointsFor + match.score1,
-          pointsAgainst: current.pointsAgainst + match.score2,
-          pointDifference: (current.pointsFor + match.score1) -
-              (current.pointsAgainst + match.score2),
-          totalPoints: current.totalPoints +
-              (isWin ? winPoints : (isDraw ? drawPoints : lossPoints)),
-        );
-      }
-
-      if (standingsMap.containsKey(match.team2Id)) {
-        final current = standingsMap[match.team2Id]!;
-        final isWin = match.winnerId == match.team2Id;
-        final isLoss = !isWin && !isDraw;
-
-        standingsMap[match.team2Id] = current.copyWith(
-          played: current.played + 1,
-          won: current.won + (isWin ? 1 : 0),
-          lost: current.lost + (isLoss ? 1 : 0),
-          drawn: current.drawn + (isDraw ? 1 : 0),
-          pointsFor: current.pointsFor + match.score2,
-          pointsAgainst: current.pointsAgainst + match.score1,
-          pointDifference: (current.pointsFor + match.score2) -
-              (current.pointsAgainst + match.score1),
-          totalPoints: current.totalPoints +
-              (isWin ? winPoints : (isDraw ? drawPoints : lossPoints)),
-        );
-      }
-    } else if (StatusHelper.isWalkover(match.status)) {
-      final winnerId = match.winnerId;
-      if (winnerId.isNotEmpty && standingsMap.containsKey(winnerId)) {
-        final current = standingsMap[winnerId]!;
-        standingsMap[winnerId] = current.copyWith(
-          played: current.played + 1,
-          won: current.won + 1,
-          totalPoints: current.totalPoints + winPoints,
-        );
-      }
-
-      final loserId = match.loserId;
-      if (loserId.isNotEmpty &&
-          loserId != 'BYE' &&
-          standingsMap.containsKey(loserId)) {
-        final current = standingsMap[loserId]!;
-        standingsMap[loserId] = current.copyWith(
-          played: current.played + 1,
-          lost: current.lost + 1,
-        );
-      }
+    // Hiệu số điểm (pointsFor/pointsAgainst) = TỔNG điểm ghi được từng set,
+    // khớp chuẩn web (parseScoreDetails) + backend (sumSetPoints) — không phải
+    // số set thắng. Chỉ tính khi match có 2 đội thật.
+    final team1Pts = match.sets.fold(0, (sum, s) => sum + s.score1);
+    final team2Pts = match.sets.fold(0, (sum, s) => sum + s.score2);
+    final team1Id = match.team1Id;
+    final team2Id = match.team2Id;
+    if (team1Id.isNotEmpty &&
+        team1Id != 'BYE' &&
+        standingsMap.containsKey(team1Id)) {
+      final current = standingsMap[team1Id]!;
+      standingsMap[team1Id] = current.copyWith(
+        pointsFor: current.pointsFor + team1Pts,
+        pointsAgainst: current.pointsAgainst + team2Pts,
+      );
     }
+    if (team2Id.isNotEmpty &&
+        team2Id != 'BYE' &&
+        standingsMap.containsKey(team2Id)) {
+      final current = standingsMap[team2Id]!;
+      standingsMap[team2Id] = current.copyWith(
+        pointsFor: current.pointsFor + team2Pts,
+        pointsAgainst: current.pointsAgainst + team1Pts,
+      );
+    }
+
+    final winnerId = match.winnerId;
+    if (winnerId.isNotEmpty &&
+        winnerId != 'BYE' &&
+        standingsMap.containsKey(winnerId)) {
+      final current = standingsMap[winnerId]!;
+      standingsMap[winnerId] = current.copyWith(
+        played: current.played + 1,
+        won: current.won + 1,
+        totalPoints: current.totalPoints + winPoints,
+      );
+    }
+
+    final loserId = match.loserId;
+    if (loserId.isNotEmpty &&
+        loserId != 'BYE' &&
+        standingsMap.containsKey(loserId)) {
+      final current = standingsMap[loserId]!;
+      standingsMap[loserId] = current.copyWith(
+        played: current.played + 1,
+        lost: current.lost + 1,
+        totalPoints: current.totalPoints + lossPoints,
+      );
+    }
+  }
+
+  // pointDifference = pointsFor - pointsAgainst (khớp _standingFromApi fallback),
+  // để cột "Hiệu số" + tie-break sort đúng khi rớt xuống fallback client.
+  for (final entry in standingsMap.entries) {
+    final current = entry.value;
+    standingsMap[entry.key] = current.copyWith(
+      pointDifference: current.pointsFor - current.pointsAgainst,
+    );
   }
 
   final standingsList = standingsMap.values.toList();

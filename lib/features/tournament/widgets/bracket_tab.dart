@@ -4,12 +4,16 @@ import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.
 class BracketTab extends StatelessWidget {
   final String tournamentId;
   final String? selectedDivisionId;
+  final String? bracketType;
+  final int configuredLegs;
   final ScrollController? scrollController;
 
   const BracketTab({
     super.key,
     required this.tournamentId,
     this.selectedDivisionId,
+    this.bracketType,
+    this.configuredLegs = 1,
     this.scrollController,
   });
 
@@ -18,6 +22,8 @@ class BracketTab extends StatelessWidget {
     return BracketViewScreen(
       tournamentId: tournamentId,
       divisionId: selectedDivisionId,
+      bracketType: bracketType,
+      configuredLegs: configuredLegs,
       isEmbedded: true,
       scrollController: scrollController,
     );

@@ -123,16 +123,47 @@ final bracketMatchesProvider =
 
 final bracketMatchesWithDivisionProvider =
     StreamProvider.family<List<MatchModel>, ({String tournamentId, String? divisionId})>((ref, params) async* {
-  final repo = ref.watch(tournamentRepositoryProvider);
-  final bracketMatches = await repo.getBracketMatches(params.tournamentId, divisionId: params.divisionId);
-  if (bracketMatches.isNotEmpty) {
-    yield bracketMatches;
-    yield* repo.watchBracketMatches(params.tournamentId, divisionId: params.divisionId);
-  } else {
-    yield* ref.watch(matchRepositoryProvider).watchByTournament(
+  final tournamentRepo = ref.watch(tournamentRepositoryProvider);
+  final matchRepo = ref.watch(matchRepositoryProvider);
+
+  List<MatchModel> bracketMatches = const [];
+  List<MatchModel> flatMatches = const [];
+
+  try {
+    final results = await Future.wait([
+      tournamentRepo.getBracketMatches(
+        params.tournamentId,
+        divisionId: params.divisionId,
+      ).catchError((_) => <MatchModel>[]),
+      matchRepo.getAllByTournament(
+        params.tournamentId,
+        divisionId: params.divisionId,
+      ).catchError((_) => <MatchModel>[]),
+    ]);
+    bracketMatches = results[0];
+    flatMatches = results[1];
+  } catch (_) {}
+
+  // /bracket is the authoritative source and matches what the web renders.
+  // Use ONLY bracket matches when available, falling back to flat list if not.
+  final snapshot = bracketMatches.isNotEmpty ? bracketMatches : flatMatches;
+
+  // Yield the snapshot immediately (even if empty `[]`) so Riverpod transitions out
+  // of loading state instantly instead of hanging the UI on division change.
+  yield snapshot;
+
+  if (snapshot.isNotEmpty) {
+    yield* tournamentRepo
+        .watchBracketMatches(
           params.tournamentId,
           divisionId: params.divisionId,
-        );
+        )
+        .handleError((_) {});
+  } else {
+    yield* matchRepo.watchByTournament(
+      params.tournamentId,
+      divisionId: params.divisionId,
+    );
   }
 });
 

@@ -91,47 +91,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Row(
                 children: [
-                  // Athlete Avatar
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppTheme.primary.withValues(alpha: 0.3),
-                        width: 1.2,
-                      ),
-                    ),
-                    child: CircleAvatar(
-                      radius: 19,
-                      backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
-                      child: team.photoUrl.isNotEmpty
-                          ? ClipOval(
-                              child: Image.network(
-                                team.photoUrl,
-                                fit: BoxFit.cover,
-                                width: 38,
-                                height: 38,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Text(
-                                      _getInitials(team.name),
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.primary,
-                                      ),
-                                    ),
-                              ),
-                            )
-                          : Text(
-                              _getInitials(team.name),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primary,
-                              ),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 2),
 
                   // Athlete Name + Badges
                   Expanded(
@@ -249,49 +209,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                 ),
                 child: Row(
                   children: [
-                    // Team Avatar / Double Initials
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppTheme.primary.withValues(alpha: 0.3),
-                          width: 1.2,
-                        ),
-                      ),
-                      child: CircleAvatar(
-                        radius: 19,
-                        backgroundColor: AppTheme.primary.withValues(
-                          alpha: 0.12,
-                        ),
-                        child: team.photoUrl.isNotEmpty
-                            ? ClipOval(
-                                child: Image.network(
-                                  team.photoUrl,
-                                  fit: BoxFit.cover,
-                                  width: 38,
-                                  height: 38,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Text(
-                                        _getInitials(team.name),
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppTheme.primary,
-                                        ),
-                                      ),
-                                ),
-                              )
-                            : Text(
-                                _getInitials(team.name),
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.primary,
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 2),
 
                     // Team Name & Subtitle
                     Expanded(
