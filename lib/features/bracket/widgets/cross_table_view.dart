@@ -55,7 +55,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
             rows,
             groupName,
             groupNames.length == 1,
-            matches: matchSnapshot,
+            matchSnapshot,
           );
           return groupMatches.fold<int>(currentMax, (matchMax, match) {
             final leg = _legForMatch(match, rows.length);
@@ -119,7 +119,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
                           groupRows,
                           groupName,
                           groupNames.length == 1,
-                          matches: matchSnapshot,
+                          matchSnapshot,
                         )
                         .where(
                           (match) =>
@@ -182,7 +182,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
     List<Standing> standings,
     String groupName,
     bool allowLegacyParticipantFallback,
-    {required List<MatchModel> matches},
+    List<MatchModel> matches,
   ) {
     final participantIds = standings.map((s) => s.id).toSet();
     final normalizedGroupName = groupName.trim().toLowerCase();
