@@ -22,7 +22,8 @@ class WithdrawSheet extends ConsumerStatefulWidget {
   });
 
   /// Hiển thị WithdrawSheet như một modal bottom sheet.
-  static Future<void> show(BuildContext context, {
+  static Future<void> show(
+    BuildContext context, {
     required String tournamentId,
     String? divisionId,
     bool hasPaid = false,
@@ -50,15 +51,23 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
   final _accountNameCtrl = TextEditingController();
   bool _submitting = false;
 
-  /// true khi profile đã có đầy đủ ngân hàng và đang dùng đó
+  /// true khi profile đã có đầy đủ ngân hàng và đang hiển thị từ profile
   bool _usingProfileBank = false;
+
+  /// false chừng nào chưa check profile xong (chỉ relevant khi hasPaid=true)
   bool _profileBankLoaded = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.hasPaid) {
-      _loadProfileBank();
+      // Dùng postFrameCallback để đảm bảo ref.read an toàn sau khi widget mount
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadProfileBank();
+      });
+    } else {
+      // Giải miễn phí không cần load bank → đánh dấu loaded ngay
+      _profileBankLoaded = true;
     }
   }
 
@@ -75,8 +84,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
         _usingProfileBank = true;
       }
     }
-    _profileBankLoaded = true;
-    if (mounted) setState(() {});
+    if (mounted) setState(() => _profileBankLoaded = true);
   }
 
   @override
@@ -87,23 +95,33 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
     super.dispose();
   }
 
-  bool get _needsBankInput =>
-      widget.hasPaid && !_usingProfileBank;
+  /// Cần nhập form bank khi giải có phí VÀ chưa dùng profile bank
+  bool get _needsBankInput => widget.hasPaid && !_usingProfileBank;
 
   Future<void> _handleWithdraw() async {
-    // Nếu cần nhập form ngân hàng thì validate trước
+    // Validate form bank nếu user cần nhập thủ công
     if (_needsBankInput) {
       if (!_formKey.currentState!.validate()) return;
     }
 
     setState(() => _submitting = true);
     try {
-      final bankName = _bankNameCtrl.text.trim().isEmpty ? null : _bankNameCtrl.text.trim();
-      final bankAccountNumber = _accountNumberCtrl.text.trim().isEmpty ? null : _accountNumberCtrl.text.trim();
-      final bankAccountName = _accountNameCtrl.text.trim().isEmpty ? null : _accountNameCtrl.text.trim().toUpperCase();
+      final bankName = _bankNameCtrl.text.trim().isEmpty
+          ? null
+          : _bankNameCtrl.text.trim();
+      final bankAccountNumber = _accountNumberCtrl.text.trim().isEmpty
+          ? null
+          : _accountNumberCtrl.text.trim();
+      final bankAccountName = _accountNameCtrl.text.trim().isEmpty
+          ? null
+          : _accountNameCtrl.text.trim().toUpperCase();
 
-      // Nếu người dùng vừa nhập bank mới (chưa có trong profile) → lưu vào profile ngay
-      if (_needsBankInput && bankName != null && bankAccountNumber != null && bankAccountName != null) {
+      // Nếu user vừa nhập bank mới (chưa có trong profile) → lưu vào profile
+      // Làm trước khi gọi withdraw để nếu withdraw thất bại thì bank vẫn được lưu
+      if (_needsBankInput &&
+          bankName != null &&
+          bankAccountNumber != null &&
+          bankAccountName != null) {
         try {
           await ref.read(userRepositoryProvider).updateProfile({
             'bankName': bankName,
@@ -119,6 +137,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
       await ref.read(tournamentRepositoryProvider).withdraw(
         tournamentId: widget.tournamentId,
         divisionId: widget.divisionId,
+        // Chỉ gửi bank khi giải có phí (backend cũng fallback từ profile nếu null)
         bankName: widget.hasPaid ? bankName : null,
         bankAccountNumber: widget.hasPaid ? bankAccountNumber : null,
         bankAccountName: widget.hasPaid ? bankAccountName : null,
@@ -137,7 +156,8 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Lỗi: $e')));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -162,33 +182,64 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Drag handle
           Center(
-            child: Container(width: 40, height: 4, decoration: BoxDecoration(color: colors.border, borderRadius: BorderRadius.circular(2))),
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: colors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
           ),
           const SizedBox(height: 20),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text('Rút lui', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: colors.textPrimary)),
-            IconButton(onPressed: () => Navigator.pop(context), icon: Icon(Icons.close, color: colors.textSecondary)),
-          ]),
+
+          // Title + close
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Rút lui',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(Icons.close, color: colors.textSecondary),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
 
-          // --- Mô tả ---
+          // Mô tả
           Text(
             widget.hasPaid
                 ? (_usingProfileBank
                     ? 'Tiền hoàn sẽ được chuyển vào tài khoản ngân hàng trong hồ sơ của bạn.'
                     : 'Bạn đã đóng phí. Vui lòng nhập thông tin ngân hàng để nhận hoàn tiền (sẽ được lưu vào hồ sơ).')
                 : 'Bạn có chắc muốn rút lui khỏi giải đấu này?',
-            style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.4),
+            style: TextStyle(
+              fontSize: 13,
+              color: colors.textSecondary,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 20),
 
-          // --- Bank section: chỉ hiển thị khi giải có phí ---
+          // Bank section: chỉ khi giải có phí
           if (widget.hasPaid) ...[
             if (!_profileBankLoaded)
-              const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: CircularProgressIndicator(),
+                ),
+              )
             else if (_usingProfileBank)
-              // Hiển thị thông tin ngân hàng từ profile (readonly)
               _BankInfoCard(
                 colors: colors,
                 bankName: _bankNameCtrl.text,
@@ -202,7 +253,6 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                 }),
               )
             else
-              // Form nhập ngân hàng
               Form(
                 key: _formKey,
                 child: Column(
@@ -213,10 +263,15 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                       decoration: InputDecoration(
                         labelText: 'Tên ngân hàng',
                         hintText: 'VD: Vietcombank, Techcombank',
-                        filled: true, fillColor: colors.bgDark,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        filled: true,
+                        fillColor: colors.bgDark,
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
-                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Nhập tên ngân hàng' : null,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty)
+                              ? 'Nhập tên ngân hàng'
+                              : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -226,10 +281,15 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                       decoration: InputDecoration(
                         labelText: 'Số tài khoản',
                         hintText: 'Nhập số tài khoản',
-                        filled: true, fillColor: colors.bgDark,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        filled: true,
+                        fillColor: colors.bgDark,
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
-                      validator: (v) => (v == null || v.trim().length < 6) ? 'Số tài khoản không hợp lệ' : null,
+                      validator: (v) =>
+                          (v == null || v.trim().length < 6)
+                              ? 'Số tài khoản không hợp lệ'
+                              : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -239,10 +299,15 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                       decoration: InputDecoration(
                         labelText: 'Chủ tài khoản',
                         hintText: 'VIẾT HOA KHÔNG DẤU',
-                        filled: true, fillColor: colors.bgDark,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        filled: true,
+                        fillColor: colors.bgDark,
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
-                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Nhập tên chủ tài khoản' : null,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty)
+                              ? 'Nhập tên chủ tài khoản'
+                              : null,
                     ),
                   ],
                 ),
@@ -250,38 +315,50 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
             const SizedBox(height: 16),
           ],
 
-          // --- Warning box (chỉ khi free hoặc đang dùng profile bank) ---
-          if (!widget.hasPaid || _usingProfileBank) ...[
-            Container(
-              width: double.infinity, padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colors.error.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.error.withValues(alpha: 0.15)),
-              ),
-              child: Row(children: [
+          // Warning box — luôn hiển thị trước nút xác nhận
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colors.error.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colors.error.withValues(alpha: 0.15)),
+            ),
+            child: Row(
+              children: [
                 Icon(Icons.warning_rounded, size: 20, color: colors.error),
                 const SizedBox(width: 12),
-                Expanded(child: Text(
-                  'Hành động này không thể hoàn tác.',
-                  style: TextStyle(fontSize: 13, color: colors.error))),
-              ]),
+                Expanded(
+                  child: Text(
+                    'Hành động này không thể hoàn tác.',
+                    style: TextStyle(fontSize: 13, color: colors.error),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-          ],
+          ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 20),
+
           SizedBox(
-            width: double.infinity, height: 50,
+            width: double.infinity,
+            height: 50,
             child: FilledButton.icon(
               onPressed: _submitting ? null : _handleWithdraw,
               icon: _submitting
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
                   : const Icon(Icons.exit_to_app_rounded),
-              label: Text(_submitting ? 'Đang xử lý...' : 'Xác nhận rút lui'),
+              label:
+                  Text(_submitting ? 'Đang xử lý...' : 'Xác nhận rút lui'),
               style: FilledButton.styleFrom(
                 backgroundColor: colors.error,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
               ),
             ),
           ),
@@ -291,9 +368,9 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
   }
 }
 
-/// Widget hiển thị thông tin ngân hàng từ profile (read-only card)
+/// Card hiển thị thông tin ngân hàng từ profile (read-only)
 class _BankInfoCard extends StatelessWidget {
-  final dynamic colors;
+  final AppColorsExtension colors;
   final String bankName;
   final String accountNumber;
   final String accountName;
@@ -324,13 +401,28 @@ class _BankInfoCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(children: [
-                Icon(Icons.account_balance_rounded, size: 16, color: colors.textSecondary),
+                Icon(Icons.account_balance_rounded,
+                    size: 16, color: colors.textSecondary),
                 const SizedBox(width: 6),
-                Text('Ngân hàng hoàn tiền', style: TextStyle(fontSize: 12, color: colors.textSecondary, fontWeight: FontWeight.w600)),
+                Text(
+                  'Ngân hàng hoàn tiền',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ]),
               GestureDetector(
                 onTap: onChangePressed,
-                child: Text('Đổi', style: TextStyle(fontSize: 12, color: colors.primary, fontWeight: FontWeight.w600)),
+                child: Text(
+                  'Đổi',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -347,17 +439,37 @@ class _BankInfoCard extends StatelessWidget {
 }
 
 class _BankRow extends StatelessWidget {
-  final dynamic colors;
+  final AppColorsExtension colors;
   final String label;
   final String value;
-  const _BankRow({required this.label, required this.value, required this.colors});
+
+  const _BankRow({
+    required this.label,
+    required this.value,
+    required this.colors,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        SizedBox(width: 72, child: Text(label, style: TextStyle(fontSize: 12, color: colors.textMuted))),
-        Expanded(child: Text(value, style: TextStyle(fontSize: 13, color: colors.textPrimary, fontWeight: FontWeight.w600))),
+        SizedBox(
+          width: 72,
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 12, color: colors.textMuted),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              color: colors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
       ],
     );
   }
