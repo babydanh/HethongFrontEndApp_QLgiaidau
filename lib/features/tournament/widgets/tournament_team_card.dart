@@ -93,6 +93,28 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                 children: [
                   const SizedBox(width: 2),
 
+                  // Singles cards represent a real participant. Show the
+                  // roster avatar when the API provides it, falling back to
+                  // initials only when the profile has no image.
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
+                    backgroundImage: singleInfo?.avatarUrl?.isNotEmpty == true
+                        ? NetworkImage(singleInfo!.avatarUrl!)
+                        : null,
+                    child: singleInfo?.avatarUrl?.isNotEmpty == true
+                        ? null
+                        : Text(
+                            _getInitials(team.name),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(width: 10),
+
                   // Athlete Name + Badges
                   Expanded(
                     child: Column(

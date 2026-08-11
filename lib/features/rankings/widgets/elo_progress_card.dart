@@ -336,8 +336,10 @@ class _ShieldRow extends StatelessWidget {
       ),
       ShieldState.onboarding => (
         icon: Icons.shield_outlined,
-        color: Colors.white54,
-        bg: Colors.white.withValues(alpha: 0.07),
+        // This card is rendered on the light surface used by “Của tôi”.
+        // White onboarding text was effectively invisible there.
+        color: context.colors.textSecondary,
+        bg: context.colors.bgCard,
       ),
     };
 

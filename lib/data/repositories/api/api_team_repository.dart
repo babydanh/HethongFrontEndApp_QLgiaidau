@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/repositories/team_repository.dart';
 
 class ApiTeamRepository implements ITeamRepository {
@@ -95,6 +96,13 @@ class ApiTeamRepository implements ITeamRepository {
               .map((r) => (r['fullName'] ?? r['user']?['fullName'] ?? '').toString())
               .where((n) => n.isNotEmpty)
               .toList();
+          final memberInfos = rosters
+              .whereType<Map>()
+              .map((roster) => MatchMemberInfo.fromJson(
+                    Map<String, dynamic>.from(roster),
+                  ))
+              .where((member) => member.fullName.isNotEmpty)
+              .toList();
 
           final divisionMap = json['division'] as Map<String, dynamic>? ?? json['tournamentDivision'] as Map<String, dynamic>?;
           final divId = json['tournamentDivisionId']?.toString() ??
@@ -112,6 +120,7 @@ class ApiTeamRepository implements ITeamRepository {
             group: groupName,
             divisionId: divId,
             members: members.isNotEmpty ? members : [teamName.isNotEmpty ? teamName : 'VĐV'],
+            memberInfos: memberInfos,
             contactEmail: json['contactPhone']?.toString() ?? '',
             qrCode: json['qrCode']?.toString() ?? id,
             approvalStatus:
