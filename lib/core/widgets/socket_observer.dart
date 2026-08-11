@@ -64,6 +64,10 @@ class _SocketObserverState extends ConsumerState<SocketObserver> with WidgetsBin
       // Invalidating them reconnects the current screens without restarting app.
       ref.invalidate(userProfileProvider);
       ref.invalidate(unreadCountProvider);
+      // Notification state is kept in a Notifier and therefore survives
+      // backgrounding. Reload page 1 so notifications created while the app
+      // was paused (or while the socket was reconnecting) are not missed.
+      unawaited(ref.read(notificationStateProvider.notifier).loadPage(1));
       ref.invalidate(myTournamentWorkspaceProvider);
       ref.invalidate(tournamentsProvider);
     } finally {
@@ -90,6 +94,10 @@ class _SocketObserverState extends ConsumerState<SocketObserver> with WidgetsBin
         final notif = AppNotification.fromJson(data);
         // Thêm vào đầu danh sách notification
         ref.read(notificationStateProvider.notifier).addNotification(notif);
+        // The socket payload is intentionally only an optimistic update. A
+        // short refetch reconciles it with the persisted notification record
+        // and also covers a notification emitted while reconnecting.
+        unawaited(ref.read(notificationStateProvider.notifier).loadPage(1));
         // Refresh unread count
         ref.invalidate(unreadCountProvider);
         

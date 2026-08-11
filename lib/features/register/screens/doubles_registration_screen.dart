@@ -11,6 +11,8 @@ import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart'
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:intl/intl.dart';
@@ -365,6 +367,12 @@ class _DoublesRegistrationFlowState
       } catch (_) {}
 
       if (mounted) {
+        // Keep tournament/slot views in sync immediately after the backend
+        // creates the participant. The registration screen itself uses a
+        // direct endpoint, while home/detail screens read Riverpod streams.
+        ref.invalidate(tournamentProvider(widget.tournamentId));
+        ref.invalidate(tournamentIntroProvider(widget.tournamentId));
+        ref.invalidate(myTournamentWorkspaceProvider);
         if (result.isWaitlisted ||
             result.teamStatus == 'COMPLETE' ||
             result.teamStatus == 'PENDING_APPROVAL') {
@@ -436,6 +444,9 @@ class _DoublesRegistrationFlowState
           teamStatus == 'WAITLISTED') {
         _pollTimer?.cancel();
         if (mounted) {
+          ref.invalidate(tournamentProvider(widget.tournamentId));
+          ref.invalidate(tournamentIntroProvider(widget.tournamentId));
+          ref.invalidate(myTournamentWorkspaceProvider);
           setState(() {
             _teamStatus = teamStatus;
             _step = 3;
