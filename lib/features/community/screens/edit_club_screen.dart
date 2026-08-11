@@ -122,6 +122,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
       _log.success('Cập nhật CLB thành công');
       ref.invalidate(communityDetailProvider(widget.clubId));
       ref.invalidate(communitiesProvider((search: null, provinceCode: null)));
+      ref.invalidate(myCommunitiesProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

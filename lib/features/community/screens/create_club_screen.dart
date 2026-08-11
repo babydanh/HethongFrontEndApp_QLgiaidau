@@ -67,6 +67,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
           ),
         );
         ref.invalidate(communitiesProvider);
+        ref.invalidate(myCommunitiesProvider);
         context.go('/club/$clubId');
       }
     } catch (e, stack) {
