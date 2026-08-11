@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -141,71 +140,6 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       ),
       body: Column(
         children: [
-          // ── DEBUG TẠM (xong bug thì xoá) ──
-          if (kDebugMode)
-            Builder(
-              builder: (context) {
-                final ws = ref.watch(myTournamentWorkspaceProvider);
-                final hasWs = ws.asData?.value.hasAnyData ?? false;
-                final works = ws.asData?.value;
-                final wsJson = works == null
-                    ? 'loading'
-                    : 'W{o=${works.organizedTournaments.length},'
-                        'c=${works.coOrganizerTournaments.length},'
-                        'r=${works.refereeTournaments.length},'
-                        'p=${works.participatingTournaments.length}}';
-                final headTitles = stateNotif.notifications
-                    .take(3)
-                    .map((e) => e.title)
-                    .join(' | ');
-                final now2 = DateTime.now();
-                final groupedDbg = <String, int>{};
-                for (final n in stateNotif.notifications) {
-                  final d = now2.difference(n.createdAt);
-                  final key = d.inDays == 0
-                      ? 'today'
-                      : d.inDays == 1
-                          ? 'yest'
-                          : d.inDays < 7
-                              ? 'week'
-                              : 'older';
-                  groupedDbg[key] = (groupedDbg[key] ?? 0) + 1;
-                }
-                final groupedStr = groupedDbg.entries
-                    .map((e) => '${e.key}=${e.value}')
-                    .join(',');
-                final itemCountDbg =
-                    groupedDbg.length + 1 + (hasWs ? 1 : 0);
-                final showCards = displayedNotifications.isNotEmpty;
-                final branch = stateNotif.notifications.isEmpty && stateNotif.isLoading
-                    ? 'SPINNER'
-                    : stateNotif.notifications.isEmpty && stateNotif.errorMessage != null
-                        ? 'ERROR'
-                        : stateNotif.notifications.isEmpty
-                            ? 'EMPTY'
-                            : showCards
-                                ? 'BUILDLIST(displayed=${displayedNotifications.length})'
-                                : 'FILTERED';
-                return Container(
-                  width: double.infinity,
-                  color: const Color(0xFFFFF3E0),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Text(
-                    'DEBUG: n=${stateNotif.notifications.length} | '
-                    'load=${stateNotif.isLoading} | '
-                    'err=${stateNotif.errorMessage ?? 'null'} | '
-                    'hasWs=$hasWs | $wsJson\n'
-                    'groups: [$groupedStr] itemCount=$itemCountDbg\n'
-                    'branch: $branch\n'
-                    'titles: $headTitles',
-                    style: const TextStyle(fontSize: 10, color: Colors.brown),
-                    maxLines: 6,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                );
-              },
-            ),
           _buildFilterBar(colors, totalUnread, l10n),
           Expanded(
             child: stateNotif.notifications.isEmpty && stateNotif.isLoading

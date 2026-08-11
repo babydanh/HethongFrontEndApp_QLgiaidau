@@ -46,7 +46,10 @@ class DioClient {
         handler.next(options);
       },
       onResponse: (response, handler) {
-        if (response.requestOptions.method.toUpperCase() == 'GET' &&
+        // Dữ liệu realtime (thông báo...) không nên bị cache — luôn lấy mới.
+        final noCache = response.requestOptions.extra['noCache'] == true;
+        if (!noCache &&
+            response.requestOptions.method.toUpperCase() == 'GET' &&
             response.statusCode != null &&
             response.statusCode! >= 200 &&
             response.statusCode! < 300) {
@@ -115,7 +118,8 @@ class DioClient {
             error.type == DioExceptionType.connectionError ||
             statusCode == 429 ||
             (statusCode != null && statusCode >= 500);
-        final cached = _getCache[_cacheKey(error.requestOptions)];
+        final noCache = error.requestOptions.extra['noCache'] == true;
+        final cached = noCache ? null : _getCache[_cacheKey(error.requestOptions)];
         if (method == 'GET' && canUseCache && cached != null &&
             DateTime.now().difference(cached.savedAt) < const Duration(minutes: 10)) {
           return handler.resolve(Response(

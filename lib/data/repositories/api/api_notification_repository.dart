@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/domain/entities/app_notification.dart';
+import 'package:dio/dio.dart';
 
 class ApiNotificationRepository {
   static const _log = AppLogger('ApiNotificationRepo');
@@ -15,11 +16,19 @@ class ApiNotificationRepository {
       final response = await _dioClient.dio.get(
         '/notifications',
         queryParameters: {'page': page, 'limit': limit},
+        options: Options(
+          extra: {
+            // Thông báo là dữ liệu realtime — KHÔNG cache để tránh serve dữ liệu cũ
+            'noCache': true,
+          },
+        ),
       );
 
       if (response.statusCode == 200) {
         final data = response.data['data'] as List<dynamic>? ?? [];
-        return data.map((e) => AppNotification.fromJson(e as Map<String, dynamic>)).toList();
+        final items = data.map((e) => AppNotification.fromJson(e as Map<String, dynamic>)).toList();
+        _log.info('Nhận ${items.length} thông báo (page=$page) từ GET /notifications');
+        return items;
       }
       return [];
     } catch (e, stack) {
@@ -32,7 +41,14 @@ class ApiNotificationRepository {
   Future<int> getUnreadCount() async {
     _log.info('Lấy số thông báo chưa đọc');
     try {
-      final response = await _dioClient.dio.get('/notifications/unread-count');
+      final response = await _dioClient.dio.get(
+        '/notifications/unread-count',
+        options: Options(
+          extra: {
+            'noCache': true,
+          },
+        ),
+      );
       if (response.statusCode == 200) {
         return response.data['count'] ?? response.data['data']?['count'] ?? 0;
       }

@@ -176,7 +176,13 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
   }
 
   int _legForMatch(MatchModel match, int participantCount) {
-    return match.round < 1 ? 1 : match.round;
+    // Backend stores roundNumber continuously across legs (for example
+    // rounds 1..3 are leg 1 and 4..6 are leg 2). Treating roundNumber as the
+    // leg made the second leg reuse the first leg's matrix/score selection.
+    final slots = participantCount.isOdd ? participantCount + 1 : participantCount;
+    final roundsPerLeg = (slots - 1).clamp(1, 1000);
+    final round = match.round < 1 ? 1 : match.round;
+    return ((round - 1) ~/ roundsPerLeg) + 1;
   }
 
   Widget _buildEmptyState(BuildContext context, String message) {
