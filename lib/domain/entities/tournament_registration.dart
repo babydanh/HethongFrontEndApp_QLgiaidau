@@ -46,17 +46,36 @@ class TournamentDivisionOption {
           ?.toString(),
       matchType: (json['matchType'] ?? json['match_type'])?.toString(),
       categoryId: (json['categoryId'] ?? json['category_id'])?.toString(),
-      minElo: (minElo as num?)?.toDouble(),
-      maxElo: (maxElo as num?)?.toDouble(),
-      entryFee: (entryFee as num?)?.toDouble(),
-      maxParticipants: (maxParticipants as num?)?.toInt(),
+      minElo: _parseDouble(minElo),
+      maxElo: _parseDouble(maxElo),
+      entryFee: _parseDouble(entryFee),
+      maxParticipants: _parseInt(maxParticipants),
       bracketType: (json['bracketType'] ?? json['bracket_type'])?.toString(),
       registrationEndDate: rawEndDate is String
           ? DateTime.tryParse(rawEndDate)
           : null,
-      participantCount: (rawCount as num?)?.toInt(),
+      participantCount: _parseInt(rawCount),
     );
   }
+
+}
+
+/// Parse a numeric value that may arrive as `num` or a numeric `String`.
+/// Backend trả các trường tiền như `entryFee`/`minElo`/`maxElo` dưới dạng
+/// chuỗi (`"0.00"`) nên cast thẳng `as num?` sẽ ném TypeError và khiến cả
+/// danh sách division bị bỏ qua (app chỉ hiện 1 mục "Đôi").
+double? _parseDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
+}
+
+int? _parseInt(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
 }
 
 class TournamentRegistrationResult {
@@ -87,7 +106,7 @@ class TournamentRegistrationResult {
 
     return TournamentRegistrationResult(
       participantId: extractId(json),
-      entryFee: (json['entryFee'] as num?)?.toDouble() ?? 0,
+      entryFee: _parseDouble(json['entryFee']) ?? 0,
       teamStatus: json['participant'] is Map
           ? (json['participant']['teamStatus']?.toString() ?? '')
           : '',
