@@ -5,10 +5,7 @@ import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 class StatusBadge extends StatelessWidget {
   final String statusKey;
 
-  const StatusBadge({
-    super.key,
-    required this.statusKey,
-  });
+  const StatusBadge({super.key, required this.statusKey});
 
   @override
   Widget build(BuildContext context) {

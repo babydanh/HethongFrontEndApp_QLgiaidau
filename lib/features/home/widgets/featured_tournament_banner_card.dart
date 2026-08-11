@@ -116,6 +116,22 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
               else
                 _FallbackBanner(colors: colors),
               if (!hideText) ...[
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withValues(alpha: 0.25),
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.75),
+                        ],
+                        stops: const [0.0, 0.45, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
                 Positioned(
                   left: 10,
                   right: 10,
@@ -154,8 +170,8 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                           letterSpacing: -0.2,
                           shadows: [
                             Shadow(
-                              color: Color(0xCC000000),
-                              blurRadius: 8,
+                              color: Colors.black,
+                              blurRadius: 10,
                               offset: Offset(0, 2),
                             ),
                           ],

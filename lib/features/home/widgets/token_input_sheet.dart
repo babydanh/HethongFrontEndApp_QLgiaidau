@@ -169,54 +169,44 @@ class _TokenInputSheetState extends ConsumerState<TokenInputSheet> {
             SizedBox(
               width: double.infinity,
               height: 52,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  gradient: context.primaryGradient,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primary.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: _isSubmittingToken
-                      ? null
-                      : () {
-                          setState(() => _isSubmittingToken = true);
-                          _submitToken().then((_) {
-                            if (mounted && _tokenError != null) {
-                              setState(() => _isSubmittingToken = false);
-                            }
-                          });
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+              child: ElevatedButton(
+                onPressed: _isSubmittingToken
+                    ? null
+                    : () {
+                        setState(() => _isSubmittingToken = true);
+                        _submitToken().then((_) {
+                          if (mounted && _tokenError != null) {
+                            setState(() => _isSubmittingToken = false);
+                          }
+                        });
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppTheme.primary.withValues(alpha: 0.4),
+                  shadowColor: Colors.transparent,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: _isSubmittingToken
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.5,
-                          ),
-                        )
-                      : const Text(
-                          'Xác nhận',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
                 ),
+                child: _isSubmittingToken
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    : const Text(
+                        'Xác nhận',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 16),

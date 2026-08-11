@@ -836,6 +836,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (upper == 'ADMIN') return l10n.infoAdmin;
       if (upper == 'ORGANIZER') return l10n.infoOrganizer;
       if (upper == 'REFEREE') return l10n.infoReferee;
+      if (upper == 'PLAYER') return l10n.infoPlayer;
       return upper;
     }
 

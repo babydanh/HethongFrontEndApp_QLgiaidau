@@ -672,41 +672,32 @@ Widget _saveButton(BuildContext context, bool isLoading, Future<void> Function()
   return SizedBox(
     width: double.infinity,
     height: 52,
-    child: DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        gradient: context.primaryGradient,
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onSave,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          ),
+    child: ElevatedButton(
+      onPressed: isLoading ? null : onSave,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppTheme.primary,
+        foregroundColor: Colors.white,
+        disabledBackgroundColor: AppTheme.primary.withValues(alpha: 0.4),
+        shadowColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         ),
-        child: isLoading
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-              )
-            : const Text(
-                'Lưu thay đổi',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
-              ),
       ),
+      child: isLoading
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+            )
+          : const Text(
+              'Lưu thay đổi',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+            ),
     ),
   );
 }
+
 
 Widget _securityRow(
   AppColorsExtension colors, {

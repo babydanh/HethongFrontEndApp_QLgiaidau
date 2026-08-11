@@ -593,7 +593,8 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     } on Exception catch (e) {
       final msg = e.toString();
       if (msg.contains('409') || msg.contains('thay đổi từ thiết bị khác')) {
-        _log.warning('Conflict 409: điểm đã thay đổi từ thiết bị khác');
+        _log.warning('Conflict 409: điểm đã thay đổi từ thiết bị khác. Refetching latest match...');
+        ref.invalidate(singleMatchProvider(arg));
         state = state.copyWith(
           errorMessage: 'Điểm đã thay đổi từ thiết bị khác. Đã làm mới số liệu.',
         );
@@ -630,6 +631,11 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         expectedRevision: rev,
       );
     } catch (e, stack) {
+      final msg = e.toString();
+      if (msg.contains('409') || msg.contains('thay đổi từ thiết bị khác')) {
+        _log.warning('Conflict 409 in live sync. Refetching latest match...');
+        ref.invalidate(singleMatchProvider(arg));
+      }
       _log.error('Lỗi đồng bộ điểm live', e, stack);
       state = state.copyWith(errorMessage: 'Không đồng bộ được điểm live. Vui lòng thử lại.');
     }

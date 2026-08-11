@@ -70,15 +70,14 @@ class ApiMatchRepository implements IMatchRepository {
     final cacheKey = '$tournamentId-${divisionId ?? 'all'}';
     late StreamController<List<MatchModel>> controller;
     StreamSubscription? socketSub;
+    StreamSubscription? scoreSub;
+    StreamSubscription? statusSub;
     Timer? refreshTimer;
 
     Future<void> refresh() async {
       List<MatchModel> updated;
       try {
         updated = await getAllByTournament(tournamentId, divisionId: divisionId);
-        // getAllByTournament only returns after a successful 200 response.
-        // An empty 200 is therefore a real snapshot, not a transient error;
-        // keeping an old empty cache here made new matches stay invisible.
         _matchesCache[cacheKey] = updated;
       } catch (error, stack) {
         _log.error('Keeping cached tournament matches after refresh failure', error, stack);
@@ -97,10 +96,13 @@ class ApiMatchRepository implements IMatchRepository {
         socketSub = _socketService.onTournamentMatchUpdate.listen((_) {
           unawaited(refresh());
         });
-        refreshTimer = Timer.periodic(const Duration(seconds: 45), (_) {
-          // Socket.IO may exhaust its reconnect attempts while the app is
-          // backgrounded. Re-entering the connect path is idempotent and
-          // restores the room before refreshing the authoritative snapshot.
+        scoreSub = _socketService.onScoreUpdate.listen((_) {
+          unawaited(refresh());
+        });
+        statusSub = _socketService.onMatchStatus.listen((_) {
+          unawaited(refresh());
+        });
+        refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
           _socketService.connect(null, joinMatch: false);
           _socketService.joinTournament(tournamentId);
           unawaited(refresh());
@@ -108,6 +110,8 @@ class ApiMatchRepository implements IMatchRepository {
       },
       onCancel: () {
         socketSub?.cancel();
+        scoreSub?.cancel();
+        statusSub?.cancel();
         refreshTimer?.cancel();
         _socketService.leaveTournament(tournamentId);
       },
@@ -135,12 +139,21 @@ class ApiMatchRepository implements IMatchRepository {
       }
     }
 
+    StreamSubscription? scoreSub;
+    StreamSubscription? statusSub;
+
     controller = StreamController<List<MatchModel>>(
       onListen: () {
         _socketService.connect(null, joinMatch: false);
         _socketService.joinTournament(tournamentId);
         unawaited(refresh());
         socketSub = _socketService.onTournamentMatchUpdate.listen((_) {
+          unawaited(refresh());
+        });
+        scoreSub = _socketService.onScoreUpdate.listen((_) {
+          unawaited(refresh());
+        });
+        statusSub = _socketService.onMatchStatus.listen((_) {
           unawaited(refresh());
         });
         refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
@@ -151,6 +164,8 @@ class ApiMatchRepository implements IMatchRepository {
       },
       onCancel: () {
         socketSub?.cancel();
+        scoreSub?.cancel();
+        statusSub?.cancel();
         refreshTimer?.cancel();
         _socketService.leaveTournament(tournamentId);
       },
@@ -492,6 +507,10 @@ class ApiMatchRepository implements IMatchRepository {
       refereeName: incoming.refereeName ?? previous.refereeName,
       refereeId: incoming.refereeId ?? previous.refereeId,
       startedAt: incoming.startedAt ?? previous.startedAt,
+      // Phải lấy revision MỚI từ payload echo. Nếu bỏ sót, local cứ giữ
+      // revision cũ → mỗi lần nhập tiếp gửi expectedRevision sai → backend
+      // trả 409 → điểm bị drop + màn "kẹt"/desync mãi. (fix #33)
+      revision: incoming.revision != null ? incoming.revision : previous.revision,
     );
   }
 

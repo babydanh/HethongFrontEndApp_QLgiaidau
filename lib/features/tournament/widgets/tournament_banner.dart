@@ -313,10 +313,6 @@ class _HeaderInfo extends StatelessWidget {
   }
 }
 
-
-
-
-
 class _HeaderMeta extends StatelessWidget {
   final Tournament tournament;
   final String? selectedDivision;
@@ -375,7 +371,10 @@ class _HeaderMeta extends StatelessWidget {
             const SizedBox(width: 8),
             if (divisions.length > 1 && onChangedDivision != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),

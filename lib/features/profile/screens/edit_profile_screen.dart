@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 
 class Province {
   final String code;
@@ -609,22 +610,26 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
 
       final body = <String, dynamic>{
         'fullName': _fullNameController.text.trim(),
-        'phoneNumber': _phoneController.text.trim(),
         'dateOfBirth': formattedDate,
         'gender': _selectedGender,
-        'address': _addressController.text.trim(),
-        'provinceCode': _selectedProvince?.code,
-        'bio': _bioController.text.trim(),
       };
+
+      final phoneVal = _phoneController.text.trim();
+      if (phoneVal.isNotEmpty) body['phoneNumber'] = phoneVal;
+
+      final addressVal = _addressController.text.trim();
+      if (addressVal.isNotEmpty) body['address'] = addressVal;
+
+      if (_selectedProvince?.code != null && _selectedProvince!.code.isNotEmpty) {
+        body['provinceCode'] = _selectedProvince!.code;
+      }
+
+      final bioVal = _bioController.text.trim();
+      if (bioVal.isNotEmpty) body['bio'] = bioVal;
 
       // Only send email if changed and verified
       if (_emailChanged && _isEmailVerified) {
         body['email'] = _emailController.text.trim();
-      }
-
-      // Only send phone if changed
-      if (_phoneChanged && _isPhoneVerified) {
-        body['phoneNumber'] = _phoneController.text.trim();
       }
 
       // Send bank fields
@@ -655,9 +660,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+      final errorMsg = ErrorParser.parse(e, 'Lỗi cập nhật hồ sơ');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.edit_update_error(e.toString().replaceAll('Exception: ', ''))),
+          content: Text(errorMsg),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -726,6 +732,50 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
             style: TextStyle(color: colors.error),
           ),
         ),
+      ),
+      bottomNavigationBar: profileAsync.maybeWhen(
+        data: (_) => Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            border: Border(top: BorderSide(color: colors.border)),
+          ),
+          child: SafeArea(
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    : const Text(
+                        'Lưu thay đổi',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+              ),
+            ),
+          ),
+        ),
+        orElse: () => null,
       ),
     );
   }
@@ -872,7 +922,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
               ),
             ),
             const SizedBox(height: 20),
-            _buildSaveButton(colors),
           ],
         ),
       ),

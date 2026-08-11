@@ -1211,11 +1211,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   // ═══════════════════════════════════════════════════════════
   Widget _buildLiveState(MatchModel match, {required bool canOpenScoring}) {
     if (widget.isViewer || canOpenScoring) {
-      return SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 16),
-        child: _buildViewerState(match, canOpenScoring: canOpenScoring),
-      );
+      return _buildViewerState(match, canOpenScoring: canOpenScoring);
     }
 
     return Column(
@@ -2206,18 +2202,20 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         ),
 
         // ─── Tab Content ───
-        // The page owns the vertical scroll. The score tab must not create a
-        // second scroll view inside it; chat keeps its own message list.
         if (_selectedViewerTab == 0)
-          Consumer(
-            builder: (context, ref, _) {
-              final state = ref.watch(scorePanelNotifierProvider(params));
-              return _buildViewerScoreboard(match, state);
-            },
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Consumer(
+                builder: (context, ref, _) {
+                  final state = ref.watch(scorePanelNotifierProvider(params));
+                  return _buildViewerScoreboard(match, state);
+                },
+              ),
+            ),
           )
         else
-          SizedBox(
-            height: isLandscape ? 450 : 620,
+          Expanded(
             child: _buildChatTab(match),
           ),
       ],

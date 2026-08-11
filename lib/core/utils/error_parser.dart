@@ -127,8 +127,7 @@ class ErrorParser {
           };
           final translated = viMap[msg];
           if (translated != null) return translated;
-          if (msg.runes.any((codePoint) => codePoint > 127)) return msg;
-          return fallback;
+          return msg;
         }
       }
     }

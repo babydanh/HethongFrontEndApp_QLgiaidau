@@ -319,7 +319,8 @@ class ApiTournamentRepository implements ITournamentRepository {
       },
       queryParameters: queryParameters.isNotEmpty ? queryParameters : null,
     );
-    final rawData = response.data['data'];
+    final body = response.data;
+    final rawData = body is Map && body['data'] is Map ? body['data'] : body;
     if (rawData is! Map) {
       throw const FormatException('Phản hồi đăng ký không hợp lệ.');
     }

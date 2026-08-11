@@ -5,7 +5,7 @@
     <key>method</key>
     <string>app-store</string>
     <key>teamID</key>
-    <string>YOUR_TEAM_ID</string>
+    <string>X5ZM9A8U8D</string>
     <key>uploadSymbols</key>
     <true/>
     <key>uploadBitcode</key>
@@ -15,13 +15,6 @@
     <key>destination</key>
     <string>export</string>
     <key>signingStyle</key>
-    <string>manual</string>
-    <key>signingCertificate</key>
-    <string>Apple Distribution</string>
-    <key>provisioningProfiles</key>
-    <dict>
-        <key>YOUR_BUNDLE_ID</key>
-        <string>YOUR_PROFILE_NAME</string>
-    </dict>
+    <string>automatic</string>
 </dict>
 </plist>

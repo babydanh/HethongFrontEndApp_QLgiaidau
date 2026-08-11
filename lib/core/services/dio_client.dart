@@ -150,9 +150,14 @@ class DioClient {
         receiveTimeout: const Duration(seconds: 8),
         sendTimeout: const Duration(seconds: 8),
       )).post('/auth/mobile/refresh', data: {'refreshToken': refreshToken});
-      final data = response.data;
-      final access = data is Map ? data['accessToken'] as String? : null;
-      final nextRefresh = data is Map ? data['refreshToken'] as String? : null;
+      final rawData = response.data;
+      final data = rawData is Map && rawData['data'] is Map
+          ? rawData['data'] as Map
+          : rawData is Map
+              ? rawData
+              : const <String, dynamic>{};
+      final access = data['accessToken']?.toString();
+      final nextRefresh = data['refreshToken']?.toString();
       if (access == null || nextRefresh == null) return null;
       await _tokenManager.saveTokens(accessToken: access, refreshToken: nextRefresh);
       return _TokenPair(access, nextRefresh);

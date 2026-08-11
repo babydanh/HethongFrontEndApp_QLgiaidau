@@ -548,7 +548,7 @@ class _LiveTournamentWithMatchesCardState
 
           // ── Teams & Score Section (Vertical Layout aligned with Team Names) ──
           GestureDetector(
-            onTap: () => context.push('/intro/${widget.tournament.id}'),
+            onTap: () => context.push('/live/${match.id}'),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
