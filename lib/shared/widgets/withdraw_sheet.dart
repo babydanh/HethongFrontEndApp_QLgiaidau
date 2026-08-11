@@ -419,7 +419,7 @@ class _BankInfoCard extends StatelessWidget {
                   'Đổi',
                   style: TextStyle(
                     fontSize: 12,
-                    color: colors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
