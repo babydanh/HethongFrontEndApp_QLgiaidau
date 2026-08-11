@@ -19,6 +19,8 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   static const _log = AppLogger('ScorePanelNotifier');
   final MatchControlParams arg;
   Timer? _liveSyncTimer;
+  String? _pendingScoreSignature;
+  DateTime? _pendingScoreAt;
 
   ScorePanelNotifier(this.arg);
 
@@ -46,7 +48,43 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void _updateStateFromMatch(MatchModel match) {
-    state = _hydrateState(state, match);
+    final hydrated = _hydrateState(state, match);
+    final pending = _pendingScoreSignature;
+    if (pending != null) {
+      final isOurEcho = _scoreSignature(hydrated) == pending;
+      final isStillWaiting = _pendingScoreAt != null &&
+          DateTime.now().difference(_pendingScoreAt!) <
+              const Duration(seconds: 4);
+      if (isOurEcho) {
+        _pendingScoreSignature = null;
+        _pendingScoreAt = null;
+      } else if (isStillWaiting) {
+        // Do not let a stale socket/poll snapshot overwrite a local tap.
+        return;
+      } else {
+        _pendingScoreSignature = null;
+        _pendingScoreAt = null;
+      }
+    }
+    state = hydrated;
+  }
+
+  String _scoreSignature(ScorePanelState value) {
+    final sets = value.finishedSets
+        .map((set) => '${set.score1}:${set.score2}:${set.isFinished}')
+        .join('|');
+    final rally = value.rally == null
+        ? '-'
+        : '${value.rally!.currentP1}:${value.rally!.currentP2}';
+    final tennis = value.tennis == null
+        ? '-'
+        : '${value.tennis!.team1GamePoints}:${value.tennis!.team2GamePoints}:${value.tennis!.isTiebreak}';
+    return '$sets#$rally#$tennis';
+  }
+
+  void _markLocalScorePending() {
+    _pendingScoreSignature = _scoreSignature(state);
+    _pendingScoreAt = DateTime.now();
   }
 
   ScorePanelState _hydrateState(ScorePanelState current, MatchModel match) {
@@ -576,6 +614,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   Future<void> _syncSetsToBackend() async {
+    _markLocalScorePending();
     final setsToSubmit = _setsForSubmission();
     final (p1Sets, p2Sets) = computeMatchSetsWon(setsToSubmit);
     try {
@@ -609,6 +648,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void _scheduleLiveSync() {
+    _markLocalScorePending();
     _liveSyncTimer?.cancel();
     _liveSyncTimer = Timer(const Duration(milliseconds: 250), _syncLiveScore);
   }
