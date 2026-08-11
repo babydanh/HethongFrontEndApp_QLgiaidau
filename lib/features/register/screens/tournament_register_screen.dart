@@ -239,13 +239,34 @@ class _TournamentRegisterScreenState
     if (!_formKey.currentState!.validate()) return;
     final userAsync = ref.read(userProfileProvider);
     final user = userAsync.asData?.value;
-    if (user?.fullName == null ||
-        user?.phoneNumber == null ||
-        user?.gender == null) {
+    final missingFields = <String>[];
+    if (user?.fullName == null || user!.fullName!.trim().isEmpty) missingFields.add('Họ tên');
+    if (user?.phoneNumber == null || user!.phoneNumber!.trim().isEmpty) missingFields.add('Số điện thoại');
+    if (user?.gender == null || user!.gender!.trim().isEmpty) missingFields.add('Giới tính');
+
+    if (missingFields.isNotEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.registerProfileIncomplete),
+        final missingStr = missingFields.join(', ');
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Hồ sơ chưa đầy đủ'),
+            content: Text(
+              'Bạn cần bổ sung thông tin [$missingStr] trong Hồ sơ cá nhân trước khi đăng ký giải đấu.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Đóng'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  context.push('/profile');
+                },
+                child: const Text('Cập nhật ngay'),
+              ),
+            ],
           ),
         );
       }
@@ -350,11 +371,28 @@ class _TournamentRegisterScreenState
       }
     } catch (e) {
       if (mounted) {
+        String msg = ErrorParser.parse(e, l10n.registerError);
+        if (msg == l10n.registerError || msg.contains('Không thể đăng ký')) {
+          final raw = e.toString();
+          if (raw.contains('BadRequestException:') || raw.contains('Exception:')) {
+            msg = raw.replaceAll(RegExp(r'.*Exception:\s*'), '');
+          } else {
+            msg = raw;
+          }
+        }
+        // Nếu lỗi là "đã đăng ký rồi" → re-check và chuyển sang màn hình đăng ký hiện có
+        final lowerMsg = msg.toLowerCase();
+        if (lowerMsg.contains('đã đăng ký') ||
+            lowerMsg.contains('already registered') ||
+            lowerMsg.contains('đã tham gia')) {
+          await _checkExistingRegistration();
+          return;
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              ErrorParser.parse(e, l10n.registerError),
-            ),
+            content: Text(msg),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -415,9 +453,6 @@ class _TournamentRegisterScreenState
       final max = d.maxElo?.toInt().toString() ?? '∞';
       items.add('ELO $min-$max');
     }
-    if (d.maxParticipants != null) {
-      items.add('Tối đa ${d.maxParticipants} đội');
-    }
     if (d.entryFee != null && d.entryFee! > 0) {
       items.add(
         '${NumberFormat('#,###', 'vi_VN').format(d.entryFee!.ceil())}đ',
@@ -434,11 +469,14 @@ class _TournamentRegisterScreenState
     };
     if (bracket != null) items.add(bracket);
     if (d.participantCount != null) {
-      final max = d.maxParticipants != null ? ' / ${d.maxParticipants}' : '';
-      items.add('${d.participantCount}$max hồ sơ');
+      final maxStr = d.maxParticipants != null ? '/${d.maxParticipants}' : '';
+      items.add('${d.participantCount}$maxStr hồ sơ');
+    } else if (d.maxParticipants != null) {
+      items.add('0/${d.maxParticipants} hồ sơ');
     }
     return items;
   }
+
 
   String _getRegistrationCta(Tournament? t) {
     if (t?.registrationMode == 'APPROVAL') return l10n.registerSubmitApproval;
