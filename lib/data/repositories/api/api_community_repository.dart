@@ -69,7 +69,10 @@ class ApiCommunityRepository implements ICommunityRepository {
         if (list.isNotEmpty) {
           _log.info('getMyCommunities sample raw item: ${list.first}');
         }
-        return list.map((e) => Community.fromJson(e as Map<String, dynamic>)).toList();
+        return list
+            .map((e) => Community.fromJson(e as Map<String, dynamic>))
+            .where((community) => community.status.toUpperCase() == 'ACTIVE')
+            .toList();
       }
       _log.warning('getMyCommunities status=${response.statusCode}');
       return [];

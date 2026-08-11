@@ -37,6 +37,13 @@ final myCommunitiesProvider = FutureProvider<List<Community>>((ref) async {
   }
 });
 
+/// Makes every visible CLB list refetch after a mutation. `communitiesProvider`
+/// is a family, so invalidating the family also covers search/province variants.
+void invalidateCommunityCollections(Ref ref) {
+  ref.invalidate(communitiesProvider);
+  ref.invalidate(myCommunitiesProvider);
+}
+
 /// Provider chi tiết 1 CLB
 final communityDetailProvider = FutureProvider.family<Community?, String>((ref, id) async {
   final repo = ref.watch(communityRepositoryProvider);

@@ -336,7 +336,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
                     icon: Icons.check_rounded,
                     label: 'Duyệt',
                     color: const Color(0xFF10B981),
-                    onTap: () => _handleAction(club.id, 'ACTIVE', colors),
+                    onTap: () => _handleAction(club.id, 'APPROVED', colors),
                   ),
                 ),
               if (club.status == 'PENDING') const SizedBox(width: 8),
@@ -393,9 +393,10 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
     try {
       await ref.read(communityRepositoryProvider).reviewCommunity(clubId, status);
       ref.invalidate(_adminClubsProvider);
+      invalidateCommunityCollections(ref);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(status == 'ACTIVE' ? 'Đã duyệt CLB' : 'Đã cập nhật CLB'),
+          content: Text(status == 'APPROVED' ? 'Đã duyệt CLB' : 'Đã cập nhật CLB'),
           backgroundColor: const Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
         ));
@@ -450,6 +451,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
                   rejectedReason: controller.text.trim(),
                 );
                 ref.invalidate(_adminClubsProvider);
+                invalidateCommunityCollections(ref);
                 if (ctx.mounted) Navigator.pop(ctx);
               } catch (e) {
                 if (context.mounted) {

@@ -2939,6 +2939,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         await ref
             .read(communityRepositoryProvider)
             .deleteCommunity(widget.clubId);
+        invalidateCommunityCollections(ref);
+        ref.invalidate(communityDetailProvider(widget.clubId));
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

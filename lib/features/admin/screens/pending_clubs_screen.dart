@@ -132,8 +132,9 @@ class PendingClubsScreen extends ConsumerWidget {
                 child: GestureDetector(
                   onTap: () async {
                     try {
-                      await ref.read(communityRepositoryProvider).reviewCommunity(club.id, 'ACTIVE');
+                      await ref.read(communityRepositoryProvider).reviewCommunity(club.id, 'APPROVED');
                       ref.invalidate(pendingCommunitiesProvider);
+                      invalidateCommunityCollections(ref);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                           content: Text('Đã duyệt CLB'), backgroundColor: Color(0xFF10B981), behavior: SnackBarBehavior.floating,
@@ -227,6 +228,7 @@ class PendingClubsScreen extends ConsumerWidget {
               try {
                 await ref.read(communityRepositoryProvider).reviewCommunity(club.id, 'REJECTED', rejectedReason: controller.text.trim());
                 ref.invalidate(pendingCommunitiesProvider);
+                invalidateCommunityCollections(ref);
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(

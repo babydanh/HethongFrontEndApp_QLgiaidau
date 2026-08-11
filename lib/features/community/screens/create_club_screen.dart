@@ -66,8 +66,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
             backgroundColor: context.colors.success,
           ),
         );
-        ref.invalidate(communitiesProvider);
-        ref.invalidate(myCommunitiesProvider);
+        invalidateCommunityCollections(ref);
         context.go('/club/$clubId');
       }
     } catch (e, stack) {
