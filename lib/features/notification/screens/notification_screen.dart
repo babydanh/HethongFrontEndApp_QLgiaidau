@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -140,6 +141,71 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       ),
       body: Column(
         children: [
+          // ── DEBUG TẠM (xong bug thì xoá) ──
+          if (kDebugMode)
+            Builder(
+              builder: (context) {
+                final ws = ref.watch(myTournamentWorkspaceProvider);
+                final hasWs = ws.asData?.value.hasAnyData ?? false;
+                final works = ws.asData?.value;
+                final wsJson = works == null
+                    ? 'loading'
+                    : 'W{o=${works.organizedTournaments.length},'
+                        'c=${works.coOrganizerTournaments.length},'
+                        'r=${works.refereeTournaments.length},'
+                        'p=${works.participatingTournaments.length}}';
+                final headTitles = stateNotif.notifications
+                    .take(3)
+                    .map((e) => e.title)
+                    .join(' | ');
+                final now2 = DateTime.now();
+                final groupedDbg = <String, int>{};
+                for (final n in stateNotif.notifications) {
+                  final d = now2.difference(n.createdAt);
+                  final key = d.inDays == 0
+                      ? 'today'
+                      : d.inDays == 1
+                          ? 'yest'
+                          : d.inDays < 7
+                              ? 'week'
+                              : 'older';
+                  groupedDbg[key] = (groupedDbg[key] ?? 0) + 1;
+                }
+                final groupedStr = groupedDbg.entries
+                    .map((e) => '${e.key}=${e.value}')
+                    .join(',');
+                final itemCountDbg =
+                    groupedDbg.length + 1 + (hasWs ? 1 : 0);
+                final showCards = displayedNotifications.isNotEmpty;
+                final branch = stateNotif.notifications.isEmpty && stateNotif.isLoading
+                    ? 'SPINNER'
+                    : stateNotif.notifications.isEmpty && stateNotif.errorMessage != null
+                        ? 'ERROR'
+                        : stateNotif.notifications.isEmpty
+                            ? 'EMPTY'
+                            : showCards
+                                ? 'BUILDLIST(displayed=${displayedNotifications.length})'
+                                : 'FILTERED';
+                return Container(
+                  width: double.infinity,
+                  color: const Color(0xFFFFF3E0),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Text(
+                    'DEBUG: n=${stateNotif.notifications.length} | '
+                    'load=${stateNotif.isLoading} | '
+                    'err=${stateNotif.errorMessage ?? 'null'} | '
+                    'hasWs=$hasWs | $wsJson\n'
+                    'groups: [$groupedStr] itemCount=$itemCountDbg\n'
+                    'branch: $branch\n'
+                    'titles: $headTitles',
+                    style: const TextStyle(fontSize: 10, color: Colors.brown),
+                    maxLines: 6,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              },
+            ),
           _buildFilterBar(colors, totalUnread, l10n),
           Expanded(
             child: stateNotif.notifications.isEmpty && stateNotif.isLoading
@@ -285,34 +351,20 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
 
     return RefreshIndicator(
       onRefresh: () => ref.read(notificationStateProvider.notifier).loadPage(1),
-      child: ListView.builder(
+      child: ListView(
         controller: _scrollController,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: orderedKeys.length + 1 + (hasWorkspace ? 1 : 0),
-        itemBuilder: (context, index) {
-          var offset = 0;
-
-          if (hasWorkspace && index == 0) {
-            offset = 1;
-            return _buildMyTournaments(
+        children: [
+          if (hasWorkspace)
+            _buildMyTournaments(
               workspaceAsync.asData!.value,
               colors,
               l10n,
-            );
-          }
-
-          final adjustedIndex = index - offset;
-          if (adjustedIndex >= orderedKeys.length) {
-            return _isLoadingMore
-                ? const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(
-                        child: CircularProgressIndicator(strokeWidth: 2)))
-                : const SizedBox.shrink();
-          }
-          final entryKey = orderedKeys[adjustedIndex];
-          final items = grouped[entryKey]!;
-          return Column(
+            ),
+          for (final entryKey in orderedKeys)
+            Builder(builder: (context) {
+              final items = grouped[entryKey]!;
+              return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
@@ -329,7 +381,13 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
               ...items.map((n) => _buildCard(n, colors, l10n)),
             ],
           );
-        },
+            }),
+          if (_isLoadingMore)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+        ],
       ),
     );
   }
