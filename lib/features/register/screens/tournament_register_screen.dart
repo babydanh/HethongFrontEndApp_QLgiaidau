@@ -57,11 +57,14 @@ class _TournamentRegisterScreenState
   Future<void> _checkExistingRegistration() async {
     try {
       final dio = ref.read(dioProvider);
+      // Truy vấn theo CẢ GIẢI (không lọc `?divisionId`): card "Đã đăng ký" là
+      // GLOBAL (`if (_alreadyRegistered)` chiếm toàn màn hình, không theo tab).
+      // Nếu lọc theo divisionId của tab đang xem, thì khi intro mở bằng
+      // `?divisionId=<tab khác division đã đăng ký>` → backend trả registered:false
+      // → app hiện form thay vì status card → mất nghiệp vụ "duyệt chưa / rút lui".
+      // (khớp web: luôn show trạng thái đăng ký dù vào từ tab nào). fix #34
       final response = await dio.get(
         '/tournaments/${widget.tournamentId}/my-registration',
-        queryParameters: widget.divisionId != null && widget.divisionId!.isNotEmpty
-            ? {'divisionId': widget.divisionId}
-            : null,
       );
       final raw = response.data;
       final payload = raw is Map && raw['data'] is Map ? raw['data'] : raw;
@@ -71,13 +74,29 @@ class _TournamentRegisterScreenState
       if (payload is Map &&
           payload['registered'] == true &&
           participant != null) {
+        final status = participant['teamStatus']?.toString();
+        const closedStatuses = {
+          'WITHDRAWN',
+          'REJECTED',
+          'KICKED',
+          'EXPIRED',
+        };
+        if (closedStatuses.contains(status)) {
+          if (mounted) {
+            setState(() {
+              _alreadyRegistered = false;
+              _checkingRegistration = false;
+            });
+          }
+          return;
+        }
         if (mounted) {
           setState(() {
             _alreadyRegistered = true;
             _existingParticipantId = participant['id']?.toString();
             _existingDivisionId = participant['tournamentDivisionId']
                 ?.toString();
-            _existingTeamStatus = participant['teamStatus']?.toString();
+            _existingTeamStatus = status;
             _existingIsPaid = participant['isPaid'] == true;
             _checkingRegistration = false;
           });
@@ -478,11 +497,6 @@ class _TournamentRegisterScreenState
   }
 
 
-  String _getRegistrationCta(Tournament? t) {
-    if (t?.registrationMode == 'APPROVAL') return l10n.registerSubmitApproval;
-    return l10n.registerButton;
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -700,12 +714,20 @@ class _TournamentRegisterScreenState
           ],
           const SizedBox(height: 12),
           OutlinedButton.icon(
-            onPressed: () => WithdrawSheet.show(
-              context,
-              tournamentId: tournament.id,
-              divisionId: _existingDivisionId,
-              hasPaid: _existingIsPaid,
-            ),
+            onPressed: () async {
+              final withdrew = await WithdrawSheet.show(
+                context,
+                tournamentId: tournament.id,
+                divisionId: _existingDivisionId,
+                // `_existingIsPaid` = isPaid, mà backend set isPaid=true khi giải
+                // MIỄN PHÍ (entryFee===0). Vậy chỉ coi "đã đóng tiền" khi có phí
+                // thực sự (>0) + isPaid → mới cần nhập/hoàn bank. (fix #35)
+                hasPaid: _existingIsPaid && fee > 0,
+              );
+              if (withdrew && context.mounted) {
+                context.go('/intro/${tournament.id}');
+              }
+            },
             icon: Icon(Icons.exit_to_app_rounded, color: context.colors.error),
             label: Text(l10n.registerWithdraw, style: TextStyle(color: context.colors.error)),
           ),
@@ -827,12 +849,17 @@ class _TournamentRegisterScreenState
             ),
             const SizedBox(height: 12),
             TextButton.icon(
-              onPressed: () => WithdrawSheet.show(
-                context,
-                tournamentId: widget.tournamentId,
-                divisionId: _selectedDiv,
-                hasPaid: false,
-              ),
+              onPressed: () async {
+                final withdrew = await WithdrawSheet.show(
+                  context,
+                  tournamentId: widget.tournamentId,
+                  divisionId: _selectedDiv,
+                  hasPaid: false,
+                );
+                if (withdrew && context.mounted) {
+                  context.go('/intro/${widget.tournamentId}');
+                }
+              },
               icon: Icon(
                 Icons.exit_to_app_rounded,
                 size: 16,

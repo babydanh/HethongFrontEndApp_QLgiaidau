@@ -22,13 +22,14 @@ class WithdrawSheet extends ConsumerStatefulWidget {
   });
 
   /// Hiển thị WithdrawSheet như một modal bottom sheet.
-  static Future<void> show(
+  /// Trả về `true` nếu rút lui thành công, `false` hoặc `null` nếu đóng mà không rút.
+  static Future<bool> show(
     BuildContext context, {
     required String tournamentId,
     String? divisionId,
     bool hasPaid = false,
-  }) {
-    return showModalBottomSheet(
+  }) async {
+    final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -38,6 +39,7 @@ class WithdrawSheet extends ConsumerStatefulWidget {
         hasPaid: hasPaid,
       ),
     );
+    return result == true;
   }
 
   @override
@@ -149,7 +151,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
       );
 
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context, true); // trả về true → caller biết rút lui thành công
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(widget.hasPaid

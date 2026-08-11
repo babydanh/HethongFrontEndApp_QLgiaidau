@@ -51,7 +51,6 @@ class _DoublesRegistrationFlowState
   String? _genderError;
   String? _eloError;
   bool _eloChecking = false;
-  bool _rankingConsent = false;
 
   // Step 2
   String? _teamInviteToken;
@@ -64,7 +63,9 @@ class _DoublesRegistrationFlowState
 
   // Step 3
   double? _entryFee;
+  bool _isPaid = false;
   String _teamStatus = '';
+  String? _partnerContact;
 
   @override
   void initState() {
@@ -82,8 +83,13 @@ class _DoublesRegistrationFlowState
           '_t': DateTime.now().millisecondsSinceEpoch.toString(),
         },
       );
-      if (mounted && regResp.data['data'] is Map) {
-        final regData = regResp.data['data'] as Map;
+      final body = regResp.data;
+      final regData = body is Map && body['data'] is Map
+          ? body['data'] as Map
+          : body is Map
+              ? body
+              : null;
+      if (mounted && regData != null) {
         if (regData['registered'] == true && regData['participant'] is Map) {
           final participant = regData['participant'] as Map;
           final status = participant['teamStatus']?.toString() ?? '';
@@ -91,6 +97,11 @@ class _DoublesRegistrationFlowState
           final link = participant['teamInviteLink']?.toString();
           final pId = participant['id']?.toString();
           final name = participant['teamName']?.toString();
+          final fee = double.tryParse(
+                participant['entryFee']?.toString() ?? '',
+              ) ??
+              widget.division.entryFee ??
+              0;
 
           if (name != null && name.isNotEmpty) {
             _teamNameCtrl.text = name;
@@ -101,6 +112,8 @@ class _DoublesRegistrationFlowState
               _participantId = pId;
               _teamInviteToken = token;
               _teamInviteLink = link;
+              _entryFee = fee;
+              _isPaid = participant['isPaid'] == true;
               _teamStatus = status;
               _step = 2;
             });
@@ -108,6 +121,10 @@ class _DoublesRegistrationFlowState
           } else if (status == 'COMPLETE' || status == 'PENDING_APPROVAL' || status == 'WAITLISTED') {
             setState(() {
               _participantId = pId;
+              _teamInviteToken = token;
+              _teamInviteLink = link;
+              _entryFee = fee;
+              _isPaid = participant['isPaid'] == true;
               _teamStatus = status;
               _step = 3;
             });
@@ -161,12 +178,16 @@ class _DoublesRegistrationFlowState
     // Check gender restriction
     final userAsync = ref.read(userProfileProvider);
     final user = userAsync.asData?.value;
-    if (user != null &&
-        div.genderRestriction != null &&
-        div.genderRestriction != 'MIXED') {
-      final userGender = user.gender?.toUpperCase();
-      final divGender = div.genderRestriction!.toUpperCase();
-      if (userGender != null && userGender != divGender) {
+    // Chuẩn hoá cả 2 phía: profile lưu giới tính tiếng Việt ('Nữ') còn
+    // division lưu 'FEMALE'/'MALE'. So sánh raw (toUpperCase) là 'NỮ' !=
+    // 'FEMALE' → báo sai "chỉ dành cho Nữ" kể cả khi đúng giới tính.
+    if (user != null) {
+      final userGender = _normalizeGender(user.gender);
+      final divGender = _normalizeGender(div.genderRestriction);
+      if (userGender != null &&
+          divGender != null &&
+          divGender != 'MIXED' &&
+          userGender != divGender) {
         setState(() {
           _genderError = divGender == 'MALE'
               ? AppLocalizations.of(context)!.registerGenderErrorMale
@@ -179,6 +200,22 @@ class _DoublesRegistrationFlowState
     if (div.categoryId != null && user != null) {
       _checkElo(user.id, div.categoryId!, div.minElo, div.maxElo);
     }
+  }
+
+  /// Chuẩn hoá giá trị giới tính ('Nữ'/'nu'/'FEMALE' → 'FEMALE'; 'Nam'/'nam'/
+  /// 'MALE' → 'MALE'; 'MIXED'/'Nam Nữ' → 'MIXED'; không nhận biết → null).
+  String? _normalizeGender(String? value) {
+    final normalized = value
+        ?.trim()
+        .toUpperCase()
+        .replaceAll('-', '_')
+        .replaceAll(' ', '_');
+    return switch (normalized) {
+      'MALE' || 'MEN' || 'NAM' => 'MALE',
+      'FEMALE' || 'WOMEN' || 'NU' || 'NỮ' => 'FEMALE',
+      'MIXED' || 'MIXED_GENDER' || 'NAM_NU' => 'MIXED',
+      _ => null,
+    };
   }
 
   Future<void> _checkElo(
@@ -216,6 +253,48 @@ class _DoublesRegistrationFlowState
     }
   }
 
+  Future<bool> _recoverRegistrationAfterSubmitFailure() async {
+    try {
+      final response = await ref.read(dioClientProvider).dio.get(
+        '/tournaments/${widget.tournamentId}/my-registration',
+        queryParameters: {
+          'divisionId': widget.division.id,
+          '_t': DateTime.now().millisecondsSinceEpoch.toString(),
+        },
+      );
+      final body = response.data;
+      final raw = body is Map && body['data'] is Map ? body['data'] as Map : body;
+      if (raw is! Map || raw['registered'] != true || raw['participant'] is! Map) {
+        return false;
+      }
+
+      final participant = raw['participant'] as Map;
+      final status = participant['teamStatus']?.toString() ?? '';
+      final participantId = participant['id']?.toString();
+      if (participantId == null || participantId.isEmpty) return false;
+
+      _participantId = participantId;
+      _teamStatus = status;
+      _teamInviteToken = participant['teamInviteToken']?.toString();
+      _teamInviteLink = participant['teamInviteLink']?.toString();
+      _entryFee = double.tryParse(participant['entryFee']?.toString() ?? '') ?? 0;
+      _isPaid = participant['isPaid'] == true;
+
+      if (!mounted) return true;
+      if (status == 'PENDING_PARTNER') {
+        setState(() => _step = 2);
+        _startPolling();
+      } else if (status == 'COMPLETE' ||
+          status == 'PENDING_APPROVAL' ||
+          status == 'WAITLISTED') {
+        setState(() => _step = 3);
+      }
+      return status.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _handleStep1Submit() async {
     final l10n = AppLocalizations.of(context)!;
     if (_teamNameCtrl.text.trim().length < 3) {
@@ -227,18 +306,22 @@ class _DoublesRegistrationFlowState
       _showError(_genderError ?? _eloError!);
       return;
     }
+    // Đồng ý ELO/ranking đã được thu thập ở màn đăng ký ngoài (checkbox bắt
+    // buộc với giải có xếp hạng trước khi vào đây). Màn ghép đôi không hỏi
+    // lại — chỉ truyền đúng trạng thái giải để backend ghi ELO hợp lệ.
     final tournament = ref
-        .read(tournamentProvider(widget.tournamentId))
+        .read(
+          registerTournamentProvider((
+            id: widget.tournamentId,
+            invite: widget.inviteCode,
+          )),
+        )
         .asData
         ?.value;
-    if (tournament?.isRanked == true && !_rankingConsent) {
-      _showError(
-        'Vui lòng đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng.',
-      );
-      return;
-    }
     setState(() => _submitting = true);
     try {
+      _partnerContact = _selectedPartner?.email ??
+          (_inviteLater ? null : _partnerSearchCtrl.text.trim());
       final result = await ref
           .read(tournamentRepositoryProvider)
           .registerParticipant(
@@ -249,12 +332,13 @@ class _DoublesRegistrationFlowState
             partnerEmailOrPhone:
                 _selectedPartner?.email ??
                 (_inviteLater ? null : _partnerSearchCtrl.text.trim()),
-            rankingConsent: _rankingConsent,
+            rankingConsent: tournament?.isRanked == true,
           );
       if (!mounted) return;
       _participantId = result.participantId;
       _teamStatus = result.teamStatus;
       _entryFee = result.entryFee;
+      _isPaid = result.entryFee <= 0;
 
       // Fetch registration details to get invite token/link
       try {
@@ -291,12 +375,15 @@ class _DoublesRegistrationFlowState
         }
       }
     } catch (e) {
-      _showError(
-        ErrorParser.parse(
-          e,
-          AppLocalizations.of(context)!.doublesRegCreateError,
-        ),
-      );
+      final recovered = await _recoverRegistrationAfterSubmitFailure();
+      if (!recovered && mounted) {
+        _showError(
+          ErrorParser.parse(
+            e,
+            AppLocalizations.of(context)!.doublesRegCreateError,
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -707,37 +794,6 @@ class _DoublesRegistrationFlowState
             ),
           ],
         ],
-        if (ref
-                .read(tournamentProvider(widget.tournamentId))
-                .asData
-                ?.value
-                ?.isRanked ==
-            true) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colors.bgSurface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colors.border),
-            ),
-            child: CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              value: _rankingConsent,
-              onChanged: (value) =>
-                  setState(() => _rankingConsent = value ?? false),
-              controlAffinity: ListTileControlAffinity.leading,
-              title: const Text(
-                'Đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-              ),
-              subtitle: const Text(
-                'Giải có xếp hạng chỉ ghi nhận ELO sau khi bạn đồng ý.',
-                style: TextStyle(fontSize: 12),
-              ),
-            ),
-          ),
-        ],
         const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,
@@ -978,12 +1034,17 @@ class _DoublesRegistrationFlowState
         SizedBox(
           width: double.infinity,
           child: TextButton.icon(
-            onPressed: () => WithdrawSheet.show(
-              context,
-              tournamentId: widget.tournamentId,
-              divisionId: widget.division.id,
-              hasPaid: false,
-            ),
+            onPressed: () async {
+              final withdrew = await WithdrawSheet.show(
+                context,
+                tournamentId: widget.tournamentId,
+                divisionId: widget.division.id,
+                hasPaid: false,
+              );
+              if (withdrew && context.mounted) {
+                context.go('/intro/${widget.tournamentId}');
+              }
+            },
             icon: Icon(
               Icons.exit_to_app_rounded,
               size: 16,
@@ -1061,9 +1122,19 @@ class _DoublesRegistrationFlowState
 
   Widget _buildStep3(Tournament t, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
+    final rawInviteLink = _teamInviteLink ??
+        (_teamInviteToken != null
+            ? '/tournaments/${widget.tournamentId}/join-team?pid=$_participantId&token=$_teamInviteToken'
+            : null);
+    final inviteLink = rawInviteLink == null
+        ? null
+        : rawInviteLink.startsWith('http://') || rawInviteLink.startsWith('https://')
+            ? rawInviteLink
+            : 'https://giaidau.vnvar.com${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
     final canPay =
         _entryFee != null &&
         _entryFee! > 0 &&
+        !_isPaid &&
         _participantId != null &&
         (_teamStatus == 'COMPLETE' || _teamStatus == 'PENDING_APPROVAL');
     final isWaitlisted = _teamStatus == 'WAITLISTED';
@@ -1095,6 +1166,26 @@ class _DoublesRegistrationFlowState
           ),
         ),
         const SizedBox(height: 20),
+        if (_partnerContact != null && _partnerContact!.isNotEmpty) ...[
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                AppShareModal.show(
+                  context: context,
+                  title: 'Tham gia đội ${_teamNameCtrl.text}',
+                  subtitle: 'Giải ${t.name} - Partner: $_partnerContact',
+                  webUrl: inviteLink ?? 'https://giaidau.vnvar.com/tournaments/${widget.tournamentId}',
+                  imageUrl: t.logoUrl,
+                  badgeText: 'Lời mời ghép đôi',
+                );
+              },
+              icon: const Icon(Icons.share_rounded, size: 18),
+              label: const Text('Chia sẻ tới đồng đội'),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(20),
@@ -1150,7 +1241,7 @@ class _DoublesRegistrationFlowState
               if (_entryFee != null && _entryFee! > 0 && !isWaitlisted) ...[
                 const SizedBox(height: 8),
                 Text(
-                  'Trạng thái thanh toán: Chưa thanh toán',
+                  'Trạng thái thanh toán: ${_isPaid ? 'Đã thanh toán' : 'Chưa thanh toán'}',
                   style: TextStyle(fontSize: 13, color: colors.textSecondary),
                 ),
               ],
@@ -1203,12 +1294,19 @@ class _DoublesRegistrationFlowState
         SizedBox(
           width: double.infinity,
           child: TextButton.icon(
-            onPressed: () => WithdrawSheet.show(
-              context,
-              tournamentId: widget.tournamentId,
-              divisionId: widget.division.id,
-              hasPaid: false, // Tại bước 3 chưa thanh toán thành công
-            ),
+            onPressed: () async {
+              final withdrew = await WithdrawSheet.show(
+                context,
+                tournamentId: widget.tournamentId,
+                divisionId: widget.division.id,
+                // `_isPaid` cũng true với giải miễn phí (entryFee<=0) → phải kèm
+                // đk có phí THỰC SỰ >0 thì mới cần nhập/hoàn bank. (fix #35)
+                hasPaid: _isPaid && _entryFee != null && _entryFee! > 0,
+              );
+              if (withdrew && context.mounted) {
+                context.go('/intro/${widget.tournamentId}');
+              }
+            },
             icon: Icon(
               Icons.exit_to_app_rounded,
               size: 16,
@@ -1258,12 +1356,17 @@ class _DoublesRegistrationFlowState
               ),
               const SizedBox(height: 12),
               TextButton.icon(
-                onPressed: () => WithdrawSheet.show(
-                  context,
-                  tournamentId: widget.tournamentId,
-                  divisionId: widget.division.id,
-                  hasPaid: _entryFee != null && _entryFee! > 0,
-                ),
+                onPressed: () async {
+                  final withdrew = await WithdrawSheet.show(
+                    context,
+                    tournamentId: widget.tournamentId,
+                    divisionId: widget.division.id,
+                    hasPaid: _entryFee != null && _entryFee! > 0,
+                  );
+                  if (withdrew && context.mounted) {
+                    context.go('/intro/${widget.tournamentId}');
+                  }
+                },
                 icon: Icon(
                   Icons.exit_to_app_rounded,
                   size: 16,
