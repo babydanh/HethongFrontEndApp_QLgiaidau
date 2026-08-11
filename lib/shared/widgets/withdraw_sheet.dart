@@ -61,7 +61,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
   void initState() {
     super.initState();
     if (widget.hasPaid) {
-      // Dùng postFrameCallback để đảm bảo ref.read an toàn sau khi widget mount
+      // Load ngay sau frame đầu để ref.read an toàn
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _loadProfileBank();
       });
@@ -71,9 +71,12 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
     }
   }
 
-  void _loadProfileBank() {
-    final profile = ref.read(userProfileProvider).asData?.value;
-    if (profile != null) {
+  Future<void> _loadProfileBank() async {
+    try {
+      // Dùng .future để await thực sự — tránh trường hợp FutureProvider
+      // chưa resolve → .asData?.value == null → bỏ sót bank trong profile.
+      final profile = await ref.read(userProfileProvider.future);
+      if (!mounted) return;
       final hasBank = (profile.bankName?.isNotEmpty ?? false) &&
           (profile.bankAccountNumber?.isNotEmpty ?? false) &&
           (profile.bankAccountName?.isNotEmpty ?? false);
@@ -83,6 +86,8 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
         _accountNameCtrl.text = profile.bankAccountName!;
         _usingProfileBank = true;
       }
+    } catch (_) {
+      // Nếu load profile thất bại → hiện form nhập thủ công
     }
     if (mounted) setState(() => _profileBankLoaded = true);
   }
