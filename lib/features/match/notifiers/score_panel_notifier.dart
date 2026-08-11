@@ -20,13 +20,20 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   final MatchControlParams arg;
   Timer? _liveSyncTimer;
   String? _pendingScoreSignature;
-  DateTime? _pendingScoreAt;
+  int? _pendingBaseRevision;
+  bool _liveSyncPending = false;
 
   ScorePanelNotifier(this.arg);
 
   @override
   ScorePanelState build() {
-    ref.onDispose(() => _liveSyncTimer?.cancel());
+    ref.onDispose(() {
+      _liveSyncTimer?.cancel();
+      // Do not lose the last tap when the scoring panel is popped before the
+      // 250ms debounce fires. The request is best-effort and is protected by
+      // expectedRevision on the API.
+      if (_liveSyncPending) unawaited(_syncLiveScore());
+    });
     final config = _initConfig(ref, arg);
     ref.listen<AsyncValue<MatchModel?>>(singleMatchProvider(arg), (prev, next) {
       final match = next.value;
@@ -52,18 +59,22 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     final pending = _pendingScoreSignature;
     if (pending != null) {
       final isOurEcho = _scoreSignature(hydrated) == pending;
-      final isStillWaiting = _pendingScoreAt != null &&
-          DateTime.now().difference(_pendingScoreAt!) <
-              const Duration(seconds: 4);
       if (isOurEcho) {
         _pendingScoreSignature = null;
-        _pendingScoreAt = null;
-      } else if (isStillWaiting) {
-        // Do not let a stale socket/poll snapshot overwrite a local tap.
-        return;
+        _pendingBaseRevision = null;
       } else {
+        // Only suppress a snapshot that is demonstrably stale (same revision
+        // as the local tap). A newer revision is an authoritative update from
+        // another scorer and must be rendered immediately.
+        final baseRevision = _pendingBaseRevision;
+        final remoteRevision = match.revision;
+        if (baseRevision != null &&
+            remoteRevision != null &&
+            remoteRevision <= baseRevision) {
+          return;
+        }
         _pendingScoreSignature = null;
-        _pendingScoreAt = null;
+        _pendingBaseRevision = null;
       }
     }
     state = hydrated;
@@ -84,7 +95,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   void _markLocalScorePending() {
     _pendingScoreSignature = _scoreSignature(state);
-    _pendingScoreAt = DateTime.now();
+    _pendingBaseRevision = ref.read(singleMatchProvider(arg)).value?.revision;
   }
 
   ScorePanelState _hydrateState(ScorePanelState current, MatchModel match) {
@@ -246,13 +257,15 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void _checkTennisGameEnd() {
+    if (state.isMatchComplete) return;
     final t = state.tennis;
     if (t == null) return;
     if (t.isTiebreak) {
-      if (t.team1GamePoints >= 7 &&
+      final target = state.config.tiebreakPoints ?? 7;
+      if (t.team1GamePoints >= target &&
           (t.team1GamePoints - t.team2GamePoints) >= 2) {
         _finishTennisGame(1);
-      } else if (t.team2GamePoints >= 7 &&
+      } else if (t.team2GamePoints >= target &&
           (t.team2GamePoints - t.team1GamePoints) >= 2) {
         _finishTennisGame(2);
       }
@@ -268,6 +281,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void _finishTennisGame(int winnerTeam) {
+    if (state.isMatchComplete) return;
     final curSet = state.finishedSets.isNotEmpty
         ? state.finishedSets.last
         : null;
@@ -367,6 +381,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void _checkPickleballGameEnd() {
+    if (state.isMatchComplete) return;
     final r = state.rally;
     if (r == null) return;
     if (state.isLite || state.overrideEnabled) return;
@@ -422,6 +437,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void _checkRallySetEnd() {
+    if (state.isMatchComplete) return;
     final r = state.rally;
     if (r == null) return;
     if (state.isLite || state.overrideEnabled) return;
@@ -542,6 +558,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   Future<void> finishSet() async {
+    if (state.isMatchComplete) {
+      state = state.copyWith(errorMessage: 'Trận đã đủ số set thắng theo cấu hình.');
+      return;
+    }
     final rally = state.rally;
     final tennis = state.tennis;
 
@@ -649,14 +669,21 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   void _scheduleLiveSync() {
     _markLocalScorePending();
+    _liveSyncPending = true;
     _liveSyncTimer?.cancel();
     _liveSyncTimer = Timer(const Duration(milliseconds: 250), _syncLiveScore);
   }
 
   Future<void> _syncLiveScore() async {
     final rally = state.rally;
-    if (rally == null || state.isMatchComplete) return;
-    if (rally.currentP1 == 0 && rally.currentP2 == 0) return;
+    if (rally == null || state.isMatchComplete) {
+      _liveSyncPending = false;
+      return;
+    }
+    if (rally.currentP1 == 0 && rally.currentP2 == 0) {
+      _liveSyncPending = false;
+      return;
+    }
     final sets = [
       ...state.finishedSets,
       SetScoreData(score1: rally.currentP1, score2: rally.currentP2),
@@ -670,6 +697,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         scoreDetails: sets,
         expectedRevision: rev,
       );
+      _liveSyncPending = false;
     } catch (e, stack) {
       final msg = e.toString();
       if (msg.contains('409') || msg.contains('thay đổi từ thiết bị khác')) {
