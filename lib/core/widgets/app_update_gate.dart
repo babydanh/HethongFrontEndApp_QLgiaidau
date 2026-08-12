@@ -59,7 +59,7 @@ class _UpdateDialog extends StatelessWidget {
       content: SingleChildScrollView(
         child: Text(
           info.releaseNotes.trim().isEmpty
-              ? 'VNSport đã có phiên bản mới ${info.latestVersion}. Cập nhật để nhận các cải tiến mới nhất.'
+              ? 'Sporto đã có phiên bản mới ${info.latestVersion}. Cập nhật để nhận các cải tiến mới nhất.'
               : info.releaseNotes,
         ),
       ),

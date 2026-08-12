@@ -13,7 +13,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/regions_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
-import 'package:app_quanly_giaidau/core/widgets/vnsport_header.dart';
+import 'package:app_quanly_giaidau/core/widgets/Sporto_header.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_banner_card.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
@@ -298,10 +298,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Positioned.fill(
                       child: Hero(
-                        tag: "vnsport_header_bg",
+                        tag: "Sporto_header_bg",
                         child: CustomPaint(
                           size: Size(screenSize.width, currentHeaderHeight),
-                          painter: VnsportHeaderPainter(
+                          painter: SportoHeaderPainter(
                             isLoggedIn: ref.watch(authProvider).isAuthenticated,
                             colors: context.colors,
                           ),
@@ -383,7 +383,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ? 'Câu lạc bộ'
                                     : _currentIndex == 4
                                     ? 'Bảng xếp hạng'
-                                    : 'VNSport',
+                                    : 'Sporto',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w900,
@@ -1296,7 +1296,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          "VNSPORT",
+          "Sporto",
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w900,

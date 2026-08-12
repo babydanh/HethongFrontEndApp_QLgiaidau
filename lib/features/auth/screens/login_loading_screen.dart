@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/widgets/vnsport_header.dart';
+import 'package:app_quanly_giaidau/core/widgets/Sporto_header.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -46,10 +46,10 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
       body: Stack(
         children: [
           Hero(
-            tag: "vnsport_header_bg",
+            tag: "Sporto_header_bg",
             child: CustomPaint(
               size: Size(double.infinity, size.height * 0.78),
-              painter: VnsportHeaderPainter(isLoggedIn: true, colors: colors),
+              painter: SportoHeaderPainter(isLoggedIn: true, colors: colors),
             ),
           ),
           SafeArea(
@@ -59,7 +59,7 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                 children: [
                   const SizedBox(height: 40),
                   Hero(
-                    tag: "vnsport_logo",
+                    tag: "Sporto_logo",
                     child: SizedBox(
                       height: 95,
                       child: SvgPicture.asset(

@@ -419,7 +419,7 @@ class _EmptySupportState extends StatelessWidget {
             ),
             const SizedBox(height: 7),
             Text(
-              'Tin nhắn tại đây được gửi trực tiếp tới quản trị viên VNSport.',
+              'Tin nhắn tại đây được gửi trực tiếp tới quản trị viên Sporto.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: colors.textSecondary,

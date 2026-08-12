@@ -235,7 +235,7 @@ class _FallbackBanner extends StatelessWidget {
         color: const Color(0xFF1E293B),
         child: Center(
           child: Text(
-            l10n.vnsport,
+            l10n.Sporto,
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w900,
@@ -646,7 +646,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                         color: const Color(0xFF1E293B),
                         child: Center(
                           child: Text(
-                            l10n.vnsport,
+                            l10n.Sporto,
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.w900,
@@ -680,7 +680,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                                 color: const Color(0xFF1E293B),
                                 child: Center(
                                   child: Text(
-                                    l10n.vnsport,
+                                    l10n.Sporto,
                                     style: TextStyle(
                                       fontSize: 28,
                                       fontWeight: FontWeight.w900,

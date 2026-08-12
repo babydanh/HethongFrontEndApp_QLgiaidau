@@ -4,7 +4,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
 import 'package:flutter_svg/flutter_svg.dart';
 
-class VnsportHeader extends StatelessWidget {
+class SportoHeader extends StatelessWidget {
   final bool isLoggedIn;
   final int elo;
   final double winRate;
@@ -13,7 +13,7 @@ class VnsportHeader extends StatelessWidget {
   final VoidCallback onLoginTap;
   final VoidCallback onNotificationTap;
 
-  const VnsportHeader({
+  const SportoHeader({
     super.key,
     required this.isLoggedIn,
     this.elo = 0,
@@ -30,10 +30,10 @@ class VnsportHeader extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         Hero(
-          tag: "vnsport_header_bg",
+          tag: "Sporto_header_bg",
           child: CustomPaint(
             size: const Size(double.infinity, 240),
-            painter: VnsportHeaderPainter(isLoggedIn: isLoggedIn, colors: context.colors),
+            painter: SportoHeaderPainter(isLoggedIn: isLoggedIn, colors: context.colors),
           ),
         ),
         SafeArea(
@@ -47,7 +47,7 @@ class VnsportHeader extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'VNSPORT',
+                      'Sporto',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
@@ -330,11 +330,11 @@ class VnsportHeader extends StatelessWidget {
   }
 }
 
-class VnsportHeaderPainter extends CustomPainter {
+class SportoHeaderPainter extends CustomPainter {
   final bool isLoggedIn;
   final AppColorsExtension colors;
 
-  VnsportHeaderPainter({required this.isLoggedIn, required this.colors});
+  SportoHeaderPainter({required this.isLoggedIn, required this.colors});
 
   bool get _isDark => colors.bgDark == const Color(0xFF000000);
 

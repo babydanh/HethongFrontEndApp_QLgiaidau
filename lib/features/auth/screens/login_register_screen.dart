@@ -273,7 +273,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                       height: 70,
                       width: 260,
                       child: Hero(
-                        tag: "vnsport_logo",
+                        tag: "Sporto_logo",
                         child: Transform.scale(
                           scale: 1.6,
                           alignment: Alignment.centerLeft,

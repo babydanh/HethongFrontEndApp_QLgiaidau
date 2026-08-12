@@ -90,9 +90,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Logo VNSPORT
+                    // Logo Sporto
                     Hero(
-                      tag: "vnsport_logo",
+                      tag: "Sporto_logo",
                       child: SizedBox(
                         width: 280,
                         height: 95,

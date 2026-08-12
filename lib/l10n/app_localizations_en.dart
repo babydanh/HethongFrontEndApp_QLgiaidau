@@ -606,7 +606,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noGalleryImages => 'No gallery images';
 
   @override
-  String get vnsport => 'VNSPORT';
+  String get Sporto => 'Sporto';
 
   @override
   String get registrationClosedTag => 'REGISTRATION CLOSED';

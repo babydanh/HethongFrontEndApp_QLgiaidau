@@ -124,9 +124,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     } on PlatformException catch (e) {
       if (!mounted) return;
       final message = e.code == 'camera_access_denied'
-          ? 'Bạn chưa cấp quyền camera cho VNSport.'
+          ? 'Bạn chưa cấp quyền camera cho Sporto.'
           : e.code == 'photo_access_denied'
-              ? 'Bạn chưa cấp quyền thư viện ảnh cho VNSport.'
+              ? 'Bạn chưa cấp quyền thư viện ảnh cho Sporto.'
               : 'Không thể mở camera hoặc thư viện ảnh.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
@@ -311,7 +311,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Official VNDC Sport SVG Logo
+              // Official Sporto SVG Logo
               SvgPicture.asset(
                 'assets/images/vndcsport.svg',
                 width: 190,

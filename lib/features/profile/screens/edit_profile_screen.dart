@@ -281,9 +281,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     } on PlatformException catch (e) {
       if (!mounted) return;
       final message = e.code == 'camera_access_denied'
-          ? 'Bạn chưa cấp quyền camera cho VNSport.'
+          ? 'Bạn chưa cấp quyền camera cho Sporto.'
           : e.code == 'photo_access_denied'
-              ? 'Bạn chưa cấp quyền thư viện ảnh cho VNSport.'
+              ? 'Bạn chưa cấp quyền thư viện ảnh cho Sporto.'
               : 'Không thể mở camera hoặc thư viện ảnh.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), backgroundColor: Colors.red),
