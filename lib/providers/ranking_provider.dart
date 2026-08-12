@@ -20,7 +20,6 @@ final rankingsProvider = FutureProvider.family<List<PlayerRanking>, RankingQuery
     matchType: query.matchType,
     genderRestriction: query.genderRestriction,
     provinceCode: query.provinceCode,
-    page: 1,
     limit: 100,
   );
 });
@@ -52,8 +51,8 @@ typedef EloHistoryQuery = ({
   String? categoryId,
   String? scope,
   String? communityId,
-  int page,
   int limit,
+  String? cursor,
 });
 
 final eloHistoryProvider = FutureProvider.family<List<EloHistoryLog>, EloHistoryQuery>(
@@ -62,8 +61,8 @@ final eloHistoryProvider = FutureProvider.family<List<EloHistoryLog>, EloHistory
       if (query.userId.isEmpty) return [];
       final dio = ref.read(dioProvider);
       final params = <String, dynamic>{
-        'page': query.page,
         'limit': query.limit,
+        if (query.cursor != null) 'cursor': query.cursor,
       };
       if (query.categoryId != null) params['categoryId'] = query.categoryId;
       if (query.scope != null) params['scope'] = query.scope;

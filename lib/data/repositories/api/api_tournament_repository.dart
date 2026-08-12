@@ -409,18 +409,25 @@ class ApiTournamentRepository implements ITournamentRepository {
   /// sẽ trả 400 làm feed trống (web cũng không gửi).
   Future<List<Tournament>> _fetchAllPublicTournaments() async {
     final List<Tournament> all = [];
+    String? cursor;
     for (var page = 1; page <= _publicMaxPages; page++) {
-      final response = await _dioClient.dio.get(
+        final response = await _dioClient.dio.get(
         '/tournaments/public',
         queryParameters: {
           'limit': _publicPageSize,
-          'page': page,
+          if (cursor != null) 'cursor': cursor,
         },
       );
       if (response.statusCode != 200) break;
       final parsed = _parseTournamentList(response.data);
       all.addAll(parsed);
       if (parsed.length < _publicPageSize) break; // đã hết dữ liệu
+      final raw = response.data;
+      final meta = raw is Map && raw['meta'] is Map
+          ? Map<String, dynamic>.from(raw['meta'] as Map)
+          : const <String, dynamic>{};
+      cursor = meta['nextCursor']?.toString();
+      if (cursor == null || cursor!.isEmpty || meta['hasMore'] != true) break;
     }
     return all;
   }

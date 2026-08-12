@@ -13,21 +13,19 @@ class ApiRankingRepository implements IRankingRepository {
 
   @override
   Future<List<PlayerRanking>> getRankings({
-    int? page,
     int? limit,
     String? categoryId,
     String? matchType,
     String? genderRestriction,
     String? provinceCode,
   }) async {
-    _log.info('Tải bảng xếp hạng: page=$page, limit=$limit, categoryId=$categoryId');
+    _log.info('Tải bảng xếp hạng: limit=$limit, categoryId=$categoryId');
     try {
       final queryParams = buildRankingQueryParams(
         categoryId: categoryId,
         matchType: matchType,
         genderRestriction: genderRestriction,
         provinceCode: provinceCode,
-        page: page ?? 1,
         limit: limit ?? 100,
       );
 
@@ -44,12 +42,9 @@ class ApiRankingRepository implements IRankingRepository {
         final rankings = dataList
             .map((json) => PlayerRanking.fromJson(json as Map<String, dynamic>))
             .toList();
-        // Backend trả theo offset phân trang và sắp xếp desc(eloPoints),
-        // nên vị trí hạng = offset + index + 1.
-        final offset = ((page ?? 1) - 1) * (limit ?? 50);
         final enriched = <PlayerRanking>[];
         for (var i = 0; i < rankings.length; i++) {
-          enriched.add(rankings[i].copyWith(rank: offset + i + 1));
+          enriched.add(rankings[i].copyWith(rank: i + 1));
         }
         return enriched;
       }

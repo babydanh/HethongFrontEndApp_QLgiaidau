@@ -5,7 +5,6 @@ abstract class IRankingRepository {
   /// Lấy bảng xếp hạng PUBLIC theo category.
   /// `limit` mặc định 100 để hiển thị Top 100 trên app.
   Future<List<PlayerRanking>> getRankings({
-    int? page,
     int? limit,
     String? categoryId,
     String? matchType,

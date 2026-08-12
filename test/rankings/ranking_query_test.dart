@@ -118,19 +118,16 @@ void main() {
       expect(params['scope'], 'PUBLIC');
     });
 
-    test('preserves page and limit', () {
+    test('preserves limit without legacy page offset', () {
       final params = buildRankingQueryParams(
         categoryId: 'uuid-cat',
-        page: 2,
         limit: 50,
       );
-      expect(params['page'], 2);
       expect(params['limit'], 50);
     });
 
-    test('uses default page=1, limit=100 when omitted', () {
+    test('uses default limit=100 when omitted', () {
       final params = buildRankingQueryParams(categoryId: 'uuid-cat');
-      expect(params['page'], 1);
       expect(params['limit'], 100);
     });
 

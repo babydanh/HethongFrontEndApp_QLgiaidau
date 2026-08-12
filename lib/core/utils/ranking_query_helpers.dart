@@ -14,18 +14,16 @@ library;
 /// - `genderRestriction` nếu null hoặc empty
 /// - `provinceCode` nếu null hoặc empty
 ///
-/// Luôn gửi: scope=PUBLIC, page (mặc định 1), limit (mặc định 100).
+/// Luôn gửi: scope=PUBLIC, limit (mặc định 100). Cursor được gửi bởi caller khi tải tiếp.
 Map<String, dynamic> buildRankingQueryParams({
   String? categoryId,
   String? matchType,
   String? genderRestriction,
   String? provinceCode,
-  int page = 1,
   int limit = 100,
 }) {
   final params = <String, dynamic>{
     'scope': 'PUBLIC',
-    'page': page,
     'limit': limit,
   };
 

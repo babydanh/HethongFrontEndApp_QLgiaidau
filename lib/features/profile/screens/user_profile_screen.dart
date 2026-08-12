@@ -383,8 +383,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       categoryId: null as String?,
       scope: null as String?,
       communityId: null as String?,
-      page: 1,
       limit: 50,
+      cursor: null,
     );
     final historyAsync = ref.watch(eloHistoryProvider(query));
     final history = historyAsync.asData?.value ?? [];

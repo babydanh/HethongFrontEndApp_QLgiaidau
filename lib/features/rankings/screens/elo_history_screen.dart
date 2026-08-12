@@ -30,7 +30,6 @@ class EloHistoryScreen extends ConsumerStatefulWidget {
 
 class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
   String? _selectedScope;
-  int _page = 1;
   static const _limit = 50;
 
   EloHistoryQuery get _query => (
@@ -38,8 +37,8 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
     categoryId: null,
     scope: _selectedScope,
     communityId: null,
-    page: _page,
     limit: _limit,
+    cursor: null,
   );
 
   @override

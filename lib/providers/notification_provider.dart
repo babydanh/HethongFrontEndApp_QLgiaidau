@@ -19,9 +19,9 @@ final unreadCountProvider = FutureProvider<int>((ref) async {
 });
 
 /// Provider cho danh sách thông báo (phân trang)
-final notificationsProvider = FutureProvider.family<List<AppNotification>, int>((ref, page) async {
+final notificationsProvider = FutureProvider<List<AppNotification>>((ref) async {
   final repo = ref.watch(notificationRepositoryProvider);
-  return repo.getMyNotifications(page: page, limit: 20);
+  return (await repo.getMyNotifications(limit: 20)).items;
 });
 
 /// Notifier quản lý trạng thái thông báo
@@ -34,21 +34,28 @@ class NotificationNotifier extends Notifier<NotificationState> {
   /// Load thêm trang
   Future<void> loadPage(int page) async {
     _log.info('Load notifications page: $page');
+    if (state.isLoading || (page > 1 && !state.hasMore)) return;
     final repo = ref.read(notificationRepositoryProvider);
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final items = await repo.getMyNotifications(page: page, limit: 20);
+      final result = await repo.getMyNotifications(
+        cursor: page == 1 ? null : state.nextCursor,
+        limit: 20,
+      );
+      final items = result.items;
       if (page == 1) {
         state = NotificationState(
           notifications: items,
           currentPage: 1,
-          hasMore: items.length >= 20,
+          hasMore: result.hasMore,
+          nextCursor: result.nextCursor,
         );
       } else {
         state = state.copyWith(
           notifications: [...state.notifications, ...items],
           currentPage: page,
-          hasMore: items.length >= 20,
+          hasMore: result.hasMore,
+          nextCursor: result.nextCursor,
           isLoading: false,
         );
       }
@@ -100,6 +107,7 @@ class NotificationState {
   final List<AppNotification> notifications;
   final int currentPage;
   final bool hasMore;
+  final String? nextCursor;
   final bool isLoading;
   final String? errorMessage;
 
@@ -107,6 +115,7 @@ class NotificationState {
     this.notifications = const [],
     this.currentPage = 0,
     this.hasMore = true,
+    this.nextCursor,
     this.isLoading = false,
     this.errorMessage,
   });
@@ -115,6 +124,7 @@ class NotificationState {
     List<AppNotification>? notifications,
     int? currentPage,
     bool? hasMore,
+    String? nextCursor,
     bool? isLoading,
     String? errorMessage,
     bool clearError = false,
@@ -123,6 +133,7 @@ class NotificationState {
       notifications: notifications ?? this.notifications,
       currentPage: currentPage ?? this.currentPage,
       hasMore: hasMore ?? this.hasMore,
+      nextCursor: nextCursor ?? this.nextCursor,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );

@@ -9,13 +9,13 @@ class ApiNotificationRepository {
 
   ApiNotificationRepository(this._dioClient);
 
-  /// GET /notifications?page=&limit=
-  Future<List<AppNotification>> getMyNotifications({int page = 1, int limit = 20}) async {
-    _log.info('Lấy danh sách thông báo: page=$page, limit=$limit');
+  /// GET /notifications?cursor=&limit=
+  Future<NotificationPage> getMyNotifications({String? cursor, int limit = 20}) async {
+    _log.info('Lấy danh sách thông báo: cursor=${cursor != null}, limit=$limit');
     try {
       final response = await _dioClient.dio.get(
         '/notifications',
-        queryParameters: {'page': page, 'limit': limit},
+        queryParameters: {'limit': limit, if (cursor != null) 'cursor': cursor},
         options: Options(
           extra: {
             // Thông báo là dữ liệu realtime — KHÔNG cache để tránh serve dữ liệu cũ
@@ -27,10 +27,17 @@ class ApiNotificationRepository {
       if (response.statusCode == 200) {
         final data = response.data['data'] as List<dynamic>? ?? [];
         final items = data.map((e) => AppNotification.fromJson(e as Map<String, dynamic>)).toList();
-        _log.info('Nhận ${items.length} thông báo (page=$page) từ GET /notifications');
-        return items;
+        final meta = response.data['meta'] is Map<String, dynamic>
+            ? response.data['meta'] as Map<String, dynamic>
+            : const <String, dynamic>{};
+        _log.info('Nhận ${items.length} thông báo từ GET /notifications');
+        return NotificationPage(
+          items: items,
+          nextCursor: meta['nextCursor']?.toString(),
+          hasMore: meta['hasMore'] == true,
+        );
       }
-      return [];
+      return const NotificationPage(items: [], hasMore: false);
     } catch (e, stack) {
       _log.error('Lỗi lấy danh sách thông báo', e, stack);
       rethrow;
@@ -80,4 +87,12 @@ class ApiNotificationRepository {
       rethrow;
     }
   }
+}
+
+class NotificationPage {
+  final List<AppNotification> items;
+  final String? nextCursor;
+  final bool hasMore;
+
+  const NotificationPage({required this.items, this.nextCursor, required this.hasMore});
 }

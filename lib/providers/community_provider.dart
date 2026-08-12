@@ -2,7 +2,6 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/gallery_image_model.dart';
-import 'package:app_quanly_giaidau/data/models/community_ranking_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_invite_model.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_community_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
@@ -22,7 +21,6 @@ final communitiesProvider = FutureProvider.family<List<Community>, CommunityQuer
   return repo.getCommunities(
     search: query.search,
     provinceCode: query.provinceCode,
-    page: 1,
     limit: 50,
   );
 });
@@ -39,7 +37,7 @@ final myCommunitiesProvider = FutureProvider<List<Community>>((ref) async {
 
 /// Makes every visible CLB list refetch after a mutation. `communitiesProvider`
 /// is a family, so invalidating the family also covers search/province variants.
-void invalidateCommunityCollections(Ref ref) {
+void invalidateCommunityCollections(dynamic ref) {
   ref.invalidate(communitiesProvider);
   ref.invalidate(myCommunitiesProvider);
 }
@@ -68,12 +66,6 @@ final communityGalleryProvider = FutureProvider.family<List<GalleryImageModel>, 
   return repo.getGallery(communityId);
 });
 
-/// Provider bảng xếp hạng CLB
-final communityRankingsProvider = FutureProvider.family<List<CommunityRankingModel>, String>((ref, communityId) async {
-  final repo = ref.watch(communityRepositoryProvider);
-  return repo.getRankings(communityId);
-});
-
 /// Provider danh sách yêu cầu tham gia CLB (OWNER/ADMIN thấy).
 final joinRequestsProvider = FutureProvider.family<List<CommunityMemberModel>, String>((ref, communityId) async {
   final repo = ref.watch(communityRepositoryProvider);
@@ -90,4 +82,22 @@ final pendingCommunitiesProvider = FutureProvider<List<Community>>((ref) async {
 final myCommunityInvitesProvider = FutureProvider<List<CommunityInviteModel>>((ref) async {
   final repo = ref.watch(communityRepositoryProvider);
   return repo.getMyInvites();
+});
+
+/// Trạng thái theo dõi CLB của user hiện tại (P2E.2).
+final isFollowingProvider = FutureProvider.family<bool, String>((
+  ref,
+  communityId,
+) async {
+  final repo = ref.watch(communityRepositoryProvider);
+  return repo.isFollowing(communityId);
+});
+
+/// Trạng thái yêu thích CLB của user hiện tại (P2E.2).
+final isFavoritedProvider = FutureProvider.family<bool, String>((
+  ref,
+  communityId,
+) async {
+  final repo = ref.watch(communityRepositoryProvider);
+  return repo.isFavorited(communityId);
 });
