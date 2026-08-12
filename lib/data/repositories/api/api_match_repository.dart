@@ -135,7 +135,7 @@ class ApiMatchRepository implements IMatchRepository {
         currentList = _matchesCache['$tournamentId-all'] ?? const [];
       }
       if (!controller.isClosed) {
-        controller.add(currentList.where((m) => m.status == 'live' || m.status == 'ONGOING').toList());
+        controller.add(currentList.where((m) => m.isLive).toList());
       }
     }
 
@@ -190,6 +190,8 @@ class ApiMatchRepository implements IMatchRepository {
       case 'ONGOING':
       case 'IN_PROGRESS':
       case 'LIVE':
+      case 'STARTED':
+      case 'PLAYING':
         return 'live';
       case 'COMPLETED':
       case 'FINISHED':
@@ -257,8 +259,23 @@ class ApiMatchRepository implements IMatchRepository {
   }
 
   MatchModel _parseMatch(Map<String, dynamic> json) {
-    final team1Name = json['participant1']?['teamName'] ?? json['team1Name'] ?? 'TBD';
-    final team2Name = json['participant2']?['teamName'] ?? json['team2Name'] ?? 'TBD';
+    String participantName(dynamic participant) {
+      if (participant is! Map) return '';
+      final value = participant['teamName'] ?? participant['name'] ?? participant['displayName'];
+      return value?.toString().trim() ?? '';
+    }
+    final p1Name = participantName(json['participant1']);
+    final p2Name = participantName(json['participant2']);
+    final team1Name = p1Name.isNotEmpty
+        ? p1Name
+        : (json['team1Name'] ?? json['participant1Name'] ??
+                    (json['team1'] is Map ? (json['team1'] as Map)['name'] : null))
+                ?.toString() ?? 'TBD';
+    final team2Name = p2Name.isNotEmpty
+        ? p2Name
+        : (json['team2Name'] ?? json['participant2Name'] ??
+                    (json['team2'] is Map ? (json['team2'] as Map)['name'] : null))
+                ?.toString() ?? 'TBD';
     final rosters1 = json['participant1']?['rosters'] as List<dynamic>?;
     final team1Members = rosters1?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
     final rosters2 = json['participant2']?['rosters'] as List<dynamic>?;

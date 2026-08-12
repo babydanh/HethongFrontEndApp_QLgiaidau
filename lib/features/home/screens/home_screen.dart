@@ -4038,9 +4038,11 @@ class _TournamentSectionList extends ConsumerWidget {
       final valid = matches.where((m) {
         final t1 = m.team1Name.trim().toUpperCase();
         final t2 = m.team2Name.trim().toUpperCase();
-        final isT1Tbd = t1.isEmpty || t1 == 'TBD' || t1 == 'BYE';
-        final isT2Tbd = t2.isEmpty || t2 == 'TBD' || t2 == 'BYE';
-        if (isT1Tbd && isT2Tbd) return false;
+        final isT1Bye = t1 == 'BYE';
+        final isT2Bye = t2 == 'BYE';
+        final isT1Tbd = !isT1Bye && (t1.isEmpty || t1 == 'TBD') && m.team1Id.trim().isEmpty;
+        final isT2Tbd = !isT2Bye && (t2.isEmpty || t2 == 'TBD') && m.team2Id.trim().isEmpty;
+        if (isT1Bye || isT2Bye || (isT1Tbd && isT2Tbd)) return false;
 
         final q = searchQuery.trim().toLowerCase();
         final matchText = '${m.team1Name} ${m.team2Name} ${m.tournamentName}'
