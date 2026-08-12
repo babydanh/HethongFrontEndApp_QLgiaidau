@@ -10,6 +10,12 @@ class CommunityMemberModel {
   final String? userEmail;
   final String joinedAt;
 
+  /// P2C.1/P2C.2 — Tag BQT (text[] từ backend, tối đa 5).
+  final List<String> tags;
+
+  /// P2C.3 — Streak tính động từ trận đấu (WIN/LOSS/ELO_UP), không lưu DB.
+  final CommunityMemberStreakModel streak;
+
   const CommunityMemberModel({
     required this.id,
     required this.userId,
@@ -20,6 +26,8 @@ class CommunityMemberModel {
     this.userAvatarUrl,
     this.userEmail,
     this.joinedAt = '',
+    this.tags = const [],
+    this.streak = const CommunityMemberStreakModel(),
   });
 
   factory CommunityMemberModel.fromJson(Map<String, dynamic> json) {
@@ -34,13 +42,51 @@ class CommunityMemberModel {
       communityId: member['communityId']?.toString() ?? '',
       role: member['role']?.toString() ?? 'MEMBER',
       status: member['status']?.toString() ?? 'JOINED',
-      userFullName: user?['fullName']?.toString() ?? profile?['fullName']?.toString(),
-      userAvatarUrl: user?['avatarUrl']?.toString() ??
+      userFullName:
+          user?['fullName']?.toString() ?? profile?['fullName']?.toString(),
+      userAvatarUrl:
+          user?['avatarUrl']?.toString() ??
           user?['avatar_url']?.toString() ??
           profile?['avatarUrl']?.toString() ??
           profile?['avatar_url']?.toString(),
       userEmail: user?['email']?.toString(),
       joinedAt: member['joinedAt']?.toString() ?? '',
+      tags:
+          (member['tags'] as List<dynamic>?)
+              ?.map((e) => e?.toString() ?? '')
+              .where((e) => e.isNotEmpty)
+              .toList() ??
+          const [],
+      streak: CommunityMemberStreakModel.fromJson(
+        json['streak'] as Map<String, dynamic>?,
+      ),
     );
   }
+}
+
+/// P2C.3 — Streak tính động: { type: 'WIN'|'LOSS'|'ELO_UP'|null, count, label }.
+class CommunityMemberStreakModel {
+  final String? type;
+  final int count;
+  final String? label;
+
+  const CommunityMemberStreakModel({this.type, this.count = 0, this.label});
+
+  factory CommunityMemberStreakModel.fromJson(Map<String, dynamic>? json) {
+    if (json == null) return const CommunityMemberStreakModel();
+    return CommunityMemberStreakModel(
+      type: json['type']?.toString(),
+      count: (json['count'] as num?)?.toInt() ?? 0,
+      label: json['label']?.toString(),
+    );
+  }
+
+  /// Chưa có streak đáng hiển thị.
+  bool get isEmpty => type == null || type!.isEmpty || count <= 0;
+
+  Map<String, dynamic> toJson() => {
+    'type': type,
+    'count': count,
+    'label': label,
+  };
 }

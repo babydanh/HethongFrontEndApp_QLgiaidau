@@ -20,7 +20,6 @@ import 'package:app_quanly_giaidau/features/tournament/screens/token_management_
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/features/notification/screens/notification_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_detail_screen.dart';
-import 'package:app_quanly_giaidau/features/community/screens/club_challenges_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_tournaments_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/create_club_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/create_club_tournament_screen.dart';
@@ -58,6 +57,8 @@ import 'package:app_quanly_giaidau/features/series/screens/series_screen.dart';
 import 'package:app_quanly_giaidau/features/series/screens/series_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/match/screens/matches_list_screen.dart';
 import 'package:app_quanly_giaidau/features/chat/screens/chat_screen.dart';
+import 'package:app_quanly_giaidau/features/community/social/club_chat_screen.dart';
+import 'package:app_quanly_giaidau/features/community/social/community_social_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -187,6 +188,22 @@ final routerProvider = Provider<GoRouter>((ref) {
           return null;
         },
         routes: [
+          GoRoute(
+            path: 'social',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              final name = state.uri.queryParameters['name'] ?? 'Cộng đồng';
+              return CommunitySocialScreen(communityId: id, communityName: name);
+            },
+          ),
+          GoRoute(
+            path: 'chat',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              final name = state.uri.queryParameters['name'] ?? 'Cộng đồng';
+              return ClubChatScreen(communityId: id, communityName: name);
+            },
+          ),
           GoRoute(
             path: 'tournament/:id',
             builder: (context, state) {
@@ -392,13 +409,6 @@ final routerProvider = Provider<GoRouter>((ref) {
               final id = state.pathParameters['id']!;
               final isOwner = state.extra as bool? ?? false;
               return ClubManagementScreen(clubId: id, isOwner: isOwner);
-            },
-          ),
-          GoRoute(
-            path: 'challenges',
-            builder: (context, state) {
-              final id = state.pathParameters['id']!;
-              return ClubChallengesScreen(clubId: id);
             },
           ),
           GoRoute(

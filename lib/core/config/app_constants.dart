@@ -23,6 +23,30 @@ class AppConstants {
     sportTableTennis: '🏓',
   };
 
+  // ─── Tag BQT (P2C.4/P2C.5) ───
+  static const int memberTagMax = 5;
+  static const int memberTagMaxLength = 24;
+  static const String memberTagMenu = 'Gán tag';
+  static const String memberTagAssignTitle = 'Gán tag cho thành viên';
+  static const String memberTagAssignDesc =
+      'Tag hiển thị cạnh tên trong danh sách thành viên (tối đa 5 tag).';
+  static const String memberTagAddHint = 'Nhập tag mới...';
+  static const String memberTagAdd = 'Thêm';
+  static const String memberTagSave = 'Lưu tag';
+  static const String memberTagSaving = 'Đang lưu...';
+  static const String memberTagMaxReached = 'Đã đạt tối đa 5 tag';
+  static const String memberTagEmpty =
+      'Chưa có tag nào. Thêm tag bên dưới để bắt đầu.';
+  static const String memberTagTooLong = 'Mỗi tag tối đa 24 ký tự.';
+  static const String memberTagInvalid =
+      'Tag chỉ được chứa chữ cái, số, khoảng trắng, gạch dưới (_) và gạch ngang (-).';
+  static const String memberTagDuplicate = 'Tag này đã tồn tại.';
+  static const String memberTagRemove = 'Xoá tag';
+  static const String memberTagSaveError =
+      'Không thể lưu tag. Vui lòng thử lại.';
+  static String memberTagCounter(int used, int max) =>
+      'Đã dùng $used/$max tag.';
+
   // ─── Formats ───
   static const String formatSingles = 'singles';
   static const String formatDoubles = 'doubles';
@@ -64,7 +88,8 @@ class AppConstants {
     bracketSingleElimination: 'Loại ngay khi thua, tối ưu thời gian',
     bracketDoubleElimination: 'Có nhánh thắng - nhánh thua, tăng cơ hội',
     bracketRoundRobin: 'Tất cả gặp nhau, tích điểm, công bằng cao',
-    bracketGroupStageKnockout: 'Chia bảng đấu vòng tròn, chọn đội đi tiếp đánh loại trực tiếp',
+    bracketGroupStageKnockout:
+        'Chia bảng đấu vòng tròn, chọn đội đi tiếp đánh loại trực tiếp',
   };
 
   static const Map<String, String> bracketTypeDetails = {

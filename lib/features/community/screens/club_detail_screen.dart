@@ -15,7 +15,10 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_ranking_widget.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/tag_assign_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
+import 'package:app_quanly_giaidau/features/community/social/community_social_screen.dart';
 
 class ClubDetailScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -31,6 +34,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   late TabController _tabController;
   CommunityMemberModel? _myMembership;
   bool _isJoinLoading = false;
+  bool _isFollowBusy = false;
+  bool _isFavoriteBusy = false;
+  bool?
+  _followOverride; // P2E.2: ghi đè local khi backend chưa trả state follow
+  bool? _favoriteOverride; // P2E.2: ghi đè local cho icon yêu thích
   String _tournamentStatusFilter = 'ALL';
   String _tournamentTypeFilter = 'ALL';
   String _tournamentSportFilter = 'ALL';
@@ -38,7 +46,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _fetchMembership());
   }
 
@@ -55,23 +63,188 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       return;
     }
     try {
-      final members = await ref
+      // P2B.3: dùng my-membership endpoint thay cho việc quét getMembers + fallback (P1.11).
+      final membership = await ref
           .read(communityRepositoryProvider)
-          .getMembers(widget.clubId);
-      // Try to match by userId from profile (JWT users)
-      final profile = ref.read(userProfileProvider).asData?.value;
-      final myUserId = profile?.id;
-      CommunityMemberModel? found;
-      if (myUserId != null && myUserId.isNotEmpty) {
-        found = members.where((m) => m.userId == myUserId).firstOrNull;
+          .getMyMembership(widget.clubId);
+      if (!mounted) return;
+      if (membership == null) {
+        // 404 (chưa phải member) hoặc lỗi → viewer thuần
+        setState(() => _myMembership = null);
+        return;
       }
-      // Fallback: take first JOINED/PENDING member
-      found ??= members
-          .where((m) => m.status == 'JOINED' || m.status == 'PENDING')
-          .firstOrNull;
-      if (mounted) setState(() => _myMembership = found);
+      final profile = ref.read(userProfileProvider).asData?.value;
+      setState(() {
+        _myMembership = CommunityMemberModel(
+          id: membership['memberId']?.toString() ?? '',
+          userId: profile?.id ?? '',
+          communityId: widget.clubId,
+          role: membership['role']?.toString() ?? 'MEMBER',
+          status: membership['status']?.toString() ?? 'JOINED',
+          joinedAt: membership['joinedAt']?.toString() ?? '',
+        );
+      });
     } catch (e, stack) {
       _log.error('Failed to fetch membership', e, stack);
+      if (mounted) setState(() => _myMembership = null);
+    }
+  }
+
+  // ─── Follow / Favorite (P2E.2) ───
+
+  Widget _buildFollowFavoriteButtons(
+    Community club,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
+    final following =
+        _followOverride ??
+        (ref.watch(isFollowingProvider(club.id)).value ?? false);
+    final favorited =
+        _favoriteOverride ??
+        (ref.watch(isFavoritedProvider(club.id)).value ?? false);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          onPressed: _isFollowBusy
+              ? null
+              : () => _toggleClubFollow(club, following),
+          tooltip: following ? l10n.club_unfollow : l10n.club_follow,
+          icon: _isFollowBusy
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppTheme.primary,
+                  ),
+                )
+              : Icon(
+                  following
+                      ? Icons.bookmark_rounded
+                      : Icons.bookmark_border_rounded,
+                  color: following ? AppTheme.primary : colors.textMuted,
+                  size: 22,
+                ),
+        ),
+        IconButton(
+          onPressed: _isFavoriteBusy
+              ? null
+              : () => _toggleClubFavorite(club, favorited),
+          tooltip: favorited ? l10n.club_unfavorite : l10n.club_favorite,
+          icon: _isFavoriteBusy
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppTheme.primary,
+                  ),
+                )
+              : Icon(
+                  favorited
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  color: favorited ? AppTheme.primary : colors.textMuted,
+                  size: 22,
+                ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _toggleClubFollow(
+    Community club,
+    bool currentlyFollowing,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final auth = ref.read(authProvider);
+    if (!auth.isAuthenticated) {
+      context.go('/login');
+      return;
+    }
+    if (_isFollowBusy) return;
+    setState(() => _isFollowBusy = true);
+    try {
+      final repo = ref.read(communityRepositoryProvider);
+      final ok = currentlyFollowing
+          ? await repo.unfollowCommunity(club.id)
+          : await repo.followCommunity(club.id);
+      if (!mounted) return;
+      if (ok) {
+        setState(() => _followOverride = !currentlyFollowing);
+        ref.invalidate(isFollowingProvider(club.id));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              currentlyFollowing
+                  ? l10n.club_unfollowSuccess
+                  : l10n.club_followSuccess,
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.club_actionError)));
+      }
+    } catch (e, stack) {
+      _log.error('Lỗi đổi trạng thái theo dõi CLB', e, stack);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.club_actionError)));
+      }
+    } finally {
+      if (mounted) setState(() => _isFollowBusy = false);
+    }
+  }
+
+  Future<void> _toggleClubFavorite(
+    Community club,
+    bool currentlyFavorited,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final auth = ref.read(authProvider);
+    if (!auth.isAuthenticated) {
+      context.go('/login');
+      return;
+    }
+    if (_isFavoriteBusy) return;
+    setState(() => _isFavoriteBusy = true);
+    try {
+      final repo = ref.read(communityRepositoryProvider);
+      final ok = currentlyFavorited
+          ? await repo.unfavoriteCommunity(club.id)
+          : await repo.favoriteCommunity(club.id);
+      if (!mounted) return;
+      if (ok) {
+        setState(() => _favoriteOverride = !currentlyFavorited);
+        ref.invalidate(isFavoritedProvider(club.id));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              currentlyFavorited
+                  ? l10n.club_unfavoriteSuccess
+                  : l10n.club_favoriteSuccess,
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.club_actionError)));
+      }
+    } catch (e, stack) {
+      _log.error('Lỗi đổi trạng thái yêu thích CLB', e, stack);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.club_actionError)));
+      }
+    } finally {
+      if (mounted) setState(() => _isFavoriteBusy = false);
     }
   }
 
@@ -176,7 +349,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   Widget _buildContent(Community club) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
-    final sportName = club.sports.isNotEmpty ? club.sports.first : l10n.club_sportFallback;
+    final sportName = club.sports.isNotEmpty
+        ? club.sports.first
+        : l10n.club_sportFallback;
     final Color sColor = _sportColor(sportName);
     final String emoji = _sportEmoji(sportName);
 
@@ -211,6 +386,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           ),
           centerTitle: true,
           actions: [
+            _buildFollowFavoriteButtons(club, colors, l10n),
             if (_myMembership?.role == 'OWNER' ||
                 _myMembership?.role == 'ADMIN' ||
                 _myMembership?.role == 'MODERATOR') ...[
@@ -224,7 +400,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   icon: const Icon(Icons.tune_rounded, size: 16),
                   label: Text(
                     l10n.club_manageShort,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ),
@@ -235,7 +414,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   icon: const Icon(Icons.edit_rounded, size: 16),
                   label: Text(
                     l10n.infoEdit,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ),
@@ -302,8 +484,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       AppShareModal.show(
                         context: context,
                         title: club.name,
-                        subtitle: '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
-                        webUrl: 'https://giaidau.vnvar.com/communities/${club.id}',
+                        subtitle:
+                            '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
+                        webUrl:
+                            'https://giaidau.vnvar.com/communities/${club.id}',
                         imageUrl: club.logoUrl ?? club.bannerUrl,
                         badgeText: l10n.club_badge,
                       );
@@ -325,6 +509,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
+          CommunitySocialScreen(communityId: club.id, communityName: club.name),
           _buildAboutTab(club, colors),
           _buildTournamentsTab(colors),
           _buildMembersTab(colors),
@@ -394,7 +579,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${l10n.errorPrefix}: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(
+              '${l10n.errorPrefix}: ${e.toString().replaceAll('Exception: ', '')}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -426,7 +613,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       }
     }
     if (sportTagWidgets.isEmpty) {
-      sportTagWidgets.add(_buildSportTag(l10n.club_sportFallback.toUpperCase(), sColor));
+      sportTagWidgets.add(
+        _buildSportTag(l10n.club_sportFallback.toUpperCase(), sColor),
+      );
       sportTagWidgets.add(const SizedBox(width: 6));
     }
 
@@ -823,7 +1012,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           StatusHelper.isTournamentRegistration(status);
     }
     if (filter == 'ONGOING') return StatusHelper.isTournamentInProgress(status);
-    if (filter == 'COMPLETED') return StatusHelper.isTournamentCompleted(status);
+    if (filter == 'COMPLETED')
+      return StatusHelper.isTournamentCompleted(status);
     return true;
   }
 
@@ -833,23 +1023,48 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         (key.isEmpty ? 'Khác' : key.replaceAll('_', ' '));
   }
 
-  Widget _buildTournamentFilters(AppColorsExtension colors, List<String> sports) {
-    Widget chips(List<(String, String)> options, String selected, ValueChanged<String> onChanged) {
+  Widget _buildTournamentFilters(
+    AppColorsExtension colors,
+    List<String> sports,
+  ) {
+    Widget chips(
+      List<(String, String)> options,
+      String selected,
+      ValueChanged<String> onChanged,
+    ) {
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
-          children: options.map((option) => Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(option.$2, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
-              selected: selected == option.$1,
-              onSelected: (_) => onChanged(option.$1),
-              selectedColor: AppTheme.primary.withValues(alpha: 0.14),
-              side: BorderSide(color: selected == option.$1 ? AppTheme.primary : colors.border),
-              labelStyle: TextStyle(color: selected == option.$1 ? AppTheme.primary : colors.textSecondary),
-            ),
-          )).toList(),
+          children: options
+              .map(
+                (option) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(
+                      option.$2,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    selected: selected == option.$1,
+                    onSelected: (_) => onChanged(option.$1),
+                    selectedColor: AppTheme.primary.withValues(alpha: 0.14),
+                    side: BorderSide(
+                      color: selected == option.$1
+                          ? AppTheme.primary
+                          : colors.border,
+                    ),
+                    labelStyle: TextStyle(
+                      color: selected == option.$1
+                          ? AppTheme.primary
+                          : colors.textSecondary,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
         ),
       );
     }
@@ -861,15 +1076,46 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text('Lọc giải đấu', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: colors.textPrimary)),
+            child: Text(
+              'Lọc giải đấu',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: colors.textPrimary,
+              ),
+            ),
           ),
           const SizedBox(height: 8),
-          chips(const [('ALL', 'Tất cả giải'), ('CLUB', 'Nội bộ CLB'), ('PUBLIC', 'Mở rộng')], _tournamentTypeFilter, (v) => setState(() => _tournamentTypeFilter = v)),
+          chips(
+            const [
+              ('ALL', 'Tất cả giải'),
+              ('CLUB', 'Nội bộ CLB'),
+              ('PUBLIC', 'Mở rộng'),
+            ],
+            _tournamentTypeFilter,
+            (v) => setState(() => _tournamentTypeFilter = v),
+          ),
           const SizedBox(height: 4),
-          chips(const [('ALL', 'Mọi trạng thái'), ('UPCOMING', 'Sắp diễn ra'), ('ONGOING', 'Đang diễn ra'), ('COMPLETED', 'Đã kết thúc')], _tournamentStatusFilter, (v) => setState(() => _tournamentStatusFilter = v)),
+          chips(
+            const [
+              ('ALL', 'Mọi trạng thái'),
+              ('UPCOMING', 'Sắp diễn ra'),
+              ('ONGOING', 'Đang diễn ra'),
+              ('COMPLETED', 'Đã kết thúc'),
+            ],
+            _tournamentStatusFilter,
+            (v) => setState(() => _tournamentStatusFilter = v),
+          ),
           if (sports.length > 1) ...[
             const SizedBox(height: 4),
-            chips([('ALL', 'Mọi môn'), ...sports.map((sport) => (sport, _tournamentSportLabel(sport)))], _tournamentSportFilter, (v) => setState(() => _tournamentSportFilter = v)),
+            chips(
+              [
+                ('ALL', 'Mọi môn'),
+                ...sports.map((sport) => (sport, _tournamentSportLabel(sport))),
+              ],
+              _tournamentSportFilter,
+              (v) => setState(() => _tournamentSportFilter = v),
+            ),
           ],
         ],
       ),
@@ -913,17 +1159,32 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
           );
         }
-        final isAdmin = _myMembership?.role == 'OWNER' || _myMembership?.role == 'ADMIN' || _myMembership?.role == 'MODERATOR';
-        final sports = tourneys.map((t) => t.sport).where((s) => s.isNotEmpty).toSet().toList();
+        final isAdmin =
+            _myMembership?.role == 'OWNER' ||
+            _myMembership?.role == 'ADMIN' ||
+            _myMembership?.role == 'MODERATOR';
+        final sports = tourneys
+            .map((t) => t.sport)
+            .where((s) => s.isNotEmpty)
+            .toSet()
+            .toList();
         final filteredTourneys = tourneys.where((t) {
-          if (!isAdmin && StatusHelper.isTournamentDraft(t.status)) return false;
-          if (_tournamentTypeFilter != 'ALL' && t.tournamentType != _tournamentTypeFilter) return false;
-          if (_tournamentSportFilter != 'ALL' && t.sport != _tournamentSportFilter) return false;
+          if (!isAdmin && StatusHelper.isTournamentDraft(t.status))
+            return false;
+          if (_tournamentTypeFilter != 'ALL' &&
+              t.tournamentType != _tournamentTypeFilter)
+            return false;
+          if (_tournamentSportFilter != 'ALL' &&
+              t.sport != _tournamentSportFilter)
+            return false;
           return _matchesTournamentStatus(t.status, _tournamentStatusFilter);
         }).toList();
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-          itemCount: filteredTourneys.length + (isAdmin ? 2 : 1) + (filteredTourneys.isEmpty ? 1 : 0),
+          itemCount:
+              filteredTourneys.length +
+              (isAdmin ? 2 : 1) +
+              (filteredTourneys.isEmpty ? 1 : 0),
           itemBuilder: (context, i) {
             if (isAdmin && i == 0) {
               return Container(
@@ -950,7 +1211,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.add_rounded, size: 18, color: Colors.white),
+                              Icon(
+                                Icons.add_rounded,
+                                size: 18,
+                                color: Colors.white,
+                              ),
                               SizedBox(width: 6),
                               Text(
                                 "Tạo giải đấu",
@@ -968,7 +1233,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     const SizedBox(width: 10),
                     Expanded(
                       child: InkWell(
-                        onTap: () => context.push('/club/${widget.clubId}/manage'),
+                        onTap: () =>
+                            context.push('/club/${widget.clubId}/manage'),
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 11),
@@ -980,7 +1246,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.tune_rounded, size: 16, color: colors.textPrimary),
+                              Icon(
+                                Icons.tune_rounded,
+                                size: 16,
+                                color: colors.textPrimary,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 "Quản lý giải",
@@ -1008,10 +1278,28 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 40),
                 child: Column(
                   children: [
-                    Icon(Icons.filter_alt_off_rounded, size: 42, color: colors.textMuted),
+                    Icon(
+                      Icons.filter_alt_off_rounded,
+                      size: 42,
+                      color: colors.textMuted,
+                    ),
                     const SizedBox(height: 10),
-                    Text('Không có giải phù hợp với bộ lọc', style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
-                    TextButton(onPressed: () => setState(() { _tournamentStatusFilter = 'ALL'; _tournamentTypeFilter = 'ALL'; _tournamentSportFilter = 'ALL'; }), child: const Text('Xóa bộ lọc')),
+                    Text(
+                      'Không có giải phù hợp với bộ lọc',
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    TextButton(
+                      onPressed: () => setState(() {
+                        _tournamentStatusFilter = 'ALL';
+                        _tournamentTypeFilter = 'ALL';
+                        _tournamentSportFilter = 'ALL';
+                      }),
+                      child: const Text('Xóa bộ lọc'),
+                    ),
                   ],
                 ),
               );
@@ -1097,13 +1385,18 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     children: [
                       _tournamentBadge(
                         t.tournamentType == 'CLUB' ? 'Nội bộ CLB' : 'Mở rộng',
-                        t.tournamentType == 'CLUB' ? const Color(0xFFD97706) : AppTheme.primary,
+                        t.tournamentType == 'CLUB'
+                            ? const Color(0xFFD97706)
+                            : AppTheme.primary,
                       ),
                       _tournamentBadge(
                         t.isRanked ? 'Xếp hạng ELO' : 'Phong trào',
-                        t.isRanked ? const Color(0xFFB45309) : colors.textSecondary,
+                        t.isRanked
+                            ? const Color(0xFFB45309)
+                            : colors.textSecondary,
                       ),
-                      if (t.parentId != null) _tournamentBadge('Chuỗi giải', const Color(0xFF2563EB)),
+                      if (t.parentId != null)
+                        _tournamentBadge('Chuỗi giải', const Color(0xFF2563EB)),
                     ],
                   ),
                   const SizedBox(height: 5),
@@ -1226,7 +1519,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
-      child: Text(label, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w800)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
     );
   }
 
@@ -1438,7 +1738,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         ],
                       ),
                     ),
-                    Icon(Icons.open_in_browser_rounded, color: const Color(0xFF2563EB)),
+                    Icon(
+                      Icons.open_in_browser_rounded,
+                      color: const Color(0xFF2563EB),
+                    ),
                   ],
                 ),
               ),
@@ -1457,9 +1760,15 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            const Icon(Icons.laptop_chromebook_rounded, color: Color(0xFF2563EB)),
+            const Icon(
+              Icons.laptop_chromebook_rounded,
+              color: Color(0xFF2563EB),
+            ),
             const SizedBox(width: 10),
-            Text(l10n.club_createAdvancedTitle, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+            Text(
+              l10n.club_createAdvancedTitle,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         content: Text(
@@ -1615,6 +1924,28 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         ),
                       ),
                     ),
+                  // P2C.5 — pills tag BQT + streak cạnh tên thành viên (text pill, không emoji).
+                  if (m.tags.isNotEmpty || !m.streak.isEmpty) ...[
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      children: [
+                        ...m.tags.map(
+                          (tag) => MemberTagChip(
+                            label: tag,
+                            kind: MemberTagChipKind.bqt,
+                          ),
+                        ),
+                        if (!m.streak.isEmpty)
+                          StreakChip(
+                            type: m.streak.type,
+                            count: m.streak.count,
+                            label: m.streak.label,
+                          ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -1632,11 +1963,17 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               itemBuilder: (_) => [
                 PopupMenuItem(
                   value: 'promote_admin',
-                  child: Text(l10n.club_setAdmin, style: const TextStyle(fontSize: 13)),
+                  child: Text(
+                    l10n.club_setAdmin,
+                    style: const TextStyle(fontSize: 13),
+                  ),
                 ),
                 PopupMenuItem(
                   value: 'promote_mod',
-                  child: Text(l10n.club_setMod, style: const TextStyle(fontSize: 13)),
+                  child: Text(
+                    l10n.club_setMod,
+                    style: const TextStyle(fontSize: 13),
+                  ),
                 ),
                 if (m.role != 'MEMBER')
                   PopupMenuItem(
@@ -1646,6 +1983,23 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       style: const TextStyle(fontSize: 13),
                     ),
                   ),
+                PopupMenuItem(
+                  value: 'assign_tags',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.sell_rounded,
+                        size: 16,
+                        color: colors.textMuted,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        AppConstants.memberTagMenu,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
                 const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'kick',
@@ -1708,13 +2062,20 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, true),
-                  child: Text(l10n.delete, style: TextStyle(color: colors.error)),
+                  child: Text(
+                    l10n.delete,
+                    style: TextStyle(color: colors.error),
+                  ),
                 ),
               ],
             ),
           );
           if (confirm != true) return;
           await repo.removeMember(widget.clubId, m.userId);
+          break;
+        case 'assign_tags':
+          // P2C.5 — gán tag BQT (bottom sheet tự đồng bộ member list sau khi lưu).
+          await _openTagAssignSheet(m);
           break;
       }
       ref.invalidate(communityMembersProvider(widget.clubId));
@@ -1730,9 +2091,30 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     } catch (e) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.errorPrefix}: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('${l10n.errorPrefix}: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
     }
+  }
+
+  /// P2C.5 — Mở bottom sheet gán tag BQT; lưu qua repository rồi đồng bộ member list.
+  Future<void> _openTagAssignSheet(CommunityMemberModel m) async {
+    final repo = ref.read(communityRepositoryProvider);
+    await TagAssignSheet.show(
+      context,
+      memberName: m.userFullName ?? '',
+      currentTags: m.tags,
+      onSave: (tags) async {
+        await repo.updateMemberTags(
+          widget.clubId,
+          m.userId.isNotEmpty ? m.userId : m.id,
+          tags,
+        );
+        ref.invalidate(communityMembersProvider(widget.clubId));
+      },
+    );
   }
 
   Widget _buildInviteButton(AppColorsExtension colors) {
@@ -2400,184 +2782,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     // Truyền môn của CLB để bộ lọc Môn chỉ hiện môn CLB đã đăng ký (giống web).
     return ListView(
       padding: const EdgeInsets.all(16),
-      children: [ClubRankingWidget(clubId: widget.clubId, clubSportKeys: club.sports)],
-    );
-
-    /*
-    final rankingsAsync = ref.watch(communityRankingsProvider(widget.clubId));
-    return ListView(
-      padding: const EdgeInsets.all(16),
       children: [
-        ClubRankingWidget(clubId: widget.clubId),
-        const SizedBox(height: 20),
-        Text(
-          'XẾP HẠNG CHI TIẾT',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: colors.textMuted,
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 12),
-        rankingsAsync.when(
-          data: (rankings) {
-            if (rankings.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.leaderboard_outlined,
-                        size: 48,
-                        color: colors.textMuted,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        "Chưa có xếp hạng",
-                        style: TextStyle(color: colors.textSecondary, fontSize: 14),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Tham gia giải đấu để có ELO",
-                        style: TextStyle(color: colors.textMuted, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-            return Column(
-              children: List.generate(rankings.length, (i) {
-                final r = rankings[i];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: colors.bgCard,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: colors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: i < 3
-                              ? [
-                                  Colors.amber,
-                                  const Color(0xFF94A3B8),
-                                  const Color(0xFFCD7F32),
-                                ][i].withValues(alpha: 0.15)
-                              : colors.bgSurface,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${i + 1}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                              color: i < 3
-                                  ? [
-                                      Colors.amber,
-                                      const Color(0xFF94A3B8),
-                                      const Color(0xFFCD7F32),
-                                    ][i]
-                                  : colors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                        child: Text(
-                          r.fullName.isNotEmpty ? r.fullName[0].toUpperCase() : '?',
-                          style: const TextStyle(
-                            color: AppTheme.primary,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          r.fullName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: r.eloPoints >= 1000
-                              ? Colors.amber.withValues(alpha: 0.12)
-                              : AppTheme.primary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.diamond_outlined,
-                              size: 10,
-                              color: r.eloPoints >= 1000
-                                  ? Colors.amber
-                                  : AppTheme.primary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${r.eloPoints}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                                color: r.eloPoints >= 1000
-                                    ? Colors.amber
-                                    : AppTheme.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, st) {
-            _log.error('Lỗi tải bảng xếp hạng', e, st);
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
-                  const SizedBox(height: 12),
-                  Text(
-                    "Không thể tải xếp hạng",
-                    style: TextStyle(color: colors.textSecondary, fontSize: 14),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
+        ClubRankingWidget(clubId: widget.clubId, clubSportKeys: club.sports),
       ],
     );
-    */
   }
 
   Widget _buildUserAvatar({
@@ -2586,13 +2794,21 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     required double radius,
     required Color fallbackColor,
   }) {
-    final initial = (name?.trim().isNotEmpty == true ? name!.trim()[0] : '?').toUpperCase();
+    final initial = (name?.trim().isNotEmpty == true ? name!.trim()[0] : '?')
+        .toUpperCase();
     final url = avatarUrl?.trim();
     return CircleAvatar(
       radius: radius,
       backgroundColor: fallbackColor.withValues(alpha: 0.1),
       child: url == null || url.isEmpty
-          ? Text(initial, style: TextStyle(color: fallbackColor, fontWeight: FontWeight.w800, fontSize: radius * 0.7))
+          ? Text(
+              initial,
+              style: TextStyle(
+                color: fallbackColor,
+                fontWeight: FontWeight.w800,
+                fontSize: radius * 0.7,
+              ),
+            )
           : ClipOval(
               child: Image.network(
                 url,
@@ -2600,7 +2816,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 height: radius * 2,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Center(
-                  child: Text(initial, style: TextStyle(color: fallbackColor, fontWeight: FontWeight.w800, fontSize: radius * 0.7)),
+                  child: Text(
+                    initial,
+                    style: TextStyle(
+                      color: fallbackColor,
+                      fontWeight: FontWeight.w800,
+                      fontSize: radius * 0.7,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -3006,6 +3229,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
         ),
         isScrollable: true,
         tabs: [
+          const Tab(text: 'Bảng tin'),
           Tab(text: l10n.club_tabAbout),
           Tab(text: l10n.club_tabTournaments),
           Tab(text: l10n.club_tabMembers),
@@ -3024,4 +3248,3 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_TabBarDelegate oldDelegate) => true;
 }
-

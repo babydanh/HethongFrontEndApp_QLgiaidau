@@ -9,6 +9,33 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get club_favorite => 'Favorite';
+
+  @override
+  String get club_unfavorite => 'Unfavorite';
+
+  @override
+  String get club_follow => 'Follow';
+
+  @override
+  String get club_unfollow => 'Unfollow';
+
+  @override
+  String get club_unfollowSuccess => 'Unfollowed club';
+
+  @override
+  String get club_followSuccess => 'Followed club';
+
+  @override
+  String get club_actionError => 'Action failed, please try again';
+
+  @override
+  String get club_unfavoriteSuccess => 'Removed from favorites';
+
+  @override
+  String get club_favoriteSuccess => 'Added to favorites';
+
+  @override
   String get navExplore => 'Explore';
 
   @override

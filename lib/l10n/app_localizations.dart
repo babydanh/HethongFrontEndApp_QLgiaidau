@@ -98,6 +98,60 @@ abstract class AppLocalizations {
     Locale('vi'),
   ];
 
+  /// No description provided for @club_favorite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Yêu thích'**
+  String get club_favorite;
+
+  /// No description provided for @club_unfavorite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ yêu thích'**
+  String get club_unfavorite;
+
+  /// No description provided for @club_follow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo dõi'**
+  String get club_follow;
+
+  /// No description provided for @club_unfollow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ theo dõi'**
+  String get club_unfollow;
+
+  /// No description provided for @club_unfollowSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bỏ theo dõi CLB'**
+  String get club_unfollowSuccess;
+
+  /// No description provided for @club_followSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã theo dõi CLB'**
+  String get club_followSuccess;
+
+  /// No description provided for @club_actionError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có lỗi xảy ra, vui lòng thử lại'**
+  String get club_actionError;
+
+  /// No description provided for @club_unfavoriteSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bỏ yêu thích CLB'**
+  String get club_unfavoriteSuccess;
+
+  /// No description provided for @club_favoriteSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm vào CLB yêu thích'**
+  String get club_favoriteSuccess;
+
   /// No description provided for @navExplore.
   ///
   /// In vi, this message translates to:

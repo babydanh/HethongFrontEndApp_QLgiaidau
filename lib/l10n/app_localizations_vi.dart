@@ -9,6 +9,33 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
+  String get club_favorite => 'Yêu thích';
+
+  @override
+  String get club_unfavorite => 'Bỏ yêu thích';
+
+  @override
+  String get club_follow => 'Theo dõi';
+
+  @override
+  String get club_unfollow => 'Bỏ theo dõi';
+
+  @override
+  String get club_unfollowSuccess => 'Đã bỏ theo dõi CLB';
+
+  @override
+  String get club_followSuccess => 'Đã theo dõi CLB';
+
+  @override
+  String get club_actionError => 'Có lỗi xảy ra, vui lòng thử lại';
+
+  @override
+  String get club_unfavoriteSuccess => 'Đã bỏ yêu thích CLB';
+
+  @override
+  String get club_favoriteSuccess => 'Đã thêm vào CLB yêu thích';
+
+  @override
   String get navExplore => 'Khám phá';
 
   @override

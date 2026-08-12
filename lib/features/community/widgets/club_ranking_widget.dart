@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
-import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
+import 'package:app_quanly_giaidau/core/utils/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
@@ -546,7 +546,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     final colors = context.colors;
     final medalColors = _medalColors(rank);
     final avatarSize = isCenter ? 42.0 : 34.0;
-    final tierInfo = _getEloTierInfo(player.eloPoints);
+    final tierInfo = _getEloTierInfo(player);
 
     return Container(
       height: isCenter ? 160 : 138,
@@ -673,7 +673,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     final winRate = player.matchesPlayed > 0
         ? (player.matchesWon / player.matchesPlayed) * 100
         : 0.0;
-    final tierInfo = _getEloTierInfo(player.eloPoints);
+    final tierInfo = _getEloTierInfo(player);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 5),
@@ -883,72 +883,44 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     }
   }
 
-  _EloTierInfo _getEloTierInfo(int elo) {
-    final idx = EloHelpers.findTierIndex(elo);
-    // Determine colors based on tier level
-    switch (idx) {
-      case 8: // Tier S
+  _EloTierInfo _getEloTierInfo(PlayerRanking player) {
+    final colors = context.colors;
+    final tier = resolveEloTier(elo: player.eloPoints, tierName: player.tierName);
+    switch (tier.role) {
+      case EloTierRole.s: // Tier S — amber (AppTheme.warning)
         return _EloTierInfo(
-          label: 'S',
-          bgColor: const Color(0xFFFEF3C7),
-          textColor: const Color(0xFF92400E),
-          borderColor: const Color(0xFFFCD34D),
+          label: tier.label,
+          bgColor: colors.warning.withValues(alpha: 0.15),
+          textColor: colors.warning,
+          borderColor: colors.warning.withValues(alpha: 0.45),
         );
-      case 7: // High A
+      case EloTierRole.a: // Tier A — emerald (AppTheme.success)
         return _EloTierInfo(
-          label: 'A+',
-          bgColor: const Color(0xFFFEE2E2),
-          textColor: const Color(0xFF991B1B),
-          borderColor: const Color(0xFFFCA5A5),
+          label: tier.label,
+          bgColor: colors.success.withValues(alpha: 0.15),
+          textColor: colors.success,
+          borderColor: colors.success.withValues(alpha: 0.45),
         );
-      case 6: // Low A
+      case EloTierRole.b: // Tier B — primary (neon)
         return _EloTierInfo(
-          label: 'A-',
-          bgColor: const Color(0xFFFFF5F5),
-          textColor: const Color(0xFFB91C1C),
-          borderColor: const Color(0xFFFECACA),
+          label: tier.label,
+          bgColor: AppTheme.primary.withValues(alpha: 0.15),
+          textColor: AppTheme.primary,
+          borderColor: AppTheme.primary.withValues(alpha: 0.45),
         );
-      case 5: // High B
+      case EloTierRole.c: // Tier C — slate sáng (textSecondary/bgElevated)
         return _EloTierInfo(
-          label: 'B+',
-          bgColor: const Color(0xFFDBEAFE),
-          textColor: const Color(0xFF1E40AF),
-          borderColor: const Color(0xFF93C5FD),
+          label: tier.label,
+          bgColor: colors.bgElevated,
+          textColor: colors.textSecondary,
+          borderColor: colors.border,
         );
-      case 4: // Low B
+      case EloTierRole.d: // Tier D — slate tối (textMuted/bgSurface)
         return _EloTierInfo(
-          label: 'B-',
-          bgColor: const Color(0xFFEFF6FF),
-          textColor: const Color(0xFF1D4ED8),
-          borderColor: const Color(0xFFBFDBFE),
-        );
-      case 3: // High C
-        return _EloTierInfo(
-          label: 'C+',
-          bgColor: const Color(0xFFD1FAE5),
-          textColor: const Color(0xFF065F46),
-          borderColor: const Color(0xFF6EE7B7),
-        );
-      case 2: // Low C
-        return _EloTierInfo(
-          label: 'C-',
-          bgColor: const Color(0xFFECFDF5),
-          textColor: const Color(0xFF047857),
-          borderColor: const Color(0xFFA7F3D0),
-        );
-      case 1: // High D
-        return _EloTierInfo(
-          label: 'D+',
-          bgColor: const Color(0xFFF1F5F9),
-          textColor: const Color(0xFF1E293B),
-          borderColor: const Color(0xFFCBD5E1),
-        );
-      default: // Low D (index 0)
-        return _EloTierInfo(
-          label: 'D',
-          bgColor: const Color(0xFFF5F5F4),
-          textColor: const Color(0xFF44403C),
-          borderColor: const Color(0xFFD6D3D1),
+          label: tier.label,
+          bgColor: colors.bgSurface,
+          textColor: colors.textMuted,
+          borderColor: colors.border,
         );
     }
   }
