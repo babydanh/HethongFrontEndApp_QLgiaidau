@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/services/chat_socket_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -25,6 +26,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
   Timer? _pollTimer;
+  late final ChatSocketService _chatSocket;
   List<_ClubChatMessage> _messages = const [];
   String? _roomId;
   String? _cursor;
@@ -32,18 +34,25 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
   bool _sending = false;
   bool _loadingOlder = false;
   String? _error;
+  bool _socketConnected = false;
+  String? _typingUser;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _chatSocket = ChatSocketService(ref.read(tokenManagerProvider));
+    _chatSocket.onConnection = (connected) { if (mounted) setState(() => _socketConnected = connected); };
+    _chatSocket.onMessage = _onSocketMessage;
+    _chatSocket.onTyping = (data) { if (mounted) setState(() => _typingUser = data['isTyping'] == true ? data['userId']?.toString() : null); };
     _loadRoom();
-    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _refreshMessages());
+    _pollTimer = Timer.periodic(const Duration(seconds: 15), (_) { if (!_socketConnected) _refreshMessages(); });
   }
 
   @override
   void dispose() {
     _pollTimer?.cancel();
+    if (_roomId != null) _chatSocket.disconnect(_roomId!);
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
@@ -68,6 +77,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
       if (id == null || id.isEmpty) throw const FormatException('Không tạo được phòng chat');
       if (!mounted) return;
       setState(() => _roomId = id);
+      await _chatSocket.connect(id);
       await _refreshMessages(initial: true);
     } catch (error, stack) {
       _log.error('Không thể mở chat CLB', error, stack);
@@ -152,6 +162,11 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     if (roomId == null || text.isEmpty || _sending) return;
     setState(() => _sending = true);
     try {
+      if (_socketConnected) {
+        _chatSocket.send(roomId, text);
+        _messageController.clear();
+        return;
+      }
       await ref.read(dioClientProvider).dio.post(
         '/chat/messages',
         data: {'roomId': roomId, 'messageText': text},
@@ -165,6 +180,13 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     } finally {
       if (mounted) setState(() => _sending = false);
     }
+  }
+
+  void _onSocketMessage(Map<String, dynamic> data) {
+    final message = _ClubChatMessage.fromJson(data);
+    if (!mounted || message.id.isEmpty || _messages.any((item) => item.id == message.id)) return;
+    setState(() => _messages = [..._messages, message]..sort((a, b) => a.createdAt.compareTo(b.createdAt)));
+    _scrollToBottom();
   }
 
   void _scrollToBottom() {
@@ -181,6 +203,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
       body: Column(
         children: [
           if (_loadingOlder) const LinearProgressIndicator(minHeight: 2),
+          if (_typingUser != null) const Padding(padding: EdgeInsets.only(top: 4), child: Text('Đang nhập…', style: TextStyle(fontSize: 11))),
           Expanded(child: _buildMessages(colors)),
           SafeArea(child: _buildComposer(colors)),
         ],
