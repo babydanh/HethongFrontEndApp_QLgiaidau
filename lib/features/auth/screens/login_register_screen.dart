@@ -275,7 +275,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                       child: Hero(
                         tag: "Sporto_logo",
                         child: SvgPicture.asset(
-                          "assets/images/vndcsport.svg",
+                          "assets/images/sporto_v1_with_text.svg",
                           fit: BoxFit.contain,
                           alignment: Alignment.centerLeft,
                         ),

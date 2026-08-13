@@ -97,7 +97,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         width: 280,
                         height: 95,
                         child: SvgPicture.asset(
-                          "assets/images/vndcsport.svg",
+                          "assets/images/sporto_v1_with_text.svg",
                           fit: BoxFit.contain,
                         ),
                       ),

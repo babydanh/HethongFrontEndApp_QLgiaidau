@@ -473,7 +473,7 @@ class _FallbackVndcLogo extends StatelessWidget {
       padding: const EdgeInsets.all(4),
       child: Center(
         child: SvgPicture.network(
-          "https://sporto.asia/vndcsport.svg",
+          "https://sporto.asia/sporto_v1_with_text.svg",
           fit: BoxFit.contain,
           width: 24,
           height: 24,

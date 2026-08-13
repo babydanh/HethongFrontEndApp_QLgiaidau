@@ -358,7 +358,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                           ),
                         ),
                         child: SvgPicture.asset(
-                          'assets/images/vndcsport.svg',
+                          'assets/images/sporto_v1_with_text.svg',
                           height: 28,
                           fit: BoxFit.contain,
                         ),

@@ -769,7 +769,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   SvgPicture.network(
-                                    "https://sporto.asia/vndcsport.svg",
+                                    "https://sporto.asia/sporto_v1_with_text.svg",
                                     fit: BoxFit.contain,
                                     placeholderBuilder: (_) => const Icon(
                                       Icons.emoji_events,
@@ -778,7 +778,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                                   ),
                             )
                           : SvgPicture.network(
-                              "https://sporto.asia/vndcsport.svg",
+                              "https://sporto.asia/sporto_v1_with_text.svg",
                               fit: BoxFit.contain,
                               placeholderBuilder: (_) =>
                                   const Icon(Icons.emoji_events, size: 28),

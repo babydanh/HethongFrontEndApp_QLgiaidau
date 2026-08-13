@@ -313,7 +313,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             children: [
               // Official Sporto SVG Logo
               SvgPicture.asset(
-                'assets/images/vndcsport.svg',
+                'assets/images/sporto_v1_with_text.svg',
                 width: 190,
                 fit: BoxFit.contain,
               ),
@@ -1862,7 +1862,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Padding(
       padding: const EdgeInsets.all(7),
       child: SvgPicture.asset(
-        'assets/images/vndcsport.svg',
+        'assets/images/sporto_v1_with_text.svg',
         fit: BoxFit.contain,
       ),
     );

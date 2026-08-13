@@ -39,43 +39,71 @@ class TournamentCardCarousel extends StatelessWidget {
     final List<String> chips = [];
     if (t.divisions.isNotEmpty) {
       for (var div in t.divisions) {
-        final formatLabel = _getFormatLabel(div.matchType, div.genderRestriction);
-        final label = (div.name.trim() != t.name.trim() && div.name.trim().isNotEmpty && div.name.trim() != 'Nội dung chính')
+        final formatLabel = _getFormatLabel(
+          div.matchType,
+          div.genderRestriction,
+        );
+        final label =
+            (div.name.trim() != t.name.trim() &&
+                div.name.trim().isNotEmpty &&
+                div.name.trim() != 'Nội dung chính')
             ? div.name
             : formatLabel;
         final regCount = div.participantCount;
-        final maxCount = div.maxParticipants != null ? "${div.maxParticipants}" : "-";
-        
+        final maxCount = div.maxParticipants != null
+            ? "${div.maxParticipants}"
+            : "-";
+
         chips.add("$label ($regCount/$maxCount)");
       }
     }
     if (chips.isEmpty) {
       final nameLower = t.name.toLowerCase();
       final descLower = t.description.toLowerCase();
-      
+
       // Safely check gender from divisions if available
-      final divGender = t.divisions.isNotEmpty ? (t.divisions.first.genderRestriction ?? '').toLowerCase() : '';
+      final divGender = t.divisions.isNotEmpty
+          ? (t.divisions.first.genderRestriction ?? '').toLowerCase()
+          : '';
 
       // Check Female
-      if (divGender == 'female' || nameLower.contains("đơn nữ") || descLower.contains("đơn nữ")) {
+      if (divGender == 'female' ||
+          nameLower.contains("đơn nữ") ||
+          descLower.contains("đơn nữ")) {
         chips.add("Đơn Nữ");
-      } else if (divGender == 'female' || nameLower.contains("đôi nữ") || descLower.contains("đôi nữ")) {
+      } else if (divGender == 'female' ||
+          nameLower.contains("đôi nữ") ||
+          descLower.contains("đôi nữ")) {
         chips.add("Đôi Nữ");
       }
       // Check Mixed
-      else if (divGender == 'mixed' || nameLower.contains("đôi nam nữ") || descLower.contains("đôi nam nữ") || nameLower.contains("nam nữ")) {
+      else if (divGender == 'mixed' ||
+          nameLower.contains("đôi nam nữ") ||
+          descLower.contains("đôi nam nữ") ||
+          nameLower.contains("nam nữ")) {
         chips.add("Đôi Nam Nữ");
       }
       // Check Male
       else if (nameLower.contains("đơn nam") || descLower.contains("đơn nam")) {
         chips.add("Đơn Nam");
-      } else if (nameLower.contains("đôi nam") || descLower.contains("đôi nam")) {
+      } else if (nameLower.contains("đôi nam") ||
+          descLower.contains("đôi nam")) {
         chips.add("Đôi Nam");
       }
       // Generic Singles / Doubles
-      else if (nameLower.contains("đôi") || descLower.contains("đôi") || t.format == "doubles" || t.maxPlayersPerTeam == 2) {
-        chips.add(divGender == 'female' ? "Đôi Nữ" : (divGender == 'mixed' ? "Đôi Nam Nữ" : "Đôi Nam"));
-      } else if (nameLower.contains("đơn") || descLower.contains("đơn") || t.format == "singles" || t.maxPlayersPerTeam == 1) {
+      else if (nameLower.contains("đôi") ||
+          descLower.contains("đôi") ||
+          t.format == "doubles" ||
+          t.maxPlayersPerTeam == 2) {
+        chips.add(
+          divGender == 'female'
+              ? "Đôi Nữ"
+              : (divGender == 'mixed' ? "Đôi Nam Nữ" : "Đôi Nam"),
+        );
+      } else if (nameLower.contains("đơn") ||
+          descLower.contains("đơn") ||
+          t.format == "singles" ||
+          t.maxPlayersPerTeam == 1) {
         chips.add(divGender == 'female' ? "Đơn Nữ" : "Đơn Nam");
       }
     }
@@ -89,8 +117,12 @@ class TournamentCardCarousel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final sportLabel = (AppConstants.sportNames[tournament.sport] ?? tournament.sport).toUpperCase();
-    final normalizedStatus = StatusHelper.normalizeTournamentStatus(tournament.status);
+    final sportLabel =
+        (AppConstants.sportNames[tournament.sport] ?? tournament.sport)
+            .toUpperCase();
+    final normalizedStatus = StatusHelper.normalizeTournamentStatus(
+      tournament.status,
+    );
     String statusText = "ĐANG MỞ ĐĂNG KÝ";
     Color statusBg = const Color(0xFF2563EB);
     if (StatusHelper.isTournamentInProgress(normalizedStatus)) {
@@ -133,7 +165,7 @@ class TournamentCardCarousel extends StatelessWidget {
               color: Colors.black.withValues(alpha: 0.12),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: ClipRRect(
@@ -149,14 +181,21 @@ class TournamentCardCarousel extends StatelessWidget {
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: Colors.blue.shade900,
-                        image: tournament.bannerUrl != null && tournament.bannerUrl!.isNotEmpty
-                            ? DecorationImage(image: NetworkImage(tournament.bannerUrl!), fit: BoxFit.cover)
+                        image:
+                            tournament.bannerUrl != null &&
+                                tournament.bannerUrl!.isNotEmpty
+                            ? DecorationImage(
+                                image: NetworkImage(tournament.bannerUrl!),
+                                fit: BoxFit.cover,
+                              )
                             : null,
                       ),
-                      child: tournament.bannerUrl == null || tournament.bannerUrl!.isEmpty
+                      child:
+                          tournament.bannerUrl == null ||
+                              tournament.bannerUrl!.isEmpty
                           ? Center(
                               child: SvgPicture.asset(
-                                "assets/images/vndcsport.svg",
+                                "assets/images/sporto_v1_with_text.svg",
                                 width: 120,
                                 fit: BoxFit.contain,
                               ),
@@ -181,14 +220,21 @@ class TournamentCardCarousel extends StatelessWidget {
                       top: 8,
                       left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           sportLabel,
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -196,14 +242,21 @@ class TournamentCardCarousel extends StatelessWidget {
                       top: 8,
                       right: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: statusBg,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           statusText,
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -221,7 +274,9 @@ class TournamentCardCarousel extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            tournament.name.isNotEmpty ? tournament.name : "(Chưa có tên)",
+                            tournament.name.isNotEmpty
+                                ? tournament.name
+                                : "(Chưa có tên)",
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -237,11 +292,21 @@ class TournamentCardCarousel extends StatelessWidget {
                               runSpacing: 4,
                               children: categoryChips.take(3).map((chipText) {
                                 return Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: colors.textPrimary.withValues(alpha: 0.08),
+                                    color: colors.textPrimary.withValues(
+                                      alpha: 0.08,
+                                    ),
                                     borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(color: colors.textPrimary.withValues(alpha: 0.15), width: 0.5),
+                                    border: Border.all(
+                                      color: colors.textPrimary.withValues(
+                                        alpha: 0.15,
+                                      ),
+                                      width: 0.5,
+                                    ),
                                   ),
                                   child: Text(
                                     chipText,
@@ -258,7 +323,11 @@ class TournamentCardCarousel extends StatelessWidget {
                       ),
                       Row(
                         children: [
-                          Icon(Icons.calendar_today_rounded, color: colors.textMuted, size: 13),
+                          Icon(
+                            Icons.calendar_today_rounded,
+                            color: colors.textMuted,
+                            size: 13,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             "$startDateStr - $endDateStr",
@@ -269,7 +338,11 @@ class TournamentCardCarousel extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Icon(Icons.group_rounded, color: colors.textMuted, size: 14),
+                          Icon(
+                            Icons.group_rounded,
+                            color: colors.textMuted,
+                            size: 14,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             "${tournament.maxTeams} Đội",
@@ -280,11 +353,17 @@ class TournamentCardCarousel extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Icon(Icons.account_tree_rounded, color: colors.textMuted, size: 13),
+                          Icon(
+                            Icons.account_tree_rounded,
+                            color: colors.textMuted,
+                            size: 13,
+                          ),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              AppConstants.bracketTypeNames[tournament.bracketType] ?? tournament.bracketType,
+                              AppConstants.bracketTypeNames[tournament
+                                      .bracketType] ??
+                                  tournament.bracketType,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(

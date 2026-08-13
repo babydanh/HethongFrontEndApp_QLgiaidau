@@ -1,4 +1,4 @@
-﻿import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
@@ -1098,12 +1098,12 @@ class _TournamentTile extends StatelessWidget {
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Padding(
                         padding: const EdgeInsets.all(8),
-                        child: SvgPicture.asset('assets/images/vndcsport.svg', fit: BoxFit.contain),
+                        child: SvgPicture.asset('assets/images/sporto_v1_with_text.svg', fit: BoxFit.contain),
                       ),
                     )
                   : Padding(
                       padding: const EdgeInsets.all(8),
-                      child: SvgPicture.asset('assets/images/vndcsport.svg', fit: BoxFit.contain),
+                      child: SvgPicture.asset('assets/images/sporto_v1_with_text.svg', fit: BoxFit.contain),
                     ),
             ),
             const SizedBox(width: 12),

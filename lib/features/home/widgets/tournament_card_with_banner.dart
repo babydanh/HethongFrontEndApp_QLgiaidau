@@ -22,11 +22,12 @@ class TournamentCardWithBanner extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TournamentCardWithBanner> createState() => _TournamentCardWithBannerState();
+  ConsumerState<TournamentCardWithBanner> createState() =>
+      _TournamentCardWithBannerState();
 }
 
-class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBanner> {
-
+class _TournamentCardWithBannerState
+    extends ConsumerState<TournamentCardWithBanner> {
   String _resolveImageUrl(String? url) {
     if (url == null || url.isEmpty) return "";
     if (url.startsWith("http")) return url;
@@ -65,43 +66,71 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
     final List<String> chips = [];
     if (t.divisions.isNotEmpty) {
       for (var div in t.divisions) {
-        final formatLabel = _getFormatLabel(div.matchType, div.genderRestriction);
-        final label = (div.name.trim() != t.name.trim() && div.name.trim().isNotEmpty && div.name.trim() != 'Nội dung chính')
+        final formatLabel = _getFormatLabel(
+          div.matchType,
+          div.genderRestriction,
+        );
+        final label =
+            (div.name.trim() != t.name.trim() &&
+                div.name.trim().isNotEmpty &&
+                div.name.trim() != 'Nội dung chính')
             ? div.name
             : formatLabel;
         final regCount = div.participantCount;
-        final maxCount = div.maxParticipants != null ? "${div.maxParticipants}" : "-";
-        
+        final maxCount = div.maxParticipants != null
+            ? "${div.maxParticipants}"
+            : "-";
+
         chips.add("$label ($regCount/$maxCount)");
       }
     }
     if (chips.isEmpty) {
       final nameLower = t.name.toLowerCase();
       final descLower = t.description.toLowerCase();
-      
+
       // Safely check gender from divisions if available
-      final divGender = t.divisions.isNotEmpty ? (t.divisions.first.genderRestriction ?? '').toLowerCase() : '';
+      final divGender = t.divisions.isNotEmpty
+          ? (t.divisions.first.genderRestriction ?? '').toLowerCase()
+          : '';
 
       // Check Female
-      if (divGender == 'female' || nameLower.contains("đơn nữ") || descLower.contains("đơn nữ")) {
+      if (divGender == 'female' ||
+          nameLower.contains("đơn nữ") ||
+          descLower.contains("đơn nữ")) {
         chips.add("Đơn Nữ");
-      } else if (divGender == 'female' || nameLower.contains("đôi nữ") || descLower.contains("đôi nữ")) {
+      } else if (divGender == 'female' ||
+          nameLower.contains("đôi nữ") ||
+          descLower.contains("đôi nữ")) {
         chips.add("Đôi Nữ");
       }
       // Check Mixed
-      else if (divGender == 'mixed' || nameLower.contains("đôi nam nữ") || descLower.contains("đôi nam nữ") || nameLower.contains("nam nữ")) {
+      else if (divGender == 'mixed' ||
+          nameLower.contains("đôi nam nữ") ||
+          descLower.contains("đôi nam nữ") ||
+          nameLower.contains("nam nữ")) {
         chips.add("Đôi Nam Nữ");
       }
       // Check Male
       else if (nameLower.contains("đơn nam") || descLower.contains("đơn nam")) {
         chips.add("Đơn Nam");
-      } else if (nameLower.contains("đôi nam") || descLower.contains("đôi nam")) {
+      } else if (nameLower.contains("đôi nam") ||
+          descLower.contains("đôi nam")) {
         chips.add("Đôi Nam");
       }
       // Generic Singles / Doubles
-      else if (nameLower.contains("đôi") || descLower.contains("đôi") || t.format == "doubles" || t.maxPlayersPerTeam == 2) {
-        chips.add(divGender == 'female' ? "Đôi Nữ" : (divGender == 'mixed' ? "Đôi Nam Nữ" : "Đôi Nam"));
-      } else if (nameLower.contains("đơn") || descLower.contains("đơn") || t.format == "singles" || t.maxPlayersPerTeam == 1) {
+      else if (nameLower.contains("đôi") ||
+          descLower.contains("đôi") ||
+          t.format == "doubles" ||
+          t.maxPlayersPerTeam == 2) {
+        chips.add(
+          divGender == 'female'
+              ? "Đôi Nữ"
+              : (divGender == 'mixed' ? "Đôi Nam Nữ" : "Đôi Nam"),
+        );
+      } else if (nameLower.contains("đơn") ||
+          descLower.contains("đơn") ||
+          t.format == "singles" ||
+          t.maxPlayersPerTeam == 1) {
         chips.add(divGender == 'female' ? "Đơn Nữ" : "Đơn Nam");
       }
     }
@@ -120,8 +149,10 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
     final startMonth = start.month.toString().padLeft(2, '0');
     final endMonth = end.month.toString().padLeft(2, '0');
     final isSameMonth = startMonth == endMonth;
-    final monthText = isSameMonth ? 'Thg $startMonth' : 'Thg $startMonth - Thg $endMonth';
-    
+    final monthText = isSameMonth
+        ? 'Thg $startMonth'
+        : 'Thg $startMonth - Thg $endMonth';
+
     return Container(
       constraints: const BoxConstraints(minWidth: 70),
       child: Column(
@@ -175,22 +206,29 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
         ? [...categoryChips.take(1), '+${categoryChips.length - 1} nội dung']
         : categoryChips;
 
-    final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl ?? widget.tournament.creatorAvatarUrl);
+    final resolvedLogoUrl = _resolveImageUrl(
+      widget.tournament.logoUrl ?? widget.tournament.creatorAvatarUrl,
+    );
     final hasLogo = resolvedLogoUrl.isNotEmpty;
     return GestureDetector(
       onTap: widget.onTap,
       child: Container(
-        margin: widget.margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin:
+            widget.margin ??
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: colors.bgCard,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: colors.border.withValues(alpha: 0.7), width: 1),
+          border: Border.all(
+            color: colors.border.withValues(alpha: 0.7),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: ClipRRect(
@@ -216,12 +254,15 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                                 gradient: LinearGradient(
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
-                                  colors: [AppTheme.primary, AppTheme.primaryDark],
+                                  colors: [
+                                    AppTheme.primary,
+                                    AppTheme.primaryDark,
+                                  ],
                                 ),
                               ),
                               child: Center(
                                 child: SvgPicture.asset(
-                                  "assets/images/vndcsport.svg",
+                                  "assets/images/sporto_v1_with_text.svg",
                                   width: 130,
                                   fit: BoxFit.contain,
                                 ),
@@ -234,12 +275,15 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
-                                colors: [AppTheme.primary, AppTheme.primaryDark],
+                                colors: [
+                                  AppTheme.primary,
+                                  AppTheme.primaryDark,
+                                ],
                               ),
                             ),
                             child: Center(
                               child: SvgPicture.asset(
-                                "assets/images/vndcsport.svg",
+                                "assets/images/sporto_v1_with_text.svg",
                                 width: 130,
                                 fit: BoxFit.contain,
                               ),
@@ -249,7 +293,9 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                         Positioned(
                           top: 10,
                           left: 10,
-                          child: StatusBadge(statusKey: widget.tournament.status),
+                          child: StatusBadge(
+                            statusKey: widget.tournament.status,
+                          ),
                         ),
                       ],
                     ),
@@ -263,7 +309,7 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                       children: [
                         // Left Column: Date Block
                         _buildDateBlock(context, colors),
-                        
+
                         // Vertical divider
                         Container(
                           width: 1,
@@ -271,7 +317,7 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                           margin: const EdgeInsets.symmetric(horizontal: 10),
                           color: colors.border.withValues(alpha: 0.6),
                         ),
-                        
+
                         // Right Column: Details
                         Expanded(
                           child: Column(
@@ -281,7 +327,9 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                               Row(
                                 children: [
                                   Text(
-                                    _getSportEmojiAndLabel(widget.tournament.sport),
+                                    _getSportEmojiAndLabel(
+                                      widget.tournament.sport,
+                                    ),
                                     style: TextStyle(
                                       fontSize: 10.5,
                                       fontWeight: FontWeight.w800,
@@ -292,11 +340,17 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                                   if (widget.tournament.isRanked != true) ...[
                                     const SizedBox(width: 6),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 5,
+                                        vertical: 1,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: colors.bgSurface,
                                         borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(color: colors.border, width: 0.5),
+                                        border: Border.all(
+                                          color: colors.border,
+                                          width: 0.5,
+                                        ),
                                       ),
                                       child: Text(
                                         'KHÔNG TÍNH ELO',
@@ -311,11 +365,17 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                                   if (widget.tournament.isRanked == true) ...[
                                     const SizedBox(width: 6),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 5,
+                                        vertical: 1,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFFFFBEB),
                                         borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(color: const Color(0xFFFDE68A), width: 0.5),
+                                        border: Border.all(
+                                          color: const Color(0xFFFDE68A),
+                                          width: 0.5,
+                                        ),
                                       ),
                                       child: const Text(
                                         "XẾP HẠNG ELO",
@@ -341,16 +401,28 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              if (widget.tournament.locationAddress != null && widget.tournament.locationAddress!.trim().isNotEmpty) ...[
+                              if (widget.tournament.locationAddress != null &&
+                                  widget.tournament.locationAddress!
+                                      .trim()
+                                      .isNotEmpty) ...[
                                 const SizedBox(height: 3),
                                 Row(
                                   children: [
-                                    Icon(Icons.location_on_rounded, size: 12, color: colors.textMuted),
+                                    Icon(
+                                      Icons.location_on_rounded,
+                                      size: 12,
+                                      color: colors.textMuted,
+                                    ),
                                     const SizedBox(width: 3),
                                     Expanded(
                                       child: Text(
-                                        widget.tournament.locationAddress!.trim(),
-                                        style: TextStyle(fontSize: 10.5, color: colors.textMuted, fontWeight: FontWeight.w500),
+                                        widget.tournament.locationAddress!
+                                            .trim(),
+                                        style: TextStyle(
+                                          fontSize: 10.5,
+                                          color: colors.textMuted,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -366,7 +438,8 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                                 crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
                                   Text(
-                                    widget.tournament.entryFee == null || widget.tournament.entryFee == 0
+                                    widget.tournament.entryFee == null ||
+                                            widget.tournament.entryFee == 0
                                         ? "Miễn phí"
                                         : "${NumberFormat.decimalPattern().format(widget.tournament.entryFee)} đ",
                                     style: const TextStyle(
@@ -383,32 +456,51 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                                     ),
                                   ),
                                   if (displayChips.isNotEmpty)
-                                    ...displayChips.map((chipText) => Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: colors.bgSurface,
-                                        borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(color: colors.border.withValues(alpha: 0.5)),
-                                      ),
-                                      child: Text(
-                                        chipText,
-                                        style: TextStyle(
-                                          fontSize: 9.5,
-                                          fontWeight: FontWeight.bold,
-                                          color: colors.textSecondary,
+                                    ...displayChips.map(
+                                      (chipText) => Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: colors.bgSurface,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                          border: Border.all(
+                                            color: colors.border.withValues(
+                                              alpha: 0.5,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          chipText,
+                                          style: TextStyle(
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.bold,
+                                            color: colors.textSecondary,
+                                          ),
                                         ),
                                       ),
-                                    ))
+                                    )
                                   else
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: colors.bgSurface,
                                         borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+                                        border: Border.all(
+                                          color: colors.border.withValues(
+                                            alpha: 0.5,
+                                          ),
+                                        ),
                                       ),
                                       child: Text(
-                                        widget.tournament.format == "single_elimination"
+                                        widget.tournament.format ==
+                                                "single_elimination"
                                             ? "Loại trực tiếp"
                                             : "Vòng tròn",
                                         style: TextStyle(
@@ -457,7 +549,7 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                               color: AppTheme.primary.withValues(alpha: 0.1),
                               padding: const EdgeInsets.all(8),
                               child: SvgPicture.asset(
-                                "assets/images/vndcsport.svg",
+                                "assets/images/sporto_v1_with_text.svg",
                                 fit: BoxFit.contain,
                               ),
                             ),
@@ -466,7 +558,7 @@ class _TournamentCardWithBannerState extends ConsumerState<TournamentCardWithBan
                             color: AppTheme.primary.withValues(alpha: 0.1),
                             padding: const EdgeInsets.all(8),
                             child: SvgPicture.asset(
-                              "assets/images/vndcsport.svg",
+                              "assets/images/sporto_v1_with_text.svg",
                               fit: BoxFit.contain,
                             ),
                           ),

@@ -68,7 +68,8 @@ class _LiveTournamentWithMatchesCardState
           if (isT1Tbd && isT2Tbd) return false;
 
           final status = m.status.toUpperCase();
-          final isDone = m.isCompleted ||
+          final isDone =
+              m.isCompleted ||
               status == 'COMPLETED' ||
               status == 'FINISHED' ||
               status == 'DONE' ||
@@ -76,7 +77,11 @@ class _LiveTournamentWithMatchesCardState
               m.completedAt != null ||
               m.isByeMatch ||
               m.isBye;
-          final isOngoing = m.isLive || status == 'ONGOING' || status == 'LIVE' || status == 'IN_PROGRESS';
+          final isOngoing =
+              m.isLive ||
+              status == 'ONGOING' ||
+              status == 'LIVE' ||
+              status == 'IN_PROGRESS';
 
           if (widget.filterStatus == 'live') return isOngoing;
           if (widget.filterStatus == 'completed') return isDone;
@@ -158,8 +163,6 @@ class _LiveTournamentWithMatchesCardState
           ];
         }
 
-
-
         // Calculate total pages (each page shows up to 4 matches)
         final totalPages = (displayMatches.length / _pageSize).ceil();
         final safePageIndex = _currentMatchIndex.clamp(0, totalPages - 1);
@@ -214,7 +217,7 @@ class _LiveTournamentWithMatchesCardState
                                       Padding(
                                         padding: const EdgeInsets.all(8.0),
                                         child: SvgPicture.asset(
-                                          "assets/images/vndcsport.svg",
+                                          "assets/images/sporto_v1_with_text.svg",
                                           fit: BoxFit.contain,
                                         ),
                                       ),
@@ -222,7 +225,7 @@ class _LiveTournamentWithMatchesCardState
                               : Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: SvgPicture.asset(
-                                    "assets/images/vndcsport.svg",
+                                    "assets/images/sporto_v1_with_text.svg",
                                     fit: BoxFit.contain,
                                   ),
                                 ),
@@ -501,7 +504,10 @@ class _LiveTournamentWithMatchesCardState
                 ),
                 if (bracketText.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF3E8FF),
                       borderRadius: BorderRadius.circular(4),
@@ -548,7 +554,10 @@ class _LiveTournamentWithMatchesCardState
                     const SizedBox(width: 8),
                     if (isByeMatch && isT2Tbd && !isT1Tbd)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFDCFCE7),
                           borderRadius: BorderRadius.circular(4),
@@ -565,14 +574,25 @@ class _LiveTournamentWithMatchesCardState
                     else
                       Container(
                         constraints: const BoxConstraints(minWidth: 28),
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
+                          color:
+                              (match.sets.isNotEmpty
+                                  ? match.sets.last.score1 >
+                                        match.sets.last.score2
+                                  : match.score1 > match.score2)
                               ? AppTheme.primary.withValues(alpha: 0.12)
                               : colors.bgSurface,
                           borderRadius: BorderRadius.circular(5),
                           border: Border.all(
-                            color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
+                            color:
+                                (match.sets.isNotEmpty
+                                    ? match.sets.last.score1 >
+                                          match.sets.last.score2
+                                    : match.score1 > match.score2)
                                 ? AppTheme.primary.withValues(alpha: 0.4)
                                 : colors.border,
                           ),
@@ -583,7 +603,11 @@ class _LiveTournamentWithMatchesCardState
                           style: TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w900,
-                            color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
+                            color:
+                                (match.sets.isNotEmpty
+                                    ? match.sets.last.score1 >
+                                          match.sets.last.score2
+                                    : match.score1 > match.score2)
                                 ? AppTheme.primary
                                 : colors.textPrimary,
                           ),
@@ -618,7 +642,10 @@ class _LiveTournamentWithMatchesCardState
                     const SizedBox(width: 8),
                     if (isByeMatch && isT1Tbd && !isT2Tbd)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFDCFCE7),
                           borderRadius: BorderRadius.circular(4),
@@ -635,14 +662,25 @@ class _LiveTournamentWithMatchesCardState
                     else
                       Container(
                         constraints: const BoxConstraints(minWidth: 28),
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
+                          color:
+                              (match.sets.isNotEmpty
+                                  ? match.sets.last.score2 >
+                                        match.sets.last.score1
+                                  : match.score2 > match.score1)
                               ? AppTheme.primary.withValues(alpha: 0.12)
                               : colors.bgSurface,
                           borderRadius: BorderRadius.circular(5),
                           border: Border.all(
-                            color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
+                            color:
+                                (match.sets.isNotEmpty
+                                    ? match.sets.last.score2 >
+                                          match.sets.last.score1
+                                    : match.score2 > match.score1)
                                 ? AppTheme.primary.withValues(alpha: 0.4)
                                 : colors.border,
                           ),
@@ -653,7 +691,11 @@ class _LiveTournamentWithMatchesCardState
                           style: TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w900,
-                            color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
+                            color:
+                                (match.sets.isNotEmpty
+                                    ? match.sets.last.score2 >
+                                          match.sets.last.score1
+                                    : match.score2 > match.score1)
                                 ? AppTheme.primary
                                 : colors.textPrimary,
                           ),
@@ -719,12 +761,19 @@ class _LiveTournamentWithMatchesCardState
                   },
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: isCheered ? const Color(0xFFFEF2F2) : colors.bgSurface,
+                      color: isCheered
+                          ? const Color(0xFFFEF2F2)
+                          : colors.bgSurface,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isCheered ? const Color(0xFFFECACA) : colors.border,
+                        color: isCheered
+                            ? const Color(0xFFFECACA)
+                            : colors.border,
                       ),
                     ),
                     child: Row(
