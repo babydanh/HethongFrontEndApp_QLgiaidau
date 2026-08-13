@@ -411,13 +411,24 @@ class ApiTournamentRepository implements ITournamentRepository {
     final List<Tournament> all = [];
     String? cursor;
     for (var page = 1; page <= _publicMaxPages; page++) {
-        final response = await _dioClient.dio.get(
-        '/tournaments/public',
-        queryParameters: {
-          'limit': _publicPageSize,
-          if (cursor != null) 'cursor': cursor,
-        },
-      );
+      dynamic response;
+      try {
+        response = await _dioClient.dio.get(
+          '/tournaments/public',
+          queryParameters: {
+            'limit': _publicPageSize,
+            if (cursor != null) 'cursor': cursor,
+          },
+        );
+      } catch (_) {
+        response = await _dioClient.dio.get(
+          '/tournaments',
+          queryParameters: {
+            'limit': _publicPageSize,
+            if (cursor != null) 'cursor': cursor,
+          },
+        );
+      }
       if (response.statusCode != 200) break;
       final parsed = _parseTournamentList(response.data);
       all.addAll(parsed);
@@ -427,7 +438,7 @@ class ApiTournamentRepository implements ITournamentRepository {
           ? Map<String, dynamic>.from(raw['meta'] as Map)
           : const <String, dynamic>{};
       cursor = meta['nextCursor']?.toString();
-      if (cursor == null || cursor!.isEmpty || meta['hasMore'] != true) break;
+      if (cursor == null || cursor.isEmpty || meta['hasMore'] != true) break;
     }
     return all;
   }
@@ -444,10 +455,13 @@ class ApiTournamentRepository implements ITournamentRepository {
         retryDelay = const Duration(seconds: 5);
         yield value;
         await Future<void>.delayed(const Duration(seconds: 45));
-      } catch (_) {
-        // Keep the last successful snapshot visible during a temporary outage.
-        // Do not turn a network error into a misleading empty state.
-        if (lastGoodValue != null) yield lastGoodValue!;
+      } catch (e, stack) {
+        _log.error('Error fetching tournaments in watchAll', e, stack);
+        if (lastGoodValue != null) {
+          yield lastGoodValue;
+        } else {
+          yield const <Tournament>[];
+        }
         await Future<void>.delayed(retryDelay);
         retryDelay = Duration(
           seconds: (retryDelay.inSeconds * 2).clamp(5, 60),
