@@ -1,7 +1,11 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_composer.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_post_card.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/tag_assign_sheet.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -26,6 +30,8 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
   final _composerController = TextEditingController();
   final _scrollController = ScrollController();
   final _selectedImages = <String>[];
+  final _mentionIds = <String>[];
+  String? _mentionQuery;
 
   @override
   void initState() {
@@ -53,11 +59,16 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
 
   Future<void> _submitPost() async {
     final notifier = ref.read(communityFeedProvider(widget.communityId).notifier);
-    final success = await notifier.createPost(text: _composerController.text, mediaUrls: List.unmodifiable(_selectedImages));
+    final success = await notifier.createPost(
+      text: _composerController.text,
+      mediaUrls: List.unmodifiable(_selectedImages),
+      mentions: List.unmodifiable(_mentionIds),
+    );
     if (!mounted) return;
     if (success) {
       _composerController.clear();
       _selectedImages.clear();
+      _mentionIds.clear();
       final createdPost = ref.read(communityFeedProvider(widget.communityId)).posts.first;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -69,6 +80,25 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _openMemberTagEditor(CommunityMemberModel member) async {
+    await TagAssignSheet.show(
+      context,
+      memberName: member.userFullName?.trim().isNotEmpty == true
+          ? member.userFullName!.trim()
+          : (member.userEmail?.split('@').first ?? 'Thành viên'),
+      currentTags: member.tags,
+      onSave: (tags) async {
+        await ref.read(communityRepositoryProvider).updateMemberTags(
+              widget.communityId,
+              member.userId.isNotEmpty ? member.userId : member.id,
+              tags,
+            );
+        ref.invalidate(communityMembersProvider(widget.communityId));
+        ref.invalidate(communityMemberSearchProvider);
+      },
+    );
   }
 
   Future<void> _pickImage() async {
@@ -86,6 +116,20 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(communityFeedProvider(widget.communityId));
+    final membership = ref.watch(myCommunityMembershipProvider(widget.communityId)).value;
+    final isPlatformAdmin = ref.watch(authProvider).isAdmin;
+    final role = membership?.role.toUpperCase();
+    final canManageMemberTags = isPlatformAdmin ||
+        (membership?.status.toUpperCase() == 'JOINED' &&
+            (role == 'OWNER' || role == 'MODERATOR'));
+    final searchState = _mentionQuery == null
+        ? null
+        : ref.watch(
+            communityMemberSearchProvider((
+              communityId: widget.communityId,
+              query: _mentionQuery!,
+            )),
+          );
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.communityName),
@@ -111,6 +155,25 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
               onSubmit: _submitPost,
               onPickImage: _pickImage,
               imageCount: _selectedImages.length,
+              mentionCandidates: searchState?.value ?? const [],
+              isSearchingMembers: searchState?.isLoading ?? false,
+              memberSearchError: searchState?.hasError == true
+                  ? 'Không thể tìm thành viên'
+                  : null,
+              onMentionQueryChanged: (query) {
+                if (_mentionQuery == query) return;
+                setState(() => _mentionQuery = query);
+              },
+              onMentionsChanged: (ids) => _mentionIds
+                ..clear()
+                ..addAll(ids),
+              onMentionWarning: (message) =>
+                  ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(message)),
+              ),
+              canManageMemberTags: canManageMemberTags,
+              onAssignMemberTags:
+                  canManageMemberTags ? _openMemberTagEditor : null,
             ),
             const SizedBox(height: AppTheme.spacingMD),
             if (state.errorMessage != null) _FeedError(message: state.errorMessage!, onRetry: () => ref.read(communityFeedProvider(widget.communityId).notifier).loadInitial()),

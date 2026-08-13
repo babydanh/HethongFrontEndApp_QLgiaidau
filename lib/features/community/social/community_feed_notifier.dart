@@ -62,7 +62,12 @@ class CommunityFeedNotifier extends Notifier<CommunityFeedState> {
     }
   }
 
-  Future<bool> createPost({required String text, List<String> mediaUrls = const [], List<String> topicTags = const []}) async {
+  Future<bool> createPost({
+    required String text,
+    List<String> mediaUrls = const [],
+    List<String> topicTags = const [],
+    List<String> mentions = const [],
+  }) async {
     final trimmed = text.trim();
     if ((trimmed.isEmpty && mediaUrls.isEmpty) || state.isSubmitting) return false;
     state = state.copyWith(isSubmitting: true, clearError: true);
@@ -72,6 +77,7 @@ class CommunityFeedNotifier extends Notifier<CommunityFeedState> {
         text: trimmed,
         mediaUrls: mediaUrls,
         topicTags: topicTags,
+        mentions: mentions,
       );
       state = state.copyWith(posts: [post, ...state.posts], isSubmitting: false, clearError: true);
       return true;

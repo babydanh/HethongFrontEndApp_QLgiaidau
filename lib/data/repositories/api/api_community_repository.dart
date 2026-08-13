@@ -119,12 +119,19 @@ class ApiCommunityRepository implements ICommunityRepository {
     String communityId, {
     int limit = 50,
     String? status,
+    String? search,
+    bool mentionableOnly = false,
   }) async {
     _log.info('Lấy thành viên CLB: $communityId');
     try {
       final response = await _dioClient.dio.get(
         '/communities/$communityId/members',
-        queryParameters: {'limit': limit, 'status': ?status},
+        queryParameters: {
+          'limit': limit,
+          if (status != null && status.isNotEmpty) 'status': status,
+          if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+          if (mentionableOnly) 'mentionable': true,
+        },
       );
       if (response.statusCode == 200) {
         final raw = response.data;

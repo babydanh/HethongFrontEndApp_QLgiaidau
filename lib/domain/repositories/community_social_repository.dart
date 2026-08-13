@@ -14,6 +14,7 @@ abstract class ICommunitySocialRepository {
     required String text,
     List<String> mediaUrls = const [],
     List<String> topicTags = const [],
+    List<String> mentions = const [],
   });
 
   Future<List<CommunityCommentModel>> getComments(

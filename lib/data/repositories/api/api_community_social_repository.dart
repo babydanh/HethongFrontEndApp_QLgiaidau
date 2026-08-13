@@ -52,6 +52,7 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
     required String text,
     List<String> mediaUrls = const [],
     List<String> topicTags = const [],
+    List<String> mentions = const [],
   }) async {
     try {
       final response = await _dioClient.dio.post(
@@ -60,6 +61,7 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
           'body': text,
           if (mediaUrls.isNotEmpty) 'mediaUrls': mediaUrls,
           if (topicTags.isNotEmpty) 'topics': topicTags,
+          if (mentions.isNotEmpty) 'mentions': mentions,
         },
         options: Options(headers: {'Idempotency-Key': Uuid().v4()}),
       );

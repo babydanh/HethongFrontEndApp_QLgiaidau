@@ -18,6 +18,8 @@ abstract class ICommunityRepository {
     String communityId, {
     int limit = 50,
     String? status,
+    String? search,
+    bool mentionableOnly = false,
   });
   Future<bool> joinCommunity(
     String communityId, {

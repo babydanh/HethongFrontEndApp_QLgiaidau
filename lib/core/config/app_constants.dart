@@ -44,6 +44,13 @@ class AppConstants {
   static const String memberTagRemove = 'Xoá tag';
   static const String memberTagSaveError =
       'Không thể lưu tag. Vui lòng thử lại.';
+  static const List<String> memberTagSuggestions = [
+    'Cây hài',
+    'Kèo thơm',
+    'MVP tuần',
+    'Đang lên form',
+    'Kèo khó',
+  ];
   static String memberTagCounter(int used, int max) =>
       'Đã dùng $used/$max tag.';
 

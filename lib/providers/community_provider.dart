@@ -54,6 +54,38 @@ final communityMembersProvider = FutureProvider.family<List<CommunityMemberModel
   return repo.getMembers(communityId);
 });
 
+/// Bounded, server-side member lookup for @mentions.  It deliberately never
+/// downloads an entire large club just to populate a composer popup.
+typedef CommunityMemberSearch = ({String communityId, String query});
+
+final communityMemberSearchProvider =
+    FutureProvider.family<List<CommunityMemberModel>, CommunityMemberSearch>((ref, request) async {
+      final repo = ref.watch(communityRepositoryProvider);
+      return repo.getMembers(
+        request.communityId,
+        search: request.query,
+        limit: 20,
+        mentionableOnly: true,
+      );
+    });
+
+/// Membership of the signed-in user.  Social UI uses this small endpoint for
+/// capability checks instead of scanning the member directory.
+final myCommunityMembershipProvider =
+    FutureProvider.family<CommunityMemberModel?, String>((ref, communityId) async {
+      final repo = ref.watch(communityRepositoryProvider);
+      final membership = await repo.getMyMembership(communityId);
+      if (membership == null) return null;
+      return CommunityMemberModel(
+        id: membership['memberId']?.toString() ?? '',
+        userId: membership['userId']?.toString() ?? '',
+        communityId: communityId,
+        role: membership['role']?.toString() ?? 'MEMBER',
+        status: membership['status']?.toString() ?? 'JOINED',
+        joinedAt: membership['joinedAt']?.toString() ?? '',
+      );
+    });
+
 /// Provider danh sách giải đấu trong CLB
 final communityTournamentsProvider = FutureProvider.family<List<CommunityTournamentModel>, String>((ref, communityId) async {
   final repo = ref.watch(communityRepositoryProvider);

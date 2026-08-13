@@ -88,6 +88,11 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
     });
   }
 
+  void _addSuggestedTag(String tag) {
+    _controller.text = tag;
+    _addTag();
+  }
+
   Future<void> _save() async {
     if (_saving) return;
     setState(() => _saving = true);
@@ -213,6 +218,25 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
                 }).toList(),
               ),
             const SizedBox(height: 12),
+            if (!maxReached)
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: AppConstants.memberTagSuggestions
+                    .where(
+                      (tag) => !_tags.any(
+                        (current) => current.toLowerCase() == tag.toLowerCase(),
+                      ),
+                    )
+                    .map(
+                      (tag) => ActionChip(
+                        label: Text(tag),
+                        onPressed: _saving ? null : () => _addSuggestedTag(tag),
+                      ),
+                    )
+                    .toList(growable: false),
+              ),
+            if (!maxReached) const SizedBox(height: 12),
             // Input thêm tag
             Row(
               children: [
@@ -222,9 +246,7 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
                     enabled: !_saving && !maxReached,
                     maxLength: AppConstants.memberTagMaxLength + 8,
                     onSubmitted: (_) => _addTag(),
-                    onChanged: (_) {
-                      if (_error != null) setState(() => _error = null);
-                    },
+                    onChanged: (_) => setState(() => _error = null),
                     decoration: InputDecoration(
                       hintText: maxReached
                           ? AppConstants.memberTagMaxReached
