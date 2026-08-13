@@ -229,13 +229,13 @@ class _FallbackBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return SvgPicture.network(
-      "https://giaidau.vnvar.com/vndcsport.svg",
+                      "https://sporto.asia/sporto_v1.svg",
       fit: BoxFit.contain,
       placeholderBuilder: (_) => Container(
         color: const Color(0xFF1E293B),
         child: Center(
           child: Text(
-            l10n.Sporto,
+            l10n.sporto,
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w900,
@@ -572,7 +572,7 @@ class _FallbackLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SvgPicture.network(
-      "https://giaidau.vnvar.com/vndcsport.svg",
+                      "https://sporto.asia/sporto_v1.svg",
       fit: BoxFit.contain,
       placeholderBuilder: (_) => Icon(Icons.emoji_events, size: size * 0.5),
     );
@@ -640,13 +640,13 @@ class _TournamentBannerState extends State<TournamentBanner> {
               color: colors.bgCard,
               child: images.isEmpty
                   ? SvgPicture.network(
-                      "https://giaidau.vnvar.com/vndcsport.svg",
+                                      "https://sporto.asia/sporto_v1.svg",
                       fit: BoxFit.contain,
                       placeholderBuilder: (_) => Container(
                         color: const Color(0xFF1E293B),
                         child: Center(
                           child: Text(
-                            l10n.Sporto,
+                            l10n.sporto,
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.w900,
@@ -674,13 +674,13 @@ class _TournamentBannerState extends State<TournamentBanner> {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return SvgPicture.network(
-                              "https://giaidau.vnvar.com/vndcsport.svg",
+                                              "https://sporto.asia/sporto_v1.svg",
                               fit: BoxFit.contain,
                               placeholderBuilder: (_) => Container(
                                 color: const Color(0xFF1E293B),
                                 child: Center(
                                   child: Text(
-                                    l10n.Sporto,
+                                    l10n.sporto,
                                     style: TextStyle(
                                       fontSize: 28,
                                       fontWeight: FontWeight.w900,

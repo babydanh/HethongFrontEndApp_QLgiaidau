@@ -1280,11 +1280,11 @@ abstract class AppLocalizations {
   /// **'Chưa có ảnh gallery'**
   String get noGalleryImages;
 
-  /// No description provided for @Sporto.
+  /// No description provided for @sporto.
   ///
   /// In vi, this message translates to:
   /// **'Sporto'**
-  String get Sporto;
+  String get sporto;
 
   /// No description provided for @registrationClosedTag.
   ///

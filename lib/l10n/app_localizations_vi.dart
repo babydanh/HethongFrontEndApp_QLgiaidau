@@ -604,7 +604,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get noGalleryImages => 'Chưa có ảnh gallery';
 
   @override
-  String get Sporto => 'Sporto';
+  String get sporto => 'Sporto';
 
   @override
   String get registrationClosedTag => 'ĐÃ ĐÓNG ĐĂNG KÝ';
