@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "vn.vnsport.quanlygiaidau"
+    namespace = "asia.sporto.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -36,7 +36,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "vn.vnsport.quanlygiaidau"
+        applicationId = "asia.sporto.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
