@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -483,12 +483,6 @@ class _FallbackSportoLogo extends StatelessWidget {
               fontSize: 8,
               fontWeight: FontWeight.w900,
               color: Colors.white70,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
             ),
           ),
         ),
