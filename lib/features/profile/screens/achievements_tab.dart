@@ -383,7 +383,7 @@ class _AchievementCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Real Tournament Logo Image or VNDCSPORT fallback (Circular Logo)
+          // Real Tournament Logo Image or SPORTO fallback (Circular Logo)
           Container(
             width: 40,
             height: 40,
@@ -399,9 +399,9 @@ class _AchievementCard extends StatelessWidget {
                     width: 40,
                     height: 40,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const _FallbackVndcLogo(),
+                    errorBuilder: (context, error, stackTrace) => const _FallbackSportoLogo(),
                   )
-                : const _FallbackVndcLogo(),
+                : const _FallbackSportoLogo(),
           ),
           const SizedBox(width: 12),
 
@@ -463,8 +463,8 @@ class _AchievementCard extends StatelessWidget {
   }
 }
 
-class _FallbackVndcLogo extends StatelessWidget {
-  const _FallbackVndcLogo();
+class _FallbackSportoLogo extends StatelessWidget {
+  const _FallbackSportoLogo();
 
   @override
   Widget build(BuildContext context) {
@@ -472,17 +472,23 @@ class _FallbackVndcLogo extends StatelessWidget {
       color: const Color(0xFF1E293B),
       padding: const EdgeInsets.all(4),
       child: Center(
-        child: SvgPicture.network(
-          "https://sporto.asia/sporto_v1_with_text.svg",
+        child: Image.asset(
+          "assets/images/sporto_v1_with_text.png",
           fit: BoxFit.contain,
           width: 24,
           height: 24,
-          placeholderBuilder: (_) => const Text(
-            "VNDC",
+          errorBuilder: (_, __, ___) => const Text(
+            "SPORTO",
             style: TextStyle(
-              fontSize: 9,
+              fontSize: 8,
               fontWeight: FontWeight.w900,
               color: Colors.white70,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
             ),
           ),
         ),

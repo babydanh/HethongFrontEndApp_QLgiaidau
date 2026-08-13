@@ -1852,13 +1852,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ? Image.network(
               url,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _defaultVndcLogo(),
+              errorBuilder: (_, __, ___) => _defaultSportoLogo(),
             )
-          : _defaultVndcLogo(),
+          : _defaultSportoLogo(),
     );
   }
 
-  Widget _defaultVndcLogo() {
+  Widget _defaultSportoLogo() {
     return Padding(
       padding: const EdgeInsets.all(7),
       child: Image.asset(
@@ -2199,7 +2199,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             children: [
-              // Logo giải đấu thật hoặc vndcsport.svg
+              // Logo giải đấu thật hoặc SportO logo
               _buildTournamentLogo(logoUrl, bannerUrl),
               const SizedBox(width: 12),
               Expanded(
