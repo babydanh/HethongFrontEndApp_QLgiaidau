@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key><string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleDisplayName</key><string>Sporto</string>
+	<key>CFBundleDisplayName</key><string>SportO</string>
 	<key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
-	<key>CFBundleName</key><string>Sporto</string>
+	<key>CFBundleName</key><string>SportO</string>
 	<key>CFBundlePackageType</key><string>APPL</string>
 	<key>CFBundleShortVersionString</key><string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key><string>????</string>
