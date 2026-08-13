@@ -420,11 +420,6 @@ class _LiveTournamentWithMatchesCardState
         match.team2Name.trim().toUpperCase() == 'BYE';
     final isByeMatch = match.isBye || isT1Tbd || isT2Tbd;
 
-    final statusText = match.isLive
-        ? 'ĐANG DIỄN RA'
-        : match.isCompleted
-        ? 'ĐÃ HOÀN THÀNH'
-        : 'SẮP DIỄN RA';
     final bracketText =
         match.stageName ??
         (match.bracketPosition.bracket == 'losers'
@@ -481,72 +476,29 @@ class _LiveTournamentWithMatchesCardState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Top Badges Row ──
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Left Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: match.isLive
-                        ? const Color(0xFFFEF2F2)
-                        : (match.isCompleted
-                              ? const Color(0xFFDCFCE7)
-                              : const Color(0xFFE0F2FE)),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        statusText,
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w800,
-                          color: match.isLive
-                              ? const Color(0xFFDC2626)
-                              : (match.isCompleted
-                                    ? const Color(0xFF16A34A)
-                                    : const Color(0xFF0284C7)),
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                      if (match.isLive) ...[
-                        const SizedBox(width: 5),
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFDC2626),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-
-                // Right Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            // ── Top Bracket Badge Row (Right Aligned & Compact) ──
+            if (bracketText.isNotEmpty)
+              Align(
+                alignment: Alignment.centerRight,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF3E8FF),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     bracketText,
                     style: const TextStyle(
-                      fontSize: 10.5,
+                      fontSize: 9.5,
                       fontWeight: FontWeight.w800,
                       color: Color(0xFF9333EA),
+                      letterSpacing: 0.2,
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
 
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
 
             // ── Teams & Score Section ──
             Padding(
