@@ -457,327 +457,306 @@ class _LiveTournamentWithMatchesCardState
     return GestureDetector(
       onTap: () => context.push('/live/${match.id}'),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: colors.bgCard,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: colors.border.withValues(alpha: 0.6),
-            width: 1.5,
+            width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Top Bracket Badge Row (Right Aligned & Compact) ──
-            if (bracketText.isNotEmpty)
-              Align(
-                alignment: Alignment.centerRight,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3E8FF),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    bracketText,
-                    style: const TextStyle(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF9333EA),
-                      letterSpacing: 0.2,
+            // ── Top Header Row: Stage Tag & Sport ──
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.sports_handball_rounded,
+                      size: 12,
+                      color: colors.textMuted,
                     ),
-                  ),
+                    const SizedBox(width: 4),
+                    Text(
+                      sportText,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textMuted,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-
-            const SizedBox(height: 10),
-
-            // ── Teams & Score Section ──
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Team Names & Scores Column
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Team 1 Row
-                        Row(
-                          children: [
-                            _DoubleAvatarWidget(
-                              initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'NM',
-                              initial2: t1Initials.length > 1 ? t1Initials[1] : '',
-                              color: const Color(0xFF0284C7),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                match.team1Name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: colors.textPrimary,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            if (isByeMatch && isT2Tbd && !isT1Tbd)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFDCFCE7),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: const Text(
-                                  'Vô thẳng',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF15803D),
-                                  ),
-                                ),
-                              )
-                            else
-                              Container(
-                                constraints: const BoxConstraints(minWidth: 32),
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
-                                      ? AppTheme.primary.withValues(alpha: 0.12)
-                                      : colors.bgSurface,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
-                                        ? AppTheme.primary.withValues(alpha: 0.4)
-                                        : colors.border,
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  '${match.sets.isNotEmpty ? match.sets.last.score1 : match.score1}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w900,
-                                    color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
-                                        ? AppTheme.primary
-                                        : colors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        // Team 2 Row
-                        Row(
-                          children: [
-                            _DoubleAvatarWidget(
-                              initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'VQ',
-                              initial2: t2Initials.length > 1 ? t2Initials[1] : '',
-                              color: const Color(0xFF16A34A),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                match.team2Name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: colors.textPrimary,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            if (isByeMatch && isT1Tbd && !isT2Tbd)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFDCFCE7),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: const Text(
-                                  'Vô thẳng',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF15803D),
-                                  ),
-                                ),
-                              )
-                            else
-                              Container(
-                                constraints: const BoxConstraints(minWidth: 32),
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
-                                      ? AppTheme.primary.withValues(alpha: 0.12)
-                                      : colors.bgSurface,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
-                                        ? AppTheme.primary.withValues(alpha: 0.4)
-                                        : colors.border,
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  '${match.sets.isNotEmpty ? match.sets.last.score2 : match.score2}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w900,
-                                    color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
-                                        ? AppTheme.primary
-                                        : colors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
+                if (bracketText.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3E8FF),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      bracketText,
+                      style: const TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF9333EA),
+                        letterSpacing: 0.2,
+                      ),
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
 
-            const SizedBox(height: 12),
-            Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
-            // ── Sub-info Row: Sport & Court ──
-            Row(
+            // ── Teams & Score Section ──
+            Column(
               children: [
-                Icon(
-                  Icons.sports_handball_rounded,
-                  size: 14,
-                  color: colors.textSecondary,
+                // Team 1 Row
+                Row(
+                  children: [
+                    _DoubleAvatarWidget(
+                      initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'NM',
+                      initial2: t1Initials.length > 1 ? t1Initials[1] : '',
+                      color: const Color(0xFF0284C7),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        match.team1Name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.bold,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (isByeMatch && isT2Tbd && !isT1Tbd)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDCFCE7),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'Vô thẳng',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF15803D),
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        constraints: const BoxConstraints(minWidth: 28),
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
+                              ? AppTheme.primary.withValues(alpha: 0.12)
+                              : colors.bgSurface,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(
+                            color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
+                                ? AppTheme.primary.withValues(alpha: 0.4)
+                                : colors.border,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${match.sets.isNotEmpty ? match.sets.last.score1 : match.score1}',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w900,
+                            color: (match.sets.isNotEmpty ? match.sets.last.score1 > match.sets.last.score2 : match.score1 > match.score2)
+                                ? AppTheme.primary
+                                : colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  sportText,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Icon(
-                  Icons.location_on_outlined,
-                  size: 14,
-                  color: colors.textMuted,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  courtText,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: colors.textMuted,
-                  ),
+
+                const SizedBox(height: 6),
+
+                // Team 2 Row
+                Row(
+                  children: [
+                    _DoubleAvatarWidget(
+                      initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'VQ',
+                      initial2: t2Initials.length > 1 ? t2Initials[1] : '',
+                      color: const Color(0xFF16A34A),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        match.team2Name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.bold,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (isByeMatch && isT1Tbd && !isT2Tbd)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDCFCE7),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'Vô thẳng',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF15803D),
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        constraints: const BoxConstraints(minWidth: 28),
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
+                              ? AppTheme.primary.withValues(alpha: 0.12)
+                              : colors.bgSurface,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(
+                            color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
+                                ? AppTheme.primary.withValues(alpha: 0.4)
+                                : colors.border,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${match.sets.isNotEmpty ? match.sets.last.score2 : match.score2}',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w900,
+                            color: (match.sets.isNotEmpty ? match.sets.last.score2 > match.sets.last.score1 : match.score2 > match.score1)
+                                ? AppTheme.primary
+                                : colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
+            Divider(height: 1, color: colors.border.withValues(alpha: 0.4)),
+            const SizedBox(height: 8),
 
-            // ── Action Buttons Row ──
+            // ── Single Merged Footer Row: Location & Quick Action Icons ──
             Row(
               children: [
-                // Button 1: Cổ vũ (Icon trái tim + số đếm nếu có)
+                Icon(
+                  Icons.location_on_outlined,
+                  size: 13,
+                  color: colors.textMuted,
+                ),
+                const SizedBox(width: 4),
                 Expanded(
-                  child: InkWell(
-                    onTap: () async {
-                      if (_cheerInFlight.contains(match.id)) return;
-                      _cheerInFlight.add(match.id);
-                      final previousCount = _cheerCounts[match.id] ?? 0;
-                      setState(() {
-                        _cheerCounts[match.id] = previousCount + 1;
-                      });
-                      try {
-                        await ref
-                            .read(matchRepositoryProvider)
-                            .cheerMatch(match.id);
-                        final count = await ref
-                            .read(matchRepositoryProvider)
-                            .getCheerCount(match.id);
-                        if (mounted)
-                          setState(() => _cheerCounts[match.id] = count);
-                      } catch (_) {
-                        if (mounted) {
-                          setState(() => _cheerCounts[match.id] = previousCount);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Chưa thể gửi cổ vũ. Vui lòng thử lại.',
-                              ),
-                            ),
-                          );
-                        }
-                      } finally {
-                        _cheerInFlight.remove(match.id);
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 9),
-                      decoration: BoxDecoration(
-                        color: isCheered
-                            ? const Color(0xFFFEF2F2)
-                            : colors.bgSurface,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: isCheered
-                              ? const Color(0xFFFECACA)
-                              : colors.border,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            isCheered ? Icons.favorite : Icons.favorite_border,
-                            size: 16,
-                            color: isCheered
-                                ? const Color(0xFFDC2626)
-                                : const Color(0xFFE11D48),
-                          ),
-                          if (cheerCount > 0) ...[
-                            const SizedBox(width: 6),
-                            Text(
-                              '$cheerCount',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: isCheered
-                                    ? const Color(0xFFDC2626)
-                                    : colors.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
+                  child: Text(
+                    courtText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                      color: colors.textMuted,
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
 
-                // Button 2: Chia sẻ
+                // Cheer Button (Capsule)
+                InkWell(
+                  onTap: () async {
+                    if (_cheerInFlight.contains(match.id)) return;
+                    _cheerInFlight.add(match.id);
+                    final previousCount = _cheerCounts[match.id] ?? 0;
+                    setState(() {
+                      _cheerCounts[match.id] = previousCount + 1;
+                    });
+                    try {
+                      await ref
+                          .read(matchRepositoryProvider)
+                          .cheerMatch(match.id);
+                      final count = await ref
+                          .read(matchRepositoryProvider)
+                          .getCheerCount(match.id);
+                      if (mounted)
+                        setState(() => _cheerCounts[match.id] = count);
+                    } catch (_) {
+                      if (mounted) {
+                        setState(() => _cheerCounts[match.id] = previousCount);
+                      }
+                    } finally {
+                      _cheerInFlight.remove(match.id);
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isCheered ? const Color(0xFFFEF2F2) : colors.bgSurface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isCheered ? const Color(0xFFFECACA) : colors.border,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isCheered ? Icons.favorite : Icons.favorite_border,
+                          size: 13,
+                          color: isCheered
+                              ? const Color(0xFFDC2626)
+                              : const Color(0xFFE11D48),
+                        ),
+                        if (cheerCount > 0) ...[
+                          const SizedBox(width: 4),
+                          Text(
+                            '$cheerCount',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: isCheered
+                                  ? const Color(0xFFDC2626)
+                                  : colors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+
+                // Share Button (Circular Icon)
                 InkWell(
                   onTap: () {
                     AppShareModal.show(
@@ -792,21 +771,18 @@ class _LiveTournamentWithMatchesCardState
                           : 'Trận đấu',
                     );
                   },
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(14),
                   child: Container(
-                    width: 42,
-                    height: 38,
+                    padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
                       color: colors.bgSurface,
-                      borderRadius: BorderRadius.circular(10),
+                      shape: BoxShape.circle,
                       border: Border.all(color: colors.border),
                     ),
-                    child: Center(
-                      child: Icon(
-                        Icons.share_rounded,
-                        size: 16,
-                        color: colors.info,
-                      ),
+                    child: Icon(
+                      Icons.share_rounded,
+                      size: 13,
+                      color: colors.info,
                     ),
                   ),
                 ),
