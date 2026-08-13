@@ -1,4 +1,4 @@
-package asia.sporto.app
+package vn.vnsport.quanlygiaidau
 
 import io.flutter.embedding.android.FlutterActivity
 
