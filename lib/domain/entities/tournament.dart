@@ -34,6 +34,8 @@ class Tournament {
   final DateTime? endDate;
   final DateTime? registrationStartDate;
   final DateTime? registrationEndDate;
+  final String? venueName;
+  final String? city;
   final String? locationAddress;
   final String? prizeDescription;
   final Map<String, dynamic>? contactInfo;
@@ -73,6 +75,8 @@ class Tournament {
     this.endDate,
     this.registrationStartDate,
     this.registrationEndDate,
+    this.venueName,
+    this.city,
     this.locationAddress,
     this.prizeDescription,
     this.contactInfo,
@@ -232,7 +236,11 @@ class Tournament {
       registrationEndDate: json['registrationEndDate'] != null
           ? DateParser.parseDate(json['registrationEndDate'])
           : null,
-      locationAddress: json['locationAddress'] ?? json['location_address'],
+      venueName: (json['venue'] is Map ? (json['venue'] as Map)['name'] : null)?.toString(),
+      city: json['city']?.toString(),
+      locationAddress: json['venue'] is Map
+          ? ((json['venue'] as Map)['locationAddress'] ?? (json['venue'] as Map)['location_address'] ?? json['locationAddress'] ?? json['location_address'])?.toString()
+          : (json['locationAddress'] ?? json['location_address'])?.toString(),
       prizeDescription: json['prizeDescription'] ?? json['prize_description'],
       contactInfo: parsedContactInfo,
       divisions: parsedDivisions,
@@ -333,6 +341,8 @@ class Tournament {
     DateTime? endDate,
     DateTime? registrationStartDate,
     DateTime? registrationEndDate,
+    String? venueName,
+    String? city,
     String? locationAddress,
     String? prizeDescription,
     Map<String, dynamic>? contactInfo,
@@ -373,6 +383,8 @@ class Tournament {
       registrationStartDate:
           registrationStartDate ?? this.registrationStartDate,
       registrationEndDate: registrationEndDate ?? this.registrationEndDate,
+      venueName: venueName ?? this.venueName,
+      city: city ?? this.city,
       locationAddress: locationAddress ?? this.locationAddress,
       prizeDescription: prizeDescription ?? this.prizeDescription,
       contactInfo: contactInfo ?? this.contactInfo,

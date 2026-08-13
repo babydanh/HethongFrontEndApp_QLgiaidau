@@ -363,7 +363,17 @@ class _HeaderMeta extends StatelessWidget {
                   ),
                   _HeaderIconText(
                     icon: Icons.location_on_outlined,
-                    text: tournament.locationAddress ?? l10n.locationNotUpdated,
+                    text: ([tournament.venueName, tournament.locationAddress, tournament.city]
+                                .whereType<String>()
+                                .where((value) => value.trim().isNotEmpty)
+                                .join(' • ')
+                                .trim()
+                                .isNotEmpty)
+                        ? [tournament.venueName, tournament.locationAddress, tournament.city]
+                            .whereType<String>()
+                            .where((value) => value.trim().isNotEmpty)
+                            .join(' • ')
+                        : l10n.locationNotUpdated,
                   ),
                 ],
               ),
