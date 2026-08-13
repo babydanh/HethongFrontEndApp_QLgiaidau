@@ -103,12 +103,12 @@ class ClubTournamentsScreen extends ConsumerWidget {
         : null;
     final dateStr = date != null ? DateFormat('dd/MM/yyyy').format(date) : '';
     final isLive = StatusHelper.isTournamentInProgress(status);
-    final isLite =
-        t['isLite'] == true ||
-        t['isQuick'] == true ||
-        t['type'] == 'LITE' ||
-        t['isClubLite'] == true ||
-        (t['inviteCode'] != null && t['inviteCode'].toString().isNotEmpty);
+    // isLite = LOẠI GIẢI lite (nhanh), đọc từ tournamentConfig.
+    // KHÔNG suy từ mode (cách tính điểm LITE) hay inviteCode (mọi giải đều có).
+    final cfg = t['tournamentConfig'];
+    final cfgMap = cfg is Map ? cfg : const <String, dynamic>{};
+    final isLite = cfgMap['isLite'] == true ||
+        (cfgMap['mode'] == 'LITE' && cfgMap['hideAdvancedSettings'] == true);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),

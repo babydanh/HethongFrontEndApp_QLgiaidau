@@ -251,8 +251,13 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       final payload = envelope is Map ? envelope['data'] : envelope;
       if (payload is Map) {
         final config = payload['tournamentConfig'];
-        final mode = config is Map ? config['mode']?.toString().toUpperCase() : null;
-        if (mode != null && mode != 'LITE') {
+        final cfgMap = config is Map ? config : const <String, dynamic>{};
+        final mode = cfgMap['mode']?.toString().toUpperCase();
+        // isLite = LOẠI GIẢI lite. Fallback an toàn cho giải lite cũ
+        // (mode='LITE' + hideAdvancedSettings=true) trước migration.
+        final isLite = cfgMap['isLite'] == true ||
+            (mode == 'LITE' && cfgMap['hideAdvancedSettings'] == true);
+        if (!isLite) {
           state = state.copyWith(
             loading: false,
             error: 'Đây là giải Nâng Cao. App chỉ hỗ trợ quản lý giải Lite.',

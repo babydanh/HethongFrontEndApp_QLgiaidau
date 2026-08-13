@@ -67,13 +67,11 @@ class CommunityTournamentModel {
       if (count != null) teamCount = int.tryParse(count.toString()) ?? 0;
     }
 
-    // Lite: parse mode từ tournamentConfig, không heuristic
+    // isLite = LOẠI GIẢI lite (nhanh). KHÔNG suy từ mode (cách tính điểm LITE/STRICT).
     bool isLite = false;
     if (json['tournamentConfig'] is Map) {
-      final mode = (json['tournamentConfig'] as Map)['mode']
-          ?.toString()
-          .toUpperCase();
-      isLite = mode == 'LITE';
+      final config = json['tournamentConfig'] as Map;
+      isLite = config['isLite'] == true;
     }
 
     final entryFee = int.tryParse(
