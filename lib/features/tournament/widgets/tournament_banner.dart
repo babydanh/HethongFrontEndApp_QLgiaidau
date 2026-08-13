@@ -885,9 +885,9 @@ class _TournamentBannerState extends State<TournamentBanner> {
                             ),
                             _iconText(
                               Icons.location_on_outlined,
-                              widget.tournament.locationAddress ??
-                                  l10n.locationNotUpdated,
+                              _locationLabel(widget.tournament),
                               colors,
+                              maxTextWidth: 230,
                             ),
                             _iconText(
                               Icons.group_rounded,
@@ -962,14 +962,47 @@ class _TournamentBannerState extends State<TournamentBanner> {
     );
   }
 
-  Widget _iconText(IconData icon, String text, AppColorsExtension colors) {
+  Widget _iconText(
+    IconData icon,
+    String text,
+    AppColorsExtension colors, {
+    double? maxTextWidth,
+  }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 14, color: colors.textMuted),
         const SizedBox(width: 4),
-        Text(text, style: TextStyle(fontSize: 11, color: colors.textSecondary)),
+        ConstrainedBox(
+          constraints: maxTextWidth == null
+              ? const BoxConstraints()
+              : BoxConstraints(maxWidth: maxTextWidth),
+          child: Text(
+            text,
+            softWrap: maxTextWidth != null,
+            maxLines: maxTextWidth == null ? 1 : 3,
+            overflow: maxTextWidth == null
+                ? TextOverflow.ellipsis
+                : TextOverflow.visible,
+            style: TextStyle(fontSize: 11, color: colors.textSecondary),
+          ),
+        ),
       ],
     );
+  }
+
+  String _locationLabel(Tournament tournament) {
+    final parts = [
+      tournament.venueName,
+      tournament.locationAddress,
+      tournament.city,
+    ]
+        .whereType<String>()
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList();
+    return parts.isEmpty
+        ? AppLocalizations.of(context)!.locationNotUpdated
+        : parts.join(' • ');
   }
 }

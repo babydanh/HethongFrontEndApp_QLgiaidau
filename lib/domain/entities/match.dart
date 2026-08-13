@@ -294,7 +294,16 @@ class MatchModel {
           : const BracketPosition(round: 1, position: 0),
       nextMatchId: json['nextMatchId'] ?? '',
       loserNextMatchId: json['loserNextMatchId'] ?? '',
-      court: json['court']?.toString() ?? json['courtName']?.toString() ?? '',
+      // A match-level court override wins; otherwise show the tournament's
+      // parent venue name when the schedule has not assigned a specific court.
+      court: json['court']?.toString() ??
+          json['courtName']?.toString() ??
+          (json['tournament'] is Map
+              ? ((json['tournament'] as Map)['venueName'] ??
+                      (json['tournament'] as Map)['venue']?['name'])
+                  ?.toString()
+              : null) ??
+          '',
       courtAddress:
           json['courtAddress']?.toString() ??
           json['court_address']?.toString() ??
