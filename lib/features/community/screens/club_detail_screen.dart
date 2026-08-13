@@ -570,42 +570,19 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                child: Row(
-                  children: [
-                    ...sportTagWidgets,
-                    const SizedBox(width: 2),
-                    _buildJoinModeBadge(club.joinMode),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                club.name.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: colors.textPrimary,
-                  height: 1.35,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 16),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 56,
-                    height: 56,
+                    width: 64,
+                    height: 64,
                     decoration: BoxDecoration(
                       color: colors.bgCard,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: colors.border),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(11),
+                      borderRadius: BorderRadius.circular(13),
                       child: club.logoUrl != null && club.logoUrl!.isNotEmpty
                           ? Image.network(
                               club.logoUrl!,
@@ -621,31 +598,48 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: Row(
+                            children: [
+                              ...sportTagWidgets,
+                              const SizedBox(width: 2),
+                              _buildJoinModeBadge(club.joinMode),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 6),
                         Row(
                           children: [
-                            Text(
-                              l10n.club_label,
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: colors.textMuted,
-                                letterSpacing: 0.5,
+                            Expanded(
+                              child: Text(
+                                club.name.toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w900,
+                                  color: colors.textPrimary,
+                                  height: 1.25,
+                                  letterSpacing: -0.2,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            if (club.status == 'ACTIVE')
-                              const SizedBox(width: 6),
-                            if (club.status == 'ACTIVE')
+                            if (club.status == 'ACTIVE') ...[
+                              const SizedBox(width: 4),
                               Icon(
                                 Icons.verified_rounded,
-                                size: 14,
+                                size: 16,
                                 color: sColor,
                               ),
+                            ],
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         Wrap(
                           spacing: 12,
-                          runSpacing: 6,
+                          runSpacing: 4,
                           children: [
                             _iconText(
                               Icons.location_on_outlined,
