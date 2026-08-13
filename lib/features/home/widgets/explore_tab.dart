@@ -1628,7 +1628,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                       context: context,
                       title: '${m.team1Name} VS ${m.team2Name}',
                       subtitle: 'Giải đấu: ${m.tournamentName ?? "Giao hữu"} • ${m.court.isNotEmpty ? m.court : "Đang thi đấu"}',
-                      webUrl: 'https://giaidau.vnvar.com/live/${m.id}',
+                      webUrl: 'https://sporto.asia/live/${m.id}',
                       badgeText: m.isLive ? 'Trận đấu đang Live 🔴' : 'Trận đấu',
                     );
                   },

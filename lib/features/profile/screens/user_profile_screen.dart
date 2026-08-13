@@ -98,7 +98,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   context: context,
                   title: profile.fullName,
                   subtitle: profile.bio ?? 'Hồ sơ Vận động viên',
-                  webUrl: 'https://giaidau.vnvar.com/profile/user/${widget.userId}',
+                  webUrl: 'https://sporto.asia/profile/user/${widget.userId}',
                   imageUrl: profile.avatarUrl,
                   badgeText: 'Thẻ VĐV & ELO',
                 );

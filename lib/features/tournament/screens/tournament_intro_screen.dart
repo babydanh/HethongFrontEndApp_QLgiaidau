@@ -440,7 +440,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   String _resolveImageUrl(String? url) {
     if (url == null || url.isEmpty) return "";
     if (url.startsWith("http")) return url;
-    return "https://qlgiaidau.esports.vn$url";
+    return "https://sporto.asia$url";
   }
 
   Future<void> _shareTournament(Tournament tournament) async {
@@ -449,8 +449,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         tournament.isLite &&
             tournament.inviteCode != null &&
             tournament.inviteCode!.isNotEmpty
-        ? 'https://giaidau.vnvar.com/lite/tournaments/join/${Uri.encodeComponent(tournament.inviteCode!)}'
-        : 'https://giaidau.vnvar.com/tournaments/${tournament.id}';
+        ? 'https://sporto.asia/lite/tournaments/join/${Uri.encodeComponent(tournament.inviteCode!)}'
+        : 'https://sporto.asia/tournaments/${tournament.id}';
     AppShareModal.show(
       context: context,
       title: tournament.name,

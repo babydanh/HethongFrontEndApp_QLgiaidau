@@ -848,7 +848,7 @@ class _DoublesRegistrationFlowState
         ? null
         : rawInviteLink.startsWith('http://') || rawInviteLink.startsWith('https://')
             ? rawInviteLink
-            : 'https://giaidau.vnvar.com${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
+            : 'https://sporto.asia${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
     final showInvite = inviteLink != null || _teamInviteToken != null;
 
     return Column(
@@ -1141,7 +1141,7 @@ class _DoublesRegistrationFlowState
         ? null
         : rawInviteLink.startsWith('http://') || rawInviteLink.startsWith('https://')
             ? rawInviteLink
-            : 'https://giaidau.vnvar.com${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
+            : 'https://sporto.asia${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
     final canPay =
         _entryFee != null &&
         _entryFee! > 0 &&
@@ -1186,7 +1186,7 @@ class _DoublesRegistrationFlowState
                   context: context,
                   title: 'Tham gia đội ${_teamNameCtrl.text}',
                   subtitle: 'Giải ${t.name} - Partner: $_partnerContact',
-                  webUrl: inviteLink ?? 'https://giaidau.vnvar.com/tournaments/${widget.tournamentId}',
+                  webUrl: inviteLink ?? 'https://sporto.asia/tournaments/${widget.tournamentId}',
                   imageUrl: t.logoUrl,
                   badgeText: 'Lời mời ghép đôi',
                 );

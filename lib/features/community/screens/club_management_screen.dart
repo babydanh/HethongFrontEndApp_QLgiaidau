@@ -316,7 +316,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   ],
                                 ),
                                 content: Text(
-                                  'Giải đấu tiêu chuẩn đầy đủ tính năng (chia vạch hạt giống, quản lý tài chính, phân lịch trọng tài) được tối ưu quản lý trên Website.\n\nVui lòng truy cập https://giaidau.vnvar.com trên trình duyệt để tạo giải!',
+                                  'Giải đấu tiêu chuẩn đầy đủ tính năng (chia vạch hạt giống, quản lý tài chính, phân lịch trọng tài) được tối ưu quản lý trên Website.\n\nVui lòng truy cập https://sporto.asia trên trình duyệt để tạo giải!',
                                   style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.5),
                                 ),
                                 actions: [

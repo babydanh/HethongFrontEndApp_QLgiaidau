@@ -356,7 +356,7 @@ class AboutTab extends StatelessWidget {
       );
     }
 
-    addItem(Icons.language_rounded, 'giaidau.vnvar.com', 'Website', action: 'https://giaidau.vnvar.com');
+    addItem(Icons.language_rounded, 'sporto.asia', 'Website', action: 'https://sporto.asia');
     addItem(Icons.phone_rounded, contactInfo['phone']?.toString(), 'Phone',
         action: contactInfo['phone'] != null
             ? 'tel:${contactInfo['phone']}'

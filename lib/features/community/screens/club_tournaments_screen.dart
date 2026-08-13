@@ -382,7 +382,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
                       ],
                     ),
                     content: const Text(
-                      'Giải đấu nâng cao có nhiều cấu hình chuyên sâu (Vòng bảng, Knockout, Lịch thi đấu, Lệ phí & Giải thưởng).\n\nVui lòng truy cập trang web giaidau.vnvar.com trên máy tính để tạo giải nâng cao cho câu lạc bộ!',
+                      'Giải đấu nâng cao có nhiều cấu hình chuyên sâu (Vòng bảng, Knockout, Lịch thi đấu, Lệ phí & Giải thưởng).\n\nVui lòng truy cập trang web sporto.asia trên máy tính để tạo giải nâng cao cho câu lạc bộ!',
                       style: TextStyle(fontSize: 13, height: 1.5),
                     ),
                     actions: [
@@ -395,7 +395,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
                           Clipboard.setData(
                             const ClipboardData(
                               text:
-                                  'https://giaidau.vnvar.com/tournaments/create',
+                                  'https://sporto.asia/tournaments/create',
                             ),
                           );
                           Navigator.pop(dialogCtx);
@@ -475,7 +475,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Chỉ khởi tạo trên Web giaidau.vnvar.com. Đầy đủ cấu hình: Thể thức Vòng bảng, Knockout, Lịch thi đấu & Giải thưởng.',
+                            'Chỉ khởi tạo trên Web sporto.asia. Đầy đủ cấu hình: Thể thức Vòng bảng, Knockout, Lịch thi đấu & Giải thưởng.',
                             style: TextStyle(
                               fontSize: 12,
                               color: colors.textSecondary,

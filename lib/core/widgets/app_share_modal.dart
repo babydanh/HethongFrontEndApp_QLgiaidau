@@ -288,7 +288,7 @@ class AppShareModal {
   static Widget _buildPreviewImage(String? url) {
     if (url == null || url.trim().isEmpty) {
       return SvgPicture.network(
-        "https://giaidau.vnvar.com/vndcsport.svg",
+        "https://sporto.asia/vndcsport.svg",
         fit: BoxFit.contain,
         placeholderBuilder: (_) => const Icon(
           Icons.emoji_events_rounded,
@@ -313,7 +313,7 @@ class AppShareModal {
       resolved,
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) => SvgPicture.network(
-        "https://giaidau.vnvar.com/vndcsport.svg",
+        "https://sporto.asia/vndcsport.svg",
         fit: BoxFit.contain,
         placeholderBuilder: (_) => const Icon(
           Icons.emoji_events_rounded,
@@ -329,8 +329,8 @@ class AppShareModal {
       return url;
     }
     if (url.startsWith("/")) {
-      return "https://giaidau.vnvar.com$url";
+      return "https://sporto.asia$url";
     }
-    return "https://giaidau.vnvar.com/$url";
+    return "https://sporto.asia/$url";
   }
 }

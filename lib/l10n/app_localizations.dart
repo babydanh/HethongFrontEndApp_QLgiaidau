@@ -5537,7 +5537,7 @@ abstract class AppLocalizations {
   /// No description provided for @club_advancedWebDialog.
   ///
   /// In vi, this message translates to:
-  /// **'Để quản lý giải đấu nâng cao (phân chia bảng đấu phức tạp, thu lệ phí, tùy chỉnh luật...), vui lòng truy cập website giaidau.vnvar.com trên máy tính.'**
+  /// **'Để quản lý giải đấu nâng cao (phân chia bảng đấu phức tạp, thu lệ phí, tùy chỉnh luật...), vui lòng truy cập website sporto.asia trên máy tính.'**
   String get club_advancedWebDialog;
 
   /// No description provided for @club_copyWebLink.

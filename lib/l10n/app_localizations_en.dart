@@ -2915,7 +2915,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get club_advancedWebDialog =>
-      'To manage advanced tournaments (complex group stages, entry fees, custom rules...), please visit giaidau.vnvar.com on a computer.';
+      'To manage advanced tournaments (complex group stages, entry fees, custom rules...), please visit sporto.asia on a computer.';
 
   @override
   String get club_copyWebLink => 'Go to Create Page';

@@ -9,8 +9,8 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 String _resolveImageUrl(String? url) {
   if (url == null || url.isEmpty) return '';
   if (url.startsWith('http')) return url;
-  if (url.startsWith('/')) return 'https://qlgiaidau.esports.vn$url';
-  return 'https://qlgiaidau.esports.vn/$url';
+  if (url.startsWith('/')) return 'https://sporto.asia$url';
+  return 'https://sporto.asia/$url';
 }
 
 /// Tab hiển thị thành tích thi đấu của người dùng.
@@ -473,7 +473,7 @@ class _FallbackVndcLogo extends StatelessWidget {
       padding: const EdgeInsets.all(4),
       child: Center(
         child: SvgPicture.network(
-          "https://giaidau.vnvar.com/vndcsport.svg",
+          "https://sporto.asia/vndcsport.svg",
           fit: BoxFit.contain,
           width: 24,
           height: 24,

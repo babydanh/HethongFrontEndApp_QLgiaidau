@@ -879,7 +879,7 @@ class _LiveTournamentWithMatchesCardState
                     title: '${match.team1Name} VS ${match.team2Name}',
                     subtitle:
                         'Giải đấu: ${widget.tournament.name} • ${match.court.isNotEmpty ? match.court : "Đang thi đấu"}',
-                    webUrl: 'https://giaidau.vnvar.com/live/${match.id}',
+                    webUrl: 'https://sporto.asia/live/${match.id}',
                     imageUrl: widget.tournament.logoUrl,
                     badgeText: match.isLive
                         ? 'Trận đấu đang Live 🔴'

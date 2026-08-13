@@ -487,7 +487,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         subtitle:
                             '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
                         webUrl:
-                            'https://giaidau.vnvar.com/communities/${club.id}',
+                            'https://sporto.asia/communities/${club.id}',
                         imageUrl: club.logoUrl ?? club.bannerUrl,
                         badgeText: l10n.club_badge,
                       );

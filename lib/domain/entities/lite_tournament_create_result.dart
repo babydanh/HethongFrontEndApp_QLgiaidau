@@ -40,7 +40,7 @@ class LiteTournamentCreateResult {
         (dotenv.isInitialized
             ? dotenv.env['WEB_BASE_URL'] ?? dotenv.env['FRONTEND_URL']
             : null) ??
-        'https://giaidau.vnvar.com';
+        'https://sporto.asia';
     // Strip leading slash on base, keep one slash between them
     final cleanBase = configuredBase.endsWith('/')
         ? configuredBase.substring(0, configuredBase.length - 1)

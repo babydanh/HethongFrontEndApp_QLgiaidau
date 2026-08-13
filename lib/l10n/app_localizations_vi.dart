@@ -2908,7 +2908,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get club_advancedWebDialog =>
-      'Để quản lý giải đấu nâng cao (phân chia bảng đấu phức tạp, thu lệ phí, tùy chỉnh luật...), vui lòng truy cập website giaidau.vnvar.com trên máy tính.';
+      'Để quản lý giải đấu nâng cao (phân chia bảng đấu phức tạp, thu lệ phí, tùy chỉnh luật...), vui lòng truy cập website sporto.asia trên máy tính.';
 
   @override
   String get club_copyWebLink => 'Đến trang tạo';

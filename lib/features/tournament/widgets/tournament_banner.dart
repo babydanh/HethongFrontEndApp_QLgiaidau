@@ -581,7 +581,7 @@ class _FallbackLogo extends StatelessWidget {
 
 String _resolveImageUrl(String url) {
   if (url.startsWith("http")) return url;
-  return "https://qlgiaidau.esports.vn$url";
+  return "https://sporto.asia$url";
 }
 
 String _formatDateRange(DateTime? start, DateTime? end) {
@@ -668,7 +668,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                       itemBuilder: (context, index) {
                         final imgUrl = images[index].startsWith("http")
                             ? images[index]
-                            : "https://qlgiaidau.esports.vn${images[index]}";
+                            : "https://sporto.asia${images[index]}";
                         return Image.network(
                           imgUrl,
                           fit: BoxFit.cover,
@@ -765,11 +765,11 @@ class _TournamentBannerState extends State<TournamentBanner> {
                           ? Image.network(
                               widget.tournament.logoUrl!.startsWith("http")
                                   ? widget.tournament.logoUrl!
-                                  : "https://qlgiaidau.esports.vn${widget.tournament.logoUrl!}",
+                                  : "https://sporto.asia${widget.tournament.logoUrl!}",
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   SvgPicture.network(
-                                    "https://giaidau.vnvar.com/vndcsport.svg",
+                                    "https://sporto.asia/vndcsport.svg",
                                     fit: BoxFit.contain,
                                     placeholderBuilder: (_) => const Icon(
                                       Icons.emoji_events,
@@ -778,7 +778,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                                   ),
                             )
                           : SvgPicture.network(
-                              "https://giaidau.vnvar.com/vndcsport.svg",
+                              "https://sporto.asia/vndcsport.svg",
                               fit: BoxFit.contain,
                               placeholderBuilder: (_) =>
                                   const Icon(Icons.emoji_events, size: 28),
@@ -843,7 +843,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                                   subtitle:
                                       '${tournament.locationAddress ?? l10n.vietnam} • ${tournament.category ?? tournament.sport}',
                                   webUrl:
-                                      'https://giaidau.vnvar.com/tournaments/${tournament.id}',
+                                      'https://sporto.asia/tournaments/${tournament.id}',
                                   imageUrl:
                                       tournament.logoUrl ??
                                       tournament.bannerUrl,
