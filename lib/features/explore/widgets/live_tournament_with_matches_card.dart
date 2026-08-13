@@ -733,7 +733,7 @@ class _LiveTournamentWithMatchesCardState
                 ),
                 const SizedBox(width: 8),
 
-                // Cheer Button (Capsule)
+                // Cheer Button (Fresh Bright Capsule Button)
                 InkWell(
                   onTap: () async {
                     if (_cheerInFlight.contains(match.id)) return;
@@ -759,39 +759,40 @@ class _LiveTournamentWithMatchesCardState
                       _cheerInFlight.remove(match.id);
                     }
                   },
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(20),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 4,
+                      horizontal: 13,
+                      vertical: 7,
                     ),
                     decoration: BoxDecoration(
                       color: isCheered
                           ? const Color(0xFFFEF2F2)
-                          : colors.bgSurface,
-                      borderRadius: BorderRadius.circular(14),
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: isCheered
                             ? const Color(0xFFFECACA)
-                            : colors.border,
+                            : const Color(0xFFE2E8F0),
+                        width: 1,
                       ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          isCheered ? Icons.favorite : Icons.favorite_border,
-                          size: 13,
+                          isCheered ? Icons.favorite : Icons.favorite_border_rounded,
+                          size: 16,
                           color: isCheered
                               ? const Color(0xFFDC2626)
                               : const Color(0xFFE11D48),
                         ),
                         if (cheerCount > 0) ...[
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 5),
                           Text(
                             '$cheerCount',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 12.5,
                               fontWeight: FontWeight.w700,
                               color: isCheered
                                   ? const Color(0xFFDC2626)
@@ -803,9 +804,9 @@ class _LiveTournamentWithMatchesCardState
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
 
-                // Share Button (Circular Icon)
+                // Share Button (Fresh Bright Circle Button)
                 InkWell(
                   onTap: () {
                     AppShareModal.show(
@@ -820,18 +821,24 @@ class _LiveTournamentWithMatchesCardState
                           : 'Trận đấu',
                     );
                   },
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(20),
                   child: Container(
-                    padding: const EdgeInsets.all(5),
+                    width: 36,
+                    height: 34,
                     decoration: BoxDecoration(
-                      color: colors.bgSurface,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: colors.border),
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFFE2E8F0),
+                        width: 1,
+                      ),
                     ),
-                    child: Icon(
-                      Icons.share_rounded,
-                      size: 13,
-                      color: colors.info,
+                    child: Center(
+                      child: Icon(
+                        Icons.share_rounded,
+                        size: 15,
+                        color: const Color(0xFF2563EB),
+                      ),
                     ),
                   ),
                 ),
