@@ -270,8 +270,8 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      height: 38,
-                      width: 170,
+                      height: 60,
+                      width: 220,
                       child: Hero(
                         tag: "Sporto_logo",
                         child: Image.asset(
