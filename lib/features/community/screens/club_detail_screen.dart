@@ -435,7 +435,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          CommunitySocialScreen(communityId: club.id, communityName: club.name),
+          CommunitySocialScreen(communityId: club.id, communityName: club.name, showHeader: false),
           _buildAboutTab(club, colors),
           _buildTournamentsTab(colors),
           _buildMembersTab(colors),

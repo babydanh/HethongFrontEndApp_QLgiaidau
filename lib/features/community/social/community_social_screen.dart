@@ -15,11 +15,13 @@ import 'package:image_picker/image_picker.dart';
 class CommunitySocialScreen extends ConsumerStatefulWidget {
   final String communityId;
   final String communityName;
+  final bool showHeader;
 
   const CommunitySocialScreen({
     super.key,
     required this.communityId,
     required this.communityName,
+    this.showHeader = true,
   });
 
   @override
@@ -130,6 +132,67 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
               query: _mentionQuery!,
             )),
           );
+
+    final feedBody = RefreshIndicator(
+      onRefresh: () => ref.read(communityFeedProvider(widget.communityId).notifier).loadInitial(),
+      child: ListView(
+        controller: _scrollController,
+        padding: const EdgeInsets.fromLTRB(AppTheme.spacingMD, AppTheme.spacingSM, AppTheme.spacingMD, AppTheme.spacingXL),
+        children: [
+          if (widget.showHeader) ...[
+            _CompactHighlights(communityName: widget.communityName),
+            const SizedBox(height: AppTheme.spacingSM),
+          ],
+          CommunityComposer(
+            controller: _composerController,
+            isSubmitting: state.isSubmitting,
+            onSubmit: _submitPost,
+            onPickImage: _pickImage,
+            imageCount: _selectedImages.length,
+            mentionCandidates: searchState?.value ?? const [],
+            isSearchingMembers: searchState?.isLoading ?? false,
+            memberSearchError: searchState?.hasError == true
+                ? 'Không thể tìm thành viên'
+                : null,
+            onMentionQueryChanged: (query) {
+              if (_mentionQuery == query) return;
+              setState(() => _mentionQuery = query);
+            },
+            onMentionsChanged: (ids) => _mentionIds
+              ..clear()
+              ..addAll(ids),
+            onMentionWarning: (message) =>
+                ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(message)),
+            ),
+            canManageMemberTags: canManageMemberTags,
+            onAssignMemberTags:
+                canManageMemberTags ? _openMemberTagEditor : null,
+          ),
+          const SizedBox(height: AppTheme.spacingMD),
+          if (state.errorMessage != null) _FeedError(message: state.errorMessage!, onRetry: () => ref.read(communityFeedProvider(widget.communityId).notifier).loadInitial()),
+          if (state.isLoading && state.posts.isEmpty) const _FeedLoading(),
+          if (!state.isLoading && state.errorMessage == null && state.posts.isEmpty) const _FeedEmpty(),
+          ...state.posts.map((post) => Padding(
+            padding: const EdgeInsets.only(bottom: AppTheme.spacingSM),
+            child: CommunityPostCard(
+              post: post,
+              communityId: widget.communityId,
+              onReact: (reaction) => ref
+                  .read(communityFeedProvider(widget.communityId).notifier)
+                  .reactToPost(post.id, reaction),
+            ),
+          )),
+          if (state.isLoading && state.posts.isNotEmpty)
+            const Padding(padding: EdgeInsets.all(AppTheme.spacingMD), child: Center(child: CircularProgressIndicator())),
+        ],
+      ),
+    );
+
+    if (!widget.showHeader) {
+      return feedBody;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.communityName),
@@ -141,59 +204,7 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () => ref.read(communityFeedProvider(widget.communityId).notifier).loadInitial(),
-        child: ListView(
-          controller: _scrollController,
-          padding: const EdgeInsets.fromLTRB(AppTheme.spacingMD, AppTheme.spacingSM, AppTheme.spacingMD, AppTheme.spacingXL),
-          children: [
-            _CompactHighlights(communityName: widget.communityName),
-            const SizedBox(height: AppTheme.spacingSM),
-            CommunityComposer(
-              controller: _composerController,
-              isSubmitting: state.isSubmitting,
-              onSubmit: _submitPost,
-              onPickImage: _pickImage,
-              imageCount: _selectedImages.length,
-              mentionCandidates: searchState?.value ?? const [],
-              isSearchingMembers: searchState?.isLoading ?? false,
-              memberSearchError: searchState?.hasError == true
-                  ? 'Không thể tìm thành viên'
-                  : null,
-              onMentionQueryChanged: (query) {
-                if (_mentionQuery == query) return;
-                setState(() => _mentionQuery = query);
-              },
-              onMentionsChanged: (ids) => _mentionIds
-                ..clear()
-                ..addAll(ids),
-              onMentionWarning: (message) =>
-                  ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(message)),
-              ),
-              canManageMemberTags: canManageMemberTags,
-              onAssignMemberTags:
-                  canManageMemberTags ? _openMemberTagEditor : null,
-            ),
-            const SizedBox(height: AppTheme.spacingMD),
-            if (state.errorMessage != null) _FeedError(message: state.errorMessage!, onRetry: () => ref.read(communityFeedProvider(widget.communityId).notifier).loadInitial()),
-            if (state.isLoading && state.posts.isEmpty) const _FeedLoading(),
-            if (!state.isLoading && state.errorMessage == null && state.posts.isEmpty) const _FeedEmpty(),
-            ...state.posts.map((post) => Padding(
-              padding: const EdgeInsets.only(bottom: AppTheme.spacingSM),
-              child: CommunityPostCard(
-                post: post,
-                communityId: widget.communityId,
-                onReact: (reaction) => ref
-                    .read(communityFeedProvider(widget.communityId).notifier)
-                    .reactToPost(post.id, reaction),
-              ),
-            )),
-            if (state.isLoading && state.posts.isNotEmpty)
-              const Padding(padding: EdgeInsets.all(AppTheme.spacingMD), child: Center(child: CircularProgressIndicator())),
-          ],
-        ),
-      ),
+      body: feedBody,
       floatingActionButton: FloatingActionButton.small(
         tooltip: 'Mở trò chuyện CLB',
         onPressed: () => context.push('/club/${widget.communityId}/chat?name=${Uri.encodeComponent(widget.communityName)}'),
