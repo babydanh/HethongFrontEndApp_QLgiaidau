@@ -68,10 +68,14 @@ class CommunityTournamentModel {
     }
 
     // isLite = LOẠI GIẢI lite (nhanh). KHÔNG suy từ mode (cách tính điểm LITE/STRICT).
-    bool isLite = false;
-    if (json['tournamentConfig'] is Map) {
+    bool isLite = json['isLite'] == true;
+    if (!isLite && json['tournamentConfig'] is Map) {
       final config = json['tournamentConfig'] as Map;
-      isLite = config['isLite'] == true;
+      final mode = config['mode']?.toString().toUpperCase();
+      isLite = config['isLite'] == true ||
+          // Fallback an toàn cho giải lite cũ (trước migration):
+          // mode='LITE' + hideAdvancedSettings=true.
+          (mode == 'LITE' && config['hideAdvancedSettings'] == true);
     }
 
     final entryFee = int.tryParse(

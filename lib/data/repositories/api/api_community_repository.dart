@@ -145,10 +145,10 @@ class ApiCommunityRepository implements ICommunityRepository {
             .toList();
       }
       _log.warning('getMembers status=${response.statusCode}');
-      return [];
+      throw StateError('Unexpected members response: ${response.statusCode}');
     } catch (e, stack) {
       _log.error('Lỗi lấy thành viên CLB', e, stack);
-      return [];
+      rethrow;
     }
   }
 
@@ -206,10 +206,10 @@ class ApiCommunityRepository implements ICommunityRepository {
             .toList();
       }
       _log.warning('getTournaments status=${response.statusCode}');
-      return [];
+      throw StateError('Unexpected tournaments response: ${response.statusCode}');
     } catch (e, stack) {
       _log.error('Lỗi lấy giải đấu của CLB', e, stack);
-      return [];
+      rethrow;
     }
   }
 

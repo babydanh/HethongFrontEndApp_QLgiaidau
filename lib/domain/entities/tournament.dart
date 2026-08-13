@@ -267,7 +267,8 @@ class Tournament {
         'roundRobinLegs': roundCount,
         if (registrationMode != null) 'registrationMode': registrationMode,
         'hideFeaturedCardText': hideFeaturedCardText,
-        if (isLite) 'mode': 'LITE',
+        // isLite = LOẠI GIẢI lite. KHÔNG ghi 'mode':'LITE' (đó là scoring mode).
+        if (isLite) 'isLite': true,
       },
       'status': status,
       'visibility': visibility,

@@ -65,6 +65,43 @@ class ApiMatchRepository implements IMatchRepository {
     return value is List ? value : const <dynamic>[];
   }
 
+  String? _extractNextCursor(dynamic payload) {
+    if (payload is! Map) return null;
+    final meta = payload['meta'];
+    if (meta is Map) {
+      final cursor = meta['nextCursor'];
+      return cursor is String && cursor.isNotEmpty ? cursor : null;
+    }
+    final data = payload['data'];
+    return data is Map ? _extractNextCursor(data) : null;
+  }
+
+  Future<List<MatchModel>> _getMatchPages(
+    Map<String, dynamic> baseQuery,
+  ) async {
+    const pageSize = 100;
+    const maxPages = 50;
+    final result = <MatchModel>[];
+    String? cursor;
+    for (var page = 0; page < maxPages; page++) {
+      final query = <String, dynamic>{...baseQuery, 'limit': pageSize};
+      if (cursor != null) query['cursor'] = cursor;
+      final response = await _dioClient.dio.get('/matches', queryParameters: query);
+      if (response.statusCode != 200) {
+        throw StateError('Unexpected match response: ${response.statusCode}');
+      }
+      final payload = response.data;
+      final list = _extractList(payload);
+      result.addAll(
+        list.map((json) => _parseMatch(Map<String, dynamic>.from(json))),
+      );
+      final nextCursor = _extractNextCursor(payload);
+      if (nextCursor == null || nextCursor == cursor || list.isEmpty) break;
+      cursor = nextCursor;
+    }
+    return result;
+  }
+
   @override
   Stream<List<MatchModel>> watchByTournament(String tournamentId, {String? divisionId}) {
     final cacheKey = '$tournamentId-${divisionId ?? 'all'}';
@@ -81,7 +118,12 @@ class ApiMatchRepository implements IMatchRepository {
         _matchesCache[cacheKey] = updated;
       } catch (error, stack) {
         _log.error('Keeping cached tournament matches after refresh failure', error, stack);
-        updated = _matchesCache[cacheKey] ?? const [];
+        final cached = _matchesCache[cacheKey];
+        if (cached == null) {
+          if (!controller.isClosed) controller.addError(error, stack);
+          return;
+        }
+        updated = cached;
       }
       if (!controller.isClosed) {
         controller.add(updated);
@@ -132,7 +174,12 @@ class ApiMatchRepository implements IMatchRepository {
         _matchesCache['$tournamentId-all'] = currentList;
       } catch (error, stack) {
         _log.error('Keeping cached live matches after refresh failure', error, stack);
-        currentList = _matchesCache['$tournamentId-all'] ?? const [];
+        final cached = _matchesCache['$tournamentId-all'];
+        if (cached == null) {
+          if (!controller.isClosed) controller.addError(error, stack);
+          return;
+        }
+        currentList = cached;
       }
       if (!controller.isClosed) {
         controller.add(currentList.where((m) => m.isLive).toList());
@@ -690,17 +737,9 @@ class ApiMatchRepository implements IMatchRepository {
       queryParameters['publicOnly'] = true;
       // Backend /matches mặc định limit=10 — phải gửi limit cao để app nhận
       // đầy đủ trận đấu của giải (DTO không giới hạn @Max).
-      queryParameters['limit'] = 200;
-      final response = await _dioClient.dio.get('/matches', queryParameters: queryParameters);
-      if (response.statusCode == 200) {
-        final List<dynamic> list = _extractList(response.data);
-        final matches = list
-            .map((json) => _parseMatch(Map<String, dynamic>.from(json)))
-            .toList();
-        _matchesCache['$tournamentId-${divisionId ?? 'all'}'] = matches;
-        return matches;
-      }
-      throw StateError('Unexpected match response: ${response.statusCode}');
+      final matches = await _getMatchPages(queryParameters);
+      _matchesCache['$tournamentId-${divisionId ?? 'all'}'] = matches;
+      return matches;
     } catch (e, stack) {
       _log.error('Error fetching matches from API', e, stack);
       rethrow;
@@ -719,15 +758,10 @@ class ApiMatchRepository implements IMatchRepository {
       final queryParams = <String, dynamic>{};
       if (status != null) queryParams['status'] = status;
       if (publicOnly != null) queryParams['publicOnly'] = publicOnly;
-      final response = await _dioClient.dio.get('/matches', queryParameters: queryParams);
-      if (response.statusCode == 200) {
-        final List<dynamic> list = _extractList(response.data);
-        return list.map((json) => _parseMatch(Map<String, dynamic>.from(json))).toList();
-      }
-      return [];
+      return await _getMatchPages(queryParams);
     } catch (e, stack) {
       _log.error('Error fetching global matches from API', e, stack);
-      return [];
+      rethrow;
     }
   }
 

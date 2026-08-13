@@ -1800,7 +1800,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final l10n = AppLocalizations.of(context)!;
     final membersAsync = ref.watch(communityMembersProvider(widget.clubId));
     final isAdmin =
-        _myMembership?.role == 'OWNER' || _myMembership?.role == 'ADMIN';
+        _myMembership?.role == 'OWNER' ||
+        _myMembership?.role == 'ADMIN' ||
+        _myMembership?.role == 'MODERATOR';
     final joinRequestsAsync = isAdmin
         ? ref.watch(joinRequestsProvider(widget.clubId))
         : const AsyncValue.data(<CommunityMemberModel>[]);

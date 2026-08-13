@@ -5,20 +5,31 @@ import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
 
 void main() {
   group('Tournament entity — Lite detection', () {
-    test('isLite=true when tournamentConfig.mode is LITE', () {
+    test('isLite=true when tournamentConfig.isLite is true', () {
       final t = Tournament.fromJson({
         'name': 'Lite Test',
-        'tournamentConfig': {'mode': 'LITE'},
+        'tournamentConfig': {'isLite': true},
         'createdAt': '2026-01-01T00:00:00Z',
         'updatedAt': '2026-01-01T00:00:00Z',
       }, 'id-1');
       expect(t.isLite, true);
     });
 
-    test('isLite=false when tournamentConfig.mode is not LITE', () {
+    test('isLite=true when top-level isLite is true', () {
       final t = Tournament.fromJson({
-        'name': 'Advanced Test',
-        'tournamentConfig': {'mode': 'ADVANCED'},
+        'name': 'Lite Test 2',
+        'isLite': true,
+        'createdAt': '2026-01-01T00:00:00Z',
+        'updatedAt': '2026-01-01T00:00:00Z',
+      }, 'id-1b');
+      expect(t.isLite, true);
+    });
+
+    test('isLite=false when tournamentConfig.mode is LITE but no isLite flag (scoring, NOT type)', () {
+      // mode='LITE' là CÁCH TÍNH ĐIỂM, không phải loại giải → isLite phải false.
+      final t = Tournament.fromJson({
+        'name': 'Advanced Scoring Lite',
+        'tournamentConfig': {'mode': 'LITE'},
         'createdAt': '2026-01-01T00:00:00Z',
         'updatedAt': '2026-01-01T00:00:00Z',
       }, 'id-2');
@@ -55,25 +66,34 @@ void main() {
   });
 
   group('CommunityTournamentModel — Lite detection', () {
-    test('isLite=true from tournamentConfig.mode LITE', () {
+    test('isLite=true from tournamentConfig.isLite true', () {
       final model = CommunityTournamentModel.fromJson({
         'id': 'c-1',
         'name': 'CLB Lite',
-        'tournamentConfig': {'mode': 'LITE'},
+        'tournamentConfig': {'isLite': true},
       });
       expect(model.isLite, true);
     });
 
-    test('isLite=false from tournamentConfig.mode ADVANCED', () {
+    test('isLite=true from top-level isLite true', () {
+      final model = CommunityTournamentModel.fromJson({
+        'id': 'c-1b',
+        'name': 'CLB Lite Top',
+        'isLite': true,
+      });
+      expect(model.isLite, true);
+    });
+
+    test('isLite=false when mode=LITE only (scoring, NOT type)', () {
       final model = CommunityTournamentModel.fromJson({
         'id': 'c-2',
         'name': 'CLB Advanced',
-        'tournamentConfig': {'mode': 'ADVANCED'},
+        'tournamentConfig': {'mode': 'LITE'},
       });
       expect(model.isLite, false);
     });
 
-    test('isLite=false when tournamentConfig.mode is absent', () {
+    test('isLite=false when tournamentConfig is absent', () {
       final model = CommunityTournamentModel.fromJson({
         'id': 'c-3',
         'name': 'CLB No Config',
@@ -90,6 +110,16 @@ void main() {
         'type': 'LITE',
       });
       expect(model.isLite, false);
+    });
+
+    test('isLite=true for legacy lite (mode=LITE + hideAdvancedSettings)', () {
+      // Fallback an toàn cho giải lite cũ trước migration.
+      final model = CommunityTournamentModel.fromJson({
+        'id': 'c-5',
+        'name': 'CLB Legacy Lite',
+        'tournamentConfig': {'mode': 'LITE', 'hideAdvancedSettings': true},
+      });
+      expect(model.isLite, true);
     });
   });
 
@@ -116,7 +146,7 @@ void main() {
       });
       expect(
         result.resolvedJoinUrl,
-        'https://giaidau.vnvar.com/lite/tournaments/join/def',
+        'https://sporto.asia/lite/tournaments/join/def',
       );
     });
 
@@ -129,7 +159,7 @@ void main() {
       });
       expect(
         result.resolvedJoinUrl,
-        'https://giaidau.vnvar.com/lite/tournaments/join/xyz-789',
+        'https://sporto.asia/lite/tournaments/join/xyz-789',
       );
     });
 
@@ -167,7 +197,7 @@ void main() {
         });
         expect(
           result.resolvedQrPayload,
-          'https://giaidau.vnvar.com/lite/tournaments/join/code-123',
+          'https://sporto.asia/lite/tournaments/join/code-123',
         );
       },
     );
