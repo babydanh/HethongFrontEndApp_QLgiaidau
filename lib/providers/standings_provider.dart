@@ -7,7 +7,7 @@ final standingsProvider = StreamProvider.family<List<Standing>, String>((ref, to
   return ref.watch(standingsWithDivisionProvider((
     tournamentId: tournamentId,
     divisionId: null,
-  )).stream;
+  )).stream);
 });
 
 final standingsWithDivisionProvider = StreamProvider.family<
