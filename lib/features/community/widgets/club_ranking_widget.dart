@@ -96,7 +96,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
           final name = c.name.toLowerCase().replaceAll(' ', '');
           return norm.contains(slug) || norm.contains(name);
         }).toList();
-        if (matched.isNotEmpty) categories = matched;
+        categories = matched;
       }
       _availableCategories = categories;
       final categoryId = _selectedCategoryId ??

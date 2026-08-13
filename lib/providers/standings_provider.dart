@@ -3,30 +3,32 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 
-final standingsProvider =
-    FutureProvider.family<List<Standing>, String>((ref, tournamentId) {
+final standingsProvider = StreamProvider.family<List<Standing>, String>((ref, tournamentId) {
   return ref.watch(standingsWithDivisionProvider((
     tournamentId: tournamentId,
     divisionId: null,
-  )).future);
+  )).stream;
 });
 
-final standingsWithDivisionProvider = FutureProvider.family<
-    List<Standing>, ({String tournamentId, String? divisionId})>((ref, params) async {
-  final apiStandings = await _fetchApiStandings(
-    ref,
-    params.tournamentId,
-    divisionId: params.divisionId,
-  );
-  if (apiStandings.isNotEmpty) {
-    return apiStandings;
+final standingsWithDivisionProvider = StreamProvider.family<
+    List<Standing>, ({String tournamentId, String? divisionId})>((ref, params) async* {
+  while (true) {
+    final apiStandings = await _fetchApiStandings(
+      ref,
+      params.tournamentId,
+      divisionId: params.divisionId,
+    );
+    if (apiStandings.isNotEmpty) {
+      yield apiStandings;
+    } else {
+      yield await _calculateClientStandings(
+        ref,
+        params.tournamentId,
+        divisionId: params.divisionId,
+      );
+    }
+    await Future<void>.delayed(const Duration(seconds: 30));
   }
-
-  return _calculateClientStandings(
-    ref,
-    params.tournamentId,
-    divisionId: params.divisionId,
-  );
 });
 
 Future<List<Standing>> _fetchApiStandings(

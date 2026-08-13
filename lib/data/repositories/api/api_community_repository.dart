@@ -51,15 +51,22 @@ class ApiCommunityRepository implements ICommunityRepository {
             .where(
               (c) =>
                   c.status.toUpperCase() == 'ACTIVE' &&
-                  c.visibility.toUpperCase() == 'PUBLIC',
+                  // Backend/Web vẫn hiển thị RESTRICTED trong danh sách khám phá;
+                  // chỉ PRIVATE mới bị ẩn hoàn toàn khỏi public discovery.
+                  c.visibility.toUpperCase() != 'PRIVATE',
             )
             .toList();
       }
-      _log.warning('getCommunities status=${response.statusCode}');
-      return [];
+      final status = response.statusCode;
+      _log.warning('getCommunities status=$status');
+      throw DioException.badResponse(
+        statusCode: status ?? 0,
+        requestOptions: response.requestOptions,
+        response: response,
+      );
     } catch (e, stack) {
       _log.error('Lỗi lấy danh sách CLB', e, stack);
-      return [];
+      rethrow;
     }
   }
 
@@ -87,11 +94,16 @@ class ApiCommunityRepository implements ICommunityRepository {
             .where((community) => community.status.toUpperCase() == 'ACTIVE')
             .toList();
       }
-      _log.warning('getMyCommunities status=${response.statusCode}');
-      return [];
+      final status = response.statusCode;
+      _log.warning('getMyCommunities status=$status');
+      throw DioException.badResponse(
+        statusCode: status ?? 0,
+        requestOptions: response.requestOptions,
+        response: response,
+      );
     } catch (e, stack) {
       _log.error('Lỗi lấy CLB của tôi', e, stack);
-      return [];
+      rethrow;
     }
   }
 

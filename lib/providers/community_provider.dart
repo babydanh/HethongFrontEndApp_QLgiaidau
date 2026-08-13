@@ -28,11 +28,9 @@ final communitiesProvider = FutureProvider.family<List<Community>, CommunityQuer
 /// Provider CLB của tôi
 final myCommunitiesProvider = FutureProvider<List<Community>>((ref) async {
   final repo = ref.watch(communityRepositoryProvider);
-  try {
-    return await repo.getMyCommunities();
-  } catch (e) {
-    return [];
-  }
+  // Giữ lỗi để UI hiển thị retry/error state; không biến 401/5xx thành
+  // danh sách rỗng khiến người dùng tưởng chưa có CLB.
+  return repo.getMyCommunities();
 });
 
 /// Makes every visible CLB list refetch after a mutation. `communitiesProvider`

@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
 
 /// Tạo câu lạc bộ mới — form đơn giản
 class CreateClubScreen extends ConsumerStatefulWidget {
@@ -34,7 +35,19 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
     super.dispose();
   }
 
-  String _getSportSlug() => _selectedSport;
+  Future<String> _resolveCategoryId() async {
+    final categories = await ref.read(categoriesProvider.future);
+    final selected = categories.where((category) {
+      final slug = category.slug.trim().toLowerCase();
+      final name = category.name.trim().toLowerCase();
+      return slug == _selectedSport.toLowerCase() ||
+          name == (AppConstants.sportNames[_selectedSport] ?? '').toLowerCase();
+    }).firstOrNull;
+    if (selected == null || selected.id.isEmpty) {
+      throw StateError('Không tìm thấy môn thể thao đã chọn. Vui lòng thử lại.');
+    }
+    return selected.id;
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -47,7 +60,8 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
         'name': _nameCtrl.text.trim(),
         'description': _descCtrl.text.trim(),
         'locationAddress': _locationCtrl.text.trim(),
-        'categoryIds': [_getSportSlug()],
+        // Backend yêu cầu UUID category, không nhận slug như "pickleball".
+        'categoryIds': [await _resolveCategoryId()],
         'joinMode': _joinMode,
         'visibility': 'PUBLIC',
         'lat': null,
