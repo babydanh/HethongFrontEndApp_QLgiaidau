@@ -3101,7 +3101,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   // ─── Banner Area ───
                   SizedBox(
-                    height: 140.0,
+                    height: 185.0,
                     width: double.infinity,
                     child: Stack(
                       fit: StackFit.expand,
@@ -3183,7 +3183,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   // ─── Content Area ───
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 30, 14, 14),
+                    padding: const EdgeInsets.fromLTRB(14, 32, 14, 14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -3301,19 +3301,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ],
               ),
 
-              // Floating Logo — rendered ON TOP of Column & Content Area (top: 114)
+              // Floating Circular Logo — centered over bottom edge of banner (top: 157)
               Positioned(
-                top: 114,
+                top: 157,
                 left: 14,
                 child: Container(
-                  width: 52,
-                  height: 52,
+                  width: 56,
+                  height: 56,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14),
+                    shape: BoxShape.circle,
                     color: context.colors.bgCard,
                     border: Border.all(
                       color: context.colors.bgCard,
-                      width: 2.5,
+                      width: 3.0,
                     ),
                     boxShadow: [
                       BoxShadow(

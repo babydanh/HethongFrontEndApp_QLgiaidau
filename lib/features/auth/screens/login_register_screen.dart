@@ -270,18 +270,14 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      height: 70,
-                      width: 260,
+                      height: 38,
+                      width: 170,
                       child: Hero(
                         tag: "Sporto_logo",
-                        child: Transform.scale(
-                          scale: 1.6,
+                        child: SvgPicture.asset(
+                          "assets/images/vndcsport.svg",
+                          fit: BoxFit.contain,
                           alignment: Alignment.centerLeft,
-                          child: SvgPicture.asset(
-                            "assets/images/vndcsport.svg",
-                            fit: BoxFit.contain,
-                            alignment: Alignment.centerLeft,
-                          ),
                         ),
                       ),
                     ).animate().fadeIn(duration: 300.ms),

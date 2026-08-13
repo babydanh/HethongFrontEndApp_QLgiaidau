@@ -35,10 +35,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   CommunityMemberModel? _myMembership;
   bool _isJoinLoading = false;
   bool _isFollowBusy = false;
-  bool _isFavoriteBusy = false;
   bool?
   _followOverride; // P2E.2: ghi đè local khi backend chưa trả state follow
-  bool? _favoriteOverride; // P2E.2: ghi đè local cho icon yêu thích
   String _tournamentStatusFilter = 'ALL';
   String _tournamentTypeFilter = 'ALL';
   String _tournamentSportFilter = 'ALL';
@@ -100,9 +98,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final following =
         _followOverride ??
         (ref.watch(isFollowingProvider(club.id)).value ?? false);
-    final favorited =
-        _favoriteOverride ??
-        (ref.watch(isFavoritedProvider(club.id)).value ?? false);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -125,28 +120,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       ? Icons.bookmark_rounded
                       : Icons.bookmark_border_rounded,
                   color: following ? AppTheme.primary : colors.textMuted,
-                  size: 22,
-                ),
-        ),
-        IconButton(
-          onPressed: _isFavoriteBusy
-              ? null
-              : () => _toggleClubFavorite(club, favorited),
-          tooltip: favorited ? l10n.club_unfavorite : l10n.club_favorite,
-          icon: _isFavoriteBusy
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppTheme.primary,
-                  ),
-                )
-              : Icon(
-                  favorited
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                  color: favorited ? AppTheme.primary : colors.textMuted,
                   size: 22,
                 ),
         ),
@@ -198,53 +171,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       }
     } finally {
       if (mounted) setState(() => _isFollowBusy = false);
-    }
-  }
-
-  Future<void> _toggleClubFavorite(
-    Community club,
-    bool currentlyFavorited,
-  ) async {
-    final l10n = AppLocalizations.of(context)!;
-    final auth = ref.read(authProvider);
-    if (!auth.isAuthenticated) {
-      context.go('/login');
-      return;
-    }
-    if (_isFavoriteBusy) return;
-    setState(() => _isFavoriteBusy = true);
-    try {
-      final repo = ref.read(communityRepositoryProvider);
-      final ok = currentlyFavorited
-          ? await repo.unfavoriteCommunity(club.id)
-          : await repo.favoriteCommunity(club.id);
-      if (!mounted) return;
-      if (ok) {
-        setState(() => _favoriteOverride = !currentlyFavorited);
-        ref.invalidate(isFavoritedProvider(club.id));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              currentlyFavorited
-                  ? l10n.club_unfavoriteSuccess
-                  : l10n.club_favoriteSuccess,
-            ),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.club_actionError)));
-      }
-    } catch (e, stack) {
-      _log.error('Lỗi đổi trạng thái yêu thích CLB', e, stack);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.club_actionError)));
-      }
-    } finally {
-      if (mounted) setState(() => _isFavoriteBusy = false);
     }
   }
 
@@ -3219,16 +3145,23 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
       ),
       child: TabBar(
         controller: tabController,
-        indicatorColor: AppTheme.primary,
-        indicatorWeight: 3.0,
+        // Đồng bộ với Web: tab active là pill emerald, không dùng gạch
+        // chân xanh riêng của theme mobile.
+        indicator: BoxDecoration(
+          color: AppTheme.primary,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicatorPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 3),
         dividerColor: Colors.transparent,
-        labelColor: AppTheme.primary,
-        unselectedLabelColor: colors.textSecondary,
-        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+        labelColor: Colors.white,
+        unselectedLabelColor: const Color(0xFF475569),
+        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
         unselectedLabelStyle: const TextStyle(
           fontSize: 13,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w700,
         ),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 14),
         isScrollable: true,
         tabs: [
           const Tab(text: 'Bảng tin'),

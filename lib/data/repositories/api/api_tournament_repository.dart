@@ -460,7 +460,9 @@ class ApiTournamentRepository implements ITournamentRepository {
         if (lastGoodValue != null) {
           yield lastGoodValue;
         } else {
-          yield const <Tournament>[];
+          // Không biến lỗi API/401/429/5xx thành trạng thái "không có giải".
+          // UI cần nhận error để hiển thị retry và log đúng nguyên nhân.
+          yield* Stream<List<Tournament>>.error(e, stack);
         }
         await Future<void>.delayed(retryDelay);
         retryDelay = Duration(

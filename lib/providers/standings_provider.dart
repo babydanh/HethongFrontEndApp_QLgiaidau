@@ -3,11 +3,21 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 
-final standingsProvider = StreamProvider.family<List<Standing>, String>((ref, tournamentId) {
-  return ref.watch(standingsWithDivisionProvider((
+final standingsProvider = StreamProvider.family<List<Standing>, String>((ref, tournamentId) async* {
+  final asyncVal = ref.watch(standingsWithDivisionProvider((
     tournamentId: tournamentId,
     divisionId: null,
-  )).stream);
+  )));
+  if (asyncVal.hasValue) {
+    yield asyncVal.requireValue;
+  } else if (asyncVal.hasError) {
+    throw asyncVal.error!;
+  } else {
+    yield await ref.watch(standingsWithDivisionProvider((
+      tournamentId: tournamentId,
+      divisionId: null,
+    )).future);
+  }
 });
 
 final standingsWithDivisionProvider = StreamProvider.family<
@@ -136,9 +146,8 @@ Future<List<Standing>> _calculateClientStandings(
     divisionId: divisionId,
   )).future);
 
-  // API standings remain the source of truth. This is only a network fallback,
-  // so read the tournament scoring preset instead of assuming 3-1-0.
   var winPoints = 3;
+  // ignore: unused_local_variable
   var drawPoints = 1;
   var lossPoints = 0;
   for (final match in matches) {
@@ -166,9 +175,6 @@ Future<List<Standing>> _calculateClientStandings(
   for (final match in matches) {
     if (match.status.toLowerCase() != 'completed') continue;
 
-    // Hiệu số điểm (pointsFor/pointsAgainst) = TỔNG điểm ghi được từng set,
-    // khớp chuẩn web (parseScoreDetails) + backend (sumSetPoints) — không phải
-    // số set thắng. Chỉ tính khi match có 2 đội thật.
     final team1Pts = match.sets.fold(0, (sum, s) => sum + s.score1);
     final team2Pts = match.sets.fold(0, (sum, s) => sum + s.score2);
     final team1Id = match.team1Id;
@@ -217,8 +223,6 @@ Future<List<Standing>> _calculateClientStandings(
     }
   }
 
-  // pointDifference = pointsFor - pointsAgainst (khớp _standingFromApi fallback),
-  // để cột "Hiệu số" + tie-break sort đúng khi rớt xuống fallback client.
   for (final entry in standingsMap.entries) {
     final current = entry.value;
     standingsMap[entry.key] = current.copyWith(

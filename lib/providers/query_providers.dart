@@ -10,9 +10,6 @@ final tournamentsProvider = StreamProvider<List<Tournament>>((ref) {
   return ref
       .watch(tournamentRepositoryProvider)
       .watchAll()
-      .handleError((error, stackTrace) {
-        return <Tournament>[];
-      })
       .map((list) {
         return list.where((t) => t.status != 'PENDING_DELETE' && t.status != 'pending_delete').toList();
       });
