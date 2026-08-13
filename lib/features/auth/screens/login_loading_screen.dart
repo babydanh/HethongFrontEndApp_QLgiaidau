@@ -62,8 +62,8 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                     tag: "Sporto_logo",
                     child: SizedBox(
                       height: 95,
-                      child: SvgPicture.asset(
-                        "assets/images/sporto_v1_with_text.svg",
+                      child: Image.asset(
+                        "assets/images/sporto_v1_with_text.png",
                         fit: BoxFit.contain,
                       ),
                     ),

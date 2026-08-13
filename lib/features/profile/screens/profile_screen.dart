@@ -312,8 +312,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Official Sporto SVG Logo
-              SvgPicture.asset(
-                'assets/images/sporto_v1_with_text.svg',
+              Image.asset(
+                'assets/images/sporto_v1_with_text.png',
                 width: 190,
                 fit: BoxFit.contain,
               ),
@@ -1861,8 +1861,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget _defaultVndcLogo() {
     return Padding(
       padding: const EdgeInsets.all(7),
-      child: SvgPicture.asset(
-        'assets/images/sporto_v1_with_text.svg',
+      child: Image.asset(
+        'assets/images/sporto_v1_with_text.png',
         fit: BoxFit.contain,
       ),
     );

@@ -194,8 +194,8 @@ class TournamentCardCarousel extends StatelessWidget {
                           tournament.bannerUrl == null ||
                               tournament.bannerUrl!.isEmpty
                           ? Center(
-                              child: SvgPicture.asset(
-                                "assets/images/sporto_v1_with_text.svg",
+                              child: Image.asset(
+                                "assets/images/sporto_v1_with_text.png",
                                 width: 120,
                                 fit: BoxFit.contain,
                               ),

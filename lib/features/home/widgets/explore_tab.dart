@@ -357,8 +357,8 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                             color: Colors.white.withValues(alpha: 0.3),
                           ),
                         ),
-                        child: SvgPicture.asset(
-                          'assets/images/sporto_v1_with_text.svg',
+                        child: Image.asset(
+                          'assets/images/sporto_v1_with_text.png',
                           height: 28,
                           fit: BoxFit.contain,
                         ),

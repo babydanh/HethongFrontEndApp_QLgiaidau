@@ -218,8 +218,8 @@ class _FallbackBanner extends StatelessWidget {
       child: Center(
         child: Padding(
           padding: const EdgeInsets.only(bottom: 26),
-          child: SvgPicture.asset(
-            'assets/images/sporto_v1_with_text.svg',
+          child: Image.asset(
+            'assets/images/sporto_v1_with_text.png',
             width: 160,
             fit: BoxFit.contain,
           ),

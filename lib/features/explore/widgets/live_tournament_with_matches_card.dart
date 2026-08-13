@@ -216,16 +216,16 @@ class _LiveTournamentWithMatchesCardState
                                   errorBuilder: (context, error, stackTrace) =>
                                       Padding(
                                         padding: const EdgeInsets.all(8.0),
-                                        child: SvgPicture.asset(
-                                          "assets/images/sporto_v1_with_text.svg",
+                                        child: Image.asset(
+                                          "assets/images/sporto_v1_with_text.png",
                                           fit: BoxFit.contain,
                                         ),
                                       ),
                                 )
                               : Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: SvgPicture.asset(
-                                    "assets/images/sporto_v1_with_text.svg",
+                                  child: Image.asset(
+                                    "assets/images/sporto_v1_with_text.png",
                                     fit: BoxFit.contain,
                                   ),
                                 ),

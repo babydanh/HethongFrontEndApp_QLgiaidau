@@ -261,8 +261,8 @@ class _TournamentCardWithBannerState
                                 ),
                               ),
                               child: Center(
-                                child: SvgPicture.asset(
-                                  "assets/images/sporto_v1_with_text.svg",
+                                child: Image.asset(
+                                  "assets/images/sporto_v1_with_text.png",
                                   width: 130,
                                   fit: BoxFit.contain,
                                 ),
@@ -282,8 +282,8 @@ class _TournamentCardWithBannerState
                               ),
                             ),
                             child: Center(
-                              child: SvgPicture.asset(
-                                "assets/images/sporto_v1_with_text.svg",
+                              child: Image.asset(
+                                "assets/images/sporto_v1_with_text.png",
                                 width: 130,
                                 fit: BoxFit.contain,
                               ),
@@ -548,8 +548,8 @@ class _TournamentCardWithBannerState
                             errorBuilder: (_, __, ___) => Container(
                               color: AppTheme.primary.withValues(alpha: 0.1),
                               padding: const EdgeInsets.all(8),
-                              child: SvgPicture.asset(
-                                "assets/images/sporto_v1_with_text.svg",
+                              child: Image.asset(
+                                "assets/images/sporto_v1_with_text.png",
                                 fit: BoxFit.contain,
                               ),
                             ),
@@ -557,8 +557,8 @@ class _TournamentCardWithBannerState
                         : Container(
                             color: AppTheme.primary.withValues(alpha: 0.1),
                             padding: const EdgeInsets.all(8),
-                            child: SvgPicture.asset(
-                              "assets/images/sporto_v1_with_text.svg",
+                            child: Image.asset(
+                              "assets/images/sporto_v1_with_text.png",
                               fit: BoxFit.contain,
                             ),
                           ),

@@ -1098,12 +1098,12 @@ class _TournamentTile extends StatelessWidget {
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Padding(
                         padding: const EdgeInsets.all(8),
-                        child: SvgPicture.asset('assets/images/sporto_v1_with_text.svg', fit: BoxFit.contain),
+                        child: Image.asset('assets/images/sporto_v1_with_text.png', fit: BoxFit.contain),
                       ),
                     )
                   : Padding(
                       padding: const EdgeInsets.all(8),
-                      child: SvgPicture.asset('assets/images/sporto_v1_with_text.svg', fit: BoxFit.contain),
+                      child: Image.asset('assets/images/sporto_v1_with_text.png', fit: BoxFit.contain),
                     ),
             ),
             const SizedBox(width: 12),
