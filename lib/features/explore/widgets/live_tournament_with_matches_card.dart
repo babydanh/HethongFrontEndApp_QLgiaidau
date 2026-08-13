@@ -459,97 +459,97 @@ class _LiveTournamentWithMatchesCardState
     final cheerCount = _cheerCounts[match.id] ?? 0;
     final isCheered = cheerCount > 0;
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: colors.border.withValues(alpha: 0.6),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+    return GestureDetector(
+      onTap: () => context.push('/live/${match.id}'),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: colors.border.withValues(alpha: 0.6),
+            width: 1.5,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Top Badges Row ──
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Left Badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: match.isLive
-                      ? const Color(0xFFFEF2F2)
-                      : (match.isCompleted
-                            ? const Color(0xFFDCFCE7)
-                            : const Color(0xFFE0F2FE)),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      statusText,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: match.isLive
-                            ? const Color(0xFFDC2626)
-                            : (match.isCompleted
-                                  ? const Color(0xFF16A34A)
-                                  : const Color(0xFF0284C7)),
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                    if (match.isLive) ...[
-                      const SizedBox(width: 5),
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFDC2626),
-                          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Top Badges Row ──
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Left Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: match.isLive
+                        ? const Color(0xFFFEF2F2)
+                        : (match.isCompleted
+                              ? const Color(0xFFDCFCE7)
+                              : const Color(0xFFE0F2FE)),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        statusText,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: match.isLive
+                              ? const Color(0xFFDC2626)
+                              : (match.isCompleted
+                                    ? const Color(0xFF16A34A)
+                                    : const Color(0xFF0284C7)),
+                          letterSpacing: 0.2,
                         ),
                       ),
+                      if (match.isLive) ...[
+                        const SizedBox(width: 5),
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFDC2626),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-              ),
-
-              // Right Badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3E8FF),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  bracketText,
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF9333EA),
                   ),
                 ),
-              ),
-            ],
-          ),
 
-          const SizedBox(height: 14),
+                // Right Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3E8FF),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    bracketText,
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF9333EA),
+                    ),
+                  ),
+                ),
+              ],
+            ),
 
-          // ── Teams & Score Section (Vertical Layout aligned with Team Names) ──
-          GestureDetector(
-            onTap: () => context.push('/live/${match.id}'),
-            child: Padding(
+            const SizedBox(height: 14),
+
+            // ── Teams & Score Section ──
+            Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -627,18 +627,7 @@ class _LiveTournamentWithMatchesCardState
                           ],
                         ),
 
-                        // VS Label
-                        Padding(
-                          padding: const EdgeInsets.only(left: 44, top: 4, bottom: 4),
-                          child: Text(
-                            'vs',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                        ),
+                        const SizedBox(height: 8),
 
                         // Team 2 Row
                         Row(
@@ -713,200 +702,166 @@ class _LiveTournamentWithMatchesCardState
                 ],
               ),
             ),
-          ),
 
-          const SizedBox(height: 12),
-          Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
-          const SizedBox(height: 10),
+            const SizedBox(height: 12),
+            Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
+            const SizedBox(height: 10),
 
-          // ── Sub-info Row: Sport & Court ──
-          Row(
-            children: [
-              Icon(
-                Icons.sports_handball_rounded,
-                size: 14,
-                color: colors.textSecondary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                sportText,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+            // ── Sub-info Row: Sport & Court ──
+            Row(
+              children: [
+                Icon(
+                  Icons.sports_handball_rounded,
+                  size: 14,
                   color: colors.textSecondary,
                 ),
-              ),
-              const SizedBox(width: 16),
-              Icon(
-                Icons.location_on_outlined,
-                size: 14,
-                color: colors.textMuted,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                courtText,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                const SizedBox(width: 4),
+                Text(
+                  sportText,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textSecondary,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Icon(
+                  Icons.location_on_outlined,
+                  size: 14,
                   color: colors.textMuted,
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(width: 4),
+                Text(
+                  courtText,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: colors.textMuted,
+                  ),
+                ),
+              ],
+            ),
 
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-          // ── Action Buttons Row ──
-          Row(
-            children: [
-              // Button 1: Cổ vũ
-              Expanded(
-                child: InkWell(
-                  onTap: () async {
-                    if (_cheerInFlight.contains(match.id)) return;
-                    _cheerInFlight.add(match.id);
-                    final previousCount = _cheerCounts[match.id] ?? 0;
-                    setState(() {
-                      _cheerCounts[match.id] = previousCount + 1;
-                    });
-                    try {
-                      await ref
-                          .read(matchRepositoryProvider)
-                          .cheerMatch(match.id);
-                      final count = await ref
-                          .read(matchRepositoryProvider)
-                          .getCheerCount(match.id);
-                      if (mounted)
-                        setState(() => _cheerCounts[match.id] = count);
-                    } catch (_) {
-                      if (mounted) {
-                        setState(() => _cheerCounts[match.id] = previousCount);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Chưa thể gửi cổ vũ. Vui lòng thử lại.',
+            // ── Action Buttons Row ──
+            Row(
+              children: [
+                // Button 1: Cổ vũ (Icon trái tim + số đếm nếu có)
+                Expanded(
+                  child: InkWell(
+                    onTap: () async {
+                      if (_cheerInFlight.contains(match.id)) return;
+                      _cheerInFlight.add(match.id);
+                      final previousCount = _cheerCounts[match.id] ?? 0;
+                      setState(() {
+                        _cheerCounts[match.id] = previousCount + 1;
+                      });
+                      try {
+                        await ref
+                            .read(matchRepositoryProvider)
+                            .cheerMatch(match.id);
+                        final count = await ref
+                            .read(matchRepositoryProvider)
+                            .getCheerCount(match.id);
+                        if (mounted)
+                          setState(() => _cheerCounts[match.id] = count);
+                      } catch (_) {
+                        if (mounted) {
+                          setState(() => _cheerCounts[match.id] = previousCount);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Chưa thể gửi cổ vũ. Vui lòng thử lại.',
+                              ),
                             ),
-                          ),
-                        );
+                          );
+                        }
+                      } finally {
+                        _cheerInFlight.remove(match.id);
                       }
-                    } finally {
-                      _cheerInFlight.remove(match.id);
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 9),
-                    decoration: BoxDecoration(
-                      color: isCheered
-                          ? const Color(0xFFFEF2F2)
-                          : colors.bgSurface,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      decoration: BoxDecoration(
                         color: isCheered
-                            ? const Color(0xFFFECACA)
-                            : colors.border,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          isCheered ? Icons.favorite : Icons.favorite_border,
-                          size: 15,
+                            ? const Color(0xFFFEF2F2)
+                            : colors.bgSurface,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
                           color: isCheered
-                              ? const Color(0xFFDC2626)
-                              : const Color(0xFFE11D48),
+                              ? const Color(0xFFFECACA)
+                              : colors.border,
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          cheerCount > 0 ? 'Cổ vũ ($cheerCount)' : 'Cổ vũ',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            isCheered ? Icons.favorite : Icons.favorite_border,
+                            size: 16,
                             color: isCheered
                                 ? const Color(0xFFDC2626)
-                                : colors.textPrimary,
+                                : const Color(0xFFE11D48),
                           ),
-                        ),
-                      ],
+                          if (cheerCount > 0) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              '$cheerCount',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: isCheered
+                                    ? const Color(0xFFDC2626)
+                                    : colors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
+                const SizedBox(width: 8),
 
-              // Button 2: Chi tiết
-              Expanded(
-                child: InkWell(
-                  onTap: () => context.push('/live/${match.id}'),
+                // Button 2: Chia sẻ
+                InkWell(
+                  onTap: () {
+                    AppShareModal.show(
+                      context: context,
+                      title: '${match.team1Name} VS ${match.team2Name}',
+                      subtitle:
+                          'Giải đấu: ${widget.tournament.name} • ${match.court.isNotEmpty ? match.court : "Đang thi đấu"}',
+                      webUrl: 'https://sporto.asia/live/${match.id}',
+                      imageUrl: widget.tournament.logoUrl,
+                      badgeText: match.isLive
+                          ? 'Trận đấu đang Live 🔴'
+                          : 'Trận đấu',
+                    );
+                  },
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 9),
+                    width: 42,
+                    height: 38,
                     decoration: BoxDecoration(
                       color: colors.bgSurface,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: colors.border),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.list_alt_rounded,
-                          size: 15,
-                          color: colors.info,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Chi tiết',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: colors.info,
-                          ),
-                        ),
-                      ],
+                    child: Center(
+                      child: Icon(
+                        Icons.share_rounded,
+                        size: 16,
+                        color: colors.info,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-
-              // Button 3: Nút Chia sẻ CHỈ CÓ ICON
-              InkWell(
-                onTap: () {
-                  AppShareModal.show(
-                    context: context,
-                    title: '${match.team1Name} VS ${match.team2Name}',
-                    subtitle:
-                        'Giải đấu: ${widget.tournament.name} • ${match.court.isNotEmpty ? match.court : "Đang thi đấu"}',
-                    webUrl: 'https://sporto.asia/live/${match.id}',
-                    imageUrl: widget.tournament.logoUrl,
-                    badgeText: match.isLive
-                        ? 'Trận đấu đang Live 🔴'
-                        : 'Trận đấu',
-                  );
-                },
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  width: 42,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: colors.bgSurface,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: colors.border),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.share_rounded,
-                      size: 16,
-                      color: colors.info,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
