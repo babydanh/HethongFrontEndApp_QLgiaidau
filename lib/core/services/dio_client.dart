@@ -37,7 +37,8 @@ class DioClient {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'x-app-key': dotenv.env['APP_API_KEY'] ?? 'sporto-secret-key-2026',
+        if (dotenv.env['APP_API_KEY'] != null && dotenv.env['APP_API_KEY']!.isNotEmpty)
+          'x-app-key': dotenv.env['APP_API_KEY']!,
       },
     ));
 
