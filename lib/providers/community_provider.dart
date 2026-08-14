@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/gallery_image_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_invite_model.dart';
+import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_community_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/repositories/community_repository.dart';
@@ -130,4 +131,8 @@ final isFavoritedProvider = FutureProvider.family<bool, String>((
 ) async {
   final repo = ref.watch(communityRepositoryProvider);
   return repo.isFavorited(communityId);
+});
+
+final communitySocialSettingsProvider = FutureProvider.family<CommunitySocialSettings, String>((ref, communityId) async {
+  return ref.watch(communityRepositoryProvider).getSocialSettings(communityId);
 });

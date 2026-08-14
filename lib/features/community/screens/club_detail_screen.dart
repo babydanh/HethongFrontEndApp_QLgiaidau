@@ -17,6 +17,7 @@ import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_ranking_widget.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/tag_assign_sheet.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/community_social_settings_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_social_screen.dart';
 
@@ -2058,10 +2059,13 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   /// P2C.5 — Mở bottom sheet gán tag BQT; lưu qua repository rồi đồng bộ member list.
   Future<void> _openTagAssignSheet(CommunityMemberModel m) async {
     final repo = ref.read(communityRepositoryProvider);
+    final presets = await repo.getTagPresets(widget.clubId);
+    if (!mounted) return;
     await TagAssignSheet.show(
       context,
       memberName: m.userFullName ?? '',
       currentTags: m.tags,
+      presets: presets,
       onSave: (tags) async {
         await repo.updateMemberTags(
           widget.clubId,
@@ -2821,6 +2825,18 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             onTap: () => context.push(
               '/club/${widget.clubId}/manage',
               extra: _myMembership?.role == 'OWNER',
+            ),
+          ),
+          const SizedBox(height: 8),
+          _settingsTile(
+            icon: Icons.forum_outlined,
+            title: 'Sinh hoạt CLB',
+            subtitle: 'Cài đặt bảng tin, bình luận, chat và tag thành viên',
+            color: AppTheme.primary,
+            onTap: () => CommunitySocialSettingsSheet.show(
+              context,
+              repository: ref.read(communityRepositoryProvider),
+              communityId: widget.clubId,
             ),
           ),
         ],

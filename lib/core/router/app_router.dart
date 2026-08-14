@@ -548,6 +548,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      // Team sport (bóng đá): đăng ký đội nhiều người
+      GoRoute(
+        path: '/register/:id/team',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return AddTeamScreen(tournamentId: id);
+        },
+      ),
 
       // ─── Series ───
       GoRoute(

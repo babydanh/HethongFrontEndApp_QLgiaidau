@@ -100,6 +100,72 @@ class CommunityFeedPage {
   });
 }
 
+class CommunitySocialSettings {
+  final String postingPolicy;
+  final bool postApprovalRequired;
+  final bool commentsEnabled;
+  final bool chatEnabled;
+  final bool publicFeed;
+  final String memberTaggingPolicy;
+
+  const CommunitySocialSettings({
+    this.postingPolicy = 'MEMBERS',
+    this.postApprovalRequired = false,
+    this.commentsEnabled = true,
+    this.chatEnabled = true,
+    this.publicFeed = true,
+    this.memberTaggingPolicy = 'MEMBERS',
+  });
+
+  factory CommunitySocialSettings.fromJson(Map<String, dynamic> json) => CommunitySocialSettings(
+        postingPolicy: json['postingPolicy']?.toString() ?? 'MEMBERS',
+        postApprovalRequired: json['postApprovalRequired'] == true,
+        commentsEnabled: json['commentsEnabled'] != false,
+        chatEnabled: json['chatEnabled'] != false,
+        publicFeed: json['publicFeed'] != false,
+        memberTaggingPolicy: json['memberTaggingPolicy']?.toString() ?? 'MEMBERS',
+      );
+
+  Map<String, dynamic> toJson() => {
+        'postingPolicy': postingPolicy,
+        'postApprovalRequired': postApprovalRequired,
+        'commentsEnabled': commentsEnabled,
+        'chatEnabled': chatEnabled,
+        'publicFeed': publicFeed,
+        'memberTaggingPolicy': memberTaggingPolicy,
+      };
+
+  CommunitySocialSettings copyWith({
+    String? postingPolicy,
+    bool? postApprovalRequired,
+    bool? commentsEnabled,
+    bool? chatEnabled,
+    bool? publicFeed,
+    String? memberTaggingPolicy,
+  }) => CommunitySocialSettings(
+        postingPolicy: postingPolicy ?? this.postingPolicy,
+        postApprovalRequired: postApprovalRequired ?? this.postApprovalRequired,
+        commentsEnabled: commentsEnabled ?? this.commentsEnabled,
+        chatEnabled: chatEnabled ?? this.chatEnabled,
+        publicFeed: publicFeed ?? this.publicFeed,
+        memberTaggingPolicy: memberTaggingPolicy ?? this.memberTaggingPolicy,
+      );
+}
+
+class CommunityTagPreset {
+  final String id;
+  final String name;
+  final String color;
+
+  const CommunityTagPreset({required this.id, required this.name, required this.color});
+
+  factory CommunityTagPreset.fromJson(Map<String, dynamic> json) => CommunityTagPreset(
+        id: json['id']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+        color: json['color']?.toString() ?? '#3B82F6',
+      );
+}
+
 Map<String, dynamic> _asMap(Object? value) {
   if (value is Map<String, dynamic>) return value;
   if (value is Map) {

@@ -45,6 +45,9 @@ class Tournament {
   final bool hideFeaturedCardText;
   final String? inviteCode;
   final bool isLite;
+  // Team sport (bóng đá): sân 5/7/11 → đội nhiều người
+  final int? teamSize;
+  final int? minTeamSize;
 
   const Tournament({
     required this.id,
@@ -86,6 +89,8 @@ class Tournament {
     this.hideFeaturedCardText = false,
     this.inviteCode,
     this.isLite = false,
+    this.teamSize,
+    this.minTeamSize,
   });
 
   factory Tournament.fromJson(Map<String, dynamic> json, String id) {
@@ -250,6 +255,9 @@ class Tournament {
       inviteCode: json['inviteCode']?.toString(),
       // isLite = LOẠI GIẢI lite (nhanh). KHÔNG nhầm với configMode (cách tính điểm LITE/STRICT).
       isLite: json['isLite'] == true || config['isLite'] == true,
+      // Team sport (bóng đá): đọc teamSize/minTeamSize từ tournamentConfig.
+      teamSize: _toInt(config['teamSize']),
+      minTeamSize: _toInt(config['minTeamSize']),
     );
   }
 
@@ -352,6 +360,8 @@ class Tournament {
     bool? hideFeaturedCardText,
     String? inviteCode,
     bool? isLite,
+    int? teamSize,
+    int? minTeamSize,
   }) {
     return Tournament(
       id: id ?? this.id,
@@ -370,6 +380,8 @@ class Tournament {
       creatorAvatarUrl: creatorAvatarUrl ?? this.creatorAvatarUrl,
       maxTeams: maxTeams ?? this.maxTeams,
       maxPlayersPerTeam: maxPlayersPerTeam ?? this.maxPlayersPerTeam,
+      teamSize: teamSize ?? this.teamSize,
+      minTeamSize: minTeamSize ?? this.minTeamSize,
       description: description ?? this.description,
       roundCount: roundCount ?? this.roundCount,
       createdAt: createdAt ?? this.createdAt,

@@ -13,10 +13,20 @@ class ApiTeamRepository implements ITeamRepository {
   @override
   Future<Team> create(String tournamentId, Team team) async {
     _log.info('Creating team via API: ${team.name} inside $tournamentId');
-    final payload = {
+    // Team sport: gửi memberIds (userId) để backend tạo roster thật; fallback playerNames.
+    final memberIds = team.memberInfos
+        .map((m) => m.userId)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList();
+    final payload = <String, dynamic>{
       'teamName': team.name,
       'contactPhone': team.contactEmail.isNotEmpty ? team.contactEmail : '0900000000',
-      'playerNames': team.members.isNotEmpty ? team.members : [team.name],
+      if (memberIds.isNotEmpty)
+        'memberIds': memberIds
+      else
+        'playerNames': team.members.isNotEmpty ? team.members : [team.name],
     };
     final response = await _dioClient.dio.post('/tournaments/$tournamentId/register', data: payload);
     if (response.statusCode == 200 || response.statusCode == 201) {

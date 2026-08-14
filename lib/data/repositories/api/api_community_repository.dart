@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/gallery_image_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_ranking_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_invite_model.dart';
+import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:dio/dio.dart';
 
 class ApiCommunityRepository implements ICommunityRepository {
@@ -651,5 +652,42 @@ class ApiCommunityRepository implements ICommunityRepository {
       'isFollowing($communityId): backend chưa hỗ trợ đọc state follow → false',
     );
     return false;
+  }
+
+  @override
+  Future<CommunitySocialSettings> getSocialSettings(String communityId) async {
+    final response = await _dioClient.dio.get('/communities/$communityId/social-settings');
+    final raw = response.data is Map ? response.data as Map : const {};
+    final data = raw['data'] is Map ? raw['data'] as Map : raw;
+    return CommunitySocialSettings.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  @override
+  Future<CommunitySocialSettings> updateSocialSettings(String communityId, CommunitySocialSettings settings) async {
+    final response = await _dioClient.dio.patch('/communities/$communityId/social-settings', data: settings.toJson());
+    final raw = response.data is Map ? response.data as Map : const {};
+    final data = raw['data'] is Map ? raw['data'] as Map : raw;
+    return CommunitySocialSettings.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  @override
+  Future<List<CommunityTagPreset>> getTagPresets(String communityId) async {
+    final response = await _dioClient.dio.get('/communities/$communityId/tag-presets');
+    final raw = response.data is Map ? response.data as Map : const {};
+    final data = raw['data'] is List ? raw['data'] as List : const [];
+    return data.map((item) => CommunityTagPreset.fromJson(Map<String, dynamic>.from(item as Map))).toList();
+  }
+
+  @override
+  Future<CommunityTagPreset> createTagPreset(String communityId, {required String name, required String color}) async {
+    final response = await _dioClient.dio.post('/communities/$communityId/tag-presets', data: {'name': name.trim(), 'color': color});
+    final raw = response.data is Map ? response.data as Map : const {};
+    final data = raw['data'] is Map ? raw['data'] as Map : raw;
+    return CommunityTagPreset.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  @override
+  Future<void> deleteTagPreset(String communityId, String presetId) async {
+    await _dioClient.dio.delete('/communities/$communityId/tag-presets/$presetId');
   }
 }

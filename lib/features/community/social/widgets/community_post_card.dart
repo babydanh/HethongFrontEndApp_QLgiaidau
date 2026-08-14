@@ -8,8 +8,9 @@ class CommunityPostCard extends ConsumerWidget {
   final CommunityPostModel post;
   final String communityId;
   final ValueChanged<String>? onReact;
+  final bool commentsEnabled;
 
-  const CommunityPostCard({super.key, required this.post, required this.communityId, this.onReact});
+  const CommunityPostCard({super.key, required this.post, required this.communityId, this.onReact, this.commentsEnabled = true});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -134,14 +135,16 @@ class CommunityPostCard extends ConsumerWidget {
                 const SizedBox(width: 5),
                 Text('${post.reactionCount}', style: TextStyle(color: colors.textMuted)),
                 const SizedBox(width: AppTheme.spacingSM),
-                IconButton(
+                if (commentsEnabled) IconButton(
                   tooltip: 'Bình luận',
                   visualDensity: VisualDensity.compact,
                   onPressed: () => _showComments(context, ref),
                   icon: Icon(Icons.chat_bubble_outline_rounded, size: 18, color: colors.textMuted),
                 ),
-                const SizedBox(width: 5),
-                Text('${post.commentCount}', style: TextStyle(color: colors.textMuted)),
+                if (commentsEnabled) ...[
+                  const SizedBox(width: 5),
+                  Text('${post.commentCount}', style: TextStyle(color: colors.textMuted)),
+                ],
               ],
             ),
           ],

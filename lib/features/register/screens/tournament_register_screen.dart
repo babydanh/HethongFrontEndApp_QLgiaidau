@@ -326,6 +326,13 @@ class _TournamentRegisterScreenState
       setState(() => _divisionError = l10n.registerSelectDivision);
       return;
     }
+    // Team sport (bóng đá): config có teamSize → đăng ký đội nhiều người
+    final tournamentForTeam = ref.read(tournamentProvider(widget.tournamentId)).asData?.value;
+    if (tournamentForTeam?.teamSize != null || tournamentForTeam?.minTeamSize != null) {
+      final inviteCode = _localInviteCode ?? widget.inviteCode ?? '';
+      context.push('/register/${widget.tournamentId}/team?invite=$inviteCode');
+      return;
+    }
     // If doubles division, navigate to doubles flow
     final selectedDiv = divisions?.where((d) => d.id == divisionId).firstOrNull;
     if (selectedDiv != null &&

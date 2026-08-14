@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_invite_model.dart';
+import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 
 /// Interface cho Community Repository — DIP
 abstract class ICommunityRepository {
@@ -141,4 +142,13 @@ abstract class ICommunityRepository {
 
   /// Trạng thái yêu thích CLB của user hiện tại.
   Future<bool> isFavorited(String communityId);
+
+  Future<CommunitySocialSettings> getSocialSettings(String communityId);
+  Future<CommunitySocialSettings> updateSocialSettings(
+    String communityId,
+    CommunitySocialSettings settings,
+  );
+  Future<List<CommunityTagPreset>> getTagPresets(String communityId);
+  Future<CommunityTagPreset> createTagPreset(String communityId, {required String name, required String color});
+  Future<void> deleteTagPreset(String communityId, String presetId);
 }

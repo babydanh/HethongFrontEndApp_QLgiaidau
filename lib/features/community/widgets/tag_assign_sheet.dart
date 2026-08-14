@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
+import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 
 /// P2C.5 — Bottom sheet gán tag BQT cho thành viên (OWNER/MODERATOR).
 /// Replace toàn bộ khi lưu; mảng rỗng = xoá hết. Tối đa 5 tag, mỗi tag ≤ 24 ký tự.
@@ -9,6 +10,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.da
 class TagAssignSheet extends StatefulWidget {
   final String memberName;
   final List<String> currentTags;
+  final List<CommunityTagPreset> presets;
 
   /// Trả về khi lưu thành công; ném exception khi thất bại → sheet giữ nguyên
   /// và hiển thị lỗi.
@@ -18,6 +20,7 @@ class TagAssignSheet extends StatefulWidget {
     super.key,
     required this.memberName,
     required this.currentTags,
+    this.presets = const [],
     required this.onSave,
   });
 
@@ -25,6 +28,7 @@ class TagAssignSheet extends StatefulWidget {
     BuildContext context, {
     required String memberName,
     required List<String> currentTags,
+    List<CommunityTagPreset> presets = const [],
     required Future<void> Function(List<String> tags) onSave,
   }) {
     return showModalBottomSheet<void>(
@@ -34,6 +38,7 @@ class TagAssignSheet extends StatefulWidget {
       builder: (_) => TagAssignSheet(
         memberName: memberName,
         currentTags: currentTags,
+        presets: presets,
         onSave: onSave,
       ),
     );
@@ -222,7 +227,13 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
-                children: AppConstants.memberTagSuggestions
+                children: [
+                  ...widget.presets.map((preset) => ActionChip(
+                    avatar: CircleAvatar(backgroundColor: _parseColor(preset.color), radius: 7),
+                    label: Text(preset.name),
+                    onPressed: _saving ? null : () => _addSuggestedTag(preset.name),
+                  )),
+                  ...AppConstants.memberTagSuggestions
                     .where(
                       (tag) => !_tags.any(
                         (current) => current.toLowerCase() == tag.toLowerCase(),
@@ -234,7 +245,8 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
                         onPressed: _saving ? null : () => _addSuggestedTag(tag),
                       ),
                     )
-                    .toList(growable: false),
+                    ,
+                ],
               ),
             if (!maxReached) const SizedBox(height: 12),
             // Input thêm tag
@@ -359,4 +371,9 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
       ),
     );
   }
+}
+
+Color _parseColor(String value) {
+  final hex = value.replaceFirst('#', '');
+  return Color(int.tryParse('FF${hex.length == 6 ? hex : '3B82F6'}', radix: 16) ?? 0xFF3B82F6);
 }
