@@ -6,12 +6,14 @@ class CategoryModel {
   final String name;
   final String slug;
   final String description;
+  final bool isActive;
 
   CategoryModel({
     required this.id,
     required this.name,
     required this.slug,
     required this.description,
+    required this.isActive,
   });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class CategoryModel {
       name: json['name'] ?? '',
       slug: json['slug'] ?? '',
       description: json['description'] ?? '',
+      isActive: json['isActive'] == true || json['is_active'] == true,
     );
   }
 }
@@ -32,5 +35,8 @@ final categoriesProvider = FutureProvider<List<CategoryModel>>((ref) async {
   final List<dynamic> dataList = raw is Map<String, dynamic>
       ? (raw['data'] as List<dynamic>? ?? [])
       : (raw as List<dynamic>? ?? []);
-  return dataList.map((e) => CategoryModel.fromJson(e as Map<String, dynamic>)).toList();
+  return dataList
+      .map((e) => CategoryModel.fromJson(e as Map<String, dynamic>))
+      .where((category) => category.isActive)
+      .toList(growable: false);
 });

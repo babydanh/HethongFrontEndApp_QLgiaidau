@@ -5,7 +5,8 @@ enum SportRuleKind {
   badminton('BADMINTON'),
   tableTennis('TABLE_TENNIS'),
   pickleball('PICKLEBALL'),
-  tennis('TENNIS');
+  tennis('TENNIS'),
+  football('FOOTBALL');
 
   final String value;
   const SportRuleKind(this.value);
@@ -28,6 +29,9 @@ enum SportRuleKind {
       case 'TENNIS':
       case 'QUẦN VỢT':
         return SportRuleKind.tennis;
+      case 'FOOTBALL':
+      case 'BONG DA':
+        return SportRuleKind.football;
       default:
         return SportRuleKind.badminton;
     }

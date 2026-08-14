@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/features/match/widgets/pickleball_panel.dart'
 import 'package:app_quanly_giaidau/features/match/widgets/rally_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/badminton_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/table_tennis_score_panel.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/football_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/set_history_bar.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
@@ -537,7 +538,9 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
       child: Column(
         children: [
           Expanded(
-            child: kind == SportRuleKind.tennis
+            child: kind == SportRuleKind.football
+                ? FootballScorePanel(params: params, team1Name: widget.match.team1Name, team2Name: widget.match.team2Name)
+                : kind == SportRuleKind.tennis
                 ? TennisScorePanel(params: params, isReadOnly: false)
                 : usePickleballSideOutPanel
                 ? PickleballPanel(params: params, isReadOnly: false)
@@ -842,6 +845,8 @@ String _sportKeyForKind(SportRuleKind kind) {
       return AppConstants.sportTableTennis;
     case SportRuleKind.badminton:
       return AppConstants.sportBadminton;
+    case SportRuleKind.football:
+      return 'FOOTBALL';
   }
 }
 
@@ -855,6 +860,8 @@ String _sportLabel(SportRuleKind kind) {
       return 'Bóng bàn';
     case SportRuleKind.badminton:
       return 'Cầu lông';
+    case SportRuleKind.football:
+      return 'Bóng đá';
   }
 }
 

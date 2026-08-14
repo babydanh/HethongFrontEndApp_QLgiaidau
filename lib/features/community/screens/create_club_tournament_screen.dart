@@ -35,12 +35,15 @@ class _CreateClubTournamentScreenState
   String _selectedBracket = AppConstants.bracketSingleElimination;
   bool _isLoading = false;
   bool _isRanked = false;
+  int _footballTeamSize = 7;
+  final _footballReserveCtrl = TextEditingController(text: '5');
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _descCtrl.dispose();
     _maxTeamsCtrl.dispose();
+    _footballReserveCtrl.dispose();
     super.dispose();
   }
 
@@ -56,6 +59,8 @@ class _CreateClubTournamentScreenState
         return 'pickleball';
       case AppConstants.sportTableTennis:
         return 'table_tennis';
+      case AppConstants.sportFootball:
+        return 'football';
       default:
         return null;
     }
@@ -84,6 +89,10 @@ class _CreateClubTournamentScreenState
         'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
         'description': _descCtrl.text.trim(),
         'isRanked': _isRanked,
+        if (_selectedSport == AppConstants.sportFootball) ...{
+          'teamSize': _footballTeamSize,
+          'maxReserve': int.tryParse(_footballReserveCtrl.text) ?? 0,
+        },
       };
 
       _log.info('Tạo giải Lite trong CLB: ${body['name']}');
@@ -193,6 +202,36 @@ class _CreateClubTournamentScreenState
               _label('Hình thức', colors),
               const SizedBox(height: 6),
               _buildFormatSelector(),
+              if (_selectedSport == AppConstants.sportFootball) ...[
+                const SizedBox(height: 16),
+                _label('Cấu hình đội bóng', colors),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        initialValue: _footballTeamSize,
+                        decoration: const InputDecoration(labelText: 'Cầu thủ chính'),
+                        items: const [5, 7, 11].map((value) => DropdownMenuItem(value: value, child: Text('$value người'))).toList(),
+                        onChanged: (value) => setState(() => _footballTeamSize = value ?? 7),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _footballReserveCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'Dự bị tối đa'),
+                        validator: (value) {
+                          if (_selectedSport != AppConstants.sportFootball) return null;
+                          final reserve = int.tryParse(value ?? '');
+                          return reserve == null || reserve < 0 || reserve > 20 ? '0-20 người' : null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 20),
 
               // ─── Thể thức ───
@@ -337,6 +376,7 @@ class _CreateClubTournamentScreenState
 
   Widget _buildSportSelector() {
     final sports = [
+      (AppConstants.sportFootball, 'Football', Icons.sports_soccer),
       (AppConstants.sportBadminton, 'Cầu lông', Icons.sports_tennis),
       (AppConstants.sportTennis, 'Tennis', Icons.sports_tennis),
       (AppConstants.sportPickleball, 'Pickleball', Icons.sports_tennis),

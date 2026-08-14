@@ -14,6 +14,24 @@ final scorePanelNotifierProvider = NotifierProvider.autoDispose
       (arg) => ScorePanelNotifier(arg),
     );
 
+FootballLiveState? _readFootballState(Map<String, dynamic> details) {
+  final raw = details['football'];
+  if (raw is! Map) return null;
+  return FootballLiveState(
+    team1Goals: raw['team1Goals'] is int ? raw['team1Goals'] as int : 0,
+    team2Goals: raw['team2Goals'] is int ? raw['team2Goals'] as int : 0,
+    phase: raw['phase']?.toString() ?? 'FIRST_HALF',
+    minute: raw['minute'] is int ? raw['minute'] as int : 0,
+    events: raw['events'] is List
+        ? (raw['events'] as List).whereType<Map>().map((event) => FootballEvent(
+              type: event['type']?.toString() ?? 'NOTE',
+              isTeam1: event['team'] == 1,
+              minute: event['minute'] is int ? event['minute'] as int : 0,
+            )).toList()
+        : const [],
+  );
+}
+
 /// Quản lý scoring logic cho tất cả môn thể thao (Tennis, Pickleball, Rally).
 class ScorePanelNotifier extends Notifier<ScorePanelState> {
   static const _log = AppLogger('ScorePanelNotifier');
@@ -46,6 +64,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     var initialState = ScorePanelState(
       config: config,
       isLite: _isLiteMatch(initialMatch),
+      football: SportRuleKind.fromString(initialMatch?.sportKey) == SportRuleKind.football
+          ? const FootballLiveState()
+          : null,
     );
     if (initialMatch != null) {
       initialState = _hydrateState(initialState, initialMatch);
@@ -192,6 +213,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       tennis: tennisState,
       pickleball: pbState,
       rally: rallyState,
+      football: _readFootballState(details) ?? current.football,
     );
   }
 
@@ -463,6 +485,78 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   // ════════════════ COMMON ════════════════
 
   bool get isMatchComplete => state.isMatchComplete;
+
+  void footballAddGoal(bool isTeam1) {
+    final current = state.football ?? const FootballLiveState();
+    final next = current.copyWith(
+      team1Goals: isTeam1 ? current.team1Goals + 1 : current.team1Goals,
+      team2Goals: isTeam1 ? current.team2Goals : current.team2Goals + 1,
+    );
+    state = state.copyWith(football: next, errorMessage: null);
+    unawaited(_syncFootball(next));
+  }
+
+  void footballRemoveGoal(bool isTeam1) {
+    final current = state.football ?? const FootballLiveState();
+    final next = current.copyWith(
+      team1Goals: isTeam1 ? (current.team1Goals > 0 ? current.team1Goals - 1 : 0) : current.team1Goals,
+      team2Goals: isTeam1 ? current.team2Goals : (current.team2Goals > 0 ? current.team2Goals - 1 : 0),
+    );
+    state = state.copyWith(football: next, errorMessage: null);
+    unawaited(_syncFootball(next));
+  }
+
+  void footballSetPhase(String phase) {
+    final next = (state.football ?? const FootballLiveState()).copyWith(phase: phase);
+    state = state.copyWith(football: next, errorMessage: null);
+    unawaited(_syncFootball(next));
+  }
+
+  void footballSetMinute(int minute) {
+    final next = (state.football ?? const FootballLiveState()).copyWith(minute: minute.clamp(0, 130));
+    state = state.copyWith(football: next, errorMessage: null);
+    unawaited(_syncFootball(next));
+  }
+
+  void footballAddEvent(String type, bool isTeam1) {
+    final current = state.football ?? const FootballLiveState();
+    final next = current.copyWith(events: [
+      ...current.events,
+      FootballEvent(type: type, isTeam1: isTeam1, minute: current.minute),
+    ]);
+    state = state.copyWith(football: next, errorMessage: null);
+    unawaited(_syncFootball(next));
+  }
+
+  Future<void> _syncFootball(FootballLiveState value) async {
+    final match = ref.read(singleMatchProvider(arg)).value;
+    if (match == null) return;
+    try {
+      await ref.read(matchControllerProvider(arg)).updateSetsWithDetails(
+        p1SetsWon: 0,
+        p2SetsWon: 0,
+        scoreDetails: const [],
+        scoreDetailsExtras: {
+          'football': {
+            'team1Goals': value.team1Goals,
+            'team2Goals': value.team2Goals,
+            'phase': value.phase,
+            'minute': value.minute,
+            'events': value.events.asMap().entries.map((entry) => {
+              'id': 'app-${entry.key}-${value.minute}',
+              'type': entry.value.type,
+              'team': entry.value.isTeam1 ? 1 : 2,
+              'minute': entry.value.minute,
+            }).toList(),
+          },
+        },
+        expectedRevision: match.revision,
+      );
+    } catch (error, stack) {
+      _log.error('Football live score sync failed', error, stack);
+      state = state.copyWith(errorMessage: 'Không thể đồng bộ tỉ số bóng đá.');
+    }
+  }
 
   bool canCompleteAs(int winnerTeam) {
     if (winnerTeam != 1 && winnerTeam != 2) return false;

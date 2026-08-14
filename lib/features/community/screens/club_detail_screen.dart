@@ -272,6 +272,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
   bool get _isMember => _myMembership?.status == 'JOINED';
   bool get _isPending => _myMembership?.status == 'PENDING';
+  bool get _isInvited => _myMembership?.status == 'INVITED';
 
   Widget _buildContent(Community club) {
     final colors = context.colors;
@@ -452,6 +453,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   IconData _getJoinIcon() {
     if (_isMember) return Icons.check_rounded;
     if (_isPending) return Icons.hourglass_empty_rounded;
+    if (_isInvited) return Icons.mail_rounded;
     return Icons.add_rounded;
   }
 
@@ -460,12 +462,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     if (_isJoinLoading) return l10n.club_joinLoading;
     if (_isMember) return l10n.club_joined;
     if (_isPending) return l10n.club_pendingApproval;
+    if (_isInvited) return 'Chấp nhận lời mời';
     return l10n.club_joinButton;
   }
 
   Color? _getJoinBgColor() {
     if (_isMember) return const Color(0xFF059669);
     if (_isPending) return Colors.grey;
+    if (_isInvited) return AppTheme.primary;
     return AppTheme.primary;
   }
 
@@ -480,6 +484,23 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
     setState(() => _isJoinLoading = true);
     try {
+      if (_isInvited) {
+        await ref
+            .read(communityRepositoryProvider)
+            .respondToInvite(widget.clubId, 'accept');
+        _log.success('Chấp nhận lời mời CLB thành công');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đã tham gia câu lạc bộ thành công!'),
+              backgroundColor: Color(0xFF059669),
+            ),
+          );
+          await _fetchMembership();
+        }
+        return;
+      }
+
       final ok = await ref
           .read(communityRepositoryProvider)
           .joinCommunity(widget.clubId);

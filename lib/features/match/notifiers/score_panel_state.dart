@@ -53,6 +53,37 @@ class RallySetState {
   );
 }
 
+class FootballLiveState {
+  final int team1Goals;
+  final int team2Goals;
+  final String phase;
+  final int minute;
+  final List<FootballEvent> events;
+
+  const FootballLiveState({
+    this.team1Goals = 0,
+    this.team2Goals = 0,
+    this.phase = 'FIRST_HALF',
+    this.minute = 0,
+    this.events = const [],
+  });
+
+  FootballLiveState copyWith({int? team1Goals, int? team2Goals, String? phase, int? minute, List<FootballEvent>? events}) => FootballLiveState(
+    team1Goals: team1Goals ?? this.team1Goals,
+    team2Goals: team2Goals ?? this.team2Goals,
+    phase: phase ?? this.phase,
+    minute: minute ?? this.minute,
+    events: events ?? this.events,
+  );
+}
+
+class FootballEvent {
+  final String type;
+  final bool isTeam1;
+  final int minute;
+  const FootballEvent({required this.type, required this.isTeam1, required this.minute});
+}
+
 /// State tổng thể của ScorePanelNotifier.
 class ScorePanelState {
   final SportConfig config;
@@ -60,6 +91,7 @@ class ScorePanelState {
   final TennisGameState? tennis;
   final PickleballServeState? pickleball;
   final RallySetState? rally;
+  final FootballLiveState? football;
   final bool isSubmitting;
   final String? errorMessage;
   final bool overrideEnabled;
@@ -72,6 +104,7 @@ class ScorePanelState {
     this.tennis,
     this.pickleball,
     this.rally,
+    this.football,
     this.isSubmitting = false,
     this.errorMessage,
     this.overrideEnabled = false,
@@ -113,6 +146,7 @@ class ScorePanelState {
     TennisGameState? tennis,
     PickleballServeState? pickleball,
     RallySetState? rally,
+    FootballLiveState? football,
     bool? isSubmitting,
     String? errorMessage,
     bool? overrideEnabled,
@@ -124,6 +158,7 @@ class ScorePanelState {
     tennis: tennis ?? this.tennis,
     pickleball: pickleball ?? this.pickleball,
     rally: rally ?? this.rally,
+    football: football ?? this.football,
     isSubmitting: isSubmitting ?? this.isSubmitting,
     errorMessage: errorMessage,
     overrideEnabled: overrideEnabled ?? this.overrideEnabled,

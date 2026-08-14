@@ -62,6 +62,7 @@ class ApiTournamentRepository implements ITournamentRepository {
       if (item is! Map<String, dynamic>) continue;
       final slug = (item['slug'] ?? '').toString().toLowerCase();
       if (slug == sportSlug.toLowerCase()) {
+        if (item['isActive'] != true && item['is_active'] != true) continue;
         final id = (item['id'] ?? '').toString();
         if (id.isNotEmpty) {
           return id;
@@ -130,6 +131,14 @@ class ApiTournamentRepository implements ITournamentRepository {
           'setsToWin': 2,
           'pointsPerSet': 21,
           'mustWinByTwo': true,
+        };
+      case AppConstants.sportFootball:
+        return {
+          'kind': 'FOOTBALL',
+          'halvesCount': 2,
+          'halfDuration': 45,
+          'allowDraw': true,
+          'bestOf': 1,
         };
       default:
         throw ArgumentError('Unsupported sport: $sport');
