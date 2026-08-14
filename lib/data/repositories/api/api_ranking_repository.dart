@@ -29,27 +29,32 @@ class ApiRankingRepository implements IRankingRepository {
         limit: limit ?? 100,
       );
 
-      final response = await _dioClient.dio.get(
-        '/rankings',
-        queryParameters: queryParams.isNotEmpty ? queryParams : null,
-      );
-
-      if (response.statusCode == 200) {
+      final rankings = <PlayerRanking>[];
+      String? cursor;
+      const pageSize = 100;
+      for (var page = 0; page < 50; page++) {
+        final pageQuery = <String, dynamic>{...queryParams, 'limit': pageSize};
+        if (cursor != null && cursor.isNotEmpty) pageQuery['cursor'] = cursor;
+        final response = await _dioClient.dio.get('/rankings', queryParameters: pageQuery);
+        if (response.statusCode != 200) throw Exception('Ranking request failed');
         final raw = response.data;
         final List<dynamic> dataList = raw is Map<String, dynamic>
             ? (raw['data'] as List<dynamic>? ?? [])
             : (raw as List<dynamic>? ?? []);
-        final rankings = dataList
-            .map((json) => PlayerRanking.fromJson(json as Map<String, dynamic>))
-            .toList();
-        final enriched = <PlayerRanking>[];
-        for (var i = 0; i < rankings.length; i++) {
-          enriched.add(rankings[i].copyWith(rank: i + 1));
-        }
-        return enriched;
+        rankings.addAll(dataList.map((json) => PlayerRanking.fromJson(json as Map<String, dynamic>)));
+        final meta = raw is Map<String, dynamic> && raw['meta'] is Map
+            ? Map<String, dynamic>.from(raw['meta'] as Map)
+            : const <String, dynamic>{};
+        final next = meta['nextCursor']?.toString();
+        if (meta['hasMore'] != true || next == null || next.isEmpty || next == cursor || dataList.isEmpty) break;
+        cursor = next;
       }
+      final enriched = <PlayerRanking>[];
+      for (var i = 0; i < rankings.length; i++) {
+        enriched.add(rankings[i].copyWith(rank: i + 1));
+      }
+      return enriched;
 
-      throw Exception('Không thể tải bảng xếp hạng');
     } catch (e, stack) {
       _log.error('Lỗi tải bảng xếp hạng', e, stack);
       rethrow;

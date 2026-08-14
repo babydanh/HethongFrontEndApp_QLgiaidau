@@ -19,7 +19,7 @@ class AppConstants {
   };
 
   static const Map<String, String> sportIcons = {
-    sportFootball: 'football',
+    sportFootball: '⚽',
     sportPickleball: 'assets/icons/racket.png',
     sportBadminton: '🏸',
     sportTennis: '🎾',

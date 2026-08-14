@@ -3,6 +3,9 @@ class CommunityPostModel {
   final String authorName;
   final String? authorAvatarUrl;
   final String text;
+  final String? tournamentId;
+  final String? tournamentName;
+  final String type;
   final List<String> mediaUrls;
   final List<String> topicTags;
   final DateTime? createdAt;
@@ -17,6 +20,9 @@ class CommunityPostModel {
     required this.authorName,
     required this.text,
     this.authorAvatarUrl,
+    this.tournamentId,
+    this.tournamentName,
+    this.type = 'NORMAL',
     this.mediaUrls = const [],
     this.topicTags = const [],
     this.createdAt,
@@ -29,6 +35,7 @@ class CommunityPostModel {
 
   factory CommunityPostModel.fromJson(Map<String, dynamic> json) {
     final author = _asMap(json['author']);
+    final tournament = _asMap(json['tournament']);
     final rawMedia = json['mediaUrls'] ?? json['attachmentsUrls'];
     final rawTopics = json['topicTags'] ?? json['topics'] ?? json['tags'];
     return CommunityPostModel(
@@ -46,6 +53,9 @@ class CommunityPostModel {
           _asString(json['content']) ??
           _asString(json['message']) ??
           '',
+      tournamentId: _asString(json['tournamentId']),
+      tournamentName: _asString(tournament['name']),
+      type: _asString(json['type']) ?? 'NORMAL',
       mediaUrls: _asStringList(rawMedia),
       topicTags: _asStringList(rawTopics),
       createdAt: _asDateTime(json['createdAt'] ?? json['created_at']),

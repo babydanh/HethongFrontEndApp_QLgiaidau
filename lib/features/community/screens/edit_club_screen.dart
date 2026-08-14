@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 
 /// Màn hình chỉnh sửa thông tin câu lạc bộ.
@@ -65,6 +66,20 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     return AppConstants.sportBadminton;
   }
 
+  Future<String> _resolveCategoryId() async {
+    final categories = await ref.read(categoriesProvider.future);
+    final selected = categories.where((category) {
+      final slug = category.slug.trim().toLowerCase();
+      final name = category.name.trim().toLowerCase();
+      return slug == _selectedSport.toLowerCase() ||
+          name == (AppConstants.sportNames[_selectedSport] ?? '').toLowerCase();
+    }).firstOrNull;
+    if (selected == null || selected.id.isEmpty) {
+      throw StateError('Không tìm thấy môn thể thao đã chọn. Vui lòng thử lại.');
+    }
+    return selected.id;
+  }
+
   Future<void> _pickImage() async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
@@ -111,7 +126,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
         'name': _nameCtrl.text.trim(),
         'description': _descCtrl.text.trim(),
         'locationAddress': _locationCtrl.text.trim(),
-        'categoryIds': [_selectedSport],
+        'categoryIds': [await _resolveCategoryId()],
         'joinMode': _joinMode,
         if (_maxMembersCtrl.text.trim().isNotEmpty)
           'maxMembers': int.tryParse(_maxMembersCtrl.text.trim()),
@@ -237,7 +252,9 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
             const SizedBox(height: 20),
 
             // Môn thể thao
-            _label('Môn thể thao', colors),
+            _label('Môn thể thao chính', colors),
+            const SizedBox(height: 6),
+            Text('Mỗi CLB chỉ có một môn thể thao chính.', style: TextStyle(fontSize: 12, color: colors.textMuted)),
             const SizedBox(height: 6),
             _buildSportSelector(),
             const SizedBox(height: 20),
