@@ -328,9 +328,17 @@ class _TournamentRegisterScreenState
     }
     // Team sport (bóng đá): config có teamSize → đăng ký đội nhiều người
     final tournamentForTeam = ref.read(tournamentProvider(widget.tournamentId)).asData?.value;
-    if (tournamentForTeam?.teamSize != null || tournamentForTeam?.minTeamSize != null) {
+    if (tournamentForTeam != null && (tournamentForTeam.teamSize != null || tournamentForTeam.minTeamSize != null)) {
       final inviteCode = _localInviteCode ?? widget.inviteCode ?? '';
-      context.push('/register/${widget.tournamentId}/team?invite=$inviteCode');
+      final selectedTeamDivision = divisions?.where((d) => d.id == divisionId).firstOrNull;
+      final query = <String, String>{
+        'invite': inviteCode,
+        ...?(divisionId == null ? null : {'divisionId': divisionId}),
+        if (selectedTeamDivision?.categoryId != null) 'categoryId': selectedTeamDivision!.categoryId!,
+        if (tournamentForTeam.teamSize != null) 'teamSize': '${tournamentForTeam.teamSize}',
+        if (tournamentForTeam.maxReserve != null) 'maxReserve': '${tournamentForTeam.maxReserve}',
+      };
+      context.push(Uri(path: '/register/${widget.tournamentId}/team', queryParameters: query).toString());
       return;
     }
     // If doubles division, navigate to doubles flow
@@ -731,9 +739,8 @@ class _TournamentRegisterScreenState
                 // thực sự (>0) + isPaid → mới cần nhập/hoàn bank. (fix #35)
                 hasPaid: _existingIsPaid && fee > 0,
               );
-              if (withdrew && context.mounted) {
-                context.go('/intro/${tournament.id}');
-              }
+              if (!withdrew || !mounted) return;
+              context.go('/intro/${tournament.id}');
             },
             icon: Icon(Icons.exit_to_app_rounded, color: context.colors.error),
             label: Text(l10n.registerWithdraw, style: TextStyle(color: context.colors.error)),
@@ -863,9 +870,8 @@ class _TournamentRegisterScreenState
                   divisionId: _selectedDiv,
                   hasPaid: false,
                 );
-                if (withdrew && context.mounted) {
-                  context.go('/intro/${widget.tournamentId}');
-                }
+                if (!withdrew || !mounted) return;
+                context.go('/intro/${widget.tournamentId}');
               },
               icon: Icon(
                 Icons.exit_to_app_rounded,

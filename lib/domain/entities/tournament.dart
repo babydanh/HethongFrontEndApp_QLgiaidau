@@ -48,6 +48,7 @@ class Tournament {
   // Team sport (bóng đá): sân 5/7/11 → đội nhiều người
   final int? teamSize;
   final int? minTeamSize;
+  final int? maxReserve;
 
   const Tournament({
     required this.id,
@@ -91,6 +92,7 @@ class Tournament {
     this.isLite = false,
     this.teamSize,
     this.minTeamSize,
+    this.maxReserve,
   });
 
   factory Tournament.fromJson(Map<String, dynamic> json, String id) {
@@ -258,6 +260,7 @@ class Tournament {
       // Team sport (bóng đá): đọc teamSize/minTeamSize từ tournamentConfig.
       teamSize: _toInt(config['teamSize']),
       minTeamSize: _toInt(config['minTeamSize']),
+      maxReserve: _toInt(config['maxReserve']),
     );
   }
 
@@ -281,6 +284,9 @@ class Tournament {
         'bracketType': bracketType,
         'maxTeams': maxTeams,
         'roundRobinLegs': roundCount,
+        if (teamSize != null) 'teamSize': teamSize,
+        if (minTeamSize != null) 'minTeamSize': minTeamSize,
+        if (maxReserve != null) 'maxReserve': maxReserve,
         if (registrationMode != null) 'registrationMode': registrationMode,
         'hideFeaturedCardText': hideFeaturedCardText,
         // isLite = LOẠI GIẢI lite. KHÔNG ghi 'mode':'LITE' (đó là scoring mode).
@@ -362,6 +368,7 @@ class Tournament {
     bool? isLite,
     int? teamSize,
     int? minTeamSize,
+    int? maxReserve,
   }) {
     return Tournament(
       id: id ?? this.id,
@@ -382,6 +389,7 @@ class Tournament {
       maxPlayersPerTeam: maxPlayersPerTeam ?? this.maxPlayersPerTeam,
       teamSize: teamSize ?? this.teamSize,
       minTeamSize: minTeamSize ?? this.minTeamSize,
+      maxReserve: maxReserve ?? this.maxReserve,
       description: description ?? this.description,
       roundCount: roundCount ?? this.roundCount,
       createdAt: createdAt ?? this.createdAt,

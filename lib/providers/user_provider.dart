@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
 
 class Province {
   final String code;
@@ -99,4 +100,12 @@ final userRankingsProvider = FutureProvider<List<PlayerRanking>>((ref) async {
   } catch (e) {
     return [];
   }
+});
+
+/// Các đội bóng người dùng đang tham gia, dùng để hiển thị ELO đội cao nhất
+/// trong dashboard cá nhân. Backend trả rank theo category đang hoạt động.
+final myFootballTeamsProvider = FutureProvider<List<FootballTeamSummary>>((ref) async {
+  final authState = ref.watch(authProvider);
+  if (!authState.isAuthenticated) return const [];
+  return ref.read(footballTeamApiProvider).listMyFootballTeams();
 });

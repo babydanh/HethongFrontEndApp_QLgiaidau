@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
 import 'package:flutter/material.dart';
 
 /// Card ELO nổi bật dùng lại cho Home/Dashboard/Profile.
@@ -12,6 +13,7 @@ class EloProgressCard extends StatefulWidget {
   final String? userEmail;
   final String? avatarUrl;
   final List<PlayerRanking> rankings;
+  final FootballTeamSummary? footballTeam;
   final VoidCallback? onTapProfile;
 
   const EloProgressCard({
@@ -20,6 +22,7 @@ class EloProgressCard extends StatefulWidget {
     this.userEmail,
     this.avatarUrl,
     required this.rankings,
+    this.footballTeam,
     this.onTapProfile,
   });
 
@@ -133,6 +136,54 @@ class _EloProgressCardState extends State<EloProgressCard> {
                   ),
                 ),
               ],
+            ),
+          ],
+          if (widget.footballTeam != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  ClipOval(
+                    child: widget.footballTeam!.logoUrl?.isNotEmpty == true
+                        ? Image.network(
+                            widget.footballTeam!.logoUrl!,
+                            width: 24,
+                            height: 24,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.groups_rounded, color: AppTheme.primary, size: 18),
+                          )
+                        : const Icon(Icons.groups_rounded, color: AppTheme.primary, size: 18),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Đội bóng cao nhất: ${widget.footballTeam!.name}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${widget.footballTeam!.eloPoints} ELO',
+                    style: const TextStyle(
+                      color: AppTheme.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
           const SizedBox(height: 16),

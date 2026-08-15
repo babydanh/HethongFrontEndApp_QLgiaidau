@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
+import 'package:dio/dio.dart';
 
 class ApiTournamentRepository implements ITournamentRepository {
   static const _log = AppLogger('ApiTournamentRepo');
@@ -168,16 +169,16 @@ class ApiTournamentRepository implements ITournamentRepository {
           'invite': inviteCode.trim(),
       };
 
-      final results = await Future.wait([
-        _dioClient.dio.get(
-          '/tournaments/$id',
-          queryParameters: query.isEmpty ? null : query,
-        ),
-        _dioClient.dio.get('/tournaments/$id/divisions').catchError((_) => null),
-      ]);
-
-      final response = results[0];
-      final divResponse = results[1];
+      final response = await _dioClient.dio.get(
+        '/tournaments/$id',
+        queryParameters: query.isEmpty ? null : query,
+      );
+      Response<dynamic>? divResponse;
+      try {
+        divResponse = await _dioClient.dio.get('/tournaments/$id/divisions');
+      } catch (_) {
+        // Tournament details remain usable when the optional divisions call fails.
+      }
 
       if (response.statusCode == 200) {
         final data = response.data['data'];
@@ -274,7 +275,7 @@ class ApiTournamentRepository implements ITournamentRepository {
             .toList();
         if (list.isNotEmpty) return list;
       }
-    } catch (e, stack) {
+    } catch (e) {
       _log.warning('Failed to fetch divisions via API, creating fallback: $e');
     }
 
@@ -306,6 +307,9 @@ class ApiTournamentRepository implements ITournamentRepository {
     String? divisionId,
     String? inviteCode,
     String? partnerEmailOrPhone,
+    String? footballTeamId,
+    List<String>? memberIds,
+    List<String>? reserveMemberIds,
     bool rankingConsent = false,
   }) async {
     final queryParameters = <String, dynamic>{};
@@ -321,9 +325,13 @@ class ApiTournamentRepository implements ITournamentRepository {
       '/tournaments/$tournamentId/register',
       data: {
         'teamName': teamName.trim(),
-        if (validDivisionId != null) 'divisionId': validDivisionId,
+        ...?(validDivisionId == null ? null : {'divisionId': validDivisionId}),
         if (partnerEmailOrPhone != null && partnerEmailOrPhone.trim().isNotEmpty)
           'partnerEmailOrPhone': partnerEmailOrPhone.trim(),
+        if (footballTeamId != null && footballTeamId.trim().isNotEmpty)
+          'footballTeamId': footballTeamId.trim(),
+        if (memberIds != null && memberIds.isNotEmpty) 'memberIds': memberIds,
+        if (reserveMemberIds != null && reserveMemberIds.isNotEmpty) 'reserveMemberIds': reserveMemberIds,
         'rankingConsent': rankingConsent,
       },
       queryParameters: queryParameters.isNotEmpty ? queryParameters : null,
@@ -335,6 +343,26 @@ class ApiTournamentRepository implements ITournamentRepository {
     }
     return TournamentRegistrationResult.fromJson(
       Map<String, dynamic>.from(rawData),
+    );
+  }
+
+  @override
+  Future<FootballRosterStatus> getFootballRosterStatus({required String tournamentId, required String participantId}) async {
+    final response = await _dioClient.dio.get('/tournaments/$tournamentId/participants/$participantId/football-roster');
+    final body = response.data;
+    final data = body is Map && body['data'] is Map ? body['data'] : body;
+    if (data is! Map) throw const FormatException('Phản hồi roster bóng đá không hợp lệ.');
+    return FootballRosterStatus.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  @override
+  Future<void> respondFootballRoster({required String tournamentId, required String participantId, required String action}) async {
+    if (action != 'CONFIRM' && action != 'DECLINE') {
+      throw ArgumentError.value(action, 'action', 'Must be CONFIRM or DECLINE');
+    }
+    await _dioClient.dio.post(
+      '/tournaments/$tournamentId/participants/$participantId/football-roster/respond',
+      data: {'action': action},
     );
   }
 
@@ -426,7 +454,7 @@ class ApiTournamentRepository implements ITournamentRepository {
           '/tournaments/public',
           queryParameters: {
             'limit': _publicPageSize,
-            if (cursor != null) 'cursor': cursor,
+            ...?(cursor == null ? null : {'cursor': cursor}),
           },
         );
       } catch (_) {
@@ -434,7 +462,7 @@ class ApiTournamentRepository implements ITournamentRepository {
           '/tournaments',
           queryParameters: {
             'limit': _publicPageSize,
-            if (cursor != null) 'cursor': cursor,
+            ...?(cursor == null ? null : {'cursor': cursor}),
           },
         );
       }
@@ -701,6 +729,10 @@ class ApiTournamentRepository implements ITournamentRepository {
         json['team2Name']?.toString() ??
         json['participant2Name']?.toString() ??
         '';
+    String? participantLogo(Map<String, dynamic>? participant) {
+      final value = participant?['logoUrl'] ?? participant?['logo_url'];
+      return value?.toString().trim().isNotEmpty == true ? value.toString() : null;
+    }
     final rosters1 = (p1?['members'] ?? p1?['rosters']) as List<dynamic>?;
     final team1Members = rosters1?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
     final rosters2 = (p2?['members'] ?? p2?['rosters']) as List<dynamic>?;
@@ -755,8 +787,10 @@ class ApiTournamentRepository implements ITournamentRepository {
       matchNumber: matchOrder,
       team1Id: p1?['id']?.toString() ?? json['participant1Id']?.toString() ?? '',
       team1Name: team1Name.isNotEmpty ? team1Name : 'TBD',
+      team1LogoUrl: participantLogo(p1) ?? json['team1LogoUrl']?.toString() ?? json['team1Logo']?.toString(),
       team2Id: p2?['id']?.toString() ?? json['participant2Id']?.toString() ?? '',
       team2Name: team2Name.isNotEmpty ? team2Name : 'TBD',
+      team2LogoUrl: participantLogo(p2) ?? json['team2LogoUrl']?.toString() ?? json['team2Logo']?.toString(),
       score1: json['p1SetsWon'] is num
           ? (json['p1SetsWon'] as num).toInt()
           : int.tryParse(json['p1SetsWon']?.toString() ?? '') ?? 0,

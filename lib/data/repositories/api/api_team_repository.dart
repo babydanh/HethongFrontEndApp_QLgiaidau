@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
+import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/repositories/team_repository.dart';
@@ -9,6 +10,75 @@ class ApiTeamRepository implements ITeamRepository {
   final DioClient _dioClient;
 
   ApiTeamRepository(this._dioClient);
+
+  Future<List<FootballTeamSummary>> listMyFootballTeams() async {
+    final response = await _dioClient.dio.get('/football-teams/mine');
+    final raw = response.data is Map ? response.data['data'] : response.data;
+    if (raw is! List) return const [];
+    return raw.whereType<Map>().map((row) => FootballTeamSummary.fromJson(Map<String, dynamic>.from(row))).toList();
+  }
+
+  Future<FootballTeamSummary> createFootballTeam({required String name, required String categoryId}) async {
+    final response = await _dioClient.dio.post('/football-teams', data: {'name': name.trim(), 'categoryId': categoryId});
+    final raw = response.data is Map ? response.data['data'] : response.data;
+    if (raw is! Map) throw const FormatException('Phản hồi tạo đội không hợp lệ.');
+    return FootballTeamSummary.fromJson(Map<String, dynamic>.from(raw));
+  }
+
+  Future<FootballTeamSummary> getFootballTeam(String teamId) async {
+    final response = await _dioClient.dio.get('/football-teams/$teamId');
+    final raw = response.data is Map && response.data['data'] is Map
+        ? response.data['data'] as Map
+        : response.data as Map;
+    return FootballTeamSummary.fromJson(Map<String, dynamic>.from(raw));
+  }
+
+  Future<FootballTeamSummary> updateFootballTeam(String teamId, {String? name, String? logoUrl, String? status}) async {
+    final payload = <String, dynamic>{
+      ...?name == null ? null : {'name': name.trim()},
+      ...?logoUrl == null ? null : {'logoUrl': logoUrl},
+      ...?status == null ? null : {'status': status},
+    };
+    final response = await _dioClient.dio.patch('/football-teams/$teamId', data: {
+      ...payload,
+    });
+    final raw = response.data is Map ? response.data['data'] : response.data;
+    return FootballTeamSummary.fromJson(Map<String, dynamic>.from(raw as Map));
+  }
+
+  Future<FootballTeamSummary> uploadFootballTeamLogo(String teamId, List<int> bytes, String fileName) async {
+    final upload = await _dioClient.dio.post(
+      '/upload/image',
+      data: FormData.fromMap({'file': MultipartFile.fromBytes(bytes, filename: fileName)}),
+      options: Options(headers: {'Content-Type': 'multipart/form-data'}),
+    );
+    final uploadData = upload.data is Map ? upload.data['data'] ?? upload.data : upload.data;
+    final url = uploadData is Map ? uploadData['url']?.toString() : null;
+    if (url == null || url.isEmpty) throw const FormatException('Ảnh logo không hợp lệ.');
+    return updateFootballTeam(teamId, logoUrl: url);
+  }
+
+  Future<List<Map<String, dynamic>>> searchFootballTeamMembers(String teamId, String query) async {
+    final response = await _dioClient.dio.get('/football-teams/$teamId/member-candidates', queryParameters: {'q': query, 'limit': 20});
+    final raw = response.data is Map ? response.data['data'] : response.data;
+    return raw is List ? raw.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList() : const [];
+  }
+
+  Future<void> inviteFootballTeamMember(String teamId, String userId) async {
+    await _dioClient.dio.post('/football-teams/$teamId/invites', data: {'userId': userId});
+  }
+
+  Future<void> updateFootballTeamMember(String teamId, String userId, String role) async {
+    await _dioClient.dio.patch('/football-teams/$teamId/members/$userId', data: {'role': role});
+  }
+
+  Future<void> removeFootballTeamMember(String teamId, String userId) async {
+    await _dioClient.dio.delete('/football-teams/$teamId/members/$userId');
+  }
+
+  Future<void> leaveFootballTeam(String teamId) async {
+    await _dioClient.dio.delete('/football-teams/$teamId/members/me');
+  }
 
   @override
   Future<Team> create(String tournamentId, Team team) async {
@@ -72,13 +142,13 @@ class ApiTeamRepository implements ITeamRepository {
   Future<List<Team>> getAllByTournament(String tournamentId) async {
     _log.debug('Fetching all participants/teams for tournament: $tournamentId');
     try {
-      final results = await Future.wait([
-        _dioClient.dio.get('/tournaments/$tournamentId/participants'),
-        _dioClient.dio.get('/tournaments/$tournamentId/divisions').catchError((_) => null),
-      ]);
-
-      final response = results[0];
-      final divResponse = results[1];
+      final response = await _dioClient.dio.get('/tournaments/$tournamentId/participants');
+      dynamic divResponse;
+      try {
+        divResponse = await _dioClient.dio.get('/tournaments/$tournamentId/divisions');
+      } catch (_) {
+        divResponse = null;
+      }
 
       final Map<String, String> divNameMap = {};
       if (divResponse != null && divResponse.statusCode == 200) {
@@ -183,4 +253,55 @@ class ApiTeamRepository implements ITeamRepository {
     final teams = await getAllByTournament(tournamentId);
     return teams.length;
   }
+}
+
+class FootballTeamSummary {
+  const FootballTeamSummary({required this.id, required this.name, required this.categoryId, this.logoUrl, this.role, this.status = 'ACTIVE', this.members = const [], this.eloPoints = 1000, this.peakElo = 1000, this.matchesPlayed = 0, this.matchesWon = 0, this.winStreak = 0});
+  final String id;
+  final String name;
+  final String categoryId;
+  final String? logoUrl;
+  final String? role;
+  final String status;
+  final List<FootballTeamMemberSummary> members;
+  final int eloPoints;
+  final int peakElo;
+  final int matchesPlayed;
+  final int matchesWon;
+  final int winStreak;
+
+  factory FootballTeamSummary.fromJson(Map<String, dynamic> json) {
+    final team = json['team'] is Map ? Map<String, dynamic>.from(json['team']) : json;
+    final membership = json['membership'] is Map ? Map<String, dynamic>.from(json['membership']) : null;
+    return FootballTeamSummary(
+      id: team['id']?.toString() ?? '',
+      name: team['name']?.toString() ?? 'Đội bóng',
+      categoryId: team['categoryId']?.toString() ?? team['category_id']?.toString() ?? '',
+      logoUrl: team['logoUrl']?.toString() ?? team['logo_url']?.toString(),
+      role: membership?['role']?.toString().toUpperCase(),
+      status: team['status']?.toString().toUpperCase() ?? 'ACTIVE',
+      members: (team['members'] as List<dynamic>? ?? const [])
+          .whereType<Map>()
+          .map((item) => FootballTeamMemberSummary.fromJson(Map<String, dynamic>.from(item)))
+          .toList(),
+      eloPoints: ((json['rank'] is Map ? json['rank']['eloPoints'] : null) as num?)?.toInt() ?? 1000,
+      peakElo: ((json['rank'] is Map ? json['rank']['peakElo'] : null) as num?)?.toInt() ?? 1000,
+      matchesPlayed: ((json['rank'] is Map ? json['rank']['matchesPlayed'] : null) as num?)?.toInt() ?? 0,
+      matchesWon: ((json['rank'] is Map ? json['rank']['matchesWon'] : null) as num?)?.toInt() ?? 0,
+      winStreak: ((json['rank'] is Map ? json['rank']['winStreak'] : null) as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+class FootballTeamMemberSummary {
+  const FootballTeamMemberSummary({required this.userId, required this.role, this.status});
+  final String userId;
+  final String role;
+  final String? status;
+
+  factory FootballTeamMemberSummary.fromJson(Map<String, dynamic> json) => FootballTeamMemberSummary(
+    userId: json['userId']?.toString() ?? json['user_id']?.toString() ?? '',
+    role: (json['role']?.toString() ?? 'PLAYER').toUpperCase(),
+    status: json['status']?.toString(),
+  );
 }

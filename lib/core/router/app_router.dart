@@ -43,8 +43,10 @@ import 'package:app_quanly_giaidau/features/admin/screens/transactions_screen.da
 import 'package:app_quanly_giaidau/features/admin/screens/verification_screen.dart';
 import 'package:app_quanly_giaidau/features/referee/screens/referee_invites_screen.dart';
 import 'package:app_quanly_giaidau/features/live/screens/live_match_screen.dart';
+import 'package:app_quanly_giaidau/features/football_team/screens/football_teams_screen.dart';
 
 import 'package:app_quanly_giaidau/features/register/screens/tournament_register_screen.dart';
+import 'package:app_quanly_giaidau/features/register/screens/football_team_register_screen.dart';
 import 'package:app_quanly_giaidau/features/register/screens/doubles_registration_screen.dart';
 import 'package:app_quanly_giaidau/features/register/screens/join_team_screen.dart';
 import 'package:app_quanly_giaidau/features/register/screens/invite_code_join_screen.dart';
@@ -434,6 +436,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
+      GoRoute(
+        path: '/football-teams',
+        builder: (context, state) => const FootballTeamsScreen(),
+      ),
+
       // ─── Profile & Subroutes ───
       GoRoute(
         path: '/profile',
@@ -553,7 +560,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/register/:id/team',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return AddTeamScreen(tournamentId: id);
+          return FootballTeamRegisterScreen(
+            tournamentId: id,
+            divisionId: state.uri.queryParameters['divisionId'],
+            categoryId: state.uri.queryParameters['categoryId'],
+            inviteCode: state.uri.queryParameters['invite'],
+            participantId: state.uri.queryParameters['participantId'],
+            teamSize: int.tryParse(state.uri.queryParameters['teamSize'] ?? '') ?? 7,
+            maxReserve: int.tryParse(state.uri.queryParameters['maxReserve'] ?? '') ?? 0,
+          );
         },
       ),
 

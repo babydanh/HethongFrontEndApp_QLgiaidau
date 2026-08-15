@@ -105,6 +105,67 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         _selectedCategoryId = null;
       }
       _selectedCategoryId = categoryId;
+      final selectedCategory = categories
+          .cast<dynamic>()
+          .where((c) => c.id == categoryId)
+          .firstOrNull;
+      final categoryLabel = selectedCategory == null
+          ? ''
+          : '${selectedCategory.slug} ${selectedCategory.name}'.toLowerCase();
+      final isFootball = categoryLabel.contains('football') ||
+          categoryLabel.contains('bóng đá') ||
+          categoryLabel.contains('bong da');
+      if (isFootball && categoryId != null && categoryId.isNotEmpty) {
+        final response = await dio.get(
+          '/rankings/football-teams',
+          queryParameters: {
+            'categoryId': categoryId,
+            'limit': widget.compact ? 3 : 20,
+          },
+        );
+        final raw = response.data;
+        final dataList = raw is Map<String, dynamic>
+            ? (raw['data'] as List<dynamic>? ?? const [])
+            : (raw as List<dynamic>? ?? const []);
+        final teams = dataList.map((item) {
+          final json = item as Map<String, dynamic>;
+          final name =
+              (json['teamName'] ?? json['team_name'] ?? 'Đội bóng').toString();
+          return PlayerRanking(
+            id: (json['id'] ?? json['teamId'] ?? name).toString(),
+            userId: '',
+            fullName: name,
+            avatarUrl:
+                json['logoUrl']?.toString() ?? json['logo_url']?.toString(),
+            categoryId: categoryId,
+            matchType: 'SINGLES',
+            genderRestriction: 'MIXED',
+            eloPoints:
+                ((json['eloPoints'] ?? json['elo_points'] ?? 1000) as num)
+                    .toInt(),
+            peakElo: ((json['peakElo'] ?? json['peak_elo']) as num?)?.toInt(),
+            matchesPlayed:
+                ((json['matchesPlayed'] ?? json['matches_played'] ?? 0)
+                        as num)
+                    .toInt(),
+            matchesWon:
+                ((json['matchesWon'] ?? json['matches_won'] ?? 0) as num)
+                    .toInt(),
+            winStreak:
+                ((json['winStreak'] ?? json['win_streak'] ?? 0) as num)
+                    .toInt(),
+            tierName: json['tierName']?.toString() ?? '',
+          );
+        }).toList();
+        if (mounted) {
+          setState(() {
+            _rankings = teams;
+            _loading = false;
+            _error = null;
+          });
+        }
+        return;
+      }
       final queryParams = <String, dynamic>{
         'communityId': widget.clubId,
         'scope': 'COMMUNITY',

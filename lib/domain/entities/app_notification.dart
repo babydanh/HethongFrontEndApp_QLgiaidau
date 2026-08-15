@@ -118,6 +118,11 @@ class AppNotification {
 
     if (path == '/profile' || path == '/notifications') return path;
     if (segments.length >= 2 && segments[0] == 'tournaments') {
+      final participantId = uri.queryParameters['participantId'];
+      if (participantId != null && participantId.isNotEmpty) {
+        final divisionId = uri.queryParameters['divisionId'];
+        return '/register/${segments[1]}/team?participantId=${Uri.encodeQueryComponent(participantId)}${divisionId == null ? '' : '&divisionId=${Uri.encodeQueryComponent(divisionId)}'}';
+      }
       if (segments.length >= 5 && segments[2] == 'participants' && segments[4] == 'accept-partner') {
         return '/join-team?tournamentId=${segments[1]}&pid=${segments[3]}';
       }

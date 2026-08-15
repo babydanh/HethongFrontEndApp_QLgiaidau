@@ -117,3 +117,47 @@ class TournamentRegistrationResult {
     );
   }
 }
+
+class FootballRosterMember {
+  const FootballRosterMember({required this.id, required this.userId, required this.role, required this.confirmationStatus, this.fullName, this.avatarUrl});
+  final String id;
+  final String userId;
+  final String role;
+  final String confirmationStatus;
+  final String? fullName;
+  final String? avatarUrl;
+
+  factory FootballRosterMember.fromJson(Map<String, dynamic> json) => FootballRosterMember(
+    id: json['id']?.toString() ?? '',
+    userId: json['userId']?.toString() ?? json['user_id']?.toString() ?? '',
+    role: json['role']?.toString() ?? 'MAIN',
+    confirmationStatus: json['confirmationStatus']?.toString() ?? json['confirmation_status']?.toString() ?? 'PENDING',
+    fullName: json['fullName']?.toString(),
+    avatarUrl: json['avatarUrl']?.toString() ?? json['avatar_url']?.toString(),
+  );
+}
+
+class FootballRosterStatus {
+  const FootballRosterStatus({required this.entryId, required this.entryStatus, required this.roster, this.currentMember});
+  final String? entryId;
+  final String? entryStatus;
+  final List<FootballRosterMember> roster;
+  final FootballRosterMember? currentMember;
+
+  factory FootballRosterStatus.fromJson(Map<String, dynamic> json) {
+    final entry = json['entry'] is Map ? Map<String, dynamic>.from(json['entry'] as Map) : null;
+    final roster = (json['roster'] is List ? json['roster'] as List : const <dynamic>[])
+        .whereType<Map>()
+        .map((item) => FootballRosterMember.fromJson(Map<String, dynamic>.from(item)))
+        .toList(growable: false);
+    final current = json['currentMember'] is Map
+        ? FootballRosterMember.fromJson(Map<String, dynamic>.from(json['currentMember'] as Map))
+        : null;
+    return FootballRosterStatus(
+      entryId: entry?['id']?.toString(),
+      entryStatus: entry?['status']?.toString(),
+      roster: roster,
+      currentMember: current,
+    );
+  }
+}

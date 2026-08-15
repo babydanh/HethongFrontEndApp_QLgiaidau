@@ -26,6 +26,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
   Timer? _pollTimer;
+  Timer? _typingTimer;
   late final ChatSocketService _chatSocket;
   List<_ClubChatMessage> _messages = const [];
   String? _roomId;
@@ -36,6 +37,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
   String? _error;
   bool _socketConnected = false;
   String? _typingUser;
+  final Set<String> _blockedUserIds = <String>{};
 
   @override
   void initState() {
@@ -46,12 +48,14 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     _chatSocket.onMessage = _onSocketMessage;
     _chatSocket.onTyping = (data) { if (mounted) setState(() => _typingUser = data['isTyping'] == true ? data['userId']?.toString() : null); };
     _loadRoom();
+    _loadBlockedUsers();
     _pollTimer = Timer.periodic(const Duration(seconds: 15), (_) { if (!_socketConnected) _refreshMessages(); });
   }
 
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _typingTimer?.cancel();
     if (_roomId != null) _chatSocket.disconnect(_roomId!);
     _scrollController
       ..removeListener(_onScroll)
@@ -82,6 +86,33 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     } catch (error, stack) {
       _log.error('Không thể mở chat CLB', error, stack);
       if (mounted) setState(() { _loading = false; _error = 'Chưa thể mở trò chuyện. Thử lại sau.'; });
+    }
+  }
+
+  Future<void> _loadBlockedUsers() async {
+    try {
+      final response = await ref.read(dioClientProvider).dio.get('/chat/blocks');
+      final payload = _asMap(response.data);
+      final raw = payload['data'] is List ? payload['data'] as List : const <Object?>[];
+      if (mounted) setState(() => _blockedUserIds.addAll(raw.map((item) => _asMap(item)['blockedId']?.toString()).whereType<String>()));
+    } catch (_) {
+      // Blocking is optional UI state; chat remains usable if this request fails.
+    }
+  }
+
+  Future<void> _toggleBlock(String userId) async {
+    if (userId.isEmpty) return;
+    final blocked = _blockedUserIds.contains(userId);
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      if (blocked) {
+        await dio.delete('/chat/blocks/$userId');
+      } else {
+        await dio.post('/chat/blocks/$userId');
+      }
+      if (mounted) setState(() => blocked ? _blockedUserIds.remove(userId) : _blockedUserIds.add(userId));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không thể cập nhật chặn lúc này.')));
     }
   }
 
@@ -121,6 +152,15 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
         _error = null;
       });
       if (initial) _scrollToBottom();
+      if (initial) {
+        // Keep the cross-device unread state in sync as soon as the room is opened.
+        try {
+          await ref.read(dioClientProvider).dio.put('/chat/rooms/$roomId/read');
+        } catch (error, stack) {
+          // Read-state is ancillary; a transient failure must not blank a usable chat.
+          _log.error('KhÃ´ng thá»ƒ cáº­p nháº­t tráº¡ng thÃ¡i Ä‘Ã£ Ä‘á»c', error, stack);
+        }
+      }
     } catch (error, stack) {
       _log.error('Không thể đồng bộ chat CLB', error, stack);
       if (mounted && initial) setState(() { _loading = false; _error = 'Mất kết nối. Kéo xuống để thử lại.'; });
@@ -215,12 +255,13 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null) return Center(child: Text(_error!));
     if (_messages.isEmpty) return const Center(child: Text('Chưa có tin nhắn nào.'));
+    final visibleMessages = _messages.where((message) => !_blockedUserIds.contains(message.senderId)).toList();
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(AppTheme.spacingMD),
-      itemCount: _messages.length,
+      itemCount: visibleMessages.length,
       itemBuilder: (context, index) {
-        final message = _messages[index];
+        final message = visibleMessages[index];
         return Align(
           alignment: Alignment.centerLeft,
           child: Container(
@@ -228,11 +269,14 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
             constraints: const BoxConstraints(maxWidth: 320),
             decoration: BoxDecoration(color: colors.bgCard, borderRadius: BorderRadius.circular(AppTheme.radiusLarge), border: Border.all(color: colors.borderLight)),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child: GestureDetector(
+              onLongPress: message.senderId.isEmpty ? null : () => _toggleBlock(message.senderId),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(message.senderName, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: colors.textMuted)),
               const SizedBox(height: 3),
               Text(message.text),
             ]),
+            ),
           ),
         );
       },
@@ -243,25 +287,48 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     padding: const EdgeInsets.fromLTRB(AppTheme.spacingMD, 8, AppTheme.spacingSM, 8),
     decoration: BoxDecoration(color: colors.bgCard, border: Border(top: BorderSide(color: colors.borderLight))),
     child: Row(children: [
-      Expanded(child: TextField(controller: _messageController, minLines: 1, maxLines: 4, textInputAction: TextInputAction.newline, decoration: const InputDecoration(hintText: 'Nhắn trong CLB', border: InputBorder.none))),
+      Expanded(child: TextField(
+        controller: _messageController,
+        minLines: 1,
+        maxLines: 4,
+        textInputAction: TextInputAction.newline,
+        onChanged: _onMessageChanged,
+        decoration: const InputDecoration(hintText: 'Nhắn trong CLB', border: InputBorder.none),
+      )),
       IconButton(onPressed: _sending ? null : _sendMessage, icon: _sending ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.send_rounded)),
     ]),
   );
+
+  void _onMessageChanged(String value) {
+    final roomId = _roomId;
+    if (roomId == null || !_socketConnected) return;
+    _typingTimer?.cancel();
+    if (value.trim().isEmpty) {
+      _chatSocket.typing(roomId, false);
+      return;
+    }
+    _chatSocket.typing(roomId, true);
+    _typingTimer = Timer(const Duration(milliseconds: 900), () {
+      if (_socketConnected) _chatSocket.typing(roomId, false);
+    });
+  }
 }
 
 class _ClubChatMessage {
   final String id;
+  final String senderId;
   final String senderName;
   final String text;
   final DateTime createdAt;
 
-  const _ClubChatMessage({required this.id, required this.senderName, required this.text, required this.createdAt});
+  const _ClubChatMessage({required this.id, required this.senderId, required this.senderName, required this.text, required this.createdAt});
 
   factory _ClubChatMessage.fromJson(Object? raw) {
     final json = _asMap(raw);
     final sender = _asMap(json['sender']);
     return _ClubChatMessage(
       id: json['id']?.toString() ?? '',
+      senderId: json['senderId']?.toString() ?? sender['id']?.toString() ?? '',
       senderName: json['senderName']?.toString() ?? sender['displayName']?.toString() ?? 'Thành viên CLB',
       text: (json['messageText'] ?? json['content'] ?? '').toString(),
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),

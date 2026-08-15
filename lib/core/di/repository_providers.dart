@@ -30,6 +30,10 @@ final teamRepositoryProvider = Provider<ITeamRepository>((ref) {
   return ApiTeamRepository(ref.watch(dioClientProvider));
 });
 
+final footballTeamApiProvider = Provider<ApiTeamRepository>((ref) {
+  return ApiTeamRepository(ref.watch(dioClientProvider));
+});
+
 final matchRepositoryProvider = Provider<IMatchRepository>((ref) {
   return ApiMatchRepository(
     ref.watch(dioClientProvider),

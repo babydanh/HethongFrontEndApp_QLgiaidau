@@ -96,14 +96,14 @@ class CommunityPostCard extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: AppTheme.primaryLight.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                  border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.2)),
+                  border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor,
+                        color: AppTheme.primary,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 20),

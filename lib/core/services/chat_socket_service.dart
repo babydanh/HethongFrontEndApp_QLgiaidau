@@ -1,10 +1,8 @@
-import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/token_manager.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 class ChatSocketService {
-  static const _log = AppLogger('ChatSocketService');
   final TokenManager tokenManager;
   io.Socket? _socket;
   bool get isConnected => _socket?.connected ?? false;

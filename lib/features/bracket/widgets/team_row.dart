@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 /// Replaces the former _TeamRow (single_elim_diagram) and _DeTeamRow (double_elim_diagram).
 class TeamRow extends StatelessWidget {
   final String name;
+  final String? logoUrl;
   final int score;
   final List<int>? sets;
   final List<int>? opponentSets;
@@ -19,6 +20,7 @@ class TeamRow extends StatelessWidget {
   const TeamRow({
     super.key,
     required this.name,
+    this.logoUrl,
     required this.score,
     required this.isWinner,
     required this.isLive,
@@ -72,6 +74,22 @@ class TeamRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
+
+            if (logoUrl != null && logoUrl!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: ClipOval(
+                  child: Image.network(
+                    logoUrl!,
+                    width: 18,
+                    height: 18,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+              ),
 
             // Team name
             Expanded(

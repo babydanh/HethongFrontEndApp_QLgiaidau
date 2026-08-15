@@ -153,13 +153,13 @@ class _CreateClubTournamentScreenState
         ? ref.watch(communityDetailProvider(widget.clubId))
         : null;
     final community = communityAsync?.value;
-    final clubCat = community != null && community.categories.isNotEmpty
-        ? community.categories.first
+    final clubCat = community != null && community.sports.isNotEmpty
+        ? community.sports.first
         : null;
     final isClubLocked = clubCat != null;
 
     if (isClubLocked && _selectedSport == null) {
-      final slug = (clubCat.slug.isNotEmpty ? clubCat.slug : clubCat.name).toLowerCase();
+      final slug = clubCat.toLowerCase();
       if (slug.contains('badminton') || slug.contains('cầu lông')) {
         _selectedSport = AppConstants.sportBadminton;
       } else if (slug.contains('tennis') || slug.contains('quần vợt')) {
@@ -220,7 +220,7 @@ class _CreateClubTournamentScreenState
               // ─── Môn thể thao ───
               _label('Môn thể thao', colors),
               const SizedBox(height: 6),
-              _buildSportSelector(isClubLocked: isClubLocked, clubCategoryName: clubCat?.name),
+              _buildSportSelector(isClubLocked: isClubLocked, clubCategoryName: clubCat),
               const SizedBox(height: 20),
 
               // ─── Hình thức ───
@@ -483,6 +483,7 @@ class _CreateClubTournamentScreenState
                 ),
               ),
             ),
+          ),
           ),
         );
           }).toList(),

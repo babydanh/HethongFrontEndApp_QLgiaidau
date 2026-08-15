@@ -12,7 +12,6 @@ import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -23,6 +22,7 @@ class DashboardScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final profileAsync = ref.watch(userProfileProvider);
     final rankingsAsync = ref.watch(userRankingsProvider);
+    final footballTeamsAsync = ref.watch(myFootballTeamsProvider);
     final workspaceAsync = ref.watch(myTournamentWorkspaceProvider);
     final isAuth = ref.watch(authProvider).isAuthenticated;
 
@@ -121,6 +121,7 @@ class DashboardScreen extends ConsumerWidget {
                     _DashboardHeader(
                       profileAsync: profileAsync,
                       rankingsAsync: rankingsAsync,
+                      footballTeamsAsync: footballTeamsAsync,
                     ),
                     const SizedBox(height: 16),
                     workspaceAsync.when(
@@ -195,10 +196,12 @@ class _DashboardHeader extends StatelessWidget {
   const _DashboardHeader({
     required this.profileAsync,
     required this.rankingsAsync,
+    required this.footballTeamsAsync,
   });
 
   final AsyncValue<dynamic> profileAsync;
   final AsyncValue<dynamic> rankingsAsync;
+  final AsyncValue<dynamic> footballTeamsAsync;
 
   @override
   Widget build(BuildContext context) {
@@ -207,12 +210,19 @@ class _DashboardHeader extends StatelessWidget {
     final email = profileAsync.asData?.value.email as String?;
     final avatarUrl = profileAsync.asData?.value.avatarUrl as String?;
     final rankings = rankingsAsync.asData?.value ?? const [];
+    final footballTeams = footballTeamsAsync.asData?.value ?? const [];
+    final bestFootballTeam = footballTeams.isEmpty
+        ? null
+        : footballTeams.reduce(
+            (a, b) => a.eloPoints >= b.eloPoints ? a : b,
+          );
 
     return EloProgressCard(
       userName: name,
       userEmail: email,
       avatarUrl: avatarUrl,
       rankings: rankings,
+      footballTeam: bestFootballTeam,
       onTapProfile: () => context.push('/profile'),
     ).animate().fadeIn(duration: 260.ms);
   }
@@ -699,6 +709,13 @@ class _QuickActions extends ConsumerWidget {
           ),
           const Divider(height: 24),
           _QuickActionRow(
+            icon: Icons.sports_soccer_rounded,
+            title: 'Đội bóng của tôi',
+            subtitle: 'Quản lý đội hình và ELO bóng đá',
+            onTap: () => context.push('/football-teams'),
+          ),
+          const Divider(height: 24),
+          _QuickActionRow(
             icon: Icons.groups_rounded,
             title: l10n.dashboard_clubInvites,
             subtitle: l10n.dashboard_clubInvitesSub,
@@ -1096,7 +1113,7 @@ class _TournamentTile extends StatelessWidget {
                   ? Image.network(
                       tournament.logoUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Padding(
+                      errorBuilder: (context, error, stackTrace) => Padding(
                         padding: const EdgeInsets.all(8),
                         child: Image.asset('assets/images/sporto_v1_with_text.png', fit: BoxFit.contain),
                       ),

@@ -104,6 +104,10 @@ class MatchModel {
   final String team2Id;
   final String team1Name;
   final String team2Name;
+  /// Snapshot logo captured when a football team enters the tournament.
+  /// It must not be resolved from the current team profile at render time.
+  final String? team1LogoUrl;
+  final String? team2LogoUrl;
   final int score1;
   final int score2;
   final List<SetScore> sets;
@@ -158,6 +162,8 @@ class MatchModel {
     this.team2Id = '',
     this.team1Name = 'TBD',
     this.team2Name = 'TBD',
+    this.team1LogoUrl,
+    this.team2LogoUrl,
     this.score1 = 0,
     this.score2 = 0,
     this.sets = const [],

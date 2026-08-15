@@ -105,6 +105,7 @@ class BracketMatchCard extends StatelessWidget {
             Expanded(
               child: TeamRow(
                 name: isBye1 ? 'Miễn đấu' : match.team1Name,
+                logoUrl: isBye1 ? null : match.team1LogoUrl,
                 score: match.score1,
                 sets: match.sets.isNotEmpty
                     ? match.sets.map((s) => s.score1).toList()
@@ -124,6 +125,7 @@ class BracketMatchCard extends StatelessWidget {
             Expanded(
               child: TeamRow(
                 name: isBye2 ? 'Miễn đấu' : match.team2Name,
+                logoUrl: isBye2 ? null : match.team2LogoUrl,
                 score: match.score2,
                 sets: match.sets.isNotEmpty
                     ? match.sets.map((s) => s.score2).toList()

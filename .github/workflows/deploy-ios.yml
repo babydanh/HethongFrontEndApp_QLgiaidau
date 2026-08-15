@@ -29,6 +29,15 @@ jobs:
       - name: Install Flutter packages
         run: flutter pub get
 
+      # Fail before signing/uploading when a release-only code path is invalid.
+      - name: Analyze Flutter source
+        run: >-
+          flutter analyze
+          lib/features/football_team
+          lib/features/register/screens/football_team_register_screen.dart
+          lib/features/community/social
+          lib/features/community/screens/club_detail_screen.dart
+
       # 4. Build iOS (không sign)
       - name: Build iOS release
         run: flutter build ios --release --no-codesign

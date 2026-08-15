@@ -20,8 +20,13 @@ abstract class ITournamentRepository {
     String? divisionId,
     String? inviteCode,
     String? partnerEmailOrPhone,
+    String? footballTeamId,
+    List<String>? memberIds,
+    List<String>? reserveMemberIds,
     bool rankingConsent = false,
   });
+  Future<FootballRosterStatus> getFootballRosterStatus({required String tournamentId, required String participantId});
+  Future<void> respondFootballRoster({required String tournamentId, required String participantId, required String action});
   Stream<Tournament?> watch(String id);
   Stream<List<Tournament>> watchAll();
   Future<void> update(String id, Map<String, dynamic> data);
