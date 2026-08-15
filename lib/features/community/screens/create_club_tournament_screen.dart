@@ -149,6 +149,31 @@ class _CreateClubTournamentScreenState
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final communityAsync = widget.clubId.isNotEmpty
+        ? ref.watch(communityDetailProvider(widget.clubId))
+        : null;
+    final community = communityAsync?.value;
+    final clubCat = community != null && community.categories.isNotEmpty
+        ? community.categories.first
+        : null;
+    final isClubLocked = clubCat != null;
+
+    if (isClubLocked && _selectedSport == null) {
+      final slug = (clubCat.slug.isNotEmpty ? clubCat.slug : clubCat.name).toLowerCase();
+      if (slug.contains('badminton') || slug.contains('cầu lông')) {
+        _selectedSport = AppConstants.sportBadminton;
+      } else if (slug.contains('tennis') || slug.contains('quần vợt')) {
+        _selectedSport = AppConstants.sportTennis;
+      } else if (slug.contains('pickleball')) {
+        _selectedSport = AppConstants.sportPickleball;
+      } else if (slug.contains('table') || slug.contains('bóng bàn')) {
+        _selectedSport = AppConstants.sportTableTennis;
+      } else if (slug.contains('foot') || slug.contains('bóng đá')) {
+        _selectedSport = AppConstants.sportFootball;
+      } else {
+        _selectedSport = AppConstants.sportBadminton;
+      }
+    }
 
     return Scaffold(
       backgroundColor: colors.bgDark,
@@ -195,7 +220,7 @@ class _CreateClubTournamentScreenState
               // ─── Môn thể thao ───
               _label('Môn thể thao', colors),
               const SizedBox(height: 6),
-              _buildSportSelector(),
+              _buildSportSelector(isClubLocked: isClubLocked, clubCategoryName: clubCat?.name),
               const SizedBox(height: 20),
 
               // ─── Hình thức ───
@@ -374,7 +399,7 @@ class _CreateClubTournamentScreenState
     );
   }
 
-  Widget _buildSportSelector() {
+  Widget _buildSportSelector({bool isClubLocked = false, String? clubCategoryName}) {
     final sports = [
       (AppConstants.sportFootball, 'Football', Icons.sports_soccer),
       (AppConstants.sportBadminton, 'Cầu lông', Icons.sports_tennis),
@@ -385,6 +410,33 @@ class _CreateClubTournamentScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (isClubLocked && clubCategoryName != null) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            margin: const EdgeInsets.only(bottom: 10),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lock_rounded, size: 16, color: AppTheme.primary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Bộ môn được cố định theo CLB: $clubCategoryName',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         Row(
           children: sports.map((s) {
         final selected = _selectedSport == s.$1;
@@ -392,19 +444,21 @@ class _CreateClubTournamentScreenState
           child: Padding(
             padding: EdgeInsets.only(right: s != sports.last ? 8 : 0),
             child: GestureDetector(
-              onTap: () => setState(() => _selectedSport = s.$1),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? AppTheme.primary.withValues(alpha: 0.1)
-                      : context.colors.bgSurface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: selected ? AppTheme.primary : context.colors.border,
-                    width: selected ? 1.5 : 1,
+              onTap: isClubLocked ? null : () => setState(() => _selectedSport = s.$1),
+              child: Opacity(
+                opacity: (isClubLocked && !selected) ? 0.4 : 1.0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? AppTheme.primary.withValues(alpha: 0.1)
+                        : context.colors.bgSurface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: selected ? AppTheme.primary : context.colors.border,
+                      width: selected ? 1.5 : 1,
+                    ),
                   ),
-                ),
                 child: Column(
                   children: [
                     Icon(
