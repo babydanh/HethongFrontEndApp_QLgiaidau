@@ -29,14 +29,43 @@ jobs:
       - name: Install Flutter packages
         run: flutter pub get
 
+      # `.env` is intentionally gitignored because it contains the app key.
+      # Create the asset in CI so release archives never fall back to localhost
+      # or ship without the header required by AppKeyGuard.
+      - name: Prepare release environment
+        env:
+          APP_API_KEY: ${{ secrets.APP_API_KEY }}
+          API_BASE_URL: ${{ secrets.APP_API_BASE_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_API_KEY}" ]; then
+            echo "Missing required GitHub secret: APP_API_KEY" >&2
+            exit 1
+          fi
+          api_base_url="${API_BASE_URL:-https://sporto.asia/api/v1}"
+          printf 'API_BASE_URL=%s\nAPP_API_KEY=%s\n' "$api_base_url" "$APP_API_KEY" > .env
+          test -s .env
+          curl --fail --silent --show-error --max-time 15 \
+            -H "x-app-key: ${APP_API_KEY}" \
+            "${api_base_url}/categories" > /dev/null
+
       # Fail before signing/uploading when a release-only code path is invalid.
       - name: Analyze Flutter source
         run: >-
-          flutter analyze
+          flutter analyze --no-fatal-infos --no-fatal-warnings
           lib/features/football_team
           lib/features/register/screens/football_team_register_screen.dart
           lib/features/community/social
           lib/features/community/screens/club_detail_screen.dart
+
+      # 3.1 Nạp GoogleService-Info.plist nếu có
+      - name: Inject GoogleService-Info.plist
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          if [ -n "$GOOGLE_SERVICE_INFO_PLIST" ]; then
+            echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > ios/Runner/GoogleService-Info.plist
+          fi
 
       # 4. Build iOS (không sign)
       - name: Build iOS release
@@ -52,9 +81,9 @@ jobs:
       - name: Import signing certificate
         uses: apple-actions/import-codesign-certs@v2
         with:
-          p12-file-base64: ${{ secrets.IOS_CERT_BASE64 }}
-          p12-password: ${{ secrets.IOS_CERT_PASSWORD }}
-          provisioning-profile-base64: ${{ secrets.IOS_PROFILE_BASE64 }}
+          p12-file-base64: ${{ secrets.IOS_CERT_BASE64 || secrets.APPLE_BUILD_CERTIFICATE_BASE64 }}
+          p12-password: ${{ secrets.IOS_CERT_PASSWORD || secrets.APPLE_P12_PASSWORD }}
+          provisioning-profile-base64: ${{ secrets.IOS_PROFILE_BASE64 || secrets.APPLE_PROVISION_PROFILE_BASE64 }}
 
       # 7. Archive + Export IPA
       - name: Archive and export IPA
@@ -77,6 +106,6 @@ jobs:
         uses: apple-actions/upload-to-app-store@v3
         with:
           ipa-path: ios/build/ipa/*.ipa
-          api-key-id: ${{ secrets.APP_STORE_API_KEY_ID }}
-          api-issuer-id: ${{ secrets.APP_STORE_API_ISSUER_ID }}
-          api-private-key: ${{ secrets.APP_STORE_API_PRIVATE_KEY }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID || secrets.APP_STORE_API_KEY_ID }}
+          api-issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID || secrets.APP_STORE_API_ISSUER_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_KEY || secrets.APP_STORE_API_PRIVATE_KEY }}

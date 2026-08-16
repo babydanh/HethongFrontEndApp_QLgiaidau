@@ -228,7 +228,8 @@ class MatchController {
   }
 
   /// Áp dụng thao tác đặc biệt lên trận đấu qua PATCH /matches/:id/operation.
-  /// action: WALKOVER | RETIREMENT | DISQUALIFICATION | OVERRIDE_RESULT
+  /// action: WALKOVER | NO_SHOW | RETIREMENT | DISQUALIFICATION |
+  /// OVERRIDE_RESULT | POSTPONE | ABANDON
   Future<void> applyOperation({
     required String action,
     required String reason,

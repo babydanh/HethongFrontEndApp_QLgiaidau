@@ -6,6 +6,9 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -35,8 +38,16 @@ class _CreateClubTournamentScreenState
   String _selectedBracket = AppConstants.bracketSingleElimination;
   bool _isLoading = false;
   bool _isRanked = false;
+  DateTime _startDate = DateTime.now();
+  TimeOfDay _startTime = const TimeOfDay(hour: 18, minute: 0);
+  bool _isRecurring = false;
+  String _recurringFrequency = 'WEEKLY';
+  final Set<int> _recurringDaysOfWeek = <int>{6};
+  TimeOfDay _recurringTime = const TimeOfDay(hour: 18, minute: 0);
+  int _recurringAdvanceDays = 0;
   int _footballTeamSize = 7;
   final _footballReserveCtrl = TextEditingController(text: '5');
+  String _footballGenderRestriction = '';
 
   @override
   void dispose() {
@@ -71,8 +82,21 @@ class _CreateClubTournamentScreenState
     final sport = _mapSportSlug();
     if (sport == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn môn thể thao trước khi tạo giải.')),
+        const SnackBar(
+          content: Text(
+            'Môn thể thao của CLB không còn hoạt động hoặc chưa được tải. Không thể tạo giải.',
+          ),
+        ),
       );
+      return;
+    }
+
+    final auth = ref.read(authProvider);
+    if (!auth.isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng đăng nhập để tạo giải đấu.')),
+      );
+      context.push('/login');
       return;
     }
 
@@ -89,9 +113,23 @@ class _CreateClubTournamentScreenState
         'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
         'description': _descCtrl.text.trim(),
         'isRanked': _isRanked,
+        'startDate': _formatDateTime(_startDate, _startTime),
+        'startTime': _formatTime(_startTime),
+        'isRecurring': _isRecurring,
+        if (_isRecurring) ...{
+          'recurringFrequency': _recurringFrequency,
+          'recurringDayOfWeek': _recurringDaysOfWeek.isEmpty
+              ? 6
+              : _recurringDaysOfWeek.first,
+          'recurringDaysOfWeek': _recurringDaysOfWeek.toList()..sort(),
+          'recurringTimeOfDay': _formatTime(_recurringTime),
+          'recurringAdvanceDays': _recurringAdvanceDays,
+        },
         if (_selectedSport == AppConstants.sportFootball) ...{
           'teamSize': _footballTeamSize,
           'maxReserve': int.tryParse(_footballReserveCtrl.text) ?? 0,
+          if (_footballGenderRestriction.isNotEmpty)
+            'genderRestriction': _footballGenderRestriction,
         },
       };
 
@@ -115,9 +153,7 @@ class _CreateClubTournamentScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Lỗi: ${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
-            ),
+            content: Text(ErrorParser.parse(e, 'Không thể tạo giải đấu.')),
             backgroundColor: context.colors.error,
           ),
         );
@@ -125,6 +161,33 @@ class _CreateClubTournamentScreenState
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  String _formatTime(TimeOfDay time) =>
+      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+
+  String _formatDateTime(DateTime date, TimeOfDay time) =>
+      '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}T${_formatTime(time)}:00';
+
+  Future<void> _pickStartDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: _startDate,
+      helpText: 'Chọn ngày thi đấu',
+    );
+    if (picked != null && mounted) setState(() => _startDate = picked);
+  }
+
+  Future<void> _pickTime({required bool recurring}) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: recurring ? _recurringTime : _startTime,
+      helpText: recurring ? 'Chọn giờ lặp lại' : 'Chọn giờ thi đấu',
+    );
+    if (picked == null || !mounted) return;
+    setState(() => recurring ? _recurringTime = picked : _startTime = picked);
   }
 
   void _showSuccessSheet(LiteTournamentCreateResult result) {
@@ -159,20 +222,16 @@ class _CreateClubTournamentScreenState
     final isClubLocked = clubCat != null;
 
     if (isClubLocked && _selectedSport == null) {
-      final slug = clubCat.toLowerCase();
-      if (slug.contains('badminton') || slug.contains('cầu lông')) {
-        _selectedSport = AppConstants.sportBadminton;
-      } else if (slug.contains('tennis') || slug.contains('quần vợt')) {
-        _selectedSport = AppConstants.sportTennis;
-      } else if (slug.contains('pickleball')) {
-        _selectedSport = AppConstants.sportPickleball;
-      } else if (slug.contains('table') || slug.contains('bóng bàn')) {
-        _selectedSport = AppConstants.sportTableTennis;
-      } else if (slug.contains('foot') || slug.contains('bóng đá')) {
-        _selectedSport = AppConstants.sportFootball;
-      } else {
-        _selectedSport = AppConstants.sportBadminton;
-      }
+      final normalizedClubCategory = clubCat.trim().toLowerCase();
+      final activeCategory = ref.watch(categoriesProvider).asData?.value.where((
+        category,
+      ) {
+        return category.slug.trim().toLowerCase() == normalizedClubCategory ||
+            category.name.trim().toLowerCase() == normalizedClubCategory;
+      }).firstOrNull;
+      // Không được âm thầm đổi sang badminton khi category CLB không tồn tại
+      // hoặc đã bị Admin tắt.
+      _selectedSport = activeCategory?.slug;
     }
 
     return Scaffold(
@@ -220,7 +279,10 @@ class _CreateClubTournamentScreenState
               // ─── Môn thể thao ───
               _label('Môn thể thao', colors),
               const SizedBox(height: 6),
-              _buildSportSelector(isClubLocked: isClubLocked, clubCategoryName: clubCat),
+              _buildSportSelector(
+                isClubLocked: isClubLocked,
+                clubCategoryName: clubCat,
+              ),
               const SizedBox(height: 20),
 
               // ─── Hình thức ───
@@ -236,9 +298,19 @@ class _CreateClubTournamentScreenState
                     Expanded(
                       child: DropdownButtonFormField<int>(
                         initialValue: _footballTeamSize,
-                        decoration: const InputDecoration(labelText: 'Cầu thủ chính'),
-                        items: const [5, 7, 11].map((value) => DropdownMenuItem(value: value, child: Text('$value người'))).toList(),
-                        onChanged: (value) => setState(() => _footballTeamSize = value ?? 7),
+                        decoration: const InputDecoration(
+                          labelText: 'Cầu thủ chính',
+                        ),
+                        items: const [5, 7, 11]
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text('$value người'),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) =>
+                            setState(() => _footballTeamSize = value ?? 7),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -246,15 +318,32 @@ class _CreateClubTournamentScreenState
                       child: TextFormField(
                         controller: _footballReserveCtrl,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Dự bị tối đa'),
+                        decoration: const InputDecoration(
+                          labelText: 'Dự bị tối đa',
+                        ),
                         validator: (value) {
-                          if (_selectedSport != AppConstants.sportFootball) return null;
+                          if (_selectedSport != AppConstants.sportFootball) {
+                            return null;
+                          }
                           final reserve = int.tryParse(value ?? '');
-                          return reserve == null || reserve < 0 || reserve > 20 ? '0-20 người' : null;
+                          return reserve == null || reserve < 0 || reserve > 20
+                              ? '0-20 người'
+                              : null;
                         },
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: _footballGenderRestriction,
+                  decoration: const InputDecoration(labelText: 'Giới tính đội'),
+                  items: const [
+                    DropdownMenuItem(value: '', child: Text('Không ràng buộc')),
+                    DropdownMenuItem(value: 'MALE', child: Text('Nam')),
+                    DropdownMenuItem(value: 'FEMALE', child: Text('Nữ')),
+                  ],
+                  onChanged: (value) => setState(() => _footballGenderRestriction = value ?? ''),
                 ),
               ],
               const SizedBox(height: 20),
@@ -280,6 +369,134 @@ class _CreateClubTournamentScreenState
                 decoration: InputDecoration(
                   hintText: '16',
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              _label('Lịch thi đấu', colors),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _pickStartDate,
+                      icon: const Icon(Icons.calendar_today_outlined, size: 16),
+                      label: Text(
+                        '${_startDate.day.toString().padLeft(2, '0')}/${_startDate.month.toString().padLeft(2, '0')}/${_startDate.year}',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _pickTime(recurring: false),
+                      icon: const Icon(Icons.schedule_outlined, size: 16),
+                      label: Text(_formatTime(_startTime)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: [
+                      SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Tự động tạo giải định kỳ'),
+                        subtitle: const Text(
+                          'Tạo giải mới và thông báo vào feed CLB theo lịch',
+                        ),
+                        value: _isRecurring,
+                        onChanged: (value) =>
+                            setState(() => _isRecurring = value),
+                      ),
+                      if (_isRecurring) ...[
+                        DropdownButtonFormField<String>(
+                          initialValue: _recurringFrequency,
+                          decoration: const InputDecoration(
+                            labelText: 'Tần suất lặp lại',
+                          ),
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'WEEKLY',
+                              child: Text('Hằng tuần'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'BIWEEKLY',
+                              child: Text('2 tuần một lần'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'DAILY',
+                              child: Text('Hằng ngày'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'MONTHLY',
+                              child: Text('Hằng tháng'),
+                            ),
+                          ],
+                          onChanged: (value) => setState(
+                            () => _recurringFrequency = value ?? 'WEEKLY',
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        OutlinedButton.icon(
+                          onPressed: () => _pickTime(recurring: true),
+                          icon: const Icon(Icons.schedule_outlined, size: 16),
+                          label: Text(
+                            'Giờ lặp lại: ${_formatTime(_recurringTime)}',
+                          ),
+                        ),
+                        if (_recurringFrequency != 'DAILY' &&
+                            _recurringFrequency != 'MONTHLY') ...[
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 6,
+                            children: [
+                              for (final day in [1, 2, 3, 4, 5, 6, 0])
+                                FilterChip(
+                                  label: Text(day == 0 ? 'CN' : 'T$day'),
+                                  selected: _recurringDaysOfWeek.contains(day),
+                                  onSelected: (selected) => setState(() {
+                                    if (selected) {
+                                      _recurringDaysOfWeek.add(day);
+                                    } else if (_recurringDaysOfWeek.length >
+                                        1) {
+                                      _recurringDaysOfWeek.remove(day);
+                                    }
+                                  }),
+                                ),
+                            ],
+                          ),
+                        ],
+                        const SizedBox(height: 10),
+                        DropdownButtonFormField<int>(
+                          initialValue: _recurringAdvanceDays,
+                          decoration: const InputDecoration(
+                            labelText: 'Tạo trước và mở đăng ký',
+                          ),
+                          items: const [0, 1, 2, 3, 5, 7]
+                              .map(
+                                (days) => DropdownMenuItem(
+                                  value: days,
+                                  child: Text('Trước $days ngày'),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) => setState(
+                            () => _recurringAdvanceDays = value ?? 0,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Thành viên CLB sẽ nhận thông báo và bài đăng poll khi kỳ mới được tạo.',
+                          style: TextStyle(fontSize: 11),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -399,14 +616,27 @@ class _CreateClubTournamentScreenState
     );
   }
 
-  Widget _buildSportSelector({bool isClubLocked = false, String? clubCategoryName}) {
-    final sports = [
-      (AppConstants.sportFootball, 'Football', Icons.sports_soccer),
-      (AppConstants.sportBadminton, 'Cầu lông', Icons.sports_tennis),
-      (AppConstants.sportTennis, 'Tennis', Icons.sports_tennis),
-      (AppConstants.sportPickleball, 'Pickleball', Icons.sports_tennis),
-      (AppConstants.sportTableTennis, 'Bóng bàn', Icons.sports_tennis),
-    ];
+  Widget _buildSportSelector({
+    bool isClubLocked = false,
+    String? clubCategoryName,
+  }) {
+    final categories =
+        ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
+    final sports = categories
+        .map((category) {
+          final slug = category.slug.toLowerCase();
+          final icon = slug == 'football'
+              ? Icons.sports_soccer
+              : Icons.sports_tennis;
+          return (category.slug, category.name, icon);
+        })
+        .toList(growable: false);
+    if (sports.isEmpty) {
+      return Text(
+        'Không có môn thi đấu đang hoạt động. Vui lòng thử lại sau.',
+        style: TextStyle(color: context.colors.error, fontSize: 12),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -417,7 +647,9 @@ class _CreateClubTournamentScreenState
             decoration: BoxDecoration(
               color: AppTheme.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: AppTheme.primary.withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               children: [
@@ -439,53 +671,57 @@ class _CreateClubTournamentScreenState
         ],
         Row(
           children: sports.map((s) {
-        final selected = _selectedSport == s.$1;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: s != sports.last ? 8 : 0),
-            child: GestureDetector(
-              onTap: isClubLocked ? null : () => setState(() => _selectedSport = s.$1),
-              child: Opacity(
-                opacity: (isClubLocked && !selected) ? 0.4 : 1.0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? AppTheme.primary.withValues(alpha: 0.1)
-                        : context.colors.bgSurface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: selected ? AppTheme.primary : context.colors.border,
-                      width: selected ? 1.5 : 1,
-                    ),
-                  ),
-                child: Column(
-                  children: [
-                    Icon(
-                      s.$3,
-                      size: 22,
-                      color: selected
-                          ? AppTheme.primary
-                          : context.colors.textSecondary,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      s.$2,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+            final selected = _selectedSport == s.$1;
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: s != sports.last ? 8 : 0),
+                child: GestureDetector(
+                  onTap: isClubLocked
+                      ? null
+                      : () => setState(() => _selectedSport = s.$1),
+                  child: Opacity(
+                    opacity: (isClubLocked && !selected) ? 0.4 : 1.0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
                         color: selected
-                            ? AppTheme.primary
-                            : context.colors.textSecondary,
+                            ? AppTheme.primary.withValues(alpha: 0.1)
+                            : context.colors.bgSurface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: selected
+                              ? AppTheme.primary
+                              : context.colors.border,
+                          width: selected ? 1.5 : 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            s.$3,
+                            size: 22,
+                            color: selected
+                                ? AppTheme.primary
+                                : context.colors.textSecondary,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            s.$2,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: selected
+                                  ? AppTheme.primary
+                                  : context.colors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
-          ),
-        );
+            );
           }).toList(),
         ),
         if (_selectedSport == null) ...[
@@ -782,7 +1018,8 @@ class _LiteSuccessSheet extends StatelessWidget {
                         AppShareModal.show(
                           context: context,
                           title: 'Giải Nhanh: ${result.name}',
-                          subtitle: 'Mã mời: ${result.inviteCode} • Quét QR hoặc mở link để tham gia',
+                          subtitle:
+                              'Mã mời: ${result.inviteCode} • Quét QR hoặc mở link để tham gia',
                           webUrl: link,
                           badgeText: 'Giải Nhanh (Lite)',
                         );

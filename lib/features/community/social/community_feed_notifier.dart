@@ -67,6 +67,7 @@ class CommunityFeedNotifier extends Notifier<CommunityFeedState> {
     List<String> mediaUrls = const [],
     List<String> topicTags = const [],
     List<String> mentions = const [],
+    Map<String, dynamic>? poll,
   }) async {
     final trimmed = text.trim();
     if ((trimmed.isEmpty && mediaUrls.isEmpty) || state.isSubmitting) return false;
@@ -78,6 +79,7 @@ class CommunityFeedNotifier extends Notifier<CommunityFeedState> {
         mediaUrls: mediaUrls,
         topicTags: topicTags,
         mentions: mentions,
+        poll: poll,
       );
       state = state.copyWith(posts: [post, ...state.posts], isSubmitting: false, clearError: true);
       return true;

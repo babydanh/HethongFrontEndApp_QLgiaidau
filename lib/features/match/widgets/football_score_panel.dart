@@ -28,17 +28,33 @@ class FootballScorePanel extends ConsumerWidget {
         Card(child: Padding(padding: const EdgeInsets.all(12), child: Row(children: [
           const Icon(Icons.timer_outlined, size: 18),
           const SizedBox(width: 8),
-          Expanded(child: TextField(keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Phút', isDense: true), onSubmitted: (value) => notifier.footballSetMinute(int.tryParse(value) ?? score.minute))),
+          Expanded(child: _FootballTimeFields(
+            minute: score.minute,
+            addedMinute: score.addedMinute,
+            onMinuteSubmitted: notifier.footballSetMinute,
+            onAddedMinuteSubmitted: notifier.footballSetAddedMinute,
+          )),
           const SizedBox(width: 12),
-          Expanded(child: DropdownButtonFormField<String>(value: score.phase, isExpanded: true, decoration: const InputDecoration(labelText: 'Trạng thái', isDense: true), items: phases.map((phase) => DropdownMenuItem(value: phase, child: Text(_label(phase), overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) { if (value != null) notifier.footballSetPhase(value); })),
+          Expanded(child: DropdownButtonFormField<String>(initialValue: score.phase, isExpanded: true, decoration: const InputDecoration(labelText: 'Trạng thái', isDense: true), items: phases.map((phase) => DropdownMenuItem(value: phase, child: Text(_label(phase), overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) { if (value != null) notifier.footballSetPhase(value); })),
         ]))),
+        if (score.team1Goals == score.team2Goals)
+          _ShootoutFields(
+            team1Name: team1Name,
+            team2Name: team2Name,
+            team1Goals: score.shootoutTeam1Goals,
+            team2Goals: score.shootoutTeam2Goals,
+            onChanged: (team1Goals, team2Goals) => notifier.footballSetShootout(
+              team1Goals: team1Goals,
+              team2Goals: team2Goals,
+            ),
+          ),
         Card(child: Padding(padding: const EdgeInsets.all(12), child: Wrap(spacing: 8, runSpacing: 8, children: [
-          for (final event in const [('YELLOW_CARD', 'Tháº» vÃ ng'), ('RED_CARD', 'Tháº» Ä‘á»'), ('FOUL', 'Pháº¡m lá»—i'), ('SUBSTITUTION', 'Thay ngÆ°á»i')])
+          for (final event in const [('YELLOW_CARD', 'Thẻ vàng'), ('RED_CARD', 'Thẻ đỏ'), ('FOUL', 'Phạm lỗi'), ('SUBSTITUTION', 'Thay người')])
             OutlinedButton.icon(onPressed: () => _showTeamPicker(context, ref, params, event.$1, event.$2), icon: const Icon(Icons.flag_outlined, size: 16), label: Text(event.$2)),
         ]))),
         if (score.events.isNotEmpty) Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Diá»…n biáº¿n', style: TextStyle(fontWeight: FontWeight.w800)),
-          for (final event in score.events.reversed.take(8)) Padding(padding: const EdgeInsets.only(top: 6), child: Text("${event.minute}' Â· ${event.type} Â· ${event.isTeam1 ? team1Name : team2Name}")),
+          const Text('Diễn biến', style: TextStyle(fontWeight: FontWeight.w800)),
+          for (final event in score.events.reversed.take(8)) Padding(padding: const EdgeInsets.only(top: 6), child: Text("${event.minute}${event.addedMinute > 0 ? '+${event.addedMinute}' : ''}' · ${event.type} · ${event.isTeam1 ? team1Name : team2Name}")),
         ]))),
         if (state.errorMessage case final message?) Padding(padding: const EdgeInsets.only(top: 8), child: Text(message, style: TextStyle(color: Theme.of(context).colorScheme.error))),
       ]),
@@ -47,8 +63,8 @@ class FootballScorePanel extends ConsumerWidget {
 
   static Future<void> _showTeamPicker(BuildContext context, WidgetRef ref, MatchControlParams params, String type, String label) async {
     final team = await showModalBottomSheet<bool>(context: context, builder: (sheetContext) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      ListTile(title: Text('$label Â· Äá»™i 1'), onTap: () => Navigator.pop(sheetContext, true)),
-      ListTile(title: Text('$label Â· Äá»™i 2'), onTap: () => Navigator.pop(sheetContext, false)),
+      ListTile(title: Text('$label · Đội 1'), onTap: () => Navigator.pop(sheetContext, true)),
+      ListTile(title: Text('$label · Đội 2'), onTap: () => Navigator.pop(sheetContext, false)),
     ])));
     if (team != null && context.mounted) ref.read(scorePanelNotifierProvider(params).notifier).footballAddEvent(type, team);
   }
@@ -63,4 +79,138 @@ class _TeamScore extends StatelessWidget {
   const _TeamScore({required this.name, required this.score, required this.onAdd, required this.onRemove});
   @override
   Widget build(BuildContext context) => Column(children: [Text(name, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)), Text('$score', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800)), Row(mainAxisAlignment: MainAxisAlignment.center, children: [IconButton(onPressed: onRemove, icon: const Icon(Icons.remove_circle_outline)), IconButton(onPressed: onAdd, icon: const Icon(Icons.add_circle, color: Colors.green))])]);
+}
+
+class _ShootoutFields extends StatefulWidget {
+  final String team1Name;
+  final String team2Name;
+  final int? team1Goals;
+  final int? team2Goals;
+  final void Function(int team1Goals, int team2Goals) onChanged;
+
+  const _ShootoutFields({required this.team1Name, required this.team2Name, required this.team1Goals, required this.team2Goals, required this.onChanged});
+
+  @override
+  State<_ShootoutFields> createState() => _ShootoutFieldsState();
+}
+
+class _ShootoutFieldsState extends State<_ShootoutFields> {
+  late final TextEditingController _team1Controller;
+  late final TextEditingController _team2Controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _team1Controller = TextEditingController(text: widget.team1Goals?.toString() ?? '');
+    _team2Controller = TextEditingController(text: widget.team2Goals?.toString() ?? '');
+  }
+
+  @override
+  void didUpdateWidget(covariant _ShootoutFields oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.team1Goals != oldWidget.team1Goals && widget.team1Goals?.toString() != _team1Controller.text) {
+      _team1Controller.text = widget.team1Goals?.toString() ?? '';
+    }
+    if (widget.team2Goals != oldWidget.team2Goals && widget.team2Goals?.toString() != _team2Controller.text) {
+      _team2Controller.text = widget.team2Goals?.toString() ?? '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _team1Controller.dispose();
+    _team2Controller.dispose();
+    super.dispose();
+  }
+
+  void _emit() => widget.onChanged(
+    int.tryParse(_team1Controller.text) ?? 0,
+    int.tryParse(_team2Controller.text) ?? 0,
+  );
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Row(children: [
+        Expanded(child: TextField(
+          controller: _team1Controller,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: '${widget.team1Name} · Luân lưu', isDense: true),
+          onChanged: (_) => _emit(),
+        )),
+        const SizedBox(width: 12),
+        Expanded(child: TextField(
+          controller: _team2Controller,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: '${widget.team2Name} · Luân lưu', isDense: true),
+          onChanged: (_) => _emit(),
+        )),
+      ]),
+    ),
+  );
+}
+
+class _FootballTimeFields extends StatefulWidget {
+  final int minute;
+  final int addedMinute;
+  final ValueChanged<int> onMinuteSubmitted;
+  final ValueChanged<int> onAddedMinuteSubmitted;
+
+  const _FootballTimeFields({
+    required this.minute,
+    required this.addedMinute,
+    required this.onMinuteSubmitted,
+    required this.onAddedMinuteSubmitted,
+  });
+
+  @override
+  State<_FootballTimeFields> createState() => _FootballTimeFieldsState();
+}
+
+class _FootballTimeFieldsState extends State<_FootballTimeFields> {
+  late final TextEditingController _minuteController;
+  late final TextEditingController _addedMinuteController;
+
+  @override
+  void initState() {
+    super.initState();
+    _minuteController = TextEditingController(text: widget.minute.toString());
+    _addedMinuteController = TextEditingController(text: widget.addedMinute.toString());
+  }
+
+  @override
+  void didUpdateWidget(covariant _FootballTimeFields oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.minute != oldWidget.minute && _minuteController.text != widget.minute.toString()) {
+      _minuteController.text = widget.minute.toString();
+    }
+    if (widget.addedMinute != oldWidget.addedMinute && _addedMinuteController.text != widget.addedMinute.toString()) {
+      _addedMinuteController.text = widget.addedMinute.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _minuteController.dispose();
+    _addedMinuteController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Row(children: [
+    Expanded(child: TextField(
+      controller: _minuteController,
+      keyboardType: TextInputType.number,
+      decoration: const InputDecoration(labelText: 'Phút', isDense: true),
+      onSubmitted: (value) => widget.onMinuteSubmitted(int.tryParse(value) ?? widget.minute),
+    )),
+    const SizedBox(width: 12),
+    Expanded(child: TextField(
+      controller: _addedMinuteController,
+      keyboardType: TextInputType.number,
+      decoration: const InputDecoration(labelText: 'Bù giờ +', isDense: true),
+      onSubmitted: (value) => widget.onAddedMinuteSubmitted(int.tryParse(value) ?? widget.addedMinute),
+    )),
+  ]);
 }

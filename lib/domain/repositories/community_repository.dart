@@ -34,6 +34,7 @@ abstract class ICommunityRepository {
   );
   Future<Community?> createCommunity(Map<String, dynamic> data);
   Future<List<GalleryImageModel>> getGallery(String communityId);
+  Future<bool> removeGalleryItem(String communityId, String imageId);
   Future<List<CommunityRankingModel>> getRankings(
     String communityId, {
     int limit = 50,
@@ -149,6 +150,16 @@ abstract class ICommunityRepository {
     CommunitySocialSettings settings,
   );
   Future<List<CommunityTagPreset>> getTagPresets(String communityId);
-  Future<CommunityTagPreset> createTagPreset(String communityId, {required String name, required String color});
+  Future<CommunityTagPreset> createTagPreset(
+    String communityId, {
+    required String name,
+    required String color,
+  });
   Future<void> deleteTagPreset(String communityId, String presetId);
+
+  Future<GalleryImageModel?> addGalleryItem(
+    String communityId, {
+    required String imageUrl,
+    String? caption,
+  });
 }

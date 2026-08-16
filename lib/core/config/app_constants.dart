@@ -1,7 +1,18 @@
 class AppConstants {
   // ─── App Info ───
-  static const String appName = 'Quản Lý Giải Đấu';
+  static const String appName = 'Sporto';
+  static const String appTagline = 'Nền tảng Quản lý & Tổ chức Giải đấu Thể thao Toàn diện';
   static const String appVersion = '1.0.0';
+  static const String appDomain = 'https://sporto.asia';
+
+  // ─── Brand Assets ───
+  static const String logoIconSvg = 'assets/images/sporto_v1.svg';
+  static const String logoFullSvg = 'assets/images/sporto_v1_with_text.svg';
+  static const String logoFullPng = 'assets/images/sporto_v1_with_text.png';
+  static const String appIconPng = 'assets/logos/icon.png';
+  static const String defaultFallbackImage = 'assets/images/sporto_v1_with_text.png';
+  static const String remoteLogoFullSvg = 'https://sporto.asia/sporto_v1_with_text.svg';
+  static const String remoteLogoIconSvg = 'https://sporto.asia/sporto_v1.svg';
 
   // ─── Sports ───
   static const String sportPickleball = 'pickleball';

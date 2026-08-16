@@ -166,6 +166,38 @@ class ApiAuthRepository implements IAuthRepository {
     }
   }
 
+  @override
+  Future<void> requestPhoneVerification({
+    required String phoneNumber,
+  }) async {
+    _log.info('Gửi yêu cầu xác minh số điện thoại qua Mobile API');
+    try {
+      await _dioClient.dio.post(
+        '/auth/verify-phone/request',
+        data: {'phoneNumber': phoneNumber},
+      );
+    } catch (e, stack) {
+      _log.error('Lỗi gửi yêu cầu xác minh số điện thoại', e, stack);
+      throw Exception(ErrorParser.parse(e, 'Lỗi kết nối đến máy chủ'));
+    }
+  }
+
+  @override
+  Future<void> confirmPhoneVerification({
+    required String code,
+  }) async {
+    _log.info('Xác minh số điện thoại qua Mobile API');
+    try {
+      await _dioClient.dio.post(
+        '/auth/verify-phone/confirm',
+        data: {'code': code},
+      );
+    } catch (e, stack) {
+      _log.error('Lỗi xác minh số điện thoại', e, stack);
+      throw Exception(ErrorParser.parse(e, 'Lỗi kết nối đến máy chủ'));
+    }
+  }
+
   AuthSession _mapAuthSession(dynamic rawData) {
     final data = rawData as Map<String, dynamic>;
     final innerData =

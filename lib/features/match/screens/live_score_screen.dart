@@ -1167,6 +1167,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         return 'Bóng bàn';
       case SportRuleKind.badminton:
         return 'Cầu lông';
+      case SportRuleKind.football:
+        return 'Bóng đá';
     }
   }
 

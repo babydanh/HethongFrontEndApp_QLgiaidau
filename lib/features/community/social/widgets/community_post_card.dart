@@ -1,6 +1,10 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
+import 'package:app_quanly_giaidau/features/community/social/widgets/community_poll_widget.dart';
+import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_preview.dart';
+import 'package:app_quanly_giaidau/features/community/social/widgets/community_comment_sheet.dart';
+import 'package:app_quanly_giaidau/shared/widgets/report_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,8 +13,24 @@ class CommunityPostCard extends ConsumerWidget {
   final String communityId;
   final ValueChanged<String>? onReact;
   final bool commentsEnabled;
+  final VoidCallback? onDelete;
+  final String currentUserId;
+  final bool canModerateComments;
+  final VoidCallback? onCommentUpdated;
+  final VoidCallback? onAuthorTap;
 
-  const CommunityPostCard({super.key, required this.post, required this.communityId, this.onReact, this.commentsEnabled = true});
+  const CommunityPostCard({
+    super.key,
+    required this.post,
+    required this.communityId,
+    this.onReact,
+    this.commentsEnabled = true,
+    this.onDelete,
+    this.currentUserId = '',
+    this.canModerateComments = false,
+    this.onCommentUpdated,
+    this.onAuthorTap,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -30,37 +50,57 @@ class CommunityPostCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 19,
-                  backgroundColor: AppTheme.primaryLight,
-                  backgroundImage: post.authorAvatarUrl == null
-                      ? null
-                      : NetworkImage(post.authorAvatarUrl!),
-                  child: post.authorAvatarUrl == null
-                      ? Text(
-                          post.authorName.characters.first.toUpperCase(),
-                          style: const TextStyle(color: AppTheme.primaryDark),
-                        )
-                      : null,
+                GestureDetector(
+                  onTap: onAuthorTap,
+                  child: CircleAvatar(
+                    radius: 19,
+                    backgroundColor: AppTheme.primaryLight,
+                    backgroundImage: post.authorAvatarUrl == null
+                        ? null
+                        : NetworkImage(post.authorAvatarUrl!),
+                    child: post.authorAvatarUrl == null
+                        ? Text(
+                            post.authorName.characters.first.toUpperCase(),
+                            style: const TextStyle(color: AppTheme.primaryDark),
+                          )
+                        : null,
+                  ),
                 ),
                 const SizedBox(width: AppTheme.spacingSM),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(post.authorName, style: Theme.of(context).textTheme.titleSmall),
+                      GestureDetector(
+                        onTap: onAuthorTap,
+                        child: Text(
+                          post.authorName,
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                      ),
                       Text(
                         _relativeTime(post.createdAt),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colors.textMuted),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colors.textMuted,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 if (post.isPinned)
                   Icon(Icons.push_pin_rounded, size: 18, color: colors.info),
+                if (onDelete != null)
+                  IconButton(
+                    tooltip: 'Xóa bài viết',
+                    onPressed: onDelete,
+                    icon: Icon(
+                      Icons.delete_outline_rounded,
+                      color: colors.error,
+                    ),
+                  ),
                 IconButton(
                   tooltip: 'Tuỳ chọn bài đăng',
-                  onPressed: () {},
+                  onPressed: () => _showPostActions(context),
                   icon: const Icon(Icons.more_horiz_rounded),
                 ),
               ],
@@ -73,7 +113,10 @@ class CommunityPostCard extends ConsumerWidget {
               const SizedBox(height: AppTheme.spacingSM),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: colors.warning.withValues(alpha: .12),
                   borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -90,7 +133,8 @@ class CommunityPostCard extends ConsumerWidget {
             ],
             if (post.tournamentId != null) ...[
               const SizedBox(height: AppTheme.spacingSM),
-              Container(
+              CommunityTournamentPreview(post: post),
+              /* Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -129,35 +173,71 @@ class CommunityPostCard extends ConsumerWidget {
                     const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppTheme.primaryDark),
                   ],
                 ),
-              ),
+              ), */
+            ],
+            if (post.poll != null) ...[
+              const SizedBox(height: AppTheme.spacingSM),
+              CommunityPollWidget(communityId: communityId, poll: post.poll!),
             ],
             if (post.topicTags.isNotEmpty) ...[
               const SizedBox(height: AppTheme.spacingSM),
               Wrap(
                 spacing: AppTheme.spacingXS,
                 runSpacing: AppTheme.spacingXS,
-                children: post.topicTags.map((tag) => Chip(
-                  label: Text('#$tag'),
-                  visualDensity: VisualDensity.compact,
-                  backgroundColor: AppTheme.primaryLight,
-                  labelStyle: const TextStyle(color: AppTheme.primaryDark, fontSize: 12),
-                  side: BorderSide.none,
-                )).toList(),
+                children: post.topicTags
+                    .map(
+                      (tag) => Chip(
+                        label: Text('#$tag'),
+                        visualDensity: VisualDensity.compact,
+                        backgroundColor: AppTheme.primaryLight,
+                        labelStyle: const TextStyle(
+                          color: AppTheme.primaryDark,
+                          fontSize: 12,
+                        ),
+                        side: BorderSide.none,
+                      ),
+                    )
+                    .toList(),
               ),
             ],
             if (post.mediaUrls.isNotEmpty) ...[
               const SizedBox(height: AppTheme.spacingSM),
               ClipRRect(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: Image.network(
-                    post.mediaUrls.first,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => ColoredBox(
-                      color: colors.bgSurface,
-                      child: const Center(child: Icon(Icons.broken_image_outlined)),
-                    ),
+                child: GestureDetector(
+                  onTap: () => _showMediaGallery(context),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        post.mediaUrls.first,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => ColoredBox(
+                          color: colors.bgSurface,
+                          child: const Center(
+                            child: Icon(Icons.broken_image_outlined),
+                          ),
+                        ),
+                      ),
+                      if (post.mediaUrls.length > 1)
+                        Positioned(
+                          right: 8,
+                          bottom: 8,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              child: Text(
+                                '1/${post.mediaUrls.length}',
+                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -170,23 +250,38 @@ class CommunityPostCard extends ConsumerWidget {
                   visualDensity: VisualDensity.compact,
                   onPressed: onReact == null ? null : () => onReact!('CHEER'),
                   icon: Icon(
-                    post.viewerReaction == 'CHEER' ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                    post.viewerReaction == 'CHEER'
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
                     size: 18,
-                    color: post.viewerReaction == 'CHEER' ? colors.error : colors.textMuted,
+                    color: post.viewerReaction == 'CHEER'
+                        ? colors.error
+                        : colors.textMuted,
                   ),
                 ),
                 const SizedBox(width: 5),
-                Text('${post.reactionCount}', style: TextStyle(color: colors.textMuted)),
-                const SizedBox(width: AppTheme.spacingSM),
-                if (commentsEnabled) IconButton(
-                  tooltip: 'Bình luận',
-                  visualDensity: VisualDensity.compact,
-                  onPressed: () => _showComments(context, ref),
-                  icon: Icon(Icons.chat_bubble_outline_rounded, size: 18, color: colors.textMuted),
+                Text(
+                  '${post.reactionCount}',
+                  style: TextStyle(color: colors.textMuted),
                 ),
+                const SizedBox(width: AppTheme.spacingSM),
+                if (commentsEnabled)
+                  IconButton(
+                    tooltip: 'Bình luận',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _showComments(context, ref),
+                    icon: Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      size: 18,
+                      color: colors.textMuted,
+                    ),
+                  ),
                 if (commentsEnabled) ...[
                   const SizedBox(width: 5),
-                  Text('${post.commentCount}', style: TextStyle(color: colors.textMuted)),
+                  Text(
+                    '${post.commentCount}',
+                    style: TextStyle(color: colors.textMuted),
+                  ),
                 ],
               ],
             ),
@@ -197,15 +292,75 @@ class CommunityPostCard extends ConsumerWidget {
   }
 
   Future<void> _showComments(BuildContext context, WidgetRef ref) async {
-    final comments = await ref.read(communitySocialRepositoryProvider).getComments(communityId, post.id);
+    final comments = await ref
+        .read(communitySocialRepositoryProvider)
+        .getComments(communityId, post.id);
     if (!context.mounted) return;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (sheetContext) => _CommentSheet(
+      builder: (sheetContext) => CommunityCommentSheet(
         communityId: communityId,
         postId: post.id,
-        comments: comments,
+        initialPage: comments,
+        currentUserId: currentUserId,
+        canModerate: canModerateComments,
+        onCommentUpdated: onCommentUpdated,
+      ),
+    );
+  }
+
+  Future<void> _showPostActions(BuildContext context) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: ListTile(
+          leading: const Icon(Icons.flag_outlined),
+          title: const Text('Báo cáo bài viết'),
+          onTap: () => Navigator.pop(sheetContext, 'report'),
+        ),
+      ),
+    );
+    if (!context.mounted || action != 'report') return;
+    await ReportSheet.show(
+      context,
+      targetId: post.id,
+      targetType: 'community_post',
+    );
+  }
+
+  Future<void> _showMediaGallery(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(12),
+        child: Stack(
+          children: [
+            PageView.builder(
+              itemCount: post.mediaUrls.length,
+              itemBuilder: (context, index) => InteractiveViewer(
+                child: Image.network(
+                  post.mediaUrls[index],
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const Center(
+                    child: Icon(Icons.broken_image_outlined, color: Colors.white, size: 40),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: IconButton(
+                tooltip: 'Đóng',
+                onPressed: () => Navigator.pop(dialogContext),
+                icon: const Icon(Icons.close, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -218,64 +373,4 @@ class CommunityPostCard extends ConsumerWidget {
     if (difference.inDays < 1) return '${difference.inHours} giờ trước';
     return '${difference.inDays} ngày trước';
   }
-}
-
-class _CommentSheet extends ConsumerStatefulWidget {
-  final String communityId;
-  final String postId;
-  final List<CommunityCommentModel> comments;
-
-  const _CommentSheet({required this.communityId, required this.postId, required this.comments});
-
-  @override
-  ConsumerState<_CommentSheet> createState() => _CommentSheetState();
-}
-
-class _CommentSheetState extends ConsumerState<_CommentSheet> {
-  final _controller = TextEditingController();
-  bool _sending = false;
-  late List<CommunityCommentModel> _comments;
-
-  @override
-  void initState() {
-    super.initState();
-    _comments = [...widget.comments];
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    final body = _controller.text.trim();
-    if (body.isEmpty || _sending) return;
-    setState(() => _sending = true);
-    try {
-      final comment = await ref.read(communitySocialRepositoryProvider).createComment(widget.communityId, widget.postId, body: body);
-      if (mounted) setState(() { _comments = [..._comments, comment]; _controller.clear(); });
-    } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không thể gửi bình luận.')));
-    } finally {
-      if (mounted) setState(() => _sending = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => SafeArea(
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(AppTheme.spacingMD, AppTheme.spacingMD, AppTheme.spacingMD, AppTheme.spacingSM),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Text('Bình luận', style: TextStyle(fontWeight: FontWeight.w700)),
-        const SizedBox(height: AppTheme.spacingSM),
-        if (_comments.isEmpty) const Padding(padding: EdgeInsets.all(AppTheme.spacingMD), child: Text('Chưa có bình luận.'))
-        else ..._comments.map((comment) => ListTile(dense: true, title: Text(comment.authorName), subtitle: Text(comment.body))),
-        Row(children: [
-          Expanded(child: TextField(controller: _controller, minLines: 1, maxLines: 3, decoration: const InputDecoration(hintText: 'Viết bình luận…'))),
-          IconButton(onPressed: _sending ? null : _submit, icon: const Icon(Icons.send_rounded)),
-        ]),
-      ]),
-    ),
-  );
 }

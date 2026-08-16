@@ -53,6 +53,7 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
     List<String> mediaUrls = const [],
     List<String> topicTags = const [],
     List<String> mentions = const [],
+    Map<String, dynamic>? poll,
   }) async {
     try {
       final response = await _dioClient.dio.post(
@@ -62,6 +63,7 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
           if (mediaUrls.isNotEmpty) 'mediaUrls': mediaUrls,
           if (topicTags.isNotEmpty) 'topics': topicTags,
           if (mentions.isNotEmpty) 'mentions': mentions,
+          if (poll != null) 'poll': poll,
         },
         options: Options(headers: {'Idempotency-Key': Uuid().v4()}),
       );
@@ -77,24 +79,35 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
   }
 
   @override
-  Future<List<CommunityCommentModel>> getComments(
+  Future<CommunityCommentPage> getComments(
     String communityId,
     String postId, {
-    int limit = 3,
+    String? cursor,
+    int limit = 20,
   }) async {
     try {
       final response = await _dioClient.dio.get(
         '/communities/$communityId/posts/$postId/comments',
-        queryParameters: {'limit': limit},
+        queryParameters: {
+          'limit': limit,
+          if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+        },
       );
       final body = _asMap(response.data);
       final raw = body['data'];
-      if (raw is! List) return const [];
-      return raw
-          .map(_asMap)
-          .map(CommunityCommentModel.fromJson)
-          .where((comment) => comment.id.isNotEmpty)
-          .toList(growable: false);
+      final items = raw is! List
+          ? const <CommunityCommentModel>[]
+          : raw
+                .map(_asMap)
+                .map(CommunityCommentModel.fromJson)
+                .where((comment) => comment.id.isNotEmpty)
+                .toList(growable: false);
+      final meta = _asMap(body['meta']);
+      return CommunityCommentPage(
+        items: items,
+        nextCursor: meta['nextCursor']?.toString(),
+        hasMore: meta['hasMore'] == true,
+      );
     } catch (error, stack) {
       _log.error('Không thể tải bình luận bài viết: $postId', error, stack);
       rethrow;
@@ -106,18 +119,135 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
     String communityId,
     String postId, {
     required String body,
+    String? parentId,
   }) async {
     try {
       final response = await _dioClient.dio.post(
         '/communities/$communityId/posts/$postId/comments',
-        data: {'body': body.trim()},
+        data: {
+          'body': body.trim(),
+          if (parentId != null && parentId.isNotEmpty) 'parentId': parentId,
+        },
+        options: Options(headers: {'Idempotency-Key': Uuid().v4()}),
       );
       final payload = _asMap(response.data);
-      final comment = CommunityCommentModel.fromJson(_asMap(payload['data'] ?? payload));
-      if (comment.id.isEmpty) throw const FormatException('Bình luận không hợp lệ');
+      final comment = CommunityCommentModel.fromJson(
+        _asMap(payload['data'] ?? payload),
+      );
+      if (comment.id.isEmpty) {
+        throw const FormatException('Bình luận không hợp lệ');
+      }
       return comment;
     } catch (error, stack) {
       _log.error('Không thể gửi bình luận bài viết: $postId', error, stack);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deletePost(String communityId, String postId) async {
+    try {
+      await _dioClient.dio.delete('/communities/$communityId/posts/$postId');
+    } catch (error, stack) {
+      _log.error('Không thể xóa bài viết: $postId', error, stack);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<CommunityPostModel>> getPendingPosts(String communityId) async {
+    final response = await _dioClient.dio.get(
+      '/communities/$communityId/moderation/posts',
+    );
+    final payload = _asMap(response.data);
+    final raw = payload['data'] ?? payload;
+    if (raw is! List) return const [];
+    return raw
+        .map(_asMap)
+        .map(CommunityPostModel.fromJson)
+        .where((post) => post.id.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> moderatePost(
+    String communityId,
+    String postId, {
+    required String status,
+  }) async {
+    await _dioClient.dio.patch(
+      '/communities/$communityId/posts/$postId/moderation',
+      data: {'status': status},
+    );
+  }
+
+  @override
+  Future<void> reportPost(
+    String communityId,
+    String postId, {
+    required String reason,
+    String? details,
+  }) async {
+    await _dioClient.dio.post(
+      '/communities/$communityId/posts/$postId/report',
+      data: {
+        'reason': reason,
+        if (details != null && details.trim().isNotEmpty)
+          'details': details.trim(),
+      },
+    );
+  }
+
+  @override
+  Future<void> deleteComment(String communityId, String commentId) async {
+    try {
+      await _dioClient.dio.post(
+        '/communities/$communityId/comments/$commentId/delete',
+      );
+    } catch (error, stack) {
+      _log.error('Không thể xóa bình luận: $commentId', error, stack);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<CommunityPollModel> votePoll(
+    String communityId,
+    String pollId,
+    String optionId,
+  ) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/communities/$communityId/polls/$pollId/vote',
+        data: {'optionId': optionId},
+      );
+      final payload = _asMap(response.data);
+      return CommunityPollModel.fromJson(_asMap(payload['data'] ?? payload));
+    } catch (error, stack) {
+      _log.error('Không thể cập nhật bình chọn: $pollId', error, stack);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<CommunityPollModel> addPollOption(
+    String communityId,
+    String pollId,
+    String optionText,
+  ) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/communities/$communityId/polls/$pollId/options',
+        data: {'optionText': optionText.trim()},
+      );
+      final payload = _asMap(response.data);
+      return CommunityPollModel.fromJson(_asMap(payload['data'] ?? payload));
+    } catch (error, stack) {
+      _log.error(
+        'Không thể thêm lựa chọn vào bình chọn: $pollId',
+        error,
+        stack,
+      );
       rethrow;
     }
   }
@@ -151,8 +281,12 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
         options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
       final payload = _asMap(response.data);
-      final url = payload['url']?.toString() ?? _asMap(payload['data'])['url']?.toString();
-      if (url == null || url.isEmpty) throw const FormatException('Ảnh tải lên không hợp lệ');
+      final url =
+          payload['url']?.toString() ??
+          _asMap(payload['data'])['url']?.toString();
+      if (url == null || url.isEmpty) {
+        throw const FormatException('Ảnh tải lên không hợp lệ');
+      }
       return url;
     } catch (error, stack) {
       _log.error('Không thể tải ảnh bài viết lên', error, stack);

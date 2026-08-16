@@ -98,6 +98,10 @@ class MatchMemberInfo {
 
 class MatchModel {
   final String id;
+  /// Tournament identity returned by the public match feed. Keeping this on
+  /// the model lets the app fan one cursor-paginated response back into the
+  /// tournament sections without issuing one request per tournament.
+  final String? tournamentId;
   final int round;
   final int matchNumber;
   final String team1Id;
@@ -156,6 +160,7 @@ class MatchModel {
 
   const MatchModel({
     required this.id,
+    this.tournamentId,
     required this.round,
     required this.matchNumber,
     this.team1Id = '',
@@ -275,6 +280,11 @@ class MatchModel {
 
     return MatchModel(
       id: id,
+      tournamentId: json['tournamentId']?.toString() ??
+          json['tournament_id']?.toString() ??
+          (json['tournament'] is Map
+              ? (json['tournament'] as Map)['id']?.toString()
+              : null),
       round: json['round'] ?? 1,
       matchNumber: json['matchNumber'] ?? 1,
       team1Id: json['team1Id']?.toString() ??
@@ -421,6 +431,7 @@ class MatchModel {
 
   MatchModel copyWith({
     String? id,
+    String? tournamentId,
     int? round,
     int? matchNumber,
     String? team1Id,
@@ -469,6 +480,7 @@ class MatchModel {
   }) {
     return MatchModel(
       id: id ?? this.id,
+      tournamentId: tournamentId ?? this.tournamentId,
       round: round ?? this.round,
       matchNumber: matchNumber ?? this.matchNumber,
       team1Id: team1Id ?? this.team1Id,

@@ -58,7 +58,15 @@ class PushNotificationService {
 
       _log.info('Notification permission status: ${settings.authorizationStatus}');
 
-      // 4. Initialize Local Notifications Plugin for Android Foreground Heads-up Banners
+      // 4. Initialize Local Notifications Plugin for Android & iOS Foreground Heads-up Banners
+      if (Platform.isIOS) {
+        await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+      }
+
       if (Platform.isAndroid) {
         const androidInitSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
         const initSettings = InitializationSettings(android: androidInitSettings);
@@ -105,6 +113,17 @@ class PushNotificationService {
   /// Get FCM token and send to backend
   Future<void> _registerDeviceToken(DioClient dioClient) async {
     try {
+      // On iOS, ensure APNs token is available before requesting FCM token
+      if (Platform.isIOS) {
+        String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+        if (apnsToken == null) {
+          // APNs token might take a few moments to resolve on app cold start
+          await Future.delayed(const Duration(seconds: 2));
+          apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+          _log.info('iOS APNs token status: ${apnsToken != null ? "Available" : "Not yet assigned"}');
+        }
+      }
+
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null && token.isNotEmpty) {
         _currentToken = token;

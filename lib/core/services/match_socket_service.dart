@@ -20,6 +20,7 @@ class MatchSocketService {
   final _commentNewController = StreamController<Map<String, dynamic>>.broadcast();
   final _cheerUpdateController = StreamController<Map<String, dynamic>>.broadcast();
   final _tournamentMatchUpdateController = StreamController<Map<String, dynamic>>.broadcast();
+  final _registrationUpdateController = StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get onScoreUpdate => _scoreUpdateController.stream;
   Stream<Map<String, dynamic>> get onMatchStatus => _matchStatusController.stream;
@@ -27,6 +28,7 @@ class MatchSocketService {
   Stream<Map<String, dynamic>> get onCommentNew => _commentNewController.stream;
   Stream<Map<String, dynamic>> get onCheerUpdate => _cheerUpdateController.stream;
   Stream<Map<String, dynamic>> get onTournamentMatchUpdate => _tournamentMatchUpdateController.stream;
+  Stream<Map<String, dynamic>> get onRegistrationUpdate => _registrationUpdateController.stream;
 
   /// An toàn parse socket payload: accept Map hoặc JSON string.
   /// Log warning nếu format lạ, không throw.
@@ -156,6 +158,14 @@ class MatchSocketService {
         final parsed = _parsePayload(data);
         if (parsed != null) {
           _tournamentMatchUpdateController.add(parsed);
+        }
+      });
+
+      _socket!.on('registration:update', (data) {
+        _log.info('Socket tournament registration:update received');
+        final parsed = _parsePayload(data);
+        if (parsed != null) {
+          _registrationUpdateController.add(parsed);
         }
       });
 

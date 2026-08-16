@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
@@ -12,6 +13,7 @@ import 'package:app_quanly_giaidau/providers/notification_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/regions_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_header.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_banner_card.dart';
@@ -111,6 +113,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _clubSport = key;
       _rankingsSport = key == 'all' ? 'pickleball' : key;
     });
+  }
+
+  List<(String, String)> _activeSportFilterItems(AppLocalizations l10n) {
+    final categories =
+        ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
+    return [
+      ('all', l10n.filterAll),
+      ...categories.map((category) => (category.slug, category.name)),
+    ];
   }
 
   final ScrollController _scrollController = ScrollController();
@@ -329,10 +340,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               itemBuilder: (context) => [
                                 if (_currentIndex != 4)
                                   _buildPopupMenuItem(l10n.filterAll, 'all'),
-                                _buildPopupMenuItem('Pickleball', 'pickleball'),
-                                _buildPopupMenuItem('Tennis', 'tennis'),
-                                _buildPopupMenuItem('Cầu lông', 'badminton'),
-                                _buildPopupMenuItem('Bóng bàn', 'table_tennis'),
+                                ..._activeSportFilterItems(l10n)
+                                    .where((item) => item.$1 != 'all')
+                                    .map(
+                                      (item) =>
+                                          _buildPopupMenuItem(item.$2, item.$1),
+                                    ),
                               ],
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -515,7 +528,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               data: (tournamentsList) {
                 final allTournaments = tournamentsList.where((t) {
                   final s = t.status.toUpperCase();
-                  if (['DRAFT', 'PENDING_APPROVAL', 'SUSPENDED', 'CANCELLED', 'PENDING_DELETE'].contains(s)) {
+                  if ([
+                    'DRAFT',
+                    'PENDING_APPROVAL',
+                    'SUSPENDED',
+                    'CANCELLED',
+                    'PENDING_DELETE',
+                  ].contains(s)) {
                     return false;
                   }
                   final tSport = t.sport
@@ -537,14 +556,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 }).toList();
 
                 final now = DateTime.now();
-                final featuredTournaments = allTournaments.where((t) {
-                  final s = t.status.toLowerCase();
-                  if (s == 'completed' || s == 'finished') {
-                    final endedDate = t.endDate ?? t.updatedAt;
-                    return now.difference(endedDate).inDays <= 14;
-                  }
-                  return true;
-                }).take(10).toList();
+                final featuredTournaments = allTournaments
+                    .where((t) {
+                      final s = t.status.toLowerCase();
+                      if (s == 'completed' || s == 'finished') {
+                        final endedDate = t.endDate ?? t.updatedAt;
+                        return now.difference(endedDate).inDays <= 14;
+                      }
+                      return true;
+                    })
+                    .take(10)
+                    .toList();
 
                 return CustomScrollView(
                   controller: _scrollController,
@@ -592,13 +614,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       contentFilter: _exploreContent,
                       bracketFilter: _exploreBracket,
                       rankedFilter: _exploreRanked,
-                      enabled: _exploreStatus == 'all' || _exploreStatus == 'live',
+                      enabled:
+                          _exploreStatus == 'all' || _exploreStatus == 'live',
                       emptyMessage: l10n.noLiveMatches,
                     ),
                     SliverToBoxAdapter(
-                      child: _buildSectionTitle(
-                        title: l10n.upcomingMatches,
-                      ),
+                      child: _buildSectionTitle(title: l10n.upcomingMatches),
                     ),
                     _TournamentSectionList(
                       tournaments: allTournaments,
@@ -607,13 +628,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       contentFilter: _exploreContent,
                       bracketFilter: _exploreBracket,
                       rankedFilter: _exploreRanked,
-                      enabled: _exploreStatus == 'all' || _exploreStatus == 'scheduled',
+                      enabled:
+                          _exploreStatus == 'all' ||
+                          _exploreStatus == 'scheduled',
                       emptyMessage: l10n.noUpcomingMatches,
                     ),
                     SliverToBoxAdapter(
-                      child: _buildSectionTitle(
-                        title: 'Trận đấu vừa kết thúc',
-                      ),
+                      child: _buildSectionTitle(title: 'Trận đấu vừa kết thúc'),
                     ),
                     _TournamentSectionList(
                       tournaments: allTournaments,
@@ -622,7 +643,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       contentFilter: _exploreContent,
                       bracketFilter: _exploreBracket,
                       rankedFilter: _exploreRanked,
-                      enabled: _exploreStatus == 'all' || _exploreStatus == 'completed',
+                      enabled:
+                          _exploreStatus == 'all' ||
+                          _exploreStatus == 'completed',
                       emptyMessage: 'Chưa có trận đấu vừa kết thúc',
                     ),
 
@@ -659,7 +682,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildClubsHorizontalList() {
     final l10n = AppLocalizations.of(context)!;
-    final communitiesAsync = ref.watch(communitiesProvider((search: null, provinceCode: null)));
+    final communitiesAsync = ref.watch(
+      communitiesProvider((search: null, provinceCode: null)),
+    );
     final colors = context.colors;
     final cardWidth = (MediaQuery.of(context).size.width - 44) / 2.05;
 
@@ -969,19 +994,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildCommunityBannerFallback() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppTheme.primaryDark, AppTheme.primary, Color(0xFF3AB5F6)],
+          colors: isDark
+              ? const [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF0F172A)]
+              : const [Color(0xFFF8FAFC), Color(0xFFEFF6FF), Color(0xFFE0E7FF)],
         ),
       ),
       child: Center(
-        child: Icon(
-          Icons.sports_tennis_rounded,
-          color: Colors.white.withValues(alpha: 0.15),
-          size: 42,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: SvgPicture.asset(
+            AppConstants.logoFullSvg,
+            fit: BoxFit.contain,
+          ),
         ),
       ),
     );
@@ -1050,9 +1080,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Text(
             label,
             style: TextStyle(
-              color: isSelected
-                  ? AppTheme.primary
-                  : context.colors.textPrimary,
+              color: isSelected ? AppTheme.primary : context.colors.textPrimary,
               fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
               fontSize: 13,
             ),
@@ -1242,7 +1270,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             Colors.white,
                           ),
                           const SizedBox(width: 14),
-                          _buildStatTableRow(l10n.infoWin, "$wins", Colors.white),
+                          _buildStatTableRow(
+                            l10n.infoWin,
+                            "$wins",
+                            Colors.white,
+                          ),
                           const SizedBox(width: 14),
                           _buildStatTableRow(
                             "Rate",
@@ -1310,7 +1342,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   error.contains("Too Many Requests")
               ? "Hệ thống đang bận, vui lòng thử lại sau"
               : "Tìm và tham gia các giải đấu thể thao",
-          style: const TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w500),
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 11.5,
+            fontWeight: FontWeight.w500,
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -1516,166 +1552,160 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
               ),
               child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Bộ lọc Khám phá',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    color: context.colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  l10n.filterSport,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: context.colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildFilterChips(
-                  items: [
-                    ('all', l10n.filterAll),
-                    ('pickleball', 'Pickleball'),
-                    ('tennis', 'Tennis'),
-                    ('badminton', 'Cầu lông'),
-                    ('table_tennis', 'Bóng bàn'),
-                  ],
-                  selected: localSport,
-                  onSelected: (v) => setSheetState(() => localSport = v),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.filterStatus,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: context.colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildFilterChips(
-                  items: [
-                    ('all', l10n.filterAll),
-                    ('live', 'Trực tiếp'),
-                    ('scheduled', l10n.matchesFilterScheduled),
-                    ('completed', 'Đã kết thúc'),
-                  ],
-                  selected: localStatus,
-                  onSelected: (v) => setSheetState(() => localStatus = v),
-                ),
-                const SizedBox(height: 16),
-                _buildExploreFilterGroup(
-                  context,
-                  title: 'Nội dung',
-                  items: const [
-                    ('all', 'Tất cả'),
-                    ('SINGLE_MALE', 'Đơn nam'),
-                    ('SINGLE_FEMALE', 'Đơn nữ'),
-                    ('DOUBLE_MALE', 'Đôi nam'),
-                    ('DOUBLE_FEMALE', 'Đôi nữ'),
-                    ('DOUBLE_MIXED', 'Đôi nam nữ'),
-                  ],
-                  selected: localContent,
-                  onSelected: (v) => setSheetState(() => localContent = v),
-                ),
-                const SizedBox(height: 16),
-                _buildExploreFilterGroup(
-                  context,
-                  title: 'Thể thức',
-                  items: const [
-                    ('all', 'Tất cả'),
-                    ('SINGLE_ELIMINATION', 'Loại trực tiếp'),
-                    ('DOUBLE_ELIMINATION', 'Nhánh thắng/thua'),
-                    ('ROUND_ROBIN', 'Vòng tròn'),
-                    ('GROUP_STAGE_KNOCKOUT', 'Vòng bảng + Playoff'),
-                  ],
-                  selected: localBracket,
-                  onSelected: (v) => setSheetState(() => localBracket = v),
-                ),
-                const SizedBox(height: 16),
-                _buildExploreFilterGroup(
-                  context,
-                  title: 'Xếp hạng',
-                  items: const [
-                    ('all', 'Tất cả'),
-                    ('ranked', 'Có tính ELO'),
-                    ('unranked', 'Không tính ELO'),
-                  ],
-                  selected: localRanked,
-                  onSelected: (v) => setSheetState(() => localRanked = v),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          setSheetState(() {
-                            localSport = 'all';
-                            localStatus = 'all';
-                            localContent = 'all';
-                            localBracket = 'all';
-                            localRanked = 'all';
-                          });
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: context.colors.textSecondary,
-                          side: BorderSide(color: context.colors.border),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        child: Text(
-                          l10n.filterReset,
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Bộ lọc Khám phá',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: context.colors.textPrimary,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () {
-                          setState(() {
-                            _exploreSport = localSport;
-                            _exploreStatus = localStatus;
-                            _exploreContent = localContent;
-                            _exploreBracket = localBracket;
-                            _exploreRanked = localRanked;
-                          });
-                          Navigator.pop(ctx);
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    l10n.filterSport,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildFilterChips(
+                    items: _activeSportFilterItems(l10n),
+                    selected: localSport,
+                    onSelected: (v) => setSheetState(() => localSport = v),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.filterStatus,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildFilterChips(
+                    items: [
+                      ('all', l10n.filterAll),
+                      ('live', 'Trực tiếp'),
+                      ('scheduled', l10n.matchesFilterScheduled),
+                      ('completed', 'Đã kết thúc'),
+                    ],
+                    selected: localStatus,
+                    onSelected: (v) => setSheetState(() => localStatus = v),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildExploreFilterGroup(
+                    context,
+                    title: 'Nội dung',
+                    items: const [
+                      ('all', 'Tất cả'),
+                      ('SINGLE_MALE', 'Đơn nam'),
+                      ('SINGLE_FEMALE', 'Đơn nữ'),
+                      ('DOUBLE_MALE', 'Đôi nam'),
+                      ('DOUBLE_FEMALE', 'Đôi nữ'),
+                      ('DOUBLE_MIXED', 'Đôi nam nữ'),
+                    ],
+                    selected: localContent,
+                    onSelected: (v) => setSheetState(() => localContent = v),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildExploreFilterGroup(
+                    context,
+                    title: 'Thể thức',
+                    items: const [
+                      ('all', 'Tất cả'),
+                      ('SINGLE_ELIMINATION', 'Loại trực tiếp'),
+                      ('DOUBLE_ELIMINATION', 'Nhánh thắng/thua'),
+                      ('ROUND_ROBIN', 'Vòng tròn'),
+                      ('GROUP_STAGE_KNOCKOUT', 'Vòng bảng + Playoff'),
+                    ],
+                    selected: localBracket,
+                    onSelected: (v) => setSheetState(() => localBracket = v),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildExploreFilterGroup(
+                    context,
+                    title: 'Xếp hạng',
+                    items: const [
+                      ('all', 'Tất cả'),
+                      ('ranked', 'Có tính ELO'),
+                      ('unranked', 'Không tính ELO'),
+                    ],
+                    selected: localRanked,
+                    onSelected: (v) => setSheetState(() => localRanked = v),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            setSheetState(() {
+                              localSport = 'all';
+                              localStatus = 'all';
+                              localContent = 'all';
+                              localBracket = 'all';
+                              localRanked = 'all';
+                            });
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: context.colors.textSecondary,
+                            side: BorderSide(color: context.colors.border),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        child: Text(
-                          l10n.filterApply,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                          child: Text(
+                            l10n.filterReset,
+                            style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () {
+                            setState(() {
+                              _exploreSport = localSport;
+                              _exploreStatus = localStatus;
+                              _exploreContent = localContent;
+                              _exploreBracket = localBracket;
+                              _exploreRanked = localRanked;
+                            });
+                            Navigator.pop(ctx);
+                          },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: Text(
+                            l10n.filterApply,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
           ),
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
   }
 
   Widget _buildExploreFilterGroup(
@@ -1761,13 +1791,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   const SizedBox(height: 8),
                   _buildFilterChips(
-                    items: [
-                      ('all', l10n.filterAll),
-                      ('pickleball', 'Pickleball'),
-                      ('tennis', 'Tennis'),
-                      ('badminton', 'Cầu lông'),
-                      ('table_tennis', 'Bóng bàn'),
-                    ],
+                    items: _activeSportFilterItems(l10n),
                     selected: localSport,
                     onSelected: (v) => setSheetState(() => localSport = v),
                   ),
@@ -1920,15 +1944,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ],
                         onChanged: (v) => setSheetState(() {
                           localProvinceCode = v ?? '';
-                          localProvince =
-                              ProvinceData.all.firstWhere(
-                                    (p) => p.code == localProvinceCode,
-                                    orElse: () => ProvinceData(
-                                      code: localProvinceCode,
-                                      name: '',
-                                    ),
-                                  )
-                                  .name;
+                          localProvince = ProvinceData.all
+                              .firstWhere(
+                                (p) => p.code == localProvinceCode,
+                                orElse: () => ProvinceData(
+                                  code: localProvinceCode,
+                                  name: '',
+                                ),
+                              )
+                              .name;
                           localDistrict = '';
                         }),
                       ),
@@ -1946,8 +1970,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 6),
                   Consumer(
                     builder: (context, ref, child) {
-                      final districts =
-                          ref.watch(districtsProvider(localProvinceCode));
+                      final districts = ref.watch(
+                        districtsProvider(localProvinceCode),
+                      );
                       final districtsList = districts.value ?? const [];
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1958,9 +1983,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
-                            value: localDistrict.isEmpty
-                                ? null
-                                : localDistrict,
+                            value: localDistrict.isEmpty ? null : localDistrict,
                             isExpanded: true,
                             hint: Text(
                               localProvinceCode.isEmpty
@@ -1999,8 +2022,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             onChanged: localProvinceCode.isEmpty
                                 ? null
                                 : (v) => setSheetState(
-                                      () => localDistrict = v ?? '',
-                                    ),
+                                    () => localDistrict = v ?? '',
+                                  ),
                           ),
                         ),
                       );
@@ -2192,13 +2215,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(height: 8),
                 _buildFilterChips(
-                  items: [
-                    ('all', l10n.filterAll),
-                    ('pickleball', 'Pickleball'),
-                    ('tennis', 'Tennis'),
-                    ('badminton', 'Cầu lông'),
-                    ('table_tennis', 'Bóng bàn'),
-                  ],
+                  items: _activeSportFilterItems(l10n),
                   selected: localSport,
                   onSelected: (v) => setSheetState(() => localSport = v),
                 ),
@@ -2296,7 +2313,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Navigator.pop(ctx);
                         },
                         style: FilledButton.styleFrom(
-                            backgroundColor: AppTheme.primary,
+                          backgroundColor: AppTheme.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -2358,13 +2375,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(height: 8),
                 _buildFilterChips(
-                  items: [
-                    ('all', l10n.filterAll),
-                    ('pickleball', 'Pickleball'),
-                    ('tennis', 'Tennis'),
-                    ('badminton', 'Cầu lông'),
-                    ('table_tennis', 'Bóng bàn'),
-                  ],
+                  items: _activeSportFilterItems(l10n),
                   selected: localSport,
                   onSelected: (v) => setSheetState(() => localSport = v),
                 ),
@@ -2755,15 +2766,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return false;
       }
       if (_tournamentProvince.isNotEmpty &&
-          !(t.locationAddress ?? '')
-              .toLowerCase()
-              .contains(_tournamentProvince.toLowerCase())) {
+          !(t.locationAddress ?? '').toLowerCase().contains(
+            _tournamentProvince.toLowerCase(),
+          )) {
         return false;
       }
       if (_tournamentDistrict.isNotEmpty &&
-          !(t.locationAddress ?? '')
-              .toLowerCase()
-              .contains(_tournamentDistrict.toLowerCase())) {
+          !(t.locationAddress ?? '').toLowerCase().contains(
+            _tournamentDistrict.toLowerCase(),
+          )) {
         return false;
       }
       if (_tournamentStartDate != null &&
@@ -2996,9 +3007,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: 8),
                     TextButton(
                       onPressed: () => ref.refresh(
-                        communitiesProvider(
-                          (search: null, provinceCode: _clubProvinceCode),
-                        ),
+                        communitiesProvider((
+                          search: null,
+                          provinceCode: _clubProvinceCode,
+                        )),
                       ),
                       child: Text(l10n.matchesRetry),
                     ),
@@ -3313,48 +3325,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     color: context.colors.bgCard,
                     border: Border.all(
                       color: context.colors.bgCard,
-                      width: 3.0,
+                      width: 2.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
+                        color: Colors.black.withValues(alpha: 0.12),
                         blurRadius: 8,
-                        offset: const Offset(0, 3),
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: club.logoUrl != null && club.logoUrl!.isNotEmpty
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
+                  child: ClipOval(
+                    child: club.logoUrl != null && club.logoUrl!.isNotEmpty
+                        ? Image.network(
                             club.logoUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              decoration: BoxDecoration(
-                                color: sportColor,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  emoji,
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ),
-                            ),
-                          ),
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            color: sportColor,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: Text(
-                              emoji,
-                              style: const TextStyle(fontSize: 20),
-                            ),
-                          ),
-                        ),
+                            errorBuilder: (_, __, ___) =>
+                                _buildCardLogoFallback(),
+                          )
+                        : _buildCardLogoFallback(),
+                  ),
                 ),
               ),
             ],
@@ -3364,20 +3354,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildCardBannerFallback(Color sportColor, String emoji) {
+  Widget _buildCardLogoFallback() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      decoration: const BoxDecoration(
+      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+      padding: const EdgeInsets.all(8),
+      child: Center(
+        child: SvgPicture.asset(AppConstants.logoFullSvg, fit: BoxFit.contain),
+      ),
+    );
+  }
+
+  Widget _buildCardBannerFallback(Color sportColor, String emoji) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppTheme.primaryDark, AppTheme.primary, Color(0xFF3AB5F6)],
+          colors: isDark
+              ? const [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF0F172A)]
+              : const [Color(0xFFF8FAFC), Color(0xFFEFF6FF), Color(0xFFE0E7FF)],
         ),
       ),
       child: Center(
-        child: Icon(
-          Icons.groups_rounded,
-          color: Colors.white.withValues(alpha: 0.18),
-          size: 48,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          child: SvgPicture.asset(
+            AppConstants.logoFullSvg,
+            width: 180,
+            fit: BoxFit.contain,
+          ),
         ),
       ),
     );
@@ -4040,8 +4047,10 @@ class _TournamentSectionList extends ConsumerWidget {
         final t2 = m.team2Name.trim().toUpperCase();
         final isT1Bye = t1 == 'BYE';
         final isT2Bye = t2 == 'BYE';
-        final isT1Tbd = !isT1Bye && (t1.isEmpty || t1 == 'TBD') && m.team1Id.trim().isEmpty;
-        final isT2Tbd = !isT2Bye && (t2.isEmpty || t2 == 'TBD') && m.team2Id.trim().isEmpty;
+        final isT1Tbd =
+            !isT1Bye && (t1.isEmpty || t1 == 'TBD') && m.team1Id.trim().isEmpty;
+        final isT2Tbd =
+            !isT2Bye && (t2.isEmpty || t2 == 'TBD') && m.team2Id.trim().isEmpty;
         if (isT1Bye || isT2Bye || (isT1Tbd && isT2Tbd)) return false;
 
         final q = searchQuery.trim().toLowerCase();
@@ -4074,8 +4083,8 @@ class _TournamentSectionList extends ConsumerWidget {
               hasLoadingMatches
                   ? 'Đang tải dữ liệu trận đấu...'
                   : hasMatchError
-                      ? 'Không tải được dữ liệu trận đấu. Vui lòng thử lại.'
-                      : emptyMessage,
+                  ? 'Không tải được dữ liệu trận đấu. Vui lòng thử lại.'
+                  : emptyMessage,
               style: const TextStyle(
                 fontSize: 13,
                 color: Color(0xFF94A3B8),
@@ -4102,4 +4111,3 @@ class _TournamentSectionList extends ConsumerWidget {
     );
   }
 }
-

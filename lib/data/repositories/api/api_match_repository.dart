@@ -51,6 +51,12 @@ class ApiMatchRepository implements IMatchRepository {
   }
 
   final Map<String, List<MatchModel>> _matchesCache = {};
+  final Map<String, Future<List<MatchModel>>> _inflightTournamentMatches = {};
+  Future<List<MatchModel>>? _inflightPublicMatches;
+  List<MatchModel>? _publicMatchesCache;
+  DateTime? _publicMatchesFetchedAt;
+
+  static const _publicMatchesCacheTtl = Duration(seconds: 10);
 
   List<dynamic> _extractList(dynamic payload) {
     dynamic value = payload;
@@ -102,6 +108,35 @@ class ApiMatchRepository implements IMatchRepository {
     return result;
   }
 
+  Future<List<MatchModel>> _getPublicMatchesSnapshot({
+    bool forceRefresh = false,
+  }) {
+    final cached = _publicMatchesCache;
+    final fetchedAt = _publicMatchesFetchedAt;
+    if (!forceRefresh &&
+        cached != null &&
+        fetchedAt != null &&
+        DateTime.now().difference(fetchedAt) < _publicMatchesCacheTtl) {
+      return Future.value(List<MatchModel>.of(cached));
+    }
+    final inflight = _inflightPublicMatches;
+    if (inflight != null) return inflight;
+
+    final request = _getMatchPages(const <String, dynamic>{
+      'publicOnly': true,
+    });
+    _inflightPublicMatches = request;
+    return request.then((matches) {
+      _publicMatchesCache = List<MatchModel>.of(matches);
+      _publicMatchesFetchedAt = DateTime.now();
+      return matches;
+    }).whenComplete(() {
+      if (identical(_inflightPublicMatches, request)) {
+        _inflightPublicMatches = null;
+      }
+    });
+  }
+
   @override
   Stream<List<MatchModel>> watchByTournament(String tournamentId, {String? divisionId}) {
     final cacheKey = '$tournamentId-${divisionId ?? 'all'}';
@@ -110,12 +145,20 @@ class ApiMatchRepository implements IMatchRepository {
     StreamSubscription? scoreSub;
     StreamSubscription? statusSub;
     Timer? refreshTimer;
+    var refreshing = false;
 
-    Future<void> refresh() async {
-      List<MatchModel> updated;
+    Future<void> refresh({bool forceRefresh = true}) async {
+      if (refreshing) return;
+      refreshing = true;
       try {
-        updated = await getAllByTournament(tournamentId, divisionId: divisionId);
+        final updated = await _fetchAllByTournament(
+          tournamentId,
+          divisionId: divisionId,
+          forceRefresh: forceRefresh,
+          usePublicSnapshot: true,
+        );
         _matchesCache[cacheKey] = updated;
+        if (!controller.isClosed) controller.add(updated);
       } catch (error, stack) {
         _log.error('Keeping cached tournament matches after refresh failure', error, stack);
         final cached = _matchesCache[cacheKey];
@@ -123,10 +166,9 @@ class ApiMatchRepository implements IMatchRepository {
           if (!controller.isClosed) controller.addError(error, stack);
           return;
         }
-        updated = cached;
-      }
-      if (!controller.isClosed) {
-        controller.add(updated);
+        if (!controller.isClosed) controller.add(cached);
+      } finally {
+        refreshing = false;
       }
     }
 
@@ -147,7 +189,7 @@ class ApiMatchRepository implements IMatchRepository {
         refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
           _socketService.connect(null, joinMatch: false);
           _socketService.joinTournament(tournamentId);
-          unawaited(refresh());
+          unawaited(refresh(forceRefresh: false));
         });
       },
       onCancel: () {
@@ -167,10 +209,14 @@ class ApiMatchRepository implements IMatchRepository {
     StreamSubscription? socketSub;
     Timer? refreshTimer;
 
-    Future<void> refresh() async {
+    Future<void> refresh({bool forceRefresh = true}) async {
       List<MatchModel> currentList;
       try {
-        currentList = await getAllByTournament(tournamentId);
+        currentList = await _fetchAllByTournament(
+          tournamentId,
+          forceRefresh: forceRefresh,
+          usePublicSnapshot: true,
+        );
         _matchesCache['$tournamentId-all'] = currentList;
       } catch (error, stack) {
         _log.error('Keeping cached live matches after refresh failure', error, stack);
@@ -206,7 +252,7 @@ class ApiMatchRepository implements IMatchRepository {
         refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
           _socketService.connect(null, joinMatch: false);
           _socketService.joinTournament(tournamentId);
-          unawaited(refresh());
+          unawaited(refresh(forceRefresh: false));
         });
       },
       onCancel: () {
@@ -400,6 +446,11 @@ class ApiMatchRepository implements IMatchRepository {
 
     return MatchModel(
       id: json['id'] ?? '',
+      tournamentId: json['tournamentId']?.toString() ??
+          json['tournament_id']?.toString() ??
+          (json['tournament'] is Map
+              ? (json['tournament'] as Map)['id']?.toString()
+              : null),
       round: json['roundNumber'] ?? json['round'] ?? 1,
       matchNumber: json['matchOrder'] ?? json['matchNumber'] ?? 1,
       team1Id: json['team1Id']?.toString() ??
@@ -574,7 +625,7 @@ class ApiMatchRepository implements IMatchRepository {
       // Phải lấy revision MỚI từ payload echo. Nếu bỏ sót, local cứ giữ
       // revision cũ → mỗi lần nhập tiếp gửi expectedRevision sai → backend
       // trả 409 → điểm bị drop + màn "kẹt"/desync mãi. (fix #33)
-      revision: incoming.revision != null ? incoming.revision : previous.revision,
+      revision: incoming.revision ?? previous.revision,
     );
   }
 
@@ -727,23 +778,54 @@ class ApiMatchRepository implements IMatchRepository {
   @override
   Future<List<MatchModel>> getAllByTournament(String tournamentId, {String? divisionId}) async {
     _log.debug('Fetching all matches for tournament $tournamentId via API (division: $divisionId)');
+    final cacheKey = '$tournamentId-${divisionId ?? 'all'}';
+    final inflight = _inflightTournamentMatches[cacheKey];
+    if (inflight != null) return inflight;
+
+    final request = _fetchAllByTournament(tournamentId, divisionId: divisionId);
+    _inflightTournamentMatches[cacheKey] = request;
     try {
-      final queryParameters = <String, dynamic>{
-        'tournamentId': tournamentId,
-      };
-      if (divisionId != null) {
-        queryParameters['divisionId'] = divisionId;
-      }
-      queryParameters['publicOnly'] = true;
-      // Backend /matches mặc định limit=10 — phải gửi limit cao để app nhận
-      // đầy đủ trận đấu của giải (DTO không giới hạn @Max).
-      final matches = await _getMatchPages(queryParameters);
-      _matchesCache['$tournamentId-${divisionId ?? 'all'}'] = matches;
-      return matches;
+      return await request;
     } catch (e, stack) {
       _log.error('Error fetching matches from API', e, stack);
       rethrow;
+    } finally {
+      if (identical(_inflightTournamentMatches[cacheKey], request)) {
+        _inflightTournamentMatches.remove(cacheKey);
+      }
     }
+  }
+
+  Future<List<MatchModel>> _fetchAllByTournament(
+    String tournamentId, {
+    String? divisionId,
+    bool forceRefresh = false,
+    bool usePublicSnapshot = false,
+  }) async {
+    // Home opens one stream per tournament. Reuse a short-lived public cursor
+    // snapshot there instead of issuing one request per tournament. Division
+    // views keep their scoped query because the MatchModel intentionally does
+    // not infer division membership from display data.
+    if (divisionId == null && usePublicSnapshot) {
+      final snapshot = await _getPublicMatchesSnapshot(
+        forceRefresh: forceRefresh,
+      );
+      final matches = snapshot
+          .where((match) => match.tournamentId == tournamentId)
+          .toList(growable: false);
+      _matchesCache['$tournamentId-all'] = matches;
+      return matches;
+    }
+    final queryParameters = <String, dynamic>{
+      'tournamentId': tournamentId,
+      'publicOnly': true,
+    };
+    if (divisionId != null) queryParameters['divisionId'] = divisionId;
+    // The backend caps cursor pages at 100; _getMatchPages follows nextCursor
+    // until the complete tournament feed is loaded.
+    final matches = await _getMatchPages(queryParameters);
+    _matchesCache['$tournamentId-${divisionId ?? 'all'}'] = matches;
+    return matches;
   }
 
   @override

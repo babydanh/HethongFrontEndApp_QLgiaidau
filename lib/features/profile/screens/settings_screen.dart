@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/domain/repositories/user_repository.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart';
+import 'package:app_quanly_giaidau/features/profile/utils/phone_verification_flow.dart';
 
 /// Màn hình Cài đặt — 3 tab: Hồ sơ, Ngân hàng, Bảo mật.
 ///
-/// Mỗi tab là một form độc lập, gọi API thật:
-/// - Hồ sơ: PATCH /users/profile
-/// - Ngân hàng: PATCH /users/profile (bankName, bankAccountNumber, bankAccountName)
-/// - Bảo mật: điều hướng sang /profile/change-password + xem phiên đăng nhập
+/// Tính năng đồng bộ với web (/profile/edit):
+/// - Hồ sơ: upload avatar + ảnh bìa, ngày sinh, giới tính (khóa + yêu cầu đổi),
+///   khu vực tranh tài (tỉnh/thành từ API), validate giống backend
+/// - Ngân hàng: chọn ví điện tử/ngân hàng, tên chủ TK tự viết hoa không dấu
+/// - Bảo mật: xác minh email + SĐT, đổi mật khẩu, xóa tài khoản (vùng nguy hiểm)
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -93,7 +98,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 }
 
 // ═════════════════════════════════════════════════════════════════════════
-//  TAB 1: HỒ SƠ — PATCH /users/profile
+//  TAB 1: HỒ SƠ — avatar/bìa + PATCH /users/profile
 // ═════════════════════════════════════════════════════════════════════════
 class _ProfileTab extends ConsumerStatefulWidget {
   const _ProfileTab();
@@ -110,44 +115,44 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
   final _addressCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
 
-  static const Map<String, String> _provinceCodeToName = {
-    '1': 'Hà Nội',
-    '31': 'Hải Phòng',
-    '48': 'Đà Nẵng',
-    '56': 'Khánh Hòa',
-    '60': 'Bình Thuận',
-    '68': 'Lâm Đồng',
-    '74': 'Bình Dương',
-    '75': 'Đồng Nai',
-    '79': 'TP. Hồ Chí Minh',
-    '89': 'An Giang',
-    '92': 'Cần Thơ',
-  };
+  /// Fallback khi API /regions/provinces lỗi — giữ nguyên danh mục cũ của app.
+  static const List<ProvinceOption> _fallbackProvinces = [
+    ProvinceOption(code: '1', name: 'Hà Nội'),
+    ProvinceOption(code: '31', name: 'Hải Phòng'),
+    ProvinceOption(code: '48', name: 'Đà Nẵng'),
+    ProvinceOption(code: '56', name: 'Khánh Hòa'),
+    ProvinceOption(code: '60', name: 'Bình Thuận'),
+    ProvinceOption(code: '68', name: 'Lâm Đồng'),
+    ProvinceOption(code: '74', name: 'Bình Dương'),
+    ProvinceOption(code: '75', name: 'Đồng Nai'),
+    ProvinceOption(code: '79', name: 'TP. Hồ Chí Minh'),
+    ProvinceOption(code: '89', name: 'An Giang'),
+    ProvinceOption(code: '92', name: 'Cần Thơ'),
+  ];
 
-  static const Map<String, String> _provinceNameToCode = {
-    'Hà Nội': '1',
-    'Hải Phòng': '31',
-    'Đà Nẵng': '48',
-    'Khánh Hòa': '56',
-    'Bình Thuận': '60',
-    'Lâm Đồng': '68',
-    'Bình Dương': '74',
-    'Đồng Nai': '75',
-    'TP. Hồ Chí Minh': '79',
-    'An Giang': '89',
-    'Cần Thơ': '92',
-  };
+  static const _genders = ['Chưa chọn', 'Nam', 'Nữ', 'Khác'];
 
-  String _gender = 'Nam';
-  String _province = 'Hà Nội';
+  List<ProvinceOption> _provinces = _fallbackProvinces;
+  String _gender = 'Chưa chọn';
+  String _provinceCode = '';
+  DateTime? _dob;
   bool _isLoading = false;
   bool _initialized = false;
+  bool _isUploadingAvatar = false;
+  bool _isUploadingCover = false;
 
-  final _genders = ['Nam', 'Nữ', 'Khác'];
-  final _provinces = [
-    'Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ',
-    'An Giang', 'Bình Dương', 'Đồng Nai', 'Khánh Hòa', 'Lâm Đồng', 'Bình Thuận',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadProvinces();
+  }
+
+  Future<void> _loadProvinces() async {
+    final provinces = await ref.read(userRepositoryProvider).getProvinces();
+    if (provinces.isNotEmpty && mounted) {
+      setState(() => _provinces = provinces);
+    }
+  }
 
   @override
   void dispose() {
@@ -158,22 +163,223 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
     super.dispose();
   }
 
-  Future<void> _save() async {
+  Future<void> _pickAndUploadAvatar() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: context.colors.bgCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_rounded, color: AppTheme.primary),
+                title: const Text('Chụp ảnh mới'),
+                onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_rounded, color: AppTheme.primary),
+                title: const Text('Chọn từ thư viện'),
+                onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+    if (source == null) return;
+    final file = await ImagePicker().pickImage(
+      source: source,
+      imageQuality: 85,
+      maxWidth: 800,
+    );
+    if (file == null) return;
+    setState(() => _isUploadingAvatar = true);
+    try {
+      await ref.read(userRepositoryProvider).uploadAvatar(await file.readAsBytes(), file.name);
+      ref.invalidate(userProfileProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Đã cập nhật ảnh đại diện'),
+            backgroundColor: context.colors.success,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e, stack) {
+      _log.error('Lỗi tải ảnh đại diện', e, stack);
+      if (mounted) _showError(e);
+    } finally {
+      if (mounted) setState(() => _isUploadingAvatar = false);
+    }
+  }
+
+  Future<void> _pickAndUploadCover() async {
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+      maxWidth: 1600,
+    );
+    if (file == null) return;
+    final bytes = await file.readAsBytes();
+    if (bytes.length > 5 * 1024 * 1024) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Kích thước ảnh không được vượt quá 5MB'),
+            backgroundColor: context.colors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+    setState(() => _isUploadingCover = true);
+    try {
+      await ref.read(userRepositoryProvider).uploadCover(bytes, file.name);
+      ref.invalidate(userProfileProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Đã cập nhật ảnh bìa'),
+            backgroundColor: context.colors.success,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e, stack) {
+      _log.error('Lỗi tải ảnh bìa', e, stack);
+      if (mounted) _showError(e);
+    } finally {
+      if (mounted) setState(() => _isUploadingCover = false);
+    }
+  }
+
+  Future<void> _pickDob() async {
+    final now = DateTime.now();
+    final initial = _dob ?? DateTime(now.year - 18);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial.isBefore(now) ? initial : DateTime(now.year - 1),
+      firstDate: DateTime(1900),
+      lastDate: now,
+      helpText: 'Chọn ngày sinh',
+    );
+    if (picked != null) setState(() => _dob = picked);
+  }
+
+  Future<void> _showGenderChangeRequestDialog() async {
+    var requestedGender = _gender.isNotEmpty && _gender != 'Chưa chọn' ? _gender : 'Nam';
+    var isSubmitting = false;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            Future<void> submit() async {
+              setState(() => isSubmitting = true);
+              try {
+                await ref.read(userRepositoryProvider).createChangeRequest(
+                      requestType: 'GENDER',
+                      newValue: requestedGender,
+                    );
+                if (!ctx.mounted) return;
+                Navigator.of(ctx).pop();
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(
+                    content: Text('Đã gửi yêu cầu. Vui lòng chờ Admin phê duyệt.'),
+                  ),
+                );
+              } catch (e) {
+                if (!ctx.mounted) return;
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  SnackBar(content: Text('Gửi yêu cầu thất bại: $e')),
+                );
+              } finally {
+                if (ctx.mounted) setState(() => isSubmitting = false);
+              }
+            }
+
+            return AlertDialog(
+              backgroundColor: context.colors.bgCard,
+              title: const Text('Yêu cầu thay đổi giới tính'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Vì bạn đã hoàn thành ít nhất một giải đấu, giới tính đã bị khóa để đảm bảo công bằng. '
+                    'Yêu cầu sẽ được gửi tới Admin để phê duyệt thủ công.',
+                    style: TextStyle(fontSize: 13, height: 1.5),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: requestedGender,
+                    decoration: const InputDecoration(
+                      labelText: 'Giới tính mong muốn',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'Nam', child: Text('Nam')),
+                      DropdownMenuItem(value: 'Nữ', child: Text('Nữ')),
+                      DropdownMenuItem(value: 'Khác', child: Text('Khác')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) setState(() => requestedGender = value);
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSubmitting ? null : () => Navigator.of(ctx).pop(),
+                  child: const Text('Hủy bỏ'),
+                ),
+                FilledButton(
+                  onPressed: isSubmitting ? null : submit,
+                  child: isSubmitting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Gửi yêu cầu'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _save(bool genderLocked) async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
     _log.info('Bắt đầu cập nhật hồ sơ');
 
     try {
-      final repo = ref.read(userRepositoryProvider);
-      await repo.updateProfile({
+      final payload = <String, dynamic>{
         'fullName': _nameCtrl.text.trim(),
         'phoneNumber': _phoneCtrl.text.trim(),
-        'address': _addressCtrl.text.trim(),
-        'bio': _bioCtrl.text.trim(),
-        'gender': _gender,
-        'provinceCode': _provinceNameToCode[_province] ?? '1',
-      });
+        if (_dob != null)
+          'dateOfBirth':
+              '${_dob!.year.toString().padLeft(4, '0')}-${_dob!.month.toString().padLeft(2, '0')}-${_dob!.day.toString().padLeft(2, '0')}',
+        // Giới tính bị khóa sau khi hoàn thành giải — không gửi để tránh ghi đè.
+        if (!genderLocked && _gender != 'Chưa chọn') 'gender': _gender,
+        if (_addressCtrl.text.trim().isNotEmpty) 'address': _addressCtrl.text.trim(),
+        if (_provinceCode.isNotEmpty) 'provinceCode': _provinceCode,
+        if (_bioCtrl.text.trim().isNotEmpty) 'bio': _bioCtrl.text.trim(),
+      };
+
+      await ref.read(userRepositoryProvider).updateProfile(payload);
 
       _log.success('Cập nhật hồ sơ thành công');
       ref.invalidate(userProfileProvider);
@@ -189,18 +395,20 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       }
     } catch (e, stack) {
       _log.error('Lỗi cập nhật hồ sơ', e, stack);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
-            backgroundColor: context.colors.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+      if (mounted) _showError(e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showError(Object e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
+        backgroundColor: context.colors.error,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -215,18 +423,28 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
           _phoneCtrl.text = profile.phoneNumber ?? '';
           _addressCtrl.text = profile.address ?? '';
           _bioCtrl.text = profile.bio ?? '';
-          _gender = profile.gender ?? 'Nam';
-          _province = _provinceCodeToName[profile.provinceCode] ?? 'Hà Nội';
+          _gender = _genders.contains(profile.gender) ? (profile.gender ?? 'Chưa chọn') : 'Chưa chọn';
+          _provinceCode = profile.provinceCode ?? '';
+          _dob = DateTime.tryParse(profile.dateOfBirth ?? '');
           _initialized = true;
         }
-        return _buildForm(colors, profile.avatarUrl, profile.email);
+        final genderLocked = profile.isGenderLocked == true;
+        return _buildForm(colors, profile.avatarUrl, profile.coverUrl, profile.email,
+            profile.fullName, genderLocked);
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => _buildErrorState(colors, 'Không thể tải hồ sơ', () => ref.invalidate(userProfileProvider)),
     );
   }
 
-  Widget _buildForm(AppColorsExtension colors, String? avatarUrl, String? email) {
+  Widget _buildForm(
+    AppColorsExtension colors,
+    String? avatarUrl,
+    String? coverUrl,
+    String? email,
+    String? fullName,
+    bool genderLocked,
+  ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       physics: const BouncingScrollPhysics(),
@@ -235,15 +453,23 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Ảnh bìa + ảnh đại diện
+            _buildCoverAndAvatar(colors, avatarUrl, coverUrl, email, fullName),
+            const SizedBox(height: 24),
             _card(colors, [
               _fieldLabel(colors, 'Họ và tên'),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _nameCtrl,
-                hint: 'Nhập họ tên',
+                hint: 'Nhập họ tên đầy đủ',
                 prefixIcon: Icons.person_outline,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Vui lòng nhập họ tên' : null,
+                validator: (v) {
+                  final value = v?.trim() ?? '';
+                  if (value.isEmpty) return 'Vui lòng nhập họ tên';
+                  if (value.length < 2) return 'Họ tên phải có ít nhất 2 ký tự';
+                  if (value.length > 100) return 'Họ tên tối đa 100 ký tự';
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               _fieldLabel(colors, 'Email'),
@@ -259,46 +485,288 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _phoneCtrl,
-                hint: 'Nhập số điện thoại',
+                hint: '0912345678',
                 keyboardType: TextInputType.phone,
                 prefixIcon: Icons.phone_outlined,
+                validator: (v) {
+                  final value = v?.trim() ?? '';
+                  if (value.isEmpty) return null;
+                  return RegExp(r'^[0-9]{10,11}$').hasMatch(value)
+                      ? null
+                      : 'Số điện thoại không hợp lệ';
+                },
               ),
+              const SizedBox(height: 16),
+              _fieldLabel(colors, 'Ngày sinh'),
+              const SizedBox(height: 6),
+              _dobField(colors),
               const SizedBox(height: 16),
               _fieldLabel(colors, 'Giới tính'),
               const SizedBox(height: 6),
-              _dropdown(colors, _gender, _genders, (v) {
-                if (v != null) setState(() => _gender = v);
-              }),
+              _genderField(colors, genderLocked),
               const SizedBox(height: 16),
-              _fieldLabel(colors, 'Địa chỉ'),
+              _fieldLabel(colors, 'Khu vực tranh tài'),
+              const SizedBox(height: 6),
+              _provinceField(colors),
+              const SizedBox(height: 4),
+              Text(
+                'Chọn khu vực để tham gia xếp hạng Tier S',
+                style: TextStyle(fontSize: 11, color: colors.textMuted),
+              ),
+              const SizedBox(height: 16),
+              _fieldLabel(colors, 'Địa chỉ chi tiết'),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _addressCtrl,
-                hint: 'Nhập địa chỉ',
+                hint: 'Nhập địa chỉ cụ thể của bạn',
                 prefixIcon: Icons.location_on_outlined,
+                validator: (v) =>
+                    (v ?? '').length > 255 ? 'Địa chỉ tối đa 255 ký tự' : null,
               ),
               const SizedBox(height: 16),
-              _fieldLabel(colors, 'Tỉnh / Thành phố'),
-              const SizedBox(height: 6),
-              _dropdown(colors, _province, _provinces, (v) {
-                if (v != null) setState(() => _province = v);
-              }),
-              const SizedBox(height: 16),
-              _fieldLabel(colors, 'Tiểu sử'),
+              _fieldLabel(colors, 'Giới thiệu bản thân'),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _bioCtrl,
-                hint: 'Giới thiệu bản thân...',
+                hint: 'Viết một chút về phong cách chơi của bạn...',
                 maxLines: 3,
                 prefixIcon: Icons.edit_note_rounded,
+                validator: (v) =>
+                    (v ?? '').length > 500 ? 'Giới thiệu tối đa 500 ký tự' : null,
               ),
               const SizedBox(height: 24),
-              _saveButton(context, _isLoading, _save),
+              _saveButton(context, _isLoading, () => _save(genderLocked)),
             ]),
             const SizedBox(height: 32),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCoverAndAvatar(
+    AppColorsExtension colors,
+    String? avatarUrl,
+    String? coverUrl,
+    String? email,
+    String? fullName,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        border: Border.all(color: colors.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // Banner ảnh bìa
+          Stack(
+            fit: StackFit.loose,
+            children: [
+              Container(
+                height: 120,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppTheme.primary, AppTheme.primary.withValues(alpha: 0.6)],
+                  ),
+                ),
+                child: coverUrl == null
+                    ? null
+                    : Image.network(coverUrl, fit: BoxFit.cover, height: 120, width: double.infinity),
+              ),
+              Positioned(
+                right: 10,
+                bottom: 10,
+                child: Material(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(8),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: _isUploadingCover ? null : _pickAndUploadCover,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_isUploadingCover)
+                            const SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          else
+                            const Icon(Icons.camera_alt_rounded, size: 13, color: Colors.white),
+                          const SizedBox(width: 6),
+                          Text(
+                            _isUploadingCover ? 'Đang tải...' : 'Thay đổi ảnh bìa',
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // Avatar
+          Transform.translate(
+            offset: const Offset(0, -36),
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTap: _isUploadingAvatar ? null : _pickAndUploadAvatar,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: colors.bgCard, width: 4),
+                    ),
+                    child: CircleAvatar(
+                      radius: 44,
+                      backgroundColor: colors.bgCard,
+                      backgroundImage: avatarUrl == null ? null : NetworkImage(avatarUrl),
+                      child: _isUploadingAvatar
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2.5),
+                            )
+                          : avatarUrl == null
+                              ? Text(
+                                  (fullName?.isNotEmpty ?? false) ? fullName![0].toUpperCase() : 'U',
+                                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+                                )
+                              : null,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.camera_alt_rounded, size: 12, color: colors.textMuted),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Chạm để đổi ảnh đại diện',
+                      style: TextStyle(fontSize: 11, color: colors.textMuted),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  email ?? '',
+                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dobField(AppColorsExtension colors) {
+    return InkWell(
+      onTap: _pickDob,
+      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      child: Container(
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.cake_rounded, size: 18, color: colors.textMuted),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                _dob == null
+                    ? 'Chọn ngày sinh'
+                    : 'Ngày ${_dob!.day.toString().padLeft(2, '0')}/'
+                        '${_dob!.month.toString().padLeft(2, '0')}/${_dob!.year}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: _dob == null ? colors.textMuted : colors.textPrimary,
+                ),
+              ),
+            ),
+            Icon(Icons.calendar_month_rounded, size: 18, color: colors.textMuted),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _genderField(AppColorsExtension colors, bool locked) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _dropdown(
+          colors,
+          _gender,
+          _genders,
+          locked ? null : (v) => setState(() => _gender = v ?? 'Chưa chọn'),
+        ),
+        if (locked)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Giới tính đã bị khóa sau khi giải đấu hoàn thành.',
+                    style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _showGenderChangeRequestDialog,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text(
+                    'Gửi yêu cầu đổi',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _provinceField(AppColorsExtension colors) {
+    // Mã tỉnh đã lưu không có trong danh sách (VD: API thiếu) — vẫn hiển thị để không mất dữ liệu.
+    final codes = _provinces.map((province) => province.code).toSet();
+    final items = [..._provinces];
+    final currentName = _provinces
+        .where((province) => province.code == _provinceCode)
+        .firstOrNull
+        ?.name;
+    return _dropdown(
+      colors,
+      currentName ?? 'Chưa chọn (Không tranh hạng Tier S)',
+      [
+        'Chưa chọn (Không tranh hạng Tier S)',
+        ...items.map((province) => province.name),
+      ],
+      (v) {
+        if (v == null) return;
+        setState(() {
+          _provinceCode = v == 'Chưa chọn (Không tranh hạng Tier S)'
+              ? ''
+              : (_provinces.where((province) => province.name == v).firstOrNull?.code ??
+                  (_provinceCode.isNotEmpty && !codes.contains(_provinceCode) ? _provinceCode : ''));
+        });
+      },
     );
   }
 }
@@ -316,19 +784,43 @@ class _BankTab extends ConsumerStatefulWidget {
 class _BankTabState extends ConsumerState<_BankTab> {
   static const _log = AppLogger('Settings.Bank');
   final _formKey = GlobalKey<FormState>();
-  final _bankNameCtrl = TextEditingController();
   final _accountNumberCtrl = TextEditingController();
   final _accountNameCtrl = TextEditingController();
 
+  static const _noBank = 'Chưa chọn ngân hàng/ví';
+  static const _wallets = ['Momo', 'ZaloPay', 'ShopeePay'];
+  static const _banks = [
+    'Vietcombank', 'Techcombank', 'Vietinbank', 'BIDV', 'Agribank',
+    'MB Bank', 'ACB', 'VPBank', 'TPBank', 'Sacombank', 'VIB',
+  ];
+
+  String _bankName = _noBank;
   bool _isLoading = false;
   bool _initialized = false;
 
+  bool get _isWallet => _wallets.contains(_bankName);
+
   @override
   void dispose() {
-    _bankNameCtrl.dispose();
     _accountNumberCtrl.dispose();
     _accountNameCtrl.dispose();
     super.dispose();
+  }
+
+  /// Viết hoa + bỏ dấu (NFD) như web: NGUYEN VAN A.
+  String _normalizeAccountName(String value) {
+    const diacriticsMap = {
+      'À': 'A', 'Á': 'A', 'Ạ': 'A', 'Ả': 'A', 'Ã': 'A', 'Â': 'A', 'Ầ': 'A', 'Ấ': 'A',
+      'Ậ': 'A', 'Ẩ': 'A', 'Ẫ': 'A', 'Ă': 'A', 'Ằ': 'A', 'Ắ': 'A', 'Ặ': 'A', 'Ẳ': 'A',
+      'Ẵ': 'A', 'Đ': 'D', 'È': 'E', 'É': 'E', 'Ẹ': 'E', 'Ẻ': 'E', 'Ẽ': 'E', 'Ê': 'E',
+      'Ề': 'E', 'Ế': 'E', 'Ệ': 'E', 'Ể': 'E', 'Ễ': 'E', 'Ì': 'I', 'Í': 'I', 'Ị': 'I',
+      'Ỉ': 'I', 'Ĩ': 'I', 'Ò': 'O', 'Ó': 'O', 'Ọ': 'O', 'Ỏ': 'O', 'Õ': 'O', 'Ô': 'O',
+      'Ồ': 'O', 'Ố': 'O', 'Ộ': 'O', 'Ổ': 'O', 'Ỗ': 'O', 'Ơ': 'O', 'Ờ': 'O', 'Ớ': 'O',
+      'Ợ': 'O', 'Ở': 'O', 'Ỡ': 'O', 'Ù': 'U', 'Ú': 'U', 'Ụ': 'U', 'Ủ': 'U', 'Ũ': 'U',
+      'Ư': 'U', 'Ừ': 'U', 'Ứ': 'U', 'Ự': 'U', 'Ử': 'U', 'Ữ': 'U', 'Ỳ': 'Y', 'Ỵ': 'Y',
+      'Ỷ': 'Y', 'Ỹ': 'Y',
+    };
+    return value.toUpperCase().split('').map((char) => diacriticsMap[char] ?? char).join();
   }
 
   Future<void> _save() async {
@@ -340,9 +832,9 @@ class _BankTabState extends ConsumerState<_BankTab> {
     try {
       final repo = ref.read(userRepositoryProvider);
       await repo.updateProfile({
-        'bankName': _bankNameCtrl.text.trim(),
+        'bankName': _bankName == _noBank ? '' : _bankName,
         'bankAccountNumber': _accountNumberCtrl.text.trim(),
-        'bankAccountName': _accountNameCtrl.text.trim(),
+        'bankAccountName': _normalizeAccountName(_accountNameCtrl.text.trim()),
       });
 
       _log.success('Lưu thông tin ngân hàng thành công');
@@ -351,7 +843,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Đã lưu thông tin ngân hàng'),
+            content: const Text('Đã lưu cấu hình hoàn tiền'),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -381,7 +873,8 @@ class _BankTabState extends ConsumerState<_BankTab> {
     return profileAsync.when(
       data: (profile) {
         if (!_initialized) {
-          _bankNameCtrl.text = profile.bankName ?? '';
+          final saved = profile.bankName ?? '';
+          _bankName = saved.isEmpty ? _noBank : saved;
           _accountNumberCtrl.text = profile.bankAccountNumber ?? '';
           _accountNameCtrl.text = profile.bankAccountName ?? '';
           _initialized = true;
@@ -395,6 +888,22 @@ class _BankTabState extends ConsumerState<_BankTab> {
   }
 
   Widget _buildForm(AppColorsExtension colors) {
+    final bankOptions = [
+      _noBank,
+      ..._wallets.map((wallet) => 'Ví điện tử $wallet'),
+      ..._banks,
+    ];
+    // Giá trị đã lưu ngoài danh sách (nhập tay từ trước) — thêm vào cuối để không mất.
+    final isKnown = _bankName == _noBank ||
+        _wallets.contains(_bankName) ||
+        _banks.contains(_bankName);
+    final currentLabel = _bankName == _noBank
+        ? _noBank
+        : _isWallet
+            ? 'Ví điện tử $_bankName'
+            : _bankName;
+    if (!isKnown) bankOptions.add(_bankName);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       physics: const BouncingScrollPhysics(),
@@ -403,34 +912,49 @@ class _BankTabState extends ConsumerState<_BankTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Info banner
             _infoBanner(colors),
             const SizedBox(height: 20),
             _card(colors, [
-              _fieldLabel(colors, 'Tên ngân hàng'),
+              _fieldLabel(colors, 'Ngân hàng / Ví nhận tiền'),
               const SizedBox(height: 6),
-              AppTextFormField(
-                controller: _bankNameCtrl,
-                hint: 'VD: Vietcombank, Techcombank...',
-                prefixIcon: Icons.account_balance_rounded,
-              ),
+              _dropdown(colors, currentLabel, bankOptions, (v) {
+                if (v == null) return;
+                setState(() {
+                  if (v == _noBank) {
+                    _bankName = _noBank;
+                  } else if (v.startsWith('Ví điện tử ')) {
+                    _bankName = v.substring('Ví điện tử '.length);
+                  } else {
+                    _bankName = v;
+                  }
+                });
+              }),
               const SizedBox(height: 16),
-              _fieldLabel(colors, 'Số tài khoản'),
+              _fieldLabel(colors, _isWallet ? 'Số điện thoại ví' : 'Số tài khoản'),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _accountNumberCtrl,
-                hint: 'Nhập số tài khoản',
+                hint: _isWallet ? 'Ví dụ: 0912345678' : 'Ví dụ: 0011001234567',
                 keyboardType: TextInputType.number,
                 prefixIcon: Icons.numbers_rounded,
               ),
               const SizedBox(height: 16),
-              _fieldLabel(colors, 'Tên chủ tài khoản'),
+              _fieldLabel(colors, 'Tên chủ tài khoản / ví (Viết hoa không dấu)'),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _accountNameCtrl,
-                hint: 'Nhập tên chủ tài khoản',
+                hint: 'Ví dụ: NGUYEN VAN A',
                 prefixIcon: Icons.person_rounded,
-                textCapitalization: TextCapitalization.words,
+                onChanged: (value) {
+                  final normalized = _normalizeAccountName(value);
+                  if (normalized != value) {
+                    final selection = _accountNameCtrl.selection;
+                    _accountNameCtrl.value = TextEditingValue(
+                      text: normalized,
+                      selection: selection,
+                    );
+                  }
+                },
               ),
               const SizedBox(height: 24),
               _saveButton(context, _isLoading, _save),
@@ -457,8 +981,8 @@ class _BankTabState extends ConsumerState<_BankTab> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Thông tin ngân hàng dùng để nhận tiền thưởng giải đấu. '
-              'Dữ liệu được bảo mật và không hiển thị công khai.',
+              'Cấu hình tài khoản nhận hoàn tiền chính xác để BTC gửi lại lệ phí giải '
+              'khi bạn rút khỏi giải trước khi giải khởi tranh. Dữ liệu được bảo mật.',
               style: TextStyle(
                 fontSize: 12,
                 height: 1.5,
@@ -473,10 +997,110 @@ class _BankTabState extends ConsumerState<_BankTab> {
 }
 
 // ═════════════════════════════════════════════════════════════════════════
-//  TAB 3: BẢO MẬT — đổi mật khẩu + trạng thái xác thực
+//  TAB 3: BẢO MẬT — xác minh, đổi mật khẩu, xóa tài khoản
 // ═════════════════════════════════════════════════════════════════════════
 class _SecurityTab extends ConsumerWidget {
   const _SecurityTab();
+
+  Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
+    final passwordCtrl = TextEditingController();
+    var obscure = true;
+    var isDeleting = false;
+    final colors = context.colors;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            Future<void> delete() async {
+              final password = passwordCtrl.text;
+              if (password.isEmpty) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(content: Text('Vui lòng nhập mật khẩu xác nhận')),
+                );
+                return;
+              }
+              setState(() => isDeleting = true);
+              try {
+                await ref.read(userRepositoryProvider).deleteAccount(password);
+                if (!ctx.mounted) return;
+                Navigator.of(ctx).pop();
+                await ref.read(authProvider.notifier).signOut();
+                ref.invalidate(userProfileProvider);
+                if (context.mounted) context.go('/home');
+              } catch (e) {
+                if (!ctx.mounted) return;
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  SnackBar(content: Text('Xóa tài khoản thất bại: $e')),
+                );
+              } finally {
+                if (ctx.mounted) setState(() => isDeleting = false);
+              }
+            }
+
+            return AlertDialog(
+              backgroundColor: colors.bgCard,
+              title: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: colors.error),
+                  const SizedBox(width: 8),
+                  const Expanded(child: Text('Xác nhận xóa tài khoản')),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Hành động này KHÔNG THỂ HOÀN TÁC. Tất cả dữ liệu cá nhân, hồ sơ thi đấu '
+                    'sẽ bị ẩn vĩnh viễn. Nhập mật khẩu hiện tại để tiếp tục.',
+                    style: TextStyle(fontSize: 13, height: 1.5),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: passwordCtrl,
+                    enabled: !isDeleting,
+                    obscureText: obscure,
+                    decoration: InputDecoration(
+                      labelText: 'Mật khẩu xác nhận',
+                      suffixIcon: IconButton(
+                        icon: Icon(obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                        onPressed: () => setState(() => obscure = !obscure),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isDeleting ? null : () => Navigator.of(ctx).pop(),
+                  child: const Text('Hủy bỏ'),
+                ),
+                FilledButton(
+                  onPressed: isDeleting ? null : delete,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colors.error,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: isDeleting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Xác nhận xóa'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    passwordCtrl.dispose();
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -508,7 +1132,7 @@ class _SecurityTab extends ConsumerWidget {
                   icon: Icons.phone_android_rounded,
                   title: 'Số điện thoại',
                   verified: profile.isPhoneVerified == true,
-                  fallbackText: profile.phoneNumber,
+                  fallbackText: profile.phoneNumber ?? 'Chưa cập nhật số điện thoại',
                 ),
                 if (profile.isEmailVerified != true) ...[
                   _divider(colors),
@@ -521,6 +1145,20 @@ class _SecurityTab extends ConsumerWidget {
                       context,
                       ref,
                       profile.email ?? '',
+                    ),
+                  ),
+                ],
+                if (profile.isPhoneVerified != true) ...[
+                  _divider(colors),
+                  _actionRow(
+                    colors,
+                    icon: Icons.sms_rounded,
+                    title: 'Xác minh số điện thoại',
+                    subtitle: 'Gửi mã OTP tới số điện thoại đang dùng',
+                    onTap: () => startPhoneVerificationFlow(
+                      context,
+                      ref,
+                      profile.phoneNumber ?? '',
                     ),
                   ),
                 ],
@@ -553,7 +1191,7 @@ class _SecurityTab extends ConsumerWidget {
               colors,
               icon: Icons.security_rounded,
               title: 'Mật khẩu mạnh',
-              subtitle: 'Tối thiểu 6 ký tự, nên có chữ hoa và số',
+              subtitle: 'Tối thiểu 8 ký tự, nên có chữ hoa và số',
               trailing: Icon(Icons.check_circle_rounded, color: colors.success, size: 20),
             ),
           ]),
@@ -581,6 +1219,58 @@ class _SecurityTab extends ConsumerWidget {
               ),
             ),
           ]),
+          const SizedBox(height: 24),
+
+          // Vùng nguy hiểm
+          _sectionTitle(colors, 'Vùng nguy hiểm'),
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+              border: Border.all(color: colors.error.withValues(alpha: 0.35)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.shield_outlined, size: 18, color: colors.error),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Xóa tài khoản cá nhân',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.error),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Khi thực hiện xóa tài khoản, tất cả dữ liệu cá nhân, hồ sơ thi đấu và thông tin '
+                  'liên quan sẽ bị ẩn vĩnh viễn. Bạn không thể đăng nhập hoặc tham gia giải đấu nào sau hành động này.',
+                  style: TextStyle(fontSize: 12, height: 1.5, color: colors.textSecondary),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 44,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _confirmDeleteAccount(context, ref),
+                    icon: const Icon(Icons.delete_forever_rounded, size: 18),
+                    label: const Text('Xóa tài khoản', style: TextStyle(fontWeight: FontWeight.w800)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colors.error,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 32),
         ],
       ),
@@ -637,8 +1327,11 @@ Widget _dropdown(
   AppColorsExtension colors,
   String value,
   List<String> items,
-  ValueChanged<String?> onChange,
+  ValueChanged<String?>? onChange,
 ) {
+  // Giá trị hiện tại nằm ngoài danh sách (dữ liệu cũ) — thêm để DropdownButton không crash.
+  var effectiveItems = items;
+  if (!items.contains(value)) effectiveItems = [...items, value];
   return Container(
     height: 48,
     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -654,7 +1347,7 @@ Widget _dropdown(
         icon: Icon(Icons.arrow_drop_down_rounded, color: colors.textMuted),
         style: TextStyle(fontSize: 14, color: colors.textPrimary),
         dropdownColor: colors.bgCard,
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        items: effectiveItems.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
         onChanged: onChange,
       ),
     ),

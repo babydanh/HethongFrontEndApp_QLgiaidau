@@ -58,22 +58,31 @@ class FootballLiveState {
   final int team2Goals;
   final String phase;
   final int minute;
+  final int addedMinute;
   final List<FootballEvent> events;
+  final int? shootoutTeam1Goals;
+  final int? shootoutTeam2Goals;
 
   const FootballLiveState({
     this.team1Goals = 0,
     this.team2Goals = 0,
     this.phase = 'FIRST_HALF',
     this.minute = 0,
+    this.addedMinute = 0,
     this.events = const [],
+    this.shootoutTeam1Goals,
+    this.shootoutTeam2Goals,
   });
 
-  FootballLiveState copyWith({int? team1Goals, int? team2Goals, String? phase, int? minute, List<FootballEvent>? events}) => FootballLiveState(
+  FootballLiveState copyWith({int? team1Goals, int? team2Goals, String? phase, int? minute, int? addedMinute, List<FootballEvent>? events, int? shootoutTeam1Goals, int? shootoutTeam2Goals}) => FootballLiveState(
     team1Goals: team1Goals ?? this.team1Goals,
     team2Goals: team2Goals ?? this.team2Goals,
     phase: phase ?? this.phase,
     minute: minute ?? this.minute,
+    addedMinute: addedMinute ?? this.addedMinute,
     events: events ?? this.events,
+    shootoutTeam1Goals: shootoutTeam1Goals ?? this.shootoutTeam1Goals,
+    shootoutTeam2Goals: shootoutTeam2Goals ?? this.shootoutTeam2Goals,
   );
 }
 
@@ -81,7 +90,8 @@ class FootballEvent {
   final String type;
   final bool isTeam1;
   final int minute;
-  const FootballEvent({required this.type, required this.isTeam1, required this.minute});
+  final int addedMinute;
+  const FootballEvent({required this.type, required this.isTeam1, required this.minute, this.addedMinute = 0});
 }
 
 /// State tổng thể của ScorePanelNotifier.

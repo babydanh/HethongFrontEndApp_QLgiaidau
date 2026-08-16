@@ -208,6 +208,74 @@ class ApiUserRepository implements IUserRepository {
     }
   }
 
+  @override
+  Future<void> deleteAccount(String password) async {
+    _log.info('Xóa tài khoản qua API');
+    try {
+      final response = await _dioClient.dio.post(
+        '/users/delete-account',
+        data: {'password': password},
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        _log.success('Đã xóa tài khoản');
+        return;
+      }
+      throw Exception('Xóa tài khoản thất bại');
+    } catch (e, stack) {
+      _log.error('Lỗi xóa tài khoản', e, stack);
+      if (e is DioException) {
+        throw Exception(_parseNestJsError(
+          e.response?.data,
+          e.message ?? 'Lỗi kết nối đến máy chủ',
+        ));
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> createChangeRequest({required String requestType, required String newValue}) async {
+    _log.info('Gửi yêu cầu thay đổi ($requestType) qua API');
+    try {
+      final response = await _dioClient.dio.post(
+        '/users/change-requests',
+        data: {'requestType': requestType, 'newValue': newValue},
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) return;
+      throw Exception('Gửi yêu cầu thất bại');
+    } catch (e, stack) {
+      _log.error('Lỗi gửi yêu cầu thay đổi', e, stack);
+      if (e is DioException) {
+        throw Exception(_parseNestJsError(
+          e.response?.data,
+          e.message ?? 'Lỗi kết nối đến máy chủ',
+        ));
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<ProvinceOption>> getProvinces() async {
+    _log.info('Lấy danh sách tỉnh/thành qua API');
+    try {
+      final response = await _dioClient.dio.get('/regions/provinces');
+      final raw = response.data is Map ? response.data['data'] : response.data;
+      if (raw is! List) return [];
+      return raw
+          .whereType<Map>()
+          .map((item) => ProvinceOption(
+                code: item['code']?.toString() ?? '',
+                name: item['name']?.toString() ?? '',
+              ))
+          .where((province) => province.code.isNotEmpty && province.name.isNotEmpty)
+          .toList();
+    } catch (e, stack) {
+      _log.error('Lỗi lấy danh sách tỉnh/thành', e, stack);
+      return [];
+    }
+  }
+
   String _parseNestJsError(dynamic responseData, String fallback) {
     if (responseData == null) {
       return fallback;

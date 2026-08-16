@@ -21,6 +21,7 @@ class CommunityComposer extends StatefulWidget {
   final ValueChanged<String?> onMentionQueryChanged;
   final ValueChanged<List<String>> onMentionsChanged;
   final ValueChanged<String>? onMentionWarning;
+  final VoidCallback? onCreatePoll;
   final bool canManageMemberTags;
   final ValueChanged<CommunityMemberModel>? onAssignMemberTags;
 
@@ -34,6 +35,7 @@ class CommunityComposer extends StatefulWidget {
     required this.onMentionQueryChanged,
     required this.onMentionsChanged,
     this.onMentionWarning,
+    this.onCreatePoll,
     this.onPickImage,
     this.imageCount = 0,
     this.memberSearchError,

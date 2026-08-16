@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
@@ -48,12 +49,16 @@ class _WaveHeaderPainter extends CustomPainter {
     // Sóng nhẹ nhàng: phải cao (72%), trái thấp (88%)
     final double waveShift = math.sin(animVal * 2 * math.pi) * 6;
     path.quadraticBezierTo(
-      size.width * 0.65, size.height * (0.78 + waveShift / size.height),
-      size.width * 0.35, size.height * 0.85,
+      size.width * 0.65,
+      size.height * (0.78 + waveShift / size.height),
+      size.width * 0.35,
+      size.height * 0.85,
     );
     path.quadraticBezierTo(
-      size.width * 0.12, size.height * (0.91 + waveShift / size.height),
-      0, size.height * 0.88, // Trái thấp hơn
+      size.width * 0.12,
+      size.height * (0.91 + waveShift / size.height),
+      0,
+      size.height * 0.88, // Trái thấp hơn
     );
     path.close();
 
@@ -67,12 +72,16 @@ class _WaveHeaderPainter extends CustomPainter {
     final overlayPath = Path();
     overlayPath.moveTo(0, size.height * 0.55);
     overlayPath.quadraticBezierTo(
-      size.width * 0.3, size.height * (0.45 - waveShift / size.height * 0.5),
-      size.width * 0.6, size.height * 0.58,
+      size.width * 0.3,
+      size.height * (0.45 - waveShift / size.height * 0.5),
+      size.width * 0.6,
+      size.height * 0.58,
     );
     overlayPath.quadraticBezierTo(
-      size.width * 0.82, size.height * 0.64,
-      size.width, size.height * 0.52,
+      size.width * 0.82,
+      size.height * 0.64,
+      size.width,
+      size.height * 0.52,
     );
     overlayPath.lineTo(size.width, 0);
     overlayPath.lineTo(0, 0);
@@ -85,13 +94,6 @@ class _WaveHeaderPainter extends CustomPainter {
 }
 
 // ─── Sport Sport chip enum ───
-const _sports = [
-  (key: 'all', label: 'Tất cả', icon: Icons.grid_view_rounded),
-  (key: 'tennis', label: 'Tennis', icon: Icons.sports_tennis),
-  (key: 'badminton', label: 'Cầu lông', icon: Icons.sports),
-  (key: 'table_tennis', label: 'Bóng bàn', icon: Icons.circle_outlined),
-  (key: 'pickleball', label: 'Pickleball', icon: Icons.sports_handball),
-];
 
 // ─── Status badge helpers ───
 Color _statusColor(BuildContext context, String status) =>
@@ -152,10 +154,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _fadeAnim = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    );
+    _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeOut);
     _fadeController.forward();
   }
 
@@ -169,11 +168,12 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
 
   List<Tournament> get _filtered {
     return widget.tournaments.where((t) {
-      final sportMatch =
-          _selectedSport == 'all' || t.sport == _selectedSport;
+      final sportMatch = _selectedSport == 'all' || t.sport == _selectedSport;
       final q = _searchQuery.toLowerCase();
       final nameMatch =
-          q.isEmpty || t.name.toLowerCase().contains(q) || t.description.toLowerCase().contains(q);
+          q.isEmpty ||
+          t.name.toLowerCase().contains(q) ||
+          t.description.toLowerCase().contains(q);
       return sportMatch && nameMatch;
     }).toList();
   }
@@ -231,7 +231,9 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                 onMore: widget.onViewAllTournaments,
               ),
             ),
-            SliverToBoxAdapter(child: _buildTournamentHorizontal(_upcomingTournaments)),
+            SliverToBoxAdapter(
+              child: _buildTournamentHorizontal(_upcomingTournaments),
+            ),
           ],
 
           // ── SECTION 1: Trận đấu đang diễn ra ──
@@ -275,9 +277,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
             ),
           ),
           SliverToBoxAdapter(
-            child: _RecentCompletedMatches(
-              tournaments: _filtered,
-            ),
+            child: _RecentCompletedMatches(tournaments: _filtered),
           ),
 
           // ── SECTION 3: Lịch thi đấu sắp diễn ra ──
@@ -289,24 +289,20 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
             ),
           ),
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (ctx, i) {
-                final list = widget.tournaments.isNotEmpty ? widget.tournaments : _filtered;
-                if (list.isEmpty) return const SizedBox.shrink();
-                return LiveTournamentWithMatchesCard(
-                  tournament: list[i % list.length],
-                  filterStatus: 'scheduled',
-                );
-              },
-              childCount: widget.tournaments.isNotEmpty ? 1 : 0,
-            ),
+            delegate: SliverChildBuilderDelegate((ctx, i) {
+              final list = widget.tournaments.isNotEmpty
+                  ? widget.tournaments
+                  : _filtered;
+              if (list.isEmpty) return const SizedBox.shrink();
+              return LiveTournamentWithMatchesCard(
+                tournament: list[i % list.length],
+                filterStatus: 'scheduled',
+              );
+            }, childCount: widget.tournaments.isNotEmpty ? 1 : 0),
           ),
 
           // ── Empty State ──
-          if (_filtered.isEmpty)
-            SliverFillRemaining(
-              child: _buildEmptyState(),
-            ),
+          if (_filtered.isEmpty) SliverFillRemaining(child: _buildEmptyState()),
 
           // Bottom padding
           const SliverToBoxAdapter(child: SizedBox(height: 120)),
@@ -349,7 +345,10 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                     children: [
                       // Logo / App name
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(10),
@@ -396,9 +395,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                       const SizedBox(width: 8),
                       // Avatar / login
                       GestureDetector(
-                        onTap: () => isAuth
-                            ? null
-                            : context.go('/login'),
+                        onTap: () => isAuth ? null : context.go('/login'),
                         child: Container(
                           width: 40,
                           height: 40,
@@ -408,9 +405,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                             border: Border.all(color: Colors.white, width: 2),
                           ),
                           child: Icon(
-                            isAuth
-                                ? Icons.person_rounded
-                                : Icons.login_rounded,
+                            isAuth ? Icons.person_rounded : Icons.login_rounded,
                             color: Colors.white,
                             size: 22,
                           ),
@@ -463,7 +458,10 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.12),
@@ -484,7 +482,11 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                   color: const Color(0xFFFFD700).withValues(alpha: 0.25),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.star_rounded, color: Color(0xFFFFD700), size: 16),
+                child: const Icon(
+                  Icons.star_rounded,
+                  color: Color(0xFFFFD700),
+                  size: 16,
+                ),
               ),
               const SizedBox(width: 8),
               const Column(
@@ -501,7 +503,11 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                   ),
                   Text(
                     'Xếp hạng Quốc gia',
-                    style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -521,7 +527,9 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
             child: LinearProgressIndicator(
               value: 0.35,
               backgroundColor: Colors.white.withValues(alpha: 0.2),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFFFFD700),
+              ),
               minHeight: 5,
             ),
           ),
@@ -530,11 +538,19 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
           // Row 3: ELO Subtext & Streak Badge
           Row(
             children: [
-              const Icon(Icons.workspace_premium_rounded, color: Color(0xFFFFD700), size: 12),
+              const Icon(
+                Icons.workspace_premium_rounded,
+                color: Color(0xFFFFD700),
+                size: 12,
+              ),
               const SizedBox(width: 4),
               const Text(
                 'Còn 50 ELO nữa lên Hạng Vàng',
-                style: TextStyle(color: Colors.white70, fontSize: 10.5, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const Spacer(),
               Container(
@@ -549,7 +565,11 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                     SizedBox(width: 2),
                     Text(
                       'Phong độ cao',
-                      style: TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
                 ),
@@ -614,10 +634,18 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
           decoration: InputDecoration(
             hintText: 'Tìm giải đấu, môn thể thao...',
             hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-            prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.primary, size: 22),
+            prefixIcon: const Icon(
+              Icons.search_rounded,
+              color: AppTheme.primary,
+              size: 22,
+            ),
             suffixIcon: _searchQuery.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      size: 18,
+                      color: Color(0xFF94A3B8),
+                    ),
                     onPressed: () {
                       _searchController.clear();
                       setState(() => _searchQuery = '');
@@ -636,6 +664,18 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
   // Sport Filter Chips
   // ─────────────────────────────────────
   Widget _buildSportFilter() {
+    final categories =
+        ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
+    final sports = [
+      (key: 'all', label: 'Tất cả', icon: Icons.grid_view_rounded),
+      ...categories.map(
+        (category) => (
+          key: category.slug,
+          label: category.name,
+          icon: _sportIcon(category.slug),
+        ),
+      ),
+    ];
     return Padding(
       padding: const EdgeInsets.only(top: 14, bottom: 2),
       child: SizedBox(
@@ -644,16 +684,19 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: _sports.length,
+          itemCount: sports.length,
           separatorBuilder: (context, index) => const SizedBox(width: 8),
           itemBuilder: (_, i) {
-            final s = _sports[i];
+            final s = sports[i];
             final selected = _selectedSport == s.key;
             return GestureDetector(
               onTap: () => setState(() => _selectedSport = s.key),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: selected ? AppTheme.primary : Colors.white,
                   borderRadius: BorderRadius.circular(20),
@@ -669,7 +712,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                             color: AppTheme.primary.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
-                          )
+                          ),
                         ]
                       : [],
                 ),
@@ -687,7 +730,9 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                       style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700,
-                        color: selected ? Colors.white : const Color(0xFF475569),
+                        color: selected
+                            ? Colors.white
+                            : const Color(0xFF475569),
                       ),
                     ),
                   ],
@@ -769,7 +814,11 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                     ),
                   ),
                   SizedBox(width: 2),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppTheme.primary),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 12,
+                    color: AppTheme.primary,
+                  ),
                 ],
               ),
             ),
@@ -794,8 +843,6 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
       ),
     );
   }
-
-
 
   // ─────────────────────────────────────
   // Compact row for Completed
@@ -913,10 +960,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
           const SizedBox(height: 6),
           const Text(
             'Thử thay đổi bộ lọc hoặc từ khoá tìm kiếm',
-            style: TextStyle(
-              fontSize: 13,
-              color: Color(0xFF94A3B8),
-            ),
+            style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
           ),
         ],
       ),
@@ -935,8 +979,11 @@ class _TournamentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = _statusColor(context, tournament.status);
-    final sportLabel = AppConstants.sportNames[tournament.sport] ?? tournament.sport;
-    final bracketLabel = AppConstants.bracketTypeNames[tournament.bracketType] ?? tournament.bracketType;
+    final sportLabel =
+        AppConstants.sportNames[tournament.sport] ?? tournament.sport;
+    final bracketLabel =
+        AppConstants.bracketTypeNames[tournament.bracketType] ??
+        tournament.bracketType;
 
     return GestureDetector(
       onTap: () => context.push('/intro/${tournament.id}'),
@@ -1005,7 +1052,10 @@ class _TournamentCard extends StatelessWidget {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(8),
@@ -1021,11 +1071,16 @@ class _TournamentCard extends StatelessWidget {
                         ),
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: statusColor.withValues(alpha: 0.25),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+                            border: Border.all(
+                              color: statusColor.withValues(alpha: 0.5),
+                            ),
                           ),
                           child: Text(
                             _statusLabel(tournament.status),
@@ -1058,7 +1113,11 @@ class _TournamentCard extends StatelessWidget {
                     // Meta row
                     Row(
                       children: [
-                        const Icon(Icons.group_rounded, color: Colors.white60, size: 13),
+                        const Icon(
+                          Icons.group_rounded,
+                          color: Colors.white60,
+                          size: 13,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${tournament.maxTeams} đội',
@@ -1069,7 +1128,11 @@ class _TournamentCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        const Icon(Icons.account_tree_rounded, color: Colors.white60, size: 13),
+                        const Icon(
+                          Icons.account_tree_rounded,
+                          color: Colors.white60,
+                          size: 13,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
@@ -1095,8 +1158,6 @@ class _TournamentCard extends StatelessWidget {
     );
   }
 }
-
-
 
 // ─── Nav Icon Button ───
 class _NavIconBtn extends StatelessWidget {
@@ -1181,7 +1242,9 @@ class _TournamentLiveMatchesSection extends ConsumerWidget {
       data: (matches) {
         if (matches.isNotEmpty) {
           return Column(
-            children: matches.map((m) => MatchExploreCard(match: m, tournament: tournament)).toList(),
+            children: matches
+                .map((m) => MatchExploreCard(match: m, tournament: tournament))
+                .toList(),
           );
         }
         return const SizedBox.shrink(); /*
@@ -1212,7 +1275,10 @@ class _TournamentLiveMatchesSection extends ConsumerWidget {
       loading: () => const Center(
         child: Padding(
           padding: EdgeInsets.all(16),
-          child: CircularProgressIndicator(color: AppTheme.primary, strokeWidth: 2),
+          child: CircularProgressIndicator(
+            color: AppTheme.primary,
+            strokeWidth: 2,
+          ),
         ),
       ),
       error: (e, s) => const SizedBox.shrink(),
@@ -1224,11 +1290,7 @@ class MatchExploreCard extends ConsumerStatefulWidget {
   final MatchModel match;
   final Tournament? tournament;
 
-  const MatchExploreCard({
-    super.key,
-    required this.match,
-    this.tournament,
-  });
+  const MatchExploreCard({super.key, required this.match, this.tournament});
 
   @override
   ConsumerState<MatchExploreCard> createState() => _MatchExploreCardState();
@@ -1247,7 +1309,9 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
 
   Future<void> _loadCheerCount() async {
     try {
-      final count = await ref.read(matchRepositoryProvider).getCheerCount(widget.match.id);
+      final count = await ref
+          .read(matchRepositoryProvider)
+          .getCheerCount(widget.match.id);
       if (mounted) setState(() => cheerCount = count);
     } catch (_) {
       // Keep the card usable when the count endpoint is temporarily unavailable.
@@ -1259,7 +1323,9 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
     setState(() => _cheerInFlight = true);
     try {
       await ref.read(matchRepositoryProvider).cheerMatch(widget.match.id);
-      final count = await ref.read(matchRepositoryProvider).getCheerCount(widget.match.id);
+      final count = await ref
+          .read(matchRepositoryProvider)
+          .getCheerCount(widget.match.id);
       if (mounted) {
         setState(() {
           cheerCount = count;
@@ -1269,7 +1335,9 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Chưa thể gửi cổ vũ. Vui lòng thử lại.')),
+          const SnackBar(
+            content: Text('Chưa thể gửi cổ vũ. Vui lòng thử lại.'),
+          ),
         );
       }
     } finally {
@@ -1281,21 +1349,37 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final m = widget.match;
-    final isT1Tbd = m.team1Name.trim().toUpperCase() == 'TBD' || m.team1Name.trim().toUpperCase() == 'BYE';
-    final isT2Tbd = m.team2Name.trim().toUpperCase() == 'TBD' || m.team2Name.trim().toUpperCase() == 'BYE';
+    final isT1Tbd =
+        m.team1Name.trim().toUpperCase() == 'TBD' ||
+        m.team1Name.trim().toUpperCase() == 'BYE';
+    final isT2Tbd =
+        m.team2Name.trim().toUpperCase() == 'TBD' ||
+        m.team2Name.trim().toUpperCase() == 'BYE';
     final isByeMatch = m.isBye || isT1Tbd || isT2Tbd;
 
     final statusText = m.isLive
         ? 'ĐANG DIỄN RA • VÒNG ${m.round}'
         : m.isCompleted
-            ? 'ĐÃ HOÀN THÀNH • VÒNG ${m.round}'
-            : 'SẮP DIỄN RA • VÒNG ${m.round}';
-    final bracketText = m.stageName ?? (m.bracketPosition.bracket == 'losers' ? 'NHÁNH THUA' : 'VÒNG KNOCKOUT');
-    final sportText = AppConstants.sportNames[m.sportKey ?? widget.tournament?.sport] ?? m.sportKey ?? widget.tournament?.sport ?? 'Pickleball';
+        ? 'ĐÃ HOÀN THÀNH • VÒNG ${m.round}'
+        : 'SẮP DIỄN RA • VÒNG ${m.round}';
+    final bracketText =
+        m.stageName ??
+        (m.bracketPosition.bracket == 'losers'
+            ? 'NHÁNH THUA'
+            : 'VÒNG KNOCKOUT');
+    final sportText =
+        AppConstants.sportNames[m.sportKey ?? widget.tournament?.sport] ??
+        m.sportKey ??
+        widget.tournament?.sport ??
+        'Pickleball';
     final courtText = m.court.isNotEmpty ? m.court : 'Chưa xếp sân';
 
     List<String> getInitials(String name) {
-      final parts = name.split('-').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      final parts = name
+          .split('-')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
       if (parts.length >= 2) {
         return parts.map((p) => _getSingleInitials(p)).take(2).toList();
       }
@@ -1311,7 +1395,10 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border.withValues(alpha: 0.7), width: 1.5),
+        border: Border.all(
+          color: colors.border.withValues(alpha: 0.7),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -1329,13 +1416,16 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
             children: [
               // Left Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: m.isLive
                       ? const Color(0xFFFEF2F2)
                       : (m.isCompleted
-                          ? const Color(0xFFDCFCE7)
-                          : const Color(0xFFE0F2FE)),
+                            ? const Color(0xFFDCFCE7)
+                            : const Color(0xFFE0F2FE)),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -1344,11 +1434,15 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                     Icon(
                       m.isLive
                           ? Icons.sensors_rounded
-                          : (m.isCompleted ? Icons.check_circle_outline_rounded : Icons.access_time_rounded),
+                          : (m.isCompleted
+                                ? Icons.check_circle_outline_rounded
+                                : Icons.access_time_rounded),
                       size: 13,
                       color: m.isLive
                           ? const Color(0xFFDC2626)
-                          : (m.isCompleted ? const Color(0xFF16A34A) : const Color(0xFF0284C7)),
+                          : (m.isCompleted
+                                ? const Color(0xFF16A34A)
+                                : const Color(0xFF0284C7)),
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -1358,7 +1452,9 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         fontWeight: FontWeight.w800,
                         color: m.isLive
                             ? const Color(0xFFDC2626)
-                            : (m.isCompleted ? const Color(0xFF16A34A) : const Color(0xFF0284C7)),
+                            : (m.isCompleted
+                                  ? const Color(0xFF16A34A)
+                                  : const Color(0xFF0284C7)),
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -1368,7 +1464,10 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
 
               // Right Badge: VÒNG KNOCKOUT / VÒNG BẢNG
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF3E8FF),
                   borderRadius: BorderRadius.circular(20),
@@ -1426,7 +1525,10 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                   const SizedBox(width: 12),
                   if (isByeMatch && isT2Tbd && !isT1Tbd)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFDCFCE7),
                         borderRadius: BorderRadius.circular(4),
@@ -1478,7 +1580,10 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                   const SizedBox(width: 12),
                   if (isByeMatch && isT1Tbd && !isT2Tbd)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFDCFCE7),
                         borderRadius: BorderRadius.circular(4),
@@ -1513,7 +1618,11 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
           // ── Sub-info Row: Sport & Court ──
           Row(
             children: [
-              Icon(Icons.sports_handball_rounded, size: 14, color: colors.textSecondary),
+              Icon(
+                Icons.sports_handball_rounded,
+                size: 14,
+                color: colors.textSecondary,
+              ),
               const SizedBox(width: 4),
               Text(
                 sportText,
@@ -1524,7 +1633,11 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                 ),
               ),
               const SizedBox(width: 16),
-              Icon(Icons.location_on_outlined, size: 14, color: colors.textMuted),
+              Icon(
+                Icons.location_on_outlined,
+                size: 14,
+                color: colors.textMuted,
+              ),
               const SizedBox(width: 4),
               Text(
                 courtText,
@@ -1550,10 +1663,14 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
-                      color: isCheered ? const Color(0xFFFEF2F2) : colors.bgSurface,
+                      color: isCheered
+                          ? const Color(0xFFFEF2F2)
+                          : colors.bgSurface,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: isCheered ? const Color(0xFFFECACA) : colors.border,
+                        color: isCheered
+                            ? const Color(0xFFFECACA)
+                            : colors.border,
                       ),
                     ),
                     child: Row(
@@ -1563,20 +1680,28 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                             ? const SizedBox(
                                 width: 15,
                                 height: 15,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : Icon(
-                          isCheered ? Icons.favorite : Icons.favorite_border,
-                          size: 15,
-                          color: isCheered ? const Color(0xFFDC2626) : const Color(0xFFE11D48),
-                        ),
+                                isCheered
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                size: 15,
+                                color: isCheered
+                                    ? const Color(0xFFDC2626)
+                                    : const Color(0xFFE11D48),
+                              ),
                         const SizedBox(width: 6),
                         Text(
                           cheerCount > 0 ? 'Cổ vũ ($cheerCount)' : 'Cổ vũ',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: isCheered ? const Color(0xFFDC2626) : colors.textPrimary,
+                            color: isCheered
+                                ? const Color(0xFFDC2626)
+                                : colors.textPrimary,
                           ),
                         ),
                       ],
@@ -1603,7 +1728,11 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.list_alt_rounded, size: 15, color: colors.info),
+                        Icon(
+                          Icons.list_alt_rounded,
+                          size: 15,
+                          color: colors.info,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'Chi tiết',
@@ -1627,9 +1756,12 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                     AppShareModal.show(
                       context: context,
                       title: '${m.team1Name} VS ${m.team2Name}',
-                      subtitle: 'Giải đấu: ${m.tournamentName ?? "Giao hữu"} • ${m.court.isNotEmpty ? m.court : "Đang thi đấu"}',
+                      subtitle:
+                          'Giải đấu: ${m.tournamentName ?? "Giao hữu"} • ${m.court.isNotEmpty ? m.court : "Đang thi đấu"}',
                       webUrl: 'https://sporto.asia/live/${m.id}',
-                      badgeText: m.isLive ? 'Trận đấu đang Live 🔴' : 'Trận đấu',
+                      badgeText: m.isLive
+                          ? 'Trận đấu đang Live 🔴'
+                          : 'Trận đấu',
                     );
                   },
                   borderRadius: BorderRadius.circular(10),
@@ -1668,7 +1800,8 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
   String _getSingleInitials(String s) {
     final parts = s.trim().split(' ');
     if (parts.length >= 2) {
-      return '${parts[parts.length - 2][0]}${parts[parts.length - 1][0]}'.toUpperCase();
+      return '${parts[parts.length - 2][0]}${parts[parts.length - 1][0]}'
+          .toUpperCase();
     }
     return s.isNotEmpty ? s[0].toUpperCase() : '?';
   }
@@ -1783,7 +1916,9 @@ class _RecentCompletedMatches extends ConsumerWidget {
     if (completedTournaments.isEmpty && hasMatchError) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 16),
-        child: Center(child: Text('Không tải được kết quả trận đấu. Vui lòng thử lại.')),
+        child: Center(
+          child: Text('Không tải được kết quả trận đấu. Vui lòng thử lại.'),
+        ),
       );
     }
     if (completedTournaments.isEmpty) {
@@ -1800,10 +1935,12 @@ class _RecentCompletedMatches extends ConsumerWidget {
 
     return Column(
       children: completedTournaments
-          .map((tournament) => LiveTournamentWithMatchesCard(
-                tournament: tournament,
-                filterStatus: 'completed',
-              ))
+          .map(
+            (tournament) => LiveTournamentWithMatchesCard(
+              tournament: tournament,
+              filterStatus: 'completed',
+            ),
+          )
           .toList(),
     );
   }

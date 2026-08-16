@@ -15,19 +15,53 @@ abstract class ICommunitySocialRepository {
     List<String> mediaUrls = const [],
     List<String> topicTags = const [],
     List<String> mentions = const [],
+    Map<String, dynamic>? poll,
   });
 
-  Future<List<CommunityCommentModel>> getComments(
+  Future<CommunityCommentPage> getComments(
     String communityId,
     String postId, {
-    int limit = 3,
+    String? cursor,
+    int limit = 20,
   });
 
   Future<CommunityCommentModel> createComment(
     String communityId,
     String postId, {
     required String body,
+    String? parentId,
   });
+
+  Future<void> deletePost(String communityId, String postId);
+
+  Future<List<CommunityPostModel>> getPendingPosts(String communityId);
+
+  Future<void> moderatePost(
+    String communityId,
+    String postId, {
+    required String status,
+  });
+
+  Future<void> reportPost(
+    String communityId,
+    String postId, {
+    required String reason,
+    String? details,
+  });
+
+  Future<void> deleteComment(String communityId, String commentId);
+
+  Future<CommunityPollModel> votePoll(
+    String communityId,
+    String pollId,
+    String optionId,
+  );
+
+  Future<CommunityPollModel> addPollOption(
+    String communityId,
+    String pollId,
+    String optionText,
+  );
 
   Future<void> reactToPost(
     String communityId,

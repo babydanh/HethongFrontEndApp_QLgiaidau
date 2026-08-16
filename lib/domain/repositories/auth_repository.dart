@@ -27,4 +27,12 @@ abstract class IAuthRepository {
   Future<void> confirmEmailVerification({
     required String token,
   });
+
+  Future<void> requestPhoneVerification({
+    required String phoneNumber,
+  });
+
+  Future<void> confirmPhoneVerification({
+    required String code,
+  });
 }

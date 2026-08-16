@@ -89,6 +89,7 @@ class LiteManagementState {
   final String? tournamentName;
   final String? inviteCode;
   final bool hasBracket;
+  final bool rosterConfirmed;
   final List<MatchModel> matches;
   final String? matchesError;
 
@@ -107,6 +108,7 @@ class LiteManagementState {
     this.tournamentName,
     this.inviteCode,
     this.hasBracket = false,
+    this.rosterConfirmed = false,
     this.matches = const [],
     this.matchesError,
   });
@@ -128,6 +130,7 @@ class LiteManagementState {
     String? tournamentName,
     String? inviteCode,
     bool? hasBracket,
+    bool? rosterConfirmed,
     List<MatchModel>? matches,
     String? matchesError,
     bool? clearMatchesError,
@@ -149,6 +152,7 @@ class LiteManagementState {
       tournamentName: tournamentName ?? this.tournamentName,
       inviteCode: inviteCode ?? this.inviteCode,
       hasBracket: hasBracket ?? this.hasBracket,
+      rosterConfirmed: rosterConfirmed ?? this.rosterConfirmed,
       matches: matches ?? this.matches,
       matchesError: clearMatchesError == true
           ? null
@@ -255,7 +259,8 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         final mode = cfgMap['mode']?.toString().toUpperCase();
         // isLite = LOẠI GIẢI lite. Fallback an toàn cho giải lite cũ
         // (mode='LITE' + hideAdvancedSettings=true) trước migration.
-        final isLite = cfgMap['isLite'] == true ||
+        final isLite =
+            cfgMap['isLite'] == true ||
             (mode == 'LITE' && cfgMap['hideAdvancedSettings'] == true);
         if (!isLite) {
           state = state.copyWith(
@@ -288,6 +293,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
           tournamentName: rawName,
           inviteCode: rawInviteCode,
           hasBracket: hasBracket,
+          rosterConfirmed: payload['isRegistrationLocked'] == true,
         );
       }
     } catch (e, stack) {
@@ -390,7 +396,8 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
   }
 
-  Future<void> refreshMatches(String tournamentId) => _fetchMatches(tournamentId);
+  Future<void> refreshMatches(String tournamentId) =>
+      _fetchMatches(tournamentId);
 
   Future<void> startMatch(String tournamentId, String matchId) async {
     await ref.read(matchRepositoryProvider).startMatch(tournamentId, matchId);
@@ -404,12 +411,14 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     required String reason,
     String? winnerId,
   }) async {
-    await ref.read(matchRepositoryProvider).matchOperation(
-      matchId,
-      action: action,
-      reason: reason,
-      winnerId: winnerId,
-    );
+    await ref
+        .read(matchRepositoryProvider)
+        .matchOperation(
+          matchId,
+          action: action,
+          reason: reason,
+          winnerId: winnerId,
+        );
     await _fetchMatches(tournamentId);
   }
 
@@ -484,16 +493,49 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
   }
 
+  Future<void> confirmRoster(String tournamentId) async {
+    try {
+      final response = await _dio.post(
+        '/tournaments/$tournamentId/confirm-roster',
+      );
+      final envelope = response.data;
+      final payload = envelope is Map && envelope['data'] is Map
+          ? Map<String, dynamic>.from(envelope['data'] as Map)
+          : envelope is Map
+          ? Map<String, dynamic>.from(envelope)
+          : null;
+      state = state.copyWith(rosterConfirmed: true);
+      await _fetchTournament(tournamentId);
+      if (payload != null) {
+        final current = state.tournament;
+        if (current != null) {
+          state = state.copyWith(
+            tournament: Tournament.fromJson(
+              payload,
+              payload['id']?.toString() ?? current.id,
+            ),
+          );
+        }
+      }
+    } on DioException catch (e) {
+      _log.error('Lỗi chốt danh sách Lite', e);
+      rethrow;
+    }
+  }
+
   Future<void> createBracket(String tournamentId) async {
     state = state.copyWith(creatingBracket: true);
-    final bType = state.tournament?.bracketType.toUpperCase() ?? 'SINGLE_ELIMINATION';
+    final bType =
+        state.tournament?.bracketType.toUpperCase() ?? 'SINGLE_ELIMINATION';
     try {
       try {
         await _dio.post(
           '/tournaments/lite/$tournamentId/bracket',
           data: {
             'seedingType': 'RANDOM',
-            'bracketType': bType.contains('DOUBLE') ? 'DOUBLE_ELIMINATION' : 'SINGLE_ELIMINATION',
+            'bracketType': bType.contains('DOUBLE')
+                ? 'DOUBLE_ELIMINATION'
+                : 'SINGLE_ELIMINATION',
           },
         );
       } on DioException catch (e) {
@@ -502,7 +544,9 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
           await _dio.post(
             '/tournaments/$tournamentId/bracket/generate',
             data: {
-              'bracketType': bType.contains('DOUBLE') ? 'DOUBLE_ELIMINATION' : 'SINGLE_ELIMINATION',
+              'bracketType': bType.contains('DOUBLE')
+                  ? 'DOUBLE_ELIMINATION'
+                  : 'SINGLE_ELIMINATION',
               'seedingType': 'RANDOM',
             },
           );

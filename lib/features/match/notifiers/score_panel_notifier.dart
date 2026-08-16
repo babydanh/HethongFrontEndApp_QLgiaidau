@@ -22,13 +22,21 @@ FootballLiveState? _readFootballState(Map<String, dynamic> details) {
     team2Goals: raw['team2Goals'] is int ? raw['team2Goals'] as int : 0,
     phase: raw['phase']?.toString() ?? 'FIRST_HALF',
     minute: raw['minute'] is int ? raw['minute'] as int : 0,
+    addedMinute: raw['addedMinute'] is int ? raw['addedMinute'] as int : 0,
     events: raw['events'] is List
         ? (raw['events'] as List).whereType<Map>().map((event) => FootballEvent(
               type: event['type']?.toString() ?? 'NOTE',
               isTeam1: event['team'] == 1,
               minute: event['minute'] is int ? event['minute'] as int : 0,
+              addedMinute: event['addedMinute'] is int ? event['addedMinute'] as int : 0,
             )).toList()
         : const [],
+    shootoutTeam1Goals: raw['shootout'] is Map && (raw['shootout'] as Map)['team1Goals'] is int
+        ? (raw['shootout'] as Map)['team1Goals'] as int
+        : null,
+    shootoutTeam2Goals: raw['shootout'] is Map && (raw['shootout'] as Map)['team2Goals'] is int
+        ? (raw['shootout'] as Map)['team2Goals'] as int
+        : null,
   );
 }
 
@@ -111,7 +119,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     final tennis = value.tennis == null
         ? '-'
         : '${value.tennis!.team1GamePoints}:${value.tennis!.team2GamePoints}:${value.tennis!.isTiebreak}';
-    return '$sets#$rally#$tennis';
+    final football = value.football == null
+        ? '-'
+        : '${value.football!.team1Goals}:${value.football!.team2Goals}:${value.football!.phase}:${value.football!.minute}:${value.football!.addedMinute}:${value.football!.shootoutTeam1Goals}:${value.football!.shootoutTeam2Goals}:${value.football!.events.length}';
+    return '$sets#$rally#$tennis#$football';
   }
 
   void _markLocalScorePending() {
@@ -518,12 +529,28 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     unawaited(_syncFootball(next));
   }
 
+  void footballSetAddedMinute(int addedMinute) {
+    final next = (state.football ?? const FootballLiveState()).copyWith(addedMinute: addedMinute.clamp(0, 30));
+    state = state.copyWith(football: next, errorMessage: null);
+    unawaited(_syncFootball(next));
+  }
+
   void footballAddEvent(String type, bool isTeam1) {
     final current = state.football ?? const FootballLiveState();
     final next = current.copyWith(events: [
       ...current.events,
-      FootballEvent(type: type, isTeam1: isTeam1, minute: current.minute),
+      FootballEvent(type: type, isTeam1: isTeam1, minute: current.minute, addedMinute: current.addedMinute),
     ]);
+    state = state.copyWith(football: next, errorMessage: null);
+    unawaited(_syncFootball(next));
+  }
+
+  void footballSetShootout({required int team1Goals, required int team2Goals}) {
+    final current = state.football ?? const FootballLiveState();
+    final next = current.copyWith(
+      shootoutTeam1Goals: team1Goals.clamp(0, 99),
+      shootoutTeam2Goals: team2Goals.clamp(0, 99),
+    );
     state = state.copyWith(football: next, errorMessage: null);
     unawaited(_syncFootball(next));
   }
@@ -542,12 +569,19 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
             'team2Goals': value.team2Goals,
             'phase': value.phase,
             'minute': value.minute,
+            'addedMinute': value.addedMinute,
             'events': value.events.asMap().entries.map((entry) => {
               'id': 'app-${entry.key}-${value.minute}',
               'type': entry.value.type,
               'team': entry.value.isTeam1 ? 1 : 2,
               'minute': entry.value.minute,
+              'addedMinute': entry.value.addedMinute,
             }).toList(),
+            if (value.shootoutTeam1Goals != null && value.shootoutTeam2Goals != null)
+              'shootout': {
+                'team1Goals': value.shootoutTeam1Goals,
+                'team2Goals': value.shootoutTeam2Goals,
+              },
           },
         },
         expectedRevision: match.revision,
@@ -560,6 +594,20 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   bool canCompleteAs(int winnerTeam) {
     if (winnerTeam != 1 && winnerTeam != 2) return false;
+    if (state.football != null) {
+      final football = state.football!;
+      final match = ref.read(singleMatchProvider(arg)).value;
+      final team1Wins = football.team1Goals > football.team2Goals;
+      final team2Wins = football.team2Goals > football.team1Goals;
+      if (football.team1Goals == football.team2Goals) {
+        final shootout1 = football.shootoutTeam1Goals;
+        final shootout2 = football.shootoutTeam2Goals;
+        if (shootout1 == null || shootout2 == null || shootout1 == shootout2) return false;
+        final shootoutWinner = shootout1 > shootout2 ? 1 : 2;
+        return shootoutWinner == winnerTeam && match?.team1Id.isNotEmpty == true && match?.team2Id.isNotEmpty == true;
+      }
+      return winnerTeam == 1 ? team1Wins : team2Wins;
+    }
     if (state.isLite) {
       final (team1Wins, team2Wins) = computeMatchSetsWon(
         _setsForSubmission(),
@@ -605,6 +653,48 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     }
     state = state.copyWith(isSubmitting: true, errorMessage: null);
     try {
+      if (state.football != null) {
+        final football = state.football!;
+        final match = ref.read(singleMatchProvider(arg)).value;
+        final winnerId = winnerTeam == 1 ? match?.team1Id ?? '' : match?.team2Id ?? '';
+        if (winnerId.isEmpty) throw StateError('Không tìm thấy đội thắng của trận bóng đá.');
+        final isDraw = football.team1Goals == football.team2Goals;
+        final shootout1 = football.shootoutTeam1Goals;
+        final shootout2 = football.shootoutTeam2Goals;
+        if (isDraw && (shootout1 == null || shootout2 == null || shootout1 == shootout2)) {
+          throw StateError('Trận hòa cần tỷ số luân lưu khác nhau để phân định.');
+        }
+        final scoreDetails = <String, dynamic>{
+          'football': {
+            'team1Goals': football.team1Goals,
+            'team2Goals': football.team2Goals,
+            'phase': isDraw ? 'PENALTY_SHOOTOUT' : 'COMPLETED',
+            'minute': football.minute,
+            'events': football.events.asMap().entries.map((entry) => {
+              'id': 'app-${entry.key}-${football.minute}',
+              'type': entry.value.type,
+              'team': entry.value.isTeam1 ? 1 : 2,
+              'minute': entry.value.minute,
+            }).toList(),
+            if (isDraw)
+              'shootout': {
+                'team1Goals': shootout1,
+                'team2Goals': shootout2,
+                'winnerId': winnerId,
+              },
+          },
+        };
+        await ref.read(matchControllerProvider(arg)).updateSetsWithDetails(
+          p1SetsWon: 0,
+          p2SetsWon: 0,
+          scoreDetails: const [],
+          scoreDetailsExtras: scoreDetails,
+          winnerId: winnerId,
+          expectedRevision: match?.revision,
+        );
+        state = state.copyWith(isSubmitting: false);
+        return;
+      }
       final finalSets = _setsForSubmission();
       final match = ref.read(singleMatchProvider(arg)).value;
       final winnerId = winnerTeam == 1

@@ -23,7 +23,10 @@ import 'package:app_quanly_giaidau/domain/repositories/user_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final tournamentRepositoryProvider = Provider<ITournamentRepository>((ref) {
-  return ApiTournamentRepository(ref.watch(dioClientProvider));
+  return ApiTournamentRepository(
+    ref.watch(dioClientProvider),
+    ref.watch(matchSocketServiceProvider),
+  );
 });
 
 final teamRepositoryProvider = Provider<ITeamRepository>((ref) {

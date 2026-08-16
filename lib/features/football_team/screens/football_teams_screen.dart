@@ -80,6 +80,12 @@ class _FootballTeamsScreenState extends ConsumerState<FootballTeamsScreen> {
     catch (error) { if (mounted) _showError(error); }
   }
 
+  Future<void> _cancelInvite(String userId) async {
+    if (_selected == null) return;
+    try { await ref.read(footballTeamApiProvider).cancelFootballTeamInvite(_selected!.id, userId); await _load(); }
+    catch (error) { if (mounted) _showError(error); }
+  }
+
   Future<void> _changeRole(String userId, String role) async {
     if (_selected == null) return;
     try {
@@ -127,7 +133,7 @@ class _FootballTeamsScreenState extends ConsumerState<FootballTeamsScreen> {
                       child: ListTile(
                         leading: CircleAvatar(child: Text(team.name.substring(0, team.name.length > 1 ? 2 : 1).toUpperCase())),
                         title: Text(team.name),
-                        subtitle: Text('ELO ${team.eloPoints} · ${team.members.length} thành viên'),
+                        subtitle: Text('ELO ${team.eloPoints} · ${team.activeMembers.length} thành viên'),
                         selected: selected?.id == team.id,
                         onTap: () => setState(() {
                           _selected = team;
@@ -195,25 +201,28 @@ class _FootballTeamsScreenState extends ConsumerState<FootballTeamsScreen> {
                               ),
                             ),
                             const Divider(),
-                            ...selected.members.map(
-                              (member) => ListTile(
+                            ...selected.members.map((member) {
+                              final isActive = member.status == null || member.status!.toUpperCase() == 'ACTIVE';
+                              return ListTile(
                                 dense: true,
                                 title: Text(member.userId),
+                                subtitle: isActive ? null : const Text('Đang mời - chờ xác nhận', style: TextStyle(fontStyle: FontStyle.italic)),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    DropdownButton<String>(
-                                      value: const {'CAPTAIN', 'MANAGER', 'PLAYER'}.contains(member.role) ? member.role : 'PLAYER',
-                                      items: const [
-                                        DropdownMenuItem(value: 'CAPTAIN', child: Text('Đội trưởng')),
-                                        DropdownMenuItem(value: 'MANAGER', child: Text('Quản lý')),
-                                        DropdownMenuItem(value: 'PLAYER', child: Text('Thành viên')),
-                                      ],
-                                      onChanged: (value) {
-                                        if (value != null && value != member.role) _changeRole(member.userId, value);
-                                      },
-                                    ),
-                                    if (member.role != 'CAPTAIN')
+                                    if (isActive)
+                                      DropdownButton<String>(
+                                        value: const {'CAPTAIN', 'MANAGER', 'PLAYER'}.contains(member.role) ? member.role : 'PLAYER',
+                                        items: const [
+                                          DropdownMenuItem(value: 'CAPTAIN', child: Text('Đội trưởng')),
+                                          DropdownMenuItem(value: 'MANAGER', child: Text('Quản lý')),
+                                          DropdownMenuItem(value: 'PLAYER', child: Text('Thành viên')),
+                                        ],
+                                        onChanged: (value) {
+                                          if (value != null && value != member.role) _changeRole(member.userId, value);
+                                        },
+                                      ),
+                                    if (isActive && member.role != 'CAPTAIN')
                                       IconButton(
                                         onPressed: () async {
                                           try {
@@ -225,10 +234,16 @@ class _FootballTeamsScreenState extends ConsumerState<FootballTeamsScreen> {
                                         },
                                         icon: const Icon(Icons.person_remove_outlined),
                                       ),
+                                    if (!isActive)
+                                      IconButton(
+                                        onPressed: () => _cancelInvite(member.userId),
+                                        tooltip: 'Hủy lời mời',
+                                        icon: const Icon(Icons.close, size: 20),
+                                      ),
                                   ],
                                 ),
-                              ),
-                            ),
+                              );
+                            }),
                           ],
                         ),
                       ),

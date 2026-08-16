@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
 
 /// Bộ lọc môn thể thao dạng chip ngang, dùng chung cho mọi tab
-class SportFilterChips extends StatelessWidget {
+class SportFilterChips extends ConsumerWidget {
   final String selectedSport;
   final ValueChanged<String> onSportChanged;
 
@@ -14,7 +15,9 @@ class SportFilterChips extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categories =
+        ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
     return SizedBox(
       height: 38,
       child: ListView(
@@ -24,10 +27,10 @@ class SportFilterChips extends StatelessWidget {
         children: [
           _buildChip(context, 'Tất cả', 'all'),
           const SizedBox(width: 8),
-          ...AppConstants.sportNames.entries.map((e) {
+          ...categories.map((category) {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: _buildChip(context, e.value, e.key),
+              child: _buildChip(context, category.name, category.slug),
             );
           }),
         ],
@@ -43,9 +46,7 @@ class SportFilterChips extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.primary
-              : context.colors.bgCard,
+          color: isSelected ? AppTheme.primary : context.colors.bgCard,
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: isSelected ? AppTheme.primary : context.colors.border,

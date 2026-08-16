@@ -26,6 +26,12 @@ abstract class ITournamentRepository {
     bool rankingConsent = false,
   });
   Future<FootballRosterStatus> getFootballRosterStatus({required String tournamentId, required String participantId});
+  Future<FootballRosterStatus> updateFootballRoster({
+    required String tournamentId,
+    required String participantId,
+    required List<String> memberIds,
+    required List<String> reserveMemberIds,
+  });
   Future<void> respondFootballRoster({required String tournamentId, required String participantId, required String action});
   Stream<Tournament?> watch(String id);
   Stream<List<Tournament>> watchAll();

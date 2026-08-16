@@ -21,6 +21,7 @@ import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
@@ -126,8 +127,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final message = e.code == 'camera_access_denied'
           ? 'Bạn chưa cấp quyền camera cho Sporto.'
           : e.code == 'photo_access_denied'
-              ? 'Bạn chưa cấp quyền thư viện ảnh cho Sporto.'
-              : 'Không thể mở camera hoặc thư viện ảnh.';
+          ? 'Bạn chưa cấp quyền thư viện ảnh cho Sporto.'
+          : 'Không thể mở camera hoặc thư viện ảnh.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
@@ -485,7 +486,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             builder: (context, snapshot) {
               final info = snapshot.data;
               if (info == null) return const SizedBox(height: 8);
-              final build = info.buildNumber.isEmpty ? '' : ' (${info.buildNumber})';
+              final build = info.buildNumber.isEmpty
+                  ? ''
+                  : ' (${info.buildNumber})';
               return Padding(
                 padding: const EdgeInsets.only(bottom: 22),
                 child: Text(
@@ -501,24 +504,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildSportFilterChips(AppColorsExtension colors) {
-    final sports = const [
+    final categories =
+        ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
+    final sports = [
       {'id': 'all', 'label': 'Tất cả', 'icon': Icons.grid_view_rounded},
-      {
-        'id': 'pickleball',
-        'label': 'Pickleball',
-        'icon': Icons.sports_tennis_rounded,
-      },
-      {
-        'id': 'badminton',
-        'label': 'Cầu lông',
-        'icon': Icons.sports_tennis_outlined,
-      },
-      {'id': 'table_tennis', 'label': 'Bóng bàn', 'icon': Icons.sports_rounded},
-      {
-        'id': 'tennis',
-        'label': 'Tennis',
-        'icon': Icons.sports_baseball_rounded,
-      },
+      ...categories.map(
+        (category) => <String, Object>{
+          'id': category.slug,
+          'label': category.name,
+          'icon': _profileSportIcon(category.slug),
+        },
+      ),
     ];
 
     return SizedBox(
@@ -582,6 +578,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  IconData _profileSportIcon(String slug) {
+    switch (slug.toLowerCase()) {
+      case 'tennis':
+        return Icons.sports_tennis_rounded;
+      case 'football':
+        return Icons.sports_soccer_rounded;
+      case 'badminton':
+        return Icons.sports_tennis_outlined;
+      case 'table_tennis':
+        return Icons.sports_rounded;
+      default:
+        return Icons.sports_handball_rounded;
+    }
+  }
+
   Widget _buildTabButton(int index, String label, IconData icon) {
     final colors = context.colors;
     final isSelected = _activeTab == index;
@@ -625,11 +636,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── COVER + AVATAR ─────────────────────────────────────────────────
   Widget _buildCoverAndAvatar(BuildContext context, UserProfile profile) {
     final colors = context.colors;
-    final rankings = ref.watch(userRankingsProvider).asData?.value ?? const <PlayerRanking>[];
+    final rankings =
+        ref.watch(userRankingsProvider).asData?.value ??
+        const <PlayerRanking>[];
     final playedRankings = rankings.where((r) => r.matchesPlayed > 0).toList()
       ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
     final bestRanking = playedRankings.isEmpty ? null : playedRankings.first;
-    final tierColor = RankTierColors.isRanked(bestRanking?.tierName, matchesPlayed: bestRanking?.matchesPlayed)
+    final tierColor =
+        RankTierColors.isRanked(
+          bestRanking?.tierName,
+          matchesPlayed: bestRanking?.matchesPlayed,
+        )
         ? RankTierColors.fromTierName(bestRanking?.tierName)
         : colors.border;
     return Stack(
@@ -1482,12 +1499,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return workspaceAsync.when(
       data: (workspace) {
-        final roleGroups = <({String label, IconData icon, Color color, List<dynamic> items})>[
-          (label: 'Chủ giải', icon: Icons.workspace_premium_rounded, color: const Color(0xFF059669), items: workspace.organizedTournaments),
-          (label: 'Ban tổ chức', icon: Icons.groups_rounded, color: AppTheme.primary, items: workspace.coOrganizerTournaments),
-          (label: 'Trọng tài', icon: Icons.gavel_rounded, color: AppTheme.refereeColor, items: workspace.refereeTournaments),
-          (label: 'Người chơi', icon: Icons.sports_tennis_rounded, color: context.colors.info, items: workspace.participatingTournaments),
-        ];
+        final roleGroups =
+            <({String label, IconData icon, Color color, List<dynamic> items})>[
+              (
+                label: 'Chủ giải',
+                icon: Icons.workspace_premium_rounded,
+                color: const Color(0xFF059669),
+                items: workspace.organizedTournaments,
+              ),
+              (
+                label: 'Ban tổ chức',
+                icon: Icons.groups_rounded,
+                color: AppTheme.primary,
+                items: workspace.coOrganizerTournaments,
+              ),
+              (
+                label: 'Trọng tài',
+                icon: Icons.gavel_rounded,
+                color: AppTheme.refereeColor,
+                items: workspace.refereeTournaments,
+              ),
+              (
+                label: 'Người chơi',
+                icon: Icons.sports_tennis_rounded,
+                color: context.colors.info,
+                items: workspace.participatingTournaments,
+              ),
+            ];
         final tournaments = roleGroups.expand((group) => group.items).toList();
         final visible = tournaments.take(4).toList();
 
@@ -1546,13 +1584,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 );
               }),
               Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: TextButton.icon(
-                    onPressed: () => context.go('/dashboard'),
-                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                    label: Text('Xem tất cả (${tournaments.length})'),
-                  ),
+                padding: const EdgeInsets.all(8),
+                child: TextButton.icon(
+                  onPressed: () => context.go('/dashboard'),
+                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                  label: Text('Xem tất cả (${tournaments.length})'),
                 ),
+              ),
             ],
           ),
         );
@@ -2130,13 +2168,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget _buildTournamentRow(
     dynamic t,
     AppColorsExtension colors,
-    BuildContext context,
-    {
+    BuildContext context, {
     required String roleLabel,
     required Color roleColor,
     required IconData roleIcon,
-    }
-  ) {
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final rawStatus = t.status?.toString() ?? 'draft';
     final statusLabel = StatusHelper.getTournamentStatusLabel(rawStatus);
@@ -2304,13 +2340,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         '/payments',
       ),
       _MenuItem(Icons.emoji_events_rounded, l.settingsSeries, '/series'),
-      _MenuItem(Icons.mail_outline_rounded, l.settingsClubInvites, '/club-invites'),
+      _MenuItem(
+        Icons.mail_outline_rounded,
+        l.settingsClubInvites,
+        '/club-invites',
+      ),
       _MenuItem(
         Icons.lock_outline_rounded,
         l.settingsChangePassword,
         '/profile/change-password',
       ),
-      _MenuItem(Icons.leaderboard_rounded, l.settingsEloHistory, '/profile/elo'),
+      _MenuItem(
+        Icons.leaderboard_rounded,
+        l.settingsEloHistory,
+        '/profile/elo',
+      ),
     ];
 
     return Container(
@@ -2446,7 +2490,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                      l.settingsDarkMode,
+                    l.settingsDarkMode,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -2486,7 +2530,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   const SizedBox(width: 14),
                   Text(
-                      l.settingsLogout,
+                    l.settingsLogout,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,

@@ -22,9 +22,7 @@ class ApiCommunityRepository implements ICommunityRepository {
     String? provinceCode,
     int limit = 20,
   }) async {
-    _log.info(
-      'Lấy danh sách CLB: search=$search, provinceCode=$provinceCode',
-    );
+    _log.info('Lấy danh sách CLB: search=$search, provinceCode=$provinceCode');
     try {
       final params = <String, dynamic>{'limit': limit};
       if (search != null && search.isNotEmpty) params['search'] = search;
@@ -142,7 +140,8 @@ class ApiCommunityRepository implements ICommunityRepository {
         queryParameters: {
           'limit': limit,
           if (status != null && status.isNotEmpty) 'status': status,
-          if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+          if (search != null && search.trim().isNotEmpty)
+            'search': search.trim(),
           if (mentionableOnly) 'mentionable': true,
         },
       );
@@ -219,7 +218,9 @@ class ApiCommunityRepository implements ICommunityRepository {
             .toList();
       }
       _log.warning('getTournaments status=${response.statusCode}');
-      throw StateError('Unexpected tournaments response: ${response.statusCode}');
+      throw StateError(
+        'Unexpected tournaments response: ${response.statusCode}',
+      );
     } catch (e, stack) {
       _log.error('Lỗi lấy giải đấu của CLB', e, stack);
       rethrow;
@@ -297,6 +298,46 @@ class ApiCommunityRepository implements ICommunityRepository {
     } catch (e, stack) {
       _log.error('Lỗi lấy gallery CLB', e, stack);
       return [];
+    }
+  }
+
+  @override
+  Future<bool> removeGalleryItem(String communityId, String imageId) async {
+    _log.info('Xoá ảnh gallery: $imageId trong CLB $communityId');
+    try {
+      final response = await _dioClient.dio.delete(
+        '/communities/$communityId/gallery/$imageId',
+      );
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e, stack) {
+      _log.error('Lỗi xoá ảnh gallery', e, stack);
+      return false;
+    }
+  }
+
+  @override
+  Future<GalleryImageModel?> addGalleryItem(
+    String communityId, {
+    required String imageUrl,
+    String? caption,
+  }) async {
+    try {
+      final response = await _dioClient.dio.post(
+        "/communities/$communityId/gallery",
+        data: {
+          "imageUrl": imageUrl,
+          if (caption != null && caption.trim().isNotEmpty)
+            "caption": caption.trim(),
+        },
+      );
+      final raw = response.data;
+      final data = raw is Map && raw["data"] is Map ? raw["data"] : raw;
+      return data is Map<String, dynamic>
+          ? GalleryImageModel.fromJson(data)
+          : null;
+    } catch (e, stack) {
+      _log.error("Lỗi thêm ảnh gallery CLB", e, stack);
+      rethrow;
     }
   }
 
@@ -656,15 +697,23 @@ class ApiCommunityRepository implements ICommunityRepository {
 
   @override
   Future<CommunitySocialSettings> getSocialSettings(String communityId) async {
-    final response = await _dioClient.dio.get('/communities/$communityId/social-settings');
+    final response = await _dioClient.dio.get(
+      '/communities/$communityId/social-settings',
+    );
     final raw = response.data is Map ? response.data as Map : const {};
     final data = raw['data'] is Map ? raw['data'] as Map : raw;
     return CommunitySocialSettings.fromJson(Map<String, dynamic>.from(data));
   }
 
   @override
-  Future<CommunitySocialSettings> updateSocialSettings(String communityId, CommunitySocialSettings settings) async {
-    final response = await _dioClient.dio.patch('/communities/$communityId/social-settings', data: settings.toJson());
+  Future<CommunitySocialSettings> updateSocialSettings(
+    String communityId,
+    CommunitySocialSettings settings,
+  ) async {
+    final response = await _dioClient.dio.patch(
+      '/communities/$communityId/social-settings',
+      data: settings.toJson(),
+    );
     final raw = response.data is Map ? response.data as Map : const {};
     final data = raw['data'] is Map ? raw['data'] as Map : raw;
     return CommunitySocialSettings.fromJson(Map<String, dynamic>.from(data));
@@ -672,15 +721,30 @@ class ApiCommunityRepository implements ICommunityRepository {
 
   @override
   Future<List<CommunityTagPreset>> getTagPresets(String communityId) async {
-    final response = await _dioClient.dio.get('/communities/$communityId/tag-presets');
+    final response = await _dioClient.dio.get(
+      '/communities/$communityId/tag-presets',
+    );
     final raw = response.data is Map ? response.data as Map : const {};
     final data = raw['data'] is List ? raw['data'] as List : const [];
-    return data.map((item) => CommunityTagPreset.fromJson(Map<String, dynamic>.from(item as Map))).toList();
+    return data
+        .map(
+          (item) => CommunityTagPreset.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
+        )
+        .toList();
   }
 
   @override
-  Future<CommunityTagPreset> createTagPreset(String communityId, {required String name, required String color}) async {
-    final response = await _dioClient.dio.post('/communities/$communityId/tag-presets', data: {'name': name.trim(), 'color': color});
+  Future<CommunityTagPreset> createTagPreset(
+    String communityId, {
+    required String name,
+    required String color,
+  }) async {
+    final response = await _dioClient.dio.post(
+      '/communities/$communityId/tag-presets',
+      data: {'name': name.trim(), 'color': color},
+    );
     final raw = response.data is Map ? response.data as Map : const {};
     final data = raw['data'] is Map ? raw['data'] as Map : raw;
     return CommunityTagPreset.fromJson(Map<String, dynamic>.from(data));
@@ -688,6 +752,8 @@ class ApiCommunityRepository implements ICommunityRepository {
 
   @override
   Future<void> deleteTagPreset(String communityId, String presetId) async {
-    await _dioClient.dio.delete('/communities/$communityId/tag-presets/$presetId');
+    await _dioClient.dio.delete(
+      '/communities/$communityId/tag-presets/$presetId',
+    );
   }
 }

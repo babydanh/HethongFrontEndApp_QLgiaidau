@@ -45,6 +45,7 @@ class Tournament {
   final bool hideFeaturedCardText;
   final String? inviteCode;
   final bool isLite;
+  final bool isRegistrationLocked;
   // Team sport (bóng đá): sân 5/7/11 → đội nhiều người
   final int? teamSize;
   final int? minTeamSize;
@@ -90,6 +91,7 @@ class Tournament {
     this.hideFeaturedCardText = false,
     this.inviteCode,
     this.isLite = false,
+    this.isRegistrationLocked = false,
     this.teamSize,
     this.minTeamSize,
     this.maxReserve,
@@ -243,10 +245,15 @@ class Tournament {
       registrationEndDate: json['registrationEndDate'] != null
           ? DateParser.parseDate(json['registrationEndDate'])
           : null,
-      venueName: (json['venue'] is Map ? (json['venue'] as Map)['name'] : null)?.toString(),
+      venueName: (json['venue'] is Map ? (json['venue'] as Map)['name'] : null)
+          ?.toString(),
       city: json['city']?.toString(),
       locationAddress: json['venue'] is Map
-          ? ((json['venue'] as Map)['locationAddress'] ?? (json['venue'] as Map)['location_address'] ?? json['locationAddress'] ?? json['location_address'])?.toString()
+          ? ((json['venue'] as Map)['locationAddress'] ??
+                    (json['venue'] as Map)['location_address'] ??
+                    json['locationAddress'] ??
+                    json['location_address'])
+                ?.toString()
           : (json['locationAddress'] ?? json['location_address'])?.toString(),
       prizeDescription: json['prizeDescription'] ?? json['prize_description'],
       contactInfo: parsedContactInfo,
@@ -257,9 +264,14 @@ class Tournament {
       inviteCode: json['inviteCode']?.toString(),
       // isLite = LOẠI GIẢI lite (nhanh). KHÔNG nhầm với configMode (cách tính điểm LITE/STRICT).
       isLite: json['isLite'] == true || config['isLite'] == true,
-      // Team sport (bóng đá): đọc teamSize/minTeamSize từ tournamentConfig.
-      teamSize: _toInt(config['teamSize']),
-      minTeamSize: _toInt(config['minTeamSize']),
+      isRegistrationLocked: json['isRegistrationLocked'] == true,
+      // Team sport (bóng đá): giữ tương thích bản ghi cũ chưa có selector sân.
+      teamSize:
+          _toInt(config['teamSize']) ??
+          (sportVal.toLowerCase() == 'football' ? 11 : null),
+      minTeamSize:
+          _toInt(config['minTeamSize']) ??
+          (sportVal.toLowerCase() == 'football' ? 11 : null),
       maxReserve: _toInt(config['maxReserve']),
     );
   }
@@ -321,6 +333,7 @@ class Tournament {
       if (contactInfo != null) 'contactInfo': contactInfo,
       'divisions': divisions.map((e) => e.toJson()).toList(),
       'isRanked': isRanked,
+      'isRegistrationLocked': isRegistrationLocked,
       if (registrationMode != null) 'registrationMode': registrationMode,
       if (inviteCode != null) 'inviteCode': inviteCode,
     };
@@ -366,6 +379,7 @@ class Tournament {
     bool? hideFeaturedCardText,
     String? inviteCode,
     bool? isLite,
+    bool? isRegistrationLocked,
     int? teamSize,
     int? minTeamSize,
     int? maxReserve,
@@ -414,6 +428,7 @@ class Tournament {
       hideFeaturedCardText: hideFeaturedCardText ?? this.hideFeaturedCardText,
       inviteCode: inviteCode ?? this.inviteCode,
       isLite: isLite ?? this.isLite,
+      isRegistrationLocked: isRegistrationLocked ?? this.isRegistrationLocked,
     );
   }
 
@@ -453,12 +468,13 @@ class TournamentDivision {
     final divisionConfig = json['tournamentConfig'] is Map
         ? Map<String, dynamic>.from(json['tournamentConfig'] as Map)
         : json['config'] is Map
-            ? Map<String, dynamic>.from(json['config'] as Map)
-            : const <String, dynamic>{};
+        ? Map<String, dynamic>.from(json['config'] as Map)
+        : const <String, dynamic>{};
     final groupsConfig = divisionConfig['groupsConfig'] is Map
         ? Map<String, dynamic>.from(divisionConfig['groupsConfig'] as Map)
         : const <String, dynamic>{};
-    final rawLegs = json['roundRobinLegs'] ??
+    final rawLegs =
+        json['roundRobinLegs'] ??
         json['roundsToPlay'] ??
         divisionConfig['roundRobinLegs'] ??
         groupsConfig['roundsToPlay'];
@@ -470,8 +486,8 @@ class TournamentDivision {
           json['matchType']?.toString() ??
           json['match_type']?.toString() ??
           'SINGLES',
-      bracketType: json['bracketType']?.toString() ??
-          json['bracket_type']?.toString(),
+      bracketType:
+          json['bracketType']?.toString() ?? json['bracket_type']?.toString(),
       roundRobinLegs: int.tryParse((rawLegs ?? '').toString()),
       genderRestriction:
           json['genderRestriction']?.toString() ??

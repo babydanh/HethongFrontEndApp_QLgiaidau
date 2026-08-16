@@ -101,7 +101,7 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
     try {
       final team = await ref.read(footballTeamApiProvider).getFootballTeam(teamId);
       if (!mounted || _selected != teamId) return;
-      final members = team.members.where((member) => member.status == null || member.status == 'ACTIVE').toList();
+      final members = team.activeMembers;
       String? currentUserId;
       try {
         currentUserId = (await ref.read(userProfileProvider.future)).id;
@@ -111,6 +111,18 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
       setState(() {
         _members = members;
         final ids = members.map((member) => member.userId).where((id) => id.isNotEmpty).toList();
+        final savedRoster = _rosterStatus?.roster;
+        if (savedRoster != null && savedRoster.isNotEmpty) {
+          _selectedMemberIds = savedRoster
+              .where((member) => member.role == 'MAIN' && ids.contains(member.userId))
+              .map((member) => member.userId)
+              .toSet();
+          _selectedReserveIds = savedRoster
+              .where((member) => member.role == 'RESERVE' && ids.contains(member.userId))
+              .map((member) => member.userId)
+              .toSet();
+          return;
+        }
         final orderedIds = [
           if (currentUserId != null && ids.contains(currentUserId)) currentUserId,
           ...ids.where((id) => id != currentUserId),
@@ -129,6 +141,20 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
     if (team == null) return;
     setState(() => _saving = true);
     try {
+      if (widget.participantId != null) {
+        final status = await ref.read(tournamentRepositoryProvider).updateFootballRoster(
+          tournamentId: widget.tournamentId,
+          participantId: widget.participantId!,
+          memberIds: _selectedMemberIds.toList(),
+          reserveMemberIds: _selectedReserveIds.toList(),
+        );
+        if (!mounted) return;
+        setState(() => _rosterStatus = status);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_selectedMemberIds.length < widget.teamSize ? 'Đã lưu roster nháp.' : 'Đã cập nhật roster đội.')),
+        );
+        return;
+      }
       final result = await ref.read(tournamentRepositoryProvider).registerParticipant(
         tournamentId: widget.tournamentId,
         teamName: team.name,
@@ -141,9 +167,17 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
       );
       if (!mounted) return;
       if (result.entryFee > 0 && result.participantId.isNotEmpty) {
-        context.push('/payment/checkout', extra: {'tournamentId': widget.tournamentId, 'participantId': result.participantId, 'divisionId': widget.divisionId, 'amount': result.entryFee});
+        await context.push('/payment/checkout', extra: {'tournamentId': widget.tournamentId, 'participantId': result.participantId, 'divisionId': widget.divisionId, 'amount': result.entryFee});
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đăng ký đội thành công.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _selectedMemberIds.length < widget.teamSize
+                  ? 'Đã lưu đăng ký nháp. Hãy bổ sung đủ đội hình trước khi BTC khóa roster.'
+                  : 'Đăng ký đội thành công.',
+            ),
+          ),
+        );
         context.pop();
       }
     } catch (error) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorParser.parse(error, 'Không thể đăng ký đội')))); }
@@ -178,6 +212,7 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
       else RadioGroup<String>(
         groupValue: _selected,
         onChanged: (value) {
+          if (widget.participantId != null) return;
           if (value == null) return;
           setState(() => _selected = value);
           _loadMembers(value);
@@ -194,11 +229,11 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
         const SizedBox(height: 12),
         const Text('Đội hình đăng ký', style: TextStyle(fontWeight: FontWeight.w700)),
         const SizedBox(height: 4),
-        Text('Chọn đúng ${widget.teamSize} cầu thủ chính và tối đa ${widget.maxReserve} dự bị.', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+        Text('Chọn tối đa ${widget.teamSize} cầu thủ chính và tối đa ${widget.maxReserve} dự bị. Có thể bổ sung sau khi lưu nháp.', style: const TextStyle(fontSize: 12, color: Colors.black54)),
         ..._members.map((member) => CheckboxListTile(
           dense: true,
           value: _selectedMemberIds.contains(member.userId) || _selectedReserveIds.contains(member.userId),
-          onChanged: (_) => _showRosterRolePicker(member),
+          onChanged: _rosterStatus?.entryStatus == 'LOCKED' ? null : (_) => _showRosterRolePicker(member),
           title: Text(member.userId, maxLines: 1, overflow: TextOverflow.ellipsis),
           subtitle: Text(_selectedMemberIds.contains(member.userId) ? 'Chính • ${member.role}' : _selectedReserveIds.contains(member.userId) ? 'Dự bị • ${member.role}' : member.role),
         )),
@@ -208,7 +243,9 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
       const SizedBox(height: 8),
       Row(children: [Expanded(child: TextField(controller: _name, decoration: const InputDecoration(hintText: 'Tên đội'))), const SizedBox(width: 8), FilledButton(onPressed: _saving ? null : _create, child: const Text('Tạo'))]),
       const SizedBox(height: 20),
-      FilledButton.icon(onPressed: _saving || _loading || _selected == null || _selectedMemberIds.length != widget.teamSize || _selectedReserveIds.length > widget.maxReserve ? null : _register, icon: const Icon(Icons.check), label: const Text('Đăng ký đội đã chọn')),
+      if (_rosterStatus?.entryStatus == 'LOCKED')
+        const Card(child: Padding(padding: EdgeInsets.all(12), child: Text('Roster đã khóa, chỉ có thể xem đội hình.'))),
+      FilledButton.icon(onPressed: _saving || _loading || _rosterStatus?.entryStatus == 'LOCKED' || _selected == null || _selectedMemberIds.isEmpty || _selectedReserveIds.length > widget.maxReserve ? null : _register, icon: const Icon(Icons.check), label: Text(widget.participantId != null ? 'Cập nhật roster' : _selectedMemberIds.length < widget.teamSize ? 'Lưu đăng ký nháp' : 'Đăng ký đội đã chọn')),
     ]),
   );
 

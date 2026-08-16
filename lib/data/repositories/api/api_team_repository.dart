@@ -68,6 +68,10 @@ class ApiTeamRepository implements ITeamRepository {
     await _dioClient.dio.post('/football-teams/$teamId/invites', data: {'userId': userId});
   }
 
+  Future<void> cancelFootballTeamInvite(String teamId, String userId) async {
+    await _dioClient.dio.delete('/football-teams/$teamId/invites/$userId');
+  }
+
   Future<void> updateFootballTeamMember(String teamId, String userId, String role) async {
     await _dioClient.dio.patch('/football-teams/$teamId/members/$userId', data: {'role': role});
   }
@@ -269,6 +273,11 @@ class FootballTeamSummary {
   final int matchesPlayed;
   final int matchesWon;
   final int winStreak;
+
+  /// Thành viên đã tham gia (ACTIVE); loại INVITED/DECLINED/LEFT/REMOVED.
+  List<FootballTeamMemberSummary> get activeMembers => members
+      .where((member) => member.status == null || member.status!.toUpperCase() == 'ACTIVE')
+      .toList();
 
   factory FootballTeamSummary.fromJson(Map<String, dynamic> json) {
     final team = json['team'] is Map ? Map<String, dynamic>.from(json['team']) : json;

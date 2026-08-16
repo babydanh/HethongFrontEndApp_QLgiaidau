@@ -32,7 +32,7 @@ import 'package:app_quanly_giaidau/features/payment/screens/payos_verify_screen.
 import 'package:app_quanly_giaidau/features/payment/screens/payment_result_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/profile_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/user_profile_screen.dart';
-import 'package:app_quanly_giaidau/features/profile/screens/edit_profile_screen.dart';
+import 'package:app_quanly_giaidau/features/profile/screens/settings_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/change_password_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -392,6 +392,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
         routes: [
           GoRoute(
+            path: 'chat',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              final name = state.uri.queryParameters['name'] ?? 'Cộng đồng';
+              return ClubChatScreen(communityId: id, communityName: name);
+            },
+          ),
+          GoRoute(
             path: 'create-tournament',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
@@ -448,7 +456,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: 'edit',
-            builder: (context, state) => const EditProfileScreen(),
+            builder: (context, state) => const SettingsScreen(),
           ),
           GoRoute(
             path: 'change-password',
@@ -456,7 +464,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: 'settings',
-            builder: (context, state) => const EditProfileScreen(),
+            builder: (context, state) => const SettingsScreen(),
           ),
           GoRoute(
             path: 'elo',

@@ -120,6 +120,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
           '/rankings/football-teams',
           queryParameters: {
             'categoryId': categoryId,
+            'communityId': widget.clubId,
             'limit': widget.compact ? 3 : 20,
           },
         );
@@ -373,7 +374,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         if (widget.compact) ...[
           const SizedBox(height: 8),
           GestureDetector(
-            onTap: () => context.push('/community/${widget.clubId}?tab=rankings'),
+            onTap: () => context.push('/club/${widget.clubId}'),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 6),
               decoration: BoxDecoration(

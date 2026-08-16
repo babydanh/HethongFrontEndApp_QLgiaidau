@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
+import 'package:app_quanly_giaidau/core/services/match_socket_service.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -11,9 +14,10 @@ import 'package:dio/dio.dart';
 class ApiTournamentRepository implements ITournamentRepository {
   static const _log = AppLogger('ApiTournamentRepo');
   final DioClient _dioClient;
+  final MatchSocketService? _matchSocketService;
   final Map<String, Tournament> _tournamentCache = {};
 
-  ApiTournamentRepository(this._dioClient);
+  ApiTournamentRepository(this._dioClient, [this._matchSocketService]);
 
   @override
   Future<Tournament> create(Tournament tournament) async {
@@ -356,6 +360,26 @@ class ApiTournamentRepository implements ITournamentRepository {
   }
 
   @override
+  Future<FootballRosterStatus> updateFootballRoster({
+    required String tournamentId,
+    required String participantId,
+    required List<String> memberIds,
+    required List<String> reserveMemberIds,
+  }) async {
+    final response = await _dioClient.dio.patch(
+      '/tournaments/$tournamentId/participants/$participantId/football-roster',
+      data: {
+        'memberIds': memberIds,
+        'reserveMemberIds': reserveMemberIds,
+      },
+    );
+    final body = response.data;
+    final data = body is Map && body['data'] is Map ? body['data'] : body;
+    if (data is! Map) throw const FormatException('Phản hồi cập nhật roster không hợp lệ.');
+    return FootballRosterStatus.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  @override
   Future<void> respondFootballRoster({required String tournamentId, required String participantId, required String action}) async {
     if (action != 'CONFIRM' && action != 'DECLINE') {
       throw ArgumentError.value(action, 'action', 'Must be CONFIRM or DECLINE');
@@ -395,11 +419,39 @@ class ApiTournamentRepository implements ITournamentRepository {
     if (initial != null) lastKnown = initial;
     yield lastKnown;
 
-    yield* Stream.periodic(const Duration(seconds: 15)).asyncMap((_) async {
-      final updated = await getById(id);
-      if (updated != null) lastKnown = updated;
-      return lastKnown;
-    });
+    final updates = StreamController<Tournament?>();
+    Timer? refreshTimer;
+    StreamSubscription<Map<String, dynamic>>? registrationSubscription;
+    Future<void> refresh() async {
+      try {
+        final updated = await getById(id);
+        if (updated != null) lastKnown = updated;
+        if (!updates.isClosed) updates.add(lastKnown);
+      } catch (error, stack) {
+        _log.error('Keeping cached tournament after realtime refresh failure', error, stack);
+      }
+    }
+
+    final socketService = _matchSocketService;
+    if (socketService != null) {
+      registrationSubscription = socketService.onRegistrationUpdate
+          .where((payload) => payload['tournamentId']?.toString() == id)
+          .listen((_) => refresh());
+      socketService.connect(null, joinMatch: false);
+      socketService.joinTournament(id);
+    }
+    refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) => refresh());
+
+    try {
+      yield* updates.stream;
+    } finally {
+      refreshTimer.cancel();
+      if (registrationSubscription != null) {
+        await registrationSubscription.cancel();
+      }
+      if (socketService != null) socketService.leaveTournament(id);
+      await updates.close();
+    }
   }
 
   List<Tournament> _parseTournamentList(dynamic rawData) {

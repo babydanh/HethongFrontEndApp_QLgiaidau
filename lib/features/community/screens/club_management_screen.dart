@@ -6,7 +6,9 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
+import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
+import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 
 /// Màn hình Điều phối CLB — dành cho OWNER/ADMIN/MODERATOR.
@@ -29,7 +31,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   List<CommunityMemberModel> _joinRequests = [];
   List<CommunityMemberModel> _invitedMembers = [];
   List<CommunityMemberModel> _bannedMembers = [];
+  List<CommunityPostModel> _pendingPosts = [];
   bool _isLoading = true;
+  bool _isModeratingPost = false;
 
   // Invite state
   final _searchCtrl = TextEditingController();
@@ -53,16 +57,19 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
     setState(() => _isLoading = true);
     try {
       final repo = ref.read(communityRepositoryProvider);
-      final results = await Future.wait<List<CommunityMemberModel>>([
+      final results = await Future.wait<Object>([
         repo.getMembers(widget.clubId, limit: 200),
         repo.getJoinRequests(widget.clubId),
+        ref.read(communitySocialRepositoryProvider).getPendingPosts(widget.clubId),
       ]);
-      final all = results[0];
-      final requests = results[1];
+      final all = results[0] as List<CommunityMemberModel>;
+      final requests = results[1] as List<CommunityMemberModel>;
+      final pendingPosts = results[2] as List<CommunityPostModel>;
 
       setState(() {
         _allMembers = all;
         _joinRequests = requests.where((r) => r.status == 'PENDING').toList();
+        _pendingPosts = pendingPosts;
         _invitedMembers = all.where((m) => m.status.toUpperCase() == 'INVITED').toList();
         _bannedMembers = all.where((m) => m.status.toUpperCase() == 'BANNED').toList();
         _isLoading = false;
@@ -110,6 +117,8 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                 children: [
                   _buildStatsRow(colors),
                   const SizedBox(height: 16),
+                  _buildPendingPostsSection(colors),
+                  const SizedBox(height: 16),
                   _buildTournamentsManagementSection(colors),
                   const SizedBox(height: 16),
                   _buildJoinRequestsSection(colors),
@@ -125,14 +134,81 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
     );
   }
 
+  Widget _buildPendingPostsSection(AppColorsExtension colors) {
+    final hasPosts = _pendingPosts.isNotEmpty;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader('Bài viết chờ duyệt (${_pendingPosts.length})', const Color(0xFFF59E0B), colors),
+          const SizedBox(height: 10),
+          if (!hasPosts)
+            Text('Không có bài viết chờ duyệt.', style: TextStyle(color: colors.textMuted, fontSize: 12))
+          else
+            ..._pendingPosts.map((post) => _buildPendingPostCard(post, colors)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPendingPostCard(CommunityPostModel post, AppColorsExtension colors) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.bgSurface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: colors.borderLight),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(post.authorName, style: TextStyle(fontWeight: FontWeight.w700, color: colors.textPrimary)),
+          if (post.text.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(post.text, maxLines: 4, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.textSecondary, fontSize: 12)),
+          ],
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: OutlinedButton(onPressed: _isModeratingPost ? null : () => _moderatePost(post, 'REJECTED'), child: const Text('Từ chối'))),
+              const SizedBox(width: 8),
+              Expanded(child: FilledButton(onPressed: _isModeratingPost ? null : () => _moderatePost(post, 'PUBLISHED'), child: const Text('Duyệt'))),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _moderatePost(CommunityPostModel post, String status) async {
+    setState(() => _isModeratingPost = true);
+    try {
+      await ref.read(communitySocialRepositoryProvider).moderatePost(widget.clubId, post.id, status: status);
+      if (mounted) {
+        setState(() => _pendingPosts.removeWhere((item) => item.id == post.id));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(status == 'PUBLISHED' ? 'Đã duyệt bài viết.' : 'Đã từ chối bài viết.')));
+      }
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không thể xử lý bài viết.')));
+    } finally {
+      if (mounted) setState(() => _isModeratingPost = false);
+    }
+  }
+
   // ─── Stats ───────────────────────────────────────────────────
   Widget _buildStatsRow(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context)!;
     final stats = [
-      (l10n.club_activeMembers, '$_activeCount', colors.textPrimary),
-      (l10n.club_pendingRequests, '${_joinRequests.length}', const Color(0xFFF59E0B)),
-      (l10n.club_invited, '${_invitedMembers.length}', const Color(0xFF6366F1)),
-      (l10n.club_banned, '${_bannedMembers.length}', const Color(0xFFEF4444)),
+      (_l10n.club_activeMembers, '$_activeCount', colors.textPrimary),
+      (_l10n.club_pendingRequests, '${_joinRequests.length}', const Color(0xFFF59E0B)),
+      (_l10n.club_invited, '${_invitedMembers.length}', const Color(0xFF6366F1)),
+      (_l10n.club_banned, '${_bannedMembers.length}', const Color(0xFFEF4444)),
     ];
     return Row(
       children: stats.map((s) => Expanded(
@@ -154,7 +230,6 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
 
   // ─── Tournament Management ────────────────────────────────────
   Widget _buildTournamentsManagementSection(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context)!;
     final tourneysAsync = ref.watch(communityTournamentsProvider(widget.clubId));
 
     return Container(

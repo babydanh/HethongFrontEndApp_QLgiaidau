@@ -44,6 +44,8 @@ class _TournamentRegisterScreenState
   final _nameCtrl = TextEditingController();
   final _inviteCtrl = TextEditingController();
   String? _selectedDiv;
+  StreamSubscription<Map<String, dynamic>>? _registrationSubscription;
+  Timer? _registrationRefreshDebounce;
 
   @override
   void initState() {
@@ -52,6 +54,33 @@ class _TournamentRegisterScreenState
       _selectedDiv = widget.divisionId;
     }
     _checkExistingRegistration();
+    _listenForRegistrationUpdates();
+  }
+
+  void _listenForRegistrationUpdates() {
+    final socket = ref.read(matchSocketServiceProvider);
+    _registrationSubscription = socket.onRegistrationUpdate.listen((payload) {
+      if (!mounted ||
+          payload['tournamentId']?.toString() != widget.tournamentId) {
+        return;
+      }
+      // Socket events are only a hint; providers re-read the authoritative
+      // tournament snapshot, so a dropped event is harmless.
+      ref.invalidate(tournamentProvider(widget.tournamentId));
+      ref.invalidate(tournamentIntroProvider(widget.tournamentId));
+      ref.invalidate(_divisionsProvider(widget.tournamentId));
+      if (_alreadyRegistered) {
+        _registrationRefreshDebounce?.cancel();
+        _registrationRefreshDebounce = Timer(
+          const Duration(milliseconds: 250),
+          () {
+            if (mounted) _checkExistingRegistration();
+          },
+        );
+      }
+    });
+    socket.connect(null, joinMatch: false);
+    socket.joinTournament(widget.tournamentId);
   }
 
   Future<void> _checkExistingRegistration() async {
@@ -135,6 +164,9 @@ class _TournamentRegisterScreenState
 
   @override
   void dispose() {
+    _registrationSubscription?.cancel();
+    _registrationRefreshDebounce?.cancel();
+    ref.read(matchSocketServiceProvider).leaveTournament(widget.tournamentId);
     _nameCtrl.dispose();
     _inviteCtrl.dispose();
     super.dispose();
@@ -338,7 +370,14 @@ class _TournamentRegisterScreenState
         if (tournamentForTeam.teamSize != null) 'teamSize': '${tournamentForTeam.teamSize}',
         if (tournamentForTeam.maxReserve != null) 'maxReserve': '${tournamentForTeam.maxReserve}',
       };
-      context.push(Uri(path: '/register/${widget.tournamentId}/team', queryParameters: query).toString());
+      await context.push(Uri(path: '/register/${widget.tournamentId}/team', queryParameters: query).toString());
+      if (mounted) {
+        // The team flow mutates the participant/division counters outside this
+        // screen. Refresh them when it returns instead of showing stale data.
+        ref.invalidate(tournamentProvider(widget.tournamentId));
+        ref.invalidate(tournamentIntroProvider(widget.tournamentId));
+        ref.invalidate(_divisionsProvider(widget.tournamentId));
+      }
       return;
     }
     // If doubles division, navigate to doubles flow

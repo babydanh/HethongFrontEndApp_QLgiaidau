@@ -158,6 +158,12 @@ class DioClient {
         connectTimeout: const Duration(seconds: 8),
         receiveTimeout: const Duration(seconds: 8),
         sendTimeout: const Duration(seconds: 8),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          if (dotenv.env['APP_API_KEY']?.isNotEmpty == true)
+            'x-app-key': dotenv.env['APP_API_KEY']!,
+        },
       )).post('/auth/mobile/refresh', data: {'refreshToken': refreshToken});
       final rawData = response.data;
       final data = rawData is Map && rawData['data'] is Map

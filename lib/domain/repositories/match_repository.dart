@@ -84,7 +84,8 @@ abstract class IMatchRepository {
   Future<int> getCheerCount(String matchId);
 
   /// Thao tác đặc biệt lên trận đấu — PATCH /matches/:id/operation.
-  /// action: WALKOVER | RETIREMENT | DISQUALIFICATION | OVERRIDE_RESULT.
+  /// action: WALKOVER | NO_SHOW | RETIREMENT | DISQUALIFICATION |
+  /// OVERRIDE_RESULT | POSTPONE | ABANDON.
   /// Backend yêu cầu reason tối thiểu 5 ký tự.
   Future<void> matchOperation(
     String matchId, {

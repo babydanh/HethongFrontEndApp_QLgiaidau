@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
@@ -20,6 +23,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/tag_assign_sheet.d
 import 'package:app_quanly_giaidau/features/community/widgets/community_social_settings_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_social_screen.dart';
+import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 
 class ClubDetailScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -41,6 +45,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   String _tournamentStatusFilter = 'ALL';
   String _tournamentTypeFilter = 'ALL';
   String _tournamentSportFilter = 'ALL';
+  bool _isAddingGalleryImage = false;
 
   @override
   void initState() {
@@ -365,7 +370,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   child: FilledButton.icon(
                     onPressed: _isJoinLoading
                         ? null
-                        : () => _handleJoinAction(),
+                        : (_isMember
+                              ? _confirmLeaveCommunity
+                              : () => _handleJoinAction(club)),
                     icon: _isJoinLoading
                         ? const SizedBox(
                             width: 16,
@@ -377,7 +384,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                           )
                         : Icon(_getJoinIcon(), size: 18),
                     label: Text(
-                      _getJoinLabel(),
+                      _isMember ? 'Rời CLB' : _getJoinLabel(),
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 13,
@@ -414,8 +421,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         title: club.name,
                         subtitle:
                             '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
-                        webUrl:
-                            'https://sporto.asia/communities/${club.id}',
+                        webUrl: 'https://sporto.asia/communities/${club.id}',
                         imageUrl: club.logoUrl ?? club.bannerUrl,
                         badgeText: l10n.club_badge,
                       );
@@ -437,7 +443,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          CommunitySocialScreen(communityId: club.id, communityName: club.name, showHeader: false),
+          CommunitySocialScreen(
+            communityId: club.id,
+            communityName: club.name,
+            showHeader: false,
+          ),
           _buildAboutTab(club, colors),
           _buildTournamentsTab(colors),
           _buildMembersTab(colors),
@@ -466,6 +476,118 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     return l10n.club_joinButton;
   }
 
+  Future<void> _confirmLeaveCommunity() async {
+    final userId = ref.read(userProfileProvider).asData?.value.id;
+    if (userId == null || userId.isEmpty || !_isMember) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Rời câu lạc bộ?'),
+        content: const Text(
+          'Bạn sẽ không còn quyền truy cập các nội dung dành cho thành viên.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Hủy'),
+          ),
+          FilledButton.tonal(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Rời CLB'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _isJoinLoading = true);
+    try {
+      final ok = await ref
+          .read(communityRepositoryProvider)
+          .leaveCommunity(widget.clubId, userId);
+      if (!mounted) return;
+      if (ok) {
+        await _fetchMembership();
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Đã rời câu lạc bộ')));
+      }
+    } catch (e, stack) {
+      _log.error('Lỗi rời CLB', e, stack);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể rời câu lạc bộ')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isJoinLoading = false);
+    }
+  }
+
+  Future<Map<String, dynamic>?> _showJoinQuestionsDialog(
+    List<String> questions,
+  ) async {
+    final controllers = questions
+        .map((_) => TextEditingController())
+        .toList(growable: false);
+    final formKey = GlobalKey<FormState>();
+    final answers = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Câu hỏi tham gia CLB'),
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Hãy trả lời các câu hỏi để gửi yêu cầu tham gia.'),
+                const SizedBox(height: 16),
+                ...List.generate(
+                  questions.length,
+                  (index) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: TextFormField(
+                      controller: controllers[index],
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        labelText: questions[index],
+                        border: const OutlineInputBorder(),
+                      ),
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? 'Vui lòng trả lời câu hỏi này'
+                          : null,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (!formKey.currentState!.validate()) return;
+              Navigator.pop(dialogContext, <String, dynamic>{
+                for (var i = 0; i < questions.length; i++)
+                  questions[i]: controllers[i].text.trim(),
+              });
+            },
+            child: const Text('Gửi yêu cầu'),
+          ),
+        ],
+      ),
+    );
+    for (final controller in controllers) {
+      controller.dispose();
+    }
+    return answers;
+  }
+
   Color? _getJoinBgColor() {
     if (_isMember) return const Color(0xFF059669);
     if (_isPending) return Colors.grey;
@@ -473,7 +595,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     return AppTheme.primary;
   }
 
-  Future<void> _handleJoinAction() async {
+  Future<void> _handleJoinAction(Community? club) async {
     final l10n = AppLocalizations.of(context)!;
     final auth = ref.read(authProvider);
     if (!auth.isAuthenticated) {
@@ -481,6 +603,31 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       return;
     }
     if (_isMember || _isPending) return;
+
+    final community =
+        club ?? ref.read(communityDetailProvider(widget.clubId)).value;
+    if (community?.joinQuestions.isNotEmpty == true) {
+      final answers = await _showJoinQuestionsDialog(community!.joinQuestions);
+      if (answers == null) return;
+      if (!mounted) return;
+      setState(() => _isJoinLoading = true);
+      try {
+        final ok = await ref
+            .read(communityRepositoryProvider)
+            .joinCommunity(widget.clubId, answers: answers);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(ok ? l10n.club_joinSuccess : l10n.club_joinFailed),
+            ),
+          );
+          if (ok) await _fetchMembership();
+        }
+      } finally {
+        if (mounted) setState(() => _isJoinLoading = false);
+      }
+      return;
+    }
 
     setState(() => _isJoinLoading = true);
     try {
@@ -600,11 +747,17 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     height: 64,
                     decoration: BoxDecoration(
                       color: colors.bgCard,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: colors.border),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: colors.border, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(13),
+                    child: ClipOval(
                       child: club.logoUrl != null && club.logoUrl!.isNotEmpty
                           ? Image.network(
                               club.logoUrl!,
@@ -762,21 +915,24 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   }
 
   Widget _bannerGradient(Color c, String emoji) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [c, c.withValues(alpha: 0.6), context.colors.bgDark],
+          colors: isDark
+              ? const [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF0F172A)]
+              : const [Color(0xFFF8FAFC), Color(0xFFEFF6FF), Color(0xFFE0E7FF)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          stops: const [0.0, 0.5, 1.0],
         ),
       ),
       child: Center(
-        child: Text(
-          emoji,
-          style: TextStyle(
-            fontSize: 80,
-            color: Colors.white.withValues(alpha: 0.12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+          child: SvgPicture.asset(
+            AppConstants.logoFullSvg,
+            width: 220,
+            fit: BoxFit.contain,
           ),
         ),
       ),
@@ -784,16 +940,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   }
 
   Widget _logoSportBg(Color c, String emoji) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [c, c.withValues(alpha: 0.6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(14),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        shape: BoxShape.circle,
       ),
-      child: Center(child: Text(emoji, style: const TextStyle(fontSize: 24))),
+      padding: const EdgeInsets.all(10),
+      child: Center(
+        child: SvgPicture.asset(AppConstants.logoFullSvg, fit: BoxFit.contain),
+      ),
     );
   }
 
@@ -895,11 +1051,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.gavel_rounded,
-                  size: 20,
-                  color: AppTheme.primary,
-                ),
+                Icon(Icons.gavel_rounded, size: 20, color: AppTheme.primary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -916,8 +1068,74 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           ),
           const SizedBox(height: 24),
         ],
+        if (club.socialLinks.isNotEmpty) ...[
+          _sectionTitle('LIÊN HỆ', colors),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: colors.border),
+            ),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: club.socialLinks.entries
+                  .where((entry) => entry.value.trim().isNotEmpty)
+                  .map(
+                    (entry) => ActionChip(
+                      avatar: Icon(_socialIcon(entry.key), size: 16),
+                      label: Text(_socialLabel(entry.key)),
+                      onPressed: () => _openSocialLink(entry.value),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
       ],
     );
+  }
+
+  IconData _socialIcon(String key) {
+    switch (key.toLowerCase()) {
+      case 'facebook':
+        return Icons.facebook_rounded;
+      case 'zalo':
+        return Icons.chat_rounded;
+      default:
+        return Icons.language_rounded;
+    }
+  }
+
+  String _socialLabel(String key) {
+    switch (key.toLowerCase()) {
+      case 'facebook':
+        return 'Facebook';
+      case 'zalo':
+        return 'Zalo';
+      default:
+        return 'Website';
+    }
+  }
+
+  Future<void> _openSocialLink(String value) async {
+    final raw = value.trim();
+    final uri = Uri.tryParse(
+      raw.startsWith('http://') || raw.startsWith('https://')
+          ? raw
+          : 'https://$raw',
+    );
+    if (uri == null ||
+        !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể mở liên kết này.')),
+        );
+      }
+    }
   }
 
   Widget _sectionTitle(String title, AppColorsExtension colors) {
@@ -1103,6 +1321,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final tourneysAsync = ref.watch(
       communityTournamentsProvider(widget.clubId),
     );
+    final isAdmin =
+        _myMembership?.role == 'OWNER' ||
+        _myMembership?.role == 'ADMIN' ||
+        _myMembership?.role == 'MODERATOR';
     return tourneysAsync.when(
       data: (tourneys) {
         if (tourneys.isEmpty) {
@@ -1120,25 +1342,23 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   l10n.club_noTournaments,
                   style: TextStyle(color: colors.textSecondary, fontSize: 14),
                 ),
-                const SizedBox(height: 20),
-                FilledButton.icon(
-                  onPressed: () => _showCreateTournamentTypeSheet(),
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  label: Text(l10n.club_createTournament),
-                  style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                if (isAdmin) ...[
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    onPressed: () => _showCreateTournamentTypeSheet(),
+                    icon: const Icon(Icons.add_rounded, size: 18),
+                    label: Text(l10n.club_createTournament),
+                    style: FilledButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           );
         }
-        final isAdmin =
-            _myMembership?.role == 'OWNER' ||
-            _myMembership?.role == 'ADMIN' ||
-            _myMembership?.role == 'MODERATOR';
         final sports = tourneys
             .map((t) => t.sport)
             .where((s) => s.isNotEmpty)
@@ -2525,9 +2745,41 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   Widget _buildGalleryTab(Community club, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     final galleryAsync = ref.watch(communityGalleryProvider(widget.clubId));
+    final isAdmin =
+        _myMembership?.role == 'OWNER' ||
+        _myMembership?.role == 'ADMIN' ||
+        _myMembership?.role == 'MODERATOR';
+
     return galleryAsync.when(
       data: (images) {
-        if (images.isEmpty && club.logoUrl == null && club.bannerUrl == null) {
+        // Collect all images with metadata
+        final List<({String id, String url, String title, bool isSystem})>
+        allItems = [
+          if (club.logoUrl != null && club.logoUrl!.isNotEmpty)
+            (
+              id: 'sys-logo',
+              url: club.logoUrl!,
+              title: 'Logo CLB',
+              isSystem: true,
+            ),
+          if (club.bannerUrl != null && club.bannerUrl!.isNotEmpty)
+            (
+              id: 'sys-banner',
+              url: club.bannerUrl!,
+              title: 'Ảnh bìa',
+              isSystem: true,
+            ),
+          ...images.map(
+            (img) => (
+              id: img.id,
+              url: img.imageUrl,
+              title: 'Ảnh hoạt động',
+              isSystem: false,
+            ),
+          ),
+        ];
+
+        if (allItems.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -2547,159 +2799,169 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   l10n.club_gallerySubtitle,
                   style: TextStyle(color: colors.textMuted, fontSize: 12),
                 ),
+                if (isAdmin) ...[
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    onPressed: _isAddingGalleryImage ? null : _addGalleryImage,
+                    icon: _isAddingGalleryImage
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.add_photo_alternate_outlined),
+                    label: const Text('Thêm ảnh đầu tiên'),
+                  ),
+                ],
               ],
             ),
           );
         }
 
-        // Collect all club images: logo, banner, and gallery
-        final List<Widget> imageWidgets = [];
-
-        // Add club banner first
-        if (club.bannerUrl != null && club.bannerUrl!.isNotEmpty) {
-          imageWidgets.add(
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: GestureDetector(
-                onTap: () => _showImagePreview(club.bannerUrl!),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 180,
-                    child: Image.network(
-                      club.bannerUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: colors.bgSurface,
-                        child: Icon(
-                          Icons.broken_image_rounded,
-                          color: colors.textMuted,
-                          size: 28,
-                        ),
-                      ),
-                      loadingBuilder: (context, child, progress) {
-                        if (progress == null) return child;
-                        return Container(
-                          color: colors.bgSurface,
-                          child: const Center(
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-
-        // Add club logo
-        if (club.logoUrl != null && club.logoUrl!.isNotEmpty) {
-          imageWidgets.add(
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: GestureDetector(
-                onTap: () => _showImagePreview(club.logoUrl!),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: SizedBox(
-                    width: 120,
-                    height: 120,
-                    child: Image.network(
-                      club.logoUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: colors.bgSurface,
-                        child: Icon(
-                          Icons.broken_image_rounded,
-                          color: colors.textMuted,
-                          size: 28,
-                        ),
-                      ),
-                      loadingBuilder: (context, child, progress) {
-                        if (progress == null) return child;
-                        return Container(
-                          color: colors.bgSurface,
-                          child: const Center(
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-
-        if (images.isNotEmpty) {
-          imageWidgets.add(
-            GridView.builder(
-              padding: const EdgeInsets.only(top: 8),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-              ),
-              itemCount: images.length,
-              itemBuilder: (context, i) => GestureDetector(
-                onTap: () => _showImagePreview(images[i].imageUrl),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    images[i].imageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: colors.bgSurface,
-                      child: Icon(
-                        Icons.broken_image_rounded,
-                        color: colors.textMuted,
-                        size: 28,
-                      ),
-                    ),
-                    loadingBuilder: (context, child, progress) {
-                      if (progress == null) return child;
-                      return Container(
-                        color: colors.bgSurface,
-                        child: const Center(
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(
                 children: [
-                  if (images.isNotEmpty)
-                    Text(
-                      l10n.club_imageCount(images.length),
+                  Expanded(
+                    child: Text(
+                      'Thư viện ảnh (${allItems.length})',
                       style: TextStyle(
-                        fontSize: 11,
-                        color: colors.textMuted,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: colors.textSecondary,
+                        fontWeight: FontWeight.w700,
                       ),
+                    ),
+                  ),
+                  if (isAdmin)
+                    IconButton(
+                      tooltip: 'Thêm ảnh',
+                      onPressed: _isAddingGalleryImage
+                          ? null
+                          : _addGalleryImage,
+                      icon: _isAddingGalleryImage
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.add_photo_alternate_outlined),
                     ),
                 ],
               ),
             ),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: imageWidgets,
+              child: GridView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.0, // Ảnh vuông 1:1
+                ),
+                itemCount: allItems.length,
+                itemBuilder: (context, i) {
+                  final item = allItems[i];
+                  return GestureDetector(
+                    onTap: () => _showImagePreview(item.url),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: colors.bgCard,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: colors.border),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(15),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.network(
+                              item.url,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                    color: colors.bgSurface,
+                                    child: Icon(
+                                      Icons.broken_image_rounded,
+                                      color: colors.textMuted,
+                                      size: 28,
+                                    ),
+                                  ),
+                              loadingBuilder: (context, child, progress) {
+                                if (progress == null) return child;
+                                return Container(
+                                  color: colors.bgSurface,
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            // Badge label cho Logo / Banner
+                            if (item.isSystem)
+                              Positioned(
+                                top: 8,
+                                left: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.75),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    item.title,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            // Nút xoá cho ảnh hoạt động nếu là Admin/Owner
+                            if (!item.isSystem && isAdmin)
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      _confirmDeleteGalleryImage(item.id),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.6,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.delete_outline_rounded,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -2723,6 +2985,36 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         );
       },
     );
+  }
+
+  Future<void> _addGalleryImage() async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 88,
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _isAddingGalleryImage = true);
+    try {
+      final bytes = await picked.readAsBytes();
+      final repo = ref.read(communityRepositoryProvider);
+      final imageUrl = await ref
+          .read(communitySocialRepositoryProvider)
+          .uploadImage(bytes, picked.name);
+      await repo.addGalleryItem(widget.clubId, imageUrl: imageUrl);
+      ref.invalidate(communityGalleryProvider(widget.clubId));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã thêm ảnh vào thư viện')),
+        );
+    } catch (e, stack) {
+      _log.error('Lỗi thêm ảnh gallery', e, stack);
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể thêm ảnh vào thư viện')),
+        );
+    } finally {
+      if (mounted) setState(() => _isAddingGalleryImage = false);
+    }
   }
 
   void _showImagePreview(String url) {
@@ -2750,6 +3042,53 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _confirmDeleteGalleryImage(String imageId) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Xoá hình ảnh',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        content: const Text(
+          'Bạn có chắc chắn muốn xoá ảnh này khỏi thư viện CLB?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Huỷ'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: context.colors.error,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                final repo = ref.read(communityRepositoryProvider);
+                await repo.removeGalleryItem(widget.clubId, imageId);
+                ref.invalidate(communityGalleryProvider(widget.clubId));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã xoá ảnh khỏi thư viện')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Không thể xoá ảnh')),
+                  );
+                }
+              }
+            },
+            child: const Text('Xoá'),
+          ),
+        ],
       ),
     );
   }
@@ -3110,6 +3449,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     AppColorsExtension colors,
   ) async {
     final l10n = AppLocalizations.of(context)!;
+    final nameController = TextEditingController();
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -3128,9 +3468,25 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
           ],
         ),
-        content: Text(
-          l10n.club_deleteWarning(club.name),
-          style: TextStyle(color: colors.textSecondary),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.club_deleteWarning(club.name),
+              style: TextStyle(color: colors.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Nhập chính xác tên CLB để xác nhận:',
+              style: TextStyle(color: colors.textSecondary),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Tên CLB hiện tại'),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -3138,7 +3494,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             child: Text(l10n.matchesCancel),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () => Navigator.pop(
+              ctx,
+              nameController.text.trim() == club.name.trim(),
+            ),
             child: Text(
               l10n.delete,
               style: TextStyle(
@@ -3150,6 +3509,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ],
       ),
     );
+    nameController.dispose();
     if (confirm == true) {
       try {
         await ref
@@ -3217,7 +3577,10 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
           borderRadius: BorderRadius.circular(8),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
-        indicatorPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 3),
+        indicatorPadding: const EdgeInsets.symmetric(
+          vertical: 6,
+          horizontal: 3,
+        ),
         dividerColor: Colors.transparent,
         labelColor: Colors.white,
         unselectedLabelColor: const Color(0xFF475569),
