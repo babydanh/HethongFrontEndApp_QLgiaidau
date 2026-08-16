@@ -33,12 +33,9 @@ class CommunitySocialScreen extends ConsumerStatefulWidget {
 }
 
 class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
-  final _scrollController = ScrollController();
-
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
     Future<void>.microtask(() {
       if (mounted)
         ref
@@ -47,21 +44,20 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.extentAfter < 520) {
+  /// Gắn controller riêng vào ListView bên trong NestedScrollView sẽ phá vỡ
+  /// phối hợp scroll (2 list scroll riêng). Dùng notification để loadMore —
+  /// hoạt động cả standalone lẫn nhúng trong club detail.
+  bool _onFeedScroll(ScrollNotification notification) {
+    if (notification.metrics.extentAfter < 520) {
       ref.read(communityFeedProvider(widget.communityId).notifier).loadMore();
     }
+    return false;
   }
 
-  void _openComposer({bool startWithPoll = false, bool startWithImage = false}) {
+  void _openComposer({
+    bool startWithPoll = false,
+    bool startWithImage = false,
+  }) {
     final membership = ref
         .read(myCommunityMembershipProvider(widget.communityId))
         .asData
@@ -69,15 +65,20 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
     final isPlatformAdmin = ref.read(authProvider).isAdmin;
     final role = membership?.role.toUpperCase();
     final isJoined = membership?.status.toUpperCase() == 'JOINED';
-    final canManageMemberTags = isPlatformAdmin ||
-        (isJoined && (role == 'OWNER' || role == 'ADMIN' || role == 'MODERATOR'));
-    final settings =
-        ref.read(communitySocialSettingsProvider(widget.communityId)).asData?.value;
+    final canManageMemberTags =
+        isPlatformAdmin ||
+        (isJoined &&
+            (role == 'OWNER' || role == 'ADMIN' || role == 'MODERATOR'));
+    final settings = ref
+        .read(communitySocialSettingsProvider(widget.communityId))
+        .asData
+        ?.value;
     final canMention = settings == null
         ? isJoined
         : (settings.memberTaggingPolicy == 'MEMBERS'
-            ? isJoined
-            : settings.memberTaggingPolicy == 'ADMINS' && canManageMemberTags);
+              ? isJoined
+              : settings.memberTaggingPolicy == 'ADMINS' &&
+                    canManageMemberTags);
     CommunityPostComposerSheet.show(
       context,
       communityId: widget.communityId,
@@ -187,82 +188,86 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
         (socialSettings.postingPolicy == 'MEMBERS' && isJoined) ||
         (socialSettings.postingPolicy == 'ADMINS' && canManageMemberTags);
 
-    final feedBody = RefreshIndicator(
-      onRefresh: () => ref
-          .read(communityFeedProvider(widget.communityId).notifier)
-          .loadInitial(),
-      child: ListView(
-        controller: _scrollController,
-        padding: const EdgeInsets.fromLTRB(
-          AppTheme.spacingMD,
-          AppTheme.spacingSM,
-          AppTheme.spacingMD,
-          AppTheme.spacingXL,
-        ),
-        children: [
-          if (widget.showHeader) ...[
-            _CompactHighlights(communityName: widget.communityName),
-            const SizedBox(height: AppTheme.spacingSM),
-          ],
-          if (canPost)
-            CommunityComposerTrigger(
-              authorName: profile?.fullName ?? 'Bạn',
-              authorAvatarUrl: profile?.avatarUrl,
-              onOpen: () => _openComposer(),
-              onOpenWithPoll: () => _openComposer(startWithPoll: true),
-              onOpenWithImage: () => _openComposer(startWithImage: true),
-            ),
-          if (!canPost)
-            _SocialNotice(
-              message: socialSettings.postingPolicy == 'OFF'
-                  ? 'CLB đang tắt đăng bài.'
-                  : 'Hãy tham gia CLB để đăng bài.',
-            ),
-          const SizedBox(height: AppTheme.spacingMD),
-          if (state.errorMessage != null)
-            _FeedError(
-              message: state.errorMessage!,
-              onRetry: () => ref
-                  .read(communityFeedProvider(widget.communityId).notifier)
-                  .loadInitial(),
-            ),
-          if (state.isLoading && state.posts.isEmpty) const _FeedLoading(),
-          if (!state.isLoading &&
-              state.errorMessage == null &&
-              state.posts.isEmpty)
-            const _FeedEmpty(),
-          ...state.posts.map(
-            (post) => Padding(
-              padding: const EdgeInsets.only(bottom: AppTheme.spacingSM),
-              child: CommunityPostCard(
-                post: post,
-                communityId: widget.communityId,
-                commentsEnabled: socialSettings.commentsEnabled,
-                onReact: (reaction) => ref
-                    .read(communityFeedProvider(widget.communityId).notifier)
-                    .reactToPost(post.id, reaction),
-                currentUserId: currentUserId,
-                canModerateComments: isModerator,
-                onCommentUpdated: () => ref
+    final feedBody = NotificationListener<ScrollNotification>(
+      onNotification: _onFeedScroll,
+      child: RefreshIndicator(
+        onRefresh: () => ref
+            .read(communityFeedProvider(widget.communityId).notifier)
+            .loadInitial(),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacingMD,
+            AppTheme.spacingSM,
+            AppTheme.spacingMD,
+            AppTheme.spacingXL,
+          ),
+          children: [
+            if (widget.showHeader) ...[
+              _CompactHighlights(communityName: widget.communityName),
+              const SizedBox(height: AppTheme.spacingSM),
+            ],
+            if (canPost)
+              CommunityComposerTrigger(
+                authorName: profile?.fullName ?? 'Bạn',
+                authorAvatarUrl: profile?.avatarUrl,
+                onOpen: () => _openComposer(),
+                onOpenWithPoll: () => _openComposer(startWithPoll: true),
+                onOpenWithImage: () => _openComposer(startWithImage: true),
+              ),
+            if (!canPost)
+              _SocialNotice(
+                message: socialSettings.postingPolicy == 'OFF'
+                    ? 'CLB đang tắt đăng bài.'
+                    : 'Hãy tham gia CLB để đăng bài.',
+              ),
+            const SizedBox(height: AppTheme.spacingMD),
+            if (state.errorMessage != null)
+              _FeedError(
+                message: state.errorMessage!,
+                onRetry: () => ref
                     .read(communityFeedProvider(widget.communityId).notifier)
                     .loadInitial(),
+              ),
+            if (state.isLoading && state.posts.isEmpty) const _FeedLoading(),
+            if (!state.isLoading &&
+                state.errorMessage == null &&
+                state.posts.isEmpty)
+              const _FeedEmpty(),
+            ...state.posts.map(
+              (post) => Padding(
+                padding: const EdgeInsets.only(bottom: AppTheme.spacingSM),
+                child: CommunityPostCard(
+                  post: post,
+                  communityId: widget.communityId,
+                  commentsEnabled: socialSettings.commentsEnabled,
+                  onReact: (reaction) => ref
+                      .read(communityFeedProvider(widget.communityId).notifier)
+                      .reactToPost(post.id, reaction),
+                  currentUserId: currentUserId,
+                  canModerateComments: isModerator,
+                  onCommentUpdated: () => ref
+                      .read(communityFeedProvider(widget.communityId).notifier)
+                      .loadInitial(),
                 onAuthorTap: post.authorId.isEmpty
                     ? null
-                    : () => context.push('/profile/user/${post.authorId}'),
-                onDelete:
-                    (currentUserId.isNotEmpty &&
-                        (post.authorId == currentUserId || isModerator))
-                    ? () => _confirmDeletePost(post.id)
-                    : null,
+                    : () => context.push(
+                        '/profile/user/${post.authorId}?communityId=${widget.communityId}'),
+                  onDelete:
+                      (currentUserId.isNotEmpty &&
+                          (post.authorId == currentUserId || isModerator))
+                      ? () => _confirmDeletePost(post.id)
+                      : null,
+                ),
               ),
             ),
-          ),
-          if (state.isLoading && state.posts.isNotEmpty)
-            const Padding(
-              padding: EdgeInsets.all(AppTheme.spacingMD),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-        ],
+            if (state.isLoading && state.posts.isNotEmpty)
+              const Padding(
+                padding: EdgeInsets.all(AppTheme.spacingMD),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+          ],
+        ),
       ),
     );
 

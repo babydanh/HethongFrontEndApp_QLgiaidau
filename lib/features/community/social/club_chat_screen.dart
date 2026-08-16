@@ -5,7 +5,11 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/chat_socket_service.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
+import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -353,6 +357,31 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     }
   }
 
+  /// Badge vai trò (Chủ CLB amber / Quản trị xanh) + tag đầu tiên cạnh tên
+  /// người gửi — khớp web (UnifiedChatWidget, phòng CLB).
+  List<Widget> _senderBadges(
+    String senderId,
+    Map<String, CommunityMemberModel>? directory,
+    List<CommunityTagPreset>? presets,
+  ) {
+    final member = directory?[senderId];
+    if (member == null) return const [];
+    final role = member.role.toUpperCase();
+    final firstTag = member.tags.isEmpty ? null : member.tags.first;
+    return [
+      if (role == 'OWNER')
+        PresetTagChip(label: 'Chủ CLB', color: context.colors.warning)
+      else if (role == 'MODERATOR')
+        PresetTagChip(label: 'Quản trị', color: AppTheme.primary),
+      if (firstTag != null)
+        PresetTagChip(
+          label: firstTag,
+          color:
+              presets == null ? null : resolvePresetColor(presets, firstTag),
+        ),
+    ];
+  }
+
   void _showMessageActions(_ClubChatMessage message) {
     showModalBottomSheet<void>(
       context: context,
@@ -520,6 +549,13 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
         .where((message) => !_blockedUserIds.contains(message.senderId))
         .toList();
     final currentUserId = ref.watch(userProfileProvider).asData?.value.id ?? '';
+    // Tag/role người gửi — resolve 1 lần như web (UnifiedChatWidget club rooms).
+    final chatPresets =
+        ref.watch(communityTagPresetsProvider(widget.communityId)).asData?.value;
+    final chatDirectory = ref
+        .watch(communityMemberDirectoryProvider(widget.communityId))
+        .asData
+        ?.value;
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(AppTheme.spacingMD),
@@ -528,6 +564,9 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
         final message = visibleMessages[index];
         final isMine =
             currentUserId.isNotEmpty && message.senderId == currentUserId;
+        // Chỉ gắn tag ở tin ĐẦU chuỗi liên tiếp của người gửi (khớp web).
+        final isFirstOfRun = index == 0 ||
+            visibleMessages[index - 1].senderId != message.senderId;
         return Align(
           alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
           child: Row(
@@ -560,13 +599,25 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (!isMine)
-                          Text(
-                            message.senderName,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textMuted,
-                            ),
+                          Wrap(
+                            spacing: 5,
+                            runSpacing: 3,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                message.senderName,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.textMuted,
+                                ),
+                              ),
+                              if (isFirstOfRun) ..._senderBadges(
+                                message.senderId,
+                                chatDirectory,
+                                chatPresets,
+                              ),
+                            ],
                           ),
                         const SizedBox(height: 3),
                         if (message.isRevoked)

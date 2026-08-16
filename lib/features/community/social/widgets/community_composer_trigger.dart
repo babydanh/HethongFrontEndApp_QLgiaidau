@@ -82,7 +82,7 @@ class CommunityComposerTrigger extends StatelessWidget {
                 child: _QuickAction(
                   icon: Icons.poll_rounded,
                   label: 'Bình chọn',
-                  color: const Color(0xFF10B981),
+                  color: colors.success,
                   onTap: onOpenWithPoll,
                 ),
               ),

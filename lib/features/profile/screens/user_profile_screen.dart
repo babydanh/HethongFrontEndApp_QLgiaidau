@@ -14,7 +14,9 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 
 /// Trang xem hồ sơ công khai của người dùng khác.
 ///
@@ -26,7 +28,11 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 class UserProfileScreen extends ConsumerStatefulWidget {
   final String userId;
 
-  const UserProfileScreen({super.key, required this.userId});
+  /// Ngữ cảnh CLB (khi mở hồ sơ từ bảng tin/chat CLB) — hiển thị thêm
+  /// section "Danh hiệu CLB" (tag preset) như popup profile của web.
+  final String? communityId;
+
+  const UserProfileScreen({super.key, required this.userId, this.communityId});
 
   @override
   ConsumerState<UserProfileScreen> createState() => _UserProfileScreenState();
@@ -145,6 +151,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 // Avatar + Thông tin cơ bản
                 _buildUserInfoHeader(context, profile, colors),
                 const SizedBox(height: 20),
+                // Danh hiệu CLB (tag preset) — chỉ khi mở từ ngữ cảnh CLB
+                if (widget.communityId != null)
+                  _buildClubTitlesSection(colors),
                 // Thống kê tổng quan
                 _buildStatsOverview(context, profile, colors),
                 const SizedBox(height: 24),
@@ -189,6 +198,69 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// "Danh hiệu CLB" — toàn bộ tag của thành viên, chip màu preset + chấm màu
+  /// (khớp popup profile web: UserProfilePopover "Danh hiệu CLB").
+  Widget _buildClubTitlesSection(AppColorsExtension colors) {
+    final communityId = widget.communityId!;
+    final directory =
+        ref.watch(communityMemberDirectoryProvider(communityId)).asData?.value;
+    final presets =
+        ref.watch(communityTagPresetsProvider(communityId)).asData?.value;
+    final tags = directory?[widget.userId]?.tags ?? const <String>[];
+    if (tags.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: colors.bgSurface.withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.borderLight),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'DANH HIỆU CLB',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                    color: colors.textSecondary,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${tags.length} nhãn',
+                  style: TextStyle(fontSize: 10, color: colors.textMuted),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: tags
+                  .map(
+                    (tag) => PresetTagChip(
+                      label: tag,
+                      color:
+                          presets == null ? null : resolvePresetColor(presets, tag),
+                      showDot: true,
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
+          ],
+        ),
       ),
     );
   }

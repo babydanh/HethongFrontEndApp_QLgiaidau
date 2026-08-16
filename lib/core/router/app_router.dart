@@ -489,7 +489,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'user/:id',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
-              return UserProfileScreen(userId: id);
+              // Query communityId: mở hồ sơ từ ngữ cảnh CLB → hiện "Danh hiệu CLB".
+              return UserProfileScreen(
+                userId: id,
+                communityId: state.uri.queryParameters['communityId'],
+              );
             },
           ),
         ],

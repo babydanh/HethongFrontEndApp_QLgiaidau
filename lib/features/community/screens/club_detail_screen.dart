@@ -251,9 +251,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         },
       ),
       bottomNavigationBar: FloatingBottomNav(
-        currentIndex: 1,
+        currentIndex: 3,
         onTabSelected: (index) {
-          if (index != 1) context.go('/home?tab=$index');
+          if (index != 3) context.go('/home?tab=$index');
         },
         onProfileTap: () => context.go('/profile'),
       ),
@@ -435,8 +435,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
           ),
         ),
+        // Không pin tab bar: banner + nút + tab trượt theo nội dung,
+        // chỉ giữ app bar (SliverAppBar pinned ở trên) cố định — 1 scroll liền mạch.
         SliverPersistentHeader(
-          pinned: true,
+          pinned: false,
           delegate: _TabBarDelegate(
             tabController: _tabController,
             colors: colors,
@@ -2118,27 +2120,38 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         ),
                       ),
                     ),
-                  // P2C.5 — pills tag BQT + streak cạnh tên thành viên (text pill, không emoji).
-                  if (m.tags.isNotEmpty || !m.streak.isEmpty) ...[
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: [
-                        ...m.tags.map(
-                          (tag) => MemberTagChip(
-                            label: tag,
-                            kind: MemberTagChipKind.bqt,
-                          ),
-                        ),
-                        if (!m.streak.isEmpty)
-                          StreakChip(
-                            type: m.streak.type,
-                            count: m.streak.count,
-                            label: m.streak.label,
-                          ),
-                      ],
-                    ),
+                    // P2C.5 — pills tag BQT (màu preset, tint như web) + streak cạnh tên.
+                    if (m.tags.isNotEmpty || !m.streak.isEmpty) ...[
+                      const SizedBox(height: 4),
+                      Builder(
+                        builder: (context) {
+                          final presets = ref
+                              .watch(communityTagPresetsProvider(widget.clubId))
+                              .asData
+                              ?.value;
+                          return Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: [
+                              ...m.tags.map(
+                                (tag) => PresetTagChip(
+                                  label: tag,
+                                  color: presets == null
+                                      ? null
+                                      : resolvePresetColor(presets, tag),
+                                  style: PresetTagChipStyle.tint,
+                                ),
+                              ),
+                              if (!m.streak.isEmpty)
+                                StreakChip(
+                                  type: m.streak.type,
+                                  count: m.streak.count,
+                                  label: m.streak.label,
+                                ),
+                            ],
+                          );
+                        },
+                      ),
                   ],
                 ],
               ),

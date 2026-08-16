@@ -1,12 +1,11 @@
-import 'dart:async';
-
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
+import 'package:app_quanly_giaidau/features/community/social/widgets/community_composer_parts.dart';
+import 'package:app_quanly_giaidau/features/community/social/widgets/community_mention_engine.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_mention_helpers.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_poll_builder.dart';
-import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -73,16 +72,13 @@ class CommunityPostComposerSheet extends ConsumerStatefulWidget {
 class _CommunityPostComposerSheetState
     extends ConsumerState<CommunityPostComposerSheet> {
   static const _log = AppLogger('PostComposer');
-  static const _mentionLimit = 20;
   static const _maxImages = 10;
 
   final _textCtrl = TextEditingController();
-  final Map<String, CommunityMemberModel> _mentions = {};
-  Timer? _searchDebounce;
-  MentionInput? _activeMention;
+  ComposerMentionEngine? _mentionEngine;
   String? _mentionQuery;
 
-  final List<String> _imageUrls = [];
+  List<String> _imageUrls = const [];
   bool _isUploading = false;
   bool _isSubmitting = false;
 
@@ -96,12 +92,18 @@ class _CommunityPostComposerSheetState
   @override
   void initState() {
     super.initState();
-    _pollOptions = [
-      TextEditingController(),
-      TextEditingController(),
-    ];
+    _pollOptions = [TextEditingController(), TextEditingController()];
     _pollOpen = widget.startWithPoll;
-    _textCtrl.addListener(_onTextChanged);
+    _mentionEngine = widget.canMention
+        ? ComposerMentionEngine(
+            controller: _textCtrl,
+            onQueryChanged: (query) {
+              if (mounted) setState(() => _mentionQuery = query);
+            },
+            onWarning: _warn,
+          )
+        : null;
+    _mentionEngine?.start();
     if (widget.startWithImage) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _pickImages());
     }
@@ -109,69 +111,13 @@ class _CommunityPostComposerSheetState
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
-    _textCtrl
-      ..removeListener(_onTextChanged)
-      ..dispose();
+    _mentionEngine?.dispose();
+    _textCtrl.dispose();
     _pollQuestionCtrl.dispose();
     for (final controller in _pollOptions) {
       controller.dispose();
     }
     super.dispose();
-  }
-
-  // ── Mention ────────────────────────────────────────────────────────────
-  void _onTextChanged() {
-    final text = _textCtrl.text;
-    final staleIds = _mentions.entries
-        .where((entry) => !containsMentionToken(text, entry.value.mentionDisplayName))
-        .map((entry) => entry.key)
-        .toList(growable: false);
-    if (staleIds.isNotEmpty) {
-      _mentions.removeWhere((id, _) => staleIds.contains(id));
-      if (mounted) setState(() {});
-    }
-    _activeMention = findActiveMention(text, _textCtrl.selection);
-    _searchDebounce?.cancel();
-    _searchDebounce = Timer(const Duration(milliseconds: 220), () {
-      if (mounted) setState(() => _mentionQuery = _activeMention?.query);
-    });
-    if (mounted) setState(() {});
-  }
-
-  void _insertMentionToken() {
-    final selection = _textCtrl.selection;
-    final position = selection.isValid ? selection.start : _textCtrl.text.length;
-    final text = _textCtrl.text;
-    _textCtrl.value = TextEditingValue(
-      text: '${text.substring(0, position)}@${text.substring(position)}',
-      selection: TextSelection.collapsed(offset: position + 1),
-    );
-  }
-
-  void _selectMember(CommunityMemberModel member) {
-    final input = _activeMention;
-    if (input == null || member.userId.isEmpty) return;
-    if (_mentions.length >= _mentionLimit && !_mentions.containsKey(member.userId)) {
-      _warn('Bạn chỉ có thể gắn tối đa $_mentionLimit thành viên.');
-      return;
-    }
-    final name = member.mentionDisplayName;
-    final duplicated = _mentions.entries.any((entry) =>
-        entry.key != member.userId &&
-        entry.value.mentionDisplayName.toLowerCase() == name.toLowerCase());
-    if (duplicated) {
-      _warn('CLB có hai thành viên cùng tên. Hãy dùng tên khác để tránh nhầm lẫn.');
-      return;
-    }
-    final text = _textCtrl.text;
-    final replacement = '@$name ';
-    _textCtrl.value = TextEditingValue(
-      text: '${text.substring(0, input.start)}$replacement${text.substring(input.end)}',
-      selection: TextSelection.collapsed(offset: input.start + replacement.length),
-    );
-    _mentions[member.userId] = member;
-    setState(() {});
   }
 
   void _warn(String message) {
@@ -195,7 +141,7 @@ class _CommunityPostComposerSheetState
         final url = await ref
             .read(communitySocialRepositoryProvider)
             .uploadImage(await file.readAsBytes(), file.name);
-        if (mounted) setState(() => _imageUrls.add(url));
+        if (mounted) setState(() => _imageUrls = [..._imageUrls, url]);
       } catch (e, stack) {
         failed++;
         _log.error('Upload ảnh composer thất bại', e, stack);
@@ -240,46 +186,41 @@ class _CommunityPostComposerSheetState
       _warn('Bài viết cần có nội dung, ảnh hoặc bình chọn.');
       return;
     }
-    // Chỉ gửi mention còn token @tên trong nội dung cuối (khớp web).
-    final mentions = _mentions.entries
-        .where((entry) => containsMentionToken(body, entry.value.mentionDisplayName))
-        .map((entry) => entry.key)
-        .toList(growable: false);
+    final mentions =
+        _mentionEngine?.validMentionIdsFor(body) ?? const <String>[];
 
     setState(() => _isSubmitting = true);
     final success = await ref
         .read(communityFeedProvider(widget.communityId).notifier)
         .createPost(
           text: body,
-          mediaUrls: List.unmodifiable(_imageUrls),
-          mentions: List.unmodifiable(mentions),
+          mediaUrls: _imageUrls,
+          mentions: mentions,
           poll: poll?.toPayload(),
         );
     if (!mounted) return;
-    if (success) {
-      final status = ref
-          .read(communityFeedProvider(widget.communityId))
-          .posts
-          .first
-          .status;
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            status == 'PENDING' ? 'Bài viết đang chờ duyệt' : 'Đã đăng lên bảng tin',
-          ),
-        ),
-      );
-    } else {
+    if (!success) {
       setState(() => _isSubmitting = false);
       _warn('Đăng bài thất bại. Vui lòng thử lại.');
+      return;
     }
+    final status =
+        ref.read(communityFeedProvider(widget.communityId)).posts.first.status;
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.of(context).pop();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          status == 'PENDING' ? 'Bài viết đang chờ duyệt' : 'Đã đăng lên bảng tin',
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final searchState = !widget.canMention || _mentionQuery == null
+    final searchState = _mentionQuery == null
         ? null
         : ref.watch(communityMemberSearchProvider((
             communityId: widget.communityId,
@@ -299,7 +240,11 @@ class _CommunityPostComposerSheetState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildHeader(colors),
+            ComposerSheetHeader(
+              isSubmitting: _isSubmitting,
+              onClose: () => Navigator.of(context).pop(),
+              onSubmit: _submit,
+            ),
             Flexible(child: _buildBody(colors, searchState)),
             _buildActionBar(colors),
           ],
@@ -308,87 +253,24 @@ class _CommunityPostComposerSheetState
     );
   }
 
-  Widget _buildHeader(AppColorsExtension colors) => Column(
-        children: [
-          const SizedBox(height: 10),
-          Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: colors.border,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.close_rounded),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                const Expanded(
-                  child: Text(
-                    'Tạo bài viết',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                  ),
-                ),
-                TextButton(
-                  onPressed: _isSubmitting ? null : _submit,
-                  child: _isSubmitting
-                      ? const SizedBox.square(
-                          dimension: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Text('Đăng',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w800, fontSize: 15)),
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
-
   Widget _buildBody(
     AppColorsExtension colors,
     AsyncValue<List<CommunityMemberModel>>? searchState,
   ) {
+    final engine = _mentionEngine;
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMD),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tác giả
-          Row(children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundImage: widget.authorAvatarUrl == null
-                  ? null
-                  : NetworkImage(widget.authorAvatarUrl!),
-              child: widget.authorAvatarUrl == null
-                  ? Text(widget.authorName.isNotEmpty
-                      ? widget.authorName[0].toUpperCase()
-                      : '?')
-                  : null,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                widget.authorName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-            ),
-          ]),
-          if (_mentions.isNotEmpty)
+          _AuthorRow(name: widget.authorName, avatarUrl: widget.authorAvatarUrl),
+          if (engine != null && engine.mentionedMembers.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: AppTheme.spacingSM),
               child: Wrap(
                 spacing: 6,
                 runSpacing: 6,
-                children: _mentions.values
+                children: engine.mentionedMembers
                     .map((member) => InputChip(
                           avatar: CircleAvatar(
                             backgroundImage: member.mentionAvatarProvider,
@@ -398,7 +280,7 @@ class _CommunityPostComposerSheetState
                           ),
                           label: Text('@${member.mentionDisplayName}'),
                           onDeleted: () {
-                            _mentions.remove(member.userId);
+                            engine.removeMention(member.userId);
                             setState(() {});
                           },
                         ))
@@ -413,23 +295,32 @@ class _CommunityPostComposerSheetState
             maxLength: 5000,
             textInputAction: TextInputAction.newline,
             onSubmitted: (_) {
-              final candidates = searchState?.value ?? const <CommunityMemberModel>[];
-              if (_activeMention != null && candidates.isNotEmpty) {
-                _selectMember(candidates.first);
+              final candidates =
+                  searchState?.value ?? const <CommunityMemberModel>[];
+              if (engine != null &&
+                  engine.activeMention != null &&
+                  candidates.isNotEmpty) {
+                engine.selectMember(candidates.first);
+                setState(() {});
               }
             },
             decoration: const InputDecoration(
-              hintText: 'Bạn muốn chia sẻ điều gì với các thành viên? (Gõ @ để nhắc tên)',
+              hintText:
+                  'Bạn muốn chia sẻ điều gì với các thành viên? (Gõ @ để nhắc tên)',
               border: InputBorder.none,
               counterText: '',
             ),
           ),
-          if (_activeMention != null && widget.canMention)
-            _MentionSuggestions(
+          if (engine != null &&
+              engine.activeMention != null &&
+              _mentionQuery != null)
+            ComposerMentionSuggestions(
               members: searchState?.value ?? const <CommunityMemberModel>[],
               isLoading: searchState?.isLoading ?? false,
               canManageTags: widget.canManageTags,
-              onSelect: _selectMember,
+              onSelect: (member) {
+                if (engine.selectMember(member)) setState(() {});
+              },
               onTag: widget.onAssignMemberTags == null
                   ? null
                   : (member) {
@@ -440,10 +331,11 @@ class _CommunityPostComposerSheetState
           if (_isUploading || _imageUrls.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: AppTheme.spacingSM),
-              child: _ImagePreviewGrid(
-                urls: List.unmodifiable(_imageUrls),
+              child: ComposerImagePreviewGrid(
+                urls: _imageUrls,
                 isUploading: _isUploading,
-                onRemove: (url) => setState(() => _imageUrls.remove(url)),
+                onRemove: (url) =>
+                    setState(() => _imageUrls = _imageUrls.where((u) => u != url).toList()),
               ),
             ),
           if (_pollOpen)
@@ -493,11 +385,11 @@ class _CommunityPostComposerSheetState
               icon: Icon(Icons.poll_rounded,
                   size: 20,
                   color: _pollOpen ? AppTheme.primary : colors.textSecondary),
-              label: Text('Bình chọn', style: TextStyle(fontSize: 13)),
+              label: const Text('Bình chọn', style: TextStyle(fontSize: 13)),
             ),
             if (widget.canMention)
               TextButton.icon(
-                onPressed: _insertMentionToken,
+                onPressed: _mentionEngine?.insertToken,
                 icon: Icon(Icons.alternate_email_rounded,
                     size: 20, color: AppTheme.primary),
                 label: const Text('Gắn thẻ', style: TextStyle(fontSize: 13)),
@@ -507,147 +399,31 @@ class _CommunityPostComposerSheetState
       );
 }
 
-class _ImagePreviewGrid extends StatelessWidget {
-  final List<String> urls;
-  final bool isUploading;
-  final ValueChanged<String> onRemove;
+class _AuthorRow extends StatelessWidget {
+  final String name;
+  final String? avatarUrl;
 
-  const _ImagePreviewGrid({
-    required this.urls,
-    required this.isUploading,
-    required this.onRemove,
-  });
+  const _AuthorRow({required this.name, this.avatarUrl});
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        ...urls.map((url) => Stack(children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(url,
-                    width: 96, height: 72, fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                        width: 96, height: 72, color: colors.bgSurface)),
-              ),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: GestureDetector(
-                  onTap: () => onRemove(url),
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: colors.bgDark.withValues(alpha: 0.7),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.close_rounded,
-                        size: 14, color: Colors.white),
-                  ),
-                ),
-              ),
-            ])),
-        if (isUploading)
-          Container(
-            width: 96,
-            height: 72,
-            decoration: BoxDecoration(
-              color: colors.bgSurface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: colors.borderLight),
-            ),
-            child: const Center(
-              child: SizedBox.square(
-                  dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _MentionSuggestions extends StatelessWidget {
-  final List<CommunityMemberModel> members;
-  final bool isLoading;
-  final bool canManageTags;
-  final ValueChanged<CommunityMemberModel> onSelect;
-  final ValueChanged<CommunityMemberModel>? onTag;
-
-  const _MentionSuggestions({
-    required this.members,
-    required this.isLoading,
-    required this.canManageTags,
-    required this.onSelect,
-    this.onTag,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    if (isLoading) {
-      return const SizedBox(
-          height: 48, child: Center(child: CircularProgressIndicator(strokeWidth: 2)));
-    }
-    if (members.isEmpty) {
-      return SizedBox(
-        height: 44,
-        child: Center(
-            child: Text('Không tìm thấy thành viên',
-                style: TextStyle(color: colors.textMuted, fontSize: 12))),
-      );
-    }
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 220),
-      margin: const EdgeInsets.only(bottom: AppTheme.spacingSM),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: colors.borderLight),
+    return Row(children: [
+      CircleAvatar(
+        radius: 18,
+        backgroundImage: avatarUrl == null ? null : NetworkImage(avatarUrl!),
+        child: avatarUrl == null
+            ? Text(name.isNotEmpty ? name[0].toUpperCase() : '?')
+            : null,
       ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const ClampingScrollPhysics(),
-        itemCount: members.length,
-        separatorBuilder: (_, __) => Divider(height: 1, color: colors.borderLight),
-        itemBuilder: (context, index) {
-          final member = members[index];
-          return InkWell(
-            onTap: () => onSelect(member),
-            onLongPress: canManageTags && onTag != null ? () => onTag!(member) : null,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              child: Row(children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundImage: member.mentionAvatarProvider,
-                  child: member.mentionAvatarProvider == null
-                      ? Text(member.mentionInitial)
-                      : null,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(member.mentionDisplayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                ),
-                if (member.tags.isNotEmpty)
-                  MemberTagChip(
-                      label: member.tags.first, kind: MemberTagChipKind.bqt),
-                if (canManageTags && onTag != null)
-                  IconButton(
-                    tooltip: 'Gán nhãn vui',
-                    icon: const Icon(Icons.sell_outlined, size: 18),
-                    onPressed: () => onTag!(member),
-                  ),
-              ]),
-            ),
-          );
-        },
+      const SizedBox(width: 10),
+      Expanded(
+        child: Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
       ),
-    );
+    ]);
   }
 }

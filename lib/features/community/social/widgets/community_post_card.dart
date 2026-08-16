@@ -4,6 +4,8 @@ import 'package:app_quanly_giaidau/features/community/social/community_feed_noti
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_poll_widget.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_preview.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_comment_sheet.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/shared/widgets/report_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,13 +73,40 @@ class CommunityPostCard extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      GestureDetector(
-                        onTap: onAuthorTap,
-                        child: Text(
-                          post.authorName,
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
-                      ),
+                      Builder(builder: (context) {
+                        // Tag CLB cạnh tên tác giả (tối đa 2, như web CommunityPostCard).
+                        final presets = ref
+                            .watch(communityTagPresetsProvider(communityId))
+                            .asData
+                            ?.value;
+                        final member = ref
+                            .watch(communityMemberDirectoryProvider(communityId))
+                            .asData
+                            ?.value[post.authorId];
+                        final tags = (member?.tags ?? const <String>[]).take(2).toList();
+                        return Wrap(
+                          spacing: 5,
+                          runSpacing: 3,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            GestureDetector(
+                              onTap: onAuthorTap,
+                              child: Text(
+                                post.authorName,
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
+                            ),
+                            ...tags.map(
+                              (tag) => PresetTagChip(
+                                label: tag,
+                                color: presets == null
+                                    ? null
+                                    : resolvePresetColor(presets, tag),
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
                       Text(
                         _relativeTime(post.createdAt),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(

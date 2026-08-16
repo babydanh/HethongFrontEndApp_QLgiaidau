@@ -53,6 +53,23 @@ final communityMembersProvider = FutureProvider.family<List<CommunityMemberModel
   return repo.getMembers(communityId);
 });
 
+/// Tag preset của CLB (tên + màu) — nguồn màu hiển thị tag thành viên
+/// mọi nơi có tên + avatar (bài viết, chat, danh sách, profile) như web.
+final communityTagPresetsProvider =
+    FutureProvider.family<List<CommunityTagPreset>, String>((ref, communityId) async {
+  return ref.watch(communityRepositoryProvider).getTagPresets(communityId);
+});
+
+/// Map userId → member để tra nhanh tag/role theo tác giả bài viết, tin nhắn.
+/// (Web cũng resolve client-side bằng getMembers limit 100 + match theo id.)
+final communityMemberDirectoryProvider =
+    FutureProvider.family<Map<String, CommunityMemberModel>, String>((ref, communityId) async {
+  final members = await ref.watch(communityMembersProvider(communityId).future);
+  return {
+    for (final member in members) member.userId: member,
+  };
+});
+
 /// Bounded, server-side member lookup for @mentions.  It deliberately never
 /// downloads an entire large club just to populate a composer popup.
 typedef CommunityMemberSearch = ({String communityId, String query});

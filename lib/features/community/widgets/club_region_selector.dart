@@ -103,7 +103,10 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Key theo mã cha: đổi tỉnh/quận phải tạo lại field con, nếu không
+        // DropdownButtonFormField giữ internal state và hiển thị giá trị cũ.
         _dropdown(
+          key: const ValueKey('province'),
           context: context,
           colors: colors,
           label: 'Tỉnh / Thành phố *',
@@ -123,6 +126,7 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
         ),
         const SizedBox(height: 12),
         _dropdown(
+          key: ValueKey('district-$_provinceCode'),
           context: context,
           colors: colors,
           label: 'Quận / Huyện',
@@ -141,6 +145,7 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
         ),
         const SizedBox(height: 12),
         _dropdown(
+          key: ValueKey('ward-$_districtCode'),
           context: context,
           colors: colors,
           label: 'Phường / Xã',
@@ -157,6 +162,7 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
   }
 
   Widget _dropdown({
+    Key? key,
     required BuildContext context,
     required AppColorsExtension colors,
     required String label,
@@ -171,6 +177,7 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
       effectiveItems.insert(0, Region(code: value, name: '$value (cũ)'));
     }
     return DropdownButtonFormField<String>(
+      key: key,
       initialValue: value.isEmpty ? null : value,
       decoration: InputDecoration(
         labelText: label,
