@@ -70,7 +70,11 @@ class CommunityFeedNotifier extends Notifier<CommunityFeedState> {
     Map<String, dynamic>? poll,
   }) async {
     final trimmed = text.trim();
-    if ((trimmed.isEmpty && mediaUrls.isEmpty) || state.isSubmitting) return false;
+    // Backend yêu cầu: bài viết cần nội dung, ảnh HOẶC bình chọn.
+    if ((trimmed.isEmpty && mediaUrls.isEmpty && poll == null) ||
+        state.isSubmitting) {
+      return false;
+    }
     state = state.copyWith(isSubmitting: true, clearError: true);
     try {
       final post = await ref.read(communitySocialRepositoryProvider).createPost(

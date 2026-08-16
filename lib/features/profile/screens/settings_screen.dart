@@ -8,7 +8,7 @@ import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
-import 'package:app_quanly_giaidau/domain/repositories/user_repository.dart';
+import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/phone_verification_flow.dart';
 
@@ -116,23 +116,23 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
   final _bioCtrl = TextEditingController();
 
   /// Fallback khi API /regions/provinces lỗi — giữ nguyên danh mục cũ của app.
-  static const List<ProvinceOption> _fallbackProvinces = [
-    ProvinceOption(code: '1', name: 'Hà Nội'),
-    ProvinceOption(code: '31', name: 'Hải Phòng'),
-    ProvinceOption(code: '48', name: 'Đà Nẵng'),
-    ProvinceOption(code: '56', name: 'Khánh Hòa'),
-    ProvinceOption(code: '60', name: 'Bình Thuận'),
-    ProvinceOption(code: '68', name: 'Lâm Đồng'),
-    ProvinceOption(code: '74', name: 'Bình Dương'),
-    ProvinceOption(code: '75', name: 'Đồng Nai'),
-    ProvinceOption(code: '79', name: 'TP. Hồ Chí Minh'),
-    ProvinceOption(code: '89', name: 'An Giang'),
-    ProvinceOption(code: '92', name: 'Cần Thơ'),
+  static const List<Region> _fallbackProvinces = [
+    Region(code: '1', name: 'Hà Nội'),
+    Region(code: '31', name: 'Hải Phòng'),
+    Region(code: '48', name: 'Đà Nẵng'),
+    Region(code: '56', name: 'Khánh Hòa'),
+    Region(code: '60', name: 'Bình Thuận'),
+    Region(code: '68', name: 'Lâm Đồng'),
+    Region(code: '74', name: 'Bình Dương'),
+    Region(code: '75', name: 'Đồng Nai'),
+    Region(code: '79', name: 'TP. Hồ Chí Minh'),
+    Region(code: '89', name: 'An Giang'),
+    Region(code: '92', name: 'Cần Thơ'),
   ];
 
   static const _genders = ['Chưa chọn', 'Nam', 'Nữ', 'Khác'];
 
-  List<ProvinceOption> _provinces = _fallbackProvinces;
+  List<Region> _provinces = _fallbackProvinces;
   String _gender = 'Chưa chọn';
   String _provinceCode = '';
   DateTime? _dob;
@@ -148,7 +148,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
   }
 
   Future<void> _loadProvinces() async {
-    final provinces = await ref.read(userRepositoryProvider).getProvinces();
+    final provinces = await ref.read(regionRepositoryProvider).getProvinces();
     if (provinces.isNotEmpty && mounted) {
       setState(() => _provinces = provinces);
     }

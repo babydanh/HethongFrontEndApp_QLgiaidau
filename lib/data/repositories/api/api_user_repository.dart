@@ -255,27 +255,6 @@ class ApiUserRepository implements IUserRepository {
     }
   }
 
-  @override
-  Future<List<ProvinceOption>> getProvinces() async {
-    _log.info('Lấy danh sách tỉnh/thành qua API');
-    try {
-      final response = await _dioClient.dio.get('/regions/provinces');
-      final raw = response.data is Map ? response.data['data'] : response.data;
-      if (raw is! List) return [];
-      return raw
-          .whereType<Map>()
-          .map((item) => ProvinceOption(
-                code: item['code']?.toString() ?? '',
-                name: item['name']?.toString() ?? '',
-              ))
-          .where((province) => province.code.isNotEmpty && province.name.isNotEmpty)
-          .toList();
-    } catch (e, stack) {
-      _log.error('Lỗi lấy danh sách tỉnh/thành', e, stack);
-      return [];
-    }
-  }
-
   String _parseNestJsError(dynamic responseData, String fallback) {
     if (responseData == null) {
       return fallback;

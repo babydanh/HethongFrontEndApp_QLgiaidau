@@ -3,19 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
-
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/club_region_selector.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/club_social_links_editor.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/club_visibility_selector.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 
-/// Màn hình chỉnh sửa thông tin câu lạc bộ.
+/// Màn hình chỉnh sửa thông tin câu lạc bộ — đồng bộ web (SettingsTab.tsx).
 ///
-/// Gọi API PATCH /communities/:id để cập nhật:
-/// - Tên, mô tả, địa điểm, môn thể thao, hình thức tham gia
-/// - Logo, banner, số thành viên tối đa, quy tắc, social links
+/// PATCH /communities/:id với: tên, mô tả, môn thể thao chính (đúng 1),
+/// vùng hoạt động (tỉnh/quận/phường + ghép địa chỉ), visibility, joinMode,
+/// câu hỏi xét duyệt (chỉ khi APPROVAL), social links động, maxMembers, nội quy.
+/// Logo/banner upload riêng qua POST /upload/image + PATCH cộng đồng.
 class EditClubScreen extends ConsumerStatefulWidget {
   final String clubId;
 
@@ -34,10 +37,10 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
   final _maxMembersCtrl = TextEditingController();
   final _rulesCtrl = TextEditingController();
   final _joinQuestionCtrl = TextEditingController();
-  final _facebookCtrl = TextEditingController();
-  final _zaloCtrl = TextEditingController();
-  final _websiteCtrl = TextEditingController();
+
   final List<String> _joinQuestions = [];
+  Map<String, String> _socialLinks = const {};
+  ClubRegionSelection _region = const ClubRegionSelection();
 
   String _selectedSport = '';
   String _joinMode = 'OPEN';
@@ -53,39 +56,22 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     _maxMembersCtrl.dispose();
     _rulesCtrl.dispose();
     _joinQuestionCtrl.dispose();
-    _facebookCtrl.dispose();
-    _zaloCtrl.dispose();
-    _websiteCtrl.dispose();
     super.dispose();
   }
 
-  void _initFromClub(dynamic club) {
+  void _initFromClub(Community? club) {
     if (_initialized || club == null) return;
-    _nameCtrl.text = club.name ?? '';
+    _nameCtrl.text = club.name;
     _descCtrl.text = club.description ?? '';
     _locationCtrl.text = club.locationAddress ?? '';
-    _selectedSport = (club.sports is List && club.sports.isNotEmpty)
-        ? _getSportKey(club.sports.first.toString())
-        : '';
-    _joinMode = club.joinMode ?? 'OPEN';
-    _visibility = club.visibility ?? 'PUBLIC';
-    _joinQuestions
-      ..clear()
-      ..addAll(List<String>.from(club.joinQuestions ?? const <String>[]));
-    final links = Map<String, dynamic>.from(
-      club.socialLinks ?? const <String, dynamic>{},
-    );
-    _facebookCtrl.text = links['facebook']?.toString() ?? '';
-    _zaloCtrl.text = links['zalo']?.toString() ?? '';
-    _websiteCtrl.text = links['website']?.toString() ?? '';
+    _rulesCtrl.text = club.rules ?? '';
+    _maxMembersCtrl.text = club.maxMembers?.toString() ?? '';
+    _selectedSport = club.sports.isNotEmpty ? club.sports.first : '';
+    _joinMode = club.joinMode;
+    _visibility = club.visibility;
+    _joinQuestions.addAll(club.joinQuestions);
+    _socialLinks = club.socialLinks;
     _initialized = true;
-  }
-
-  String _getSportKey(String sportName) {
-    for (final entry in AppConstants.sportNames.entries) {
-      if (entry.value == sportName) return entry.key;
-    }
-    return sportName.trim();
   }
 
   Future<String> _resolveCategoryId() async {
@@ -97,49 +83,32 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           name == _selectedSport.toLowerCase();
     }).firstOrNull;
     if (selected == null || selected.id.isEmpty) {
-      throw StateError(
-        'Không tìm thấy môn thể thao đã chọn. Vui lòng thử lại.',
-      );
+      throw StateError('Câu lạc bộ phải có đúng 1 môn thể thao chính.');
     }
     return selected.id;
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickAndUploadImage({required bool isLogo}) async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      backgroundColor: context.colors.bgSurface,
+      backgroundColor: context.colors.bgCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => SafeArea(
+      builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: context.colors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(
-                Icons.camera_alt_rounded,
-                color: AppTheme.primary,
-              ),
+              leading: const Icon(Icons.camera_alt_rounded, color: AppTheme.primary),
               title: const Text('Chụp ảnh mới'),
-              onTap: () => Navigator.pop(context, ImageSource.camera),
+              onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
             ),
             ListTile(
-              leading: const Icon(
-                Icons.photo_library_rounded,
-                color: AppTheme.primary,
-              ),
+              leading: const Icon(Icons.photo_library_rounded, color: AppTheme.primary),
               title: const Text('Chọn từ thư viện'),
-              onTap: () => Navigator.pop(context, ImageSource.gallery),
+              onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
             ),
             const SizedBox(height: 12),
           ],
@@ -148,31 +117,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     );
     if (source == null || !mounted) return;
 
-    final target = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Chọn loại ảnh'),
-        content: const Text(
-          'Bạn muốn cập nhật ảnh đại diện hay ảnh bìa của CLB?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, 'logo'),
-            child: const Text('Ảnh đại diện'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, 'banner'),
-            child: const Text('Ảnh bìa'),
-          ),
-        ],
-      ),
-    );
-    if (target == null || !mounted) return;
-
-    final picked = await ImagePicker().pickImage(
-      source: source,
-      imageQuality: 88,
-    );
+    final picked = await ImagePicker().pickImage(source: source, imageQuality: 88);
     if (picked == null || !mounted) return;
     setState(() => _isLoading = true);
     try {
@@ -181,18 +126,16 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           .read(communitySocialRepositoryProvider)
           .uploadImage(bytes, picked.name);
       await ref.read(communityRepositoryProvider).updateCommunity(
-        widget.clubId,
-        {target == 'logo' ? 'logoUrl' : 'bannerUrl': url},
-      );
+            widget.clubId,
+            {isLogo ? 'logoUrl' : 'bannerUrl': url},
+          );
       ref.invalidate(communityDetailProvider(widget.clubId));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              target == 'logo'
-                  ? 'Đã cập nhật ảnh đại diện'
-                  : 'Đã cập nhật ảnh bìa',
-            ),
+            content: Text(isLogo
+                ? 'Đã cập nhật ảnh đại diện (PNG, JPG tỉ lệ 1:1)'
+                : 'Đã cập nhật ảnh bìa (khuyên dùng 1200x400 px)'),
           ),
         );
       }
@@ -210,30 +153,39 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedSport.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Câu lạc bộ phải có đúng 1 môn thể thao chính.')),
+      );
+      return;
+    }
+    if (_region.provinceCode.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn tỉnh/thành phố.')),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
     _log.info('Bắt đầu cập nhật CLB: ${widget.clubId}');
 
     try {
+      final composedAddress = _region.composeAddress(_locationCtrl.text);
       final repo = ref.read(communityRepositoryProvider);
       await repo.updateCommunity(widget.clubId, {
         'name': _nameCtrl.text.trim(),
         'description': _descCtrl.text.trim(),
-        'locationAddress': _locationCtrl.text.trim(),
-        'categoryIds': [await _resolveCategoryId()],
-        'joinMode': _joinMode,
+        'rules': _rulesCtrl.text.trim(),
         'visibility': _visibility,
+        'joinMode': _joinMode,
         'joinQuestions': _joinQuestions,
-        'socialLinks': {
-          if (_facebookCtrl.text.trim().isNotEmpty)
-            'facebook': _facebookCtrl.text.trim(),
-          if (_zaloCtrl.text.trim().isNotEmpty) 'zalo': _zaloCtrl.text.trim(),
-          if (_websiteCtrl.text.trim().isNotEmpty)
-            'website': _websiteCtrl.text.trim(),
-        },
-        if (_maxMembersCtrl.text.trim().isNotEmpty)
-          'maxMembers': int.tryParse(_maxMembersCtrl.text.trim()),
-        if (_rulesCtrl.text.trim().isNotEmpty) 'rules': _rulesCtrl.text.trim(),
+        'socialLinks': _socialLinks,
+        'categoryIds': [await _resolveCategoryId()],
+        'maxMembers': int.tryParse(_maxMembersCtrl.text.trim()),
+        'locationAddress': composedAddress.isEmpty ? null : composedAddress,
+        'provinceCode': _region.provinceCode,
+        'districtCode': _region.districtCode.isEmpty ? null : _region.districtCode,
+        'wardCode': _region.wardCode.isEmpty ? null : _region.wardCode,
       });
 
       _log.success('Cập nhật CLB thành công');
@@ -243,12 +195,17 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Đã cập nhật thông tin CLB'),
+            content: const Text('Cập nhật cài đặt câu lạc bộ thành công!'),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
           ),
         );
-        context.pop();
+        // Deep-link (vào thẳng /club/:id/edit) không có stack để pop thì về chi tiết CLB.
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/club/${widget.clubId}');
+        }
       }
     } catch (e, stack) {
       _log.error('Lỗi cập nhật CLB', e, stack);
@@ -278,7 +235,13 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.close_rounded, color: colors.textPrimary),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/club/${widget.clubId}');
+            }
+          },
         ),
         title: Text(
           'Chỉnh sửa CLB',
@@ -308,7 +271,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
       body: clubAsync.when(
         data: (club) {
           _initFromClub(club);
-          return _buildForm(colors);
+          return _buildForm(colors, club);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _buildError(
@@ -319,7 +282,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     );
   }
 
-  Widget _buildForm(AppColorsExtension colors) {
+  Widget _buildForm(AppColorsExtension colors, Community? club) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       physics: const BouncingScrollPhysics(),
@@ -328,59 +291,55 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Avatar & Banner
+            // ── Ảnh đại diện & Ảnh bìa (preview riêng như web) ──
             _label('Ảnh đại diện & Ảnh bìa', colors),
             const SizedBox(height: 8),
-            InkWell(
-              onTap: _pickImage,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                width: double.infinity,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: colors.bgSurface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: colors.border,
-                    style: BorderStyle.solid,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _imagePickerCard(
+                    colors: colors,
+                    title: 'Logo CLB',
+                    hint: 'PNG, JPG tỉ lệ 1:1',
+                    imageUrl: club?.logoUrl,
+                    isCircle: true,
+                    onTap: () => _pickAndUploadImage(isLogo: true),
                   ),
                 ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.camera_alt_outlined,
-                        color: colors.textMuted,
-                        size: 28,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Chạm để thay đổi ảnh',
-                        style: TextStyle(fontSize: 12, color: colors.textMuted),
-                      ),
-                    ],
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: _imagePickerCard(
+                    colors: colors,
+                    title: 'Ảnh bìa',
+                    hint: 'Khuyên dùng 1200x400 px',
+                    imageUrl: club?.bannerUrl,
+                    isCircle: false,
+                    onTap: () => _pickAndUploadImage(isLogo: false),
                   ),
                 ),
-              ),
+              ],
             ),
             const SizedBox(height: 24),
 
-            // Tên CLB
+            // ── Thông tin cơ bản ──
             _label('Tên câu lạc bộ *', colors),
             const SizedBox(height: 6),
             AppTextFormField(
               controller: _nameCtrl,
               hint: 'VD: CLB Cầu lông ABC',
               prefixIcon: Icons.edit_rounded,
-              validator: (v) => (v == null || v.trim().length < 3)
-                  ? 'Tên phải ít nhất 3 ký tự'
-                  : null,
+              validator: (v) {
+                final value = v?.trim() ?? '';
+                if (value.isEmpty) return 'Vui lòng nhập tên câu lạc bộ.';
+                if (value.length > 255) return 'Tên tối đa 255 ký tự.';
+                return null;
+              },
             ),
             const SizedBox(height: 20),
 
-            // Môn thể thao
-            _label('Môn thể thao chính', colors),
+            _label('Môn thể thao chính *', colors),
             const SizedBox(height: 6),
             Text(
               'Mỗi CLB chỉ có một môn thể thao chính.',
@@ -390,139 +349,124 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
             _buildSportSelector(),
             const SizedBox(height: 20),
 
-            // Mô tả
             _label('Mô tả', colors),
             const SizedBox(height: 6),
             AppTextFormField(
               controller: _descCtrl,
-              hint: 'Giới thiệu về câu lạc bộ...',
+              hint: 'Giới thiệu về mục đích hoạt động, lịch sinh hoạt cố định...',
               maxLines: 3,
               prefixIcon: Icons.notes_rounded,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            // Địa điểm
-            _label('Địa điểm', colors),
-            const SizedBox(height: 6),
+            // ── Địa điểm & Khu vực hoạt động ──
+            _label('Địa điểm & Khu vực hoạt động', colors),
+            const SizedBox(height: 8),
+            ClubRegionSelector(
+              initialProvinceCode: club?.provinceCode ?? '',
+              initialDistrictCode: club?.districtCode ?? '',
+              initialWardCode: club?.wardCode ?? '',
+              onChanged: (selection) => _region = selection,
+            ),
+            const SizedBox(height: 12),
             AppTextFormField(
               controller: _locationCtrl,
-              hint: 'VD: Hà Nội, TP. Hồ Chí Minh...',
+              hint:
+                  'Địa chỉ sân nhà / địa điểm sinh hoạt cụ thể (VD: Sân Thể Thao Tuổi Trẻ, Số 123 Lê Lợi...)',
               prefixIcon: Icons.location_on_outlined,
+            ),
+            const SizedBox(height: 24),
+
+            // ── Quyền riêng tư & Cách thức tham gia ──
+            _label('Quyền riêng tư', colors),
+            const SizedBox(height: 8),
+            ClubVisibilitySelector(
+              value: _visibility,
+              onChanged: (value) => setState(() => _visibility = value),
             ),
             const SizedBox(height: 20),
 
-            // Hình thức tham gia
-            _label('Hình thức tham gia', colors),
-            const SizedBox(height: 6),
+            _label('Cách thức tham gia', colors),
+            const SizedBox(height: 8),
             _buildJoinModeSelector(),
             const SizedBox(height: 20),
 
-            _label('Câu hỏi khi tham gia', colors),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Expanded(
-                  child: AppTextFormField(
-                    controller: _joinQuestionCtrl,
-                    hint: 'VD: Bạn chơi môn này bao lâu?',
-                    prefixIcon: Icons.help_outline_rounded,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filledTonal(
-                  onPressed: () {
-                    final question = _joinQuestionCtrl.text.trim();
-                    if (question.isEmpty || _joinQuestions.contains(question))
-                      return;
-                    setState(() {
-                      _joinQuestions.add(question);
-                      _joinQuestionCtrl.clear();
-                    });
-                  },
-                  icon: const Icon(Icons.add_rounded),
-                  tooltip: 'Thêm câu hỏi',
-                ),
-              ],
-            ),
-            if (_joinQuestions.isNotEmpty)
-              ..._joinQuestions.asMap().entries.map(
-                (entry) => ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  leading: Text('${entry.key + 1}.'),
-                  title: Text(entry.value),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 18),
-                    onPressed: () =>
-                        setState(() => _joinQuestions.removeAt(entry.key)),
-                  ),
-                ),
-              ),
-            const SizedBox(height: 20),
-
-            _label('Liên kết mạng xã hội', colors),
-            const SizedBox(height: 6),
-            AppTextFormField(
-              controller: _facebookCtrl,
-              hint: 'Facebook URL',
-              prefixIcon: Icons.facebook_rounded,
-              keyboardType: TextInputType.url,
-            ),
-            const SizedBox(height: 8),
-            AppTextFormField(
-              controller: _zaloCtrl,
-              hint: 'Zalo URL hoặc số điện thoại',
-              prefixIcon: Icons.chat_rounded,
-              keyboardType: TextInputType.url,
-            ),
-            const SizedBox(height: 8),
-            AppTextFormField(
-              controller: _websiteCtrl,
-              hint: 'Website URL',
-              prefixIcon: Icons.language_rounded,
-              keyboardType: TextInputType.url,
-            ),
-            const SizedBox(height: 20),
-
-            _label('Chế độ hiển thị', colors),
-            const SizedBox(height: 6),
-            DropdownButtonFormField<String>(
-              initialValue: _visibility,
-              decoration: const InputDecoration(isDense: true),
-              items: const [
-                DropdownMenuItem(value: 'PUBLIC', child: Text('Công khai')),
-                DropdownMenuItem(value: 'RESTRICTED', child: Text('Giới hạn')),
-                DropdownMenuItem(value: 'PRIVATE', child: Text('Riêng tư')),
-              ],
-              onChanged: (value) {
-                if (value != null) setState(() => _visibility = value);
-              },
-            ),
-            const SizedBox(height: 20),
-
-            // Số thành viên tối đa
-            _label('Số thành viên tối đa (không bắt buộc)', colors),
-            const SizedBox(height: 6),
             AppTextFormField(
               controller: _maxMembersCtrl,
-              hint: 'VD: 200',
+              label: 'Số thành viên tối đa',
+              hint: 'Không giới hạn',
               keyboardType: TextInputType.number,
               prefixIcon: Icons.people_alt_outlined,
             ),
             const SizedBox(height: 20),
 
-            // Quy tắc CLB
-            _label('Quy tắc CLB (không bắt buộc)', colors),
+            _label('Nội quy câu lạc bộ', colors),
             const SizedBox(height: 6),
             AppTextFormField(
               controller: _rulesCtrl,
-              hint: 'Nội quy, điều kiện tham gia...',
+              hint: 'Quy định ứng xử, thời gian sinh hoạt, đóng quỹ...',
               maxLines: 3,
               prefixIcon: Icons.rule_rounded,
             ),
+            const SizedBox(height: 24),
+
+            // ── Câu hỏi xét duyệt (chỉ khi joinMode == APPROVAL, như web) ──
+            if (_joinMode == 'APPROVAL') ...[
+              _label('Câu hỏi xét duyệt thành viên', colors),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppTextFormField(
+                      controller: _joinQuestionCtrl,
+                      hint:
+                          'Nhập câu hỏi (VD: Trình độ ELO / DUPR hiện tại của bạn là bao nhiêu?)...',
+                      prefixIcon: Icons.help_outline_rounded,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.filledTonal(
+                    onPressed: () {
+                      final question = _joinQuestionCtrl.text.trim();
+                      if (question.isEmpty || _joinQuestions.contains(question)) {
+                        return;
+                      }
+                      setState(() {
+                        _joinQuestions.add(question);
+                        _joinQuestionCtrl.clear();
+                      });
+                    },
+                    icon: const Icon(Icons.add_rounded),
+                    tooltip: 'Thêm câu hỏi',
+                  ),
+                ],
+              ),
+              ..._joinQuestions.asMap().entries.map(
+                    (entry) => ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: Text('${entry.key + 1}.'),
+                      title: Text(entry.value),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 18),
+                        onPressed: () => setState(
+                          () => _joinQuestions.removeAt(entry.key),
+                        ),
+                      ),
+                    ),
+                  ),
+              const SizedBox(height: 24),
+            ],
+
+            // ── Mạng xã hội & Kênh liên hệ ──
+            _label('Mạng xã hội & Kênh liên hệ', colors),
+            const SizedBox(height: 8),
+            ClubSocialLinksEditor(
+              initialLinks: _socialLinks,
+              onChanged: (links) => _socialLinks = links,
+            ),
             const SizedBox(height: 32),
 
-            // Save button
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -539,11 +483,8 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                       )
                     : const Icon(Icons.save_rounded),
                 label: Text(
-                  _isLoading ? 'Đang lưu...' : 'Lưu thay đổi',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15,
-                  ),
+                  _isLoading ? 'Đang lưu...' : 'Lưu toàn bộ cài đặt',
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                 ),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.primary,
@@ -562,6 +503,62 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     );
   }
 
+  Widget _imagePickerCard({
+    required AppColorsExtension colors,
+    required String title,
+    required String hint,
+    required String? imageUrl,
+    required bool isCircle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.border),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              height: 64,
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                shape: isCircle ? BoxShape.circle : BoxShape.rectangle,
+                borderRadius: isCircle ? null : BorderRadius.circular(8),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: imageUrl == null || imageUrl.isEmpty
+                  ? Icon(Icons.image_outlined, color: colors.textMuted, size: 24)
+                  : Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          Icon(Icons.broken_image_outlined, color: colors.textMuted),
+                    ),
+            ),
+            const SizedBox(height: 8),
+            Text(title,
+                style: TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w800, color: colors.textPrimary)),
+            const SizedBox(height: 2),
+            Text(hint, style: TextStyle(fontSize: 10, color: colors.textMuted)),
+            const SizedBox(height: 4),
+            Text(
+              'Thay đổi',
+              style: TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.w800, color: AppTheme.primary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDangerZone(AppColorsExtension colors) {
     return Card(
       color: colors.error.withValues(alpha: .06),
@@ -572,21 +569,19 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           children: [
             Text(
               'Vùng nguy hiểm',
-              style: TextStyle(
-                color: colors.error,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(color: colors.error, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 6),
-            Text(
-              'Xóa CLB là thao tác không thể hoàn tác.',
-              style: TextStyle(color: colors.textMuted),
+            const Text(
+              'Hành động này sẽ xóa vĩnh viễn Câu lạc bộ này cùng toàn bộ bài viết, '
+              'bảng xếp hạng và lịch sử giải đấu. Không thể hoàn tác sau khi xác nhận.',
+              style: TextStyle(fontSize: 12),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: _isLoading ? null : _confirmDeleteClub,
               icon: const Icon(Icons.delete_forever_outlined),
-              label: const Text('Xóa câu lạc bộ'),
+              label: const Text('Xoá vĩnh viễn câu lạc bộ'),
             ),
           ],
         ),
@@ -595,65 +590,74 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
   }
 
   Future<void> _confirmDeleteClub() async {
-    final expected = _nameCtrl.text.trim();
+    final club = ref.read(communityDetailProvider(widget.clubId)).asData?.value;
+    final expected = club?.name.trim() ?? _nameCtrl.text.trim();
     final controller = TextEditingController();
+    var typedName = '';
     try {
       final confirmed = await showDialog<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Xóa câu lạc bộ?'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Nhập chính xác tên CLB để xác nhận:'),
-              const SizedBox(height: 12),
-              Text(
-                expected,
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  labelText: 'Tên CLB hiện tại',
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (ctx, setDialogState) => AlertDialog(
+            title: const Text('Xoá vĩnh viễn câu lạc bộ'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Bạn có chắc chắn muốn xoá câu lạc bộ "$expected"? Toàn bộ dữ liệu '
+                  'thành viên, bài viết và hoạt động sẽ bị xoá vĩnh viễn và không thể khôi phục.',
                 ),
+                const SizedBox(height: 12),
+                Text('Nhập tên câu lạc bộ $expected để xác nhận:'),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: controller,
+                  onChanged: (value) => setDialogState(() => typedName = value),
+                  decoration: const InputDecoration(labelText: 'Tên câu lạc bộ'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Huỷ'),
+              ),
+              FilledButton(
+                onPressed: typedName.trim() == expected
+                    ? () => Navigator.pop(dialogContext, true)
+                    : null,
+                style: FilledButton.styleFrom(
+                  backgroundColor: context.colors.error,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Xoá vĩnh viễn'),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Hủy'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(
-                dialogContext,
-                controller.text.trim() == expected,
-              ),
-              child: const Text('Xóa'),
-            ),
-          ],
         ),
       );
       if (confirmed != true || !mounted) return;
       setState(() => _isLoading = true);
-      await ref
-          .read(communityRepositoryProvider)
-          .deleteCommunity(widget.clubId);
-      ref.invalidate(communityDetailProvider(widget.clubId));
+      await ref.read(communityRepositoryProvider).deleteCommunity(widget.clubId);
       invalidateCommunityCollections(ref);
-      if (mounted) context.go('/club/${widget.clubId}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã xoá câu lạc bộ thành công.')),
+        );
+        context.go('/home');
+      }
     } catch (e, stack) {
       _log.error('Lỗi xóa CLB', e, stack);
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Không thể xóa CLB: ${e.toString().replaceAll('Exception: ', '')}',
+              'Lỗi khi thực hiện xoá câu lạc bộ: ${e.toString().replaceAll('Exception: ', '')}',
             ),
           ),
         );
+      }
     } finally {
       controller.dispose();
       if (mounted) setState(() => _isLoading = false);
@@ -685,7 +689,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
       runSpacing: 8,
       children: categories.map((category) {
         final selected =
-            _selectedSport == category.slug || _selectedSport == category.id;
+            _selectedSport == category.slug || _selectedSport == category.name;
         return ChoiceChip(
           label: Text(category.name),
           selected: selected,
@@ -701,9 +705,11 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
 
   Widget _buildJoinModeSelector() {
     final modes = [
-      ('OPEN', 'Tự do', 'Bất kỳ ai cũng có thể tham gia'),
-      ('APPROVAL', 'Xét duyệt', 'Cần được phê duyệt khi tham gia'),
-      ('INVITE_ONLY', 'Chỉ mời', 'Chỉ thành viên được mời mới tham gia'),
+      ('OPEN', 'Mở tự do', 'Thành viên nhấn tham gia là vào nhóm ngay.'),
+      ('APPROVAL', 'Cần phê duyệt đơn',
+          'Phải trả lời câu hỏi và chờ BQT chấp thuận.'),
+      ('INVITE_ONLY', 'Chỉ nhận lời mời',
+          'Chỉ thành viên được mời mới có thể tham gia.'),
     ];
     return Column(
       children: modes.map((m) {
@@ -717,7 +723,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
               decoration: BoxDecoration(
                 color: selected
                     ? AppTheme.primary.withValues(alpha: 0.08)
-                    : context.colors.bgSurface,
+                    : context.colors.bgCard,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: selected ? AppTheme.primary : context.colors.border,
@@ -728,8 +734,8 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                 children: [
                   Icon(
                     selected
-                        ? Icons.check_circle_rounded
-                        : Icons.circle_outlined,
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_off,
                     color: selected
                         ? AppTheme.primary
                         : context.colors.textMuted,
@@ -753,9 +759,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                         Text(
                           m.$3,
                           style: TextStyle(
-                            fontSize: 11,
-                            color: context.colors.textMuted,
-                          ),
+                              fontSize: 11, color: context.colors.textMuted),
                         ),
                       ],
                     ),

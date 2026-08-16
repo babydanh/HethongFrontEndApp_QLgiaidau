@@ -2,7 +2,8 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
-import 'package:app_quanly_giaidau/features/community/social/widgets/community_composer.dart';
+import 'package:app_quanly_giaidau/features/community/social/widgets/community_composer_trigger.dart';
+import 'package:app_quanly_giaidau/features/community/social/widgets/community_post_composer_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_post_card.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/tag_assign_sheet.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -11,9 +12,9 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 
 /// Màn sinh hoạt CLB gọn cho mobile. Có thể mở từ club detail hoặc tab CLB.
+/// Đăng bài qua composer bottom sheet kiểu Facebook (đủ tính năng như web).
 class CommunitySocialScreen extends ConsumerStatefulWidget {
   final String communityId;
   final String communityName;
@@ -32,11 +33,7 @@ class CommunitySocialScreen extends ConsumerStatefulWidget {
 }
 
 class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
-  final _composerController = TextEditingController();
   final _scrollController = ScrollController();
-  final _selectedImages = <String>[];
-  final _mentionIds = <String>[];
-  String? _mentionQuery;
 
   @override
   void initState() {
@@ -52,7 +49,6 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
 
   @override
   void dispose() {
-    _composerController.dispose();
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
@@ -65,91 +61,34 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
     }
   }
 
-  Future<void> _submitPost() async {
-    final notifier = ref.read(
-      communityFeedProvider(widget.communityId).notifier,
+  void _openComposer({bool startWithPoll = false, bool startWithImage = false}) {
+    final membership = ref
+        .read(myCommunityMembershipProvider(widget.communityId))
+        .asData
+        ?.value;
+    final isPlatformAdmin = ref.read(authProvider).isAdmin;
+    final role = membership?.role.toUpperCase();
+    final isJoined = membership?.status.toUpperCase() == 'JOINED';
+    final canManageMemberTags = isPlatformAdmin ||
+        (isJoined && (role == 'OWNER' || role == 'ADMIN' || role == 'MODERATOR'));
+    final settings =
+        ref.read(communitySocialSettingsProvider(widget.communityId)).asData?.value;
+    final canMention = settings == null
+        ? isJoined
+        : (settings.memberTaggingPolicy == 'MEMBERS'
+            ? isJoined
+            : settings.memberTaggingPolicy == 'ADMINS' && canManageMemberTags);
+    CommunityPostComposerSheet.show(
+      context,
+      communityId: widget.communityId,
+      authorName: ref.read(userProfileProvider).asData?.value.fullName ?? 'Bạn',
+      authorAvatarUrl: ref.read(userProfileProvider).asData?.value.avatarUrl,
+      canMention: canMention,
+      canManageTags: canManageMemberTags,
+      onAssignMemberTags: _openMemberTagEditor,
+      startWithPoll: startWithPoll,
+      startWithImage: startWithImage,
     );
-    final success = await notifier.createPost(
-      text: _composerController.text,
-      mediaUrls: List.unmodifiable(_selectedImages),
-      mentions: List.unmodifiable(_mentionIds),
-    );
-    if (!mounted) return;
-    if (success) {
-      _composerController.clear();
-      _selectedImages.clear();
-      _mentionIds.clear();
-      final createdPost = ref
-          .read(communityFeedProvider(widget.communityId))
-          .posts
-          .first;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            createdPost.status == 'PENDING'
-                ? 'Bài viết đang chờ duyệt'
-                : 'Đã đăng lên bảng tin',
-          ),
-        ),
-      );
-    }
-  }
-
-  Future<void> _createPoll() async {
-    final questionController = TextEditingController();
-    final optionControllers = [TextEditingController(), TextEditingController()];
-    final poll = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text("Tạo bình chọn"),
-        content: StatefulBuilder(
-          builder: (context, setDialogState) => SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(controller: questionController, decoration: const InputDecoration(labelText: "Câu hỏi")),
-                ...optionControllers.asMap().entries.map((entry) => TextField(controller: entry.value, decoration: InputDecoration(labelText: "Lựa chọn ${entry.key + 1}"))),
-                TextButton.icon(
-                  onPressed: optionControllers.length >= 20 ? null : () => setDialogState(() => optionControllers.add(TextEditingController())),
-                  icon: const Icon(Icons.add),
-                  label: const Text("Thêm lựa chọn"),
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text("Hủy")),
-          FilledButton(
-            onPressed: () {
-              final question = questionController.text.trim();
-              final options = optionControllers.map((controller) => controller.text.trim()).where((value) => value.isNotEmpty).toList();
-              if (question.isEmpty || options.length < 2) return;
-              Navigator.pop(dialogContext, {
-                "question": question,
-                "options": options,
-                "allowMultipleAnswers": false,
-                "allowAddOptions": false,
-              });
-            },
-            child: const Text("Đăng bình chọn"),
-          ),
-        ],
-      ),
-    );
-    for (final controller in [questionController, ...optionControllers]) { controller.dispose(); }
-    if (!mounted || poll == null) return;
-    final success = await ref.read(communityFeedProvider(widget.communityId).notifier).createPost(
-      text: _composerController.text,
-      mediaUrls: List.unmodifiable(_selectedImages),
-      mentions: List.unmodifiable(_mentionIds),
-      poll: poll,
-    );
-    if (!mounted || !success) return;
-    _composerController.clear();
-    _selectedImages.clear();
-    _mentionIds.clear();
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã đăng bình chọn lên bảng tin")));
   }
 
   Future<void> _confirmDeletePost(String postId) async {
@@ -215,26 +154,6 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
     );
   }
 
-  Future<void> _pickImage() async {
-    try {
-      final picked = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 85,
-      );
-      if (picked == null || !mounted) return;
-      final bytes = await picked.readAsBytes();
-      final url = await ref
-          .read(communitySocialRepositoryProvider)
-          .uploadImage(bytes, picked.name);
-      if (mounted) setState(() => _selectedImages.add(url));
-    } catch (_) {
-      if (mounted)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Không thể tải ảnh lên.')));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(communityFeedProvider(widget.communityId));
@@ -267,19 +186,6 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
         isPlatformAdmin ||
         (socialSettings.postingPolicy == 'MEMBERS' && isJoined) ||
         (socialSettings.postingPolicy == 'ADMINS' && canManageMemberTags);
-    final canUseMemberTags =
-        canManageMemberTags && socialSettings.memberTaggingPolicy != 'OFF';
-    final canMentionMembers = socialSettings.memberTaggingPolicy == 'MEMBERS'
-        ? isJoined
-        : socialSettings.memberTaggingPolicy == 'ADMINS' && canManageMemberTags;
-    final searchState = !canMentionMembers || _mentionQuery == null
-        ? null
-        : ref.watch(
-            communityMemberSearchProvider((
-              communityId: widget.communityId,
-              query: _mentionQuery!,
-            )),
-          );
 
     final feedBody = RefreshIndicator(
       onRefresh: () => ref
@@ -299,32 +205,12 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
             const SizedBox(height: AppTheme.spacingSM),
           ],
           if (canPost)
-            CommunityComposer(
-              controller: _composerController,
-              isSubmitting: state.isSubmitting,
-              onSubmit: _submitPost,
-              onCreatePoll: _createPoll,
-              onPickImage: _pickImage,
-              imageCount: _selectedImages.length,
-              mentionCandidates: searchState?.value ?? const [],
-              isSearchingMembers: searchState?.isLoading ?? false,
-              memberSearchError: searchState?.hasError == true
-                  ? 'Không thể tìm thành viên'
-                  : null,
-              onMentionQueryChanged: (query) {
-                if (_mentionQuery == query) return;
-                setState(() => _mentionQuery = query);
-              },
-              onMentionsChanged: (ids) => _mentionIds
-                ..clear()
-                ..addAll(ids),
-              onMentionWarning: (message) => ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(message))),
-              canManageMemberTags: canUseMemberTags,
-              onAssignMemberTags: canUseMemberTags
-                  ? _openMemberTagEditor
-                  : null,
+            CommunityComposerTrigger(
+              authorName: profile?.fullName ?? 'Bạn',
+              authorAvatarUrl: profile?.avatarUrl,
+              onOpen: () => _openComposer(),
+              onOpenWithPoll: () => _openComposer(startWithPoll: true),
+              onOpenWithImage: () => _openComposer(startWithImage: true),
             ),
           if (!canPost)
             _SocialNotice(

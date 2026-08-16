@@ -1,12 +1,5 @@
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 
-/// Tỉnh/thành phục vụ chọn khu vực tranh tài. GET /regions/provinces
-class ProvinceOption {
-  final String code;
-  final String name;
-  const ProvinceOption({required this.code, required this.name});
-}
-
 abstract class IUserRepository {
   Future<UserProfile> getProfile();
   Future<UserProfile> updateProfile(Map<String, dynamic> data);
@@ -19,9 +12,6 @@ abstract class IUserRepository {
 
   /// Gửi yêu cầu đổi dữ liệu bị khóa (VD: giới tính). POST /users/change-requests
   Future<void> createChangeRequest({required String requestType, required String newValue});
-
-  /// Danh sách tỉnh/thành. GET /regions/provinces
-  Future<List<ProvinceOption>> getProvinces();
 
   /// Lấy hồ sơ công khai của người dùng khác.
   /// GET /users/:id/public

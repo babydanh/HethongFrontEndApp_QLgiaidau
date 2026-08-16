@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
@@ -30,6 +29,14 @@ class StandingsView extends ConsumerWidget {
     final tournamentAsync = ref.watch(tournamentProvider(tournamentId));
     final tournament = tournamentAsync.value;
     final isGsknockout = tournament?.bracketType == AppConstants.bracketGroupStageKnockout;
+    final isFootball = (tournament?.sport.toLowerCase() == 'football' ||
+            tournament?.sport.toLowerCase() == 'bóng đá' ||
+            tournament?.sport.toLowerCase() == 'soccer') ||
+        matches.any((match) {
+          final kind = match.sportRules?['kind']?.toString().toUpperCase();
+          final sport = match.sportKey?.toLowerCase();
+          return kind == 'FOOTBALL' || sport == 'football' || sport == 'soccer';
+        });
 
     // Map tên đội với groupName từ matches thuộc Vòng Bảng
     final teamGroupMap = <String, String>{};
@@ -159,18 +166,69 @@ class StandingsView extends ConsumerWidget {
                               color: context.colors.textSecondary,
                               fontSize: 12,
                             ),
-                            columns: const [
-                              DataColumn(label: Text('Hạng')),
-                              DataColumn(label: Text('Đội VĐV')),
-                              DataColumn(label: Text('Trận')),
-                              DataColumn(label: Text('T')),
-                              DataColumn(label: Text('B')),
-                              DataColumn(label: Text('Điểm')),
-                              DataColumn(label: Text('Hiệu số')),
-                            ],
+                            columns: isFootball
+                                ? const [
+                                    DataColumn(label: Text('Hạng')),
+                                    DataColumn(label: Text('Đội')),
+                                    DataColumn(label: Text('MP')),
+                                    DataColumn(label: Text('W')),
+                                    DataColumn(label: Text('D')),
+                                    DataColumn(label: Text('L')),
+                                    DataColumn(label: Text('GF')),
+                                    DataColumn(label: Text('GA')),
+                                    DataColumn(label: Text('GD')),
+                                    DataColumn(label: Text('Pts')),
+                                  ]
+                                : const [
+                                    DataColumn(label: Text('Hạng')),
+                                    DataColumn(label: Text('Đội VĐV')),
+                                    DataColumn(label: Text('Trận')),
+                                    DataColumn(label: Text('T')),
+                                    DataColumn(label: Text('B')),
+                                    DataColumn(label: Text('Điểm')),
+                                    DataColumn(label: Text('Hiệu số')),
+                                  ],
                             rows: List.generate(gStandings.length, (index) {
                               final st = gStandings[index];
                               final isAdvancing = isGsknockout && index < advancingCount;
+                              final cells = isFootball
+                                  ? [
+                                      DataCell(Text('${st.played}')),
+                                      DataCell(Text('${st.won}')),
+                                      DataCell(Text('${st.drawn}')),
+                                      DataCell(Text('${st.lost}')),
+                                      DataCell(Text('${st.pointsFor}')),
+                                      DataCell(Text('${st.pointsAgainst}')),
+                                      DataCell(Text(
+                                        '${st.pointDifference > 0 ? '+' : ''}${st.pointDifference}',
+                                      )),
+                                      DataCell(
+                                        Text(
+                                          '${st.totalPoints}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.primary,
+                                          ),
+                                        ),
+                                      ),
+                                    ]
+                                  : [
+                                      DataCell(Text('${st.played}')),
+                                      DataCell(Text('${st.won}')),
+                                      DataCell(Text('${st.lost}')),
+                                      DataCell(
+                                        Text(
+                                          '${st.totalPoints}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.primary,
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(Text(
+                                        '${st.pointDifference > 0 ? '+' : ''}${st.pointDifference}',
+                                      )),
+                                    ];
                               return DataRow(
                                 color: isAdvancing
                                     ? WidgetStateProperty.all(context.colors.success.withValues(alpha: 0.06))
@@ -203,23 +261,7 @@ class StandingsView extends ConsumerWidget {
                                       style: const TextStyle(fontWeight: FontWeight.bold),
                                     ),
                                   ),
-                                  DataCell(Text('${st.played}')),
-                                  DataCell(Text('${st.won}')),
-                                  DataCell(Text('${st.lost}')),
-                                  DataCell(
-                                    Text(
-                                      '${st.totalPoints}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.primary,
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Text(
-                                      '${st.pointDifference > 0 ? '+' : ''}${st.pointDifference}',
-                                    ),
-                                  ),
+                                  ...cells,
                                 ],
                               );
                             }),

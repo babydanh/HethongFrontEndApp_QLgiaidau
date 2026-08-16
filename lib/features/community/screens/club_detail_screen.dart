@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
+import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -46,6 +47,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   String _tournamentTypeFilter = 'ALL';
   String _tournamentSportFilter = 'ALL';
   bool _isAddingGalleryImage = false;
+  // Cache future cho card Trạng thái nhanh — tránh gọi lại API mỗi lần rebuild.
+  Future<CommunitySocialSettings>? _socialSettingsFuture;
 
   @override
   void initState() {
@@ -916,16 +919,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
   Widget _bannerGradient(Color c, String emoji) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Taste: màu phẳng, không gradient.
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isDark
-              ? const [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF0F172A)]
-              : const [Color(0xFFF8FAFC), Color(0xFFEFF6FF), Color(0xFFE0E7FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+      color: isDark ? const Color(0xFF16233A) : const Color(0xFFE8EEFB),
       child: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
@@ -3256,6 +3252,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ),
         const SizedBox(height: 20),
 
+        // Trạng thái & Tóm tắt nhanh (đồng bộ sidebar web)
+        _settingsSectionHeader('Trạng thái nhanh', colors),
+        const SizedBox(height: 8),
+        _buildQuickStatusCard(club, colors),
+        const SizedBox(height: 20),
+
         // Thống kê
         _settingsSectionHeader(l10n.club_statsSection, colors),
         const SizedBox(height: 8),
@@ -3325,6 +3327,88 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           ),
         ],
       ],
+    );
+  }
+
+  /// Tóm tắt nhanh như sidebar web: trạng thái, chế độ hiển thị, phòng chat.
+  Widget _buildQuickStatusCard(Community club, AppColorsExtension colors) {
+    final visibilityLabel = club.visibility == 'PUBLIC'
+        ? 'Công khai'
+        : club.visibility == 'RESTRICTED'
+            ? 'Hạn chế'
+            : 'Riêng tư';
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        children: [
+          _quickStatusRow(
+            colors,
+            icon: Icons.bolt_rounded,
+            label: 'Trạng thái',
+            value: 'Đang hoạt động',
+            valueColor: colors.success,
+          ),
+          Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
+          _quickStatusRow(
+            colors,
+            icon: Icons.visibility_outlined,
+            label: 'Chế độ hiển thị',
+            value: visibilityLabel,
+          ),
+          Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
+          FutureBuilder<CommunitySocialSettings>(
+            future: _socialSettingsFuture ??=
+                ref.read(communityRepositoryProvider).getSocialSettings(widget.clubId),
+            builder: (context, snapshot) {
+              final chatEnabled = snapshot.data?.chatEnabled ?? true;
+              return _quickStatusRow(
+                colors,
+                icon: Icons.chat_bubble_outline_rounded,
+                label: 'Phòng chat nội bộ',
+                value: chatEnabled ? 'Đang mở' : 'Đang tắt',
+                valueColor: chatEnabled ? colors.success : colors.textMuted,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _quickStatusRow(
+    AppColorsExtension colors, {
+    required IconData icon,
+    required String label,
+    required String value,
+    Color? valueColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: colors.textMuted),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 12, color: colors.textSecondary),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: valueColor ?? colors.textPrimary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -3525,7 +3609,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               behavior: SnackBarBehavior.floating,
             ),
           );
-          context.pop();
+          // Deep-link thẳng vào CLB không có stack để pop — về /home an toàn.
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/home');
+          }
         }
       } catch (e) {
         if (mounted) {

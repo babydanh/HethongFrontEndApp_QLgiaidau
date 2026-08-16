@@ -549,14 +549,22 @@ class _GroupCrossTable extends StatelessWidget {
     final cells = <String, _ScoreCell>{};
 
     for (final match in matches) {
-      if (!(match.status == 'completed' || match.status == 'walkover'))
+      if (!(match.status == 'completed' || match.status == 'walkover')) {
         continue;
-      if (match.team1Id.isEmpty || match.team2Id.isEmpty) continue;
+      }
+      if (match.team1Id.isEmpty || match.team2Id.isEmpty) {
+        continue;
+      }
 
       final p1Result = _resultFor(match, match.team1Id);
       final p2Result = _resultFor(match, match.team2Id);
-      final p1Label = '${match.score1}-${match.score2}';
-      final p2Label = '${match.score2}-${match.score1}';
+      final goals = _footballGoals(match);
+      final p1Label = goals == null
+          ? '${match.score1}-${match.score2}'
+          : '${goals.$1}-${goals.$2}';
+      final p2Label = goals == null
+          ? '${match.score2}-${match.score1}'
+          : '${goals.$2}-${goals.$1}';
 
       cells['${match.team1Id}_${match.team2Id}'] = _ScoreCell(
         p1Label,
@@ -577,15 +585,29 @@ class _GroupCrossTable extends StatelessWidget {
         ? _MatchResult.win
         : _MatchResult.loss;
     }
-    if (match.score1 == match.score2) {
+    final goals = _footballGoals(match);
+    final score1 = goals?.$1 ?? match.score1;
+    final score2 = goals?.$2 ?? match.score2;
+    if (score1 == score2) {
       return _MatchResult.draw;
     }
     final isTeam1 = participantId == match.team1Id;
-    final participantScore = isTeam1 ? match.score1 : match.score2;
-    final opponentScore = isTeam1 ? match.score2 : match.score1;
+    final participantScore = isTeam1 ? score1 : score2;
+    final opponentScore = isTeam1 ? score2 : score1;
     return participantScore > opponentScore
         ? _MatchResult.win
         : _MatchResult.loss;
+  }
+
+  (int, int)? _footballGoals(MatchModel match) {
+    final football = match.scoreDetails?['football'];
+    if (football is! Map) return null;
+    final p1 = football['team1Goals'] ?? football['p1Goals'];
+    final p2 = football['team2Goals'] ?? football['p2Goals'];
+    final score1 = p1 is num ? p1.toInt() : int.tryParse(p1?.toString() ?? '');
+    final score2 = p2 is num ? p2.toInt() : int.tryParse(p2?.toString() ?? '');
+    if (score1 == null || score2 == null || score1 < 0 || score2 < 0) return null;
+    return (score1, score2);
   }
 }
 

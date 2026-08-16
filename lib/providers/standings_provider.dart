@@ -147,7 +147,6 @@ Future<List<Standing>> _calculateClientStandings(
   )).future);
 
   var winPoints = 3;
-  // ignore: unused_local_variable
   var drawPoints = 1;
   var lossPoints = 0;
   for (final match in matches) {
@@ -175,8 +174,16 @@ Future<List<Standing>> _calculateClientStandings(
   for (final match in matches) {
     if (match.status.toLowerCase() != 'completed') continue;
 
-    final team1Pts = match.sets.fold(0, (sum, s) => sum + s.score1);
-    final team2Pts = match.sets.fold(0, (sum, s) => sum + s.score2);
+    final football = match.scoreDetails?['football'];
+    final footballMap = football is Map
+        ? Map<String, dynamic>.from(football)
+        : null;
+    final team1Pts = footballMap == null
+        ? match.sets.fold(0, (sum, s) => sum + s.score1)
+        : _asInt(footballMap['team1Goals'] ?? footballMap['p1Goals']);
+    final team2Pts = footballMap == null
+        ? match.sets.fold(0, (sum, s) => sum + s.score2)
+        : _asInt(footballMap['team2Goals'] ?? footballMap['p2Goals']);
     final team1Id = match.team1Id;
     final team2Id = match.team2Id;
     if (team1Id.isNotEmpty &&
@@ -198,27 +205,54 @@ Future<List<Standing>> _calculateClientStandings(
       );
     }
 
-    final winnerId = match.winnerId;
-    if (winnerId.isNotEmpty &&
-        winnerId != 'BYE' &&
-        standingsMap.containsKey(winnerId)) {
-      final current = standingsMap[winnerId]!;
-      standingsMap[winnerId] = current.copyWith(
-        played: current.played + 1,
-        won: current.won + 1,
-        totalPoints: current.totalPoints + winPoints,
-      );
+    if (team1Id.isEmpty ||
+        team2Id.isEmpty ||
+        team1Id == 'BYE' ||
+        team2Id == 'BYE' ||
+        !standingsMap.containsKey(team1Id) ||
+        !standingsMap.containsKey(team2Id)) {
+      continue;
     }
 
-    final loserId = match.loserId;
-    if (loserId.isNotEmpty &&
-        loserId != 'BYE' &&
-        standingsMap.containsKey(loserId)) {
-      final current = standingsMap[loserId]!;
-      standingsMap[loserId] = current.copyWith(
-        played: current.played + 1,
-        lost: current.lost + 1,
-        totalPoints: current.totalPoints + lossPoints,
+    final winnerId = match.winnerId;
+    final team1Won =
+        winnerId == team1Id || (winnerId.isEmpty && team1Pts > team2Pts);
+    final team2Won =
+        winnerId == team2Id || (winnerId.isEmpty && team2Pts > team1Pts);
+    final team1 = standingsMap[team1Id]!;
+    final team2 = standingsMap[team2Id]!;
+    if (team1Won) {
+      standingsMap[team1Id] = team1.copyWith(
+        played: team1.played + 1,
+        won: team1.won + 1,
+        totalPoints: team1.totalPoints + winPoints,
+      );
+      standingsMap[team2Id] = team2.copyWith(
+        played: team2.played + 1,
+        lost: team2.lost + 1,
+        totalPoints: team2.totalPoints + lossPoints,
+      );
+    } else if (team2Won) {
+      standingsMap[team2Id] = team2.copyWith(
+        played: team2.played + 1,
+        won: team2.won + 1,
+        totalPoints: team2.totalPoints + winPoints,
+      );
+      standingsMap[team1Id] = team1.copyWith(
+        played: team1.played + 1,
+        lost: team1.lost + 1,
+        totalPoints: team1.totalPoints + lossPoints,
+      );
+    } else {
+      standingsMap[team1Id] = team1.copyWith(
+        played: team1.played + 1,
+        drawn: team1.drawn + 1,
+        totalPoints: team1.totalPoints + drawPoints,
+      );
+      standingsMap[team2Id] = team2.copyWith(
+        played: team2.played + 1,
+        drawn: team2.drawn + 1,
+        totalPoints: team2.totalPoints + drawPoints,
       );
     }
   }

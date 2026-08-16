@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dar
 import 'package:app_quanly_giaidau/data/repositories/api/api_token_repository.dart';
 
 import 'package:app_quanly_giaidau/data/repositories/api/api_payment_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_region_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_user_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/local/app_session_repository.dart';
@@ -15,6 +16,7 @@ import 'package:app_quanly_giaidau/domain/repositories/auth_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/local_session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/ranking_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/region_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/team_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/token_repository.dart';
@@ -62,6 +64,10 @@ final rankingRepositoryProvider = Provider<IRankingRepository>((ref) {
 
 final userRepositoryProvider = Provider<IUserRepository>((ref) {
   return ApiUserRepository(ref.watch(dioClientProvider));
+});
+
+final regionRepositoryProvider = Provider<IRegionRepository>((ref) {
+  return ApiRegionRepository(ref.watch(dioClientProvider));
 });
 
 final sessionRepositoryProvider = Provider<ISessionRepository>((ref) {
