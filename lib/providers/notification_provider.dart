@@ -2,18 +2,24 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_notification_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/app_notification.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final notificationRepositoryProvider = Provider<ApiNotificationRepository>((ref) {
   return ApiNotificationRepository(ref.watch(dioClientProvider));
 });
 
-/// Provider cho số thông báo chưa đọc
+/// Provider cho số thông báo chưa đọc.
+/// Watch auth để tự fetch lại sau khi đăng nhập — tránh kẹt 0 do lần fetch
+/// đầu tiên chạy lúc chưa có token (401 → catch → cache 0 vĩnh viễn).
 final unreadCountProvider = FutureProvider<int>((ref) async {
+  if (!ref.watch(authProvider).isAuthenticated) return 0;
   try {
     final repo = ref.watch(notificationRepositoryProvider);
     return await repo.getUnreadCount();
-  } catch (_) {
+  } catch (e, stack) {
+    AppLogger('NotificationProvider')
+        .error('Không lấy được số thông báo chưa đọc', e, stack);
     return 0;
   }
 });

@@ -1039,30 +1039,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               color: Colors.white,
               size: 20,
             ),
-            Positioned(
-              top: -2.0,
-              right: -2.0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 1.5,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEF4444),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.white, width: 1.5),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  unread > 99 ? "99+" : "$unread",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 8.5,
-                    fontWeight: FontWeight.w900,
+            // Ẩn badge khi không có thông báo chưa đọc — không hiện số 0.
+            if (unread > 0)
+              Positioned(
+                top: -2.0,
+                right: -2.0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1.5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white, width: 1.5),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    unread > 99 ? "99+" : "$unread",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),

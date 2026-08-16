@@ -29,7 +29,12 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    Future.microtask(() => ref.read(notificationStateProvider.notifier).loadPage(1));
+    Future.microtask(() {
+      if (!mounted) return;
+      ref.read(notificationStateProvider.notifier).loadPage(1);
+      // Đồng bộ lại badge số chưa đọc mỗi lần mở màn hình thông báo.
+      ref.invalidate(unreadCountProvider);
+    });
   }
 
   @override

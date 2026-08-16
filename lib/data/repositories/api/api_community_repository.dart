@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/data/models/gallery_image_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_ranking_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_invite_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:dio/dio.dart';
 
 class ApiCommunityRepository implements ICommunityRepository {
@@ -179,7 +180,9 @@ class ApiCommunityRepository implements ICommunityRepository {
       return true;
     } catch (e, stack) {
       _log.error('Lỗi tham gia CLB', e, stack);
-      return false;
+      // Ném lỗi kèm message backend (CLB riêng tư, hết chỗ, cần lời mời...)
+      // để UI hiện lý do thật thay vì "Thất bại" chung chung.
+      throw Exception(ErrorParser.parse(e, 'Không thể tham gia CLB'));
     }
   }
 
