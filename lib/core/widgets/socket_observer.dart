@@ -1,10 +1,11 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/di/socket_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/services/push_notification_service.dart';
 import 'package:app_quanly_giaidau/domain/entities/app_notification.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/notification_provider.dart';
@@ -12,10 +13,10 @@ import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 
-/// Widget quản lý lifecycle kết nối WebSocket dựa trên trạng thái đăng nhập.
+/// Widget quản lý lifecycle kết nối WebSocket và FCM Push Notification dựa trên trạng thái đăng nhập.
 ///
-/// - Khi user đăng nhập → kết nối socket + đăng ký nhận notification realtime
-/// - Khi user đăng xuất → ngắt kết nối socket
+/// - Khi user đăng nhập → kết nối socket + đăng ký FCM Push Notification
+/// - Khi user đăng xuất → ngắt kết nối socket + hủy token FCM
 /// - Khi nhận `notification:new` từ socket → cập nhật NotificationNotifier
 class SocketObserver extends ConsumerStatefulWidget {
   final Widget child;
@@ -34,7 +35,10 @@ class _SocketObserverState extends ConsumerState<SocketObserver> with WidgetsBin
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncSocket());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncSocket();
+      _syncPushNotifications();
+    });
   }
 
   @override
@@ -86,6 +90,15 @@ class _SocketObserverState extends ConsumerState<SocketObserver> with WidgetsBin
     }
   }
 
+  void _syncPushNotifications() {
+    final isAuthenticated = ref.read(authProvider).isAuthenticated;
+    final dioClient = ref.read(dioClientProvider);
+
+    if (isAuthenticated) {
+      PushNotificationService.instance.initialize(dioClient: dioClient);
+    }
+  }
+
   void _connectSocket(dynamic socketService) {
     // Đăng ký callback xử lý notification realtime
     socketService.onNotification = (Map<String, dynamic> data) {
@@ -100,19 +113,21 @@ class _SocketObserverState extends ConsumerState<SocketObserver> with WidgetsBin
         unawaited(ref.read(notificationStateProvider.notifier).loadPage(1));
         // Refresh unread count
         ref.invalidate(unreadCountProvider);
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(notif.title),
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 4),
-              action: notif.routeTarget != null ? SnackBarAction(
-                label: 'Xem',
-                onPressed: () {
-                  context.push(notif.routeTarget!);
-                },
-              ) : null,
+              action: notif.routeTarget != null
+                  ? SnackBarAction(
+                      label: 'Xem',
+                      onPressed: () {
+                        context.push(notif.routeTarget!);
+                      },
+                    )
+                  : null,
             ),
           );
         }
@@ -126,15 +141,19 @@ class _SocketObserverState extends ConsumerState<SocketObserver> with WidgetsBin
 
   @override
   Widget build(BuildContext context) {
-    // Lắng nghe auth state để connect/disconnect socket
+    // Lắng nghe auth state để connect/disconnect socket và FCM
     ref.listen<bool>(
       authProvider.select((s) => s.isAuthenticated),
       (prev, next) {
         final socketService = ref.read(socketServiceProvider);
+        final dioClient = ref.read(dioClientProvider);
+
         if (next == true && prev != true) {
           _connectSocket(socketService);
+          PushNotificationService.instance.initialize(dioClient: dioClient);
         } else if (next == false && prev != false) {
           socketService.disconnect();
+          PushNotificationService.instance.unregisterToken(dioClient: dioClient);
         }
       },
     );

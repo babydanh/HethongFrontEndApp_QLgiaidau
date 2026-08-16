@@ -90,6 +90,11 @@ app.*.map.json
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
 lib/firebase_options.dart
+secrets/
+*firebase*.json
+*adminsdk*.json
+*service-account*.json
+*google-services*.json
 
 # Các file do IDE sinh ra
 .vscode/
