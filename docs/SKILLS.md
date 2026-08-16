@@ -733,3 +733,30 @@ abstract class BaseFirestoreRepository<T> {
 - **Trải nghiệm Lỗi thân thiện:** Mọi Error Message bật lên cho người dùng không được chứa dòng Code/Stacktrace (ví dụ: `Null check operator used on a null value`). Chỉ hiển thị thông điệp con người hiểu được: *"Đã xảy ra lỗi kết nối, vui lòng thử lại sau"*.
 - **Firebase App Check:** Cần kích hoạt **App Check** trên Firebase để đảm bảo chỉ có ứng dụng chính chủ tải từ Store mới có quyền gọi API xuống Database, ngăn chặn các cuộc tấn công DDoS hay spam dữ liệu từ Script bên ngoài.
 - **Bắt buộc có Privacy Policy:** Store yêu cầu mọi app kết nối mạng (dù là Đăng nhập ẩn danh) đều phải đính kèm đường link Chính sách bảo mật. Code UI phải có chỗ cho người dùng đọc điều khoản này.
+
+---
+
+## 15. Quy định Kiến trúc Firebase & Cơ sở Dữ liệu (FCM vs PostgreSQL Rule)
+
+> [!IMPORTANT]
+> **QUY TẮC CỐT LÕI VỀ CƠ SỞ DỮ LIỆU & FIREBASE TRONG TOÀN BỘ HỆ THỐNG:**
+
+1. **Firebase CHỈ ĐƯỢC PHÉP dùng cho Push Notification Thiết bị (FCM - Firebase Cloud Messaging):**
+   - Nhiệm vụ duy nhất của Firebase là kênh trung chuyển (Gateway) để đánh thức thiết bị, nhận `fcmToken`, kích hoạt chuông/rung và hiển thị banner thông báo ra màn hình khóa / khay hệ thống khi ứng dụng đang chạy ngầm hoặc đã bị đóng (Kill app).
+   - Tích hợp qua `PushNotificationService` trong Flutter (`app_quanly_giaidau`) và `FirebaseService` trong NestJS (`backend-api_qlgiaidau`).
+
+2. **TUYỆT ĐỐI KHÔNG DÙNG Firebase làm Cơ sở dữ liệu (No Firestore / No Realtime DB):**
+   - Toàn bộ cơ sở dữ liệu của dự án (Tài khoản, Hồ sơ người dùng, Giải đấu, Phân nhánh thi đấu, Lịch đấu, Tỉ số trực tiếp, Bài viết, Bình luận, Tin nhắn Chat, Đội bóng, Bảng xếp hạng ELO, Thanh toán...) **100% BẮT BUỘC lưu trữ trong PostgreSQL + Drizzle ORM + Redis** do máy chủ Backend NestJS tự quản lý.
+   - Mọi thao tác đọc/ghi/truy vấn dữ liệu phải thông qua REST API (`/api/v1/...`) và WebSocket (`Socket.IO`), tuyệt đối không kết nối trực tiếp vào Firestore SDK.
+
+3. **Quy định về Xin Quyền & Vòng đời Thiết bị (Notification Permission & Device Lifecycle):**
+   - **Xin quyền thông báo (Permission UX):** Chỉ yêu cầu quyền thông báo (`FirebaseMessaging.instance.requestPermission()`) khi người dùng đã đăng nhập hoặc vào luồng cần nhận thông báo thực tế.
+   - **Quản lý Vòng đời Token:** 
+     - Khi Đăng nhập $\rightarrow$ Lấy `fcmToken` và gọi `POST /api/v1/notifications/device-token` để lưu vào bảng `user_device_tokens`.
+     - Khi Đăng xuất $\rightarrow$ Gọi `DELETE /api/v1/notifications/device-token` để hủy token, tránh tình trạng nổ thông báo của tài khoản cũ sang máy người khác.
+     - Khi Token hết hạn / ứng dụng bị gỡ $\rightarrow$ Backend tự động dọn dẹp mã token hỏng trong DB.
+   - **Điều hướng khi bấm thông báo (Deeplink Routing):** Payload gửi từ Backend phải luôn kèm `data: { type, roomId, redirectUrl }` để Flutter router (`GoRouter`) tự động mở đúng phòng chat hoặc màn hình chi tiết tương ứng khi người dùng bấm vào thông báo từ màn hình khóa.
+
+4. **Bảo mật Tệp Cấu hình & Khóa Bí mật:**
+   - Các file `google-services.json`, `GoogleService-Info.plist`, `firebase-service-account.json`, `*adminsdk*.json`, và thư mục `secrets/` **BẮT BUỘC PHẢI NẰM TRONG `.gitignore`** ở mọi repository, không bao giờ được commit lên GitHub.
+
