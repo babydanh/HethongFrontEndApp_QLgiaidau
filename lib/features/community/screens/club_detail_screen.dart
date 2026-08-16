@@ -628,6 +628,20 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           );
           if (ok) await _fetchMembership();
         }
+      } catch (e, stack) {
+        // joinCommunity ném lỗi kèm message backend (hết chỗ, riêng tư...) —
+        // phải bắt để hiện lý do thay vì crash.
+        _log.error('Lỗi khi tham gia CLB (có câu hỏi)', e, stack);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${l10n.errorPrefix}: ${e.toString().replaceAll('Exception: ', '')}',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       } finally {
         if (mounted) setState(() => _isJoinLoading = false);
       }
