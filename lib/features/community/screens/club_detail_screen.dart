@@ -91,13 +91,201 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           joinedAt: membership['joinedAt']?.toString() ?? '',
         );
       });
+      if (_myMembership?.status == 'JOINED') {
+        _loadNotificationPref();
+      }
     } catch (e, stack) {
       _log.error('Failed to fetch membership', e, stack);
       if (mounted) setState(() => _myMembership = null);
     }
   }
 
-  // ─── Follow / Favorite (P2E.2) ───
+  // ─── Follow / Favorite & Notification (P2E.2) ───
+  String _notificationPref = 'ALL';
+
+  Future<void> _loadNotificationPref() async {
+    try {
+      final prefs = await ref.read(communityRepositoryProvider).getMyNotificationPreferences();
+      final found = prefs.where((p) => p.communityId == widget.clubId).firstOrNull;
+      if (found != null && mounted) {
+        setState(() => _notificationPref = found.notificationPreference);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _updateNotificationPref(String newPref) async {
+    final oldPref = _notificationPref;
+    setState(() => _notificationPref = newPref);
+    try {
+      await ref.read(communityRepositoryProvider).updateNotificationPreference(
+        widget.clubId,
+        newPref,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              newPref == 'ALL'
+                  ? 'Đã bật nhận tất cả thông báo CLB'
+                  : newPref == 'MENTIONS_ONLY'
+                      ? 'Chỉ nhận thông báo khi được @nhắc tên'
+                      : 'Đã tắt thông báo CLB (Im lặng)',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _notificationPref = oldPref);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể cập nhật cài đặt thông báo.')),
+        );
+      }
+    }
+  }
+
+  void _showNotificationPreferenceSheet(BuildContext context, Community club) {
+    final colors = context.colors;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: colors.bgCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.notifications_outlined, color: Color(0xFF2563EB), size: 22),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Thông báo câu lạc bộ',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Tùy chỉnh nhận tin nhắn và thông báo từ ${club.name}',
+                      style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildNotificationOptionItem(
+                      title: 'Tất cả tin nhắn',
+                      subtitle: 'Nhận thông báo cho mọi tin nhắn mới (Mặc định)',
+                      icon: Icons.notifications_active_outlined,
+                      iconColor: const Color(0xFF2563EB),
+                      value: 'ALL',
+                      colors: colors,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _updateNotificationPref('ALL');
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildNotificationOptionItem(
+                      title: 'Chỉ khi được @tag',
+                      subtitle: 'Chỉ thông báo khi có người nhắc tên bạn hoặc @all',
+                      icon: Icons.alternate_email_rounded,
+                      iconColor: const Color(0xFFD97706),
+                      value: 'MENTIONS_ONLY',
+                      colors: colors,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _updateNotificationPref('MENTIONS_ONLY');
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildNotificationOptionItem(
+                      title: 'Tắt thông báo (Im lặng)',
+                      subtitle: 'Không nhận thông báo đẩy từ câu lạc bộ này',
+                      icon: Icons.notifications_off_outlined,
+                      iconColor: const Color(0xFF64748B),
+                      value: 'MUTED',
+                      colors: colors,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _updateNotificationPref('MUTED');
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildNotificationOptionItem({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color iconColor,
+    required String value,
+    required AppColorsExtension colors,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = _notificationPref == value;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? iconColor.withValues(alpha: 0.08) : colors.bgDark,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? iconColor.withValues(alpha: 0.4) : colors.border,
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(Icons.check_circle_rounded, color: iconColor, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildFollowFavoriteButtons(
     Community club,
@@ -110,6 +298,24 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (_myMembership?.status == 'JOINED')
+          IconButton(
+            onPressed: () => _showNotificationPreferenceSheet(context, club),
+            tooltip: 'Cài đặt thông báo CLB',
+            icon: Icon(
+              _notificationPref == 'MUTED'
+                  ? Icons.notifications_off_outlined
+                  : _notificationPref == 'MENTIONS_ONLY'
+                      ? Icons.alternate_email_rounded
+                      : Icons.notifications_active_outlined,
+              color: _notificationPref == 'MUTED'
+                  ? colors.textMuted
+                  : _notificationPref == 'MENTIONS_ONLY'
+                      ? const Color(0xFFD97706)
+                      : AppTheme.primary,
+              size: 22,
+            ),
+          ),
         IconButton(
           onPressed: _isFollowBusy
               ? null

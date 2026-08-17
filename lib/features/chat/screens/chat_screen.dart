@@ -86,15 +86,83 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return raw;
   }
 
+  String? _roomId;
+
   List<ChatMessage> _parseMessages(dynamic raw) {
     final conversation = _unwrapData(raw);
     if (conversation is! Map<String, dynamic>) return const [];
+    final id = conversation['id']?.toString();
+    if (id != null && id.isNotEmpty && mounted) {
+      _roomId = id;
+    }
     final messages = conversation['messages'];
     if (messages is! List) return const [];
     return messages
         .whereType<Map>()
         .map((item) => ChatMessage.fromJson(Map<String, dynamic>.from(item)))
         .toList();
+  }
+
+  Future<void> _confirmClearChat(BuildContext context) async {
+    final colors = context.colors;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.bgCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFEE2E2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.delete_outline_rounded, color: Color(0xFFE11D48), size: 22),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text('Xóa đoạn chat?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Lịch sử tin nhắn hỗ trợ cũ sẽ được xóa khỏi tài khoản của bạn và không thể khôi phục.',
+          style: TextStyle(fontSize: 13, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('Hủy', style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w600)),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFE11D48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Xóa đoạn chat', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && _roomId != null) {
+      try {
+        final dio = ref.read(dioClientProvider).dio;
+        await dio.post('/chat/rooms/$_roomId/clear');
+        if (!mounted || !context.mounted) return;
+        setState(() => _messages = const []);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã xóa toàn bộ lịch sử đoạn chat.')),
+        );
+      } catch (e) {
+        if (!mounted || !context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể xóa lịch sử đoạn chat lúc này.')),
+        );
+      }
+    }
   }
 
   Future<void> _loadConversation({bool quiet = false}) async {
@@ -234,6 +302,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ],
         ),
+        actions: [
+          PopupMenuButton<String>(
+            icon: Icon(Icons.more_vert_rounded, color: colors.textPrimary),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
+            onSelected: (value) {
+              if (value == 'clear') {
+                _confirmClearChat(context);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'clear',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline_rounded, size: 20, color: Color(0xFFE11D48)),
+                    SizedBox(width: 10),
+                    Text('Xóa đoạn chat', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFE11D48))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Column(
         children: [

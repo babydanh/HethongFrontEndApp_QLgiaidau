@@ -9,6 +9,8 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
+import 'package:app_quanly_giaidau/data/models/club_notification_pref_model.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/phone_verification_flow.dart';
 
@@ -1221,6 +1223,10 @@ class _SecurityTab extends ConsumerWidget {
           ]),
           const SizedBox(height: 24),
 
+          // Thông báo Câu lạc bộ
+          const _ClubNotificationSettingsCard(),
+          const SizedBox(height: 24),
+
           // Vùng nguy hiểm
           _sectionTitle(colors, 'Vùng nguy hiểm'),
           const SizedBox(height: 10),
@@ -1273,6 +1279,338 @@ class _SecurityTab extends ConsumerWidget {
           ),
           const SizedBox(height: 32),
         ],
+      ),
+    );
+  }
+}
+
+class _ClubNotificationSettingsCard extends ConsumerStatefulWidget {
+  const _ClubNotificationSettingsCard();
+
+  @override
+  ConsumerState<_ClubNotificationSettingsCard> createState() =>
+      _ClubNotificationSettingsCardState();
+}
+
+class _ClubNotificationSettingsCardState
+    extends ConsumerState<_ClubNotificationSettingsCard> {
+  List<ClubNotificationPrefModel>? _prefs;
+  bool _isLoading = true;
+  String? _updatingClubId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    try {
+      final list = await ref.read(communityRepositoryProvider).getMyNotificationPreferences();
+      if (mounted) {
+        setState(() {
+          _prefs = list;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _prefs = [];
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _updatePref(String communityId, String newPref) async {
+    final currentList = _prefs ?? [];
+    final idx = currentList.indexWhere((c) => c.communityId == communityId);
+    if (idx == -1) return;
+
+    final oldPref = currentList[idx].notificationPreference;
+    // Optimistic update
+    setState(() {
+      _updatingClubId = communityId;
+      currentList[idx] = currentList[idx].copyWith(notificationPreference: newPref);
+    });
+
+    try {
+      await ref.read(communityRepositoryProvider).updateNotificationPreference(
+        communityId,
+        newPref,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              newPref == 'ALL'
+                  ? 'Đã bật nhận tất cả thông báo'
+                  : newPref == 'MENTIONS_ONLY'
+                      ? 'Chỉ nhận thông báo khi được @nhắc tên'
+                      : 'Đã tắt thông báo CLB (Im lặng)',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          currentList[idx] = currentList[idx].copyWith(notificationPreference: oldPref);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể cập nhật cài đặt thông báo')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _updatingClubId = null);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle(colors, 'Thông báo Câu lạc bộ'),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+            border: Border.all(color: colors.border),
+          ),
+          child: _isLoading
+              ? const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    ),
+                  ),
+                )
+              : (_prefs == null || _prefs!.isEmpty)
+                  ? Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          Icon(Icons.groups_outlined, size: 36, color: colors.textMuted),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Bạn chưa tham gia câu lạc bộ nào',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Khi gia nhập CLB, bạn có thể tùy chỉnh nhận thông báo tại đây.',
+                            style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _prefs!.length,
+                      separatorBuilder: (_, index) => _divider(colors),
+                      itemBuilder: (context, index) {
+                        final club = _prefs![index];
+                        final isUpdating = _updatingClubId == club.communityId;
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 18,
+                                    backgroundColor: const Color(0xFFEFF6FF),
+                                    backgroundImage: club.logoUrl != null && club.logoUrl!.isNotEmpty
+                                        ? NetworkImage(club.logoUrl!)
+                                        : null,
+                                    child: club.logoUrl == null || club.logoUrl!.isEmpty
+                                        ? Text(
+                                            club.communityName.isNotEmpty
+                                                ? club.communityName[0].toUpperCase()
+                                                : 'C',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 14,
+                                              color: Color(0xFF2563EB),
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                club.communityName,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: colors.textPrimary,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 6,
+                                                vertical: 2,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: colors.bgDark,
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                club.role,
+                                                style: TextStyle(
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: colors.textSecondary,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          club.notificationPreference == 'ALL'
+                                              ? 'Nhận tất cả tin nhắn & thông báo'
+                                              : club.notificationPreference == 'MENTIONS_ONLY'
+                                                  ? 'Chỉ nhận thông báo khi được @nhắc tên'
+                                                  : 'Đã tắt thông báo (Im lặng)',
+                                          style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (isUpdating)
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 8),
+                                      child: SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              // 3-Option Segmented Row
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildSegmentButton(
+                                      title: 'Tất cả',
+                                      icon: Icons.notifications_active_outlined,
+                                      isSelected: club.notificationPreference == 'ALL',
+                                      activeColor: const Color(0xFF2563EB),
+                                      colors: colors,
+                                      onTap: isUpdating ? null : () => _updatePref(club.communityId, 'ALL'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: _buildSegmentButton(
+                                      title: 'Chỉ @tag',
+                                      icon: Icons.alternate_email_rounded,
+                                      isSelected: club.notificationPreference == 'MENTIONS_ONLY',
+                                      activeColor: const Color(0xFFD97706),
+                                      colors: colors,
+                                      onTap: isUpdating ? null : () => _updatePref(club.communityId, 'MENTIONS_ONLY'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: _buildSegmentButton(
+                                      title: 'Tắt',
+                                      icon: Icons.notifications_off_outlined,
+                                      isSelected: club.notificationPreference == 'MUTED',
+                                      activeColor: const Color(0xFFE11D48),
+                                      colors: colors,
+                                      onTap: isUpdating ? null : () => _updatePref(club.communityId, 'MUTED'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSegmentButton({
+    required String title,
+    required IconData icon,
+    required bool isSelected,
+    required Color activeColor,
+    required AppColorsExtension colors,
+    required VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor.withValues(alpha: 0.1) : colors.bgDark,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? activeColor.withValues(alpha: 0.5) : colors.border,
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 13,
+              color: isSelected ? activeColor : colors.textMuted,
+            ),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected ? activeColor : colors.textSecondary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

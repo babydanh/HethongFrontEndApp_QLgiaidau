@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/domain/repositories/community_repository.dart
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/gallery_image_model.dart';
+import 'package:app_quanly_giaidau/data/models/club_notification_pref_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_ranking_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_invite_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
@@ -758,5 +759,56 @@ class ApiCommunityRepository implements ICommunityRepository {
     await _dioClient.dio.delete(
       '/communities/$communityId/tag-presets/$presetId',
     );
+  }
+
+  @override
+  Future<void> updateNotificationPreference(
+    String communityId,
+    String preference,
+  ) async {
+    _log.info('Cập nhật thông báo CLB $communityId: $preference');
+    try {
+      await _dioClient.dio.put(
+        '/communities/$communityId/members/me/notification-preference',
+        data: {'preference': preference},
+      );
+      _log.success('Cập nhật thông báo CLB $communityId thành công');
+    } catch (e, stack) {
+      _log.error('Lỗi cập nhật thông báo CLB', e, stack);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<ClubNotificationPrefModel>> getMyNotificationPreferences() async {
+    _log.info('Lấy danh sách cài đặt thông báo CLB của tôi');
+    try {
+      final response = await _dioClient.dio.get(
+        '/communities/my/notification-preferences',
+      );
+      final raw = response.data;
+      final list = raw is Map
+          ? (raw['data'] as List<dynamic>? ?? const [])
+          : (raw as List<dynamic>? ?? const []);
+      return list
+          .whereType<Map>()
+          .map((item) => ClubNotificationPrefModel.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+    } catch (e, stack) {
+      _log.error('Lỗi lấy danh sách cài đặt thông báo CLB', e, stack);
+      return [];
+    }
+  }
+
+  @override
+  Future<void> clearChatRoom(String roomId) async {
+    _log.info('Xóa lịch sử phòng chat: $roomId');
+    try {
+      await _dioClient.dio.post('/chat/rooms/$roomId/clear');
+      _log.success('Xóa lịch sử phòng chat $roomId thành công');
+    } catch (e, stack) {
+      _log.error('Lỗi xóa lịch sử phòng chat', e, stack);
+      rethrow;
+    }
   }
 }

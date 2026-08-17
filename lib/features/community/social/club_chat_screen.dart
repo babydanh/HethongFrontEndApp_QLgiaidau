@@ -50,6 +50,8 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
   _ClubChatMessage? _replyingTo;
   bool _uploading = false;
 
+  String _notificationPref = 'ALL';
+
   @override
   void initState() {
     super.initState();
@@ -72,9 +74,255 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     };
     _loadRoom();
     _loadBlockedUsers();
+    _loadNotificationPref();
     _pollTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       if (!_socketConnected) _refreshMessages();
     });
+  }
+
+  Future<void> _loadNotificationPref() async {
+    try {
+      final prefs = await ref.read(communityRepositoryProvider).getMyNotificationPreferences();
+      final found = prefs.where((p) => p.communityId == widget.communityId).firstOrNull;
+      if (found != null && mounted) {
+        setState(() => _notificationPref = found.notificationPreference);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _updateNotificationPref(String newPref) async {
+    final oldPref = _notificationPref;
+    setState(() => _notificationPref = newPref);
+    try {
+      await ref.read(communityRepositoryProvider).updateNotificationPreference(
+        widget.communityId,
+        newPref,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              newPref == 'ALL'
+                  ? 'Đã bật nhận tất cả thông báo CLB'
+                  : newPref == 'MENTIONS_ONLY'
+                      ? 'Chỉ nhận thông báo khi được @nhắc tên'
+                      : 'Đã tắt thông báo CLB (Im lặng)',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _notificationPref = oldPref);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể cập nhật cài đặt thông báo.')),
+        );
+      }
+    }
+  }
+
+  void _showNotificationPreferenceSheet(BuildContext context) {
+    final colors = context.colors;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: colors.bgCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.notifications_outlined, color: Color(0xFF2563EB), size: 22),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Thông báo câu lạc bộ',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Tùy chỉnh nhận tin nhắn và thông báo từ ${widget.communityName}',
+                      style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildNotificationOption(
+                      title: 'Tất cả tin nhắn',
+                      subtitle: 'Nhận thông báo cho mọi tin nhắn mới (Mặc định)',
+                      icon: Icons.notifications_active_outlined,
+                      iconColor: const Color(0xFF2563EB),
+                      value: 'ALL',
+                      colors: colors,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _updateNotificationPref('ALL');
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildNotificationOption(
+                      title: 'Chỉ khi được @tag',
+                      subtitle: 'Chỉ thông báo khi có người nhắc tên bạn hoặc @all',
+                      icon: Icons.alternate_email_rounded,
+                      iconColor: const Color(0xFFD97706),
+                      value: 'MENTIONS_ONLY',
+                      colors: colors,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _updateNotificationPref('MENTIONS_ONLY');
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildNotificationOption(
+                      title: 'Tắt thông báo (Im lặng)',
+                      subtitle: 'Không nhận thông báo đẩy từ câu lạc bộ này',
+                      icon: Icons.notifications_off_outlined,
+                      iconColor: const Color(0xFF64748B),
+                      value: 'MUTED',
+                      colors: colors,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _updateNotificationPref('MUTED');
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildNotificationOption({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color iconColor,
+    required String value,
+    required AppColorsExtension colors,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = _notificationPref == value;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? iconColor.withValues(alpha: 0.08) : colors.bgDark,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? iconColor.withValues(alpha: 0.4) : colors.border,
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(Icons.check_circle_rounded, color: iconColor, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmClearChat(BuildContext context) async {
+    final colors = context.colors;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.bgCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFEE2E2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.delete_outline_rounded, color: Color(0xFFE11D48), size: 22),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text('Xóa đoạn chat?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Lịch sử tin nhắn cũ sẽ được xóa khỏi tài khoản của bạn và không thể khôi phục. Các thành viên khác trong CLB không bị ảnh hưởng.',
+          style: TextStyle(fontSize: 13, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('Hủy', style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w600)),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFE11D48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Xóa đoạn chat', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && _roomId != null) {
+      try {
+        await ref.read(communityRepositoryProvider).clearChatRoom(_roomId!);
+        if (!mounted || !context.mounted) return;
+        setState(() => _messages = const []);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã xóa toàn bộ lịch sử đoạn chat.')),
+        );
+      } catch (e) {
+        if (!mounted || !context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể xóa lịch sử đoạn chat lúc này.')),
+        );
+      }
+    }
   }
 
   @override
@@ -524,7 +772,53 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.communityName)),
+      appBar: AppBar(
+        title: Text(widget.communityName, style: const TextStyle(fontWeight: FontWeight.w800)),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
+            onSelected: (value) {
+              if (value == 'notification') {
+                _showNotificationPreferenceSheet(context);
+              } else if (value == 'clear') {
+                _confirmClearChat(context);
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'notification',
+                child: Row(
+                  children: [
+                    Icon(
+                      _notificationPref == 'MUTED'
+                          ? Icons.notifications_off_outlined
+                          : _notificationPref == 'MENTIONS_ONLY'
+                              ? Icons.alternate_email_rounded
+                              : Icons.notifications_active_outlined,
+                      size: 20,
+                      color: const Color(0xFF2563EB),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text('Thông báo CLB', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'clear',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline_rounded, size: 20, color: Color(0xFFE11D48)),
+                    SizedBox(width: 10),
+                    Text('Xóa đoạn chat', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFE11D48))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: Column(
         children: [
           if (_loadingOlder) const LinearProgressIndicator(minHeight: 2),

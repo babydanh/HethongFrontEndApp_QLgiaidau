@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/data/models/club_notification_pref_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_ranking_model.dart';
 import 'package:app_quanly_giaidau/data/models/gallery_image_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
@@ -156,10 +157,21 @@ abstract class ICommunityRepository {
     required String color,
   });
   Future<void> deleteTagPreset(String communityId, String presetId);
-
   Future<GalleryImageModel?> addGalleryItem(
     String communityId, {
     required String imageUrl,
     String? caption,
   });
+
+  /// Cập nhật cài đặt thông báo của cá nhân trong câu lạc bộ (ALL, MENTIONS_ONLY, MUTED)
+  /// PUT /communities/:id/members/me/notification-preference
+  Future<void> updateNotificationPreference(String communityId, String preference);
+
+  /// Lấy danh sách cài đặt thông báo của các CLB mà user tham gia
+  /// GET /communities/my/notification-preferences
+  Future<List<ClubNotificationPrefModel>> getMyNotificationPreferences();
+
+  /// Xóa lịch sử đoạn chat phía người dùng
+  /// POST /chat/rooms/:roomId/clear
+  Future<void> clearChatRoom(String roomId);
 }
