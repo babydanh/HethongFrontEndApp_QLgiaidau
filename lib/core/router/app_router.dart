@@ -92,7 +92,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/login';
       }
 
-      // Chưa auth thì mặc định về /home (cho phép truy cập /scan-qr, /profile, /intro, /club, /tournament, /live-matches)
+      // Chưa auth thì mặc định về /home (cho phép truy cập các trang công khai)
       if (!isAuth &&
           currentPath != '/home' &&
           currentPath != '/login-loading' &&
@@ -102,11 +102,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           !currentPath.startsWith('/profile') &&
           !currentPath.startsWith('/intro') &&
           !currentPath.startsWith('/club') &&
+          !currentPath.startsWith('/communities') &&
           !currentPath.startsWith('/tournament') &&
+          !currentPath.startsWith('/tournaments') &&
           !currentPath.startsWith('/live-matches') &&
           !currentPath.startsWith('/live') &&
           !currentPath.startsWith('/matches') &&
           !currentPath.startsWith('/chat') &&
+          !currentPath.startsWith('/user') &&
           !currentPath.startsWith('/series') &&
           !isPublicRegistrationRoute) {
         return '/home';
@@ -296,12 +299,48 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // ─── Intro Screen ───
+      // ─── Public Tournament Intro Screen (Both /intro/:id, /tournament/:id and /tournaments/:id) ───
       GoRoute(
         path: '/intro/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return TournamentIntroScreen(tournamentId: id);
+        },
+      ),
+      GoRoute(
+        path: '/tournament/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return TournamentIntroScreen(tournamentId: id);
+        },
+      ),
+      GoRoute(
+        path: '/tournaments/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return TournamentIntroScreen(tournamentId: id);
+        },
+      ),
+
+      // ─── Public User Profile (/user/:id and /users/:id) ───
+      GoRoute(
+        path: '/user/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return UserProfileScreen(
+            userId: id,
+            communityId: state.uri.queryParameters['communityId'],
+          );
+        },
+      ),
+      GoRoute(
+        path: '/users/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return UserProfileScreen(
+            userId: id,
+            communityId: state.uri.queryParameters['communityId'],
+          );
         },
       ),
 
@@ -384,7 +423,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             const CreateClubTournamentScreen(clubId: ''),
       ),
 
-      // ─── Club Detail ───
+      // ─── Club Detail (Both /club/:id and /communities/:id and /clubs/:id) ───
       GoRoute(
         path: '/club/:id',
         builder: (context, state) {
@@ -430,6 +469,38 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
         ],
+      ),
+      GoRoute(
+        path: '/communities/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return ClubDetailScreen(clubId: id);
+        },
+        routes: [
+          GoRoute(
+            path: 'chat',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              final name = state.uri.queryParameters['name'] ?? 'Cộng đồng';
+              return ClubChatScreen(communityId: id, communityName: name);
+            },
+          ),
+          GoRoute(
+            path: 'social',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              final name = state.uri.queryParameters['name'] ?? 'Cộng đồng';
+              return CommunitySocialScreen(communityId: id, communityName: name);
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/clubs/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return ClubDetailScreen(clubId: id);
+        },
       ),
 
       // ─── Public Tournament Bracket ───
