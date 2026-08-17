@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/providers/notification_provider.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/app_notification.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -24,6 +24,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
 
   // Filter mode: false = Tất cả, true = Chưa đọc
   bool _unreadOnly = false;
+  final Set<String> _handledInviteIds = <String>{};
 
   @override
   void initState() {
@@ -75,10 +76,22 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   Future<void> _handleInviteAction(
       AppNotification notif, bool accept) async {
     try {
-      final dio = ref.read(dioClientProvider).dio;
-      final endpoint = accept ? '/notifications/${notif.id}/accept' : '/notifications/${notif.id}/decline';
-      await dio.patch(endpoint);
+      if (notif.type == 'CLUB_INVITE' || notif.type == 'COMMUNITY_INVITED') {
+        final communityId = notif.communityId;
+        if (communityId == null || communityId.isEmpty) {
+          throw StateError('Lời mời không có mã cộng đồng.');
+        }
+        // Community invitations are actions on the community resource, not
+        // generic notification actions.
+        await ref.read(communityRepositoryProvider).respondToInvite(
+              communityId,
+              accept ? 'accept' : 'decline',
+            );
+      } else {
+        throw StateError('Loại lời mời này chưa có thao tác tương ứng.');
+      }
       await ref.read(notificationStateProvider.notifier).markAsRead(notif.id);
+      if (mounted) setState(() => _handledInviteIds.add(notif.id));
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -553,7 +566,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                 ),
               ],
             ),
-            if (isInvite) ...[
+            if (isInvite && !_handledInviteIds.contains(notif.id)) ...[
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,

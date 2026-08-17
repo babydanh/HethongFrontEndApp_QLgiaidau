@@ -298,7 +298,19 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (_myMembership?.status == 'JOINED')
+        if (_myMembership?.status == 'JOINED') ...[
+          IconButton(
+            onPressed: () {
+              final name = Uri.encodeComponent(club.name);
+              context.push('/club/${club.id}/chat?name=$name');
+            },
+            tooltip: 'Trò chuyện CLB',
+            icon: const Icon(
+              Icons.forum_outlined,
+              color: AppTheme.primary,
+              size: 22,
+            ),
+          ),
           IconButton(
             onPressed: () => _showNotificationPreferenceSheet(context, club),
             tooltip: 'Cài đặt thông báo CLB',
@@ -316,6 +328,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               size: 22,
             ),
           ),
+        ],
         IconButton(
           onPressed: _isFollowBusy
               ? null
