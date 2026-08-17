@@ -41,6 +41,7 @@ class _CreateClubTournamentScreenState
 
   String? _selectedSport;
   String _selectedFormat = AppConstants.formatDoubles;
+  // UI-only division selection; never send this field to the Lite endpoint.
   final Set<String> _selectedFormats = {'MALE_DOUBLES'};
   String _selectedBracket = AppConstants.bracketSingleElimination;
   bool _isLoading = false;
@@ -157,7 +158,6 @@ class _CreateClubTournamentScreenState
         'name': _nameCtrl.text.trim(),
         'sport': sport,
         'format': _selectedFormat,
-        'selectedFormats': _selectedFormats.toList(),
         'bracketType': _selectedBracket,
         'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
         'description': _descCtrl.text.trim(),
@@ -176,9 +176,9 @@ class _CreateClubTournamentScreenState
         if (_footballGenderRestriction.isNotEmpty)
           'genderRestriction': _footballGenderRestriction,
         if (widget.clubId.isNotEmpty) 'communityId': widget.clubId,
-        // Quick tournaments start in approval mode; the organizer can
-        // switch to open or invite-only from management later.
-        'registrationMode': 'APPROVAL',
+        // Club Lite is an internal quick flow. Advanced registration rules
+        // are configured later in the management workspace.
+        'registrationMode': 'OPEN',
         'startDate': _formatDateTime(_startDate, _startTime),
         'startTime': _formatTime(_startTime),
         'endDate': _formatDateTime(_endDate, _endTime),
