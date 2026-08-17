@@ -51,6 +51,12 @@ class _CreateClubTournamentScreenState
   bool _isPublic = false;
   DateTime _startDate = DateTime.now();
   TimeOfDay _startTime = const TimeOfDay(hour: 18, minute: 0);
+  DateTime _registrationStartDate = DateTime.now();
+  TimeOfDay _registrationStartTime = const TimeOfDay(hour: 0, minute: 0);
+  DateTime _registrationEndDate = DateTime.now();
+  TimeOfDay _registrationEndTime = const TimeOfDay(hour: 17, minute: 0);
+  DateTime _endDate = DateTime.now();
+  TimeOfDay _endTime = const TimeOfDay(hour: 20, minute: 0);
   bool _isRecurring = false;
   String _recurringFrequency = 'WEEKLY';
   final Set<int> _recurringDaysOfWeek = <int>{6};
@@ -62,6 +68,23 @@ class _CreateClubTournamentScreenState
   String? _bannerUrl;
   String? _logoUrl;
   bool _isUploadingMedia = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, now.day, now.hour + 1);
+    final end = start.add(const Duration(hours: 2));
+    final registrationEnd = start.subtract(const Duration(hours: 1));
+    _startDate = start;
+    _startTime = TimeOfDay.fromDateTime(start);
+    _endDate = end;
+    _endTime = TimeOfDay.fromDateTime(end);
+    _registrationStartDate = DateTime(now.year, now.month, now.day);
+    _registrationStartTime = const TimeOfDay(hour: 0, minute: 0);
+    _registrationEndDate = registrationEnd;
+    _registrationEndTime = TimeOfDay.fromDateTime(registrationEnd);
+  }
 
   @override
   void dispose() {
@@ -134,8 +157,6 @@ class _CreateClubTournamentScreenState
         'description': _descCtrl.text.trim(),
         'isRanked': _isRanked,
         'visibility': _isPublic ? 'PUBLIC' : 'PRIVATE',
-        if (_bannerUrl != null) 'bannerUrl': _bannerUrl,
-        if (_logoUrl != null) 'logoUrl': _logoUrl,
         if (_prizeCtrl.text.trim().isNotEmpty)
           'prizeDescription': _prizeCtrl.text.trim(),
         if (_contactCtrl.text.trim().isNotEmpty)
@@ -154,6 +175,9 @@ class _CreateClubTournamentScreenState
           'registrationMode': _isPublic ? 'OPEN' : 'INVITE_ONLY',
         'startDate': _formatDateTime(_startDate, _startTime),
         'startTime': _formatTime(_startTime),
+        'endDate': _formatDateTime(_endDate, _endTime),
+        'registrationStartDate': _formatDateTime(_registrationStartDate, _registrationStartTime),
+        'registrationEndDate': _formatDateTime(_registrationEndDate, _registrationEndTime),
         'isRecurring': _isRecurring,
         if (_isRecurring) ...{
           'recurringFrequency': _recurringFrequency,
@@ -229,6 +253,50 @@ class _CreateClubTournamentScreenState
     );
     if (picked == null || !mounted) return;
     setState(() => recurring ? _recurringTime = picked : _startTime = picked);
+  }
+
+  Future<void> _pickScheduleDate(String target) async {
+    final current = switch (target) {
+      'registrationStart' => _registrationStartDate,
+      'registrationEnd' => _registrationEndDate,
+      'end' => _endDate,
+      _ => _startDate,
+    };
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: current,
+      helpText: 'Chọn ngày',
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      switch (target) {
+        case 'registrationStart': _registrationStartDate = picked;
+        case 'registrationEnd': _registrationEndDate = picked;
+        case 'end': _endDate = picked;
+        default: _startDate = picked;
+      }
+    });
+  }
+
+  Future<void> _pickScheduleTime(String target) async {
+    final current = switch (target) {
+      'registrationStart' => _registrationStartTime,
+      'registrationEnd' => _registrationEndTime,
+      'end' => _endTime,
+      _ => _startTime,
+    };
+    final picked = await showTimePicker(context: context, initialTime: current, helpText: 'Chọn giờ');
+    if (picked == null || !mounted) return;
+    setState(() {
+      switch (target) {
+        case 'registrationStart': _registrationStartTime = picked;
+        case 'registrationEnd': _registrationEndTime = picked;
+        case 'end': _endTime = picked;
+        default: _startTime = picked;
+      }
+    });
   }
 
   Future<void> _pickAndUploadImage({required bool logo}) async {
@@ -491,41 +559,9 @@ class _CreateClubTournamentScreenState
                 child: ExpansionTile(
                   tilePadding: const EdgeInsets.symmetric(horizontal: 12),
                   title: const Text('Thông tin thêm (không bắt buộc)'),
-                  subtitle: const Text('Địa điểm, ảnh, giải thưởng và liên hệ BTC'),
+                  subtitle: const Text('Địa điểm, ghi chú và liên hệ BTC'),
                   childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: _isUploadingMedia
-                                ? null
-                                : () => _pickAndUploadImage(logo: true),
-                            icon: Icon(
-                              _logoUrl == null
-                                  ? Icons.image_outlined
-                                  : Icons.check_circle_outline,
-                            ),
-                            label: Text(_logoUrl == null ? 'Thêm logo' : 'Đã có logo'),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: _isUploadingMedia
-                                ? null
-                                : () => _pickAndUploadImage(logo: false),
-                            icon: Icon(
-                              _bannerUrl == null
-                                  ? Icons.panorama_outlined
-                                  : Icons.check_circle_outline,
-                            ),
-                            label: Text(_bannerUrl == null ? 'Thêm banner' : 'Đã có banner'),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
                     TextFormField(
                       controller: _venueCtrl,
                       decoration: const InputDecoration(labelText: 'Tên sân/địa điểm'),
