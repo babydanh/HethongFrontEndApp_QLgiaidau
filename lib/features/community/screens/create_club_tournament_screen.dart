@@ -6,7 +6,6 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
-import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
@@ -15,7 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/club_region_selector.dart';
 
 /// Tạo giải đấu Lite trong CLB hoặc giải nhanh riêng của Organizer.
 /// Gọi POST /tournaments/lite — dùng chung contract với Web.
@@ -37,9 +36,6 @@ class _CreateClubTournamentScreenState
   final _maxTeamsCtrl = TextEditingController(text: '16');
   final _venueCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
-  final _provinceCtrl = TextEditingController();
-  final _districtCtrl = TextEditingController();
-  final _wardCtrl = TextEditingController();
   final _prizeCtrl = TextEditingController();
   final _contactCtrl = TextEditingController();
 
@@ -64,10 +60,8 @@ class _CreateClubTournamentScreenState
   int _recurringAdvanceDays = 0;
   int _footballTeamSize = 7;
   final _footballReserveCtrl = TextEditingController(text: '5');
-  String _footballGenderRestriction = '';
-  String? _bannerUrl;
-  String? _logoUrl;
-  bool _isUploadingMedia = false;
+  String _footballGenderRestriction = 'MALE';
+  ClubRegionSelection _region = const ClubRegionSelection();
 
   @override
   void initState() {
@@ -93,9 +87,6 @@ class _CreateClubTournamentScreenState
     _maxTeamsCtrl.dispose();
     _venueCtrl.dispose();
     _addressCtrl.dispose();
-    _provinceCtrl.dispose();
-    _districtCtrl.dispose();
-    _wardCtrl.dispose();
     _prizeCtrl.dispose();
     _contactCtrl.dispose();
     _footballReserveCtrl.dispose();
@@ -178,11 +169,9 @@ class _CreateClubTournamentScreenState
           'venueName': _venueCtrl.text.trim(),
         if (_addressCtrl.text.trim().isNotEmpty)
           'locationAddress': _addressCtrl.text.trim(),
-        if (_provinceCtrl.text.trim().isNotEmpty)
-          'province': _provinceCtrl.text.trim(),
-        if (_districtCtrl.text.trim().isNotEmpty)
-          'district': _districtCtrl.text.trim(),
-        if (_wardCtrl.text.trim().isNotEmpty) 'ward': _wardCtrl.text.trim(),
+        if (_region.provinceName != null) 'province': _region.provinceName,
+        if (_region.districtName != null) 'district': _region.districtName,
+        if (_region.wardName != null) 'ward': _region.wardName,
         if (_footballGenderRestriction.isNotEmpty)
           'genderRestriction': _footballGenderRestriction,
         if (widget.clubId.isNotEmpty) 'communityId': widget.clubId,
@@ -304,32 +293,6 @@ class _CreateClubTournamentScreenState
     });
   }
 
-  Future<void> _pickAndUploadImage({required bool logo}) async {
-    final picked = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      imageQuality: logo ? 88 : 84,
-      maxWidth: logo ? 1000 : 1600,
-    );
-    if (picked == null || !mounted) return;
-    setState(() => _isUploadingMedia = true);
-    try {
-      final bytes = await picked.readAsBytes();
-      final url = await ref
-          .read(communitySocialRepositoryProvider)
-          .uploadImage(bytes, picked.name);
-      if (mounted) setState(() => logo ? _logoUrl = url : _bannerUrl = url);
-    } catch (error, stack) {
-      _log.error('Tải ảnh giải thất bại', error, stack);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể tải ảnh lên, bạn vẫn có thể tạo giải.')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isUploadingMedia = false);
-    }
-  }
-
   void _showSuccessSheet(LiteTournamentCreateResult result) {
     showModalBottomSheet(
       context: context,
@@ -354,7 +317,7 @@ class _CreateClubTournamentScreenState
       children: [
         Expanded(child: OutlinedButton.icon(onPressed: () => _pickScheduleDate(target), icon: const Icon(Icons.calendar_today_outlined, size: 16), label: Text('$label: ${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}'))),
         const SizedBox(width: 8),
-        Expanded(child: OutlinedButton.icon(onPressed: () => _pickScheduleTime(target), icon: const Icon(Icons.schedule_outlined, size: 16), label: Text(_formatTime(time))),
+        Expanded(child: OutlinedButton.icon(onPressed: () => _pickScheduleTime(target), icon: const Icon(Icons.schedule_outlined, size: 16), label: Text(_formatTime(time)))),
       ],
     );
   }
@@ -562,32 +525,10 @@ class _CreateClubTournamentScreenState
                       decoration: const InputDecoration(labelText: 'Địa chỉ chi tiết'),
                     ),
                     const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _provinceCtrl,
-                            decoration: const InputDecoration(labelText: 'Tỉnh/thành'),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _districtCtrl,
-                            decoration: const InputDecoration(labelText: 'Quận/huyện'),
-                          ),
-                        ),
-                      ],
-                    ),
+                    ClubRegionSelector(onChanged: (selection) => _region = selection),
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _wardCtrl,
-                            decoration: const InputDecoration(labelText: 'Phường/xã'),
-                          ),
-                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: TextFormField(

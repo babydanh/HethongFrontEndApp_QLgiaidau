@@ -222,6 +222,10 @@ class ClubRegionSelection {
     return null;
   }
 
+  String? get provinceName => _nameOf(provinces, provinceCode);
+  String? get districtName => _nameOf(districts, districtCode);
+  String? get wardName => _nameOf(wards, wardCode);
+
   /// Ghép địa chỉ giống web: "chi tiết, phường, quận, tỉnh".
   /// Bỏ lặp nếu chi tiết đã chứa tên tỉnh/quận; chỉ chi tiết → giữ nguyên.
   String composeAddress(String detail) {
