@@ -84,7 +84,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String _tournamentRanked = 'all';
   String _tournamentProvince = ''; // tên tỉnh — để so khớp locationAddress
   String _tournamentProvinceCode = ''; // mã tỉnh — để tải quận/huyện
-  String _tournamentDistrict = ''; // tên quận/huyện
+  String _tournamentWard = ''; // tên phường/xã
   DateTime? _tournamentStartDate;
   DateTime? _tournamentEndDate;
 
@@ -1755,7 +1755,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         String localRanked = _tournamentRanked;
         String localProvince = _tournamentProvince;
         String localProvinceCode = _tournamentProvinceCode;
-        String localDistrict = _tournamentDistrict;
+        String localWard = _tournamentWard;
         DateTime? localStartDate = _tournamentStartDate;
         DateTime? localEndDate = _tournamentEndDate;
         return StatefulBuilder(
@@ -1955,14 +1955,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                               )
                               .name;
-                          localDistrict = '';
+                          localWard = '';
                         }),
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Quận/Huyện',
+                    'Phường/Xã',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -1972,10 +1972,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 6),
                   Consumer(
                     builder: (context, ref, child) {
-                      final districts = ref.watch(
-                        districtsProvider(localProvinceCode),
+                      final wards = ref.watch(
+                        wardsProvider(localProvinceCode),
                       );
-                      final districtsList = districts.value ?? const [];
+                      final wardsList = wards.value ?? const [];
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
@@ -1985,7 +1985,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
-                            value: localDistrict.isEmpty ? null : localDistrict,
+                            value: localWard.isEmpty ? null : localWard,
                             isExpanded: true,
                             hint: Text(
                               localProvinceCode.isEmpty
@@ -2011,11 +2011,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                 ),
                               ),
-                              ...districtsList.map(
-                                (d) => DropdownMenuItem<String>(
-                                  value: d.name,
+                              ...wardsList.map(
+                                (ward) => DropdownMenuItem<String>(
+                                  value: ward.name,
                                   child: Text(
-                                    d.name,
+                                    ward.name,
                                     style: const TextStyle(fontSize: 13),
                                   ),
                                 ),
@@ -2024,7 +2024,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             onChanged: localProvinceCode.isEmpty
                                 ? null
                                 : (v) => setSheetState(
-                                    () => localDistrict = v ?? '',
+                                    () => localWard = v ?? '',
                                   ),
                           ),
                         ),
@@ -2146,7 +2146,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               _tournamentRanked = localRanked;
                               _tournamentProvince = localProvince;
                               _tournamentProvinceCode = localProvinceCode;
-                              _tournamentDistrict = localDistrict;
+                              _tournamentWard = localWard;
                               _tournamentStartDate = localStartDate;
                               _tournamentEndDate = localEndDate;
                             });
@@ -2773,9 +2773,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           )) {
         return false;
       }
-      if (_tournamentDistrict.isNotEmpty &&
+      if (_tournamentWard.isNotEmpty &&
           !(t.locationAddress ?? '').toLowerCase().contains(
-            _tournamentDistrict.toLowerCase(),
+            _tournamentWard.toLowerCase(),
           )) {
         return false;
       }
