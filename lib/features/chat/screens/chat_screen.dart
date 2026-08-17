@@ -445,7 +445,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with SingleTickerProvid
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: ActionChip(
-                          avatar: const Icon(Icons.sparkles, size: 14, color: AppTheme.primary),
+                          avatar: const Icon(Icons.auto_awesome_rounded, size: 14, color: AppTheme.primary),
                           label: Text(prompt, style: const TextStyle(fontSize: 12)),
                           backgroundColor: AppTheme.primary.withValues(alpha: 0.08),
                           onPressed: () => _sendAiMessage(presetText: prompt),

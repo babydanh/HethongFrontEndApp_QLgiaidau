@@ -69,12 +69,14 @@ class ChatSocketService {
       _socket!.emit('typing', {'roomId': roomId, 'isTyping': isTyping});
   }
 
-  void disconnect(String roomId) {
-    if (_socket?.connected == true) _socket!.emit('leaveChatRoom', roomId);
+  void disconnect([String roomId = '']) {
+    if (_socket?.connected == true && roomId.isNotEmpty) _socket!.emit('leaveChatRoom', roomId);
     _socket?.disconnect();
     _socket?.close();
     _socket = null;
   }
+
+  void dispose() => disconnect();
 
   Map<String, dynamic> _asMap(Object? value) => value is Map
       ? value.map((k, v) => MapEntry(k.toString(), v))
