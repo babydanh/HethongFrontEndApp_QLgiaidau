@@ -1,20 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 
 class LocaleNotifier extends Notifier<Locale> {
+  static const _localeKey = 'locale';
+  static const supportedLanguageCodes = <String>['vi', 'en'];
+
   @override
   Locale build() {
-    return const Locale('vi');
+    final savedLanguageCode = ref
+        .watch(sharedPreferencesProvider)
+        .value
+        ?.getString(_localeKey);
+    return _localeFor(savedLanguageCode);
   }
 
-  /// Tạm thời chỉ hỗ trợ tiếng Việt
-  /// Khi nào thêm tiếng Anh thì mở khoá hàm này
-  // Future<void> changeLocale(String languageCode) async {
-  //   state = Locale(languageCode);
-  //   final prefs = await SharedPreferences.getInstance();
-  //   await prefs.setString(_localeKey, languageCode);
-  // }
+  Future<void> changeLocale(String languageCode) async {
+    final locale = _localeFor(languageCode);
+    state = locale;
+
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setString(_localeKey, locale.languageCode);
+  }
+
+  Locale _localeFor(String? languageCode) {
+    if (supportedLanguageCodes.contains(languageCode)) {
+      return Locale(languageCode!);
+    }
+    return const Locale('vi');
+  }
 }
 
-final localeProvider = NotifierProvider<LocaleNotifier, Locale>(LocaleNotifier.new);
+final localeProvider = NotifierProvider<LocaleNotifier, Locale>(
+  LocaleNotifier.new,
+);
