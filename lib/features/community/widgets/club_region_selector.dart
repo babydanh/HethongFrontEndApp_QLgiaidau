@@ -53,24 +53,12 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
       _provinces = provinces;
       _loadingProvinces = false;
     });
-    if (_provinceCode.isNotEmpty) await _loadDistricts(loadWards: true);
+    if (_provinceCode.isNotEmpty) await _loadWards();
     _notify();
   }
 
-  Future<void> _loadDistricts({bool loadWards = false}) async {
-    final districts =
-        await ref.read(regionRepositoryProvider).getDistricts(_provinceCode);
-    if (!mounted) return;
-    setState(() => _districts = districts);
-    if (loadWards && _districtCode.isNotEmpty) {
-      await _loadWards();
-    } else {
-      _notify();
-    }
-  }
-
   Future<void> _loadWards() async {
-    final wards = await ref.read(regionRepositoryProvider).getWards(_districtCode);
+    final wards = await ref.read(regionRepositoryProvider).getWards(_provinceCode);
     if (!mounted) return;
     setState(() => _wards = wards);
     _notify();
@@ -103,8 +91,6 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Key theo mã cha: đổi tỉnh/quận phải tạo lại field con, nếu không
-        // DropdownButtonFormField giữ internal state và hiển thị giá trị cũ.
         _dropdown(
           key: const ValueKey('province'),
           context: context,
@@ -117,26 +103,6 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
               _provinceCode = code;
               _districtCode = '';
               _wardCode = '';
-              _districts = const [];
-              _wards = const [];
-            });
-            if (code.isNotEmpty) _loadDistricts();
-            _notify();
-          },
-        ),
-        const SizedBox(height: 12),
-        _dropdown(
-          key: ValueKey('district-$_provinceCode'),
-          context: context,
-          colors: colors,
-          label: 'Quận / Huyện',
-          value: _districtCode,
-          items: _districts,
-          enabled: _provinceCode.isNotEmpty,
-          onChanged: (code) {
-            setState(() {
-              _districtCode = code;
-              _wardCode = '';
               _wards = const [];
             });
             if (code.isNotEmpty) _loadWards();
@@ -145,13 +111,13 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
         ),
         const SizedBox(height: 12),
         _dropdown(
-          key: ValueKey('ward-$_districtCode'),
+          key: ValueKey('ward-$_provinceCode'),
           context: context,
           colors: colors,
-          label: 'Phường / Xã',
+          label: 'Phường / Xã / Thị trấn (Tùy chọn)',
           value: _wardCode,
           items: _wards,
-          enabled: _districtCode.isNotEmpty,
+          enabled: _provinceCode.isNotEmpty,
           onChanged: (code) {
             setState(() => _wardCode = code);
             _notify();

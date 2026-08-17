@@ -22,9 +22,9 @@ class ApiRegionRepository implements IRegionRepository {
   }
 
   @override
-  Future<List<Region>> getWards(String districtCode) async {
-    _log.info('Lấy danh sách phường/xã: districtCode=$districtCode');
-    return _fetch('/regions/wards', query: {'districtCode': districtCode});
+  Future<List<Region>> getWards(String code) async {
+    _log.info('Lấy danh sách phường/xã: code=$code');
+    return _fetch('/regions/wards', query: {'provinceCode': code, 'districtCode': code});
   }
 
   Future<List<Region>> _fetch(String path, {Map<String, String>? query}) async {
