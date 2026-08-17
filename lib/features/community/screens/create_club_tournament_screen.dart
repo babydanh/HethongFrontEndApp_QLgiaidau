@@ -175,8 +175,9 @@ class _CreateClubTournamentScreenState
         if (_footballGenderRestriction.isNotEmpty)
           'genderRestriction': _footballGenderRestriction,
         if (widget.clubId.isNotEmpty) 'communityId': widget.clubId,
-        if (widget.clubId.isEmpty)
-          'registrationMode': _isPublic ? 'OPEN' : 'INVITE_ONLY',
+        // Quick tournaments start in approval mode; the organizer can
+        // switch to open or invite-only from management later.
+        'registrationMode': 'APPROVAL',
         'startDate': _formatDateTime(_startDate, _startTime),
         'startTime': _formatTime(_startTime),
         'endDate': _formatDateTime(_endDate, _endTime),
