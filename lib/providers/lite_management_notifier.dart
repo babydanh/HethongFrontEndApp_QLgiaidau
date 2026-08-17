@@ -16,12 +16,16 @@ class LiteParticipant {
   final String id;
   final String status;
   final String teamName;
+  final String? footballTeamId;
+  final String? footballTeamLogoUrl;
   final List<LiteMember> members;
 
   const LiteParticipant({
     required this.id,
     required this.status,
     this.teamName = '',
+    this.footballTeamId,
+    this.footballTeamLogoUrl,
     this.members = const [],
   });
 
@@ -39,6 +43,8 @@ class LiteParticipant {
       id: json['id']?.toString() ?? '',
       status: (json['teamStatus']?.toString() ?? '').toUpperCase(),
       teamName: json['teamName']?.toString() ?? '',
+      footballTeamId: json['footballTeamId']?.toString(),
+      footballTeamLogoUrl: json['footballTeamLogoUrl']?.toString(),
       members: membersList,
     );
   }
@@ -55,8 +61,14 @@ class LiteMember {
   final String id;
   final String fullName;
   final String avatarUrl;
+  final String role;
 
-  const LiteMember({required this.id, this.fullName = '', this.avatarUrl = ''});
+  const LiteMember({
+    required this.id,
+    this.fullName = '',
+    this.avatarUrl = '',
+    this.role = '',
+  });
 
   factory LiteMember.fromRosterJson(Map<String, dynamic> json) {
     final profile = json['profile'] is Map
@@ -66,6 +78,7 @@ class LiteMember {
       id: json['userId']?.toString() ?? '',
       fullName: profile['fullName']?.toString() ?? '',
       avatarUrl: profile['avatarUrl']?.toString() ?? '',
+      role: json['role']?.toString().toUpperCase() ?? '',
     );
   }
 }
@@ -170,6 +183,16 @@ class LiteManagementState {
   bool get isDoubles =>
       matchType?.toUpperCase() == 'DOUBLES' ||
       matchType?.toUpperCase() == 'DOUBLE';
+
+  bool get isFootball {
+    final tournamentSport = tournament?.sport.toLowerCase() ?? '';
+    final tournamentCategory = tournament?.category?.toLowerCase() ?? '';
+    return tournamentSport.contains('football') ||
+        tournamentSport.contains('soccer') ||
+        tournamentCategory.contains('bóng đá') ||
+        tournamentCategory.contains('football') ||
+        participants.any((participant) => participant.footballTeamId != null);
+  }
 }
 
 // ──────────────────────────────────────────────
@@ -519,6 +542,24 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       }
     } on DioException catch (e) {
       _log.error('Lỗi chốt danh sách Lite', e);
+      rethrow;
+    }
+  }
+
+  Future<void> kickParticipant(
+    String tournamentId,
+    String participantId,
+    String reason,
+  ) async {
+    try {
+      await _dio.post(
+        '/tournaments/$tournamentId/participants/$participantId/kick',
+        data: {'reason': reason},
+      );
+      _log.success('Đã loại participant khỏi giải: $participantId');
+      await _fetchParticipants(tournamentId);
+    } on DioException catch (e) {
+      _log.error('Lỗi loại participant khỏi giải', e);
       rethrow;
     }
   }

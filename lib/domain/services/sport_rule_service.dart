@@ -131,6 +131,16 @@ const _sportDefaults = <SportRuleKind, SportConfig>{
     tiebreakAt: 6,
     tiebreakPoints: 7,
   ),
+  SportRuleKind.football: SportConfig(
+    kind: SportRuleKind.football,
+    scoringModel: SportScoringModel.rallyPointSet,
+    bestOf: 1,
+    setsToWin: 1,
+    pointsPerSet: 1,
+    mustWinByTwo: false,
+    maxPoints: 99,
+    tiebreakAt: 90,
+  ),
 };
 
 // ─── Resolve ───

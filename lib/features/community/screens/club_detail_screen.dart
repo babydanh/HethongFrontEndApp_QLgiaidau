@@ -1052,30 +1052,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         const SizedBox(height: 24),
         if (club.rules != null && club.rules!.trim().isNotEmpty) ...[
           _sectionTitle('NỘI QUY CÂU LẠC BỘ', colors),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: colors.border),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.gavel_rounded, size: 20, color: AppTheme.primary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    club.rules!.trim(),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colors.textSecondary,
-                      height: 1.6,
-                    ),
-                  ),
-                ),
-              ],
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              club.rules!.trim(),
+              style: TextStyle(
+                fontSize: 13,
+                color: colors.textSecondary,
+                height: 1.6,
+              ),
             ),
           ),
           const SizedBox(height: 24),

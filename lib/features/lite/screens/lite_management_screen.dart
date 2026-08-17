@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
+import 'package:app_quanly_giaidau/features/lite/widgets/football_registration_groups.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -807,7 +808,29 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             ],
           ),
 
-          if (isDoubles) ...[
+          if (state.isFootball) ...[
+            _sectionHeader(
+              colors,
+              'Đội bóng đăng ký (${state.participants.length})',
+              Icons.shield_outlined,
+            ),
+            const SizedBox(height: 8),
+            if (state.participants.isEmpty)
+              _emptyCard(colors, 'Chưa có đội bóng đăng ký')
+            else
+              FootballRegistrationGroups(
+                participants: state.participants,
+                colors: colors,
+                rosterConfirmed: state.rosterConfirmed,
+                onKickParticipant: (participant, reason) =>
+                    _kickFootballParticipant(
+                      colors,
+                      notifier,
+                      participant,
+                      reason,
+                    ),
+              ),
+          ] else if (isDoubles) ...[
             // ─── Pending Section ───
             _sectionHeader(
               colors,
@@ -1070,6 +1093,37 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     );
     if (count != null) {
       notifier.seedMock(widget.tournamentId, count);
+    }
+  }
+
+  Future<void> _kickFootballParticipant(
+    AppColorsExtension colors,
+    LiteManagementNotifier notifier,
+    LiteParticipant participant,
+    String reason,
+  ) async {
+    try {
+      await notifier.kickParticipant(
+        widget.tournamentId,
+        participant.id,
+        reason,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã loại ${participant.teamName} khỏi giải.'),
+          backgroundColor: colors.success,
+        ),
+      );
+    } on DioException catch (error) {
+      if (!mounted) return;
+      final data = error.response?.data;
+      final message = data is Map && data['message'] != null
+          ? data['message'].toString()
+          : 'Không thể loại đội khỏi giải. Vui lòng thử lại.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: colors.error),
+      );
     }
   }
 
