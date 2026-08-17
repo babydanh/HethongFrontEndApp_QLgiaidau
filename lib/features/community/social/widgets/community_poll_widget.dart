@@ -53,6 +53,16 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final total = _poll.options.fold<int>(0, (sum, option) => sum + option.voteCount);
+    final sortedOptions = [..._poll.options]..sort((a, b) {
+      int score(String text) {
+        if (text.contains('Có tham gia') || text.contains('Đăng ký') || text.contains('✅')) return 1;
+        if (text.contains('Chưa chắc chắn') || text.contains('suy nghĩ') || text.contains('⏳')) return 2;
+        if (text.contains('Không') || text.contains('Bận') || text.contains('❌')) return 3;
+        return 2;
+      }
+      return score(a.optionText).compareTo(score(b.optionText));
+    });
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppTheme.spacingMD),
@@ -60,7 +70,7 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [Icon(Icons.poll_outlined, color: AppTheme.primary), const SizedBox(width: AppTheme.spacingSM), Expanded(child: Text(_poll.question, style: const TextStyle(fontWeight: FontWeight.w600))), if (_poll.isClosed) Text('Đã đóng', style: TextStyle(color: colors.textMuted, fontSize: 12))]),
         const SizedBox(height: AppTheme.spacingSM),
-        ..._poll.options.map((option) {
+        ...sortedOptions.map((option) {
           final ratio = total == 0 ? 0.0 : option.voteCount / total;
           return Padding(padding: const EdgeInsets.only(bottom: 8), child: InkWell(onTap: _busy || _poll.isClosed ? null : () => _vote(option.id), borderRadius: BorderRadius.circular(AppTheme.radiusSmall), child: Stack(children: [
             ClipRRect(borderRadius: BorderRadius.circular(AppTheme.radiusSmall), child: LinearProgressIndicator(value: ratio, minHeight: 42, color: AppTheme.primary.withValues(alpha: .18), backgroundColor: colors.bgCard)),
