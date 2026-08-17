@@ -4,7 +4,6 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
-import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_card.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -698,7 +697,7 @@ class _QuickActions extends ConsumerWidget {
             icon: Icons.bolt_rounded,
             title: l10n.dashboard_createLite,
             subtitle: l10n.dashboard_createLiteSub,
-            onTap: () => _openLiteCreation(context, ref),
+            onTap: () => _openLiteCreation(context),
           ),
           const Divider(height: 24),
           _QuickActionRow(
@@ -733,70 +732,9 @@ class _QuickActions extends ConsumerWidget {
     ).animate().fadeIn(delay: 180.ms, duration: 260.ms);
   }
 
-  Future<void> _openLiteCreation(BuildContext context, WidgetRef ref) async {
-    final l10n = AppLocalizations.of(context)!;
-    final communities = await ref.read(myCommunitiesProvider.future);
-    if (!context.mounted) return;
-
-    if (communities.isEmpty) {
-      await showDialog<void>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(l10n.dashboard_needClubTitle),
-          content: Text(l10n.dashboard_needClubContent),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(l10n.dashboard_later),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                context.push('/club/create');
-              },
-              child: Text(l10n.dashboard_createClubBtn),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-
-    if (communities.length == 1) {
-      context.push('/club/${communities.first.id}/create-tournament');
-      return;
-    }
-
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                l10n.dashboard_selectClub,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-              ),
-            ),
-            ...communities.map(
-              (club) => ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.groups_rounded)),
-                title: Text(club.name),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  context.push('/club/${club.id}/create-tournament');
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  void _openLiteCreation(BuildContext context) {
+    // Luồng nhanh của Dashboard là giải riêng; giải trong CLB vẫn tạo từ trang CLB.
+    context.push('/tournaments/create');
   }
 }
 

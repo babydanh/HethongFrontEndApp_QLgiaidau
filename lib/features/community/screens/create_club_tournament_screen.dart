@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
@@ -13,9 +14,11 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:image_picker/image_picker.dart';
 
-/// Tạo giải đấu Lite trong câu lạc bộ
-/// Gọi POST /tournaments/lite — đơn giản, không cần categoryId UUID
+/// Tạo giải đấu Lite trong CLB hoặc giải nhanh riêng của Organizer.
+/// Gọi POST /tournaments/lite — dùng chung contract với Web.
 class CreateClubTournamentScreen extends ConsumerStatefulWidget {
   final String clubId;
   const CreateClubTournamentScreen({super.key, required this.clubId});
@@ -32,12 +35,20 @@ class _CreateClubTournamentScreenState
   final _nameCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _maxTeamsCtrl = TextEditingController(text: '16');
+  final _venueCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
+  final _provinceCtrl = TextEditingController();
+  final _districtCtrl = TextEditingController();
+  final _wardCtrl = TextEditingController();
+  final _prizeCtrl = TextEditingController();
+  final _contactCtrl = TextEditingController();
 
   String? _selectedSport;
   String _selectedFormat = AppConstants.formatSingles;
   String _selectedBracket = AppConstants.bracketSingleElimination;
   bool _isLoading = false;
   bool _isRanked = false;
+  bool _isPublic = false;
   DateTime _startDate = DateTime.now();
   TimeOfDay _startTime = const TimeOfDay(hour: 18, minute: 0);
   bool _isRecurring = false;
@@ -48,12 +59,22 @@ class _CreateClubTournamentScreenState
   int _footballTeamSize = 7;
   final _footballReserveCtrl = TextEditingController(text: '5');
   String _footballGenderRestriction = '';
+  String? _bannerUrl;
+  String? _logoUrl;
+  bool _isUploadingMedia = false;
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _descCtrl.dispose();
     _maxTeamsCtrl.dispose();
+    _venueCtrl.dispose();
+    _addressCtrl.dispose();
+    _provinceCtrl.dispose();
+    _districtCtrl.dispose();
+    _wardCtrl.dispose();
+    _prizeCtrl.dispose();
+    _contactCtrl.dispose();
     _footballReserveCtrl.dispose();
     super.dispose();
   }
@@ -106,13 +127,31 @@ class _CreateClubTournamentScreenState
 
       final body = <String, dynamic>{
         'name': _nameCtrl.text.trim(),
-        'communityId': widget.clubId,
         'sport': sport,
         'format': _selectedFormat,
         'bracketType': _selectedBracket,
         'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
         'description': _descCtrl.text.trim(),
         'isRanked': _isRanked,
+        'visibility': _isPublic ? 'PUBLIC' : 'PRIVATE',
+        if (_bannerUrl != null) 'bannerUrl': _bannerUrl,
+        if (_logoUrl != null) 'logoUrl': _logoUrl,
+        if (_prizeCtrl.text.trim().isNotEmpty)
+          'prizeDescription': _prizeCtrl.text.trim(),
+        if (_contactCtrl.text.trim().isNotEmpty)
+          'contactInfo': {'phone': _contactCtrl.text.trim()},
+        if (_venueCtrl.text.trim().isNotEmpty)
+          'venueName': _venueCtrl.text.trim(),
+        if (_addressCtrl.text.trim().isNotEmpty)
+          'locationAddress': _addressCtrl.text.trim(),
+        if (_provinceCtrl.text.trim().isNotEmpty)
+          'province': _provinceCtrl.text.trim(),
+        if (_districtCtrl.text.trim().isNotEmpty)
+          'district': _districtCtrl.text.trim(),
+        if (_wardCtrl.text.trim().isNotEmpty) 'ward': _wardCtrl.text.trim(),
+        if (widget.clubId.isNotEmpty) 'communityId': widget.clubId,
+        if (widget.clubId.isEmpty)
+          'registrationMode': _isPublic ? 'OPEN' : 'INVITE_ONLY',
         'startDate': _formatDateTime(_startDate, _startTime),
         'startTime': _formatTime(_startTime),
         'isRecurring': _isRecurring,
@@ -143,8 +182,10 @@ class _CreateClubTournamentScreenState
             : <String, dynamic>{};
         final result = LiteTournamentCreateResult.fromJson(dataJson);
 
-        ref.invalidate(communityTournamentsProvider(widget.clubId));
-        ref.invalidate(communityDetailProvider(widget.clubId));
+        if (widget.clubId.isNotEmpty) {
+          ref.invalidate(communityTournamentsProvider(widget.clubId));
+          ref.invalidate(communityDetailProvider(widget.clubId));
+        }
 
         _showSuccessSheet(result);
       }
@@ -188,6 +229,32 @@ class _CreateClubTournamentScreenState
     );
     if (picked == null || !mounted) return;
     setState(() => recurring ? _recurringTime = picked : _startTime = picked);
+  }
+
+  Future<void> _pickAndUploadImage({required bool logo}) async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: logo ? 88 : 84,
+      maxWidth: logo ? 1000 : 1600,
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _isUploadingMedia = true);
+    try {
+      final bytes = await picked.readAsBytes();
+      final url = await ref
+          .read(communitySocialRepositoryProvider)
+          .uploadImage(bytes, picked.name);
+      if (mounted) setState(() => logo ? _logoUrl = url : _bannerUrl = url);
+    } catch (error, stack) {
+      _log.error('Tải ảnh giải thất bại', error, stack);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể tải ảnh lên, bạn vẫn có thể tạo giải.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploadingMedia = false);
+    }
   }
 
   void _showSuccessSheet(LiteTournamentCreateResult result) {
@@ -244,7 +311,7 @@ class _CreateClubTournamentScreenState
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Tạo giải đấu trong CLB',
+          widget.clubId.isEmpty ? 'Tạo giải nhanh' : 'Tạo giải đấu trong CLB',
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.w700,
@@ -395,6 +462,124 @@ class _CreateClubTournamentScreenState
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Mặc định mở đăng ký ngay khi tạo và đóng trước giờ thi đấu 1 giờ.',
+                style: TextStyle(fontSize: 11, color: colors.textMuted),
+              ),
+              const SizedBox(height: 10),
+              Card(
+                margin: EdgeInsets.zero,
+                child: SwitchListTile.adaptive(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  title: const Text('Công khai giải đấu'),
+                  subtitle: Text(
+                    _isPublic
+                        ? 'Sẽ chờ Admin duyệt trước khi xuất hiện công khai.'
+                        : widget.clubId.isNotEmpty
+                            ? 'Chỉ thành viên CLB nhìn thấy và tham gia.'
+                            : 'Giải riêng, chỉ người có mã mời nhìn thấy.',
+                  ),
+                  value: _isPublic,
+                  onChanged: (value) => setState(() => _isPublic = value),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                margin: EdgeInsets.zero,
+                child: ExpansionTile(
+                  tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+                  title: const Text('Thông tin thêm (không bắt buộc)'),
+                  subtitle: const Text('Địa điểm, ảnh, giải thưởng và liên hệ BTC'),
+                  childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _isUploadingMedia
+                                ? null
+                                : () => _pickAndUploadImage(logo: true),
+                            icon: Icon(
+                              _logoUrl == null
+                                  ? Icons.image_outlined
+                                  : Icons.check_circle_outline,
+                            ),
+                            label: Text(_logoUrl == null ? 'Thêm logo' : 'Đã có logo'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _isUploadingMedia
+                                ? null
+                                : () => _pickAndUploadImage(logo: false),
+                            icon: Icon(
+                              _bannerUrl == null
+                                  ? Icons.panorama_outlined
+                                  : Icons.check_circle_outline,
+                            ),
+                            label: Text(_bannerUrl == null ? 'Thêm banner' : 'Đã có banner'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: _venueCtrl,
+                      decoration: const InputDecoration(labelText: 'Tên sân/địa điểm'),
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: _addressCtrl,
+                      decoration: const InputDecoration(labelText: 'Địa chỉ chi tiết'),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _provinceCtrl,
+                            decoration: const InputDecoration(labelText: 'Tỉnh/thành'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _districtCtrl,
+                            decoration: const InputDecoration(labelText: 'Quận/huyện'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _wardCtrl,
+                            decoration: const InputDecoration(labelText: 'Phường/xã'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _contactCtrl,
+                            keyboardType: TextInputType.phone,
+                            decoration: const InputDecoration(labelText: 'SĐT BTC'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: _prizeCtrl,
+                      maxLines: 2,
+                      decoration: const InputDecoration(labelText: 'Giải thưởng/mô tả thêm'),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               Card(
@@ -567,6 +752,36 @@ class _CreateClubTournamentScreenState
                 ),
               ),
               const SizedBox(height: 20),
+
+              // Giữ app gọn cho giải nhanh; các cấu hình chuyên sâu mở trên Web.
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: context.colors.bgSurface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: context.colors.border),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.tune_rounded, color: AppTheme.primary),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'Cần vòng bảng, thu phí hoặc luật nâng cao?',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => launchUrl(
+                        Uri.parse('${AppConstants.appDomain}/tournaments/create'),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      child: const Text('Mở Web'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
 
               // ─── Nút Submit ───
               SizedBox(
