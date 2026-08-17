@@ -170,7 +170,6 @@ class _CreateClubTournamentScreenState
         if (_addressCtrl.text.trim().isNotEmpty)
           'locationAddress': _addressCtrl.text.trim(),
         if (_region.provinceName != null) 'province': _region.provinceName,
-        if (_region.districtName != null) 'district': _region.districtName,
         if (_region.wardName != null) 'ward': _region.wardName,
         if (_footballGenderRestriction.isNotEmpty)
           'genderRestriction': _footballGenderRestriction,

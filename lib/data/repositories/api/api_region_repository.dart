@@ -16,15 +16,9 @@ class ApiRegionRepository implements IRegionRepository {
   }
 
   @override
-  Future<List<Region>> getDistricts(String provinceCode) async {
-    _log.info('Lấy danh sách quận/huyện: provinceCode=$provinceCode');
-    return _fetch('/regions/districts', query: {'provinceCode': provinceCode});
-  }
-
-  @override
-  Future<List<Region>> getWards(String code) async {
-    _log.info('Lấy danh sách phường/xã: code=$code');
-    return _fetch('/regions/wards', query: {'provinceCode': code, 'districtCode': code});
+  Future<List<Region>> getWardsByProvince(String provinceCode) async {
+    _log.info('Lấy danh sách phường/xã: provinceCode=$provinceCode');
+    return _fetch('/regions/wards', query: {'provinceCode': provinceCode});
   }
 
   Future<List<Region>> _fetch(String path, {Map<String, String>? query}) async {

@@ -184,7 +184,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
         'maxMembers': int.tryParse(_maxMembersCtrl.text.trim()),
         'locationAddress': composedAddress.isEmpty ? null : composedAddress,
         'provinceCode': _region.provinceCode,
-        'districtCode': _region.districtCode.isEmpty ? null : _region.districtCode,
+        'districtCode': null,
         'wardCode': _region.wardCode.isEmpty ? null : _region.wardCode,
       });
 
@@ -364,7 +364,6 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
             const SizedBox(height: 8),
             ClubRegionSelector(
               initialProvinceCode: club?.provinceCode ?? '',
-              initialDistrictCode: club?.districtCode ?? '',
               initialWardCode: club?.wardCode ?? '',
               onChanged: (selection) => _region = selection,
             ),

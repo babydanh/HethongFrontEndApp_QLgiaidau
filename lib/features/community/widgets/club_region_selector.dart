@@ -4,21 +4,19 @@ import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Khu vực hoạt động của CLB: cascade Tỉnh/Thành → Quận/Huyện → Phường/Xã.
+/// Khu vực hoạt động của CLB: cascade Tỉnh/Thành → Phường/Xã.
 ///
 /// Đồng bộ logic với web (SettingsTab.tsx):
-/// - Chọn tỉnh mới → reset quận + phường; chọn quận mới → reset phường.
-/// - Ghép địa chỉ: "địa điểm chi tiết, phường, quận, tỉnh" (không lặp tên tỉnh/quận).
+/// - Chọn tỉnh mới → tải lại danh sách phường/xã.
+/// - Ghép địa chỉ: "địa điểm chi tiết, phường, tỉnh".
 class ClubRegionSelector extends ConsumerStatefulWidget {
   final String initialProvinceCode;
-  final String initialDistrictCode;
   final String initialWardCode;
   final ValueChanged<ClubRegionSelection> onChanged;
 
   const ClubRegionSelector({
     super.key,
     this.initialProvinceCode = '',
-    this.initialDistrictCode = '',
     this.initialWardCode = '',
     required this.onChanged,
   });
@@ -29,11 +27,9 @@ class ClubRegionSelector extends ConsumerStatefulWidget {
 
 class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
   List<Region> _provinces = const [];
-  List<Region> _districts = const [];
   List<Region> _wards = const [];
 
   String _provinceCode = '';
-  String _districtCode = '';
   String _wardCode = '';
   bool _loadingProvinces = true;
 
@@ -41,7 +37,6 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
   void initState() {
     super.initState();
     _provinceCode = widget.initialProvinceCode;
-    _districtCode = widget.initialDistrictCode;
     _wardCode = widget.initialWardCode;
     _loadProvinces();
   }
@@ -58,7 +53,7 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
   }
 
   Future<void> _loadWards() async {
-    final wards = await ref.read(regionRepositoryProvider).getWards(_provinceCode);
+    final wards = await ref.read(regionRepositoryProvider).getWardsByProvince(_provinceCode);
     if (!mounted) return;
     setState(() => _wards = wards);
     _notify();
@@ -67,10 +62,8 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
   void _notify() {
     widget.onChanged(ClubRegionSelection(
       provinceCode: _provinceCode,
-      districtCode: _districtCode,
       wardCode: _wardCode,
       provinces: _provinces,
-      districts: _districts,
       wards: _wards,
     ));
   }
@@ -101,7 +94,6 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
           onChanged: (code) {
             setState(() {
               _provinceCode = code;
-              _districtCode = '';
               _wardCode = '';
               _wards = const [];
             });
@@ -165,18 +157,14 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
 /// Trạng thái chọn vùng + danh sách để màn cha ghép địa chỉ khi lưu.
 class ClubRegionSelection {
   final String provinceCode;
-  final String districtCode;
   final String wardCode;
   final List<Region> provinces;
-  final List<Region> districts;
   final List<Region> wards;
 
   const ClubRegionSelection({
     this.provinceCode = '',
-    this.districtCode = '',
     this.wardCode = '',
     this.provinces = const [],
-    this.districts = const [],
     this.wards = const [],
   });
 
@@ -189,16 +177,13 @@ class ClubRegionSelection {
   }
 
   String? get provinceName => _nameOf(provinces, provinceCode);
-  String? get districtName => _nameOf(districts, districtCode);
   String? get wardName => _nameOf(wards, wardCode);
 
-  /// Ghép địa chỉ giống web: "chi tiết, phường, quận, tỉnh".
-  /// Bỏ lặp nếu chi tiết đã chứa tên tỉnh/quận; chỉ chi tiết → giữ nguyên.
+  /// Ghép địa chỉ giống web: "chi tiết, phường, tỉnh".
   String composeAddress(String detail) {
     final wardName = _nameOf(wards, wardCode);
-    final districtName = _nameOf(districts, districtCode);
     final provinceName = _nameOf(provinces, provinceCode);
-    final adminPart = [wardName, districtName, provinceName]
+    final adminPart = [wardName, provinceName]
         .whereType<String>()
         .where((name) => name.isNotEmpty)
         .join(', ');
@@ -206,9 +191,7 @@ class ClubRegionSelection {
 
     if (trimmedDetail.isEmpty) return adminPart;
     if (adminPart.isEmpty) return trimmedDetail;
-    final alreadyContainsAdmin =
-        (provinceName != null && trimmedDetail.contains(provinceName)) ||
-            (districtName != null && trimmedDetail.contains(districtName));
+    final alreadyContainsAdmin = provinceName != null && trimmedDetail.contains(provinceName);
     return alreadyContainsAdmin ? trimmedDetail : '$trimmedDetail, $adminPart';
   }
 }
