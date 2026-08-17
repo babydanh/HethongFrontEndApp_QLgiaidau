@@ -1,7 +1,7 @@
 class AppConstants {
   // ─── App Info ───
-  static const String appName = 'Sporto';
-  static const String appTagline = 'Nền tảng Quản lý & Tổ chức Giải đấu Thể thao Toàn diện';
+  static const String appName = 'SportO';
+  static const String appTagline = 'Chơi cùng nhau';
   static const String appVersion = '1.0.0';
   static const String appDomain = 'https://sporto.asia';
 

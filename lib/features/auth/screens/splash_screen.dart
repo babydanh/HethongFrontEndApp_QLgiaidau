@@ -106,10 +106,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                     // Tagline
                     Text(
-                      'Tổ chức giải đấu chuyên nghiệp',
+                      AppConstants.appTagline,
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: context.colors.textSecondary,
                         letterSpacing: 1.5,
                       ),
