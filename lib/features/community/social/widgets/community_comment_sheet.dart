@@ -1,8 +1,12 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class CommunityCommentSheet extends ConsumerStatefulWidget {
   final String communityId;
@@ -29,11 +33,14 @@ class CommunityCommentSheet extends ConsumerStatefulWidget {
 
 class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
   final _controller = TextEditingController();
+  final _focusNode = FocusNode();
   late List<CommunityCommentModel> _comments;
   String? _cursor;
   String? _replyTo;
+  String? _replyAuthorName;
   bool _busy = false;
   bool _hasMore = false;
+  bool _canSend = false;
 
   @override
   void initState() {
@@ -41,11 +48,18 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
     _comments = [...widget.initialPage.items];
     _cursor = widget.initialPage.nextCursor;
     _hasMore = widget.initialPage.hasMore;
+    _controller.addListener(() {
+      final hasText = _controller.text.trim().isNotEmpty;
+      if (hasText != _canSend) {
+        setState(() => _canSend = hasText);
+      }
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -88,7 +102,10 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
           _comments = [..._comments, comment];
           _controller.clear();
           _replyTo = null;
+          _replyAuthorName = null;
+          _canSend = false;
         });
+        _focusNode.unfocus();
         widget.onCommentUpdated?.call();
       }
     } catch (_) {
@@ -96,6 +113,14 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  void _startReply(CommunityCommentModel comment) {
+    setState(() {
+      _replyTo = comment.id;
+      _replyAuthorName = comment.authorName;
+    });
+    _focusNode.requestFocus();
   }
 
   Future<void> _delete(CommunityCommentModel comment) async {
@@ -111,6 +136,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             child: const Text('Xóa'),
           ),
         ],
@@ -122,8 +148,9 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
       await ref
           .read(communitySocialRepositoryProvider)
           .deleteComment(widget.communityId, comment.id);
-      if (mounted)
+      if (mounted) {
         setState(() => _comments.removeWhere((item) => item.id == comment.id));
+      }
       widget.onCommentUpdated?.call();
     } catch (_) {
       if (mounted) _showMessage('Không thể xóa bình luận.');
@@ -136,106 +163,443 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
     context,
   ).showSnackBar(SnackBar(content: Text(message)));
 
+  String _relativeTime(DateTime? value) {
+    if (value == null) return 'Vừa xong';
+    final difference = DateTime.now().difference(value.toLocal());
+    if (difference.inMinutes < 1) return 'Vừa xong';
+    if (difference.inHours < 1) return '${difference.inMinutes} phút trước';
+    if (difference.inDays < 1) return '${difference.inHours} giờ trước';
+    if (difference.inDays < 7) return '${difference.inDays} ngày trước';
+    return '${value.day}/${value.month}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppTheme.spacingMD,
-          AppTheme.spacingMD,
-          AppTheme.spacingMD,
-          AppTheme.spacingSM,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Bình luận',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: AppTheme.spacingSM),
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  if (_comments.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(AppTheme.spacingMD),
-                      child: Text('Chưa có bình luận.'),
-                    ),
-                  ..._comments.map(
-                    (comment) => Padding(
-                      padding: EdgeInsets.only(
-                        left: comment.parentId == null ? 0 : AppTheme.spacingMD,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bubbleColor = isDark ? const Color(0xFF3A3B3C) : const Color(0xFFF0F2F5);
+    final profile = ref.watch(userProfileProvider).asData?.value;
+    final presets = ref.watch(communityTagPresetsProvider(widget.communityId)).asData?.value;
+    final memberDirectory = ref.watch(communityMemberDirectoryProvider(widget.communityId)).asData?.value;
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+      ),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ── Drag Handle ──
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 4.5,
+                  margin: const EdgeInsets.only(top: 10, bottom: 6),
+                  decoration: BoxDecoration(
+                    color: colors.borderLight,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+
+              // ── Header (Title + Count + Close Button) ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 2, 8, 8),
+                child: Row(
+                  children: [
+                    Text(
+                      'Bình luận',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16.5,
                       ),
-                      child: ListTile(
-                        dense: true,
-                        title: Text(comment.authorName),
-                        subtitle: Text(comment.body),
-                        trailing: Wrap(
-                          spacing: 0,
-                          children: [
-                            IconButton(
-                              tooltip: 'Trả lời',
-                              onPressed: () =>
-                                  setState(() => _replyTo = comment.id),
-                              icon: const Icon(Icons.reply_outlined, size: 18),
-                            ),
-                            if (comment.authorId == widget.currentUserId ||
-                                widget.canModerate)
-                              IconButton(
-                                tooltip: 'Xóa',
-                                onPressed: () => _delete(comment),
-                                icon: Icon(
-                                  Icons.delete_outline,
-                                  size: 18,
-                                  color: colors.error,
+                    ),
+                    if (_comments.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryLight,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${_comments.length}',
+                          style: const TextStyle(
+                            color: AppTheme.primaryDark,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const Spacer(),
+                    IconButton(
+                      tooltip: 'Đóng',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(Icons.close_rounded, size: 20, color: colors.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+
+              Divider(
+                height: 1,
+                thickness: 0.8,
+                color: colors.borderLight.withValues(alpha: 0.6),
+              ),
+
+              // ── Comment List (Facebook Bubbles) ──
+              Flexible(
+                child: _comments.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.chat_bubble_outline_rounded,
+                                size: 44,
+                                color: colors.textMuted.withValues(alpha: 0.5),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Chưa có bình luận nào.',
+                                style: TextStyle(
+                                  color: colors.textMuted,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                          ],
+                              const SizedBox(height: 4),
+                              Text(
+                                'Hãy là người đầu tiên chia sẻ ý kiến!',
+                                style: TextStyle(
+                                  color: colors.textMuted.withValues(alpha: 0.7),
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                        itemCount: _comments.length + (_hasMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == _comments.length) {
+                            return Center(
+                              child: TextButton.icon(
+                                onPressed: _busy ? null : _loadMore,
+                                icon: _busy
+                                    ? const SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Icon(Icons.expand_more_rounded, size: 16),
+                                label: Text(
+                                  _busy ? 'Đang tải...' : 'Xem thêm bình luận cũ hơn',
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            );
+                          }
+
+                          final comment = _comments[index];
+                          final isReply = comment.parentId != null;
+                          final member = memberDirectory?[comment.authorId];
+                          final tags = (member?.tags ?? const <String>[]).take(2).toList();
+
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              top: 6,
+                              bottom: 6,
+                              left: isReply ? 38.0 : 0.0,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // ── Author Avatar ──
+                                GestureDetector(
+                                  onTap: comment.authorId.isEmpty
+                                      ? null
+                                      : () => context.push(
+                                          '/profile/user/${comment.authorId}?communityId=${widget.communityId}'),
+                                  child: CircleAvatar(
+                                    radius: isReply ? 15 : 18,
+                                    backgroundColor: AppTheme.primaryLight,
+                                    backgroundImage: comment.authorAvatarUrl == null
+                                        ? null
+                                        : NetworkImage(comment.authorAvatarUrl!),
+                                    child: comment.authorAvatarUrl == null
+                                        ? Text(
+                                            comment.authorName.characters.first.toUpperCase(),
+                                            style: TextStyle(
+                                              color: AppTheme.primaryDark,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: isReply ? 11 : 13,
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+
+                                // ── Speech Bubble + Action Row ──
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // ── Bubble Box ──
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 9,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: bubbleColor,
+                                          borderRadius: BorderRadius.circular(18),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            // Author Name & Badges
+                                            Wrap(
+                                              spacing: 5,
+                                              runSpacing: 2,
+                                              crossAxisAlignment: WrapCrossAlignment.center,
+                                              children: [
+                                                GestureDetector(
+                                                  onTap: comment.authorId.isEmpty
+                                                      ? null
+                                                      : () => context.push(
+                                                          '/profile/user/${comment.authorId}?communityId=${widget.communityId}'),
+                                                  child: Text(
+                                                    comment.authorName,
+                                                    style: TextStyle(
+                                                      fontWeight: FontWeight.w700,
+                                                      fontSize: 13.5,
+                                                      color: colors.textPrimary,
+                                                    ),
+                                                  ),
+                                                ),
+                                                ...tags.map(
+                                                  (tag) => PresetTagChip(
+                                                    label: tag,
+                                                    color: presets == null
+                                                        ? null
+                                                        : resolvePresetColor(presets, tag),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 3),
+                                            // Comment Body Text
+                                            Text(
+                                              comment.body,
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                height: 1.35,
+                                                color: colors.textPrimary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      // ── Actions Below Bubble (Timestamp, Reply, Delete) ──
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 10, top: 4, bottom: 2),
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              _relativeTime(comment.createdAt),
+                                              style: TextStyle(
+                                                fontSize: 11.5,
+                                                color: colors.textMuted,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 14),
+                                            GestureDetector(
+                                              onTap: () => _startReply(comment),
+                                              child: Text(
+                                                'Trả lời',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: colors.textSecondary,
+                                                ),
+                                              ),
+                                            ),
+                                            if (comment.authorId == widget.currentUserId ||
+                                                widget.canModerate) ...[
+                                              const SizedBox(width: 14),
+                                              GestureDetector(
+                                                onTap: () => _delete(comment),
+                                                child: Text(
+                                                  'Xóa',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: colors.error,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ),
+
+              // ── Reply Indicator Banner ──
+              if (_replyTo != null)
+                Container(
+                  width: double.infinity,
+                  color: isDark ? const Color(0xFF242526) : const Color(0xFFE4E6EB),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.reply_rounded, size: 15, color: AppTheme.primary),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Đang trả lời ${_replyAuthorName ?? 'bình luận'}',
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => setState(() {
+                          _replyTo = null;
+                          _replyAuthorName = null;
+                        }),
+                        child: Icon(Icons.close_rounded, size: 16, color: colors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // ── Facebook-style Input Bar at Bottom ──
+              Container(
+                padding: const EdgeInsets.fromLTRB(12, 8, 10, 8),
+                decoration: BoxDecoration(
+                  color: colors.bgCard,
+                  border: Border(
+                    top: BorderSide(
+                      color: colors.borderLight.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Current User Avatar
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4, right: 8),
+                      child: CircleAvatar(
+                        radius: 17,
+                        backgroundColor: AppTheme.primaryLight,
+                        backgroundImage: profile?.avatarUrl == null
+                            ? null
+                            : NetworkImage(profile!.avatarUrl!),
+                        child: profile?.avatarUrl == null
+                            ? Text(
+                                (profile?.fullName.isNotEmpty == true
+                                        ? profile!.fullName.characters.first
+                                        : 'B')
+                                    .toUpperCase(),
+                                style: const TextStyle(
+                                  color: AppTheme.primaryDark,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12.5,
+                                ),
+                              )
+                            : null,
+                      ),
+                    ),
+
+                    // Pill TextField Container
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: bubbleColor,
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        child: TextField(
+                          controller: _controller,
+                          focusNode: _focusNode,
+                          minLines: 1,
+                          maxLines: 4,
+                          style: const TextStyle(fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: _replyTo == null
+                                ? 'Viết bình luận…'
+                                : 'Viết câu trả lời…',
+                            hintStyle: TextStyle(
+                              color: colors.textMuted,
+                              fontSize: 14,
+                            ),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  if (_hasMore)
-                    TextButton(
-                      onPressed: _busy ? null : _loadMore,
-                      child: Text(_busy ? 'Đang tải...' : 'Xem thêm bình luận'),
+                    const SizedBox(width: 6),
+
+                    // Send Button
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: IconButton(
+                        tooltip: 'Gửi',
+                        visualDensity: VisualDensity.compact,
+                        onPressed: (_canSend && !_busy) ? _submit : null,
+                        icon: Icon(
+                          Icons.send_rounded,
+                          size: 20,
+                          color: _canSend ? AppTheme.primary : colors.textMuted.withValues(alpha: 0.4),
+                        ),
+                      ),
                     ),
-                ],
-              ),
-            ),
-            if (_replyTo != null)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: () => setState(() => _replyTo = null),
-                  icon: const Icon(Icons.close, size: 16),
-                  label: const Text('Hủy trả lời'),
+                  ],
                 ),
               ),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    minLines: 1,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      hintText: _replyTo == null
-                          ? 'Viết bình luận…'
-                          : 'Viết câu trả lời…',
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: _busy ? null : _submit,
-                  icon: const Icon(Icons.send_rounded),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
