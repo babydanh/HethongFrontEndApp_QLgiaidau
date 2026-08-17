@@ -83,7 +83,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String _tournamentBracket = 'all';
   String _tournamentRanked = 'all';
   String _tournamentProvince = ''; // tên tỉnh — để so khớp locationAddress
-  String _tournamentProvinceCode = ''; // mã tỉnh — để tải quận/huyện
+  String _tournamentProvinceCode = ''; // mã tỉnh — để tải phường/xã
   String _tournamentWard = ''; // tên phường/xã
   DateTime? _tournamentStartDate;
   DateTime? _tournamentEndDate;
@@ -2115,7 +2115,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               localRanked = 'all';
                               localProvince = '';
                               localProvinceCode = '';
-                              localDistrict = '';
+                              localWard = '';
                               localStartDate = null;
                               localEndDate = null;
                             });

@@ -1,16 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 
-/// Quận/Huyện thuộc một Tỉnh/Thành (theo chuẩn bảng `districts`).
-class District {
+/// Phường/Xã thuộc một Tỉnh/Thành theo API địa chỉ v2.
+class Ward {
   final String code;
   final String name;
   final String provinceCode;
 
-  District({required this.code, required this.name, required this.provinceCode});
+  Ward({required this.code, required this.name, required this.provinceCode});
 
-  factory District.fromJson(Map<String, dynamic> json) {
-    return District(
+  factory Ward.fromJson(Map<String, dynamic> json) {
+    return Ward(
       code: json['code']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       provinceCode: json['provinceCode']?.toString() ?? '',
@@ -18,13 +18,13 @@ class District {
   }
 }
 
-/// Danh sách Quận/Huyện theo mã tỉnh — GET /regions/districts?provinceCode=...
-final districtsProvider =
-    FutureProvider.family<List<District>, String>((ref, provinceCode) async {
+/// Danh sách Phường/Xã theo mã tỉnh — GET /regions/wards?provinceCode=...
+final wardsProvider =
+    FutureProvider.family<List<Ward>, String>((ref, provinceCode) async {
   try {
     final dio = ref.read(dioProvider);
     final response = await dio.get(
-      '/regions/districts',
+      '/regions/wards',
       queryParameters: {'provinceCode': provinceCode},
     );
     final raw = response.data;
@@ -32,7 +32,7 @@ final districtsProvider =
         ? (raw['data'] as List<dynamic>? ?? [])
         : (raw as List<dynamic>? ?? []);
     return dataList
-        .map((e) => District.fromJson(e as Map<String, dynamic>))
+        .map((e) => Ward.fromJson(e as Map<String, dynamic>))
         .toList();
   } catch (_) {
     return [];

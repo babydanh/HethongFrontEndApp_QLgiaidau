@@ -1,5 +1,5 @@
-/// Đơn vị hành chính Việt Nam (tỉnh / quận / phường).
-/// GET /regions/provinces, /regions/districts, /regions/wards
+/// Đơn vị hành chính Việt Nam theo API v2 (tỉnh/thành, phường/xã).
+/// GET /regions/provinces, /regions/wards
 class Region {
   final String code;
   final String name;
