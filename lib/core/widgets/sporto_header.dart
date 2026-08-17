@@ -12,6 +12,7 @@ class SportoHeader extends StatelessWidget {
   final int notificationsCount;
   final VoidCallback onLoginTap;
   final VoidCallback onNotificationTap;
+  final VoidCallback? onChatTap;
 
   const SportoHeader({
     super.key,
@@ -22,6 +23,7 @@ class SportoHeader extends StatelessWidget {
     this.notificationsCount = 0,
     required this.onLoginTap,
     required this.onNotificationTap,
+    this.onChatTap,
   });
 
   @override
@@ -55,7 +57,32 @@ class SportoHeader extends StatelessWidget {
                         letterSpacing: 1.2,
                       ),
                     ),
-                    _buildNotificationBell(context),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (onChatTap != null) ...[
+                          GestureDetector(
+                            onTap: onChatTap,
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.forum_outlined,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        _buildNotificationBell(context),
+                      ],
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),

@@ -363,13 +363,25 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                         ),
                       ),
                       const Spacer(),
+                      // Chat Button
+                      _NavIconBtn(
+                        icon: Icons.forum_outlined,
+                        onTap: () {
+                          if (!isAuth) {
+                            context.push('/login');
+                          } else {
+                            context.push('/chat');
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 8),
                       // Notification with Live Red Badge
                       Stack(
                         clipBehavior: Clip.none,
                         children: [
                           _NavIconBtn(
                             icon: Icons.notifications_outlined,
-                            onTap: () {},
+                            onTap: () => context.push('/notifications'),
                           ),
                           Positioned(
                             top: -2,
