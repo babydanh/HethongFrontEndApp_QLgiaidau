@@ -161,10 +161,23 @@ class AppNotification {
   }
 
   String? get communityId {
-    if (data == null) return null;
-    final value = data!['communityId'] ?? data!['clubId'];
+    final value = data?['communityId'] ?? data?['clubId'];
     if (value is String && value.isNotEmpty) return value;
     if (value is num) return value.toString();
+
+    // Community invite notifications currently carry the community id in
+    // redirectUrl rather than data. Support both shapes so old and new
+    // notifications use the same accept/decline flow.
+    final rawRedirect = redirectUrl;
+    if (rawRedirect != null && rawRedirect.isNotEmpty) {
+      final uri = Uri.tryParse(rawRedirect);
+      final segments = uri?.pathSegments ?? const <String>[];
+      if (segments.length >= 2 &&
+          (segments[0] == 'communities' || segments[0] == 'clubs')) {
+        final id = segments[1].trim();
+        if (id.isNotEmpty) return id;
+      }
+    }
     return null;
   }
 

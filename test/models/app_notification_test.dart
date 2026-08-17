@@ -91,6 +91,18 @@ void main() {
       // Should use DateTime.now() fallback — just verify it's a valid DateTime
       expect(notification.createdAt, isA<DateTime>());
     });
+
+    test('should extract community id from invite redirect URL', () {
+      final notification = AppNotification.fromJson({
+        'id': 'invite-1',
+        'type': 'COMMUNITY_INVITED',
+        'title': 'Lời mời tham gia cộng đồng',
+        'redirectUrl': '/communities/community-42',
+        'createdAt': '2026-07-07T10:00:00Z',
+      });
+
+      expect(notification.communityId, 'community-42');
+    });
   });
 
   group('TC-FLUTTER-NOTIFICATION-015: AppNotification icon & color by type', () {

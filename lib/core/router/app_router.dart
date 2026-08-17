@@ -59,6 +59,7 @@ import 'package:app_quanly_giaidau/features/series/screens/series_screen.dart';
 import 'package:app_quanly_giaidau/features/series/screens/series_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/match/screens/matches_list_screen.dart';
 import 'package:app_quanly_giaidau/features/chat/screens/chat_screen.dart';
+import 'package:app_quanly_giaidau/features/chat/screens/chat_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/community/social/club_chat_screen.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_social_screen.dart';
 
@@ -612,10 +613,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: ':id',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
-              final conversation = state.extra;
+              final name = state.uri.queryParameters['name'];
+              final avatar = state.uri.queryParameters['avatar'];
+              final type = state.uri.queryParameters['type'];
+              final communityId = state.uri.queryParameters['communityId'];
               return ChatDetailScreen(
-                conversationId: id,
-                conversation: conversation as dynamic,
+                roomId: id,
+                roomName: name,
+                roomAvatar: avatar,
+                roomType: type,
+                communityId: communityId,
               );
             },
           ),

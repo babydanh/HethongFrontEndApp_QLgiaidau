@@ -1,49 +1,15 @@
 import 'dart:async';
-
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
-import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/services/chat_socket_service.dart';
+import 'package:app_quanly_giaidau/data/models/chat_models.dart';
+import 'package:app_quanly_giaidau/features/chat/screens/chat_detail_screen.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-
-class Conversation {
-  final String id;
-  final String name;
-  final String? avatarUrl;
-
-  const Conversation({required this.id, required this.name, this.avatarUrl});
-}
-
-class ChatMessage {
-  final String id;
-  final String senderId;
-  final String senderName;
-  final String content;
-  final DateTime createdAt;
-
-  const ChatMessage({
-    required this.id,
-    required this.senderId,
-    required this.senderName,
-    required this.content,
-    required this.createdAt,
-  });
-
-  factory ChatMessage.fromJson(Map<String, dynamic> json) {
-    return ChatMessage(
-      id: json['id']?.toString() ?? '',
-      senderId: json['senderId']?.toString() ?? '',
-      senderName: json['senderName']?.toString() ?? 'Admin hỗ trợ',
-      content: (json['messageText'] ?? json['content'] ?? '').toString(),
-      createdAt:
-          DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
-          DateTime.now(),
-    );
-  }
-}
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
@@ -52,545 +18,623 @@ class ChatScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen> {
-  final _messageController = TextEditingController();
-  final _scrollController = ScrollController();
-  List<ChatMessage> _messages = const [];
-  Timer? _pollTimer;
-  bool _isLoading = true;
-  bool _isSending = false;
-  String? _errorMessage;
+class _ChatScreenState extends ConsumerState<ChatScreen> with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+  final _searchController = TextEditingController();
+  final _aiMessageController = TextEditingController();
+  final _supportMessageController = TextEditingController();
+
+  List<ChatRoomModel> _rooms = [];
+  bool _isLoadingRooms = true;
+  String _searchQuery = '';
+
+  // AI Chat State
+  final List<Map<String, String>> _aiMessages = [
+    {
+      'role': 'assistant',
+      'content': 'Xin chào! Mình là trợ lý AI Sporto. Bạn có thể hỏi về luật thi đấu, cách tính điểm ELO, hay cách đăng ký tham gia các giải đấu!',
+    },
+  ];
+  bool _isAiReplying = false;
+
+  // Support Chat State
+  List<ChatMessageModel> _supportMessages = [];
+  bool _isLoadingSupport = false;
+  bool _isSendingSupport = false;
+
+  late final ChatSocketService _chatSocket;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
-    _loadConversation();
-    _pollTimer = Timer.periodic(
-      const Duration(seconds: 5),
-      (_) => _loadConversation(quiet: true),
-    );
+    _tabController = TabController(length: 3, vsync: this);
+    _chatSocket = ChatSocketService(ref.read(tokenManagerProvider));
+    _initSocket();
+    _loadRooms();
+    _loadSupportChat();
+
+    _searchController.addListener(() {
+      setState(() => _searchQuery = _searchController.text.trim().toLowerCase());
+    });
+
+    _refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) => _loadRooms(quiet: true));
   }
 
   @override
   void dispose() {
-    _pollTimer?.cancel();
-    _messageController.dispose();
-    _scrollController.dispose();
+    _refreshTimer?.cancel();
+    _tabController.dispose();
+    _searchController.dispose();
+    _aiMessageController.dispose();
+    _supportMessageController.dispose();
+    _chatSocket.dispose();
     super.dispose();
   }
 
-  dynamic _unwrapData(dynamic raw) {
-    if (raw is Map<String, dynamic> && raw.containsKey('data')) {
-      return raw['data'];
-    }
-    return raw;
+  void _initSocket() {
+    _chatSocket.onMessage = (data) {
+      if (mounted) _loadRooms(quiet: true);
+    };
   }
 
-  String? _roomId;
-
-  List<ChatMessage> _parseMessages(dynamic raw) {
-    final conversation = _unwrapData(raw);
-    if (conversation is! Map<String, dynamic>) return const [];
-    final id = conversation['id']?.toString();
-    if (id != null && id.isNotEmpty && mounted) {
-      _roomId = id;
-    }
-    final messages = conversation['messages'];
-    if (messages is! List) return const [];
-    return messages
-        .whereType<Map>()
-        .map((item) => ChatMessage.fromJson(Map<String, dynamic>.from(item)))
-        .toList();
-  }
-
-  Future<void> _confirmClearChat(BuildContext context) async {
-    final colors = context.colors;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: colors.bgCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFEE2E2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.delete_outline_rounded, color: Color(0xFFE11D48), size: 22),
-            ),
-            const SizedBox(width: 10),
-            const Expanded(
-              child: Text('Xóa đoạn chat?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-            ),
-          ],
-        ),
-        content: const Text(
-          'Lịch sử tin nhắn hỗ trợ cũ sẽ được xóa khỏi tài khoản của bạn và không thể khôi phục.',
-          style: TextStyle(fontSize: 13, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Hủy', style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w600)),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFE11D48),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Xóa đoạn chat', style: TextStyle(fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && _roomId != null) {
-      try {
-        final dio = ref.read(dioClientProvider).dio;
-        await dio.post('/chat/rooms/$_roomId/clear');
-        if (!mounted || !context.mounted) return;
-        setState(() => _messages = const []);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã xóa toàn bộ lịch sử đoạn chat.')),
-        );
-      } catch (e) {
-        if (!mounted || !context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể xóa lịch sử đoạn chat lúc này.')),
-        );
-      }
-    }
-  }
-
-  Future<void> _loadConversation({bool quiet = false}) async {
-    if (!quiet && mounted) {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-    }
-
+  Future<void> _loadRooms({bool quiet = false}) async {
+    if (!quiet) setState(() => _isLoadingRooms = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
-      final response = await dio.get('/chat/support/me');
-      final messages = _parseMessages(response.data);
-      if (!mounted) return;
-      setState(() {
-        _messages = messages;
-        _isLoading = false;
-        _errorMessage = null;
-      });
-      _scrollToBottom();
-    } catch (error) {
-      if (!mounted || quiet) return;
-      setState(() {
-        _isLoading = false;
-        _errorMessage = ErrorParser.parse(
-          error,
-          'Không thể tải cuộc trò chuyện hỗ trợ.',
-        );
-      });
-    }
+      final currentUserId = ref.read(userProfileProvider).asData?.value?.id;
+      final res = await dio.get('/chat/rooms');
+      final rawList = res.data is Map ? (res.data['data'] ?? res.data['items'] ?? []) : res.data;
+      if (rawList is List && mounted) {
+        final items = rawList
+            .whereType<Map<String, dynamic>>()
+            .map((json) => ChatRoomModel.fromJson(json, currentUserId: currentUserId))
+            .toList();
+        setState(() => _rooms = items);
+      }
+    } catch (_) {}
+    if (!quiet && mounted) setState(() => _isLoadingRooms = false);
   }
 
-  Future<void> _sendMessage() async {
-    final content = _messageController.text.trim();
-    if (content.isEmpty || _isSending) return;
+  Future<void> _loadSupportChat() async {
+    setState(() => _isLoadingSupport = true);
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      final currentUserId = ref.read(userProfileProvider).asData?.value?.id;
+      final res = await dio.get('/chat/support/me');
+      final data = res.data is Map ? (res.data['data'] ?? res.data) : null;
+      if (data is Map<String, dynamic> && data['messages'] is List && mounted) {
+        final msgs = (data['messages'] as List)
+            .whereType<Map<String, dynamic>>()
+            .map((json) => ChatMessageModel.fromJson(json, currentUserId: currentUserId))
+            .toList();
+        setState(() => _supportMessages = msgs);
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _isLoadingSupport = false);
+  }
+
+  Future<void> _sendSupportMessage() async {
+    final text = _supportMessageController.text.trim();
+    if (text.isEmpty || _isSendingSupport) return;
+    setState(() => _isSendingSupport = true);
+    _supportMessageController.clear();
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      final res = await dio.post('/chat/support', data: {'messageText': text});
+      final currentUserId = ref.read(userProfileProvider).asData?.value?.id;
+      final data = res.data is Map ? (res.data['data'] ?? res.data) : null;
+      if (data is Map<String, dynamic> && data['messages'] is List && mounted) {
+        final msgs = (data['messages'] as List)
+            .whereType<Map<String, dynamic>>()
+            .map((json) => ChatMessageModel.fromJson(json, currentUserId: currentUserId))
+            .toList();
+        setState(() => _supportMessages = msgs);
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _isSendingSupport = false);
+  }
+
+  Future<void> _sendAiMessage({String? presetText}) async {
+    final text = (presetText ?? _aiMessageController.text).trim();
+    if (text.isEmpty || _isAiReplying) return;
 
     setState(() {
-      _isSending = true;
-      _errorMessage = null;
+      _aiMessages.add({'role': 'user', 'content': text});
+      _isAiReplying = true;
     });
+    _aiMessageController.clear();
 
     try {
       final dio = ref.read(dioClientProvider).dio;
-      final response = await dio.post(
-        '/chat/support',
-        data: {'messageText': content},
-      );
-      final messages = _parseMessages(response.data);
-      if (!mounted) return;
-      _messageController.clear();
-      setState(() {
-        _messages = messages;
-        _isSending = false;
-      });
-      _scrollToBottom();
-    } catch (error) {
-      if (!mounted) return;
-      setState(() {
-        _isSending = false;
-        _errorMessage = ErrorParser.parse(error, 'Không gửi được tin nhắn.');
-      });
+      final res = await dio.post('/chat/ai', data: {'message': text});
+      final reply = (res.data is Map ? (res.data['reply'] ?? res.data['content'] ?? res.data['data']) : res.data)?.toString();
+      if (mounted) {
+        setState(() {
+          _aiMessages.add({
+            'role': 'assistant',
+            'content': reply ?? 'Sporto AI đang xử lý yêu cầu của bạn...',
+          });
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _aiMessages.add({
+            'role': 'assistant',
+            'content': 'Xin lỗi, tạm thời hệ thống AI đang bận. Bạn có thể thử lại sau ít phút nhé!',
+          });
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isAiReplying = false);
     }
   }
 
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) return;
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 240),
-        curve: Curves.easeOut,
-      );
-    });
+  String _formatRoomTime(DateTime dt) {
+    final now = DateTime.now();
+    if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
+      return DateFormat('HH:mm').format(dt);
+    }
+    final diff = now.difference(dt);
+    if (diff.inDays < 7) {
+      return DateFormat('EEEE', 'vi_VN').format(dt);
+    }
+    return DateFormat('dd/MM').format(dt);
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final profile = ref.watch(userProfileProvider).asData?.value;
+    final currentUserId = profile?.id;
+
+    final filteredRooms = _rooms.where((r) {
+      if (_searchQuery.isEmpty) return true;
+      final title = r.displayTitle(currentUserId).toLowerCase();
+      final lastMsg = r.lastMessage?.content.toLowerCase() ?? '';
+      return title.contains(_searchQuery) || lastMsg.contains(_searchQuery);
+    }).toList();
 
     return Scaffold(
-      backgroundColor: colors.bgDark,
+      backgroundColor: isDark ? const Color(0xFF18191A) : const Color(0xFFF0F2F5),
       appBar: AppBar(
-        backgroundColor: colors.bgDark,
-        elevation: 0,
+        backgroundColor: colors.bgCard,
+        elevation: 0.5,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => context.pop(),
         ),
-        titleSpacing: 4,
         title: Row(
           children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: const BoxDecoration(
-                color: Color(0xFFE8F1FF),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.support_agent_rounded,
-                color: Color(0xFF1463F3),
-                size: 22,
-              ),
+            CircleAvatar(
+              radius: 17,
+              backgroundColor: AppTheme.primaryLight,
+              backgroundImage: profile?.avatarUrl != null ? NetworkImage(profile!.avatarUrl!) : null,
+              child: profile?.avatarUrl == null
+                  ? const Icon(Icons.person, color: AppTheme.primaryDark, size: 18)
+                  : null,
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const Text('Đoạn chat', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19)),
+          ],
+        ),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: AppTheme.primary,
+          indicatorWeight: 3,
+          labelColor: AppTheme.primary,
+          unselectedLabelColor: colors.textMuted,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+          tabs: const [
+            Tab(icon: Icon(Icons.chat_bubble_outline_rounded, size: 20), text: 'Trò chuyện'),
+            Tab(icon: Icon(Icons.auto_awesome_rounded, size: 20), text: 'AI Trợ lý'),
+            Tab(icon: Icon(Icons.headset_mic_outlined, size: 20), text: 'Hỗ trợ CSKH'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // ── TAB 1: CONVERSATIONS / INBOX ──
+          RefreshIndicator(
+            onRefresh: () => _loadRooms(),
+            color: AppTheme.primary,
+            child: Column(
               children: [
-                Text(
-                  'Admin hỗ trợ',
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
-                ),
-                Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF22C55E),
-                        shape: BoxShape.circle,
+                // Messenger Search Bar
+                Container(
+                  color: colors.bgCard,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF3A3B3C) : const Color(0xFFF0F2F5),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      style: const TextStyle(fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'Tìm kiếm tin nhắn, người chơi hoặc CLB...',
+                        hintStyle: TextStyle(color: colors.textMuted, fontSize: 13.5),
+                        prefixIcon: Icon(Icons.search_rounded, color: colors.textMuted, size: 20),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                       ),
                     ),
-                    const SizedBox(width: 5),
-                    Text(
-                      'Phản hồi trực tiếp',
-                      style: TextStyle(color: colors.textMuted, fontSize: 11),
-                    ),
-                  ],
+                  ),
+                ),
+
+                // Conversations List
+                Expanded(
+                  child: _isLoadingRooms
+                      ? const Center(child: CircularProgressIndicator())
+                      : filteredRooms.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.forum_outlined, size: 52, color: colors.textMuted.withValues(alpha: 0.4)),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    _searchQuery.isNotEmpty ? 'Không tìm thấy cuộc trò chuyện phù hợp.' : 'Chưa có cuộc trò chuyện nào.',
+                                    style: TextStyle(color: colors.textMuted, fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.separated(
+                              itemCount: filteredRooms.length,
+                              separatorBuilder: (_, __) => Divider(
+                                height: 1,
+                                indent: 72,
+                                color: colors.borderLight.withValues(alpha: 0.5),
+                              ),
+                              itemBuilder: (context, index) {
+                                final room = filteredRooms[index];
+                                final title = room.displayTitle(currentUserId);
+                                final avatar = room.displayAvatar(currentUserId);
+                                final hasUnread = room.unreadCount > 0;
+
+                                return ListTile(
+                                  tileColor: colors.bgCard,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => ChatDetailScreen(
+                                          roomId: room.id,
+                                          roomName: title,
+                                          roomAvatar: avatar,
+                                          roomType: room.type,
+                                          communityId: room.communityId,
+                                        ),
+                                      ),
+                                    ).then((_) => _loadRooms(quiet: true));
+                                  },
+                                  leading: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 24,
+                                        backgroundColor: AppTheme.primaryLight,
+                                        backgroundImage: avatar != null && avatar.isNotEmpty ? NetworkImage(avatar) : null,
+                                        child: avatar == null || avatar.isEmpty
+                                            ? Text(
+                                                title.characters.first.toUpperCase(),
+                                                style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryDark, fontSize: 16),
+                                              )
+                                            : null,
+                                      ),
+                                      Positioned(
+                                        bottom: 0,
+                                        right: 0,
+                                        child: Container(
+                                          width: 13,
+                                          height: 13,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF22C55E),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(color: colors.bgCard, width: 2),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  title: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          title,
+                                          style: TextStyle(
+                                            fontWeight: hasUnread ? FontWeight.bold : FontWeight.w600,
+                                            fontSize: 15,
+                                            color: colors.textPrimary,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      if (room.type == 'CLUB')
+                                        Container(
+                                          margin: const EdgeInsets.only(left: 6),
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.primary.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: const Text(
+                                            'CLB',
+                                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.primaryDark),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  subtitle: Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            room.lastMessage?.isRevoked == true
+                                                ? 'Tin nhắn đã bị thu hồi'
+                                                : (room.lastMessage?.content.isNotEmpty == true
+                                                    ? room.lastMessage!.content
+                                                    : (room.lastMessage?.mediaUrls.isNotEmpty == true ? '[Hình ảnh]' : 'Bắt đầu cuộc trò chuyện')),
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: hasUnread ? colors.textPrimary : colors.textMuted,
+                                              fontWeight: hasUnread ? FontWeight.w700 : FontWeight.normal,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          _formatRoomTime(room.updatedAt),
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            color: hasUnread ? AppTheme.primary : colors.textMuted,
+                                            fontWeight: hasUnread ? FontWeight.bold : FontWeight.normal,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  trailing: hasUnread
+                                      ? Container(
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: const BoxDecoration(
+                                            color: AppTheme.primary,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Text(
+                                            '${room.unreadCount}',
+                                            style: const TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold),
+                                          ),
+                                        )
+                                      : null,
+                                );
+                              },
+                            ),
                 ),
               ],
             ),
-          ],
-        ),
-        actions: [
-          PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert_rounded, color: colors.textPrimary),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
-            onSelected: (value) {
-              if (value == 'clear') {
-                _confirmClearChat(context);
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'clear',
+          ),
+
+          // ── TAB 2: AI SPORTO ASSISTANT ──
+          Column(
+            children: [
+              // Quick Prompt Chips
+              Container(
+                color: colors.bgCard,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      'Cách đăng ký giải đấu?',
+                      'Hệ số ELO tính thế nào?',
+                      'Làm sao để tạo CLB?',
+                      'Luật thi đấu Pickleball?',
+                    ].map((prompt) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ActionChip(
+                          avatar: const Icon(Icons.sparkles, size: 14, color: AppTheme.primary),
+                          label: Text(prompt, style: const TextStyle(fontSize: 12)),
+                          backgroundColor: AppTheme.primary.withValues(alpha: 0.08),
+                          onPressed: () => _sendAiMessage(presetText: prompt),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+
+              // AI Chat Log
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _aiMessages.length + (_isAiReplying ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _aiMessages.length) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: [
+                            const CircleAvatar(
+                              radius: 14,
+                              backgroundColor: AppTheme.primary,
+                              child: Icon(Icons.auto_awesome_rounded, size: 14, color: Colors.white),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF3A3B3C) : Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Text('Sporto AI đang soạn câu trả lời...', style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic)),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    final msg = _aiMessages[index];
+                    final isUser = msg['role'] == 'user';
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!isUser) ...[
+                            const CircleAvatar(
+                              radius: 14,
+                              backgroundColor: AppTheme.primary,
+                              child: Icon(Icons.auto_awesome_rounded, size: 14, color: Colors.white),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: isUser ? AppTheme.primary : (isDark ? const Color(0xFF3A3B3C) : Colors.white),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Text(
+                                msg['content'] ?? '',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  height: 1.4,
+                                  color: isUser ? Colors.white : colors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // AI Input Bar
+              Container(
+                padding: const EdgeInsets.all(12),
+                color: colors.bgCard,
                 child: Row(
                   children: [
-                    Icon(Icons.delete_outline_rounded, size: 20, color: Color(0xFFE11D48)),
-                    SizedBox(width: 10),
-                    Text('Xóa đoạn chat', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFE11D48))),
+                    Expanded(
+                      child: TextField(
+                        controller: _aiMessageController,
+                        style: const TextStyle(fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: 'Hỏi AI Sporto bất cứ điều gì...',
+                          hintStyle: TextStyle(color: colors.textMuted),
+                          filled: true,
+                          fillColor: isDark ? const Color(0xFF3A3B3C) : const Color(0xFFF0F2F5),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.send_rounded, color: AppTheme.primary),
+                      onPressed: _sendAiMessage,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // ── TAB 3: LIVE SUPPORT CSKH ──
+          Column(
+            children: [
+              Expanded(
+                child: _isLoadingSupport
+                    ? const Center(child: CircularProgressIndicator())
+                    : _supportMessages.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.headset_mic_rounded, size: 54, color: AppTheme.primary),
+                                const SizedBox(height: 10),
+                                const Text('Trung tâm hỗ trợ Sporto', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                const SizedBox(height: 4),
+                                Text('Hãy gửi câu hỏi, nhân viên CSKH sẽ hỗ trợ bạn sớm nhất.', style: TextStyle(color: colors.textMuted, fontSize: 13)),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _supportMessages.length,
+                            itemBuilder: (context, index) {
+                              final msg = _supportMessages[index];
+                              final isUser = msg.isMine;
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color: isUser ? AppTheme.primary : (isDark ? const Color(0xFF3A3B3C) : Colors.white),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Text(
+                                        msg.content,
+                                        style: TextStyle(color: isUser ? Colors.white : colors.textPrimary),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                color: colors.bgCard,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _supportMessageController,
+                        style: const TextStyle(fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: 'Nhập nội dung cần hỗ trợ...',
+                          hintStyle: TextStyle(color: colors.textMuted),
+                          filled: true,
+                          fillColor: isDark ? const Color(0xFF3A3B3C) : const Color(0xFFF0F2F5),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.send_rounded, color: AppTheme.primary),
+                      onPressed: _sendSupportMessage,
+                    ),
                   ],
                 ),
               ),
             ],
           ),
         ],
-      ),
-      body: Column(
-        children: [
-          if (_errorMessage != null)
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colors.error.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline_rounded, color: colors.error),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _errorMessage!,
-                      style: TextStyle(
-                        color: colors.textSecondary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _loadConversation,
-                    child: const Text('Thử lại'),
-                  ),
-                ],
-              ),
-            ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : RefreshIndicator(
-                    onRefresh: _loadConversation,
-                    child: _messages.isEmpty
-                        ? ListView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            children: [
-                              SizedBox(
-                                height:
-                                    MediaQuery.sizeOf(context).height * 0.55,
-                                child: _EmptySupportState(colors: colors),
-                              ),
-                            ],
-                          )
-                        : ListView.builder(
-                            controller: _scrollController,
-                            physics: const AlwaysScrollableScrollPhysics(
-                              parent: BouncingScrollPhysics(),
-                            ),
-                            padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
-                            itemCount: _messages.length,
-                            itemBuilder: (context, index) {
-                              final message = _messages[index];
-                              return _MessageBubble(
-                                message: message,
-                                isMine: message.senderId == currentUserId,
-                                colors: colors,
-                              );
-                            },
-                          ),
-                  ),
-          ),
-          _buildInput(colors),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInput(AppColorsExtension colors) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          border: Border(top: BorderSide(color: colors.border)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _messageController,
-                minLines: 1,
-                maxLines: 4,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _sendMessage(),
-                style: TextStyle(color: colors.textPrimary, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'Nhập nội dung cần hỗ trợ...',
-                  filled: true,
-                  fillColor: colors.bgSurface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 9),
-            IconButton.filled(
-              onPressed: _isSending ? null : _sendMessage,
-              style: IconButton.styleFrom(
-                backgroundColor: const Color(0xFF1463F3),
-                disabledBackgroundColor: const Color(
-                  0xFF1463F3,
-                ).withValues(alpha: 0.45),
-                minimumSize: const Size(46, 46),
-              ),
-              icon: _isSending
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.send_rounded, color: Colors.white),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ChatDetailScreen extends StatelessWidget {
-  final String conversationId;
-  final Conversation? conversation;
-
-  const ChatDetailScreen({
-    super.key,
-    required this.conversationId,
-    this.conversation,
-  });
-
-  @override
-  Widget build(BuildContext context) => const ChatScreen();
-}
-
-class _EmptySupportState extends StatelessWidget {
-  final AppColorsExtension colors;
-
-  const _EmptySupportState({required this.colors});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 78,
-              height: 78,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1463F3).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: const Icon(
-                Icons.support_agent_rounded,
-                color: Color(0xFF1463F3),
-                size: 40,
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              'Bạn cần hỗ trợ gì?',
-              style: TextStyle(
-                color: colors.textPrimary,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 7),
-            Text(
-              'Tin nhắn tại đây được gửi trực tiếp tới quản trị viên Sporto.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colors.textSecondary,
-                fontSize: 13,
-                height: 1.45,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MessageBubble extends StatelessWidget {
-  final ChatMessage message;
-  final bool isMine;
-  final AppColorsExtension colors;
-
-  const _MessageBubble({
-    required this.message,
-    required this.isMine,
-    required this.colors,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width * 0.76,
-        ),
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
-        decoration: BoxDecoration(
-          color: isMine ? const Color(0xFF1463F3) : colors.bgCard,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(17),
-            topRight: const Radius.circular(17),
-            bottomLeft: Radius.circular(isMine ? 17 : 4),
-            bottomRight: Radius.circular(isMine ? 4 : 17),
-          ),
-          border: isMine ? null : Border.all(color: colors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!isMine)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  message.senderName.isEmpty
-                      ? 'Admin hỗ trợ'
-                      : message.senderName,
-                  style: const TextStyle(
-                    color: Color(0xFF1463F3),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            Text(
-              message.content,
-              style: TextStyle(
-                color: isMine ? Colors.white : colors.textPrimary,
-                fontSize: 14,
-                height: 1.35,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              DateFormat('HH:mm • dd/MM').format(message.createdAt.toLocal()),
-              style: TextStyle(
-                color: isMine ? Colors.white70 : colors.textMuted,
-                fontSize: 9.5,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
