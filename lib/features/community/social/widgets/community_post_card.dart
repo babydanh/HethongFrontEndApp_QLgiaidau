@@ -526,7 +526,7 @@ class CommunityPostCard extends ConsumerWidget {
     return '${difference.inDays} ngày trước';
   }
 
-  Widget _buildRichText(String text, BuildContext context, AppColors colors) {
+  Widget _buildRichText(String text, BuildContext context, AppColorsExtension colors) {
     final regex = RegExp(r'(@[^\s@#]+(?:\s+[^\s@#]+)*|#[a-zA-Z0-9_\u00C0-\u1EF9]+)');
     final matches = regex.allMatches(text).toList();
     if (matches.isEmpty) {

@@ -199,7 +199,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
   }
 
   /// Parse text for @mentions and #hashtags, highlighting them like web
-  Widget _buildRichCommentText(String text, BuildContext context, AppColors colors) {
+  Widget _buildRichCommentText(String text, BuildContext context, AppColorsExtension colors) {
     final regex = RegExp(r'(@[^\s@#]+(?:\s+[^\s@#]+)*|#[a-zA-Z0-9_\u00C0-\u1EF9]+)');
     final matches = regex.allMatches(text).toList();
     if (matches.isEmpty) {
@@ -582,7 +582,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
     required Color bubbleColor,
     required Map<String, dynamic>? memberDirectory,
     required List<CommunityTagPreset>? presets,
-    required AppColors colors,
+    required AppColorsExtension colors,
   }) {
     final member = memberDirectory?[comment.authorId];
     final memberRole = member?.role?.toString().toUpperCase();
