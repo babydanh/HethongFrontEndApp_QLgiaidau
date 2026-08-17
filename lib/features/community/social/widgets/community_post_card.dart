@@ -37,25 +37,24 @@ class CommunityPostCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 0,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final separatorColor = isDark ? const Color(0xFF18191A) : const Color(0xFFF0F2F5);
+
+    return Container(
       color: colors.bgCard,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        side: BorderSide(color: colors.borderLight),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacingMD),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Header (Avatar, Author, Tags, Time, Actions) ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 8, 10),
+            child: Row(
               children: [
                 GestureDetector(
                   onTap: onAuthorTap,
                   child: CircleAvatar(
-                    radius: 19,
+                    radius: 20,
                     backgroundColor: AppTheme.primaryLight,
                     backgroundImage: post.authorAvatarUrl == null
                         ? null
@@ -63,18 +62,21 @@ class CommunityPostCard extends ConsumerWidget {
                     child: post.authorAvatarUrl == null
                         ? Text(
                             post.authorName.characters.first.toUpperCase(),
-                            style: const TextStyle(color: AppTheme.primaryDark),
+                            style: const TextStyle(
+                              color: AppTheme.primaryDark,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
                           )
                         : null,
                   ),
                 ),
-                const SizedBox(width: AppTheme.spacingSM),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Builder(builder: (context) {
-                        // Tag CLB cạnh tên tác giả (tối đa 2, như web CommunityPostCard).
                         final presets = ref
                             .watch(communityTagPresetsProvider(communityId))
                             .asData
@@ -85,7 +87,7 @@ class CommunityPostCard extends ConsumerWidget {
                             ?.value[post.authorId];
                         final tags = (member?.tags ?? const <String>[]).take(2).toList();
                         return Wrap(
-                          spacing: 5,
+                          spacing: 6,
                           runSpacing: 3,
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
@@ -93,7 +95,10 @@ class CommunityPostCard extends ConsumerWidget {
                               onTap: onAuthorTap,
                               child: Text(
                                 post.authorName,
-                                style: Theme.of(context).textTheme.titleSmall,
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14.5,
+                                ),
                               ),
                             ),
                             ...tags.map(
@@ -107,110 +112,113 @@ class CommunityPostCard extends ConsumerWidget {
                           ],
                         );
                       }),
-                      Text(
-                        _relativeTime(post.createdAt),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colors.textMuted,
-                        ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(
+                            _relativeTime(post.createdAt),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: colors.textMuted,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(Icons.public_rounded, size: 12, color: colors.textMuted),
+                        ],
                       ),
                     ],
                   ),
                 ),
                 if (post.isPinned)
-                  Icon(Icons.push_pin_rounded, size: 18, color: colors.info),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Icon(Icons.push_pin_rounded, size: 18, color: colors.info),
+                  ),
                 if (onDelete != null)
                   IconButton(
                     tooltip: 'Xóa bài viết',
+                    visualDensity: VisualDensity.compact,
                     onPressed: onDelete,
                     icon: Icon(
                       Icons.delete_outline_rounded,
+                      size: 20,
                       color: colors.error,
                     ),
                   ),
                 IconButton(
                   tooltip: 'Tuỳ chọn bài đăng',
+                  visualDensity: VisualDensity.compact,
                   onPressed: () => _showPostActions(context),
-                  icon: const Icon(Icons.more_horiz_rounded),
+                  icon: Icon(Icons.more_horiz_rounded, color: colors.textMuted),
                 ),
               ],
             ),
-            if (post.text.isNotEmpty) ...[
-              const SizedBox(height: AppTheme.spacingSM),
-              Text(post.text, style: Theme.of(context).textTheme.bodyMedium),
-            ],
-            if (post.status == 'PENDING') ...[
-              const SizedBox(height: AppTheme.spacingSM),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
+          ),
+
+          // ── Text Content ──
+          if (post.text.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Text(
+                post.text,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 15,
+                  height: 1.45,
+                  color: colors.textPrimary,
                 ),
+              ),
+            ),
+
+          // ── Pending Approval Notice ──
+          if (post.status == 'PENDING')
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                 decoration: BoxDecoration(
                   color: colors.warning.withValues(alpha: .12),
                   borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                ),
-                child: Text(
-                  'Bài viết đang chờ ban quản trị duyệt.',
-                  style: TextStyle(
-                    color: colors.warning,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-            if (post.tournamentId != null) ...[
-              const SizedBox(height: AppTheme.spacingSM),
-              CommunityTournamentPreview(post: post),
-              /* Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryLight.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                  border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                  border: Border.all(color: colors.warning.withValues(alpha: .3)),
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 20),
-                    ),
-                    const SizedBox(width: 10),
+                    Icon(Icons.hourglass_empty_rounded, size: 16, color: colors.warning),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'GIẢI ĐẤU CLB',
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.primaryDark),
-                          ),
-                          Text(
-                            post.tournamentName ?? 'Giải đấu Câu lạc bộ',
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                      child: Text(
+                        'Bài viết đang chờ ban quản trị duyệt.',
+                        style: TextStyle(
+                          color: colors.warning,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                    const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppTheme.primaryDark),
                   ],
                 ),
-              ), */
-            ],
-            if (post.poll != null) ...[
-              const SizedBox(height: AppTheme.spacingSM),
-              CommunityPollWidget(communityId: communityId, poll: post.poll!),
-            ],
-            if (post.topicTags.isNotEmpty) ...[
-              const SizedBox(height: AppTheme.spacingSM),
-              Wrap(
+              ),
+            ),
+
+          // ── Tournament Preview ──
+          if (post.tournamentId != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: CommunityTournamentPreview(post: post),
+            ),
+
+          // ── Poll Widget ──
+          if (post.poll != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: CommunityPollWidget(communityId: communityId, poll: post.poll!),
+            ),
+
+          // ── Topic Tags ──
+          if (post.topicTags.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: Wrap(
                 spacing: AppTheme.spacingXS,
                 runSpacing: AppTheme.spacingXS,
                 children: post.topicTags
@@ -222,103 +230,189 @@ class CommunityPostCard extends ConsumerWidget {
                         labelStyle: const TextStyle(
                           color: AppTheme.primaryDark,
                           fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
                         side: BorderSide.none,
                       ),
                     )
                     .toList(),
               ),
-            ],
-            if (post.mediaUrls.isNotEmpty) ...[
-              const SizedBox(height: AppTheme.spacingSM),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                child: GestureDetector(
-                  onTap: () => _showMediaGallery(context),
-                  child: AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.network(
-                          post.mediaUrls.first,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => ColoredBox(
-                            color: colors.bgSurface,
-                            child: const Center(
-                              child: Icon(Icons.broken_image_outlined),
+            ),
+
+          // ── Edge-to-Edge Media / Photo Preview (Full width like Facebook) ──
+          if (post.mediaUrls.isNotEmpty)
+            GestureDetector(
+              onTap: () => _showMediaGallery(context),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      post.mediaUrls.first,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => ColoredBox(
+                        color: colors.bgSurface,
+                        child: const Center(
+                          child: Icon(Icons.broken_image_outlined, size: 36),
+                        ),
+                      ),
+                    ),
+                    if (post.mediaUrls.length > 1)
+                      Positioned(
+                        right: 12,
+                        bottom: 12,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.collections_rounded, color: Colors.white, size: 14),
+                                const SizedBox(width: 5),
+                                Text(
+                                  '1/${post.mediaUrls.length}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        if (post.mediaUrls.length > 1)
-                          Positioned(
-                            right: 8,
-                            bottom: 8,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                child: Text(
-                                  '1/${post.mediaUrls.length}',
-                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+                      ),
+                  ],
                 ),
               ),
-            ],
-            const SizedBox(height: AppTheme.spacingSM),
-            Row(
+            ),
+
+          // ── Reaction & Comment Summary (Facebook Count Row) ──
+          if (post.reactionCount > 0 || post.commentCount > 0)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (post.reactionCount > 0)
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(3.5),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFEF4444),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.favorite_rounded, size: 10, color: Colors.white),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${post.reactionCount}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: colors.textMuted,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    const SizedBox.shrink(),
+                  if (post.commentCount > 0)
+                    Text(
+                      '${post.commentCount} bình luận',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colors.textMuted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+          // ── Facebook-style Action Buttons Bar (Yêu thích & Bình luận) ──
+          Divider(
+            height: 1,
+            thickness: 0.8,
+            color: colors.borderLight.withValues(alpha: 0.6),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            child: Row(
               children: [
-                IconButton(
-                  tooltip: 'Cổ vũ',
-                  visualDensity: VisualDensity.compact,
-                  onPressed: onReact == null ? null : () => onReact!('CHEER'),
-                  icon: Icon(
-                    post.viewerReaction == 'CHEER'
-                        ? Icons.favorite_rounded
-                        : Icons.favorite_border_rounded,
-                    size: 18,
-                    color: post.viewerReaction == 'CHEER'
-                        ? colors.error
-                        : colors.textMuted,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  '${post.reactionCount}',
-                  style: TextStyle(color: colors.textMuted),
-                ),
-                const SizedBox(width: AppTheme.spacingSM),
-                if (commentsEnabled)
-                  IconButton(
-                    tooltip: 'Bình luận',
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () => _showComments(context, ref),
-                    icon: Icon(
-                      Icons.chat_bubble_outline_rounded,
-                      size: 18,
-                      color: colors.textMuted,
+                Expanded(
+                  child: InkWell(
+                    onTap: onReact == null ? null : () => onReact!('CHEER'),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            post.viewerReaction == 'CHEER'
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                            size: 19,
+                            color: post.viewerReaction == 'CHEER'
+                                ? const Color(0xFFEF4444)
+                                : colors.textMuted,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Yêu thích',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: post.viewerReaction == 'CHEER'
+                                  ? const Color(0xFFEF4444)
+                                  : colors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                if (commentsEnabled) ...[
-                  const SizedBox(width: 5),
-                  Text(
-                    '${post.commentCount}',
-                    style: TextStyle(color: colors.textMuted),
+                ),
+                if (commentsEnabled)
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _showComments(context, ref),
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              size: 18,
+                              color: colors.textMuted,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Bình luận',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                ],
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

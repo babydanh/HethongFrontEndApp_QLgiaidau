@@ -188,56 +188,77 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
         (socialSettings.postingPolicy == 'MEMBERS' && isJoined) ||
         (socialSettings.postingPolicy == 'ADMINS' && canManageMemberTags);
 
-    final feedBody = NotificationListener<ScrollNotification>(
-      onNotification: _onFeedScroll,
-      child: RefreshIndicator(
-        onRefresh: () => ref
-            .read(communityFeedProvider(widget.communityId).notifier)
-            .loadInitial(),
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            AppTheme.spacingMD,
-            AppTheme.spacingSM,
-            AppTheme.spacingMD,
-            AppTheme.spacingXL,
-          ),
-          children: [
-            if (widget.showHeader) ...[
-              _CompactHighlights(communityName: widget.communityName),
-              const SizedBox(height: AppTheme.spacingSM),
-            ],
-            if (canPost)
-              CommunityComposerTrigger(
-                authorName: profile?.fullName ?? 'Bạn',
-                authorAvatarUrl: profile?.avatarUrl,
-                onOpen: () => _openComposer(),
-                onOpenWithPoll: () => _openComposer(startWithPoll: true),
-                onOpenWithImage: () => _openComposer(startWithImage: true),
-              ),
-            if (!canPost)
-              _SocialNotice(
-                message: socialSettings.postingPolicy == 'OFF'
-                    ? 'CLB đang tắt đăng bài.'
-                    : 'Hãy tham gia CLB để đăng bài.',
-              ),
-            const SizedBox(height: AppTheme.spacingMD),
-            if (state.errorMessage != null)
-              _FeedError(
-                message: state.errorMessage!,
-                onRetry: () => ref
-                    .read(communityFeedProvider(widget.communityId).notifier)
-                    .loadInitial(),
-              ),
-            if (state.isLoading && state.posts.isEmpty) const _FeedLoading(),
-            if (!state.isLoading &&
-                state.errorMessage == null &&
-                state.posts.isEmpty)
-              const _FeedEmpty(),
-            ...state.posts.map(
-              (post) => Padding(
-                padding: const EdgeInsets.only(bottom: AppTheme.spacingSM),
-                child: CommunityPostCard(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final canvasColor = isDark ? const Color(0xFF18191A) : const Color(0xFFF0F2F5);
+
+    final feedBody = Container(
+      color: canvasColor,
+      child: NotificationListener<ScrollNotification>(
+        onNotification: _onFeedScroll,
+        child: RefreshIndicator(
+          onRefresh: () => ref
+              .read(communityFeedProvider(widget.communityId).notifier)
+              .loadInitial(),
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(bottom: AppTheme.spacingXL),
+            children: [
+              if (widget.showHeader) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: _CompactHighlights(communityName: widget.communityName),
+                ),
+              ],
+              if (canPost)
+                Container(
+                  color: colors.bgCard,
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: CommunityComposerTrigger(
+                    authorName: profile?.fullName ?? 'Bạn',
+                    authorAvatarUrl: profile?.avatarUrl,
+                    onOpen: () => _openComposer(),
+                    onOpenWithPoll: () => _openComposer(startWithPoll: true),
+                    onOpenWithImage: () => _openComposer(startWithImage: true),
+                  ),
+                ),
+              if (!canPost)
+                Container(
+                  color: colors.bgCard,
+                  padding: const EdgeInsets.all(14),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: _SocialNotice(
+                    message: socialSettings.postingPolicy == 'OFF'
+                        ? 'CLB đang tắt đăng bài.'
+                        : 'Hãy tham gia CLB để đăng bài.',
+                  ),
+                ),
+              if (state.errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: _FeedError(
+                    message: state.errorMessage!,
+                    onRetry: () => ref
+                        .read(communityFeedProvider(widget.communityId).notifier)
+                        .loadInitial(),
+                  ),
+                ),
+              if (state.isLoading && state.posts.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(top: 20),
+                  child: _FeedLoading(),
+                ),
+              if (!state.isLoading &&
+                  state.errorMessage == null &&
+                  state.posts.isEmpty)
+                Container(
+                  color: colors.bgCard,
+                  padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: const _FeedEmpty(),
+                ),
+              ...state.posts.map(
+                (post) => CommunityPostCard(
                   post: post,
                   communityId: widget.communityId,
                   commentsEnabled: socialSettings.commentsEnabled,
@@ -249,10 +270,10 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                   onCommentUpdated: () => ref
                       .read(communityFeedProvider(widget.communityId).notifier)
                       .loadInitial(),
-                onAuthorTap: post.authorId.isEmpty
-                    ? null
-                    : () => context.push(
-                        '/profile/user/${post.authorId}?communityId=${widget.communityId}'),
+                  onAuthorTap: post.authorId.isEmpty
+                      ? null
+                      : () => context.push(
+                          '/profile/user/${post.authorId}?communityId=${widget.communityId}'),
                   onDelete:
                       (currentUserId.isNotEmpty &&
                           (post.authorId == currentUserId || isModerator))
@@ -260,13 +281,13 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                       : null,
                 ),
               ),
-            ),
-            if (state.isLoading && state.posts.isNotEmpty)
-              const Padding(
-                padding: EdgeInsets.all(AppTheme.spacingMD),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-          ],
+              if (state.isLoading && state.posts.isNotEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(AppTheme.spacingMD),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+            ],
+          ),
         ),
       ),
     );
