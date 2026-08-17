@@ -536,16 +536,21 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                             ? null
                             : NetworkImage(profile!.avatarUrl!),
                         child: profile?.avatarUrl == null
-                            ? Text(
-                                (profile?.fullName.isNotEmpty == true
-                                        ? profile!.fullName.characters.first
-                                        : 'B')
-                                    .toUpperCase(),
-                                style: const TextStyle(
-                                  color: AppTheme.primaryDark,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12.5,
-                                ),
+                            ? Builder(
+                                builder: (_) {
+                                  final name = profile?.fullName?.trim() ?? '';
+                                  final initial = name.isNotEmpty
+                                      ? name.characters.first.toUpperCase()
+                                      : 'B';
+                                  return Text(
+                                    initial,
+                                    style: const TextStyle(
+                                      color: AppTheme.primaryDark,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12.5,
+                                    ),
+                                  );
+                                },
                               )
                             : null,
                       ),
