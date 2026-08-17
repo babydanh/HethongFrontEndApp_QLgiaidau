@@ -85,6 +85,7 @@ class CommunityPostCard extends ConsumerWidget {
                             .watch(communityMemberDirectoryProvider(communityId))
                             .asData
                             ?.value[post.authorId];
+                        final memberRole = member?.role?.toString().toUpperCase();
                         final tags = (member?.tags ?? const <String>[]).take(2).toList();
                         return Wrap(
                           spacing: 6,
@@ -101,6 +102,38 @@ class CommunityPostCard extends ConsumerWidget {
                                 ),
                               ),
                             ),
+                            if (memberRole == 'OWNER')
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primary.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text(
+                                  'Chủ CLB',
+                                  style: TextStyle(
+                                    color: AppTheme.primaryDark,
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              )
+                            else if (memberRole == 'ADMIN' || memberRole == 'MODERATOR')
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: colors.info.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'BQT',
+                                  style: TextStyle(
+                                    color: colors.info,
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
                             ...tags.map(
                               (tag) => PresetTagChip(
                                 label: tag,
@@ -155,18 +188,11 @@ class CommunityPostCard extends ConsumerWidget {
             ),
           ),
 
-          // ── Text Content ──
+          // ── Text Content with Rich Mentions & Hashtags ──
           if (post.text.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Text(
-                post.text,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 15,
-                  height: 1.45,
-                  color: colors.textPrimary,
-                ),
-              ),
+              child: _buildRichText(post.text, context, colors),
             ),
 
           // ── Pending Approval Notice ──
@@ -498,5 +524,53 @@ class CommunityPostCard extends ConsumerWidget {
     if (difference.inHours < 1) return '${difference.inMinutes} phút trước';
     if (difference.inDays < 1) return '${difference.inHours} giờ trước';
     return '${difference.inDays} ngày trước';
+  }
+
+  Widget _buildRichText(String text, BuildContext context, AppColors colors) {
+    final regex = RegExp(r'(@[^\s@#]+(?:\s+[^\s@#]+)*|#[a-zA-Z0-9_\u00C0-\u1EF9]+)');
+    final matches = regex.allMatches(text).toList();
+    if (matches.isEmpty) {
+      return Text(
+        text,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontSize: 15,
+          height: 1.45,
+          color: colors.textPrimary,
+        ),
+      );
+    }
+
+    final spans = <InlineSpan>[];
+    int lastEnd = 0;
+
+    for (final match in matches) {
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(
+          text: text.substring(lastEnd, match.start),
+          style: TextStyle(fontSize: 15, height: 1.45, color: colors.textPrimary),
+        ));
+      }
+      final token = match.group(0)!;
+      final isMention = token.startsWith('@');
+      spans.add(TextSpan(
+        text: token,
+        style: TextStyle(
+          fontSize: 15,
+          height: 1.45,
+          fontWeight: FontWeight.w700,
+          color: isMention ? AppTheme.primary : AppTheme.primaryDark,
+        ),
+      ));
+      lastEnd = match.end;
+    }
+
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(
+        text: text.substring(lastEnd),
+        style: TextStyle(fontSize: 15, height: 1.45, color: colors.textPrimary),
+      ));
+    }
+
+    return RichText(text: TextSpan(children: spans));
   }
 }
