@@ -40,7 +40,8 @@ class _CreateClubTournamentScreenState
   final _contactCtrl = TextEditingController();
 
   String? _selectedSport;
-  String _selectedFormat = AppConstants.formatSingles;
+  String _selectedFormat = AppConstants.formatDoubles;
+  final Set<String> _selectedFormats = {'MALE_DOUBLES'};
   String _selectedBracket = AppConstants.bracketSingleElimination;
   bool _isLoading = false;
   bool _isRanked = false;
@@ -156,6 +157,7 @@ class _CreateClubTournamentScreenState
         'name': _nameCtrl.text.trim(),
         'sport': sport,
         'format': _selectedFormat,
+        'selectedFormats': _selectedFormats.toList(),
         'bracketType': _selectedBracket,
         'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
         'description': _descCtrl.text.trim(),
@@ -922,55 +924,114 @@ class _CreateClubTournamentScreenState
     );
   }
 
+  void _toggleFormat(String formatKey) {
+    setState(() {
+      if (_selectedFormats.contains(formatKey)) {
+        if (_selectedFormats.length > 1) {
+          _selectedFormats.remove(formatKey);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cần chọn ít nhất 1 nội dung thi đấu.')),
+          );
+        }
+      } else {
+        _selectedFormats.add(formatKey);
+      }
+      _syncLegacyFormat();
+    });
+  }
+
+  void _syncLegacyFormat() {
+    if (_selectedFormats.isEmpty) return;
+    final primary = _selectedFormats.first;
+    if (primary.contains('SINGLES')) {
+      _selectedFormat = AppConstants.formatSingles;
+      _footballGenderRestriction = primary.contains('FEMALE') ? 'FEMALE' : 'MALE';
+    } else if (primary.contains('DOUBLES')) {
+      _selectedFormat = AppConstants.formatDoubles;
+      if (primary.contains('MIXED')) {
+        _footballGenderRestriction = 'MIXED';
+      } else if (primary.contains('FEMALE')) {
+        _footballGenderRestriction = 'FEMALE';
+      } else {
+        _footballGenderRestriction = 'MALE';
+      }
+    } else if (primary.startsWith('FOOTBALL_')) {
+      _selectedFormat = AppConstants.formatDoubles;
+      if (primary == 'FOOTBALL_MALE') {
+        _footballGenderRestriction = 'MALE';
+      } else if (primary == 'FOOTBALL_FEMALE') {
+        _footballGenderRestriction = 'FEMALE';
+      } else {
+        _footballGenderRestriction = '';
+      }
+    }
+  }
+
   Widget _buildFormatSelector() {
     if (_selectedSport == AppConstants.sportFootball) {
       final footballFormats = [
-        ('MALE', 'Đội nam'),
-        ('FEMALE', 'Đội nữ'),
-        ('', 'Không giới hạn'),
+        ('FOOTBALL_MALE', 'Đội nam'),
+        ('FOOTBALL_FEMALE', 'Đội nữ'),
+        ('FOOTBALL_MIXED', 'Không giới hạn'),
       ];
       return Wrap(
         spacing: 8,
         runSpacing: 8,
         children: footballFormats.map((f) => SizedBox(
           width: (MediaQuery.sizeOf(context).width - 56) / 3,
-          child: _formatChoice(AppConstants.formatDoubles, f.$1, f.$2),
+          child: _formatChoice(f.$1, f.$2),
         )).toList(),
       );
     }
     final formats = [
-      (AppConstants.formatSingles, 'MALE', 'Đơn nam'),
-      (AppConstants.formatSingles, 'FEMALE', 'Đơn nữ'),
-      (AppConstants.formatDoubles, 'MALE', 'Đôi nam'),
-      (AppConstants.formatDoubles, 'FEMALE', 'Đôi nữ'),
-      (AppConstants.formatDoubles, 'MIXED', 'Đôi nam nữ'),
+      ('MALE_SINGLES', 'Đơn nam'),
+      ('FEMALE_SINGLES', 'Đơn nữ'),
+      ('MALE_DOUBLES', 'Đôi nam'),
+      ('FEMALE_DOUBLES', 'Đôi nữ'),
+      ('MIXED_DOUBLES', 'Đôi nam nữ'),
     ];
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: formats.map((f) => SizedBox(
         width: (MediaQuery.sizeOf(context).width - 56) / 2,
-        child: _formatChoice(f.$1, f.$2, f.$3),
+        child: _formatChoice(f.$1, f.$2),
       )).toList(),
     );
   }
 
-  Widget _formatChoice(String format, String gender, String label) {
-    final selected = _footballGenderRestriction == gender &&
-        (_selectedSport == AppConstants.sportFootball || _selectedFormat == format);
+  Widget _formatChoice(String formatKey, String label) {
+    final selected = _selectedFormats.contains(formatKey);
     return GestureDetector(
-      onTap: () => setState(() {
-        _selectedFormat = format;
-        _footballGenderRestriction = gender;
-      }),
+      onTap: () => _toggleFormat(formatKey),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
         decoration: BoxDecoration(
           color: selected ? AppTheme.primary.withValues(alpha: 0.1) : context.colors.bgSurface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? AppTheme.primary : context.colors.border, width: selected ? 1.5 : 1),
+          border: Border.all(
+            color: selected ? AppTheme.primary : context.colors.border,
+            width: selected ? 1.5 : 1,
+          ),
         ),
-        child: Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: selected ? AppTheme.primary : context.colors.textSecondary)),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (selected) ...[
+              Icon(Icons.check_circle_rounded, size: 16, color: AppTheme.primary),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                color: selected ? AppTheme.primary : context.colors.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
