@@ -679,8 +679,10 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
 
   void _onSocketMessage(Map<String, dynamic> data) {
     final message = _ClubChatMessage.fromJson(data);
+    final targetRoomId = data['roomId']?.toString() ?? message.id;
     if (!mounted ||
         message.id.isEmpty ||
+        (data['roomId'] != null && data['roomId']?.toString() != _roomId) ||
         _messages.any((item) => item.id == message.id))
       return;
     setState(
