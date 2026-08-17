@@ -146,6 +146,19 @@ class _CreateClubTournamentScreenState
 
     setState(() => _isLoading = true);
     try {
+      final registrationStart = _combineDateTime(_registrationStartDate, _registrationStartTime);
+      final registrationEnd = _combineDateTime(_registrationEndDate, _registrationEndTime);
+      final start = _combineDateTime(_startDate, _startTime);
+      final end = _combineDateTime(_endDate, _endTime);
+      if (!registrationStart.isBefore(registrationEnd)) {
+        throw const FormatException('Thời gian mở đăng ký phải trước thời gian đóng.');
+      }
+      if (!registrationEnd.isBefore(start)) {
+        throw const FormatException('Thời gian đóng đăng ký phải trước giờ bắt đầu giải.');
+      }
+      if (!start.isBefore(end)) {
+        throw const FormatException('Thời gian kết thúc phải sau thời gian bắt đầu.');
+      }
       final dio = ref.read(dioClientProvider).dio;
 
       final body = <String, dynamic>{
@@ -170,6 +183,8 @@ class _CreateClubTournamentScreenState
         if (_districtCtrl.text.trim().isNotEmpty)
           'district': _districtCtrl.text.trim(),
         if (_wardCtrl.text.trim().isNotEmpty) 'ward': _wardCtrl.text.trim(),
+        if (_footballGenderRestriction.isNotEmpty)
+          'genderRestriction': _footballGenderRestriction,
         if (widget.clubId.isNotEmpty) 'communityId': widget.clubId,
         if (widget.clubId.isEmpty)
           'registrationMode': _isPublic ? 'OPEN' : 'INVITE_ONLY',
@@ -191,8 +206,6 @@ class _CreateClubTournamentScreenState
         if (_selectedSport == AppConstants.sportFootball) ...{
           'teamSize': _footballTeamSize,
           'maxReserve': int.tryParse(_footballReserveCtrl.text) ?? 0,
-          if (_footballGenderRestriction.isNotEmpty)
-            'genderRestriction': _footballGenderRestriction,
         },
       };
 
@@ -231,19 +244,11 @@ class _CreateClubTournamentScreenState
   String _formatTime(TimeOfDay time) =>
       '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
 
+  DateTime _combineDateTime(DateTime date, TimeOfDay time) =>
+      DateTime(date.year, date.month, date.day, time.hour, time.minute);
+
   String _formatDateTime(DateTime date, TimeOfDay time) =>
       '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}T${_formatTime(time)}:00';
-
-  Future<void> _pickStartDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      initialDate: _startDate,
-      helpText: 'Chọn ngày thi đấu',
-    );
-    if (picked != null && mounted) setState(() => _startDate = picked);
-  }
 
   Future<void> _pickTime({required bool recurring}) async {
     final picked = await showTimePicker(
@@ -344,6 +349,16 @@ class _CreateClubTournamentScreenState
     );
   }
 
+  Widget _scheduleRow(String label, String target, DateTime date, TimeOfDay time) {
+    return Row(
+      children: [
+        Expanded(child: OutlinedButton.icon(onPressed: () => _pickScheduleDate(target), icon: const Icon(Icons.calendar_today_outlined, size: 16), label: Text('$label: ${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}'))),
+        const SizedBox(width: 8),
+        Expanded(child: OutlinedButton.icon(onPressed: () => _pickScheduleTime(target), icon: const Icon(Icons.schedule_outlined, size: 16), label: Text(_formatTime(time))),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -367,6 +382,9 @@ class _CreateClubTournamentScreenState
       // Không được âm thầm đổi sang badminton khi category CLB không tồn tại
       // hoặc đã bị Admin tắt.
       _selectedSport = activeCategory?.slug;
+      if (_selectedSport == AppConstants.sportFootball) {
+        _selectedFormat = AppConstants.formatDoubles;
+      }
     }
 
     return Scaffold(
@@ -469,17 +487,6 @@ class _CreateClubTournamentScreenState
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _footballGenderRestriction,
-                  decoration: const InputDecoration(labelText: 'Giới tính đội'),
-                  items: const [
-                    DropdownMenuItem(value: '', child: Text('Không ràng buộc')),
-                    DropdownMenuItem(value: 'MALE', child: Text('Nam')),
-                    DropdownMenuItem(value: 'FEMALE', child: Text('Nữ')),
-                  ],
-                  onChanged: (value) => setState(() => _footballGenderRestriction = value ?? ''),
-                ),
               ],
               const SizedBox(height: 20),
 
@@ -510,32 +517,15 @@ class _CreateClubTournamentScreenState
 
               _label('Lịch thi đấu', colors),
               const SizedBox(height: 6),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _pickStartDate,
-                      icon: const Icon(Icons.calendar_today_outlined, size: 16),
-                      label: Text(
-                        '${_startDate.day.toString().padLeft(2, '0')}/${_startDate.month.toString().padLeft(2, '0')}/${_startDate.year}',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _pickTime(recurring: false),
-                      icon: const Icon(Icons.schedule_outlined, size: 16),
-                      label: Text(_formatTime(_startTime)),
-                    ),
-                  ),
-                ],
-              ),
+              _scheduleRow('Mở đăng ký', 'registrationStart', _registrationStartDate, _registrationStartTime),
               const SizedBox(height: 8),
-              Text(
-                'Mặc định mở đăng ký ngay khi tạo và đóng trước giờ thi đấu 1 giờ.',
-                style: TextStyle(fontSize: 11, color: colors.textMuted),
-              ),
+              _scheduleRow('Đóng đăng ký', 'registrationEnd', _registrationEndDate, _registrationEndTime),
+              const SizedBox(height: 8),
+              _scheduleRow('Bắt đầu giải', 'start', _startDate, _startTime),
+              const SizedBox(height: 8),
+              _scheduleRow('Kết thúc dự kiến', 'end', _endDate, _endTime),
+              const SizedBox(height: 8),
+              Text('Mặc định mở đăng ký từ hôm nay; kết thúc dự kiến sau giờ bắt đầu 2 tiếng. Bạn có thể chỉnh lại.', style: TextStyle(fontSize: 11, color: colors.textMuted)),
               const SizedBox(height: 10),
               Card(
                 margin: EdgeInsets.zero,
@@ -929,7 +919,13 @@ class _CreateClubTournamentScreenState
                 child: GestureDetector(
                   onTap: isClubLocked
                       ? null
-                      : () => setState(() => _selectedSport = s.$1),
+                      : () => setState(() {
+                          _selectedSport = s.$1;
+                          if (s.$1 == AppConstants.sportFootball) {
+                            _selectedFormat = AppConstants.formatDoubles;
+                            _footballGenderRestriction = '';
+                          }
+                        }),
                   child: Opacity(
                     opacity: (isClubLocked && !selected) ? 0.4 : 1.0,
                     child: Container(
@@ -987,47 +983,55 @@ class _CreateClubTournamentScreenState
   }
 
   Widget _buildFormatSelector() {
+    if (_selectedSport == AppConstants.sportFootball) {
+      final footballFormats = [
+        ('MALE', 'Đội nam'),
+        ('FEMALE', 'Đội nữ'),
+        ('', 'Không giới hạn'),
+      ];
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: footballFormats.map((f) => SizedBox(
+          width: (MediaQuery.sizeOf(context).width - 56) / 3,
+          child: _formatChoice(AppConstants.formatDoubles, f.$1, f.$2),
+        )).toList(),
+      );
+    }
     final formats = [
-      (AppConstants.formatSingles, 'Đánh đơn'),
-      (AppConstants.formatDoubles, 'Đánh đôi'),
+      (AppConstants.formatSingles, 'MALE', 'Đơn nam'),
+      (AppConstants.formatSingles, 'FEMALE', 'Đơn nữ'),
+      (AppConstants.formatDoubles, 'MALE', 'Đôi nam'),
+      (AppConstants.formatDoubles, 'FEMALE', 'Đôi nữ'),
+      (AppConstants.formatDoubles, 'MIXED', 'Đôi nam nữ'),
     ];
-    return Row(
-      children: formats.map((f) {
-        final selected = _selectedFormat == f.$1;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: f != formats.last ? 8 : 0),
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedFormat = f.$1),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? AppTheme.primary.withValues(alpha: 0.1)
-                      : context.colors.bgSurface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: selected ? AppTheme.primary : context.colors.border,
-                    width: selected ? 1.5 : 1,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    f.$2,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: selected
-                          ? AppTheme.primary
-                          : context.colors.textSecondary,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: formats.map((f) => SizedBox(
+        width: (MediaQuery.sizeOf(context).width - 56) / 2,
+        child: _formatChoice(f.$1, f.$2, f.$3),
+      )).toList(),
+    );
+  }
+
+  Widget _formatChoice(String format, String gender, String label) {
+    final selected = _footballGenderRestriction == gender &&
+        (_selectedSport == AppConstants.sportFootball || _selectedFormat == format);
+    return GestureDetector(
+      onTap: () => setState(() {
+        _selectedFormat = format;
+        _footballGenderRestriction = gender;
+      }),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+        decoration: BoxDecoration(
+          color: selected ? AppTheme.primary.withValues(alpha: 0.1) : context.colors.bgSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: selected ? AppTheme.primary : context.colors.border, width: selected ? 1.5 : 1),
+        ),
+        child: Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: selected ? AppTheme.primary : context.colors.textSecondary)),
+      ),
     );
   }
 
