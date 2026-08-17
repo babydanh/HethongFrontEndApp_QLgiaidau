@@ -338,7 +338,7 @@ DateTime? _asDateTime(Object? value) => value is DateTime
 List<String> _asStringList(Object? value) {
   if (value is! List) return const [];
   return value
-      .whereType<String>()
+      .map((item) => item?.toString() ?? '')
       .where((item) => item.trim().isNotEmpty)
       .toList();
 }

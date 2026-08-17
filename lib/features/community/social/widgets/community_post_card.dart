@@ -235,38 +235,41 @@ class CommunityPostCard extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                 child: GestureDetector(
                   onTap: () => _showMediaGallery(context),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.network(
-                        post.mediaUrls.first,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => ColoredBox(
-                          color: colors.bgSurface,
-                          child: const Center(
-                            child: Icon(Icons.broken_image_outlined),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.network(
+                          post.mediaUrls.first,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => ColoredBox(
+                            color: colors.bgSurface,
+                            child: const Center(
+                              child: Icon(Icons.broken_image_outlined),
+                            ),
                           ),
                         ),
-                      ),
-                      if (post.mediaUrls.length > 1)
-                        Positioned(
-                          right: 8,
-                          bottom: 8,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              child: Text(
-                                '1/${post.mediaUrls.length}',
-                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                        if (post.mediaUrls.length > 1)
+                          Positioned(
+                            right: 8,
+                            bottom: 8,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                child: Text(
+                                  '1/${post.mediaUrls.length}',
+                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
