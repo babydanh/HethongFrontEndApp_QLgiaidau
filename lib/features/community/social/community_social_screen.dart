@@ -188,6 +188,7 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
         (socialSettings.postingPolicy == 'MEMBERS' && isJoined) ||
         (socialSettings.postingPolicy == 'ADMINS' && canManageMemberTags);
 
+    final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final canvasColor = isDark ? const Color(0xFF18191A) : const Color(0xFFF0F2F5);
 
