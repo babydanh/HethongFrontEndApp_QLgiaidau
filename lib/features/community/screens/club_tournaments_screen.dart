@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
@@ -366,7 +367,36 @@ class ClubTournamentsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            // Option 2: Giải Nâng Cao (Full) - Notice for Web
+            // Option 2: Tạo nhanh theo luồng Web, vẫn thuộc CLB.
+            InkWell(
+              onTap: () async {
+                Navigator.pop(ctx);
+                final uri = Uri.parse('https://sporto.asia/organizer/tournaments/create?communityId=$clubId');
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                ),
+                child: Row(children: [
+                  Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.flash_on_rounded, color: Color(0xFF10B981), size: 24)),
+                  const SizedBox(width: 14),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Tạo nhanh trên Web', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.textPrimary)),
+                    const SizedBox(height: 4),
+                    Text('Form nhanh đầy đủ hơn Lite; giải vẫn thuộc CLB và mở quản lý nâng cao trên web.', style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.3)),
+                  ])),
+                  Icon(Icons.open_in_new_rounded, color: colors.textMuted),
+                ]),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Option 3: Giải Nâng Cao (Full) - Notice for Web
             InkWell(
               onTap: () {
                 Navigator.pop(ctx);
@@ -392,12 +422,9 @@ class ClubTournamentsScreen extends ConsumerWidget {
                       ),
                       FilledButton.icon(
                         onPressed: () {
-                          Clipboard.setData(
-                            const ClipboardData(
-                              text:
-                                  'https://sporto.asia/tournaments/create',
-                            ),
-                          );
+                          Clipboard.setData(ClipboardData(
+                            text: 'https://sporto.asia/organizer/tournaments/create?communityId=$clubId&mode=advanced',
+                          ));
                           Navigator.pop(dialogCtx);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(

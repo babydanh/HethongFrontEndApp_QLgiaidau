@@ -2072,7 +2072,36 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
             const SizedBox(height: 12),
 
-            // Option 2: Giải Nâng Cao (Full) - Direct to Web notice
+            // Option 2: Tạo nhanh theo luồng Web, vẫn gắn với CLB.
+            InkWell(
+              onTap: () async {
+                Navigator.pop(ctx);
+                final uri = Uri.parse('https://sporto.asia/organizer/tournaments/create?communityId=${widget.clubId}');
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                ),
+                child: Row(children: [
+                  Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.flash_on_rounded, color: Color(0xFF10B981), size: 24)),
+                  const SizedBox(width: 14),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Tạo nhanh trên Web', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.textPrimary)),
+                    const SizedBox(height: 4),
+                    Text('Form nhanh đầy đủ hơn Lite; giải vẫn thuộc CLB.', style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.3)),
+                  ])),
+                  Icon(Icons.open_in_new_rounded, color: colors.textMuted),
+                ]),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Option 3: Giải Nâng Cao (Full) - Direct to Web notice
             InkWell(
               onTap: () {
                 Navigator.pop(ctx);
@@ -2194,8 +2223,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             child: Text(l10n.close),
           ),
           FilledButton.icon(
-            onPressed: () {
-              context.push('/tournaments/create');
+            onPressed: () async {
+              final uri = Uri.parse('https://sporto.asia/organizer/tournaments/create?communityId=${widget.clubId}&mode=advanced');
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
               Navigator.pop(ctx);
             },
             icon: const Icon(Icons.copy_rounded, size: 16),

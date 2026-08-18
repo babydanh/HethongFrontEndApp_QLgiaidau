@@ -23,6 +23,7 @@ import 'package:app_quanly_giaidau/features/community/screens/club_detail_screen
 import 'package:app_quanly_giaidau/features/community/screens/club_tournaments_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/create_club_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/create_club_tournament_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/create_public_quick_tournament_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_management_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_invites_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/edit_club_screen.dart';
@@ -419,8 +420,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ─── Create Tournament Standalone ───
       GoRoute(
         path: '/tournaments/create',
-        builder: (context, state) =>
-            const CreateClubTournamentScreen(clubId: ''),
+        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
       ),
 
       // ─── Club Detail (Both /club/:id and /communities/:id and /clubs/:id) ───
