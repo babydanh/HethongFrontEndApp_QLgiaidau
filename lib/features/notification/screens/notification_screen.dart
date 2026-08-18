@@ -25,6 +25,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   // Filter mode: false = Tất cả, true = Chưa đọc
   bool _unreadOnly = false;
   final Set<String> _handledInviteIds = <String>{};
+  final Set<String> _handlingInviteIds = <String>{};
 
   @override
   void initState() {
@@ -75,42 +76,74 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
 
   Future<void> _handleInviteAction(
       AppNotification notif, bool accept) async {
+    if (_handlingInviteIds.contains(notif.id)) return;
+    setState(() => _handlingInviteIds.add(notif.id));
+
+    final l10n = AppLocalizations.of(context)!;
     try {
       if (notif.type == 'CLUB_INVITE' || notif.type == 'COMMUNITY_INVITED') {
         final communityId = notif.communityId;
         if (communityId == null || communityId.isEmpty) {
           throw StateError('Lời mời không có mã cộng đồng.');
         }
-        // Community invitations are actions on the community resource, not
-        // generic notification actions.
         await ref.read(communityRepositoryProvider).respondToInvite(
               communityId,
               accept ? 'accept' : 'decline',
             );
+        ref.invalidate(myCommunityInvitesProvider);
+        ref.invalidate(communityDetailProvider(communityId));
       } else {
         throw StateError('Loại lời mời này chưa có thao tác tương ứng.');
       }
       await ref.read(notificationStateProvider.notifier).markAsRead(notif.id);
-      if (mounted) setState(() => _handledInviteIds.add(notif.id));
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        setState(() => _handledInviteIds.add(notif.id));
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(accept ? l10n.notification_inviteAccepted : l10n.notification_inviteDeclined),
+            backgroundColor: accept ? const Color(0xFF059669) : context.colors.textSecondary,
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (e, stack) {
       _log.error('Lỗi xử lý lời mời', e, stack);
+      final rawError = e.toString().toLowerCase();
+      final isAlreadyJoinedOrResolved = rawError.contains('not found') ||
+          rawError.contains('no pending') ||
+          rawError.contains('đã tham gia') ||
+          rawError.contains('đã được xử lý') ||
+          rawError.contains('already');
+
+      if (isAlreadyJoinedOrResolved) {
+        await ref.read(notificationStateProvider.notifier).markAsRead(notif.id);
+        if (mounted) {
+          setState(() => _handledInviteIds.add(notif.id));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(accept
+                  ? 'Bạn đã là thành viên của câu lạc bộ này.'
+                  : 'Lời mời này đã được xử lý trước đó.'),
+              backgroundColor: const Color(0xFF059669),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          final cleanMsg = e.toString().replaceAll('Exception: ', '').replaceAll('StateError: ', '');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${accept ? l10n.notification_acceptError : l10n.notification_declineError} $cleanMsg'),
+              backgroundColor: context.colors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } finally {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(accept ? l10n.notification_acceptError : l10n.notification_declineError),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        setState(() => _handlingInviteIds.remove(notif.id));
       }
     }
   }
@@ -566,43 +599,96 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                 ),
               ],
             ),
-            if (isInvite && !_handledInviteIds.contains(notif.id)) ...[
+            if (isInvite) ...[
               const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => _handleInviteAction(notif, false),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: colors.textMuted,
-                      side: BorderSide(color: colors.border),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+              if (_handledInviteIds.contains(notif.id)) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF059669).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFF059669).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.check_circle_outline_rounded,
+                        size: 14,
+                        color: Color(0xFF059669),
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        'Đã phản hồi lời mời',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF059669),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      onPressed: _handlingInviteIds.contains(notif.id)
+                          ? null
+                          : () => _handleInviteAction(notif, false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: colors.textMuted,
+                        side: BorderSide(color: colors.border),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        l10n.notification_decline,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                    child: Text(l10n.notification_decline,
-                        style: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w600)),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: () => _handleInviteAction(notif, true),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF2979FF),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: _handlingInviteIds.contains(notif.id)
+                          ? null
+                          : () => _handleInviteAction(notif, true),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF2979FF),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
+                      child: _handlingInviteIds.contains(notif.id)
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              l10n.notification_accept,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
-                    child: Text(l10n.notification_accept,
-                        style: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w600)),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ],
           ],
         ),

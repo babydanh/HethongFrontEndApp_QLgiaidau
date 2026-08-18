@@ -37,10 +37,27 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
       }
     } catch (e, stack) {
       _log.error('Lỗi $action lời mời', e, stack);
-      if (mounted) {
+      final rawError = e.toString().toLowerCase();
+      final isAlreadyJoined = rawError.contains('not found') ||
+          rawError.contains('no pending') ||
+          rawError.contains('đã tham gia') ||
+          rawError.contains('đã được xử lý') ||
+          rawError.contains('already');
+      if (isAlreadyJoined && action == 'accept') {
+        ref.invalidate(myCommunityInvitesProvider);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Bạn đã là thành viên của câu lạc bộ này.'),
+              backgroundColor: context.colors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '').replaceAll('StateError: ', '')}'),
             backgroundColor: context.colors.error,
             behavior: SnackBarBehavior.floating,
           ),
