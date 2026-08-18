@@ -109,32 +109,29 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
     setState(() => _isLoadingMembers = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
-      final res = await dio.get('/chat/rooms/${widget.roomId}');
-      final data = res.data is Map ? (res.data['data'] ?? res.data) : null;
-      if (data is Map<String, dynamic> && mounted) {
-        if (data['name'] is String && (data['name'] as String).isNotEmpty) {
-          _currentRoomName = data['name'];
-        }
-        if (data['clubAvatar'] is String) {
-          _currentRoomAvatar = data['clubAvatar'];
-        }
-        _isAnnouncementOnly = data['isAnnouncementOnly'] == true;
-        _slowModeSeconds = (data['slowModeSeconds'] as num?)?.toInt() ?? 0;
+      if (widget.roomType == 'CLUB' && widget.communityId != null) {
+        final res = await dio.get('/chat/rooms', queryParameters: {
+          'type': 'CLUB',
+          'communityId': widget.communityId,
+        });
+        final data = res.data is Map ? (res.data['data'] ?? res.data) : null;
+        if (data is Map<String, dynamic> && mounted) {
+          if (data['name'] is String && (data['name'] as String).isNotEmpty) {
+            _currentRoomName = data['name'];
+          }
+          if (data['clubAvatar'] is String) {
+            _currentRoomAvatar = data['clubAvatar'];
+          }
+          _isAnnouncementOnly = data['isAnnouncementOnly'] == true;
+          _slowModeSeconds = (data['slowModeSeconds'] as num?)?.toInt() ?? 0;
 
-        final rawParts = data['participants'] ?? data['members'];
-        if (rawParts is List) {
-          _participants = rawParts
-              .whereType<Map<String, dynamic>>()
-              .map((p) => ChatParticipant.fromJson(p))
-              .toList();
-        }
-        final notifPref = data['notificationPref']?.toString().toUpperCase();
-        if (notifPref == 'MUTED') {
-          _notifMode = ChatNotificationMode.muted;
-        } else if (notifPref == 'MENTIONS_ONLY' || notifPref == 'MENTIONS') {
-          _notifMode = ChatNotificationMode.mentionsOnly;
-        } else {
-          _notifMode = ChatNotificationMode.all;
+          final rawParts = data['members'] ?? data['participants'];
+          if (rawParts is List) {
+            _participants = rawParts
+                .whereType<Map<String, dynamic>>()
+                .map((p) => ChatParticipant.fromJson(p))
+                .toList();
+          }
         }
       }
     } catch (_) {
@@ -470,7 +467,11 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 const SizedBox(height: 20),
 
                 // ── Pinned Messages Section ──
-                if (widget.pinnedMessage != null) ...[
+                if (widget.pinnedMessage != null &&
+                    widget.pinnedMessage!.id.isNotEmpty &&
+                    (widget.pinnedMessage!.content.trim().isNotEmpty ||
+                        widget.pinnedMessage!.mediaUrls.isNotEmpty ||
+                        widget.pinnedMessage!.poll != null)) ...[
                   _buildSectionHeader('TIN NHẮN ĐÃ GHIM', Icons.push_pin_outlined, colors),
                   const SizedBox(height: 8),
                   _buildPinnedCard(colors),
