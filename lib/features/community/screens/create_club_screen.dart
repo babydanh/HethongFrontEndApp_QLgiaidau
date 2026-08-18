@@ -142,9 +142,80 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
     }
   }
 
-  Future<void> _pickAndUploadImage({required bool banner}) async {
+  Future<void> _chooseAndUploadImage({required bool banner}) async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.colors.bgSurface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 36, height: 4, decoration: BoxDecoration(color: context.colors.border, borderRadius: BorderRadius.circular(99))),
+              const SizedBox(height: 14),
+              Text(banner ? 'Chọn ảnh bìa' : 'Chọn logo / avatar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(child: _sourceAction(
+                    context: sheetContext,
+                    icon: Icons.photo_library_outlined,
+                    label: 'Thư viện ảnh',
+                    source: ImageSource.gallery,
+                  )),
+                  const SizedBox(width: 12),
+                  Expanded(child: _sourceAction(
+                    context: sheetContext,
+                    icon: Icons.photo_camera_outlined,
+                    label: 'Chụp ảnh',
+                    source: ImageSource.camera,
+                  )),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (source == null || !mounted) return;
+    await _pickAndUploadImage(banner: banner, source: source);
+  }
+
+  Widget _sourceAction({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required ImageSource source,
+  }) {
+    return InkWell(
+      onTap: () => Navigator.of(context).pop(source),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: context.colors.bgSurface,
+          border: Border.all(color: context.colors.border),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: AppTheme.primary, size: 27),
+            const SizedBox(height: 7),
+            Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.textPrimary)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndUploadImage({required bool banner, required ImageSource source}) async {
     final picked = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
+      source: source,
       imageQuality: 85,
       maxWidth: banner ? 1800 : 1000,
     );
@@ -407,14 +478,14 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
           url: _logoUrl,
           loading: _isUploadingLogo,
           circle: true,
-          onTap: () => _pickAndUploadImage(banner: false),
+          onTap: () => _chooseAndUploadImage(banner: false),
         )),
         const SizedBox(width: 10),
         Expanded(child: _imagePickerCard(
           title: 'Ảnh bìa',
           url: _bannerUrl,
           loading: _isUploadingBanner,
-          onTap: () => _pickAndUploadImage(banner: true),
+          onTap: () => _chooseAndUploadImage(banner: true),
         )),
       ],
     );

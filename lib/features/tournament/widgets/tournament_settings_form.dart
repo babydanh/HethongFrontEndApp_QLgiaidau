@@ -53,7 +53,7 @@ class TournamentSettingsForm extends ConsumerWidget {
         ).slideInFromBottom(delay: 50.ms),
 
         FormSection(
-          title: 'Hình thức thi đấu',
+          title: 'Nội dung thi đấu',
           child: _buildFormatSelector(context),
         ).slideInFromBottom(delay: 100.ms),
 

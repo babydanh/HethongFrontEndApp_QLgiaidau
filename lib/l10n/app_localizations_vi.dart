@@ -556,7 +556,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get formatLabel => 'Thể thức';
 
   @override
-  String get bracketTypeLabel => 'Hình thức thi đấu';
+  String get bracketTypeLabel => 'Nội dung thi đấu';
 
   @override
   String get maxTeamsLabel => 'Số đội tối đa';

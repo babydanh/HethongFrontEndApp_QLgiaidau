@@ -240,8 +240,8 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
               _buildSportSelector(lockedSport: clubSport),
               const SizedBox(height: 20),
 
-              // ─── Hình thức ───
-              _label('Hình thức', colors),
+              // ─── Nội dung thi đấu ───
+              _label('Nội dung thi đấu', colors),
               const SizedBox(height: 6),
               _buildFormatSelector(),
               const SizedBox(height: 20),

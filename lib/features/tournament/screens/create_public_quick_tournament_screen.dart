@@ -112,7 +112,7 @@ class _CreatePublicQuickTournamentScreenState extends ConsumerState<CreatePublic
           DropdownButtonFormField<String>(initialValue: _sport, items: AppConstants.sportNames.entries.map((entry) => DropdownMenuItem(value: entry.key, child: Text(entry.value))).toList(), onChanged: (value) => setState(() => _sport = value ?? _sport)),
           const SizedBox(height: 18),
           Row(children: [
-            Expanded(child: _dropdown('Hình thức', _format, AppConstants.formatNames, (value) => setState(() => _format = value))),
+            Expanded(child: _dropdown('Nội dung thi đấu', _format, AppConstants.formatNames, (value) => setState(() => _format = value))),
             const SizedBox(width: 12),
             Expanded(child: _dropdown('Thể thức', _bracket, AppConstants.bracketTypeNames, (value) => setState(() => _bracket = value))),
           ]),
