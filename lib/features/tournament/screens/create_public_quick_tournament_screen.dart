@@ -24,7 +24,7 @@ class _CreatePublicQuickTournamentScreenState extends ConsumerState<CreatePublic
   String _format = AppConstants.formatSingles;
   String _bracket = AppConstants.bracketSingleElimination;
   String _visibility = 'PUBLIC';
-  String _registrationMode = 'OPEN';
+  static const _registrationMode = 'APPROVAL';
   bool _isSubmitting = false;
 
   @override
@@ -123,7 +123,7 @@ class _CreatePublicQuickTournamentScreenState extends ConsumerState<CreatePublic
           const SizedBox(height: 18),
           _choiceGroup('Hiển thị giải đấu', {'PUBLIC': 'Công khai', 'PRIVATE': 'Không niêm yết'}, _visibility, (value) => setState(() => _visibility = value)),
           const SizedBox(height: 14),
-          _choiceGroup('Cách nhận đăng ký', {'OPEN': 'Tự do', 'APPROVAL': 'Xét duyệt', 'INVITE_ONLY': 'Chỉ nhận mã mời'}, _registrationMode, (value) => setState(() => _registrationMode = value)),
+          Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(12), border: Border.all(color: colors.border)), child: Text('Đăng ký mặc định ở chế độ Xét duyệt. Bạn có thể thay đổi cách nhận đăng ký trong trang quản lý web sau khi tạo.', style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.35))),
           const SizedBox(height: 18),
           Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(12), border: Border.all(color: colors.border)), child: Text('Không có lựa chọn câu lạc bộ trong luồng Public. Muốn tạo trong CLB, hãy vào trang CLB và chọn Lite CLB hoặc Tạo nhanh trên web.', style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.35))),
           const SizedBox(height: 24),
