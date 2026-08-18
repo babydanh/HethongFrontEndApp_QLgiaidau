@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/notification_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -108,12 +109,22 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       }
     } catch (e, stack) {
       _log.error('Lỗi xử lý lời mời', e, stack);
+      bool isAlreadyJoinedOrResolved = false;
+      if (e is DioException) {
+        final code = e.response?.statusCode;
+        if (code == 404 || code == 400 || code == 409) {
+          isAlreadyJoinedOrResolved = true;
+        }
+      }
       final rawError = e.toString().toLowerCase();
-      final isAlreadyJoinedOrResolved = rawError.contains('not found') ||
+      if (rawError.contains('404') ||
+          rawError.contains('not found') ||
           rawError.contains('no pending') ||
           rawError.contains('đã tham gia') ||
           rawError.contains('đã được xử lý') ||
-          rawError.contains('already');
+          rawError.contains('already')) {
+        isAlreadyJoinedOrResolved = true;
+      }
 
       if (isAlreadyJoinedOrResolved) {
         await ref.read(notificationStateProvider.notifier).markAsRead(notif.id);
