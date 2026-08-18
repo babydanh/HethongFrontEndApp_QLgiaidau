@@ -401,7 +401,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
           // Tab bar selector (3 Tabs: Thông tin | Theo dõi | Thành tích)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
               height: 46,
               padding: const EdgeInsets.all(4),
@@ -449,19 +449,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             // My Tournaments Section
             _buildSectionTitle(colors, l10n.infoMyTournaments),
             const SizedBox(height: 10),
-            _buildMyTournamentsSection(context),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildMyTournamentsSection(context),
+            ),
             const SizedBox(height: 24),
 
             // My Communities Section
             _buildSectionTitle(colors, l10n.infoMyClubs),
             const SizedBox(height: 10),
-            _buildMyCommunitiesSection(context),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildMyCommunitiesSection(context),
+            ),
             const SizedBox(height: 24),
 
             // Followed Tournaments Section
             _buildSectionTitle(colors, l10n.infoFollowedTournaments),
             const SizedBox(height: 10),
-            _buildFollowedTournamentsSection(context),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildFollowedTournamentsSection(context),
+            ),
             const SizedBox(height: 24),
 
             // Personal Info Section
@@ -520,7 +529,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return SizedBox(
       height: 36,
       child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         itemCount: sports.length,
@@ -1034,7 +1043,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           );
 
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _buildRankDonutSummary(
               context,
               ranking: unranked,
@@ -1061,7 +1070,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         final nextLabel = nextThreshold?.name ?? ranking.tierName;
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: _buildRankDonutSummary(
             context,
             ranking: ranking,
@@ -1073,7 +1082,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         );
       },
       loading: () => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Container(
           height: 180,
           decoration: BoxDecoration(
@@ -1084,7 +1093,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
       ),
       error: (_, stackTrace) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: _buildRankDonutSummary(
           context,
           ranking: const PlayerRanking(
@@ -1361,7 +1370,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
         color: colors.bgCard,
@@ -2358,7 +2367,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     ];
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
@@ -2421,7 +2430,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final colors = context.colors;
     final l = AppLocalizations.of(context)!;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
@@ -2549,7 +2558,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── SECTION TITLE ────────────────────────────────────────────────
   Widget _buildSectionTitle(AppColorsExtension colors, String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
           Container(

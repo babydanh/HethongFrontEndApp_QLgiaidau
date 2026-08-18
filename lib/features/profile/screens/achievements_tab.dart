@@ -105,7 +105,7 @@ class AchievementsTab extends ConsumerWidget {
         // ─── Achievement Cards ──────────────────────────────────────
         if (recentAchievements.isEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -175,7 +175,7 @@ class AchievementsTab extends ConsumerWidget {
     VoidCallback? onSeeAllTap,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -374,7 +374,7 @@ class _AchievementCard extends StatelessWidget {
     final resolvedLogo = _resolveImageUrl(achievement.logoUrl);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: colors.bgCard,
