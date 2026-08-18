@@ -54,6 +54,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   final Set<String> _onlineUserIds = {};
   final Map<String, DateTime> _userReadTimestamps = {};
   bool _showScrollToBottom = false;
+  String? _highlightedMessageId;
+  Timer? _highlightTimer;
 
   bool _isLoading = true;
   bool _isSending = false;
@@ -100,6 +102,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   void dispose() {
     _pollTimer?.cancel();
     _typingTimer?.cancel();
+    _highlightTimer?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
@@ -745,13 +748,20 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   }
 
   void _jumpToMessage(String messageId) {
+    HapticFeedback.lightImpact();
     final idx = _messages.indexWhere((m) => m.id == messageId);
     if (idx != -1 && _scrollController.hasClients) {
+      final targetOffset = (idx * 85.0).clamp(0.0, _scrollController.position.maxScrollExtent);
       _scrollController.animateTo(
-        idx * 60.0,
+        targetOffset,
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeOutCubic,
       );
+      setState(() => _highlightedMessageId = messageId);
+      _highlightTimer?.cancel();
+      _highlightTimer = Timer(const Duration(milliseconds: 2000), () {
+        if (mounted) setState(() => _highlightedMessageId = null);
+      });
     }
   }
 
@@ -1333,7 +1343,12 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                           constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.76),
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                           decoration: BoxDecoration(
-                            color: bubbleBg,
+                            color: msg.id == _highlightedMessageId
+                                ? (isMine ? AppTheme.primary : (isDark ? const Color(0xFF4A4B4D) : const Color(0xFFFFFBEB)))
+                                : bubbleBg,
+                            border: msg.id == _highlightedMessageId
+                                ? Border.all(color: Colors.amber, width: 2)
+                                : null,
                             borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(!isMine && !isFirstInGroup ? 6 : 18),
                               topRight: Radius.circular(isMine && !isFirstInGroup ? 6 : 18),
@@ -1342,8 +1357,11 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.04),
-                                blurRadius: 4,
+                                color: msg.id == _highlightedMessageId
+                                    ? Colors.amber.withValues(alpha: 0.35)
+                                    : Colors.black.withValues(alpha: 0.04),
+                                blurRadius: msg.id == _highlightedMessageId ? 10 : 4,
+                                spreadRadius: msg.id == _highlightedMessageId ? 1 : 0,
                                 offset: const Offset(0, 2),
                               ),
                             ],
