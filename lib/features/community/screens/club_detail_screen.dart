@@ -289,24 +289,111 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     AppColorsExtension colors,
     AppLocalizations l10n,
   ) {
-    if (_myMembership?.status != 'JOINED') {
-      return const SizedBox.shrink();
-    }
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // 1. Nút Tham gia / Chờ duyệt trên AppBar khi chưa tham gia
+        if (!_isMember)
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: FilledButton.icon(
+              onPressed: _isJoinLoading ? null : () => _handleJoinAction(club),
+              style: FilledButton.styleFrom(
+                backgroundColor: _getJoinBgColor(),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              icon: _isJoinLoading
+                  ? const SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(_getJoinIcon(), size: 14),
+              label: Text(
+                _getJoinLabel(),
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+              ),
+            ),
+          ),
+
+        // 2. Chat CLB (khi đã là thành viên)
+        if (_isMember)
+          IconButton(
+            onPressed: () {
+              final name = Uri.encodeComponent(club.name);
+              context.push('/club/${club.id}/chat?name=$name');
+            },
+            tooltip: 'Trò chuyện CLB',
+            icon: const Icon(
+              Icons.forum_outlined,
+              color: AppTheme.primary,
+              size: 22,
+            ),
+          ),
+
+        // 3. Mời bạn bè (khi đã là thành viên & CLB là PUBLIC)
+        if (_isMember && club.visibility.toUpperCase() == 'PUBLIC')
+          IconButton(
+            onPressed: () {
+              AppShareModal.show(
+                context: context,
+                title: club.name,
+                subtitle:
+                    '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
+                webUrl: 'https://sporto.asia/communities/${club.id}',
+                imageUrl: club.logoUrl ?? club.bannerUrl,
+                badgeText: l10n.club_badge,
+              );
+            },
+            tooltip: 'Mời thành viên',
+            icon: const Icon(
+              Icons.person_add_alt_1_rounded,
+              color: AppTheme.primary,
+              size: 22,
+            ),
+          ),
+
+        // 4. Chia sẻ CLB
         IconButton(
           onPressed: () {
-            final name = Uri.encodeComponent(club.name);
-            context.push('/club/${club.id}/chat?name=$name');
+            AppShareModal.show(
+              context: context,
+              title: club.name,
+              subtitle:
+                  '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
+              webUrl: 'https://sporto.asia/communities/${club.id}',
+              imageUrl: club.logoUrl ?? club.bannerUrl,
+              badgeText: l10n.club_badge,
+            );
           },
-          tooltip: 'Trò chuyện CLB',
-          icon: const Icon(
-            Icons.forum_outlined,
-            color: AppTheme.primary,
-            size: 22,
+          tooltip: 'Chia sẻ',
+          icon: Icon(
+            Icons.share_outlined,
+            size: 20,
+            color: colors.textPrimary,
           ),
         ),
+
+        // 5. Menu Tùy chọn (Cài đặt thông báo, Quản lý, Sửa, Rời CLB)
+        if (_isMember)
+          IconButton(
+            onPressed: () => _showMemberOptionsSheet(context, club),
+            tooltip: 'Tùy chọn',
+            icon: Icon(
+              Icons.more_vert_rounded,
+              color: colors.textPrimary,
+              size: 22,
+            ),
+          ),
       ],
     );
   }
@@ -451,225 +538,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           centerTitle: true,
           actions: [
             _buildFollowFavoriteButtons(club, colors, l10n),
-            if (_myMembership?.role == 'OWNER' ||
-                _myMembership?.role == 'ADMIN' ||
-                _myMembership?.role == 'MODERATOR') ...[
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: TextButton.icon(
-                  onPressed: () => context.push(
-                    '/club/${widget.clubId}/manage',
-                    extra: _myMembership?.role == 'OWNER',
-                  ),
-                  icon: const Icon(Icons.tune_rounded, size: 16),
-                  label: Text(
-                    l10n.club_manageShort,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: TextButton.icon(
-                  onPressed: () => context.push('/club/${widget.clubId}/edit'),
-                  icon: const Icon(Icons.edit_rounded, size: 16),
-                  label: Text(
-                    l10n.infoEdit,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
         SliverToBoxAdapter(
           child: _buildClubBanner(club, colors, sColor, emoji),
         ),
-        SliverToBoxAdapter(
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-            color: colors.bgCard,
-            child: Row(
-              children: [
-                if (_isMember) ...[
-                  // Nút 1: Đã tham gia (Dropdown mở menu tùy chọn/rời CLB)
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _isJoinLoading
-                          ? null
-                          : () => _showMemberOptionsSheet(context, club),
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: colors.bgSurface,
-                        foregroundColor: colors.textPrimary,
-                        side: BorderSide(color: colors.border),
-                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: _isJoinLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.check_rounded, size: 16, color: Color(0xFF059669)),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Đã tham gia',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                SizedBox(width: 2),
-                                Icon(Icons.keyboard_arrow_down_rounded, size: 18),
-                              ],
-                            ),
-                    ),
-                  ),
-                  // Nút 2: + Mời (Chỉ hiển thị với CLB Công khai / PUBLIC)
-                  if (club.visibility.toUpperCase() == 'PUBLIC') ...[
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () {
-                          AppShareModal.show(
-                            context: context,
-                            title: club.name,
-                            subtitle:
-                                '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
-                            webUrl: 'https://sporto.asia/communities/${club.id}',
-                            imageUrl: club.logoUrl ?? club.bannerUrl,
-                            badgeText: l10n.club_badge,
-                          );
-                        },
-                        icon: const Icon(Icons.person_add_alt_1_rounded, size: 16),
-                        label: const Text(
-                          'Mời',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                          ),
-                        ),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(width: 8),
-                  // Nút 3: Chia sẻ
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: colors.bgSurface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: colors.border),
-                    ),
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      icon: Icon(
-                        Icons.share_outlined,
-                        size: 18,
-                        color: colors.textPrimary,
-                      ),
-                      onPressed: () {
-                        AppShareModal.show(
-                          context: context,
-                          title: club.name,
-                          subtitle:
-                              '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
-                          webUrl: 'https://sporto.asia/communities/${club.id}',
-                          imageUrl: club.logoUrl ?? club.bannerUrl,
-                          badgeText: l10n.club_badge,
-                        );
-                      },
-                    ),
-                  ),
-                ] else ...[
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: _isJoinLoading
-                          ? null
-                          : () => _handleJoinAction(club),
-                      icon: _isJoinLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Icon(_getJoinIcon(), size: 18),
-                      label: Text(
-                        _getJoinLabel(),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
-                        ),
-                      ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _getJoinBgColor(),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: colors.bgSurface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: colors.border),
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.share_outlined,
-                        size: 18,
-                        color: colors.textPrimary,
-                      ),
-                      onPressed: () {
-                        AppShareModal.show(
-                          context: context,
-                          title: club.name,
-                          subtitle:
-                              '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
-                          webUrl: 'https://sporto.asia/communities/${club.id}',
-                          imageUrl: club.logoUrl ?? club.bannerUrl,
-                          badgeText: l10n.club_badge,
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-        // Không pin tab bar: banner + nút + tab trượt theo nội dung,
+        // Không pin tab bar: banner + tab trượt theo nội dung,
         // chỉ giữ app bar (SliverAppBar pinned ở trên) cố định — 1 scroll liền mạch.
         SliverPersistentHeader(
           pinned: false,
@@ -770,6 +644,65 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   _showNotificationPreferenceSheet(context, club);
                 },
               ),
+              if (_myMembership?.role == 'OWNER' ||
+                  _myMembership?.role == 'ADMIN' ||
+                  _myMembership?.role == 'MODERATOR') ...[
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.tune_rounded,
+                      color: AppTheme.primary,
+                      size: 20,
+                    ),
+                  ),
+                  title: const Text(
+                    'Quản lý câu lạc bộ',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                  subtitle: Text(
+                    'Duyệt thành viên, giải đấu, cài đặt',
+                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    context.push(
+                      '/club/${widget.clubId}/manage',
+                      extra: _myMembership?.role == 'OWNER',
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.edit_rounded,
+                      color: AppTheme.primary,
+                      size: 20,
+                    ),
+                  ),
+                  title: const Text(
+                    'Chỉnh sửa thông tin CLB',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                  subtitle: Text(
+                    'Tên, logo, banner, mô tả, nội quy',
+                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    context.push('/club/${widget.clubId}/edit');
+                  },
+                ),
+              ],
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(8),
@@ -1151,14 +1084,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            if (club.status == 'ACTIVE') ...[
-                              const SizedBox(width: 4),
-                              Icon(
-                                Icons.verified_rounded,
-                                size: 16,
-                                color: sColor,
-                              ),
-                            ],
                           ],
                         ),
                         const SizedBox(height: 6),
