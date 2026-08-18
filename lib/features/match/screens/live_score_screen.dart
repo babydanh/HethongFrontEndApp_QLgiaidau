@@ -57,7 +57,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     with TickerProviderStateMixin {
   final _maxScoreController = TextEditingController(text: '21');
   final _timeLimitController = TextEditingController();
-  final _refereeController = TextEditingController();
   bool _winByTwo = true;
   bool _didSeedSetupControls = false;
 
@@ -160,7 +159,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   void dispose() {
     _maxScoreController.dispose();
     _timeLimitController.dispose();
-    _refereeController.dispose();
     _tabController.dispose();
     _commentSub?.cancel();
     _cheerSub?.cancel();
@@ -751,33 +749,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ),
               ),
               const SizedBox(height: 18),
-              if (false)
-                TextField(
-                  controller: _refereeController,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: context.colors.textPrimary,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: 'Tên trọng tài hoặc ghi chú nhanh',
-                    helperText:
-                        'Không bắt buộc. Chỉ hiển thị trong app nếu có.',
-                    prefixIcon: Icon(
-                      Icons.person_outline_rounded,
-                      color: context.colors.textMuted,
-                    ),
-                    filled: true,
-                    fillColor: context.colors.bgDark,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: context.colors.border),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: context.colors.border),
-                    ),
-                  ),
-                ),
               const SizedBox(height: 24),
               SizedBox(
                 height: 52,
@@ -1025,33 +996,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
               const SizedBox(height: 16),
 
-              // Referee name
-              TextField(
-                controller: _refereeController,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: context.colors.textPrimary,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Tên trọng tài (Tùy chọn)',
-                  prefixIcon: Icon(
-                    Icons.person_outline_rounded,
-                    color: context.colors.textMuted,
-                  ),
-                  filled: true,
-                  fillColor: context.colors.bgDark,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: context.colors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: context.colors.border),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
               // Win by 2 toggle
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -1152,7 +1096,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     _timeLimitController.text = match.timeLimitMinutes != null
         ? match.timeLimitMinutes.toString()
         : '';
-    _refereeController.text = match.refereeName ?? '';
     _winByTwo = seededWinByTwo;
     _didSeedSetupControls = true;
   }
