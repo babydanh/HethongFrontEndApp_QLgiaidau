@@ -92,12 +92,12 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
         aspectRatio: 16 / 9,
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A),
-            borderRadius: BorderRadius.circular(12),
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: colors.border.withValues(alpha: 0.6)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
+                color: Colors.black.withValues(alpha: 0.06),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -123,7 +123,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.black.withValues(alpha: 0.25),
+                          Colors.black.withValues(alpha: 0.3),
                           Colors.transparent,
                           Colors.black.withValues(alpha: 0.75),
                         ],
@@ -203,24 +203,23 @@ class _FallbackBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
-        gradient: RadialGradient(
-          center: Alignment.center,
-          radius: 0.85,
-          colors: [
-            AppTheme.primary.withValues(alpha: 0.22),
-            const Color(0xFF0F172A),
-          ],
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? const [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF0F172A)]
+              : const [Color(0xFFF8FAFC), Color(0xFFEFF6FF), Color(0xFFE0E7FF)],
         ),
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 26),
-          child: Image.asset(
-            'assets/images/sporto_v1_with_text.png',
-            width: 160,
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+          child: SvgPicture.asset(
+            AppConstants.logoFullSvg,
+            width: 175,
             fit: BoxFit.contain,
           ),
         ),

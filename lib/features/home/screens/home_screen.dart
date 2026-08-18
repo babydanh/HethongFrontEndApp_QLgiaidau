@@ -3622,9 +3622,9 @@ class _TournamentCard extends StatelessWidget {
                             bannerUrlResolved,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) =>
-                                _buildFallbackBanner(),
+                                _buildFallbackBanner(context),
                           )
-                        : _buildFallbackBanner(),
+                        : _buildFallbackBanner(context),
                   ),
                   // Top left: Sport badge
                   Positioned(
@@ -3780,17 +3780,27 @@ class _TournamentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildFallbackBanner() {
+  Widget _buildFallbackBanner(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primary, AppTheme.primaryDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+          colors: isDark
+              ? const [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF0F172A)]
+              : const [Color(0xFFF8FAFC), Color(0xFFEFF6FF), Color(0xFFE0E7FF)],
         ),
       ),
-      child: const Center(
-        child: Icon(Icons.sports_tennis_rounded, color: Colors.white, size: 42),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: SvgPicture.asset(
+            AppConstants.logoFullSvg,
+            width: 140,
+            fit: BoxFit.contain,
+          ),
+        ),
       ),
     );
   }
