@@ -588,68 +588,174 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             color: colors.bgCard,
             child: Row(
               children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: _isJoinLoading
-                        ? null
-                        : (_isMember
-                              ? _confirmLeaveCommunity
-                              : () => _handleJoinAction(club)),
-                    icon: _isJoinLoading
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+                if (_isMember) ...[
+                  // Nút 1: Đã tham gia (Dropdown mở menu tùy chọn/rời CLB)
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _isJoinLoading
+                          ? null
+                          : () => _showMemberOptionsSheet(context, club),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: colors.bgSurface,
+                        foregroundColor: colors.textPrimary,
+                        side: BorderSide(color: colors.border),
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _isJoinLoading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.check_rounded, size: 16, color: Color(0xFF059669)),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Đã tham gia',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                SizedBox(width: 2),
+                                Icon(Icons.keyboard_arrow_down_rounded, size: 18),
+                              ],
                             ),
-                          )
-                        : Icon(_getJoinIcon(), size: 18),
-                    label: Text(
-                      _isMember ? 'Rời CLB' : _getJoinLabel(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13,
+                    ),
+                  ),
+                  // Nút 2: + Mời (Chỉ hiển thị với CLB Công khai / PUBLIC)
+                  if (club.visibility.toUpperCase() == 'PUBLIC') ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          AppShareModal.show(
+                            context: context,
+                            title: club.name,
+                            subtitle:
+                                '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
+                            webUrl: 'https://sporto.asia/communities/${club.id}',
+                            imageUrl: club.logoUrl ?? club.bannerUrl,
+                            badgeText: l10n.club_badge,
+                          );
+                        },
+                        icon: const Icon(Icons.person_add_alt_1_rounded, size: 16),
+                        label: const Text(
+                          'Mời',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
                     ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _getJoinBgColor(),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                  ],
+                  const SizedBox(width: 8),
+                  // Nút 3: Chia sẻ
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: colors.bgSurface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: colors.border),
+                    ),
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        Icons.share_outlined,
+                        size: 18,
+                        color: colors.textPrimary,
+                      ),
+                      onPressed: () {
+                        AppShareModal.show(
+                          context: context,
+                          title: club.name,
+                          subtitle:
+                              '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
+                          webUrl: 'https://sporto.asia/communities/${club.id}',
+                          imageUrl: club.logoUrl ?? club.bannerUrl,
+                          badgeText: l10n.club_badge,
+                        );
+                      },
+                    ),
+                  ),
+                ] else ...[
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: _isJoinLoading
+                          ? null
+                          : () => _handleJoinAction(club),
+                      icon: _isJoinLoading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Icon(_getJoinIcon(), size: 18),
+                      label: Text(
+                        _getJoinLabel(),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                        ),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _getJoinBgColor(),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: colors.bgSurface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: colors.border),
-                  ),
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.share_outlined,
-                      size: 18,
-                      color: colors.textPrimary,
+                  const SizedBox(width: 10),
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: colors.bgSurface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: colors.border),
                     ),
-                    onPressed: () {
-                      AppShareModal.show(
-                        context: context,
-                        title: club.name,
-                        subtitle:
-                            '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
-                        webUrl: 'https://sporto.asia/communities/${club.id}',
-                        imageUrl: club.logoUrl ?? club.bannerUrl,
-                        badgeText: l10n.club_badge,
-                      );
-                    },
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.share_outlined,
+                        size: 18,
+                        color: colors.textPrimary,
+                      ),
+                      onPressed: () {
+                        AppShareModal.show(
+                          context: context,
+                          title: club.name,
+                          subtitle:
+                              '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
+                          webUrl: 'https://sporto.asia/communities/${club.id}',
+                          imageUrl: club.logoUrl ?? club.bannerUrl,
+                          badgeText: l10n.club_badge,
+                        );
+                      },
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -698,6 +804,98 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     if (_isPending) return l10n.club_pendingApproval;
     if (_isInvited) return 'Chấp nhận lời mời';
     return l10n.club_joinButton;
+  }
+
+  void _showMemberOptionsSheet(BuildContext context, Community club) {
+    final colors = context.colors;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colors.bgCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: colors.borderLight,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _notificationPref == 'MUTED'
+                        ? Icons.notifications_off_outlined
+                        : Icons.notifications_active_outlined,
+                    color: AppTheme.primary,
+                    size: 20,
+                  ),
+                ),
+                title: const Text(
+                  'Cài đặt thông báo',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+                subtitle: Text(
+                  _notificationPref == 'MUTED'
+                      ? 'Đang tắt thông báo'
+                      : _notificationPref == 'MENTIONS_ONLY'
+                          ? 'Chỉ khi được nhắc tên'
+                          : 'Nhận tất cả thông báo',
+                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _showNotificationPreferenceSheet(context, club);
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.logout_rounded,
+                    color: Colors.redAccent,
+                    size: 20,
+                  ),
+                ),
+                title: const Text(
+                  'Rời khỏi câu lạc bộ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: Colors.redAccent,
+                  ),
+                ),
+                subtitle: Text(
+                  'Hủy tư cách thành viên của câu lạc bộ này',
+                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _confirmLeaveCommunity();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _confirmLeaveCommunity() async {
@@ -890,10 +1088,15 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           .read(communityRepositoryProvider)
           .joinCommunity(widget.clubId);
       if (ok && mounted) {
-        _log.success('Tham gia CLB thành công');
+        _log.success('Tham gia/gửi yêu cầu CLB thành công');
+        final isApproval = community?.joinMode.toUpperCase() == 'APPROVAL';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.club_joinSuccess),
+            content: Text(
+              isApproval
+                  ? 'Đã gửi yêu cầu tham gia. Vui lòng chờ Ban chủ nhiệm xét duyệt!'
+                  : l10n.club_joinSuccess,
+            ),
             backgroundColor: const Color(0xFF059669),
           ),
         );

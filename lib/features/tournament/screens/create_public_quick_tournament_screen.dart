@@ -56,7 +56,6 @@ class _CreatePublicQuickTournamentScreenState extends ConsumerState<CreatePublic
         'maxTeams': maxTeams,
         'visibility': _visibility,
         'registrationMode': _registrationMode,
-        'tournamentType': 'PUBLIC',
         'isRanked': false,
       });
       final raw = response.data;

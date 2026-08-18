@@ -163,6 +163,10 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
         .value;
     final profile = ref.watch(userProfileProvider).asData?.value;
     final currentUserId = profile?.id ?? '';
+    final currentAvatarUrl = profile?.avatarUrl?.trim();
+    final currentAuthorName = (profile?.fullName?.isNotEmpty == true
+        ? profile!.fullName!
+        : 'Bạn').trim();
     final socialSettings =
         ref.watch(communitySocialSettingsProvider(widget.communityId)).value ??
         const CommunitySocialSettings(
@@ -213,11 +217,10 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
               if (canPost)
                 Container(
                   color: colors.bgCard,
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                   margin: const EdgeInsets.only(bottom: 8),
                   child: CommunityComposerTrigger(
-                    authorName: profile?.fullName ?? 'Bạn',
-                    authorAvatarUrl: profile?.avatarUrl,
+                    authorName: currentAuthorName,
+                    authorAvatarUrl: currentAvatarUrl,
                     onOpen: () => _openComposer(),
                     onOpenWithPoll: () => _openComposer(startWithPoll: true),
                     onOpenWithImage: () => _openComposer(startWithImage: true),
