@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/chat_socket_service.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/features/chat/screens/chat_detail_screen.dart';
@@ -19,6 +20,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 }
 
 class _ChatScreenState extends ConsumerState<ChatScreen> with SingleTickerProviderStateMixin {
+  static const _log = AppLogger('ChatScreen');
   late final TabController _tabController;
   final _searchController = TextEditingController();
   final _aiMessageController = TextEditingController();
@@ -147,8 +149,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with SingleTickerProvid
 
     try {
       final dio = ref.read(dioClientProvider).dio;
-      final res = await dio.post('/chat/ai', data: {'message': text});
-      final reply = (res.data is Map ? (res.data['reply'] ?? res.data['content'] ?? res.data['data']) : res.data)?.toString();
+      final res = await dio.post('/ai/message', data: {
+        'messages': _aiMessages,
+        'message': text,
+        'isMobile': true,
+      });
+      final raw = res.data;
+      final data = raw is Map<String, dynamic> ? raw : (raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{});
+      final reply = (data['reply'] ?? data['data'] ?? data['content'])?.toString();
       if (mounted) {
         setState(() {
           _aiMessages.add({
@@ -157,7 +165,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with SingleTickerProvid
           });
         });
       }
-    } catch (_) {
+    } catch (e, stack) {
+      _log.error('Lỗi gọi AI Chat', e, stack);
       if (mounted) {
         setState(() {
           _aiMessages.add({
