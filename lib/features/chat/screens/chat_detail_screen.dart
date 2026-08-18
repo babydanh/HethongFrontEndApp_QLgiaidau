@@ -179,6 +179,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             .whereType<Map<String, dynamic>>()
             .map((json) => ChatMessageModel.fromJson(json, currentUserId: currentUserId))
             .toList();
+        // Ensure strictly sorted newest-first so ListView.builder(reverse: true) renders newest at the bottom
+        items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         setState(() {
           _messages = items;
           _hasMore = items.length >= 30;
@@ -207,6 +209,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             .whereType<Map<String, dynamic>>()
             .map((json) => ChatMessageModel.fromJson(json, currentUserId: currentUserId))
             .toList();
+        older.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         setState(() {
           _messages.addAll(older);
           _hasMore = older.length >= 30;
@@ -227,6 +230,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             .whereType<Map<String, dynamic>>()
             .map((json) => ChatMessageModel.fromJson(json, currentUserId: currentUserId))
             .toList();
+        items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         setState(() => _messages = items);
       }
     } catch (_) {}
@@ -310,35 +314,32 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     }
   }
 
-  Future<void> _sendThumbsUp() async {
-    await _sendMessage(customContent: '👍');
+  void _sendThumbsUp() {
+    _sendMessage(customContent: '👍');
   }
 
   Future<void> _pickImage(ImageSource source) async {
     try {
       final picker = ImagePicker();
-      final picked = await picker.pickImage(source: source, imageQuality: 85);
+      final picked = await picker.pickImage(source: source, imageQuality: 80);
       if (picked == null) return;
 
-      setState(() => _isSending = true);
       final dio = ref.read(dioClientProvider).dio;
       final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(picked.path, filename: picked.name),
+        'file': await MultipartFile.fromFile(picked.path),
       });
       final res = await dio.post('/upload/image', data: formData);
-      final url = res.data is Map ? (res.data['url'] ?? res.data['data']?['url']) : null;
-      if (url is String && mounted) {
+      final url = (res.data is Map ? (res.data['data']?['url'] ?? res.data['url']) : null)?.toString();
+      if (url != null && url.isNotEmpty) {
         setState(() => _pendingMedia.add(url));
         await _sendMessage();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể tải ảnh lên.')),
+          SnackBar(content: Text(ErrorParser.parse(e, 'Không thể tải ảnh lên.'))),
         );
       }
-    } finally {
-      if (mounted) setState(() => _isSending = false);
     }
   }
 
@@ -350,20 +351,85 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   }
 
   Future<void> _reactToMessage(ChatMessageModel message, String emoji) async {
+    HapticFeedback.lightImpact();
+
+    // 1. Optimistic Update
+    final currentUserId = ref.read(userProfileProvider).asData?.value?.id ?? 'me';
+    final existingIdx = message.reactions.indexWhere((r) => r.emoji == emoji);
+    final updatedReactions = List<ChatReactionModel>.from(message.reactions);
+
+    if (existingIdx != -1) {
+      final current = updatedReactions[existingIdx];
+      if (current.isReacted) {
+        if (current.count <= 1) {
+          updatedReactions.removeAt(existingIdx);
+        } else {
+          updatedReactions[existingIdx] = ChatReactionModel(
+            emoji: current.emoji,
+            count: current.count - 1,
+            isReacted: false,
+          );
+        }
+      } else {
+        updatedReactions[existingIdx] = ChatReactionModel(
+          emoji: current.emoji,
+          count: current.count + 1,
+          isReacted: true,
+        );
+      }
+    } else {
+      updatedReactions.add(ChatReactionModel(
+        emoji: emoji,
+        count: 1,
+        isReacted: true,
+      ));
+    }
+
+    setState(() {
+      final idx = _messages.indexWhere((m) => m.id == message.id);
+      if (idx != -1) {
+        _messages[idx] = _messages[idx].copyWith(reactions: updatedReactions);
+      }
+    });
+
+    // 2. Server Sync
     try {
       final dio = ref.read(dioClientProvider).dio;
       final res = await dio.post('/chat/messages/${message.id}/reaction', data: {'emoji': emoji});
-      final currentUserId = ref.read(userProfileProvider).asData?.value?.id;
-      final raw = res.data is Map ? res.data['data'] : null;
-      if (raw is Map<String, dynamic> && raw['reactions'] is List && mounted) {
-        final reactionsList = (raw['reactions'] as List)
-            .whereType<Map<String, dynamic>>()
-            .map((r) => ChatReactionModel.fromJson(r, currentUserId: currentUserId))
-            .toList();
+      final raw = res.data is Map ? (res.data['data'] ?? res.data) : null;
+      final rawList = raw is Map ? raw['reactions'] : (raw is List ? raw : null);
+
+      if (rawList is List && mounted) {
+        final parsedReactions = <ChatReactionModel>[];
+        final emojiCounts = <String, int>{};
+        final userReactedMap = <String, bool>{};
+
+        for (final item in rawList) {
+          if (item is String) {
+            emojiCounts[item] = (emojiCounts[item] ?? 0) + 1;
+            if (item == emoji) userReactedMap[item] = true;
+          } else if (item is Map<String, dynamic>) {
+            final em = (item['emoji'] ?? '').toString();
+            final count = (item['count'] as num?)?.toInt() ?? 1;
+            if (em.isNotEmpty) {
+              emojiCounts[em] = count;
+              userReactedMap[em] = item['isReacted'] == true;
+            }
+          }
+        }
+
+        emojiCounts.forEach((em, count) {
+          parsedReactions.add(ChatReactionModel(
+            emoji: em,
+            count: count,
+            isReacted: userReactedMap[em] ?? (em == emoji),
+          ));
+        });
+
         setState(() {
           final idx = _messages.indexWhere((m) => m.id == message.id);
           if (idx != -1) {
-            _messages[idx] = _messages[idx].copyWith(reactions: reactionsList);
+            _messages[idx] = _messages[idx].copyWith(reactions: parsedReactions);
           }
         });
       }
