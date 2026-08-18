@@ -523,6 +523,10 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       messages: _messages,
       onUnpinMessage: _pinnedMessage != null ? () => _togglePinMessage(_pinnedMessage!) : null,
       onJumpToMessage: (id) => _jumpToMessage(id),
+      onRoomUpdated: () {
+        _refreshMessages();
+        _loadPinnedMessage();
+      },
     );
   }
 

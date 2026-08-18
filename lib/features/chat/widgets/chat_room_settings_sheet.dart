@@ -1,9 +1,12 @@
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
-import 'package:app_quanly_giaidau/data/models/chat_models.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/data/models/chat_models.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 
 enum ChatNotificationMode { all, mentionsOnly, muted }
 
@@ -17,6 +20,7 @@ class ChatRoomSettingsSheet extends ConsumerStatefulWidget {
   final List<ChatMessageModel> messages;
   final VoidCallback? onUnpinMessage;
   final Function(String messageId)? onJumpToMessage;
+  final VoidCallback? onRoomUpdated;
 
   const ChatRoomSettingsSheet({
     super.key,
@@ -29,6 +33,7 @@ class ChatRoomSettingsSheet extends ConsumerStatefulWidget {
     this.messages = const [],
     this.onUnpinMessage,
     this.onJumpToMessage,
+    this.onRoomUpdated,
   });
 
   static Future<void> show(
@@ -42,6 +47,7 @@ class ChatRoomSettingsSheet extends ConsumerStatefulWidget {
     List<ChatMessageModel> messages = const [],
     VoidCallback? onUnpinMessage,
     Function(String messageId)? onJumpToMessage,
+    VoidCallback? onRoomUpdated,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -57,6 +63,7 @@ class ChatRoomSettingsSheet extends ConsumerStatefulWidget {
         messages: messages,
         onUnpinMessage: onUnpinMessage,
         onJumpToMessage: onJumpToMessage,
+        onRoomUpdated: onRoomUpdated,
       ),
     );
   }
@@ -73,11 +80,30 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   bool _isLoadingMembers = false;
   List<ChatParticipant> _participants = [];
 
+  // Admin / Room settings
+  String _currentRoomName = '';
+  String? _currentRoomAvatar;
+  bool _isAnnouncementOnly = false;
+  int _slowModeSeconds = 0;
+  bool _isUpdatingAdminSettings = false;
+
   @override
   void initState() {
     super.initState();
+    _currentRoomName = widget.roomName;
+    _currentRoomAvatar = widget.roomAvatar;
     _loadRoomSettings();
   }
+
+  String get _myRole {
+    final currentUserId = ref.read(userProfileProvider).asData?.value?.id;
+    if (currentUserId == null) return 'MEMBER';
+    final p = _participants.where((part) => part.id == currentUserId).firstOrNull;
+    return p?.role?.toUpperCase() ?? 'MEMBER';
+  }
+
+  bool get _isRoomAdmin =>
+      _myRole == 'OWNER' || _myRole == 'ADMIN' || _myRole == 'MODERATOR';
 
   Future<void> _loadRoomSettings() async {
     setState(() => _isLoadingMembers = true);
@@ -86,6 +112,15 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
       final res = await dio.get('/chat/rooms/${widget.roomId}');
       final data = res.data is Map ? (res.data['data'] ?? res.data) : null;
       if (data is Map<String, dynamic> && mounted) {
+        if (data['name'] is String && (data['name'] as String).isNotEmpty) {
+          _currentRoomName = data['name'];
+        }
+        if (data['clubAvatar'] is String) {
+          _currentRoomAvatar = data['clubAvatar'];
+        }
+        _isAnnouncementOnly = data['isAnnouncementOnly'] == true;
+        _slowModeSeconds = (data['slowModeSeconds'] as num?)?.toInt() ?? 0;
+
         final rawParts = data['participants'] ?? data['members'];
         if (rawParts is List) {
           _participants = rawParts
@@ -145,6 +180,206 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
     }
   }
 
+  Future<void> _updateRoomNameDialog() async {
+    final controller = TextEditingController(text: _currentRoomName);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Đổi tên phòng chat', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: 'Nhập tên phòng chat mới...',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child: const Text('Lưu'),
+          ),
+        ],
+      ),
+    );
+
+    if (newName != null && newName.isNotEmpty && newName != _currentRoomName) {
+      await _saveAdminSettings({'name': newName});
+      setState(() => _currentRoomName = newName);
+      widget.onRoomUpdated?.call();
+    }
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      if (picked == null) return;
+
+      setState(() => _isUpdatingAdminSettings = true);
+      final dio = ref.read(dioClientProvider).dio;
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(picked.path, filename: picked.name),
+      });
+      final res = await dio.post('/upload/image', data: formData);
+      final url = res.data is Map ? (res.data['url'] ?? res.data['data']?['url']) : null;
+      if (url is String) {
+        await _saveAdminSettings({'clubAvatar': url});
+        setState(() => _currentRoomAvatar = url);
+        widget.onRoomUpdated?.call();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể tải ảnh lên.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUpdatingAdminSettings = false);
+    }
+  }
+
+  Future<void> _saveAdminSettings(Map<String, dynamic> payload) async {
+    setState(() => _isUpdatingAdminSettings = true);
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      await dio.put('/chat/rooms/${widget.roomId}/settings', data: payload);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã cập nhật cài đặt phòng chat.'),
+            backgroundColor: Color(0xFF059669),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi cập nhật: ${e.toString().replaceAll("Exception: ", "")}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUpdatingAdminSettings = false);
+    }
+  }
+
+  Future<void> _clearChatHistory() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xóa lịch sử cuộc trò chuyện?'),
+        content: const Text('Toàn bộ tin nhắn sẽ bị xóa khỏi chế độ xem của bạn. Các thành viên khác vẫn xem được bình thường.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            child: const Text('Xóa lịch sử'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final dio = ref.read(dioClientProvider).dio;
+        await dio.post('/chat/rooms/${widget.roomId}/clear');
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đã xóa lịch sử cuộc trò chuyện phía bạn.'),
+              backgroundColor: Color(0xFF059669),
+            ),
+          );
+          widget.onRoomUpdated?.call();
+        }
+      } catch (_) {}
+    }
+  }
+
+  void _showParticipantActions(ChatParticipant participant) {
+    final currentUserId = ref.read(userProfileProvider).asData?.value?.id;
+    if (participant.id == currentUserId) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => Container(
+        decoration: BoxDecoration(
+          color: context.colors.bgCard,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: CircleAvatar(
+                radius: 18,
+                backgroundImage: participant.avatarUrl != null ? NetworkImage(participant.avatarUrl!) : null,
+                child: participant.avatarUrl == null ? Text(participant.fullName.characters.first) : null,
+              ),
+              title: Text(participant.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(participant.role ?? 'Thành viên'),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.person_outline_rounded),
+              title: const Text('Xem trang cá nhân'),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                Navigator.pop(context);
+                context.push('/users/${participant.id}');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.chat_bubble_outline_rounded, color: AppTheme.primary),
+              title: const Text('Nhắn tin riêng'),
+              onTap: () async {
+                Navigator.pop(sheetCtx);
+                Navigator.pop(context);
+                try {
+                  final dio = ref.read(dioClientProvider).dio;
+                  final res = await dio.post('/chat/rooms', data: {
+                    'type': 'DIRECT',
+                    'memberIds': [participant.id],
+                  });
+                  final roomData = res.data is Map ? (res.data['data'] ?? res.data) : null;
+                  if (roomData != null && roomData['id'] != null && mounted) {
+                    final name = Uri.encodeComponent(participant.fullName);
+                    context.push('/chat/${roomData['id']}?name=$name');
+                  }
+                } catch (_) {}
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.block_rounded, color: context.colors.error),
+              title: Text('Chặn người dùng này', style: TextStyle(color: context.colors.error)),
+              onTap: () async {
+                Navigator.pop(sheetCtx);
+                try {
+                  final dio = ref.read(dioClientProvider).dio;
+                  await dio.post('/chat/blocks/${participant.id}');
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Đã chặn ${participant.fullName}')),
+                    );
+                  }
+                } catch (_) {}
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   List<String> get _allSharedMedia {
     final list = <String>[];
     for (final m in widget.messages) {
@@ -161,7 +396,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.88,
+      height: MediaQuery.of(context).size.height * 0.9,
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1F22) : const Color(0xFFF8FAFC),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -189,7 +424,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 const SizedBox(width: 40),
                 Expanded(
                   child: Text(
-                    'Tùy chọn & Thông báo',
+                    'Tùy chọn & Cài đặt',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
@@ -220,6 +455,14 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 _buildQuickActions(colors),
                 const SizedBox(height: 20),
 
+                // ── Room Admin Management (For Owner / Admin) ──
+                if (_isRoomAdmin) ...[
+                  _buildSectionHeader('QUẢN TRỊ PHÒNG CHAT (CHỦ PHÒNG / ADMIN)', Icons.admin_panel_settings_outlined, colors),
+                  const SizedBox(height: 8),
+                  _buildAdminManagementCard(colors),
+                  const SizedBox(height: 20),
+                ],
+
                 // ── Notification Settings Section ──
                 _buildSectionHeader('CÀI ĐẶT THÔNG BÁO', Icons.notifications_active_outlined, colors),
                 const SizedBox(height: 8),
@@ -244,7 +487,13 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 _buildSectionHeader('THÀNH VIÊN TRONG PHÒNG (${_participants.isNotEmpty ? _participants.length : 1})', Icons.people_alt_outlined, colors),
                 const SizedBox(height: 8),
                 _buildMembersList(colors),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
+
+                // ── Danger / Clear Actions ──
+                _buildSectionHeader('TÙY CHỌN KHÁC', Icons.settings_outlined, colors),
+                const SizedBox(height: 8),
+                _buildDangerCard(colors),
+                const SizedBox(height: 28),
               ],
             ),
           ),
@@ -272,6 +521,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildProfileBanner(AppColorsExtension colors) {
+    final avatar = _currentRoomAvatar;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -281,30 +531,64 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
       ),
       child: Column(
         children: [
-          CircleAvatar(
-            radius: 36,
-            backgroundColor: AppTheme.primaryLight,
-            backgroundImage: widget.roomAvatar != null && widget.roomAvatar!.isNotEmpty
-                ? NetworkImage(widget.roomAvatar!)
-                : null,
-            child: widget.roomAvatar == null || widget.roomAvatar!.isEmpty
-                ? Text(
-                    widget.roomName.characters.first.toUpperCase(),
-                    style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: AppTheme.primaryDark),
-                  )
-                : null,
+          Stack(
+            children: [
+              CircleAvatar(
+                radius: 36,
+                backgroundColor: AppTheme.primaryLight,
+                backgroundImage: avatar != null && avatar.isNotEmpty
+                    ? NetworkImage(avatar)
+                    : null,
+                child: avatar == null || avatar.isEmpty
+                    ? Text(
+                        _currentRoomName.characters.first.toUpperCase(),
+                        style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: AppTheme.primaryDark),
+                      )
+                    : null,
+              ),
+              if (_isRoomAdmin)
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: InkWell(
+                    onTap: _isUpdatingAdminSettings ? null : _pickAndUploadAvatar,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: AppTheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 14),
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 12),
-          Text(
-            widget.roomName,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w900,
-              color: colors.textPrimary,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  _currentRoomName,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                    color: colors.textPrimary,
+                  ),
+                ),
+              ),
+              if (_isRoomAdmin) ...[
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: _updateRoomNameDialog,
+                  child: const Icon(Icons.edit_rounded, size: 16, color: AppTheme.primary),
+                ),
+              ],
+            ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -415,6 +699,110 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAdminManagementCard(AppColorsExtension colors) {
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          // Đổi tên phòng chat
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.edit_note_rounded, size: 18, color: AppTheme.primary),
+            ),
+            title: const Text('Đổi tên phòng chat', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700)),
+            subtitle: Text(_currentRoomName, style: TextStyle(fontSize: 11.5, color: colors.textMuted)),
+            trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+            onTap: _updateRoomNameDialog,
+          ),
+          const Divider(height: 1),
+
+          // Đổi ảnh đại diện
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.image_outlined, size: 18, color: AppTheme.primary),
+            ),
+            title: const Text('Đổi ảnh đại diện phòng chat', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700)),
+            subtitle: Text('Tải ảnh mới từ thư viện của bạn', style: TextStyle(fontSize: 11.5, color: colors.textMuted)),
+            trailing: _isUpdatingAdminSettings
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.chevron_right_rounded, size: 20),
+            onTap: _isUpdatingAdminSettings ? null : _pickAndUploadAvatar,
+          ),
+          const Divider(height: 1),
+
+          // Chế độ chỉ thông báo
+          SwitchListTile(
+            secondary: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.campaign_outlined, size: 18, color: Color(0xFFD97706)),
+            ),
+            title: const Text('Chế độ chỉ thông báo', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700)),
+            subtitle: Text('Chỉ Ban Quản Trị mới có thể gửi tin nhắn', style: TextStyle(fontSize: 11.5, color: colors.textMuted)),
+            value: _isAnnouncementOnly,
+            activeThumbColor: AppTheme.primary,
+            onChanged: (v) async {
+              setState(() => _isAnnouncementOnly = v);
+              await _saveAdminSettings({'isAnnouncementOnly': v});
+            },
+          ),
+          const Divider(height: 1),
+
+          // Chế độ làm chậm
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.timer_outlined, size: 18, color: Color(0xFF6366F1)),
+            ),
+            title: const Text('Chế độ làm chậm (Slow mode)', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700)),
+            subtitle: Text(
+              _slowModeSeconds > 0 ? 'Thành viên phải chờ $_slowModeSeconds giây giữa mỗi tin' : 'Tắt làm chậm (nhắn tin bình thường)',
+              style: TextStyle(fontSize: 11.5, color: colors.textMuted),
+            ),
+            trailing: DropdownButton<int>(
+              value: _slowModeSeconds,
+              underline: const SizedBox(),
+              items: const [
+                DropdownMenuItem(value: 0, child: Text('Tắt')),
+                DropdownMenuItem(value: 5, child: Text('5s')),
+                DropdownMenuItem(value: 15, child: Text('15s')),
+                DropdownMenuItem(value: 30, child: Text('30s')),
+                DropdownMenuItem(value: 60, child: Text('1p')),
+              ],
+              onChanged: (val) async {
+                if (val != null) {
+                  setState(() => _slowModeSeconds = val);
+                  await _saveAdminSettings({'slowModeSeconds': val});
+                }
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -677,6 +1065,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           final isOwner = p.role == 'OWNER';
           final isAdmin = p.role == 'ADMIN' || p.role == 'MODERATOR';
           return ListTile(
+            onTap: () => _showParticipantActions(p),
             leading: CircleAvatar(
               radius: 18,
               backgroundColor: AppTheme.primaryLight,
@@ -696,6 +1085,39 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                     : _buildRoleBadge('THÀNH VIÊN', colors.textMuted),
           );
         }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildDangerCard(AppColorsExtension colors) {
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: colors.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.delete_sweep_outlined, size: 18, color: colors.error),
+            ),
+            title: Text(
+              'Xóa lịch sử trò chuyện',
+              style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: colors.error),
+            ),
+            subtitle: Text(
+              'Dọn sạch tin nhắn cuộc trò chuyện phía bạn',
+              style: TextStyle(fontSize: 11.5, color: colors.textMuted),
+            ),
+            onTap: _clearChatHistory,
+          ),
+        ],
       ),
     );
   }
