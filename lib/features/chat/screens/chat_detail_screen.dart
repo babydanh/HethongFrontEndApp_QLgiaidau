@@ -7,6 +7,8 @@ import 'package:app_quanly_giaidau/core/services/chat_socket_service.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_poll_dialog.dart';
+import 'package:app_quanly_giaidau/features/chat/widgets/chat_room_settings_sheet.dart';
+import 'package:app_quanly_giaidau/features/chat/widgets/chat_reaction_detail_sheet.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -455,6 +457,15 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                 ),
               ),
               const Divider(height: 16),
+              if (message.reactions.isNotEmpty)
+                ListTile(
+                  leading: const Icon(Icons.favorite_outline_rounded, color: Colors.pink),
+                  title: const Text('Xem người bày tỏ cảm xúc'),
+                  onTap: () {
+                    Navigator.pop(sheetCtx);
+                    ChatReactionDetailSheet.show(context, message);
+                  },
+                ),
               ListTile(
                 leading: const Icon(Icons.reply_rounded),
                 title: const Text('Trả lời'),
@@ -498,6 +509,32 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         );
       },
     );
+  }
+
+  void _openRoomSettings() {
+    ChatRoomSettingsSheet.show(
+      context,
+      roomId: widget.roomId,
+      roomName: widget.roomName ?? 'Phòng chat',
+      roomAvatar: widget.roomAvatar,
+      roomType: widget.roomType,
+      communityId: widget.communityId,
+      pinnedMessage: _pinnedMessage,
+      messages: _messages,
+      onUnpinMessage: _pinnedMessage != null ? () => _togglePinMessage(_pinnedMessage!) : null,
+      onJumpToMessage: (id) => _jumpToMessage(id),
+    );
+  }
+
+  void _jumpToMessage(String messageId) {
+    final idx = _messages.indexWhere((m) => m.id == messageId);
+    if (idx != -1 && _scrollController.hasClients) {
+      _scrollController.animateTo(
+        idx * 60.0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   void _showMediaGallery(String url) {
@@ -555,62 +592,65 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => context.pop(),
         ),
-        title: Row(
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                CircleAvatar(
-                  radius: 19,
-                  backgroundColor: AppTheme.primaryLight,
-                  backgroundImage: widget.roomAvatar != null && widget.roomAvatar!.isNotEmpty
-                      ? NetworkImage(widget.roomAvatar!)
-                      : null,
-                  child: widget.roomAvatar == null || widget.roomAvatar!.isEmpty
-                      ? Text(
-                          title.characters.first.toUpperCase(),
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryDark),
-                        )
-                      : null,
-                ),
-                Positioned(
-                  bottom: -1,
-                  right: -1,
-                  child: Container(
-                    width: 11,
-                    height: 11,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF22C55E),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: colors.bgCard, width: 2),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        title: GestureDetector(
+          onTap: _openRoomSettings,
+          child: Row(
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  CircleAvatar(
+                    radius: 19,
+                    backgroundColor: AppTheme.primaryLight,
+                    backgroundImage: widget.roomAvatar != null && widget.roomAvatar!.isNotEmpty
+                        ? NetworkImage(widget.roomAvatar!)
+                        : null,
+                    child: widget.roomAvatar == null || widget.roomAvatar!.isEmpty
+                        ? Text(
+                            title.characters.first.toUpperCase(),
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryDark),
+                          )
+                        : null,
                   ),
-                  Text(
-                    _typingUser != null ? '$_typingUser đang soạn tin...' : 'Đang hoạt động',
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      color: _typingUser != null ? AppTheme.primary : colors.textMuted,
-                      fontWeight: _typingUser != null ? FontWeight.w600 : FontWeight.normal,
+                  Positioned(
+                    bottom: -1,
+                    right: -1,
+                    child: Container(
+                      width: 11,
+                      height: 11,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF22C55E),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: colors.bgCard, width: 2),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      _typingUser != null ? '$_typingUser đang soạn tin...' : 'Đang hoạt động',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: _typingUser != null ? AppTheme.primary : colors.textMuted,
+                        fontWeight: _typingUser != null ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           IconButton(
@@ -620,8 +660,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.info_outline_rounded, size: 22),
-            tooltip: 'Thông tin',
-            onPressed: () {},
+            tooltip: 'Tùy chọn & Thông báo',
+            onPressed: _openRoomSettings,
           ),
         ],
       ),
@@ -996,6 +1036,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         children: msg.reactions.map((r) {
                           return GestureDetector(
                             onTap: () => _reactToMessage(msg, r.emoji),
+                            onLongPress: () => ChatReactionDetailSheet.show(context, msg),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
