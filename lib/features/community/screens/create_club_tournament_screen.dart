@@ -378,7 +378,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                 keyboardType: TextInputType.number,
                 validator: (v) {
                   final n = int.tryParse(v ?? '');
-                  if (n == null || n < 2 || n > 32) return 'Từ 2-32 đội';
+                  if (n == null || n < 2 || n > 64) return 'Từ 2-64 đội';
                   return null;
                 },
                 style: TextStyle(color: colors.textPrimary),
