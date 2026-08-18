@@ -44,6 +44,7 @@ class Tournament {
   final String? registrationMode;
   final bool hideFeaturedCardText;
   final String? inviteCode;
+  final String? communityId;
   final bool isLite;
   final bool isRegistrationLocked;
   // Team sport (bóng đá): sân 5/7/11 → đội nhiều người
@@ -90,12 +91,19 @@ class Tournament {
     this.registrationMode,
     this.hideFeaturedCardText = false,
     this.inviteCode,
+    this.communityId,
     this.isLite = false,
     this.isRegistrationLocked = false,
     this.teamSize,
     this.minTeamSize,
     this.maxReserve,
   });
+
+  /// Club Lite is the intentionally minimal club flow. Public Quick still
+  /// uses the same backend flag for compatibility, but is managed as a full
+  /// tournament on the web and must not be routed to the Lite workspace.
+  bool get isClubLite =>
+      isLite && communityId != null && communityId!.isNotEmpty;
 
   factory Tournament.fromJson(Map<String, dynamic> json, String id) {
     // ─── Debug log ───
@@ -262,6 +270,7 @@ class Tournament {
       registrationMode: config['registrationMode']?.toString(),
       hideFeaturedCardText: config['hideFeaturedCardText'] == true,
       inviteCode: json['inviteCode']?.toString(),
+      communityId: (json['communityId'] ?? json['community_id'])?.toString(),
       // isLite = LOẠI GIẢI lite (nhanh). KHÔNG nhầm với configMode (cách tính điểm LITE/STRICT).
       isLite: json['isLite'] == true || config['isLite'] == true,
       isRegistrationLocked: json['isRegistrationLocked'] == true,
@@ -336,6 +345,7 @@ class Tournament {
       'isRegistrationLocked': isRegistrationLocked,
       if (registrationMode != null) 'registrationMode': registrationMode,
       if (inviteCode != null) 'inviteCode': inviteCode,
+      if (communityId != null) 'communityId': communityId,
     };
   }
 
@@ -378,6 +388,7 @@ class Tournament {
     String? registrationMode,
     bool? hideFeaturedCardText,
     String? inviteCode,
+    String? communityId,
     bool? isLite,
     bool? isRegistrationLocked,
     int? teamSize,
@@ -427,6 +438,7 @@ class Tournament {
       registrationMode: registrationMode ?? this.registrationMode,
       hideFeaturedCardText: hideFeaturedCardText ?? this.hideFeaturedCardText,
       inviteCode: inviteCode ?? this.inviteCode,
+      communityId: communityId ?? this.communityId,
       isLite: isLite ?? this.isLite,
       isRegistrationLocked: isRegistrationLocked ?? this.isRegistrationLocked,
     );

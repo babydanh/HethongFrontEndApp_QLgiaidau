@@ -28,6 +28,7 @@ import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/rank_tier_colors.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -271,7 +272,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       body: profileAsync.when(
         data: (profile) => _buildBody(context, profile, isDark),
         loading: () => const ProfileShimmerLoading(),
-        error: (err, _) => _buildError(context, err.toString()),
+        error: (err, _) => _buildError(
+          context,
+          ErrorParser.parse(err, 'Không thể tải thông tin hồ sơ.'),
+        ),
       ),
       bottomNavigationBar: FloatingBottomNav(
         currentIndex: 2,
@@ -2234,7 +2238,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       },
       child: InkWell(
         onTap: () {
-          if (t.isLite == true) {
+          if (t.isClubLite) {
             context.push('/lite-manage/${t.id}');
           } else {
             _showAdvancedManagementUnsupported(context);
@@ -2263,12 +2267,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      t.isLite == true
+                      t.isClubLite
                           ? 'Giải nhanh (Lite) • Quản lý trên app'
                           : 'Giải nâng cao • Quản lý đầy đủ',
                       style: TextStyle(
                         fontSize: 9,
-                        color: t.isLite == true
+                        color: t.isClubLite
                             ? const Color(0xFF059669)
                             : AppTheme.primary,
                         fontWeight: FontWeight.w600,

@@ -300,6 +300,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
+      // ─── Create Tournament Standalone (Must be placed before /tournaments/:id) ───
+      GoRoute(
+        path: '/tournaments/create',
+        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
+      ),
+      GoRoute(
+        path: '/tournament/create',
+        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
+      ),
+      GoRoute(
+        path: '/tournament-create',
+        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
+      ),
+
       // ─── Public Tournament Intro Screen (Both /intro/:id, /tournament/:id and /tournaments/:id) ───
       GoRoute(
         path: '/intro/:id',
@@ -415,12 +429,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/club/create',
         builder: (context, state) => const CreateClubScreen(),
-      ),
-
-      // ─── Create Tournament Standalone ───
-      GoRoute(
-        path: '/tournaments/create',
-        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
       ),
 
       // ─── Club Detail (Both /club/:id and /communities/:id and /clubs/:id) ───

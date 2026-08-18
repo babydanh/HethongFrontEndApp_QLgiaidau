@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
 
 /// Tạo giải đấu Lite trong câu lạc bộ
 /// Gọi POST /tournaments/lite — đơn giản, không cần categoryId UUID
@@ -32,6 +33,12 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   String _selectedSport = AppConstants.sportBadminton;
   String _selectedFormat = AppConstants.formatSingles;
   String _selectedBracket = AppConstants.bracketSingleElimination;
+  DateTime? _startDate;
+  bool _isRecurring = false;
+  String _recurringFrequency = 'WEEKLY';
+  int _recurringDayOfWeek = 6;
+  TimeOfDay _recurringTime = const TimeOfDay(hour: 18, minute: 0);
+  int _recurringAdvanceDays = 3;
   bool _isLoading = false;
   bool _isRanked = false;
 
@@ -83,6 +90,14 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
         'description': _descCtrl.text.trim(),
         'isRanked': _isRanked,
+        if (_startDate != null) 'startDate': _startDate!.toIso8601String(),
+        if (_isRecurring) ...{
+          'isRecurring': true,
+          'recurringFrequency': _recurringFrequency,
+          'recurringDayOfWeek': _recurringDayOfWeek,
+          'recurringTimeOfDay': _formatTime(_recurringTime),
+          'recurringAdvanceDays': _recurringAdvanceDays,
+        },
       };
 
       _log.info('Tạo giải Lite trong CLB: ${body['name']}');
@@ -140,6 +155,42 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không thể mở trang quản lý trên web.')));
     }
   }
+
+  Future<void> _pickStartDate() async {
+    final today = DateTime.now();
+    // Lite chỉ nhập ngày, không nhập giờ. Backend sẽ tự đặt hạn đăng ký
+    // trước giờ bắt đầu một tiếng, vì vậy ngày bắt đầu phải từ ngày mai để
+    // không tạo ra hạn đăng ký đã nằm trong quá khứ.
+    final firstAvailableDate = DateTime(today.year, today.month, today.day + 1);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _startDate ?? firstAvailableDate,
+      firstDate: firstAvailableDate,
+      lastDate: DateTime(today.year + 3, 12, 31),
+      helpText: 'Chọn ngày bắt đầu giải',
+      cancelText: 'Hủy',
+      confirmText: 'Chọn ngày',
+    );
+    if (picked != null && mounted) {
+      setState(() => _startDate = DateTime(picked.year, picked.month, picked.day));
+    }
+  }
+
+  Future<void> _pickRecurringTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _recurringTime,
+      helpText: 'Chọn giờ tự động tạo giải',
+      cancelText: 'Hủy',
+      confirmText: 'Chọn giờ',
+    );
+    if (picked != null && mounted) setState(() => _recurringTime = picked);
+  }
+
+  String _formatTime(TimeOfDay time) =>
+      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+
+  String _formatRecurringTime(TimeOfDay time) => MaterialLocalizations.of(context).formatTimeOfDay(time);
 
   @override
   Widget build(BuildContext context) {
@@ -199,6 +250,124 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
               _label('Thể thức thi đấu', colors),
               const SizedBox(height: 6),
               _buildBracketSelector(),
+              const SizedBox(height: 20),
+
+              // ─── Ngày bắt đầu ───
+              _label('Ngày bắt đầu (tuỳ chọn)', colors),
+              const SizedBox(height: 6),
+              InkWell(
+                onTap: _pickStartDate,
+                borderRadius: BorderRadius.circular(12),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    hintText: 'Chọn ngày bắt đầu giải',
+                    hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
+                    prefixIcon: const Icon(Icons.calendar_today_rounded, size: 18),
+                    suffixIcon: _startDate == null
+                        ? null
+                        : IconButton(
+                            tooltip: 'Xóa ngày',
+                            icon: const Icon(Icons.close_rounded, size: 18),
+                            onPressed: () => setState(() => _startDate = null),
+                          ),
+                  ),
+                  child: Text(
+                    _startDate == null
+                        ? 'Chưa chọn'
+                        : DateFormat('dd/MM/yyyy').format(_startDate!),
+                    style: TextStyle(
+                      color: _startDate == null ? colors.textMuted : colors.textPrimary,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Có thể bổ sung hoặc thay đổi lịch trong trang quản lý sau khi tạo.',
+                style: TextStyle(color: colors.textMuted, fontSize: 11, height: 1.3),
+              ),
+              const SizedBox(height: 20),
+
+              // ─── Tạo định kỳ ───
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: _isRecurring ? AppTheme.primary.withValues(alpha: 0.06) : colors.bgSurface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _isRecurring ? AppTheme.primary : colors.border),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Tự động tạo giải định kỳ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                              const SizedBox(height: 3),
+                              Text('Cron sẽ tự tạo giải mới và báo cho thành viên CLB.', style: TextStyle(fontSize: 11, color: colors.textMuted, height: 1.3)),
+                            ],
+                          ),
+                        ),
+                        Switch.adaptive(value: _isRecurring, onChanged: (value) => setState(() => _isRecurring = value), activeTrackColor: AppTheme.primary),
+                      ],
+                    ),
+                    if (_isRecurring) ...[
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        initialValue: _recurringFrequency,
+                        decoration: const InputDecoration(labelText: 'Tần suất'),
+                        items: const [
+                          DropdownMenuItem(value: 'DAILY', child: Text('Mỗi ngày')),
+                          DropdownMenuItem(value: 'WEEKLY', child: Text('Mỗi tuần')),
+                          DropdownMenuItem(value: 'BIWEEKLY', child: Text('Mỗi 2 tuần')),
+                          DropdownMenuItem(value: 'MONTHLY', child: Text('Mỗi tháng')),
+                        ],
+                        onChanged: (value) => setState(() => _recurringFrequency = value ?? _recurringFrequency),
+                      ),
+                      if (_recurringFrequency == 'WEEKLY' || _recurringFrequency == 'BIWEEKLY') ...[
+                        const SizedBox(height: 10),
+                        DropdownButtonFormField<int>(
+                          initialValue: _recurringDayOfWeek,
+                          decoration: const InputDecoration(labelText: 'Ngày trong tuần'),
+                          items: const [
+                            DropdownMenuItem(value: 1, child: Text('Thứ 2')),
+                            DropdownMenuItem(value: 2, child: Text('Thứ 3')),
+                            DropdownMenuItem(value: 3, child: Text('Thứ 4')),
+                            DropdownMenuItem(value: 4, child: Text('Thứ 5')),
+                            DropdownMenuItem(value: 5, child: Text('Thứ 6')),
+                            DropdownMenuItem(value: 6, child: Text('Thứ 7')),
+                            DropdownMenuItem(value: 0, child: Text('Chủ nhật')),
+                          ],
+                          onChanged: (value) => setState(() => _recurringDayOfWeek = value ?? _recurringDayOfWeek),
+                        ),
+                      ],
+                      const SizedBox(height: 10),
+                      InkWell(
+                        onTap: _pickRecurringTime,
+                        borderRadius: BorderRadius.circular(12),
+                        child: InputDecorator(
+                          decoration: const InputDecoration(labelText: 'Giờ tự động tạo'),
+                          child: Row(children: [
+                            const Icon(Icons.schedule_rounded, size: 18),
+                            const SizedBox(width: 8),
+                            Text(_formatRecurringTime(_recurringTime)),
+                          ]),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      DropdownButtonFormField<int>(
+                        initialValue: _recurringAdvanceDays,
+                        decoration: const InputDecoration(labelText: 'Tạo trước ngày thi đấu'),
+                        items: List.generate(8, (days) => DropdownMenuItem(value: days, child: Text(days == 0 ? 'Ngay ngày thi đấu' : 'Trước $days ngày'))),
+                        onChanged: (value) => setState(() => _recurringAdvanceDays = value ?? _recurringAdvanceDays),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
               const SizedBox(height: 20),
 
               // ─── Số đội tối đa ───

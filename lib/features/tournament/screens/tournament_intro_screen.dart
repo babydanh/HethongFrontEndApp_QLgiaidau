@@ -263,7 +263,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         padding: const EdgeInsets.only(bottom: 160),
-                        child: tournament.isLite
+                        child: tournament.isClubLite
                             ? _buildLiteTeamList(teams)
                             : TeamsTab(
                                 teams: teams,
@@ -446,7 +446,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   Future<void> _shareTournament(Tournament tournament) async {
     final l10n = AppLocalizations.of(context)!;
     final shareUrl =
-        tournament.isLite &&
+        tournament.isClubLite &&
             tournament.inviteCode != null &&
             tournament.inviteCode!.isNotEmpty
         ? 'https://sporto.asia/lite/tournaments/join/${Uri.encodeComponent(tournament.inviteCode!)}'
@@ -458,7 +458,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           '${tournament.locationAddress ?? l10n.vietnam} • ${tournament.category ?? tournament.sport}',
       webUrl: shareUrl,
       imageUrl: tournament.logoUrl ?? tournament.bannerUrl,
-      badgeText: tournament.isLite
+      badgeText: tournament.isClubLite
           ? l10n.liteTournament
           : l10n.advancedTournament,
     );
@@ -623,7 +623,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   context.push('/login');
                   return;
                 }
-                if (tournament.isLite &&
+                if (tournament.isClubLite &&
                     tournament.inviteCode != null &&
                     tournament.inviteCode!.isNotEmpty) {
                   context.push('/lite-join/${tournament.inviteCode}');

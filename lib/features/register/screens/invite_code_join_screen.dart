@@ -40,7 +40,7 @@ class _InviteCodeJoinScreenState extends ConsumerState<InviteCodeJoinScreen> {
       return;
     }
     final code = widget.inviteCode.trim();
-    final route = t.isLite
+    final route = t.isClubLite
         ? '/lite-join/$code'
         : '/register/${t.id}?invite=$code';
     context.pushReplacement(route);

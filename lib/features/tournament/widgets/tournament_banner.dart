@@ -857,7 +857,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                                   imageUrl:
                                       tournament.logoUrl ??
                                       tournament.bannerUrl,
-                                  badgeText: tournament.isLite
+                                  badgeText: tournament.isClubLite
                                       ? l10n.liteTournament
                                       : l10n.advancedTournament,
                                 );

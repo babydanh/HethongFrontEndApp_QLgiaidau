@@ -17,8 +17,11 @@ class ApiUserRepository implements IUserRepository {
       final response = await _dioClient.dio.get('/users/profile');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data['data'] as Map<String, dynamic>? ?? response.data;
-        return UserProfile.fromJson(data);
+        final raw = response.data;
+        if (raw is Map) {
+          final data = raw['data'] is Map ? raw['data'] as Map : raw;
+          return UserProfile.fromJson(Map<String, dynamic>.from(data));
+        }
       }
 
       throw Exception('Không thể lấy thông tin người dùng');
@@ -44,8 +47,11 @@ class ApiUserRepository implements IUserRepository {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final result = response.data['data'] as Map<String, dynamic>? ?? response.data;
-        return UserProfile.fromJson(result);
+        final raw = response.data;
+        if (raw is Map) {
+          final result = raw['data'] is Map ? raw['data'] as Map : raw;
+          return UserProfile.fromJson(Map<String, dynamic>.from(result));
+        }
       }
 
       throw Exception('Cập nhật thông tin thất bại');
@@ -83,8 +89,11 @@ class ApiUserRepository implements IUserRepository {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final result = response.data['data'] as Map<String, dynamic>? ?? response.data;
-        return UserProfile.fromJson(result);
+        final raw = response.data;
+        if (raw is Map) {
+          final result = raw['data'] is Map ? raw['data'] as Map : raw;
+          return UserProfile.fromJson(Map<String, dynamic>.from(result));
+        }
       }
 
       throw Exception('Tải ảnh đại diện thất bại');
@@ -122,8 +131,11 @@ class ApiUserRepository implements IUserRepository {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final result = response.data['data'] as Map<String, dynamic>? ?? response.data;
-        return UserProfile.fromJson(result);
+        final raw = response.data;
+        if (raw is Map) {
+          final result = raw['data'] is Map ? raw['data'] as Map : raw;
+          return UserProfile.fromJson(Map<String, dynamic>.from(result));
+        }
       }
 
       throw Exception('Tải ảnh bìa thất bại');
@@ -145,8 +157,11 @@ class ApiUserRepository implements IUserRepository {
     try {
       final response = await _dioClient.dio.get('/users/$userId/public');
       if (response.statusCode == 200) {
-        final data = response.data['data'] as Map<String, dynamic>? ?? response.data;
-        return UserPublicProfile.fromJson(data);
+        final raw = response.data;
+        if (raw is Map) {
+          final data = raw['data'] is Map ? raw['data'] as Map : raw;
+          return UserPublicProfile.fromJson(Map<String, dynamic>.from(data));
+        }
       }
       throw Exception('Không thể tải thông tin người dùng');
     } catch (e, stack) {
@@ -198,8 +213,10 @@ class ApiUserRepository implements IUserRepository {
       final response = await _dioClient.dio.get('/users/search', queryParameters: {'q': query});
       if (response.statusCode == 200) {
         final raw = response.data;
-        final data = raw is Map ? (raw['data'] as List<dynamic>? ?? []) : (raw as List<dynamic>? ?? []);
-        return data.map((e) => UserSearchResult.fromJson(e as Map<String, dynamic>)).toList();
+        final list = raw is Map
+            ? (raw['data'] as List<dynamic>? ?? [])
+            : (raw is List ? raw : []);
+        return list.whereType<Map<String, dynamic>>().map((e) => UserSearchResult.fromJson(e)).toList();
       }
       return [];
     } catch (e, stack) {
@@ -259,6 +276,13 @@ class ApiUserRepository implements IUserRepository {
     if (responseData == null) {
       return fallback;
     }
+    if (responseData is! Map) {
+      if (responseData is String && responseData.isNotEmpty) {
+        return responseData;
+      }
+      return fallback;
+    }
+
     final rawMessage = responseData['message'];
     String msg;
     if (rawMessage is List && rawMessage.isNotEmpty) {

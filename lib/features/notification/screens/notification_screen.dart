@@ -35,6 +35,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     Future.microtask(() {
       if (!mounted) return;
       ref.read(notificationStateProvider.notifier).loadPage(1);
+      ref.invalidate(myCommunityInvitesProvider);
       // Đồng bộ lại badge số chưa đọc mỗi lần mở màn hình thông báo.
       ref.invalidate(unreadCountProvider);
     });
@@ -414,8 +415,8 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     if (items.isEmpty) return const SizedBox.shrink();
 
     items.sort((a, b) {
-      final aLite = a.tournament.isLite ? 0 : 1;
-      final bLite = b.tournament.isLite ? 0 : 1;
+      final aLite = a.tournament.isClubLite ? 0 : 1;
+      final bLite = b.tournament.isClubLite ? 0 : 1;
       if (aLite != bLite) return aLite.compareTo(bLite);
       return a.tournament.name.compareTo(b.tournament.name);
     });
@@ -457,7 +458,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                     children: [
                       Row(
                         children: [
-                          if (item.tournament.isLite)
+                          if (item.tournament.isClubLite)
                             Padding(
                               padding: const EdgeInsets.only(right: 6),
                               child: Icon(
@@ -510,6 +511,18 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
 
   Widget _buildCard(AppNotification notif, AppColorsExtension colors, AppLocalizations l10n) {
     final isInvite = notif.isInvite;
+    final pendingInvitesAsync = ref.watch(myCommunityInvitesProvider);
+    final pendingCommunityIds = pendingInvitesAsync.asData?.value
+        .map((inv) => inv.communityId)
+        .toSet();
+
+    final isCommunityInvite =
+        notif.type == 'CLUB_INVITE' || notif.type == 'COMMUNITY_INVITED';
+    final isHandled = _handledInviteIds.contains(notif.id) ||
+        (isCommunityInvite &&
+            pendingCommunityIds != null &&
+            notif.communityId != null &&
+            !pendingCommunityIds.contains(notif.communityId));
 
     return GestureDetector(
       onTap: () async {
@@ -612,7 +625,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             ),
             if (isInvite) ...[
               const SizedBox(height: 12),
-              if (_handledInviteIds.contains(notif.id)) ...[
+              if (isHandled) ...[
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(

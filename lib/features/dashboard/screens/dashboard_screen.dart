@@ -503,8 +503,8 @@ class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> 
 
     final allTournaments = tournamentMap.values.toList()
       ..sort((a, b) {
-        if (a.isLite == b.isLite) return 0;
-        return a.isLite ? -1 : 1;
+        if (a.isClubLite == b.isClubLite) return 0;
+        return a.isClubLite ? -1 : 1;
       });
 
     // Filter by search query
@@ -695,8 +695,8 @@ class _QuickActions extends ConsumerWidget {
           const SizedBox(height: 16),
           _QuickActionRow(
             icon: Icons.bolt_rounded,
-            title: l10n.dashboard_createLite,
-            subtitle: l10n.dashboard_createLiteSub,
+            title: 'Tạo giải nhanh',
+            subtitle: 'Tạo nhanh trên app, quản lý đầy đủ trên web',
             onTap: () => _openLiteCreation(context),
           ),
           const Divider(height: 24),
@@ -986,6 +986,7 @@ class _TournamentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
+    final isClubLite = tournament.isClubLite;
 
     String badgeText = l10n.dashboard_registered;
     Color badgeBg = const Color(0xFFECFDF5);
@@ -1007,7 +1008,7 @@ class _TournamentTile extends StatelessWidget {
     return InkWell(
         onTap: () {
           if (isOwner || isCoOrg) {
-            if (tournament.isLite) {
+            if (isClubLite) {
               context.push('/lite-manage/${tournament.id}');
             } else {
               showDialog<void>(
@@ -1078,12 +1079,12 @@ class _TournamentTile extends StatelessWidget {
                    ),
                   const SizedBox(height: 2),
                   Text(
-                    tournament.isLite
+                    isClubLite
                         ? l10n.dashboard_liteDesc
-                        : l10n.dashboard_advancedDesc,
+                        : 'Giải nhanh • Quản lý đầy đủ trên web',
                     style: TextStyle(
                       fontSize: 9,
-                      color: tournament.isLite
+                      color: isClubLite
                           ? const Color(0xFF059669)
                           : AppTheme.primary,
                       fontWeight: FontWeight.w600,

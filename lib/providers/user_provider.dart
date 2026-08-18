@@ -25,8 +25,13 @@ final provincesProvider = FutureProvider<List<Province>>((ref) async {
   try {
     final dio = ref.read(dioProvider);
     final response = await dio.get('/regions/provinces');
-    final List<dynamic> data = response.data['data'] ?? response.data;
-    return data.map((json) => Province.fromJson(json)).toList();
+    final raw = response.data;
+    final payload = raw is Map ? (raw['data'] ?? raw) : raw;
+    final List<dynamic> data = payload is List ? payload : [];
+    return data
+        .whereType<Map<String, dynamic>>()
+        .map((json) => Province.fromJson(json))
+        .toList();
   } catch (_) {
     return [];
   }
@@ -35,7 +40,7 @@ final provincesProvider = FutureProvider<List<Province>>((ref) async {
 final userProfileProvider = FutureProvider<UserProfile>((ref) async {
   final authState = ref.watch(authProvider);
   if (!authState.isAuthenticated) {
-    return UserProfile(id: '', fullName: 'Khách', email: '');
+    return const UserProfile(id: '', fullName: 'Khách', email: '');
   }
 
   try {
@@ -85,17 +90,14 @@ final userRankingsProvider = FutureProvider<List<PlayerRanking>>((ref) async {
     final dio = ref.read(dioProvider);
     final response = await dio.get('/rankings/user/$userId');
 
-    // response.data là Map (Dio tự parse JSON)
     final raw = response.data;
-    if (raw is! Map<String, dynamic>) return [];
+    if (raw is! Map) return [];
 
-    // TransformInterceptor: { data: ..., message, statusCode }
-    final inner = raw['data'] as Map<String, dynamic>? ?? raw;
-
-    // inner = { publicRanks: [...], communityRanks: [...] }
+    final inner = raw['data'] is Map ? raw['data'] as Map : raw;
     final list = inner['publicRanks'] as List<dynamic>? ?? [];
     return list
-        .map((e) => PlayerRanking.fromJson(e as Map<String, dynamic>))
+        .whereType<Map<String, dynamic>>()
+        .map((e) => PlayerRanking.fromJson(e))
         .toList();
   } catch (e) {
     return [];
