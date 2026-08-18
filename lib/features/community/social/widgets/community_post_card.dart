@@ -237,7 +237,12 @@ class CommunityPostCard extends ConsumerWidget {
           if (post.poll != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: CommunityPollWidget(communityId: communityId, poll: post.poll!),
+              child: CommunityPollWidget(
+                communityId: communityId,
+                poll: post.poll!,
+                tournamentId: post.tournamentId,
+                tournamentInviteCode: post.tournamentInviteCode,
+              ),
             ),
 
           // ── Topic Tags ──

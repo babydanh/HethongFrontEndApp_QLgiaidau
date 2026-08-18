@@ -351,6 +351,13 @@ class ApiTournamentRepository implements ITournamentRepository {
   }
 
   @override
+  Future<void> joinLite(String inviteCode) async {
+    final code = inviteCode.trim();
+    if (code.isEmpty) throw const FormatException('Mã tham gia giải không hợp lệ.');
+    await _dioClient.dio.post('/tournaments/lite/join/$code');
+  }
+
+  @override
   Future<FootballRosterStatus> getFootballRosterStatus({required String tournamentId, required String participantId}) async {
     final response = await _dioClient.dio.get('/tournaments/$tournamentId/participants/$participantId/football-roster');
     final body = response.data;

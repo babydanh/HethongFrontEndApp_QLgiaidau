@@ -1,14 +1,17 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CommunityPollWidget extends ConsumerStatefulWidget {
   final String communityId;
   final CommunityPollModel poll;
+  final String? tournamentId;
+  final String? tournamentInviteCode;
 
-  const CommunityPollWidget({super.key, required this.communityId, required this.poll});
+  const CommunityPollWidget({super.key, required this.communityId, required this.poll, this.tournamentId, this.tournamentInviteCode});
 
   @override
   ConsumerState<CommunityPollWidget> createState() => _CommunityPollWidgetState();
@@ -27,6 +30,16 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
     try {
       final updated = await ref.read(communitySocialRepositoryProvider).votePoll(widget.communityId, _poll.id, optionId);
       if (mounted) setState(() => _poll = updated);
+      final selected = _poll.options.where((option) => option.id == optionId).firstOrNull;
+      final isRegistrationOption = selected?.isVoted == true && (selected?.optionText.contains('Có tham gia') == true || selected?.optionText.contains('Đăng ký') == true || selected?.optionText.contains('✅') == true);
+      if (isRegistrationOption && widget.tournamentId != null && widget.tournamentInviteCode != null) {
+        try {
+          await ref.read(tournamentRepositoryProvider).joinLite(widget.tournamentInviteCode!);
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã bình chọn và đăng ký tham gia giải.')));
+        } catch (_) {
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã ghi nhận bình chọn. Bạn có thể đã đăng ký giải này trước đó.')));
+        }
+      }
     } catch (_) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không thể ghi nhận bình chọn.')));
     } finally { if (mounted) setState(() => _busy = false); }
@@ -83,4 +96,3 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
     );
   }
 }
-

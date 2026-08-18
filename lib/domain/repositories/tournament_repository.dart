@@ -7,6 +7,7 @@ abstract class ITournamentRepository {
   Future<Tournament> create(Tournament tournament);
   Future<Tournament?> getById(String id, {String? inviteCode});
   Future<Tournament?> getByInviteCode(String code);
+  Future<void> joinLite(String inviteCode);
   Future<TournamentWorkspace> getMyWorkspace();
   Future<void> respondToRefereeInvite({
     required String tournamentId,

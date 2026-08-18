@@ -105,6 +105,7 @@ class CommunityPostModel {
   final String text;
   final String? tournamentId;
   final String? tournamentName;
+  final String? tournamentInviteCode;
   final String type;
   final List<String> mediaUrls;
   final List<String> topicTags;
@@ -125,6 +126,7 @@ class CommunityPostModel {
     this.authorAvatarUrl,
     this.tournamentId,
     this.tournamentName,
+    this.tournamentInviteCode,
     this.type = 'NORMAL',
     this.mediaUrls = const [],
     this.topicTags = const [],
@@ -165,6 +167,7 @@ class CommunityPostModel {
           '',
       tournamentId: _asString(json['tournamentId'] ?? tournament['id']),
       tournamentName: _asString(json['tournamentName'] ?? tournament['name']),
+      tournamentInviteCode: _asString(json['tournamentInviteCode'] ?? tournament['inviteCode'] ?? tournament['invite_code']),
       type: _asString(json['type']) ?? 'NORMAL',
       mediaUrls: _asStringList(rawMedia),
       topicTags: _asStringList(rawTopics),
