@@ -259,14 +259,15 @@ class _CommunityPostComposerSheetState
   ) {
     final engine = _mentionEngine;
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMD),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _AuthorRow(name: widget.authorName, avatarUrl: widget.authorAvatarUrl),
+          const SizedBox(height: 12),
           if (engine != null && engine.mentionedMembers.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: AppTheme.spacingSM),
+              padding: const EdgeInsets.only(bottom: 8),
               child: Wrap(
                 spacing: 6,
                 runSpacing: 6,
@@ -293,6 +294,11 @@ class _CommunityPostComposerSheetState
             maxLines: null,
             minLines: 4,
             maxLength: 5000,
+            style: TextStyle(
+              fontSize: 16,
+              height: 1.4,
+              color: colors.textPrimary,
+            ),
             textInputAction: TextInputAction.newline,
             onSubmitted: (_) {
               final candidates =
@@ -304,10 +310,20 @@ class _CommunityPostComposerSheetState
                 setState(() {});
               }
             },
-            decoration: const InputDecoration(
-              hintText:
-                  'Bạn muốn chia sẻ điều gì với các thành viên? (Gõ @ để nhắc tên)',
+            decoration: InputDecoration(
+              hintText: 'Bạn muốn chia sẻ điều gì với các thành viên? (Gõ @ để nhắc tên)',
+              hintStyle: TextStyle(
+                fontSize: 15,
+                color: colors.textMuted,
+                height: 1.4,
+              ),
               border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              errorBorder: InputBorder.none,
+              disabledBorder: InputBorder.none,
+              focusedErrorBorder: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 4),
               counterText: '',
             ),
           ),
@@ -330,7 +346,7 @@ class _CommunityPostComposerSheetState
             ),
           if (_isUploading || _imageUrls.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: AppTheme.spacingSM),
+              padding: const EdgeInsets.only(top: 8),
               child: ComposerImagePreviewGrid(
                 urls: _imageUrls,
                 isUploading: _isUploading,
@@ -340,7 +356,7 @@ class _CommunityPostComposerSheetState
             ),
           if (_pollOpen)
             Padding(
-              padding: const EdgeInsets.only(top: AppTheme.spacingSM),
+              padding: const EdgeInsets.only(top: 8),
               child: CommunityPollBuilder(
                 questionController: _pollQuestionCtrl,
                 optionControllers: _pollOptions,
@@ -361,40 +377,60 @@ class _CommunityPostComposerSheetState
                 onCancel: () => setState(() => _pollOpen = false),
               ),
             ),
-          const SizedBox(height: AppTheme.spacingSM),
+          const SizedBox(height: 12),
         ],
       ),
     );
   }
 
-  Widget _buildActionBar(AppColorsExtension colors) => DecoratedBox(
+  Widget _buildActionBar(AppColorsExtension colors) => Container(
+        margin: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: colors.borderLight)),
+          color: colors.bgSurface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.borderLight),
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Row(children: [
-            TextButton.icon(
-              onPressed: _isUploading ? null : _pickImages,
-              icon: Icon(Icons.photo_library_outlined,
-                  size: 20, color: AppTheme.primary),
-              label: const Text('Ảnh', style: TextStyle(fontSize: 13)),
+        child: Row(
+          children: [
+            Text(
+              'Thêm vào bài viết',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: colors.textPrimary,
+              ),
             ),
-            TextButton.icon(
+            const Spacer(),
+            IconButton(
+              icon: const Icon(
+                Icons.photo_library_rounded,
+                color: Color(0xFF45BD62),
+                size: 22,
+              ),
+              tooltip: 'Ảnh',
+              onPressed: _isUploading ? null : _pickImages,
+            ),
+            IconButton(
+              icon: Icon(
+                Icons.poll_rounded,
+                color: _pollOpen ? AppTheme.primary : const Color(0xFFF7B125),
+                size: 22,
+              ),
+              tooltip: 'Bình chọn',
               onPressed: () => setState(() => _pollOpen = !_pollOpen),
-              icon: Icon(Icons.poll_rounded,
-                  size: 20,
-                  color: _pollOpen ? AppTheme.primary : colors.textSecondary),
-              label: const Text('Bình chọn', style: TextStyle(fontSize: 13)),
             ),
             if (widget.canMention)
-              TextButton.icon(
+              IconButton(
+                icon: const Icon(
+                  Icons.alternate_email_rounded,
+                  color: Color(0xFF1877F2),
+                  size: 22,
+                ),
+                tooltip: 'Gắn thẻ',
                 onPressed: _mentionEngine?.insertToken,
-                icon: Icon(Icons.alternate_email_rounded,
-                    size: 20, color: AppTheme.primary),
-                label: const Text('Gắn thẻ', style: TextStyle(fontSize: 13)),
               ),
-          ]),
+          ],
         ),
       );
 }
@@ -407,23 +443,103 @@ class _AuthorRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      CircleAvatar(
-        radius: 18,
-        backgroundImage: avatarUrl == null ? null : NetworkImage(avatarUrl!),
-        child: avatarUrl == null
-            ? Text(name.isNotEmpty ? name[0].toUpperCase() : '?')
-            : null,
-      ),
-      const SizedBox(width: 10),
-      Expanded(
-        child: Text(
-          name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w800),
+    final colors = context.colors;
+    final cleanAvatarUrl = avatarUrl?.trim();
+    final hasAvatar = cleanAvatarUrl != null && cleanAvatarUrl.isNotEmpty;
+    final initial = (name.trim().isNotEmpty ? name.trim()[0] : 'U').toUpperCase();
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppTheme.primary.withValues(alpha: 0.12),
+            border: Border.all(
+              color: colors.borderLight.withValues(alpha: 0.6),
+              width: 1,
+            ),
+          ),
+          child: ClipOval(
+            child: hasAvatar
+                ? Image.network(
+                    cleanAvatarUrl,
+                    width: 42,
+                    height: 42,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  )
+                : Center(
+                    child: Text(
+                      initial,
+                      style: const TextStyle(
+                        color: AppTheme.primary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+          ),
         ),
-      ),
-    ]);
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                name.isNotEmpty ? name : 'Bạn',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colors.bgSurface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: colors.borderLight),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.groups_rounded,
+                      size: 13,
+                      color: colors.textSecondary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Thành viên CLB',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }

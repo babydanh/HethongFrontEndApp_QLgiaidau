@@ -29,40 +29,58 @@ class ComposerSheetHeader extends StatelessWidget {
           width: 36,
           height: 4,
           decoration: BoxDecoration(
-            color: colors.border,
+            color: colors.borderLight,
             borderRadius: BorderRadius.circular(4),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.fromLTRB(6, 4, 14, 8),
           child: Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.close_rounded),
+                icon: const Icon(Icons.close_rounded, size: 22),
                 onPressed: onClose,
               ),
               const Expanded(
                 child: Text(
                   'Tạo bài viết',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
               ),
-              TextButton(
+              FilledButton(
                 onPressed: isSubmitting ? null : onSubmit,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
                 child: isSubmitting
                     ? const SizedBox.square(
-                        dimension: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        dimension: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Text(
                         'Đăng',
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
                       ),
               ),
             ],
           ),
         ),
+        Divider(height: 1, thickness: 0.8, color: colors.borderLight),
+        const SizedBox(height: 12),
       ],
     );
   }

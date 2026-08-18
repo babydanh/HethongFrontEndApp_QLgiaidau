@@ -40,9 +40,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   late TabController _tabController;
   CommunityMemberModel? _myMembership;
   bool _isJoinLoading = false;
-  bool _isFollowBusy = false;
-  bool?
-  _followOverride; // P2E.2: ghi đè local khi backend chưa trả state follow
   String _tournamentStatusFilter = 'ALL';
   String _tournamentTypeFilter = 'ALL';
   String _tournamentSportFilter = 'ALL';
@@ -292,114 +289,26 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     AppColorsExtension colors,
     AppLocalizations l10n,
   ) {
-    final following =
-        _followOverride ??
-        (ref.watch(isFollowingProvider(club.id)).value ?? false);
+    if (_myMembership?.status != 'JOINED') {
+      return const SizedBox.shrink();
+    }
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (_myMembership?.status == 'JOINED') ...[
-          IconButton(
-            onPressed: () {
-              final name = Uri.encodeComponent(club.name);
-              context.push('/club/${club.id}/chat?name=$name');
-            },
-            tooltip: 'Trò chuyện CLB',
-            icon: const Icon(
-              Icons.forum_outlined,
-              color: AppTheme.primary,
-              size: 22,
-            ),
-          ),
-          IconButton(
-            onPressed: () => _showNotificationPreferenceSheet(context, club),
-            tooltip: 'Cài đặt thông báo CLB',
-            icon: Icon(
-              _notificationPref == 'MUTED'
-                  ? Icons.notifications_off_outlined
-                  : _notificationPref == 'MENTIONS_ONLY'
-                      ? Icons.alternate_email_rounded
-                      : Icons.notifications_active_outlined,
-              color: _notificationPref == 'MUTED'
-                  ? colors.textMuted
-                  : _notificationPref == 'MENTIONS_ONLY'
-                      ? const Color(0xFFD97706)
-                      : AppTheme.primary,
-              size: 22,
-            ),
-          ),
-        ],
         IconButton(
-          onPressed: _isFollowBusy
-              ? null
-              : () => _toggleClubFollow(club, following),
-          tooltip: following ? l10n.club_unfollow : l10n.club_follow,
-          icon: _isFollowBusy
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppTheme.primary,
-                  ),
-                )
-              : Icon(
-                  following
-                      ? Icons.bookmark_rounded
-                      : Icons.bookmark_border_rounded,
-                  color: following ? AppTheme.primary : colors.textMuted,
-                  size: 22,
-                ),
+          onPressed: () {
+            final name = Uri.encodeComponent(club.name);
+            context.push('/club/${club.id}/chat?name=$name');
+          },
+          tooltip: 'Trò chuyện CLB',
+          icon: const Icon(
+            Icons.forum_outlined,
+            color: AppTheme.primary,
+            size: 22,
+          ),
         ),
       ],
     );
-  }
-
-  Future<void> _toggleClubFollow(
-    Community club,
-    bool currentlyFollowing,
-  ) async {
-    final l10n = AppLocalizations.of(context)!;
-    final auth = ref.read(authProvider);
-    if (!auth.isAuthenticated) {
-      context.go('/login');
-      return;
-    }
-    if (_isFollowBusy) return;
-    setState(() => _isFollowBusy = true);
-    try {
-      final repo = ref.read(communityRepositoryProvider);
-      final ok = currentlyFollowing
-          ? await repo.unfollowCommunity(club.id)
-          : await repo.followCommunity(club.id);
-      if (!mounted) return;
-      if (ok) {
-        setState(() => _followOverride = !currentlyFollowing);
-        ref.invalidate(isFollowingProvider(club.id));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              currentlyFollowing
-                  ? l10n.club_unfollowSuccess
-                  : l10n.club_followSuccess,
-            ),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.club_actionError)));
-      }
-    } catch (e, stack) {
-      _log.error('Lỗi đổi trạng thái theo dõi CLB', e, stack);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.club_actionError)));
-      }
-    } finally {
-      if (mounted) setState(() => _isFollowBusy = false);
-    }
   }
 
   @override

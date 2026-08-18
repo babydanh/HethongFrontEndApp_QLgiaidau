@@ -79,11 +79,17 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
               ? isJoined
               : settings.memberTaggingPolicy == 'ADMINS' &&
                     canManageMemberTags);
+    final profile = ref.read(userProfileProvider).asData?.value;
+    final authorName = (profile?.fullName?.isNotEmpty == true
+        ? profile!.fullName!
+        : 'Bạn').trim();
+    final authorAvatarUrl = profile?.avatarUrl?.trim();
+
     CommunityPostComposerSheet.show(
       context,
       communityId: widget.communityId,
-      authorName: ref.read(userProfileProvider).asData?.value.fullName ?? 'Bạn',
-      authorAvatarUrl: ref.read(userProfileProvider).asData?.value.avatarUrl,
+      authorName: authorName,
+      authorAvatarUrl: authorAvatarUrl,
       canMention: canMention,
       canManageTags: canManageMemberTags,
       onAssignMemberTags: _openMemberTagEditor,
