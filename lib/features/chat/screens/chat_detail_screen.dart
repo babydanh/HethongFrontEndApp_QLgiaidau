@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_poll_dialog.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_room_settings_sheet.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_reaction_detail_sheet.dart';
+import 'package:app_quanly_giaidau/features/chat/widgets/chat_image_viewer.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -237,12 +238,23 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       final currentUserId = ref.read(userProfileProvider).asData?.value?.id;
       final res = await dio.get('/chat/rooms/${widget.roomId}/pinned');
       final data = res.data is Map ? (res.data['data'] ?? res.data) : null;
-      if (data is Map<String, dynamic> && mounted) {
-        setState(() => _pinnedMessage = ChatMessageModel.fromJson(data, currentUserId: currentUserId));
+      if (data is Map<String, dynamic> &&
+          data['id'] != null &&
+          data['id'].toString().isNotEmpty &&
+          mounted) {
+        final parsed = ChatMessageModel.fromJson(data, currentUserId: currentUserId);
+        if (parsed.id.isNotEmpty &&
+            (parsed.content.trim().isNotEmpty || parsed.mediaUrls.isNotEmpty || parsed.poll != null)) {
+          setState(() => _pinnedMessage = parsed);
+        } else {
+          setState(() => _pinnedMessage = null);
+        }
       } else if (mounted) {
         setState(() => _pinnedMessage = null);
       }
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) setState(() => _pinnedMessage = null);
+    }
   }
 
   Future<void> _markAsRead() async {
@@ -541,30 +553,12 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     }
   }
 
-  void _showMediaGallery(String url) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black87,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(12),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            InteractiveViewer(
-              child: Image.network(url, fit: BoxFit.contain),
-            ),
-            Positioned(
-              top: 10,
-              right: 10,
-              child: IconButton(
-                icon: const Icon(Icons.close_rounded, color: Colors.white, size: 28),
-                onPressed: () => Navigator.pop(ctx),
-              ),
-            ),
-          ],
-        ),
-      ),
+  void _showMediaGallery(String url, {String? senderName, DateTime? timestamp}) {
+    ChatImageViewer.show(
+      context,
+      imageUrl: url,
+      senderName: senderName,
+      timestamp: timestamp,
     );
   }
 
@@ -585,6 +579,12 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final title = widget.roomName ?? 'Phòng chat';
+
+    final hasValidPinned = _pinnedMessage != null &&
+        _pinnedMessage!.id.isNotEmpty &&
+        (_pinnedMessage!.content.trim().isNotEmpty ||
+            _pinnedMessage!.mediaUrls.isNotEmpty ||
+            _pinnedMessage!.poll != null);
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF18191A) : const Color(0xFFF0F2F5),
@@ -671,38 +671,77 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       ),
       body: Column(
         children: [
-          // ── Sticky Pinned Banner ──
-          if (_pinnedMessage != null)
+          // ── Sticky Pinned Banner (Only when valid pinned message exists) ──
+          if (hasValidPinned)
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2D261A) : const Color(0xFFFEF3C7),
-                border: Border(bottom: BorderSide(color: Colors.amber.withValues(alpha: 0.3))),
+                color: isDark ? const Color(0xFF241E12) : const Color(0xFFFFFBEB),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.35)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.amber.withValues(alpha: 0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.push_pin_rounded, size: 16, color: Color(0xFFD97706)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Tin nhắn đã ghim từ ${_pinnedMessage!.senderName}',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFB45309)),
-                        ),
-                        Text(
-                          _pinnedMessage!.content,
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            color: isDark ? Colors.white70 : const Color(0xFF78350F),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
                     ),
+                    child: const Icon(Icons.push_pin_rounded, size: 15, color: Color(0xFFD97706)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _jumpToMessage(_pinnedMessage!.id),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Text(
+                                'Tin nhắn đã ghim',
+                                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: Color(0xFFD97706)),
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  '· ${_pinnedMessage!.senderName}',
+                                  style: TextStyle(fontSize: 11, color: colors.textMuted),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _pinnedMessage!.content.trim().isNotEmpty
+                                ? _pinnedMessage!.content.trim()
+                                : (_pinnedMessage!.mediaUrls.isNotEmpty ? '📷 [Hình ảnh đính kèm]' : '📊 [Bình chọn]'),
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: isDark ? Colors.white70 : const Color(0xFF78350F),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.arrow_forward_rounded, size: 18, color: Color(0xFFD97706)),
+                    tooltip: 'Xem tin nhắn',
+                    onPressed: () => _jumpToMessage(_pinnedMessage!.id),
                   ),
                 ],
               ),
@@ -732,10 +771,20 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         itemCount: _messages.length,
                         itemBuilder: (context, index) {
                           final msg = _messages[index];
-                          final prevMsg = index < _messages.length - 1 ? _messages[index + 1] : null;
-                          final showDate = prevMsg == null ||
-                              msg.createdAt.day != prevMsg.createdAt.day ||
-                              msg.createdAt.month != prevMsg.createdAt.month;
+                          final olderMsg = index < _messages.length - 1 ? _messages[index + 1] : null;
+                          final newerMsg = index > 0 ? _messages[index - 1] : null;
+
+                          final showDate = olderMsg == null ||
+                              msg.createdAt.day != olderMsg.createdAt.day ||
+                              msg.createdAt.month != olderMsg.createdAt.month;
+
+                          final isFirstInGroup = olderMsg == null ||
+                              olderMsg.senderId != msg.senderId ||
+                              msg.createdAt.difference(olderMsg.createdAt).inMinutes.abs() > 3;
+
+                          final isLastInGroup = newerMsg == null ||
+                              newerMsg.senderId != msg.senderId ||
+                              newerMsg.createdAt.difference(msg.createdAt).inMinutes.abs() > 3;
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -755,7 +804,13 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                     ),
                                   ),
                                 ),
-                              _buildMessageBubble(msg, colors, isDark),
+                              _buildMessageBubble(
+                                msg,
+                                colors,
+                                isDark,
+                                isFirstInGroup: isFirstInGroup,
+                                isLastInGroup: isLastInGroup,
+                              ),
                             ],
                           );
                         },
@@ -886,186 +941,250 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     );
   }
 
-  Widget _buildMessageBubble(ChatMessageModel msg, AppColorsExtension colors, bool isDark) {
+  Widget _buildMessageBubble(
+    ChatMessageModel msg,
+    AppColorsExtension colors,
+    bool isDark, {
+    required bool isFirstInGroup,
+    required bool isLastInGroup,
+  }) {
     final isMine = msg.isMine;
     final bubbleBg = isMine
         ? AppTheme.primary
         : (isDark ? const Color(0xFF3A3B3C) : const Color(0xFFFFFFFF));
     final textColor = isMine ? Colors.white : colors.textPrimary;
 
+    final textContent = msg.content.trim();
+    final hasMedia = msg.mediaUrls.isNotEmpty;
+    final hasPoll = msg.poll != null;
+
+    if (textContent.isEmpty && !hasMedia && !hasPoll) {
+      return const SizedBox.shrink();
+    }
+
+    final isEmojiOnly = textContent.isNotEmpty &&
+        textContent.characters.length <= 4 &&
+        !hasMedia &&
+        !hasPoll &&
+        textContent.runes.every((r) =>
+            (r >= 0x1F600 && r <= 0x1F64F) ||
+            (r >= 0x1F300 && r <= 0x1F5FF) ||
+            (r >= 0x1F680 && r <= 0x1F6FF) ||
+            (r >= 0x1F900 && r <= 0x1F9FF) ||
+            (r >= 0x1FA70 && r <= 0x1FAFF) ||
+            (r >= 0x2600 && r <= 0x27BF) ||
+            r == 0x200D ||
+            r == 0xFE0F ||
+            r == 0x20 ||
+            r == 0x0A);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: EdgeInsets.only(
+        top: isFirstInGroup ? 6 : 1.5,
+        bottom: isLastInGroup ? 6 : 1.5,
+      ),
       child: Row(
         mainAxisAlignment: isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Other's Avatar
+          // Other's Avatar (only on last message of group)
           if (!isMine) ...[
-            CircleAvatar(
-              radius: 14,
-              backgroundColor: AppTheme.primaryLight,
-              backgroundImage: msg.senderAvatarUrl != null ? NetworkImage(msg.senderAvatarUrl!) : null,
-              child: msg.senderAvatarUrl == null
-                  ? Text(
-                      msg.senderName.characters.first.toUpperCase(),
-                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.primaryDark),
-                    )
-                  : null,
-            ),
+            if (isLastInGroup)
+              CircleAvatar(
+                radius: 14,
+                backgroundColor: AppTheme.primaryLight,
+                backgroundImage: msg.senderAvatarUrl != null ? NetworkImage(msg.senderAvatarUrl!) : null,
+                child: msg.senderAvatarUrl == null
+                    ? Text(
+                        msg.senderName.characters.first.toUpperCase(),
+                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.primaryDark),
+                      )
+                    : null,
+              )
+            else
+              const SizedBox(width: 28),
             const SizedBox(width: 8),
           ],
 
           // Bubble Container
           Flexible(
             child: GestureDetector(
+              onDoubleTap: () => _reactToMessage(msg, '❤️'),
               onLongPress: () => _showMessageOptions(msg),
               child: Column(
                 crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
-                  // Sender name in group/club chats
-                  if (!isMine && (widget.roomType == 'CLUB' || widget.roomType == 'GROUP'))
+                  // Sender name in group/club chats (only on first message in group)
+                  if (!isMine && isFirstInGroup && (widget.roomType == 'CLUB' || widget.roomType == 'GROUP'))
                     Padding(
-                      padding: const EdgeInsets.only(left: 4, bottom: 2),
+                      padding: const EdgeInsets.only(left: 4, bottom: 3),
                       child: Text(
                         msg.senderName,
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: colors.textMuted),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: colors.textMuted),
                       ),
                     ),
 
-                  Container(
-                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.76),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: bubbleBg,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(18),
-                        topRight: const Radius.circular(18),
-                        bottomLeft: Radius.circular(isMine ? 18 : 4),
-                        bottomRight: Radius.circular(isMine ? 4 : 18),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Quoted Reply Preview
-                        if (msg.replyToMessage != null)
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 6),
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: isMine ? Colors.white.withValues(alpha: 0.2) : colors.bgSurface,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  msg.replyToMessage!.senderName,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: isMine ? Colors.white : AppTheme.primary,
-                                  ),
-                                ),
-                                Text(
-                                  msg.replyToMessage!.content.isEmpty
-                                      ? '[Hình ảnh]'
-                                      : msg.replyToMessage!.content,
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    color: isMine ? Colors.white70 : colors.textMuted,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      if (isEmojiOnly)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Text(
+                            textContent,
+                            style: const TextStyle(fontSize: 32),
                           ),
-
-                        // Media Images Grid
-                        if (msg.mediaUrls.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Wrap(
-                                spacing: 4,
-                                runSpacing: 4,
-                                children: msg.mediaUrls.map((url) {
-                                  return GestureDetector(
-                                    onTap: () => _showMediaGallery(url),
-                                    child: Image.network(
-                                      url,
-                                      width: msg.mediaUrls.length == 1 ? 220 : 105,
-                                      height: msg.mediaUrls.length == 1 ? 180 : 105,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  );
-                                }).toList(),
+                        )
+                      else
+                        Container(
+                          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.76),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                          decoration: BoxDecoration(
+                            color: bubbleBg,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(!isMine && !isFirstInGroup ? 6 : 18),
+                              topRight: Radius.circular(isMine && !isFirstInGroup ? 6 : 18),
+                              bottomLeft: Radius.circular(!isMine && !isLastInGroup ? 6 : (isMine ? 18 : 4)),
+                              bottomRight: Radius.circular(isMine && !isLastInGroup ? 6 : (isMine ? 4 : 18)),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
                               ),
-                            ),
+                            ],
                           ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Quoted Reply Preview
+                              if (msg.replyToMessage != null)
+                                GestureDetector(
+                                  onTap: () => _jumpToMessage(msg.replyToMessage!.id),
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 6),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: isMine ? Colors.white.withValues(alpha: 0.2) : colors.bgSurface,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border(
+                                        left: BorderSide(
+                                          color: isMine ? Colors.white : AppTheme.primary,
+                                          width: 3,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          msg.replyToMessage!.senderName,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: isMine ? Colors.white : AppTheme.primary,
+                                          ),
+                                        ),
+                                        Text(
+                                          msg.replyToMessage!.content.isEmpty
+                                              ? '[Hình ảnh / Bình chọn]'
+                                              : msg.replyToMessage!.content,
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            color: isMine ? Colors.white70 : colors.textMuted,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
 
-                        // In-chat Poll Card
-                        if (msg.poll != null) _buildPollCard(msg, msg.poll!, colors, isMine),
+                              // Media Images Grid
+                              if (msg.mediaUrls.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Wrap(
+                                      spacing: 4,
+                                      runSpacing: 4,
+                                      children: msg.mediaUrls.map((url) {
+                                        return GestureDetector(
+                                          onTap: () => _showMediaGallery(url, senderName: msg.senderName, timestamp: msg.createdAt),
+                                          child: Image.network(
+                                            url,
+                                            width: msg.mediaUrls.length == 1 ? 220 : 105,
+                                            height: msg.mediaUrls.length == 1 ? 180 : 105,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                                ),
 
-                        // Text Content
-                        if (msg.content.isNotEmpty)
-                          Text(
-                            msg.content,
-                            style: TextStyle(
-                              fontSize: 14.5,
-                              height: 1.35,
-                              fontStyle: msg.isRevoked ? FontStyle.italic : FontStyle.normal,
-                              color: msg.isRevoked ? (isMine ? Colors.white70 : colors.textMuted) : textColor,
-                            ),
+                              // In-chat Poll Card
+                              if (msg.poll != null) _buildPollCard(msg, msg.poll!, colors, isMine),
+
+                              // Text Content
+                              if (textContent.isNotEmpty)
+                                Text(
+                                  textContent,
+                                  style: TextStyle(
+                                    fontSize: 14.5,
+                                    height: 1.35,
+                                    fontStyle: msg.isRevoked ? FontStyle.italic : FontStyle.normal,
+                                    color: msg.isRevoked ? (isMine ? Colors.white70 : colors.textMuted) : textColor,
+                                  ),
+                                ),
+                            ],
                           ),
-                      ],
-                    ),
-                  ),
+                        ),
 
-                  // Reactions Badge Row
-                  if (msg.reactions.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Wrap(
-                        spacing: 4,
-                        children: msg.reactions.map((r) {
-                          return GestureDetector(
-                            onTap: () => _reactToMessage(msg, r.emoji),
+                      // Floating Messenger Reaction Pill
+                      if (msg.reactions.isNotEmpty)
+                        Positioned(
+                          bottom: -9,
+                          right: isMine ? 6 : null,
+                          left: isMine ? null : 6,
+                          child: GestureDetector(
+                            onTap: () => _reactToMessage(msg, msg.reactions.first.emoji),
                             onLongPress: () => ChatReactionDetailSheet.show(context, msg),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: colors.bgCard,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: r.isReacted ? AppTheme.primary : colors.borderLight,
-                                  width: r.isReacted ? 1.2 : 0.8,
-                                ),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: colors.borderLight, width: 1),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.12),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(r.emoji, style: const TextStyle(fontSize: 12)),
-                                  if (r.count > 1) ...[
+                                  ...msg.reactions.take(3).map((r) => Text(r.emoji, style: const TextStyle(fontSize: 12))),
+                                  if (msg.reactions.fold<int>(0, (sum, r) => sum + r.count) > 1) ...[
                                     const SizedBox(width: 3),
-                                    Text('${r.count}', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: colors.textPrimary)),
+                                    Text(
+                                      '${msg.reactions.fold<int>(0, (sum, r) => sum + r.count)}',
+                                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: colors.textPrimary),
+                                    ),
                                   ],
                                 ],
                               ),
                             ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),
