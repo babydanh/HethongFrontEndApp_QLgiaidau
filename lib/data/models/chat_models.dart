@@ -4,6 +4,7 @@ class ChatParticipant {
   final String? avatarUrl;
   final String? role;
   final bool isOnline;
+  final DateTime? lastReadAt;
 
   const ChatParticipant({
     required this.id,
@@ -11,6 +12,7 @@ class ChatParticipant {
     this.avatarUrl,
     this.role,
     this.isOnline = false,
+    this.lastReadAt,
   });
 
   factory ChatParticipant.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class ChatParticipant {
       avatarUrl: json['avatarUrl']?.toString(),
       role: json['role']?.toString(),
       isOnline: json['isOnline'] == true,
+      lastReadAt: DateTime.tryParse(json['lastReadAt']?.toString() ?? ''),
     );
   }
 }

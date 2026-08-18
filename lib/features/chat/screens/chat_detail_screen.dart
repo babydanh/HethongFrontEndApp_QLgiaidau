@@ -50,6 +50,10 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   ChatMessageModel? _pinnedMessage;
   ChatMessageModel? _replyingTo;
   final List<String> _pendingMedia = [];
+  List<ChatParticipant> _participants = [];
+  final Set<String> _onlineUserIds = {};
+  final Map<String, DateTime> _userReadTimestamps = {};
+  bool _showScrollToBottom = false;
 
   bool _isLoading = true;
   bool _isSending = false;
@@ -61,7 +65,6 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
   late final ChatSocketService _chatSocket;
   bool _socketConnected = false;
-  bool _showEmojiPicker = false;
 
   @override
   void initState() {
@@ -70,14 +73,21 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     _initSocket();
     _loadInitialMessages();
     _loadPinnedMessage();
+    _loadRoomDetails();
     _markAsRead();
 
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-              _scrollController.position.maxScrollExtent - 200 &&
-          !_isLoading &&
-          _hasMore) {
-        _loadOlderMessages();
+      if (_scrollController.hasClients) {
+        final show = _scrollController.offset > 200;
+        if (show != _showScrollToBottom) {
+          setState(() => _showScrollToBottom = show);
+        }
+        if (_scrollController.position.pixels >=
+                _scrollController.position.maxScrollExtent - 200 &&
+            !_isLoading &&
+            _hasMore) {
+          _loadOlderMessages();
+        }
       }
     });
 
@@ -99,7 +109,24 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
   void _initSocket() {
     _chatSocket.onConnection = (connected) {
-      if (mounted) setState(() => _socketConnected = connected);
+      if (mounted) {
+        setState(() => _socketConnected = connected);
+        if (connected && _participants.isNotEmpty) {
+          _chatSocket.checkOnlineUsers(_participants.map((p) => p.id).toList(), (statusMap) {
+            if (mounted && statusMap.isNotEmpty) {
+              setState(() {
+                for (final entry in statusMap.entries) {
+                  if (entry.value == true) {
+                    _onlineUserIds.add(entry.key);
+                  } else {
+                    _onlineUserIds.remove(entry.key);
+                  }
+                }
+              });
+            }
+          });
+        }
+      }
     };
     _chatSocket.onMessage = (data) {
       if (data is Map<String, dynamic> && mounted) {
@@ -119,15 +146,36 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         final msgId = data['messageId']?.toString();
         final reactionsRaw = data['reactions'];
         if (msgId != null && reactionsRaw is List) {
+          final parsedReactions = <ChatReactionModel>[];
+          final emojiCounts = <String, int>{};
+          final userReactedMap = <String, bool>{};
+
+          for (final item in reactionsRaw) {
+            if (item is String) {
+              emojiCounts[item] = (emojiCounts[item] ?? 0) + 1;
+              if (item == data['emoji']) userReactedMap[item] = true;
+            } else if (item is Map<String, dynamic>) {
+              final em = (item['emoji'] ?? '').toString();
+              final count = (item['count'] as num?)?.toInt() ?? 1;
+              if (em.isNotEmpty) {
+                emojiCounts[em] = count;
+                userReactedMap[em] = item['isReacted'] == true;
+              }
+            }
+          }
+
+          emojiCounts.forEach((em, count) {
+            parsedReactions.add(ChatReactionModel(
+              emoji: em,
+              count: count,
+              isReacted: userReactedMap[em] ?? false,
+            ));
+          });
+
           setState(() {
             final idx = _messages.indexWhere((m) => m.id == msgId);
             if (idx != -1) {
-              final currentUserId = ref.read(userProfileProvider).asData?.value?.id;
-              final reactionsList = reactionsRaw
-                  .whereType<Map<String, dynamic>>()
-                  .map((r) => ChatReactionModel.fromJson(r, currentUserId: currentUserId))
-                  .toList();
-              _messages[idx] = _messages[idx].copyWith(reactions: reactionsList);
+              _messages[idx] = _messages[idx].copyWith(reactions: parsedReactions);
             }
           });
         }
@@ -151,6 +199,33 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         _loadPinnedMessage();
       }
     };
+    _chatSocket.onUserStatus = (data) {
+      if (data is Map<String, dynamic> && mounted) {
+        final uid = data['userId']?.toString();
+        final isOnline = data['isOnline'] == true;
+        if (uid != null) {
+          setState(() {
+            if (isOnline) {
+              _onlineUserIds.add(uid);
+            } else {
+              _onlineUserIds.remove(uid);
+            }
+          });
+        }
+      }
+    };
+    _chatSocket.onRoomRead = (data) {
+      if (data is Map<String, dynamic> && mounted) {
+        final uid = data['userId']?.toString();
+        final readAtStr = data['readAt']?.toString();
+        if (uid != null && readAtStr != null) {
+          final dt = DateTime.tryParse(readAtStr);
+          if (dt != null) {
+            setState(() => _userReadTimestamps[uid] = dt);
+          }
+        }
+      }
+    };
     _chatSocket.onTyping = (data) {
       if (data is Map<String, dynamic> && mounted) {
         if (data['roomId'] == widget.roomId) {
@@ -166,6 +241,50 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         }
       }
     };
+    _chatSocket.connect(widget.roomId);
+  }
+
+  Future<void> _loadRoomDetails() async {
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      final res = await dio.get('/chat/rooms/${widget.roomId}');
+      final data = res.data is Map ? (res.data['data'] ?? res.data) : null;
+      if (data is Map<String, dynamic> && mounted) {
+        final rawParts = data['participants'];
+        if (rawParts is List) {
+          final list = rawParts
+              .whereType<Map<String, dynamic>>()
+              .map((p) => ChatParticipant.fromJson(p))
+              .toList();
+          setState(() {
+            _participants = list;
+            for (final p in list) {
+              if (p.lastReadAt != null) {
+                _userReadTimestamps[p.id] = p.lastReadAt!;
+              }
+              if (p.isOnline) {
+                _onlineUserIds.add(p.id);
+              }
+            }
+          });
+          if (list.isNotEmpty && _chatSocket.isConnected) {
+            _chatSocket.checkOnlineUsers(list.map((p) => p.id).toList(), (statusMap) {
+              if (mounted && statusMap.isNotEmpty) {
+                setState(() {
+                  for (final entry in statusMap.entries) {
+                    if (entry.value == true) {
+                      _onlineUserIds.add(entry.key);
+                    } else {
+                      _onlineUserIds.remove(entry.key);
+                    }
+                  }
+                });
+              }
+            });
+          }
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadInitialMessages() async {
@@ -706,7 +825,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       width: 11,
                       height: 11,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF22C55E),
+                        color: _typingUser != null || (widget.roomType == 'CLUB' || widget.roomType == 'GROUP' ? _onlineUserIds.isNotEmpty : (_participants.any((p) => p.id != ref.read(userProfileProvider).asData?.value?.id && _onlineUserIds.contains(p.id))))
+                            ? const Color(0xFF22C55E)
+                            : colors.textMuted.withValues(alpha: 0.4),
                         shape: BoxShape.circle,
                         border: Border.all(color: colors.bgCard, width: 2),
                       ),
@@ -726,7 +847,13 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      _typingUser != null ? '$_typingUser đang soạn tin...' : 'Đang hoạt động',
+                      _typingUser != null
+                          ? '$_typingUser đang soạn tin...'
+                          : (widget.roomType == 'CLUB' || widget.roomType == 'GROUP'
+                              ? (_onlineUserIds.isNotEmpty ? '${_onlineUserIds.length} người đang online' : 'Đang hoạt động')
+                              : (_participants.any((p) => p.id != ref.read(userProfileProvider).asData?.value?.id && _onlineUserIds.contains(p.id))
+                                  ? 'Đang hoạt động'
+                                  : 'Hoạt động gần đây')),
                       style: TextStyle(
                         fontSize: 11.5,
                         color: _typingUser != null ? AppTheme.primary : colors.textMuted,
@@ -832,75 +959,153 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
           // ── Message Stream ──
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _messages.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.forum_outlined, size: 54, color: colors.textMuted.withValues(alpha: 0.4)),
-                            const SizedBox(height: 12),
-                            Text('Chưa có tin nhắn nào.', style: TextStyle(color: colors.textMuted, fontSize: 14)),
-                            const SizedBox(height: 4),
-                            Text('Hãy gửi tin nhắn đầu tiên để bắt đầu trò chuyện!', style: TextStyle(color: colors.textMuted.withValues(alpha: 0.7), fontSize: 12)),
+            child: Stack(
+              children: [
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _messages.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.forum_outlined, size: 54, color: colors.textMuted.withValues(alpha: 0.4)),
+                                const SizedBox(height: 12),
+                                Text('Chưa có tin nhắn nào.', style: TextStyle(color: colors.textMuted, fontSize: 14)),
+                                const SizedBox(height: 4),
+                                Text('Hãy gửi tin nhắn đầu tiên để bắt đầu trò chuyện!', style: TextStyle(color: colors.textMuted.withValues(alpha: 0.7), fontSize: 12)),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            controller: _scrollController,
+                            reverse: true,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                            itemCount: _messages.length,
+                            itemBuilder: (context, index) {
+                              final msg = _messages[index];
+                              final olderMsg = index < _messages.length - 1 ? _messages[index + 1] : null;
+                              final newerMsg = index > 0 ? _messages[index - 1] : null;
+
+                              final showDate = olderMsg == null ||
+                                  msg.createdAt.day != olderMsg.createdAt.day ||
+                                  msg.createdAt.month != olderMsg.createdAt.month ||
+                                  msg.createdAt.year != olderMsg.createdAt.year;
+
+                              final isFirstInGroup = olderMsg == null ||
+                                  olderMsg.senderId != msg.senderId ||
+                                  showDate;
+
+                              final isLastInGroup = newerMsg == null ||
+                                  newerMsg.senderId != msg.senderId ||
+                                  (newerMsg.createdAt.day != msg.createdAt.day ||
+                                   newerMsg.createdAt.month != msg.createdAt.month ||
+                                   newerMsg.createdAt.year != msg.createdAt.year);
+
+                              final currentUserId = ref.read(userProfileProvider).asData?.value?.id;
+                              final readers = _participants.where((p) {
+                                if (p.id == currentUserId) return false;
+                                final readAt = _userReadTimestamps[p.id];
+                                if (readAt == null) return false;
+                                final isAfterThis = !readAt.isBefore(msg.createdAt);
+                                final isBeforeNewer = newerMsg == null || readAt.isBefore(newerMsg.createdAt);
+                                return isAfterThis && isBeforeNewer;
+                              }).toList();
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  if (showDate)
+                                    Center(
+                                      child: Container(
+                                        margin: const EdgeInsets.symmetric(vertical: 14),
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: colors.bgCard.withValues(alpha: 0.8),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          _formatDateSeparator(msg.createdAt),
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: colors.textMuted),
+                                        ),
+                                      ),
+                                    ),
+                                  _buildMessageBubble(
+                                    msg,
+                                    colors,
+                                    isDark,
+                                    isFirstInGroup: isFirstInGroup,
+                                    isLastInGroup: isLastInGroup,
+                                  ),
+                                  if (readers.isNotEmpty)
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(top: 2, right: 8, bottom: 4),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: readers.map((p) {
+                                            return Padding(
+                                              padding: const EdgeInsets.only(left: 3),
+                                              child: Tooltip(
+                                                message: 'Đã xem bởi ${p.fullName}',
+                                                child: CircleAvatar(
+                                                  radius: 7.5,
+                                                  backgroundColor: AppTheme.primaryLight,
+                                                  backgroundImage: p.avatarUrl != null && p.avatarUrl!.isNotEmpty
+                                                      ? NetworkImage(_resolveMediaUrl(p.avatarUrl!))
+                                                      : null,
+                                                  child: p.avatarUrl == null || p.avatarUrl!.isEmpty
+                                                      ? Text(
+                                                          p.fullName.characters.first.toUpperCase(),
+                                                          style: const TextStyle(fontSize: 7, fontWeight: FontWeight.bold, color: AppTheme.primaryDark),
+                                                        )
+                                                      : null,
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+
+                // Floating Scroll-To-Bottom Button (↓)
+                if (_showScrollToBottom)
+                  Positioned(
+                    right: 14,
+                    bottom: 12,
+                    child: GestureDetector(
+                      onTap: () {
+                        _scrollController.animateTo(
+                          0,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOutCubic,
+                        );
+                      },
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: colors.bgCard,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: colors.borderLight, width: 1),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
                           ],
                         ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        reverse: true,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        itemCount: _messages.length,
-                        itemBuilder: (context, index) {
-                          final msg = _messages[index];
-                          final olderMsg = index < _messages.length - 1 ? _messages[index + 1] : null;
-                          final newerMsg = index > 0 ? _messages[index - 1] : null;
-
-                          final showDate = olderMsg == null ||
-                              msg.createdAt.day != olderMsg.createdAt.day ||
-                              msg.createdAt.month != olderMsg.createdAt.month ||
-                              msg.createdAt.year != olderMsg.createdAt.year;
-
-                          final isFirstInGroup = olderMsg == null ||
-                              olderMsg.senderId != msg.senderId ||
-                              showDate;
-
-                          final isLastInGroup = newerMsg == null ||
-                              newerMsg.senderId != msg.senderId ||
-                              (newerMsg.createdAt.day != msg.createdAt.day ||
-                               newerMsg.createdAt.month != msg.createdAt.month ||
-                               newerMsg.createdAt.year != msg.createdAt.year);
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              if (showDate)
-                                Center(
-                                  child: Container(
-                                    margin: const EdgeInsets.symmetric(vertical: 14),
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: colors.bgCard.withValues(alpha: 0.8),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      _formatDateSeparator(msg.createdAt),
-                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: colors.textMuted),
-                                    ),
-                                  ),
-                                ),
-                              _buildMessageBubble(
-                                msg,
-                                colors,
-                                isDark,
-                                isFirstInGroup: isFirstInGroup,
-                                isLastInGroup: isLastInGroup,
-                              ),
-                            ],
-                          );
-                        },
+                        child: const Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.primary, size: 24),
                       ),
+                    ),
+                  ),
+              ],
+            ),
           ),
 
           // ── Typing Indicator ──
@@ -1250,6 +1455,18 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                     color: msg.isRevoked ? (isMine ? Colors.white70 : colors.textMuted) : textColor,
                                   ),
                                 ),
+
+                              // Message Time
+                              Padding(
+                                padding: const EdgeInsets.only(top: 3),
+                                child: Text(
+                                  DateFormat('HH:mm').format(msg.createdAt),
+                                  style: TextStyle(
+                                    fontSize: 9.5,
+                                    color: isMine ? Colors.white.withValues(alpha: 0.65) : colors.textMuted.withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),

@@ -11,6 +11,8 @@ class ChatSocketService {
   void Function(Map<String, dynamic>)? onReaction;
   void Function(Map<String, dynamic>)? onRevoked;
   void Function(Map<String, dynamic>)? onPinned;
+  void Function(Map<String, dynamic>)? onUserStatus;
+  void Function(Map<String, dynamic>)? onRoomRead;
   void Function(bool)? onConnection;
 
   ChatSocketService(this.tokenManager);
@@ -36,6 +38,10 @@ class ChatSocketService {
       _socket!.emit('joinChatRoom', roomId);
     });
     _socket!.onDisconnect((_) => onConnection?.call(false));
+    _socket!.on('chat:message', (data) {
+      final map = _asMap(data);
+      if (map.isNotEmpty) onMessage?.call(map);
+    });
     _socket!.on('chat:club:message', (data) {
       final map = _asMap(data);
       if (map.isNotEmpty) onMessage?.call(map);
@@ -56,7 +62,24 @@ class ChatSocketService {
       final map = _asMap(data);
       if (map.isNotEmpty) onPinned?.call(map);
     });
+    _socket!.on('chat:user:status', (data) {
+      final map = _asMap(data);
+      if (map.isNotEmpty) onUserStatus?.call(map);
+    });
+    _socket!.on('chat:room:read', (data) {
+      final map = _asMap(data);
+      if (map.isNotEmpty) onRoomRead?.call(map);
+    });
     _socket!.connect();
+  }
+
+  void checkOnlineUsers(List<String> userIds, void Function(Map<String, dynamic>) callback) {
+    if (isConnected && userIds.isNotEmpty) {
+      _socket!.emitWithAck('checkOnlineUsers', userIds, ack: (data) {
+        final map = _asMap(data);
+        callback(map);
+      });
+    }
   }
 
   void send(String roomId, String content) {
