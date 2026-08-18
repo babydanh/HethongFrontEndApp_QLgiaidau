@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/shared/widgets/app_image_viewer.dart';
 
 class GalleryTab extends StatelessWidget {
   final List<String> galleryImages;
@@ -35,6 +36,8 @@ class GalleryTab extends StatelessWidget {
       );
     }
 
+    final resolvedImages = galleryImages.map((img) => resolveImageUrl(img)).toList();
+
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
@@ -47,53 +50,52 @@ class GalleryTab extends StatelessWidget {
       ),
       itemCount: galleryImages.length,
       itemBuilder: (context, index) {
-        final imageUrl = resolveImageUrl(galleryImages[index]);
+        final imageUrl = resolvedImages[index];
         return GestureDetector(
-          onTap: () => _showFullscreenImage(context, imageUrl),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(
-                color: colors.bgSurface,
-                child: Icon(Icons.broken_image_outlined, color: colors.textMuted),
+          onTap: () {
+            AppImageViewer.showGallery(
+              context,
+              imageUrls: resolvedImages,
+              initialIndex: index,
+            );
+          },
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => Container(
+                    color: colors.bgSurface,
+                    child: Icon(Icons.broken_image_outlined, color: colors.textMuted),
+                  ),
+                  loadingBuilder: (_, child, progress) {
+                    if (progress == null) return child;
+                    return Container(
+                      color: colors.bgSurface,
+                      child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                    );
+                  },
+                ),
               ),
-              loadingBuilder: (_, child, progress) {
-                if (progress == null) return child;
-                return Container(
-                  color: colors.bgSurface,
-                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                );
-              },
-            ),
+              Positioned(
+                bottom: 6,
+                right: 6,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.zoom_in_rounded, color: Colors.white, size: 16),
+                ),
+              ),
+            ],
           ),
         );
       },
-    );
-  }
-
-  void _showFullscreenImage(BuildContext context, String url) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => Scaffold(
-          backgroundColor: Colors.black,
-          appBar: AppBar(
-            backgroundColor: Colors.black,
-            iconTheme: const IconThemeData(color: Colors.white),
-            elevation: 0,
-          ),
-          body: Center(
-            child: InteractiveViewer(
-              child: Image.network(
-                url,
-                fit: BoxFit.contain,
-                errorBuilder: (_, _, _) => const Icon(Icons.broken_image, color: Colors.white54, size: 64),
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -5,9 +5,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
-import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/widgets/countdown_timer.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/shared/widgets/app_image_viewer.dart';
 
 class AboutTab extends StatelessWidget {
   final Tournament tournament;
@@ -134,13 +134,7 @@ class AboutTab extends StatelessWidget {
                 if (tournament.description.isNotEmpty) ...[
                   _buildSectionHeader(colors, l10n.sectionAboutTournament),
                   const SizedBox(height: 12),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 500),
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: _buildRichDescription(context, tournament.description),
-                    ),
-                  ),
+                  _buildRichDescription(context, tournament.description),
                   const SizedBox(height: 16),
                   _sectionDivider(colors),
                   const SizedBox(height: 16),
@@ -667,32 +661,7 @@ class AboutTab extends StatelessWidget {
               final url = (data['file']?['url'] ?? data['url'] ?? '').toString();
               final caption = (data['caption'] ?? '').toString();
               if (url.isNotEmpty) {
-                widgets.add(
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            url,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                          ),
-                        ),
-                        if (caption.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            caption,
-                            style: TextStyle(fontSize: 11, color: colors.textMuted, fontStyle: FontStyle.italic),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                );
+                widgets.add(_buildZoomableImage(context, url, caption: caption));
               }
             } else if (type == 'list') {
               final items = data['items'] as List?;
@@ -761,19 +730,7 @@ class AboutTab extends StatelessWidget {
 
       final imgUrl = match.group(1);
       if (imgUrl != null && imgUrl.isNotEmpty) {
-        children.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                imgUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ),
-            ),
-          ),
-        );
+        children.add(_buildZoomableImage(context, imgUrl));
       }
       lastEnd = match.end;
     }
@@ -873,6 +830,76 @@ class AboutTab extends StatelessWidget {
           .replaceAll('&nbsp;', ' ');
     }
     return result;
+  }
+
+  Widget _buildZoomableImage(BuildContext context, String imageUrl, {String? caption}) {
+    final colors = context.colors;
+    final resolvedUrl = resolveImageUrl(imageUrl);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          GestureDetector(
+            onTap: () => AppImageViewer.show(
+              context,
+              imageUrl: resolvedUrl,
+              title: caption?.isNotEmpty == true ? caption : tournament.name,
+            ),
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    resolvedUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  ),
+                ),
+                Positioned(
+                  bottom: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.zoom_in_rounded, color: Colors.white, size: 14),
+                        SizedBox(width: 4),
+                        Text(
+                          'Chạm để phóng to',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (caption != null && caption.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              caption,
+              style: TextStyle(
+                fontSize: 11,
+                color: colors.textMuted,
+                fontStyle: FontStyle.italic,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   String _stripHtml(String html) {

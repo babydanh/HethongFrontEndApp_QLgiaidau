@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
+import 'package:app_quanly_giaidau/shared/widgets/app_image_viewer.dart';
 
 class TournamentHeaderView extends StatefulWidget {
   final Tournament tournament;
@@ -173,11 +174,21 @@ class _BannerCarousel extends StatelessWidget {
                   itemCount: images.length,
                   onPageChanged: onPageChanged,
                   itemBuilder: (context, index) {
-                    return Image.network(
-                      _resolveImageUrl(images[index]),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _FallbackBanner(),
+                    final resolvedList = images.map((i) => _resolveImageUrl(i)).toList();
+                    return GestureDetector(
+                      onTap: () {
+                        AppImageViewer.showGallery(
+                          context,
+                          imageUrls: resolvedList,
+                          initialIndex: index,
+                        );
+                      },
+                      child: Image.network(
+                        resolvedList[index],
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _FallbackBanner(),
+                      ),
                     );
                   },
                 ),

@@ -84,7 +84,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with SingleTickerProvid
     if (!quiet) setState(() => _isLoadingRooms = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
-      final currentUserId = ref.read(userProfileProvider).asData?.value?.id;
+      final currentUserId = ref.read(userProfileProvider).asData?.value.id;
       final res = await dio.get('/chat/rooms');
       final rawList = res.data is Map ? (res.data['data'] ?? res.data['items'] ?? []) : res.data;
       if (rawList is List && mounted) {
@@ -102,7 +102,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with SingleTickerProvid
     setState(() => _isLoadingSupport = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
-      final currentUserId = ref.read(userProfileProvider).asData?.value?.id;
+      final currentUserId = ref.read(userProfileProvider).asData?.value.id;
       final res = await dio.get('/chat/support/me');
       final data = res.data is Map ? (res.data['data'] ?? res.data) : null;
       if (data is Map<String, dynamic> && data['messages'] is List && mounted) {
@@ -124,7 +124,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with SingleTickerProvid
     try {
       final dio = ref.read(dioClientProvider).dio;
       final res = await dio.post('/chat/support', data: {'messageText': text});
-      final currentUserId = ref.read(userProfileProvider).asData?.value?.id;
+      final currentUserId = ref.read(userProfileProvider).asData?.value.id;
       final data = res.data is Map ? (res.data['data'] ?? res.data) : null;
       if (data is Map<String, dynamic> && data['messages'] is List && mounted) {
         final msgs = (data['messages'] as List)
@@ -296,7 +296,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with SingleTickerProvid
                             )
                           : ListView.separated(
                               itemCount: filteredRooms.length,
-                              separatorBuilder: (_, __) => Divider(
+                              separatorBuilder: (_, _) => Divider(
                                 height: 1,
                                 indent: 72,
                                 color: colors.borderLight.withValues(alpha: 0.5),
