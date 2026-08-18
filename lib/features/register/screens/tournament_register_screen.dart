@@ -156,10 +156,66 @@ class _TournamentRegisterScreenState
   String? _existingTeamStatus;
   bool _existingIsPaid = false;
   bool _rankingConsent = false;
+  final Map<String, dynamic> _customResponses = {};
 
   String _getSubmitLabel(Tournament? t) {
     if (t?.registrationMode == 'APPROVAL') return l10n.registerSubmitApproval;
     return l10n.registerSubmitConfirm;
+  }
+
+  List<Map<String, dynamic>> _activeRegistrationFields(Tournament tournament) {
+    final divisionId = _selectedDiv;
+    if (divisionId == null || divisionId.isEmpty) return const [];
+    if (tournament.registrationFormDivisionIds.isNotEmpty && !tournament.registrationFormDivisionIds.contains(divisionId)) return const [];
+    return tournament.registrationFields;
+  }
+
+  String? _validateCustomResponses(Tournament tournament) {
+    for (final field in _activeRegistrationFields(tournament)) {
+      final id = field['id']?.toString() ?? '';
+      final value = _customResponses[id];
+      final empty = value == null || value.toString().trim().isEmpty || (value is List && value.isEmpty);
+      final label = field['label']?.toString() ?? id;
+      if (field['required'] == true && empty) return 'Vui lòng điền “$label”.';
+      if (empty) continue;
+      if (field['type'] == 'EMAIL' && !RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(value.toString())) return '“$label” phải là email hợp lệ.';
+      if (field['type'] == 'NUMBER') {
+        final number = num.tryParse(value.toString());
+        if (number == null) return '“$label” phải là số.';
+        final min = num.tryParse(field['min']?.toString() ?? '');
+        final max = num.tryParse(field['max']?.toString() ?? '');
+        if (min != null && number < min) return '“$label” không được nhỏ hơn $min.';
+        if (max != null && number > max) return '“$label” không được lớn hơn $max.';
+      }
+      if (field['type'] == 'SELECT' && field['options'] is List && !(field['options'] as List).contains(value)) return 'Lựa chọn của “$label” không hợp lệ.';
+      if (field['type'] == 'CHECKBOX' && value != true) return 'Bạn cần xác nhận “$label”.';
+    }
+    return null;
+  }
+
+  Widget _buildCustomFields(Tournament tournament) {
+    final fields = _activeRegistrationFields(tournament);
+    if (fields.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: context.colors.bgSurface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Thông tin đăng ký bổ sung', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 4),
+        Text('Ban tổ chức yêu cầu các thông tin dưới đây cho nội dung bạn đã chọn.', style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
+        const SizedBox(height: 12),
+        ...fields.map((field) {
+          final id = field['id']?.toString() ?? '';
+          final label = field['label']?.toString() ?? id;
+          final required = field['required'] == true;
+          final type = field['type']?.toString();
+          final help = field['helpText']?.toString();
+          if (type == 'CHECKBOX') return CheckboxListTile(contentPadding: EdgeInsets.zero, value: _customResponses[id] == true, onChanged: (value) => setState(() => _customResponses[id] = value == true), title: Text('$label${required ? ' *' : ''}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)));
+          if (type == 'SELECT') return DropdownButtonFormField<String>(value: _customResponses[id]?.toString(), decoration: InputDecoration(labelText: '$label${required ? ' *' : ''}', helperText: help), items: [const DropdownMenuItem(value: '', child: Text('Chọn một lựa chọn')), ...((field['options'] as List? ?? const []).map((option) => DropdownMenuItem(value: option.toString(), child: Text(option.toString()))))], onChanged: (value) => setState(() => _customResponses[id] = value));
+          return Padding(padding: const EdgeInsets.only(bottom: 10), child: TextFormField(initialValue: _customResponses[id]?.toString() ?? '', keyboardType: type == 'NUMBER' ? TextInputType.number : type == 'EMAIL' ? TextInputType.emailAddress : type == 'PHONE' ? TextInputType.phone : TextInputType.text, maxLines: type == 'TEXTAREA' ? 3 : 1, decoration: InputDecoration(labelText: '$label${required ? ' *' : ''}', helperText: help), onChanged: (value) => _customResponses[id] = value));
+        }),
+      ]),
+    );
   }
 
   @override
@@ -358,6 +414,13 @@ class _TournamentRegisterScreenState
       setState(() => _divisionError = l10n.registerSelectDivision);
       return;
     }
+    if (tournament != null) {
+      final customError = _validateCustomResponses(tournament);
+      if (customError != null) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(customError)));
+        return;
+      }
+    }
     // Team sport (bóng đá): config có teamSize → đăng ký đội nhiều người
     final tournamentForTeam = ref.read(tournamentProvider(widget.tournamentId)).asData?.value;
     if (tournamentForTeam != null && (tournamentForTeam.teamSize != null || tournamentForTeam.minTeamSize != null)) {
@@ -408,6 +471,7 @@ class _TournamentRegisterScreenState
             divisionId: divisionId,
             inviteCode: _localInviteCode ?? widget.inviteCode,
             rankingConsent: _rankingConsent,
+            customResponses: _customResponses,
           );
       if (!mounted) return;
       // Refresh the detail streams so the participant count reflects the
@@ -1651,6 +1715,8 @@ class _TournamentRegisterScreenState
                     ),
                   ),
                 ),
+                _buildCustomFields(t),
+                const SizedBox(height: 12),
                 if (t.isRanked) ...[
                   Container(
                     padding: const EdgeInsets.all(12),

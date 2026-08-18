@@ -25,6 +25,7 @@ abstract class ITournamentRepository {
     List<String>? memberIds,
     List<String>? reserveMemberIds,
     bool rankingConsent = false,
+    Map<String, dynamic>? customResponses,
   });
   Future<FootballRosterStatus> getFootballRosterStatus({required String tournamentId, required String participantId});
   Future<FootballRosterStatus> updateFootballRoster({

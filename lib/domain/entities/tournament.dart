@@ -51,6 +51,8 @@ class Tournament {
   final int? teamSize;
   final int? minTeamSize;
   final int? maxReserve;
+  final List<Map<String, dynamic>> registrationFields;
+  final List<String> registrationFormDivisionIds;
 
   const Tournament({
     required this.id,
@@ -97,6 +99,8 @@ class Tournament {
     this.teamSize,
     this.minTeamSize,
     this.maxReserve,
+    this.registrationFields = const [],
+    this.registrationFormDivisionIds = const [],
   });
 
   /// Club Lite is the intentionally minimal club flow. Public Quick still
@@ -204,6 +208,19 @@ class Tournament {
       }
     }
 
+    final registrationForm = config['registrationForm'];
+    final registrationFields = <Map<String, dynamic>>[];
+    final registrationFormDivisionIds = registrationForm is Map && registrationForm['divisionIds'] is List
+        ? (registrationForm['divisionIds'] as List).whereType<String>().toList()
+        : <String>[];
+    if (registrationForm is Map && registrationForm['status'] == 'PUBLISHED' && registrationForm['fields'] is List) {
+      for (final field in registrationForm['fields'] as List) {
+        if (field is Map && field['id'] != null && field['label'] != null && field['type'] != null) {
+          registrationFields.add(Map<String, dynamic>.from(field));
+        }
+      }
+    }
+
     return Tournament(
       id: id,
       name: json['name'] ?? '',
@@ -282,6 +299,8 @@ class Tournament {
           _toInt(config['minTeamSize']) ??
           (sportVal.toLowerCase() == 'football' ? 11 : null),
       maxReserve: _toInt(config['maxReserve']),
+      registrationFields: registrationFields,
+      registrationFormDivisionIds: registrationFormDivisionIds,
     );
   }
 

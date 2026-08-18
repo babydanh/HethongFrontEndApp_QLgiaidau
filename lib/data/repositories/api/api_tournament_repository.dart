@@ -315,6 +315,7 @@ class ApiTournamentRepository implements ITournamentRepository {
     List<String>? memberIds,
     List<String>? reserveMemberIds,
     bool rankingConsent = false,
+    Map<String, dynamic>? customResponses,
   }) async {
     final queryParameters = <String, dynamic>{};
     if (inviteCode != null && inviteCode.trim().isNotEmpty) {
@@ -337,6 +338,7 @@ class ApiTournamentRepository implements ITournamentRepository {
         if (memberIds != null && memberIds.isNotEmpty) 'memberIds': memberIds,
         if (reserveMemberIds != null && reserveMemberIds.isNotEmpty) 'reserveMemberIds': reserveMemberIds,
         'rankingConsent': rankingConsent,
+        if (customResponses != null && customResponses.isNotEmpty) 'customResponses': customResponses,
       },
       queryParameters: queryParameters.isNotEmpty ? queryParameters : null,
     );
