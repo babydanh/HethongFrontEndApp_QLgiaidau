@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
+import 'package:app_quanly_giaidau/providers/regions_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 
 /// Tạo câu lạc bộ mới — form đơn giản
 class CreateClubScreen extends ConsumerStatefulWidget {
@@ -21,17 +25,29 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
+  final _rulesCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
+  final _questionCtrl = TextEditingController();
 
   String _selectedSport = AppConstants.sportBadminton;
   String _joinMode = 'OPEN';
+  String _visibility = 'PUBLIC';
+  String? _provinceCode;
+  String? _wardCode;
+  String? _logoUrl;
+  String? _bannerUrl;
+  final List<String> _joinQuestions = [];
+  bool _isUploadingLogo = false;
+  bool _isUploadingBanner = false;
   bool _isLoading = false;
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _descCtrl.dispose();
+    _rulesCtrl.dispose();
     _locationCtrl.dispose();
+    _questionCtrl.dispose();
     super.dispose();
   }
 
@@ -51,21 +67,49 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_provinceCode == null || _provinceCode!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn tỉnh/thành phố')),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
     try {
       final dio = ref.read(dioProvider);
 
+      final provinces = ref.read(provincesProvider).asData?.value ?? const <Province>[];
+      final wards = _provinceCode == null
+          ? const <Ward>[]
+          : (await ref.read(wardsProvider(_provinceCode!).future));
+      final provinceName = provinces
+          .where((item) => item.code == _provinceCode)
+          .map((item) => item.name)
+          .firstOrNull;
+      final wardName = wards
+          .where((item) => item.code == _wardCode)
+          .map((item) => item.name)
+          .firstOrNull;
+      final locationParts = [
+        _locationCtrl.text.trim(),
+        wardName,
+        provinceName,
+      ].whereType<String>().where((value) => value.isNotEmpty).toList();
+
       final body = <String, dynamic>{
         'name': _nameCtrl.text.trim(),
         'description': _descCtrl.text.trim(),
-        'locationAddress': _locationCtrl.text.trim(),
+        'rules': _rulesCtrl.text.trim(),
+        'locationAddress': locationParts.join(', '),
+        'provinceCode': _provinceCode,
+        'wardCode': _wardCode,
         // Backend yêu cầu UUID category, không nhận slug như "pickleball".
         'categoryIds': [await _resolveCategoryId()],
         'joinMode': _joinMode,
-        'visibility': 'PUBLIC',
-        'lat': null,
-        'lng': null,
+        'visibility': _visibility,
+        'joinQuestions': _joinQuestions,
+        if (_logoUrl != null) 'logoUrl': _logoUrl,
+        if (_bannerUrl != null) 'bannerUrl': _bannerUrl,
       };
 
       _log.info('Tạo CLB: ${body['name']}');
@@ -96,6 +140,59 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _pickAndUploadImage({required bool banner}) async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+      maxWidth: banner ? 1800 : 1000,
+    );
+    if (picked == null) return;
+    if (banner) {
+      setState(() => _isUploadingBanner = true);
+    } else {
+      setState(() => _isUploadingLogo = true);
+    }
+    try {
+      final bytes = await picked.readAsBytes();
+      if (bytes.length > (banner ? 10 : 5) * 1024 * 1024) {
+        throw StateError('Ảnh ${banner ? 'bìa' : 'logo'} không được vượt quá ${banner ? 10 : 5}MB');
+      }
+      final url = await ref.read(communitySocialRepositoryProvider).uploadImage(
+            bytes,
+            picked.name,
+          );
+      if (!mounted) return;
+      setState(() {
+        if (banner) {
+          _bannerUrl = url;
+        } else {
+          _logoUrl = url;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Bad state: ', ''))),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploadingBanner = false;
+          _isUploadingLogo = false;
+        });
+      }
+    }
+  }
+
+  void _addJoinQuestion() {
+    final question = _questionCtrl.text.trim();
+    if (question.isEmpty || _joinQuestions.length >= 5) return;
+    setState(() {
+      _joinQuestions.add(question);
+      _questionCtrl.clear();
+    });
   }
 
   @override
@@ -153,6 +250,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               TextFormField(
                 controller: _descCtrl,
                 maxLines: 3,
+                maxLength: 1000,
                 style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'Giới thiệu về câu lạc bộ...',
@@ -161,7 +259,21 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               ),
               const SizedBox(height: 20),
 
-              _label('Địa điểm (không bắt buộc)', colors),
+              _label('Nội quy (không bắt buộc)', colors),
+              const SizedBox(height: 6),
+              TextFormField(
+                controller: _rulesCtrl,
+                maxLines: 4,
+                maxLength: 5000,
+                style: TextStyle(color: colors.textPrimary),
+                decoration: InputDecoration(
+                  hintText: '1. Tôn trọng lẫn nhau\n2. Đúng giờ...',
+                  hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              _label('Khu vực hoạt động', colors),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _locationCtrl,
@@ -171,11 +283,25 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
                 ),
               ),
+              const SizedBox(height: 10),
+              _buildRegionSelectors(),
+              const SizedBox(height: 20),
+
+              _buildImagePickers(),
+              const SizedBox(height: 20),
+
+              _label('Hiển thị câu lạc bộ', colors),
+              const SizedBox(height: 6),
+              _buildVisibilitySelector(),
               const SizedBox(height: 20),
 
               _label('Hình thức tham gia', colors),
               const SizedBox(height: 6),
               _buildJoinModeSelector(),
+              if (_joinMode == 'APPROVAL') ...[
+                const SizedBox(height: 10),
+                _buildJoinQuestions(),
+              ],
               const SizedBox(height: 32),
 
               SizedBox(
@@ -222,6 +348,171 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
         fontWeight: FontWeight.w700,
         color: colors.textSecondary,
       ),
+    );
+  }
+
+  Widget _buildRegionSelectors() {
+    final colors = context.colors;
+    final provincesAsync = ref.watch(provincesProvider);
+    final wardsAsync = _provinceCode == null
+        ? const AsyncData<List<Ward>>([])
+        : ref.watch(wardsProvider(_provinceCode!));
+    return Row(
+      children: [
+        Expanded(
+          child: provincesAsync.when(
+            data: (items) => DropdownButtonFormField<String>(
+              initialValue: _provinceCode,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Tỉnh/thành phố *'),
+              items: items
+                  .map((item) => DropdownMenuItem(value: item.code, child: Text(item.name, overflow: TextOverflow.ellipsis)))
+                  .toList(),
+              onChanged: (value) => setState(() {
+                _provinceCode = value;
+                _wardCode = null;
+              }),
+            ),
+            loading: () => const LinearProgressIndicator(),
+            error: (e, s) => Text('Không tải được tỉnh/thành', style: TextStyle(color: colors.error, fontSize: 11)),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: wardsAsync.when(
+            data: (items) => DropdownButtonFormField<String>(
+              initialValue: _wardCode,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Phường/xã'),
+              items: items
+                  .map((item) => DropdownMenuItem(value: item.code, child: Text(item.name, overflow: TextOverflow.ellipsis)))
+                  .toList(),
+              onChanged: _provinceCode == null ? null : (value) => setState(() => _wardCode = value),
+            ),
+            loading: () => const LinearProgressIndicator(),
+            error: (e, s) => Text('Không tải được phường/xã', style: TextStyle(color: colors.error, fontSize: 11)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImagePickers() {
+    return Row(
+      children: [
+        Expanded(child: _imagePickerCard(
+          title: 'Logo / avatar',
+          url: _logoUrl,
+          loading: _isUploadingLogo,
+          circle: true,
+          onTap: () => _pickAndUploadImage(banner: false),
+        )),
+        const SizedBox(width: 10),
+        Expanded(child: _imagePickerCard(
+          title: 'Ảnh bìa',
+          url: _bannerUrl,
+          loading: _isUploadingBanner,
+          onTap: () => _pickAndUploadImage(banner: true),
+        )),
+      ],
+    );
+  }
+
+  Widget _imagePickerCard({
+    required String title,
+    required String? url,
+    required bool loading,
+    required VoidCallback onTap,
+    bool circle = false,
+  }) {
+    final colors = context.colors;
+    return Column(
+      children: [
+        Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: colors.textSecondary)),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: loading ? null : onTap,
+          borderRadius: BorderRadius.circular(circle ? 48 : 12),
+          child: Container(
+            width: double.infinity,
+            height: 92,
+            decoration: BoxDecoration(
+              shape: circle ? BoxShape.circle : BoxShape.rectangle,
+              borderRadius: circle ? null : BorderRadius.circular(12),
+              color: colors.bgSurface,
+              border: Border.all(color: url == null ? colors.border : AppTheme.primary),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: loading
+                ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+                : url == null
+                    ? Icon(Icons.add_photo_alternate_outlined, color: colors.textMuted, size: 28)
+                    : Image.network(url, fit: BoxFit.cover, errorBuilder: (c, o, s) => Icon(Icons.broken_image_outlined, color: colors.textMuted)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildJoinQuestions() {
+    final colors = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(12), border: Border.all(color: colors.border)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Câu hỏi xin vào (tối đa 5)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+          const SizedBox(height: 8),
+          ..._joinQuestions.asMap().entries.map((entry) => ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                title: Text(entry.value, style: TextStyle(fontSize: 12, color: colors.textPrimary)),
+                trailing: IconButton(icon: Icon(Icons.close, size: 16, color: colors.textMuted), onPressed: () => setState(() => _joinQuestions.removeAt(entry.key)),),
+              )),
+          if (_joinQuestions.length < 5)
+            Row(children: [
+              Expanded(child: TextField(controller: _questionCtrl, maxLength: 255, decoration: const InputDecoration(hintText: 'Ví dụ: Bạn đang chơi ở trình độ nào?'))),
+              IconButton(onPressed: _addJoinQuestion, icon: const Icon(Icons.add_circle_rounded, color: AppTheme.primary)),
+            ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVisibilitySelector() {
+    final options = [
+      ('PUBLIC', 'Công khai', 'Ai cũng có thể tìm thấy CLB'),
+      ('PRIVATE', 'Riêng tư', 'Chỉ thành viên mới xem được nội dung'),
+      ('RESTRICTED', 'Hạn chế', 'Hiện khi tìm kiếm, cần tham gia để xem'),
+    ];
+    return Column(
+      children: options.map((option) {
+        final selected = _visibility == option.$1;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: InkWell(
+            onTap: () => setState(() => _visibility = option.$1),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: selected ? AppTheme.primary.withValues(alpha: 0.08) : context.colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: selected ? AppTheme.primary : context.colors.border),
+              ),
+              child: Row(children: [
+                Icon(selected ? Icons.radio_button_checked : Icons.radio_button_off, color: selected ? AppTheme.primary : context.colors.textMuted, size: 19),
+                const SizedBox(width: 10),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(option.$2, style: TextStyle(fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
+                  Text(option.$3, style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
+                ])),
+              ]),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
