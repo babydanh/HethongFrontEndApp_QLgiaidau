@@ -193,7 +193,7 @@ class ChatMessageModel {
     final senderAvatarUrl = json['senderAvatarUrl']?.toString() ?? sender?['avatarUrl']?.toString();
     final senderRole = json['senderRole']?.toString() ?? sender?['role']?.toString();
 
-    final rawMedia = json['mediaUrls'] ?? json['attachments'];
+    final rawMedia = json['attachmentsUrls'] ?? json['attachments_urls'] ?? json['mediaUrls'] ?? json['attachments'];
     final mediaUrls = <String>[];
     if (rawMedia is List) {
       for (final m in rawMedia) {

@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/features/chat/widgets/chat_image_viewer.dart'
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -268,6 +269,19 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     } catch (_) {}
   }
 
+  String _resolveMediaUrl(String url) {
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    var rawBase = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
+    if (rawBase.contains('localhost')) {
+      rawBase = rawBase.replaceAll('localhost', '10.0.2.2');
+    } else if (rawBase.contains('127.0.0.1')) {
+      rawBase = rawBase.replaceAll('127.0.0.1', '10.0.2.2');
+    }
+    final host = rawBase.replaceAll(RegExp(r'/api/v1/?$'), '');
+    final cleanPath = url.startsWith('/') ? url : '/$url';
+    return '$host$cleanPath';
+  }
+
   Future<void> _sendMessage({String? customContent, Map<String, dynamic>? pollData}) async {
     final text = (customContent ?? _messageController.text).trim();
     if (text.isEmpty && _pendingMedia.isEmpty && pollData == null) return;
@@ -288,7 +302,10 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       final payload = <String, dynamic>{
         'roomId': widget.roomId,
         'messageText': text,
-        if (media.isNotEmpty) 'mediaUrls': media,
+        if (media.isNotEmpty) ...{
+          'attachmentsUrls': media,
+          'mediaUrls': media,
+        },
         if (replyId != null) 'replyToId': replyId,
         if (pollData != null) 'poll': pollData,
       };
@@ -622,7 +639,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   void _showMediaGallery(String url, {String? senderName, DateTime? timestamp}) {
     ChatImageViewer.show(
       context,
-      imageUrl: url,
+      imageUrl: _resolveMediaUrl(url),
       senderName: senderName,
       timestamp: timestamp,
     );
@@ -842,15 +859,18 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
                           final showDate = olderMsg == null ||
                               msg.createdAt.day != olderMsg.createdAt.day ||
-                              msg.createdAt.month != olderMsg.createdAt.month;
+                              msg.createdAt.month != olderMsg.createdAt.month ||
+                              msg.createdAt.year != olderMsg.createdAt.year;
 
                           final isFirstInGroup = olderMsg == null ||
                               olderMsg.senderId != msg.senderId ||
-                              msg.createdAt.difference(olderMsg.createdAt).inMinutes.abs() > 3;
+                              showDate;
 
                           final isLastInGroup = newerMsg == null ||
                               newerMsg.senderId != msg.senderId ||
-                              newerMsg.createdAt.difference(msg.createdAt).inMinutes.abs() > 3;
+                              (newerMsg.createdAt.day != msg.createdAt.day ||
+                               newerMsg.createdAt.month != msg.createdAt.month ||
+                               newerMsg.createdAt.year != msg.createdAt.year);
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1059,8 +1079,10 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               CircleAvatar(
                 radius: 14,
                 backgroundColor: AppTheme.primaryLight,
-                backgroundImage: msg.senderAvatarUrl != null ? NetworkImage(msg.senderAvatarUrl!) : null,
-                child: msg.senderAvatarUrl == null
+                backgroundImage: msg.senderAvatarUrl != null && msg.senderAvatarUrl!.isNotEmpty
+                    ? NetworkImage(_resolveMediaUrl(msg.senderAvatarUrl!))
+                    : null,
+                child: msg.senderAvatarUrl == null || msg.senderAvatarUrl!.isEmpty
                     ? Text(
                         msg.senderName.characters.first.toUpperCase(),
                         style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.primaryDark),
@@ -1178,13 +1200,35 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                       spacing: 4,
                                       runSpacing: 4,
                                       children: msg.mediaUrls.map((url) {
+                                        final resolved = _resolveMediaUrl(url);
                                         return GestureDetector(
-                                          onTap: () => _showMediaGallery(url, senderName: msg.senderName, timestamp: msg.createdAt),
-                                          child: Image.network(
-                                            url,
-                                            width: msg.mediaUrls.length == 1 ? 220 : 105,
-                                            height: msg.mediaUrls.length == 1 ? 180 : 105,
-                                            fit: BoxFit.cover,
+                                          onTap: () => _showMediaGallery(resolved, senderName: msg.senderName, timestamp: msg.createdAt),
+                                          child: Hero(
+                                            tag: resolved,
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.circular(10),
+                                              child: Image.network(
+                                                resolved,
+                                                width: msg.mediaUrls.length == 1 ? 220 : 105,
+                                                height: msg.mediaUrls.length == 1 ? 180 : 105,
+                                                fit: BoxFit.cover,
+                                                loadingBuilder: (ctx, child, progress) {
+                                                  if (progress == null) return child;
+                                                  return Container(
+                                                    width: msg.mediaUrls.length == 1 ? 220 : 105,
+                                                    height: msg.mediaUrls.length == 1 ? 180 : 105,
+                                                    color: Colors.black12,
+                                                    child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                                                  );
+                                                },
+                                                errorBuilder: (ctx, err, stack) => Container(
+                                                  width: msg.mediaUrls.length == 1 ? 220 : 105,
+                                                  height: msg.mediaUrls.length == 1 ? 180 : 105,
+                                                  color: Colors.black12,
+                                                  child: const Center(child: Icon(Icons.broken_image_rounded, size: 28, color: Colors.grey)),
+                                                ),
+                                              ),
+                                            ),
                                           ),
                                         );
                                       }).toList(),
