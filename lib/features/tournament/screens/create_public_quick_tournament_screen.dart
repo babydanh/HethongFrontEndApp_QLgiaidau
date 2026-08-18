@@ -52,6 +52,7 @@ class _CreatePublicQuickTournamentScreenState extends ConsumerState<CreatePublic
         'name': name,
         'sport': _sport,
         'format': _format,
+        if (_format == AppConstants.formatMixedDoubles) 'genderRestriction': 'MIXED',
         'bracketType': _bracket,
         'maxTeams': maxTeams,
         'visibility': _visibility,

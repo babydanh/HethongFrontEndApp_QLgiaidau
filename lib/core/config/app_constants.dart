@@ -71,10 +71,12 @@ class AppConstants {
   // ─── Formats ───
   static const String formatSingles = 'singles';
   static const String formatDoubles = 'doubles';
+  static const String formatMixedDoubles = 'mixed_doubles';
 
   static const Map<String, String> formatNames = {
     formatSingles: 'Đánh đơn',
     formatDoubles: 'Đánh đôi',
+    formatMixedDoubles: 'Đôi nam nữ',
   };
 
   // ─── Categories (Hạng mục) ───

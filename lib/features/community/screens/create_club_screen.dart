@@ -308,7 +308,9 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                 width: double.infinity,
                 height: 50,
                 child: FilledButton.icon(
-                  onPressed: _isLoading ? null : _submit,
+                  onPressed: _isLoading || _isUploadingLogo || _isUploadingBanner
+                      ? null
+                      : _submit,
                   icon: _isLoading
                       ? const SizedBox(
                           width: 18,
@@ -447,9 +449,24 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                 ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
                 : url == null
                     ? Icon(Icons.add_photo_alternate_outlined, color: colors.textMuted, size: 28)
-                    : Image.network(url, fit: BoxFit.cover, errorBuilder: (c, o, s) => Icon(Icons.broken_image_outlined, color: colors.textMuted)),
+                    : Image.network(
+                        url.startsWith('http') ? url : 'https://sporto.asia$url',
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, o, s) => Icon(Icons.broken_image_outlined, color: colors.textMuted),
+                      ),
           ),
         ),
+        if (url != null && !loading)
+          TextButton(
+            onPressed: () => setState(() {
+              if (circle) {
+                _logoUrl = null;
+              } else {
+                _bannerUrl = null;
+              }
+            }),
+            child: const Text('Gỡ ảnh', style: TextStyle(fontSize: 11)),
+          ),
       ],
     );
   }
