@@ -101,11 +101,20 @@ jobs:
                      -exportPath build/ipa \
                      -allowProvisioningUpdates
 
-      # 8. Upload lên App Store Connect
+      # 8. Upload lên App Store Connect via native xcrun altool
       - name: Upload to App Store
-        uses: apple-actions/upload-to-app-store@v3
-        with:
-          ipa-path: ios/build/ipa/*.ipa
-          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID || secrets.APP_STORE_API_KEY_ID }}
-          api-issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID || secrets.APP_STORE_API_ISSUER_ID }}
-          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_KEY || secrets.APP_STORE_API_PRIVATE_KEY }}
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID || secrets.APP_STORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID || secrets.APP_STORE_API_ISSUER_ID }}
+          API_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY || secrets.APP_STORE_API_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$API_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8
+          IPA_PATH=$(ls ios/build/ipa/*.ipa | head -n 1)
+          echo "Found IPA: $IPA_PATH"
+          xcrun altool --upload-app \
+            -f "$IPA_PATH" \
+            -t ios \
+            --apiKey "$API_KEY_ID" \
+            --apiIssuer "$API_ISSUER_ID"
