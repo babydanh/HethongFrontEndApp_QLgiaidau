@@ -462,7 +462,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             ),
           ],
           overrideReason: 'Xử thắng trực tiếp (force win)',
-          expectedRevision: match?.revision,
+          expectedRevision: match.revision,
         );
     context.pop();
   }
@@ -728,7 +728,19 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _buildSetupChip('Môn', AppConstants.sportNames[match.sportKey?.toLowerCase()] ?? AppConstants.sportNames[ref.watch(tournamentProvider(widget.tournamentId)).value?.sport?.toLowerCase()] ?? _setupSportLabel(kind)),
+                        _buildSetupChip(
+                          'Môn',
+                          AppConstants.sportNames[match.sportKey
+                                  ?.toLowerCase()] ??
+                              AppConstants.sportNames[ref
+                                  .watch(
+                                    tournamentProvider(widget.tournamentId),
+                                  )
+                                  .value
+                                  ?.sport
+                                  .toLowerCase()] ??
+                              _setupSportLabel(kind),
+                        ),
                         _buildSetupChip('Format', 'BO${config.bestOf}'),
                         _buildSetupChip('Thắng', '${config.setsToWin} set'),
                         _buildSetupChip(
@@ -761,7 +773,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       )),
                     );
                     await controller.startMatch();
-                    if (!context.mounted) return;
+                    if (!mounted) return;
                     showOfficialScoreModal(
                       context,
                       tournamentId: widget.tournamentId,
@@ -1659,15 +1671,25 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusMedium,
+                              ),
                             ),
                           ),
                           onPressed: () async {
-                            final controller = ref.read(matchControllerProvider(params));
+                            final controller = ref.read(
+                              matchControllerProvider(params),
+                            );
                             await controller.startMatch();
                           },
                           icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                          label: const Text('BẮT ĐẦU TRẬN ĐẤU', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                          label: const Text(
+                            'BẮT ĐẦU TRẬN ĐẤU',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
                         )
                       else
                         ElevatedButton.icon(
@@ -1676,7 +1698,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusMedium,
+                              ),
                             ),
                           ),
                           onPressed: () {
@@ -1685,14 +1709,26 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               tournamentId: widget.tournamentId,
                               matchId: widget.matchId,
                               match: match,
-                              onRecordPenalty: () => _showFoulSelectionDialog(match),
+                              onRecordPenalty: () =>
+                                  _showFoulSelectionDialog(match),
                               onSubmitPenalty: (teamName, option, reason) =>
-                                  _submitPenalty(match, teamName, option, reason),
+                                  _submitPenalty(
+                                    match,
+                                    teamName,
+                                    option,
+                                    reason,
+                                  ),
                               onForceWin: () => _showForceWinDialog(match),
                             );
                           },
                           icon: const Icon(Icons.scoreboard_rounded, size: 18),
-                          label: const Text('MỞ BẢNG CHẤM ĐIỂM', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                          label: const Text(
+                            'MỞ BẢNG CHẤM ĐIỂM',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
                     ],
                   );
@@ -1753,26 +1789,44 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF16A34A),
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusMedium,
+                            ),
                           ),
                         ),
                         onPressed: () async {
-                          final controller = ref.read(matchControllerProvider(params));
+                          final controller = ref.read(
+                            matchControllerProvider(params),
+                          );
                           await controller.startMatch();
                         },
                         icon: const Icon(Icons.play_arrow_rounded, size: 16),
-                        label: const Text('BẮT ĐẦU', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11)),
+                        label: const Text(
+                          'BẮT ĐẦU',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                          ),
+                        ),
                       )
                     else
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2563EB),
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusMedium,
+                            ),
                           ),
                         ),
                         onPressed: () {
@@ -1781,14 +1835,21 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             tournamentId: widget.tournamentId,
                             matchId: widget.matchId,
                             match: match,
-                            onRecordPenalty: () => _showFoulSelectionDialog(match),
+                            onRecordPenalty: () =>
+                                _showFoulSelectionDialog(match),
                             onSubmitPenalty: (teamName, option, reason) =>
                                 _submitPenalty(match, teamName, option, reason),
                             onForceWin: () => _showForceWinDialog(match),
                           );
                         },
                         icon: const Icon(Icons.scoreboard_rounded, size: 16),
-                        label: const Text('MỞ BẢNG', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11)),
+                        label: const Text(
+                          'MỞ BẢNG',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                          ),
+                        ),
                       ),
                   ],
                 );
@@ -2160,9 +2221,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             ),
           )
         else
-          Expanded(
-            child: _buildChatTab(match),
-          ),
+          Expanded(child: _buildChatTab(match)),
       ],
     );
   }
@@ -3814,4 +3873,3 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 }
-

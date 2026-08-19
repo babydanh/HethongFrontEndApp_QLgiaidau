@@ -155,8 +155,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
       if (_carouselController == null ||
           !_carouselController!.hasClients ||
-          _carouselController!.positions.length != 1)
+          _carouselController!.positions.length != 1) {
         return;
+      }
       _carouselCurrentPage = (_carouselCurrentPage + 1) % itemCount;
       _carouselController!.animateToPage(
         _carouselCurrentPage,
@@ -353,10 +354,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.18),
+                                  color: Colors.white.withValues(alpha: 0.18),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(0.35),
+                                    color: Colors.white.withValues(alpha: 0.35),
                                   ),
                                 ),
                                 child: Row(
@@ -778,7 +779,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           ? Image.network(
                                               resolvedBanner,
                                               fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) =>
+                                              errorBuilder: (_, _, _) =>
                                                   _buildCommunityBannerFallback(),
                                             )
                                           : _buildCommunityBannerFallback(),
@@ -943,7 +944,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ? Image.network(
                                         resolvedLogo,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => Container(
+                                        errorBuilder: (_, _, _) => Container(
                                           color: AppTheme.primary.withValues(
                                             alpha: 0.15,
                                           ),
@@ -981,7 +982,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         height: 160,
         child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 
@@ -1028,9 +1029,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             width: 36.0,
             height: 36.0,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withOpacity(0.3)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
             ),
             alignment: Alignment.center,
             child: const Icon(
@@ -1047,9 +1048,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             width: 36.0,
             height: 36.0,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withOpacity(0.3)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
             ),
             child: Stack(
               alignment: Alignment.center,
@@ -1137,9 +1138,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.18),
+              color: Colors.white.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(20.0),
-              border: Border.all(color: Colors.white.withOpacity(0.35)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
@@ -1246,15 +1247,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     vertical: 9,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
+                    color: Colors.white.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.32),
+                      color: Colors.white.withValues(alpha: 0.32),
                       width: 1.2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -1313,7 +1314,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
                           value: progressPercent,
-                          backgroundColor: Colors.white.withOpacity(0.2),
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
                           valueColor: const AlwaysStoppedAnimation<Color>(
                             Color(0xFFFFD700),
                           ),
@@ -1394,7 +1395,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             fontSize: 10.0,
           ),
         ),
@@ -1453,7 +1454,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         border: Border.all(color: context.colors.border, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10.0,
             offset: const Offset(0, 4),
           ),
@@ -1994,9 +1995,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 6),
                   Consumer(
                     builder: (context, ref, child) {
-                      final wards = ref.watch(
-                        wardsProvider(localProvinceCode),
-                      );
+                      final wards = ref.watch(wardsProvider(localProvinceCode));
                       final wardsList = wards.value ?? const [];
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -2045,9 +2044,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ],
                             onChanged: localProvinceCode.isEmpty
                                 ? null
-                                : (v) => setSheetState(
-                                    () => localWard = v ?? '',
-                                  ),
+                                : (v) =>
+                                      setSheetState(() => localWard = v ?? ''),
                           ),
                         ),
                       );
@@ -2666,7 +2664,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             width: 72.0,
             height: 72.0,
             decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.08),
+              color: Colors.grey.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(20.0),
             ),
             child: const Icon(
@@ -2920,12 +2918,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   if (_clubSport == 'badminton' &&
                       (name.contains('badminton') ||
                           name.contains('cầu lông') ||
-                          name.contains('cau long')))
+                          name.contains('cau long'))) {
                     return true;
-                  if (_clubSport == 'tennis' && name.contains('tennis'))
+                  }
+                  if (_clubSport == 'tennis' && name.contains('tennis')) {
                     return true;
-                  if (_clubSport == 'pickleball' && name.contains('pickleball'))
+                  }
+                  if (_clubSport == 'pickleball' &&
+                      name.contains('pickleball')) {
                     return true;
+                  }
                   return name.contains(_clubSport);
                 });
                 if (!hasSport) return false;
@@ -2951,7 +2953,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         width: 72.0,
                         height: 72.0,
                         decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.08),
+                          color: Colors.grey.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(20.0),
                         ),
                         child: const Icon(
@@ -3051,16 +3053,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// ─── Helpers ───
   Color _getSportColor(String sportName) {
     final n = sportName.toLowerCase();
-    if (n.contains('badminton') || n.contains('cầu lông'))
+    if (n.contains('badminton') || n.contains('cầu lông')) {
       return const Color(0xFF0284C7);
-    if (n.contains('tennis')) return const Color(0xFFEA580C);
-    if (n.contains('pickleball')) return const Color(0xFF059669);
+    }
+    if (n.contains('tennis')) {
+      return const Color(0xFFEA580C);
+    }
+    if (n.contains('pickleball')) {
+      return const Color(0xFF059669);
+    }
     if (n.contains('table tennis') ||
         n.contains('bóng bàn') ||
-        n.contains('bong ban'))
+        n.contains('bong ban')) {
       return const Color(0xFFDC2626);
-    if (n.contains('bóng đá') || n.contains('football'))
+    }
+    if (n.contains('bóng đá') || n.contains('football')) {
       return const Color(0xFF16A34A);
+    }
     if (n.contains('bơi') || n.contains('swim')) return const Color(0xFF2563EB);
     if (n.contains('cờ') || n.contains('chess')) return const Color(0xFF7C3AED);
     return const Color(0xFF0284C7);
@@ -3146,7 +3155,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Image.network(
                             club.bannerUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
+                            errorBuilder: (_, _, _) =>
                                 _buildCardBannerFallback(sportColor, emoji),
                           )
                         else
@@ -3364,8 +3373,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ? Image.network(
                             club.logoUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                _buildCardLogoFallback(),
+                            errorBuilder: (_, _, _) => _buildCardLogoFallback(),
                           )
                         : _buildCardLogoFallback(),
                   ),
@@ -3517,21 +3525,23 @@ class _TournamentCard extends StatelessWidget {
         final mt = div.matchType.toUpperCase();
         final gr = div.genderRestriction?.toUpperCase() ?? '';
         if (mt == 'SINGLES') {
-          if (gr == 'FEMALE')
+          if (gr == 'FEMALE') {
             chips.add("Đơn Nữ");
-          else if (gr == 'MALE')
+          } else if (gr == 'MALE') {
             chips.add("Đơn Nam");
-          else
+          } else {
             chips.add("Đơn");
+          }
         } else if (mt == 'DOUBLES') {
-          if (gr == 'FEMALE')
+          if (gr == 'FEMALE') {
             chips.add("Đôi Nữ");
-          else if (gr == 'MALE')
+          } else if (gr == 'MALE') {
             chips.add("Đôi Nam");
-          else if (gr == 'MIXED')
+          } else if (gr == 'MIXED') {
             chips.add("Đôi Nam Nữ");
-          else
+          } else {
             chips.add("Đôi Nam");
+          }
         } else if (mt == 'MIXED_DOUBLES' || mt == 'MIXED' || gr == 'MIXED') {
           chips.add("Đôi Nam Nữ");
         }
@@ -3613,7 +3623,7 @@ class _TournamentCard extends StatelessWidget {
                         ? Image.network(
                             bannerUrlResolved,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
+                            errorBuilder: (_, _, _) =>
                                 _buildFallbackBanner(context),
                           )
                         : _buildFallbackBanner(context),
