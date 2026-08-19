@@ -3836,8 +3836,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exploreDetails => 'Details';
 
   @override
-  String exploreShareSubtitle(Object tournament, Object court) =>
-      'Tournament: $tournament • $court';
+  String exploreShareSubtitle(Object tournament, Object court) {
+    return 'Tournament: $tournament • $court';
+  }
 
   @override
   String get exploreLiveBadge => 'Live match 🔴';
@@ -3846,13 +3847,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exploreMatchBadge => 'Match';
 
   @override
-  String exploreMatchStatusLive(Object round) => 'LIVE • ROUND $round';
+  String exploreMatchStatusLive(Object round) {
+    return 'LIVE • ROUND $round';
+  }
 
   @override
-  String exploreMatchStatusCompleted(Object round) => 'COMPLETED • ROUND $round';
+  String exploreMatchStatusCompleted(Object round) {
+    return 'COMPLETED • ROUND $round';
+  }
 
   @override
-  String exploreMatchStatusScheduled(Object round) => 'UPCOMING • ROUND $round';
+  String exploreMatchStatusScheduled(Object round) {
+    return 'UPCOMING • ROUND $round';
+  }
 
   @override
   String get exploreRecentResultsLoading => 'Loading match results...';
@@ -3916,8 +3923,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubRankingFilterTooltip => 'Ranking filters';
 
   @override
-  String get clubRankingAutoRefresh =>
-      'Automatically updates every 30 seconds';
+  String get clubRankingAutoRefresh => 'Automatically updates every 30 seconds';
 
   @override
   String get clubRankingViewAll => 'View all rankings →';
@@ -3959,7 +3965,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubRankingMyRank => 'Your ranking';
 
   @override
-  String clubRankingPeak(Object elo) => 'Peak: $elo';
+  String clubRankingPeak(Object elo) {
+    return 'Peak: $elo';
+  }
 
   @override
   String get clubRankingError => 'Could not load rankings';
@@ -3990,7 +3998,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubInvitesTitle => 'Club invites';
 
   @override
-  String clubInvitesInvitedBy(Object name) => 'Invited by $name';
+  String clubInvitesInvitedBy(Object name) {
+    return 'Invited by $name';
+  }
 
   @override
   String get clubInvitesPending => 'Pending';
@@ -3999,8 +4009,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubInvitesEmptyTitle => 'No invites';
 
   @override
-  String get clubInvitesEmptySubtitle =>
-      'Club invitations will appear here';
+  String get clubInvitesEmptySubtitle => 'Club invitations will appear here';
 
   @override
   String get clubInvitesLoadError => 'Could not load invites';
@@ -4054,7 +4063,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clubTournamentsAdvancedDescription =>
-      'Advanced tournaments offer deeper configuration (group stage, knockout, scheduling, fees and prizes).\n\nPlease visit sporto.asia on a computer to create an advanced tournament for the club!';
+      'Advanced tournaments offer deeper configuration (group stage, knockout, scheduling, fees and prizes).\\n\\nPlease visit sporto.asia on a computer to create an advanced tournament for the club!';
 
   @override
   String get clubTournamentsAdvancedCardDescription =>
@@ -4067,6 +4076,5 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubTournamentsCopyWebLink => 'Copy Web link';
 
   @override
-  String get clubTournamentsLinkCopied =>
-      'Tournament creation link copied';
+  String get clubTournamentsLinkCopied => 'Tournament creation link copied';
 }

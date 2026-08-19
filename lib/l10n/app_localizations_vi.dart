@@ -3831,8 +3831,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get exploreDetails => 'Chi tiết';
 
   @override
-  String exploreShareSubtitle(Object tournament, Object court) =>
-      'Giải đấu: $tournament • $court';
+  String exploreShareSubtitle(Object tournament, Object court) {
+    return 'Giải đấu: $tournament • $court';
+  }
 
   @override
   String get exploreLiveBadge => 'Trận đấu đang Live 🔴';
@@ -3841,15 +3842,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get exploreMatchBadge => 'Trận đấu';
 
   @override
-  String exploreMatchStatusLive(Object round) => 'ĐANG DIỄN RA • VÒNG $round';
+  String exploreMatchStatusLive(Object round) {
+    return 'ĐANG DIỄN RA • VÒNG $round';
+  }
 
   @override
-  String exploreMatchStatusCompleted(Object round) =>
-      'ĐÃ HOÀN THÀNH • VÒNG $round';
+  String exploreMatchStatusCompleted(Object round) {
+    return 'ĐÃ HOÀN THÀNH • VÒNG $round';
+  }
 
   @override
-  String exploreMatchStatusScheduled(Object round) =>
-      'SẮP DIỄN RA • VÒNG $round';
+  String exploreMatchStatusScheduled(Object round) {
+    return 'SẮP DIỄN RA • VÒNG $round';
+  }
 
   @override
   String get exploreRecentResultsLoading => 'Đang tải kết quả trận đấu...';
@@ -3955,7 +3960,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubRankingMyRank => 'Xếp hạng của bạn';
 
   @override
-  String clubRankingPeak(Object elo) => 'Cao nhất: $elo';
+  String clubRankingPeak(Object elo) {
+    return 'Cao nhất: $elo';
+  }
 
   @override
   String get clubRankingError => 'Không thể tải xếp hạng';
@@ -3986,7 +3993,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubInvitesTitle => 'Lời mời CLB';
 
   @override
-  String clubInvitesInvitedBy(Object name) => 'Được mời bởi $name';
+  String clubInvitesInvitedBy(Object name) {
+    return 'Được mời bởi $name';
+  }
 
   @override
   String get clubInvitesPending => 'Chờ duyệt';
@@ -4049,7 +4058,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get clubTournamentsAdvancedDescription =>
-      'Giải đấu nâng cao có nhiều cấu hình chuyên sâu (Vòng bảng, Knockout, Lịch thi đấu, Lệ phí và Giải thưởng).\n\nVui lòng truy cập trang web sporto.asia trên máy tính để tạo giải nâng cao cho câu lạc bộ!';
+      'Giải đấu nâng cao có nhiều cấu hình chuyên sâu (Vòng bảng, Knockout, Lịch thi đấu, Lệ phí và Giải thưởng).\\n\\nVui lòng truy cập trang web sporto.asia trên máy tính để tạo giải nâng cao cho câu lạc bộ!';
 
   @override
   String get clubTournamentsAdvancedCardDescription =>
