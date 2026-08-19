@@ -111,28 +111,70 @@ jobs:
           cd ios
           pod install --repo-update
 
-      # 6. Import certificate + provisioning profile
-      - name: Import signing certificate
-        uses: apple-actions/import-codesign-certs@v2
-        with:
-          p12-file-base64: ${{ secrets.IOS_CERT_BASE64 || secrets.APPLE_BUILD_CERTIFICATE_BASE64 }}
-          p12-password: ${{ secrets.IOS_CERT_PASSWORD || secrets.APPLE_P12_PASSWORD }}
-          provisioning-profile-base64: ${{ secrets.IOS_PROFILE_BASE64 || secrets.APPLE_PROVISION_PROFILE_BASE64 }}
-
-      # 7. Archive + Export IPA
-      - name: Archive and export IPA
+      # 6. Cài đặt chứng chỉ Signing & Provisioning Profile (Native macOS Keychain)
+      - name: Setup Apple Codesigning Keychain
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.IOS_CERT_BASE64 || secrets.APPLE_BUILD_CERTIFICATE_BASE64 || secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD || secrets.APPLE_P12_PASSWORD || secrets.P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 || secrets.APPLE_PROVISION_PROFILE_BASE64 || secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD || 'sporto_temp_keychain_pass' }}
         run: |
+          set -euo pipefail
+
+          if [ -n "${BUILD_CERTIFICATE_BASE64:-}" ] && [ -n "${P12_PASSWORD:-}" ]; then
+            echo "Importing certificate into temporary keychain..."
+            CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+            KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+            echo "$BUILD_CERTIFICATE_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
+
+            # Create and configure temporary keychain
+            security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+            security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+            security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+            # Import certificate into keychain
+            security import "$CERTIFICATE_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+            security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+            security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed -e 's/^[ \t]*"//' -e 's/"$//')
+
+            if [ -n "${BUILD_PROVISION_PROFILE_BASE64:-}" ]; then
+              echo "Installing provisioning profile..."
+              mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+              echo "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+            fi
+          else
+            echo "No manual .p12 certificate supplied. Xcode will use App Store Connect API Key with automatic provisioning."
+          fi
+
+      # 7. Archive + Export IPA (với App Store Connect API Key)
+      - name: Archive and export IPA
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID || secrets.APP_STORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID || secrets.APP_STORE_API_ISSUER_ID }}
+          API_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY || secrets.APP_STORE_API_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$API_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8
+
           cd ios
           xcodebuild -workspace Runner.xcworkspace \
                      -scheme Runner \
                      -configuration Release \
                      -derivedDataPath build \
                      -archivePath build/Runner.xcarchive \
+                     -authenticationKeyID "$API_KEY_ID" \
+                     -authenticationKeyIssuerID "$API_ISSUER_ID" \
+                     -allowProvisioningUpdates \
                      clean archive
+
           xcodebuild -exportArchive \
                      -archivePath build/Runner.xcarchive \
                      -exportOptionsPlist ExportOptions.plist \
                      -exportPath build/ipa \
+                     -authenticationKeyID "$API_KEY_ID" \
+                     -authenticationKeyIssuerID "$API_ISSUER_ID" \
                      -allowProvisioningUpdates
 
       # 8. Upload lên App Store Connect via native xcrun altool
