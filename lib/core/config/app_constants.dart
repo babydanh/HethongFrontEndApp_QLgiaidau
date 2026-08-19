@@ -170,7 +170,7 @@ class AppConstants {
   static const String tokenPrefixViewer = 'VWR';
 
   // ─── Max Teams ───
-  static const List<int> maxTeamOptions = [4, 8, 16, 32, 64];
+  static const List<int> maxTeamOptions = [4, 8, 16, 32, 64, 128];
 
   // ─── Scoring ───
   static const int pointsForWin = 3;

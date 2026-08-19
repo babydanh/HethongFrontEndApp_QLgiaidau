@@ -70,6 +70,12 @@ class AppNotification {
         if (matchId != null) return '/live/$matchId';
         return null;
 
+      case 'MATCH_REMINDER':
+        // Reminder payloads carry the canonical deep link; keep the match
+        // fallback for older notifications that only contained matchId.
+        return _normalizeRedirectUrl(redirectUrl) ??
+            (matchId == null ? null : '/live/$matchId');
+
       case 'TOURNAMENT_INVITE':
       case 'TOURNAMENT_REGISTER_PENDING':
       case 'TEAM_CONFIRMATION_EXPIRED':
@@ -146,12 +152,31 @@ class AppNotification {
       }
       if (segments.length >= 3 && segments[2] == 'register') {
         final divisionId = uri.queryParameters['divisionId'];
-        if (divisionId != null && divisionId.isNotEmpty) {
-           return '/register/${segments[1]}?divisionId=$divisionId';
-        }
-        return '/register/${segments[1]}';
+        final tab = uri.queryParameters['tab'];
+        final participantId = uri.queryParameters['participantId'];
+        final query = <String, String>{
+          if (divisionId != null && divisionId.isNotEmpty) 'divisionId': divisionId,
+          if (tab != null && tab.isNotEmpty) 'tab': tab,
+          if (participantId != null && participantId.isNotEmpty) 'participantId': participantId,
+        };
+        final suffix = query.entries
+            .map((entry) => '${Uri.encodeQueryComponent(entry.key)}=${Uri.encodeQueryComponent(entry.value)}')
+            .join('&');
+        return '/register/${segments[1]}${suffix.isEmpty ? '' : '?$suffix'}';
       }
       return '/intro/${segments[1]}';
+    }
+    if (segments.length >= 3 &&
+        segments[0] == 'organizer' &&
+        segments[1] == 'tournaments') {
+      // Advanced management remains web-first, but the app must still land
+      // on the real tournament instead of silently dropping the notification.
+      return '/intro/${segments[2]}';
+    }
+    if (segments.length >= 2 &&
+        segments[0] == 'organizer' &&
+        segments[1] == 'tournaments') {
+      return '/dashboard';
     }
     if (segments.length >= 2 && segments[0] == 'matches') {
       return '/live/${segments[1]}';
@@ -232,6 +257,23 @@ class AppNotification {
       case 'PAYOUT_APPROVED':
       case 'PAYOUT_REJECTED':
         return Icons.payments_rounded;
+      case 'PARTNER_INVITE_RECEIVED':
+      case 'PARTNER_INVITE_ACCEPTED':
+      case 'PARTNER_INVITE_REJECTED':
+      case 'PARTNER_INVITE_CANCELLED':
+        return Icons.group_add_rounded;
+      case 'REFEREE_INVITED':
+      case 'REFEREE_INVITE_ACCEPTED':
+      case 'REFEREE_INVITE_DECLINED':
+      case 'REFEREE_INVITE_REVOKED':
+      case 'REFEREE_ASSIGNED':
+        return Icons.sports_rounded;
+      case 'COMMUNITY_INVITED':
+      case 'COMMUNITY_ROLE_PROMOTED':
+      case 'COMMUNITY_ROLE_DEMOTED':
+      case 'COMMUNITY_KICKED':
+      case 'COMMUNITY_INVITE_REVOKED':
+        return Icons.groups_rounded;
       case 'CHAT':
         return Icons.chat_rounded;
       case 'REMINDER':
@@ -262,6 +304,29 @@ class AppNotification {
       case 'PAYOUT_APPROVED':
       case 'PAYOUT_REJECTED':
         return const Color(0xFF10B981);
+      case 'PARTNER_INVITE_RECEIVED':
+        return const Color(0xFF8B5CF6);
+      case 'PARTNER_INVITE_ACCEPTED':
+        return const Color(0xFF10B981);
+      case 'PARTNER_INVITE_REJECTED':
+      case 'PARTNER_INVITE_CANCELLED':
+        return const Color(0xFF64748B);
+      case 'REFEREE_INVITED':
+      case 'REFEREE_ASSIGNED':
+        return const Color(0xFFF59E0B);
+      case 'REFEREE_INVITE_ACCEPTED':
+        return const Color(0xFF10B981);
+      case 'REFEREE_INVITE_DECLINED':
+      case 'REFEREE_INVITE_REVOKED':
+        return const Color(0xFF64748B);
+      case 'COMMUNITY_INVITED':
+        return const Color(0xFF8B5CF6);
+      case 'COMMUNITY_ROLE_PROMOTED':
+        return const Color(0xFF10B981);
+      case 'COMMUNITY_ROLE_DEMOTED':
+      case 'COMMUNITY_KICKED':
+      case 'COMMUNITY_INVITE_REVOKED':
+        return const Color(0xFF64748B);
       case 'CHAT':
         return const Color(0xFF8B5CF6);
       case 'REMINDER':

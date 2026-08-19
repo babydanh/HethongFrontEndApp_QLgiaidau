@@ -1187,7 +1187,7 @@ abstract class AppLocalizations {
   /// No description provided for @bracketTypeLabel.
   ///
   /// In vi, this message translates to:
-  /// **'Hình thức thi đấu'**
+  /// **'Nội dung thi đấu'**
   String get bracketTypeLabel;
 
   /// No description provided for @maxTeamsLabel.

@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {
@@ -115,6 +116,20 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
               tournamentId: tournamentId,
               refereeId: refereeId,
               action: accept ? 'ACCEPT' : 'DECLINE',
+            );
+      } else if (notif.type == 'PARTNER_INVITE_RECEIVED') {
+        final uri = Uri.tryParse(notif.redirectUrl ?? '');
+        final segments = uri?.pathSegments ?? const <String>[];
+        final participantIndex = segments.indexOf('participants');
+        final participantId = participantIndex >= 0 &&
+                participantIndex + 1 < segments.length
+            ? segments[participantIndex + 1]
+            : null;
+        if (participantId == null || participantId.isEmpty) {
+          throw StateError('Lời mời ghép đôi không có mã đăng ký.');
+        }
+        await ref.read(dioProvider).post(
+              '/tournaments/participants/$participantId/${accept ? 'accept-partner' : 'reject-partner'}',
             );
       } else {
         throw StateError('Loại lời mời này chưa có thao tác tương ứng.');
