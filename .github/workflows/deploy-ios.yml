@@ -101,7 +101,7 @@ jobs:
           fi
           test -f ios/Runner/GoogleService-Info.plist
 
-      # 4. Build iOS (không sign)
+      # 4. Build iOS Runner (không codesign trên máy chủ builder)
       - name: Build iOS release
         run: flutter build ios --release --no-codesign
 
@@ -111,7 +111,7 @@ jobs:
           cd ios
           pod install --repo-update
 
-      # 6. Cài đặt chứng chỉ Signing & Provisioning Profile (Native macOS Keychain)
+      # 6. Cài đặt chứng chỉ Signing & Provisioning Profile (nếu có p12)
       - name: Setup Apple Codesigning Keychain
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.IOS_CERT_BASE64 || secrets.APPLE_BUILD_CERTIFICATE_BASE64 || secrets.BUILD_CERTIFICATE_BASE64 }}
@@ -128,12 +128,10 @@ jobs:
 
             echo "$BUILD_CERTIFICATE_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
 
-            # Create and configure temporary keychain
             security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
             security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
             security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-            # Import certificate into keychain
             security import "$CERTIFICATE_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
             security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
             security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed -e 's/^[ \t]*"//' -e 's/"$//')
@@ -143,8 +141,6 @@ jobs:
               mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
               echo "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
             fi
-          else
-            echo "No manual .p12 certificate supplied. Xcode will use App Store Connect API Key with automatic provisioning."
           fi
 
       # 7. Archive + Export IPA (với App Store Connect API Key)
@@ -164,9 +160,8 @@ jobs:
                      -configuration Release \
                      -derivedDataPath build \
                      -archivePath build/Runner.xcarchive \
-                     -authenticationKeyID "$API_KEY_ID" \
-                     -authenticationKeyIssuerID "$API_ISSUER_ID" \
-                     -allowProvisioningUpdates \
+                     CODE_SIGNING_ALLOWED=NO \
+                     CODE_SIGNING_REQUIRED=NO \
                      clean archive
 
           xcodebuild -exportArchive \
