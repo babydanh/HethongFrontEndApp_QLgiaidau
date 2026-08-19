@@ -102,6 +102,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAccountTitle => 'Account & Settings';
 
   @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get settingsProfileTab => 'Profile';
+
+  @override
+  String get settingsBankTab => 'Banking';
+
+  @override
+  String get settingsSecurityTab => 'Security';
+
+  @override
   String get settingsSystemTitle => 'System Options';
 
   @override

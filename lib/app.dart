@@ -8,7 +8,6 @@ import 'package:app_quanly_giaidau/core/widgets/app_update_gate.dart';
 import 'package:app_quanly_giaidau/providers/theme_provider.dart';
 import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 class MyCustomScrollBehavior extends MaterialScrollBehavior {
   @override

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,9 @@ import 'package:app_quanly_giaidau/data/models/club_notification_pref_model.dart
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/phone_verification_flow.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/language_setting_card.dart';
+import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 
 /// Màn hình Cài đặt — 3 tab: Hồ sơ, Ngân hàng, Bảo mật.
 ///
@@ -47,6 +51,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: colors.bgDark,
@@ -64,7 +69,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           },
         ),
         title: Text(
-          'Cài đặt',
+          l10n?.settingsTitle ?? 'Cài đặt',
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.w900,
@@ -80,10 +85,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           unselectedLabelColor: colors.textSecondary,
           labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
           unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-          tabs: const [
-            Tab(text: 'Hồ sơ'),
-            Tab(text: 'Ngân hàng'),
-            Tab(text: 'Bảo mật'),
+          tabs: [
+            Tab(text: l10n?.settingsProfileTab ?? 'Hồ sơ'),
+            Tab(text: l10n?.settingsBankTab ?? 'Ngân hàng'),
+            Tab(text: l10n?.settingsSecurityTab ?? 'Bảo mật'),
           ],
         ),
       ),
@@ -142,11 +147,41 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
   bool _initialized = false;
   bool _isUploadingAvatar = false;
   bool _isUploadingCover = false;
+  Timer? _addressDebounce;
+  String? _autoDetectedProvinceName;
 
   @override
   void initState() {
     super.initState();
     _loadProvinces();
+    _addressCtrl.addListener(_onAddressInput);
+  }
+
+  void _onAddressInput() {
+    _addressDebounce?.cancel();
+    _addressDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      final text = _addressCtrl.text.trim();
+      if (text.length < 3) {
+        if (_autoDetectedProvinceName != null) {
+          setState(() => _autoDetectedProvinceName = null);
+        }
+        return;
+      }
+      final detected = VietnamAddressParser.detectProvince<Region>(
+        rawAddress: text,
+        provinces: _provinces,
+        getCode: (p) => p.code,
+        getName: (p) => p.name,
+        getFullName: (p) => p.fullName ?? p.name,
+      );
+      if (detected != null && detected.code != _provinceCode) {
+        setState(() {
+          _provinceCode = detected.code;
+          _autoDetectedProvinceName = detected.name;
+        });
+      }
+    });
   }
 
   Future<void> _loadProvinces() async {
@@ -158,6 +193,8 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
 
   @override
   void dispose() {
+    _addressDebounce?.cancel();
+    _addressCtrl.removeListener(_onAddressInput);
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
     _addressCtrl.dispose();
@@ -333,7 +370,9 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                       DropdownMenuItem(value: 'Khác', child: Text('Khác')),
                     ],
                     onChanged: (value) {
-                      if (value != null) setState(() => requestedGender = value);
+                      if (value != null) {
+                        setState(() => requestedGender = value);
+                      }
                     },
                   ),
                 ],
@@ -455,6 +494,10 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            LanguageSettingCard(
+              key: const ValueKey('settings-language-card'),
+            ),
+            const SizedBox(height: 16),
             // Ảnh bìa + ảnh đại diện
             _buildCoverAndAvatar(colors, avatarUrl, coverUrl, email, fullName),
             const SizedBox(height: 24),
@@ -525,6 +568,23 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 validator: (v) =>
                     (v ?? '').length > 255 ? 'Địa chỉ tối đa 255 ký tự' : null,
               ),
+              if (_autoDetectedProvinceName != null && _provinceCode.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.auto_awesome, size: 14, color: AppTheme.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Đã tự nhận diện: $_autoDetectedProvinceName',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 16),
               _fieldLabel(colors, 'Giới thiệu bản thân'),
               const SizedBox(height: 6),

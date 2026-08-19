@@ -11,7 +11,7 @@ import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'dart:math' as math;
 
@@ -194,16 +194,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
       .where((t) => t.status == AppConstants.statusInProgress)
       .toList();
 
-  List<Tournament> get _completedTournaments {
-    final list = _filtered
-        .where((t) => t.status == AppConstants.statusCompleted)
-        .toList();
-    return list.isNotEmpty ? list : _filtered;
-  }
-
-  DateTime _completedTimestamp(Tournament tournament) {
-    return tournament.endDate ?? tournament.updatedAt;
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -856,88 +847,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
     );
   }
 
-  // ─────────────────────────────────────
-  // Compact row for Completed
-  // ─────────────────────────────────────
-  Widget _buildCompactTournamentRow(Tournament t) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                _sportIcon(t.sport),
-                color: const Color(0xFF94A3B8),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    t.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    AppConstants.sportNames[t.sport] ?? t.sport,
-                    style: const TextStyle(
-                      fontSize: 11.5,
-                      color: Color(0xFF94A3B8),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: const Color(0xFF6B7280).withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Text(
-                'Hoàn thành',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF6B7280),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  
 
   // ─────────────────────────────────────
   // Empty State
@@ -1238,65 +1148,7 @@ class _PulseDotState extends State<_PulseDot>
   }
 }
 
-// ═══════════════════════════════════════
-// ─── Match Section & Card (Image 1 Style) ───
-// ═══════════════════════════════════════
-class _TournamentLiveMatchesSection extends ConsumerWidget {
-  final Tournament tournament;
 
-  const _TournamentLiveMatchesSection({required this.tournament});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final matchesAsync = ref.watch(matchesProvider(tournament.id));
-
-    return matchesAsync.when(
-      data: (matches) {
-        if (matches.isNotEmpty) {
-          return Column(
-            children: matches
-                .map((m) => MatchExploreCard(match: m, tournament: tournament))
-                .toList(),
-          );
-        }
-        return const SizedBox.shrink(); /*
-          data: (teams) {
-            final t1 = teams.isNotEmpty ? teams[0].name : 'Nguyễn Minh Danh - Phạm Hải Dũng';
-            final t2 = teams.length >= 2 ? teams[1].name : 'Vũ Quốc Phong - Đặng Khánh Linh';
-            final fallbackMatch = MatchModel(
-              id: 'match_${tournament.id}',
-              round: 1,
-              matchNumber: 1,
-              team1Name: t1,
-              team2Name: t2,
-              score1: 0,
-              score2: 0,
-              status: tournament.status,
-              bracketPosition: const BracketPosition(round: 1, position: 1),
-              updatedAt: DateTime.now(),
-              tournamentName: tournament.name,
-              sportKey: tournament.sport,
-              court: tournament.locationAddress ?? 'Chưa xếp sân',
-            );
-            return MatchExploreCard(match: fallbackMatch, tournament: tournament);
-          },
-          loading: () => const SizedBox.shrink(),
-          error: (e, s) => const SizedBox.shrink(),
-        ); */
-      },
-      loading: () => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: CircularProgressIndicator(
-            color: AppTheme.primary,
-            strokeWidth: 2,
-          ),
-        ),
-      ),
-      error: (e, s) => const SizedBox.shrink(),
-    );
-  }
-}
 
 class MatchExploreCard extends ConsumerStatefulWidget {
   final MatchModel match;

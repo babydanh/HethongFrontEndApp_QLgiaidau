@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
-import 'package:flutter_svg/flutter_svg.dart';
 
 class SportoHeader extends StatelessWidget {
   final bool isLoggedIn;
@@ -325,36 +324,8 @@ class SportoHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(BuildContext context, String label, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.75),
-            fontSize: 10,
-          ),
-        ),
-      ],
-    );
-  }
+  
 
-  Widget _buildDivider() {
-    return Container(
-      width: 1.0,
-      height: 24.0,
-      color: Colors.white.withValues(alpha: 0.3),
-    );
-  }
 }
 
 class SportoHeaderPainter extends CustomPainter {

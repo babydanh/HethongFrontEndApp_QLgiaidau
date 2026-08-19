@@ -7,7 +7,6 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class TournamentCardWithBanner extends ConsumerStatefulWidget {
   final Tournament tournament;

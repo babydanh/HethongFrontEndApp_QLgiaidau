@@ -1,21 +1,27 @@
 import 'dart:io' show Platform;
+import 'dart:math' as math;
 
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/token_manager.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 class DioClient {
   static const _log = AppLogger('DioClient');
   static const _retryCountKey = '__transient_retry_count';
   static const _authRetryKey = '__auth_retry';
+  static const _rateLimitRetryKey = '__rate_limit_retry_count';
   static const _maxTransientRetries = 2;
+  static const _maxRateLimitRetries = 1;
 
   late final Dio _dio;
   final TokenManager _tokenManager;
   final Map<String, _CachedGetResponse> _getCache = {};
   Future<_TokenPair?>? _refreshInFlight;
+  late final Future<String> _clientId = _loadClientId();
 
   DioClient({required TokenManager tokenManager, Dio? dio})
       : _tokenManager = tokenManager {
@@ -44,6 +50,8 @@ class DioClient {
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
+        final clientId = await _clientId;
+        options.headers['x-client-id'] = clientId;
         final token = await _tokenManager.getAccessToken();
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
@@ -103,6 +111,46 @@ class DioClient {
             error.type == DioExceptionType.connectionError ||
             (statusCode != null && statusCode >= 500);
         final method = error.requestOptions.method.toUpperCase();
+        final noCache = error.requestOptions.extra['noCache'] == true;
+        final cached = noCache ? null : _getCache[_cacheKey(error.requestOptions)];
+
+        // A stale-but-valid public snapshot is more useful than waiting for a
+        // rate-limit window. Only retry a GET without cache, once, and honor
+        // the server's Retry-After with a small jitter to avoid synchronized
+        // clients waking up together.
+        if (method == 'GET' && statusCode == 429) {
+          if (cached != null &&
+              DateTime.now().difference(cached.savedAt) < const Duration(minutes: 10)) {
+            return handler.resolve(Response(
+              requestOptions: error.requestOptions,
+              data: cached.data,
+              statusCode: cached.statusCode,
+              statusMessage: cached.statusMessage,
+              headers: cached.headers,
+            ));
+          }
+          final rateLimitRetryCount =
+              (error.requestOptions.extra[_rateLimitRetryKey] as int?) ?? 0;
+          if (rateLimitRetryCount < _maxRateLimitRetries) {
+            final retryAfterSeconds = int.tryParse(
+                  error.response?.headers.value('retry-after') ?? '',
+                ) ??
+                1;
+            final jitterMs = math.Random().nextInt(250);
+            final delayMs = math.min(10000, retryAfterSeconds * 1000 + jitterMs);
+            await Future<void>.delayed(Duration(milliseconds: delayMs));
+            final options = error.requestOptions.copyWith(extra: {
+              ...error.requestOptions.extra,
+              _rateLimitRetryKey: rateLimitRetryCount + 1,
+            });
+            try {
+              return handler.resolve(await _dio.fetch<dynamic>(options));
+            } on DioException catch (retryError) {
+              error = retryError;
+            }
+          }
+        }
+
         final retryCount = (error.requestOptions.extra[_retryCountKey] as int?) ?? 0;
         if (method == 'GET' && transient && retryCount < _maxTransientRetries) {
           await Future<void>.delayed(Duration(milliseconds: 350 * (1 << retryCount)));
@@ -123,8 +171,6 @@ class DioClient {
             error.type == DioExceptionType.connectionError ||
             statusCode == 429 ||
             (statusCode != null && statusCode >= 500);
-        final noCache = error.requestOptions.extra['noCache'] == true;
-        final cached = noCache ? null : _getCache[_cacheKey(error.requestOptions)];
         if (method == 'GET' && canUseCache && cached != null &&
             DateTime.now().difference(cached.savedAt) < const Duration(minutes: 10)) {
           return handler.resolve(Response(
@@ -138,6 +184,23 @@ class DioClient {
         handler.next(error);
       },
     ));
+  }
+
+  Future<String> _loadClientId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      const key = 'sporto_anonymous_client_id_v1';
+      final existing = prefs.getString(key);
+      if (existing != null && existing.length >= 8 && existing.length <= 128) {
+        return existing;
+      }
+      final generated = const Uuid().v4();
+      await prefs.setString(key, generated);
+      return generated;
+    } catch (error, stack) {
+      _log.error('Unable to persist anonymous client id', error, stack);
+      return const Uuid().v4();
+    }
   }
 
   Future<_TokenPair?> _refreshAccessToken(String baseUrl) {

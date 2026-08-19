@@ -284,6 +284,30 @@ abstract class AppLocalizations {
   /// **'Tài khoản & Thiết lập'**
   String get settingsAccountTitle;
 
+  /// No description provided for @settingsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt'**
+  String get settingsTitle;
+
+  /// No description provided for @settingsProfileTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hồ sơ'**
+  String get settingsProfileTab;
+
+  /// No description provided for @settingsBankTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngân hàng'**
+  String get settingsBankTab;
+
+  /// No description provided for @settingsSecurityTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảo mật'**
+  String get settingsSecurityTab;
+
   /// No description provided for @settingsSystemTitle.
   ///
   /// In vi, this message translates to:

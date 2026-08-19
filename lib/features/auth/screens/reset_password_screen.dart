@@ -29,7 +29,11 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     if (_pwCtrl.text != _confirmCtrl.text) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.resetPassword_mismatchError))); return; }
     setState(() => _submitting = true);
     try {
-      await ref.read(dioClientProvider).dio.post('/auth/reset-password', data: {'token': widget.token, 'password': _pwCtrl.text});
+      await ref.read(dioClientProvider).dio.post(
+        '/auth/reset-password',
+        data: {'token': widget.token, 'password': _pwCtrl.text},
+      );
+      if (!mounted) return;
       setState(() => _success = true);
     } catch (e) {
       if (mounted) {

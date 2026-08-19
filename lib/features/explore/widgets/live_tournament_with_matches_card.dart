@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
-import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -749,8 +748,9 @@ class _LiveTournamentWithMatchesCardState
                       final count = await ref
                           .read(matchRepositoryProvider)
                           .getCheerCount(match.id);
-                      if (mounted)
+                      if (mounted) {
                         setState(() => _cheerCounts[match.id] = count);
+                      }
                     } catch (_) {
                       if (mounted) {
                         setState(() => _cheerCounts[match.id] = previousCount);

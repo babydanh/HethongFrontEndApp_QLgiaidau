@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+
 import 'package:app_quanly_giaidau/features/match/widgets/rally_score_panel.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 

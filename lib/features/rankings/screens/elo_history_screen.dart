@@ -3,10 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_history_log.dart';
-import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
-import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class EloHistoryScreen extends ConsumerStatefulWidget {
   final String userId;

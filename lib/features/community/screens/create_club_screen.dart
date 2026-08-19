@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +12,7 @@ import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/regions_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
+import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 
 /// Tạo câu lạc bộ mới — form đơn giản
 class CreateClubScreen extends ConsumerStatefulWidget {
@@ -40,9 +42,61 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   bool _isUploadingLogo = false;
   bool _isUploadingBanner = false;
   bool _isLoading = false;
+  Timer? _locationDebounce;
+  String? _autoDetectedInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _locationCtrl.addListener(_onLocationInput);
+  }
+
+  void _onLocationInput() {
+    _locationDebounce?.cancel();
+    _locationDebounce = Timer(const Duration(milliseconds: 300), () async {
+      if (!mounted) return;
+      final text = _locationCtrl.text.trim();
+      if (text.length < 3) {
+        if (_autoDetectedInfo != null) {
+          setState(() => _autoDetectedInfo = null);
+        }
+        return;
+      }
+      final provinces = ref.read(provincesProvider).asData?.value ?? const <Province>[];
+      final detectedProv = VietnamAddressParser.detectProvince<Province>(
+        rawAddress: text,
+        provinces: provinces,
+        getCode: (p) => p.code,
+        getName: (p) => p.name,
+      );
+      if (detectedProv != null) {
+        final provCode = detectedProv.code;
+        final wards = await ref.read(wardsProvider(provCode).future);
+        final detectedWard = VietnamAddressParser.detectWard<Ward>(
+          rawAddress: text,
+          wards: wards,
+          getCode: (w) => w.code,
+          getName: (w) => w.name,
+        );
+        if (mounted) {
+          setState(() {
+            _provinceCode = provCode;
+            if (detectedWard != null) {
+              _wardCode = detectedWard.code;
+              _autoDetectedInfo = '${detectedProv.name} > ${detectedWard.name}';
+            } else {
+              _autoDetectedInfo = detectedProv.name;
+            }
+          });
+        }
+      }
+    });
+  }
 
   @override
   void dispose() {
+    _locationDebounce?.cancel();
+    _locationCtrl.removeListener(_onLocationInput);
     _nameCtrl.dispose();
     _descCtrl.dispose();
     _rulesCtrl.dispose();
@@ -350,10 +404,27 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                 controller: _locationCtrl,
                 style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'VD: Hà Nội, TP. Hồ Chí Minh...',
+                  hintText: 'VD: 3/9 Thành Thái, Phường Diên Hồng, TP.HCM',
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
                 ),
               ),
+              if (_autoDetectedInfo != null && _provinceCode != null) ...[
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(Icons.auto_awesome, size: 14, color: AppTheme.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Đã tự nhận diện: $_autoDetectedInfo',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 10),
               _buildRegionSelectors(),
               const SizedBox(height: 20),

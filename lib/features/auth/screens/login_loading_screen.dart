@@ -6,7 +6,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_header.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class LoginLoadingScreen extends ConsumerStatefulWidget {

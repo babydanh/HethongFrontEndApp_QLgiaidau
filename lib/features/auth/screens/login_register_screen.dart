@@ -54,7 +54,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       onPressed: _isLoading ? null : _submitApple,
       style: SignInWithAppleButtonStyle.black,
       borderRadius: BorderRadius.circular(12.0),
-      text: 'Sign in with Apple',
+      text: AppLocalizations.of(context)!.loginRegister_appleSignInButton,
     );
   }
 
@@ -122,7 +122,9 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       final googleAuth = await googleUser.authentication;
       final idToken = googleAuth.idToken;
       if (idToken == null) {
-        throw Exception("Không nhận được ID Token từ Google");
+        throw Exception(
+          AppLocalizations.of(context)!.loginRegister_googleTokenMissing,
+        );
       }
       bool success = await ref
           .read(authProvider.notifier)
@@ -172,7 +174,9 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       );
       final idToken = credential.identityToken;
       if (idToken == null) {
-        throw Exception("Không nhận được ID Token từ Apple");
+        throw Exception(
+          AppLocalizations.of(context)!.loginRegister_appleTokenMissing,
+        );
       }
       final fullName = [
         credential.givenName,
@@ -555,7 +559,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                   height: 20,
                                 ),
                                 label: Text(
-                                  'Sign in with Google',
+                                  l10n.loginRegister_googleSignInButton,
                                   style: TextStyle(
                                     color: textPrimaryColor,
                                     fontWeight: FontWeight.w600,

@@ -102,6 +102,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsAccountTitle => 'Tài khoản & Thiết lập';
 
   @override
+  String get settingsTitle => 'Cài đặt';
+
+  @override
+  String get settingsProfileTab => 'Hồ sơ';
+
+  @override
+  String get settingsBankTab => 'Ngân hàng';
+
+  @override
+  String get settingsSecurityTab => 'Bảo mật';
+
+  @override
   String get settingsSystemTitle => 'Tùy chọn hệ thống';
 
   @override
