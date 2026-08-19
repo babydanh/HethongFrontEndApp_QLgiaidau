@@ -1935,14 +1935,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               t.endDate != null &&
               now.difference(t.endDate!).inDays <= 14;
 
-          if (_followedFilter == 'recent_completed')
+          if (_followedFilter == 'recent_completed') {
             return isRecentCompleted || isCompleted;
-          if (_followedFilter == 'in_progress')
+          }
+          if (_followedFilter == 'in_progress') {
             return StatusHelper.isTournamentInProgress(t.status);
-          if (_followedFilter == 'registration')
+          }
+          if (_followedFilter == 'registration') {
             return StatusHelper.isTournamentRegistration(t.status);
-          if (_followedFilter == 'upcoming')
+          }
+          if (_followedFilter == 'upcoming') {
             return StatusHelper.isTournamentUpcoming(t.status);
+          }
           return true;
         }).toList();
 
@@ -2168,8 +2172,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (StatusHelper.isTournamentCompleted(tournament.status)) return 0;
     if (StatusHelper.isTournamentInProgress(tournament.status)) return 1;
     if (StatusHelper.isTournamentRegistration(tournament.status) ||
-        StatusHelper.isTournamentUpcoming(tournament.status))
+        StatusHelper.isTournamentUpcoming(tournament.status)) {
       return 2;
+    }
     if (StatusHelper.isTournamentCancelled(tournament.status)) return 3;
     return 4;
   }
@@ -2186,7 +2191,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required Color roleColor,
     required IconData roleIcon,
   }) {
-    final l10n = AppLocalizations.of(context)!;
     final rawStatus = t.status?.toString() ?? 'draft';
     final statusLabel = StatusHelper.getTournamentStatusLabel(rawStatus);
     final String? logoUrl = t is Tournament
@@ -2627,44 +2631,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── HELPERS ────────────────────────────────────────────────────────
   String _initials(String name) {
     final p = name.trim().split(' ');
-    if (p.length >= 2)
+    if (p.length >= 2) {
       return '${p[p.length - 2][0]}${p[p.length - 1][0]}'.toUpperCase();
+    }
     return name.isNotEmpty ? name[0].toUpperCase() : '?';
-  }
-}
-
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({
-    required this.label,
-    required this.backgroundColor,
-    required this.foregroundColor,
-    this.borderColor,
-  });
-
-  final String label;
-  final Color backgroundColor;
-  final Color foregroundColor;
-  final Color? borderColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: borderColor ?? Colors.transparent),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: foregroundColor,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.2,
-        ),
-      ),
-    );
   }
 }
 

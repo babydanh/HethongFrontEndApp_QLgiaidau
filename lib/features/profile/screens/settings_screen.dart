@@ -83,8 +83,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           indicatorWeight: 3,
           labelColor: AppTheme.primary,
           unselectedLabelColor: colors.textSecondary,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 14,
+          ),
           tabs: [
             Tab(text: l10n?.settingsProfileTab ?? 'Hồ sơ'),
             Tab(text: l10n?.settingsBankTab ?? 'Ngân hàng'),
@@ -94,11 +100,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          _ProfileTab(),
-          _BankTab(),
-          _SecurityTab(),
-        ],
+        children: const [_ProfileTab(), _BankTab(), _SecurityTab()],
       ),
     );
   }
@@ -216,12 +218,18 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
             children: [
               const SizedBox(height: 12),
               ListTile(
-                leading: const Icon(Icons.camera_alt_rounded, color: AppTheme.primary),
+                leading: const Icon(
+                  Icons.camera_alt_rounded,
+                  color: AppTheme.primary,
+                ),
                 title: const Text('Chụp ảnh mới'),
                 onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library_rounded, color: AppTheme.primary),
+                leading: const Icon(
+                  Icons.photo_library_rounded,
+                  color: AppTheme.primary,
+                ),
                 title: const Text('Chọn từ thư viện'),
                 onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
               ),
@@ -240,7 +248,9 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
     if (file == null) return;
     setState(() => _isUploadingAvatar = true);
     try {
-      await ref.read(userRepositoryProvider).uploadAvatar(await file.readAsBytes(), file.name);
+      await ref
+          .read(userRepositoryProvider)
+          .uploadAvatar(await file.readAsBytes(), file.name);
       ref.invalidate(userProfileProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -314,7 +324,9 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
   }
 
   Future<void> _showGenderChangeRequestDialog() async {
-    var requestedGender = _gender.isNotEmpty && _gender != 'Chưa chọn' ? _gender : 'Nam';
+    var requestedGender = _gender.isNotEmpty && _gender != 'Chưa chọn'
+        ? _gender
+        : 'Nam';
     var isSubmitting = false;
     await showDialog<void>(
       context: context,
@@ -324,7 +336,9 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
             Future<void> submit() async {
               setState(() => isSubmitting = true);
               try {
-                await ref.read(userRepositoryProvider).createChangeRequest(
+                await ref
+                    .read(userRepositoryProvider)
+                    .createChangeRequest(
                       requestType: 'GENDER',
                       newValue: requestedGender,
                     );
@@ -332,7 +346,9 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 Navigator.of(ctx).pop();
                 ScaffoldMessenger.of(ctx).showSnackBar(
                   const SnackBar(
-                    content: Text('Đã gửi yêu cầu. Vui lòng chờ Admin phê duyệt.'),
+                    content: Text(
+                      'Đã gửi yêu cầu. Vui lòng chờ Admin phê duyệt.',
+                    ),
                   ),
                 );
               } catch (e) {
@@ -379,7 +395,9 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               ),
               actions: [
                 TextButton(
-                  onPressed: isSubmitting ? null : () => Navigator.of(ctx).pop(),
+                  onPressed: isSubmitting
+                      ? null
+                      : () => Navigator.of(ctx).pop(),
                   child: const Text('Hủy bỏ'),
                 ),
                 FilledButton(
@@ -415,7 +433,8 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               '${_dob!.year.toString().padLeft(4, '0')}-${_dob!.month.toString().padLeft(2, '0')}-${_dob!.day.toString().padLeft(2, '0')}',
         // Giới tính bị khóa sau khi hoàn thành giải — không gửi để tránh ghi đè.
         if (!genderLocked && _gender != 'Chưa chọn') 'gender': _gender,
-        if (_addressCtrl.text.trim().isNotEmpty) 'address': _addressCtrl.text.trim(),
+        if (_addressCtrl.text.trim().isNotEmpty)
+          'address': _addressCtrl.text.trim(),
         if (_provinceCode.isNotEmpty) 'provinceCode': _provinceCode,
         if (_bioCtrl.text.trim().isNotEmpty) 'bio': _bioCtrl.text.trim(),
       };
@@ -464,17 +483,29 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
           _phoneCtrl.text = profile.phoneNumber ?? '';
           _addressCtrl.text = profile.address ?? '';
           _bioCtrl.text = profile.bio ?? '';
-          _gender = _genders.contains(profile.gender) ? (profile.gender ?? 'Chưa chọn') : 'Chưa chọn';
+          _gender = _genders.contains(profile.gender)
+              ? (profile.gender ?? 'Chưa chọn')
+              : 'Chưa chọn';
           _provinceCode = profile.provinceCode ?? '';
           _dob = DateTime.tryParse(profile.dateOfBirth ?? '');
           _initialized = true;
         }
         final genderLocked = profile.isGenderLocked == true;
-        return _buildForm(colors, profile.avatarUrl, profile.coverUrl, profile.email,
-            profile.fullName, genderLocked);
+        return _buildForm(
+          colors,
+          profile.avatarUrl,
+          profile.coverUrl,
+          profile.email,
+          profile.fullName,
+          genderLocked,
+        );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => _buildErrorState(colors, 'Không thể tải hồ sơ', () => ref.invalidate(userProfileProvider)),
+      error: (e, _) => _buildErrorState(
+        colors,
+        'Không thể tải hồ sơ',
+        () => ref.invalidate(userProfileProvider),
+      ),
     );
   }
 
@@ -494,9 +525,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            LanguageSettingCard(
-              key: const ValueKey('settings-language-card'),
-            ),
+            LanguageSettingCard(key: const ValueKey('settings-language-card')),
             const SizedBox(height: 16),
             // Ảnh bìa + ảnh đại diện
             _buildCoverAndAvatar(colors, avatarUrl, coverUrl, email, fullName),
@@ -568,11 +597,16 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 validator: (v) =>
                     (v ?? '').length > 255 ? 'Địa chỉ tối đa 255 ký tự' : null,
               ),
-              if (_autoDetectedProvinceName != null && _provinceCode.isNotEmpty) ...[
+              if (_autoDetectedProvinceName != null &&
+                  _provinceCode.isNotEmpty) ...[
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(Icons.auto_awesome, size: 14, color: AppTheme.primary),
+                    const Icon(
+                      Icons.auto_awesome,
+                      size: 14,
+                      color: AppTheme.primary,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Đã tự nhận diện: $_autoDetectedProvinceName',
@@ -593,8 +627,9 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 hint: 'Viết một chút về phong cách chơi của bạn...',
                 maxLines: 3,
                 prefixIcon: Icons.edit_note_rounded,
-                validator: (v) =>
-                    (v ?? '').length > 500 ? 'Giới thiệu tối đa 500 ký tự' : null,
+                validator: (v) => (v ?? '').length > 500
+                    ? 'Giới thiệu tối đa 500 ký tự'
+                    : null,
               ),
               const SizedBox(height: 24),
               _saveButton(context, _isLoading, () => _save(genderLocked)),
@@ -631,12 +666,20 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppTheme.primary, AppTheme.primary.withValues(alpha: 0.6)],
+                    colors: [
+                      AppTheme.primary,
+                      AppTheme.primary.withValues(alpha: 0.6),
+                    ],
                   ),
                 ),
                 child: coverUrl == null
                     ? null
-                    : Image.network(coverUrl, fit: BoxFit.cover, height: 120, width: double.infinity),
+                    : Image.network(
+                        coverUrl,
+                        fit: BoxFit.cover,
+                        height: 120,
+                        width: double.infinity,
+                      ),
               ),
               Positioned(
                 right: 10,
@@ -648,7 +691,10 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                     borderRadius: BorderRadius.circular(8),
                     onTap: _isUploadingCover ? null : _pickAndUploadCover,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -656,14 +702,27 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                             const SizedBox(
                               width: 12,
                               height: 12,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           else
-                            const Icon(Icons.camera_alt_rounded, size: 13, color: Colors.white),
+                            const Icon(
+                              Icons.camera_alt_rounded,
+                              size: 13,
+                              color: Colors.white,
+                            ),
                           const SizedBox(width: 6),
                           Text(
-                            _isUploadingCover ? 'Đang tải...' : 'Thay đổi ảnh bìa',
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                            _isUploadingCover
+                                ? 'Đang tải...'
+                                : 'Thay đổi ảnh bìa',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
@@ -688,19 +747,28 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                     child: CircleAvatar(
                       radius: 44,
                       backgroundColor: colors.bgCard,
-                      backgroundImage: avatarUrl == null ? null : NetworkImage(avatarUrl),
+                      backgroundImage: avatarUrl == null
+                          ? null
+                          : NetworkImage(avatarUrl),
                       child: _isUploadingAvatar
                           ? const SizedBox(
                               width: 24,
                               height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2.5),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                              ),
                             )
                           : avatarUrl == null
-                              ? Text(
-                                  (fullName?.isNotEmpty ?? false) ? fullName![0].toUpperCase() : 'U',
-                                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
-                                )
-                              : null,
+                          ? Text(
+                              (fullName?.isNotEmpty ?? false)
+                                  ? fullName![0].toUpperCase()
+                                  : 'U',
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            )
+                          : null,
                     ),
                   ),
                 ),
@@ -708,7 +776,11 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.camera_alt_rounded, size: 12, color: colors.textMuted),
+                    Icon(
+                      Icons.camera_alt_rounded,
+                      size: 12,
+                      color: colors.textMuted,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Chạm để đổi ảnh đại diện',
@@ -751,14 +823,18 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 _dob == null
                     ? 'Chọn ngày sinh'
                     : 'Ngày ${_dob!.day.toString().padLeft(2, '0')}/'
-                        '${_dob!.month.toString().padLeft(2, '0')}/${_dob!.year}',
+                          '${_dob!.month.toString().padLeft(2, '0')}/${_dob!.year}',
                 style: TextStyle(
                   fontSize: 14,
                   color: _dob == null ? colors.textMuted : colors.textPrimary,
                 ),
               ),
             ),
-            Icon(Icons.calendar_month_rounded, size: 18, color: colors.textMuted),
+            Icon(
+              Icons.calendar_month_rounded,
+              size: 18,
+              color: colors.textMuted,
+            ),
           ],
         ),
       ),
@@ -825,8 +901,13 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         setState(() {
           _provinceCode = v == 'Chưa chọn (Không tranh hạng Tier S)'
               ? ''
-              : (_provinces.where((province) => province.name == v).firstOrNull?.code ??
-                  (_provinceCode.isNotEmpty && !codes.contains(_provinceCode) ? _provinceCode : ''));
+              : (_provinces
+                        .where((province) => province.name == v)
+                        .firstOrNull
+                        ?.code ??
+                    (_provinceCode.isNotEmpty && !codes.contains(_provinceCode)
+                        ? _provinceCode
+                        : ''));
         });
       },
     );
@@ -852,8 +933,17 @@ class _BankTabState extends ConsumerState<_BankTab> {
   static const _noBank = 'Chưa chọn ngân hàng/ví';
   static const _wallets = ['Momo', 'ZaloPay', 'ShopeePay'];
   static const _banks = [
-    'Vietcombank', 'Techcombank', 'Vietinbank', 'BIDV', 'Agribank',
-    'MB Bank', 'ACB', 'VPBank', 'TPBank', 'Sacombank', 'VIB',
+    'Vietcombank',
+    'Techcombank',
+    'Vietinbank',
+    'BIDV',
+    'Agribank',
+    'MB Bank',
+    'ACB',
+    'VPBank',
+    'TPBank',
+    'Sacombank',
+    'VIB',
   ];
 
   String _bankName = _noBank;
@@ -872,17 +962,78 @@ class _BankTabState extends ConsumerState<_BankTab> {
   /// Viết hoa + bỏ dấu (NFD) như web: NGUYEN VAN A.
   String _normalizeAccountName(String value) {
     const diacriticsMap = {
-      'À': 'A', 'Á': 'A', 'Ạ': 'A', 'Ả': 'A', 'Ã': 'A', 'Â': 'A', 'Ầ': 'A', 'Ấ': 'A',
-      'Ậ': 'A', 'Ẩ': 'A', 'Ẫ': 'A', 'Ă': 'A', 'Ằ': 'A', 'Ắ': 'A', 'Ặ': 'A', 'Ẳ': 'A',
-      'Ẵ': 'A', 'Đ': 'D', 'È': 'E', 'É': 'E', 'Ẹ': 'E', 'Ẻ': 'E', 'Ẽ': 'E', 'Ê': 'E',
-      'Ề': 'E', 'Ế': 'E', 'Ệ': 'E', 'Ể': 'E', 'Ễ': 'E', 'Ì': 'I', 'Í': 'I', 'Ị': 'I',
-      'Ỉ': 'I', 'Ĩ': 'I', 'Ò': 'O', 'Ó': 'O', 'Ọ': 'O', 'Ỏ': 'O', 'Õ': 'O', 'Ô': 'O',
-      'Ồ': 'O', 'Ố': 'O', 'Ộ': 'O', 'Ổ': 'O', 'Ỗ': 'O', 'Ơ': 'O', 'Ờ': 'O', 'Ớ': 'O',
-      'Ợ': 'O', 'Ở': 'O', 'Ỡ': 'O', 'Ù': 'U', 'Ú': 'U', 'Ụ': 'U', 'Ủ': 'U', 'Ũ': 'U',
-      'Ư': 'U', 'Ừ': 'U', 'Ứ': 'U', 'Ự': 'U', 'Ử': 'U', 'Ữ': 'U', 'Ỳ': 'Y', 'Ỵ': 'Y',
-      'Ỷ': 'Y', 'Ỹ': 'Y',
+      'À': 'A',
+      'Á': 'A',
+      'Ạ': 'A',
+      'Ả': 'A',
+      'Ã': 'A',
+      'Â': 'A',
+      'Ầ': 'A',
+      'Ấ': 'A',
+      'Ậ': 'A',
+      'Ẩ': 'A',
+      'Ẫ': 'A',
+      'Ă': 'A',
+      'Ằ': 'A',
+      'Ắ': 'A',
+      'Ặ': 'A',
+      'Ẳ': 'A',
+      'Ẵ': 'A',
+      'Đ': 'D',
+      'È': 'E',
+      'É': 'E',
+      'Ẹ': 'E',
+      'Ẻ': 'E',
+      'Ẽ': 'E',
+      'Ê': 'E',
+      'Ề': 'E',
+      'Ế': 'E',
+      'Ệ': 'E',
+      'Ể': 'E',
+      'Ễ': 'E',
+      'Ì': 'I',
+      'Í': 'I',
+      'Ị': 'I',
+      'Ỉ': 'I',
+      'Ĩ': 'I',
+      'Ò': 'O',
+      'Ó': 'O',
+      'Ọ': 'O',
+      'Ỏ': 'O',
+      'Õ': 'O',
+      'Ô': 'O',
+      'Ồ': 'O',
+      'Ố': 'O',
+      'Ộ': 'O',
+      'Ổ': 'O',
+      'Ỗ': 'O',
+      'Ơ': 'O',
+      'Ờ': 'O',
+      'Ớ': 'O',
+      'Ợ': 'O',
+      'Ở': 'O',
+      'Ỡ': 'O',
+      'Ù': 'U',
+      'Ú': 'U',
+      'Ụ': 'U',
+      'Ủ': 'U',
+      'Ũ': 'U',
+      'Ư': 'U',
+      'Ừ': 'U',
+      'Ứ': 'U',
+      'Ự': 'U',
+      'Ử': 'U',
+      'Ữ': 'U',
+      'Ỳ': 'Y',
+      'Ỵ': 'Y',
+      'Ỷ': 'Y',
+      'Ỹ': 'Y',
     };
-    return value.toUpperCase().split('').map((char) => diacriticsMap[char] ?? char).join();
+    return value
+        .toUpperCase()
+        .split('')
+        .map((char) => diacriticsMap[char] ?? char)
+        .join();
   }
 
   Future<void> _save() async {
@@ -944,8 +1095,11 @@ class _BankTabState extends ConsumerState<_BankTab> {
         return _buildForm(colors);
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => _buildErrorState(colors, 'Không thể tải thông tin ngân hàng',
-          () => ref.invalidate(userProfileProvider)),
+      error: (e, _) => _buildErrorState(
+        colors,
+        'Không thể tải thông tin ngân hàng',
+        () => ref.invalidate(userProfileProvider),
+      ),
     );
   }
 
@@ -956,14 +1110,15 @@ class _BankTabState extends ConsumerState<_BankTab> {
       ..._banks,
     ];
     // Giá trị đã lưu ngoài danh sách (nhập tay từ trước) — thêm vào cuối để không mất.
-    final isKnown = _bankName == _noBank ||
+    final isKnown =
+        _bankName == _noBank ||
         _wallets.contains(_bankName) ||
         _banks.contains(_bankName);
     final currentLabel = _bankName == _noBank
         ? _noBank
         : _isWallet
-            ? 'Ví điện tử $_bankName'
-            : _bankName;
+        ? 'Ví điện tử $_bankName'
+        : _bankName;
     if (!isKnown) bankOptions.add(_bankName);
 
     return SingleChildScrollView(
@@ -992,7 +1147,10 @@ class _BankTabState extends ConsumerState<_BankTab> {
                 });
               }),
               const SizedBox(height: 16),
-              _fieldLabel(colors, _isWallet ? 'Số điện thoại ví' : 'Số tài khoản'),
+              _fieldLabel(
+                colors,
+                _isWallet ? 'Số điện thoại ví' : 'Số tài khoản',
+              ),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _accountNumberCtrl,
@@ -1001,7 +1159,10 @@ class _BankTabState extends ConsumerState<_BankTab> {
                 prefixIcon: Icons.numbers_rounded,
               ),
               const SizedBox(height: 16),
-              _fieldLabel(colors, 'Tên chủ tài khoản / ví (Viết hoa không dấu)'),
+              _fieldLabel(
+                colors,
+                'Tên chủ tài khoản / ví (Viết hoa không dấu)',
+              ),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _accountNameCtrl,
@@ -1039,7 +1200,11 @@ class _BankTabState extends ConsumerState<_BankTab> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.lock_rounded, size: 18, color: AppTheme.primary.withValues(alpha: 0.8)),
+          Icon(
+            Icons.lock_rounded,
+            size: 18,
+            color: AppTheme.primary.withValues(alpha: 0.8),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -1064,7 +1229,10 @@ class _BankTabState extends ConsumerState<_BankTab> {
 class _SecurityTab extends ConsumerWidget {
   const _SecurityTab();
 
-  Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmDeleteAccount(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final passwordCtrl = TextEditingController();
     var obscure = true;
     var isDeleting = false;
@@ -1080,7 +1248,9 @@ class _SecurityTab extends ConsumerWidget {
               final password = passwordCtrl.text;
               if (password.isEmpty) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(content: Text('Vui lòng nhập mật khẩu xác nhận')),
+                  const SnackBar(
+                    content: Text('Vui lòng nhập mật khẩu xác nhận'),
+                  ),
                 );
                 return;
               }
@@ -1128,7 +1298,11 @@ class _SecurityTab extends ConsumerWidget {
                     decoration: InputDecoration(
                       labelText: 'Mật khẩu xác nhận',
                       suffixIcon: IconButton(
-                        icon: Icon(obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                        icon: Icon(
+                          obscure
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
                         onPressed: () => setState(() => obscure = !obscure),
                       ),
                     ),
@@ -1150,7 +1324,10 @@ class _SecurityTab extends ConsumerWidget {
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
                       : const Text('Xác nhận xóa'),
                 ),
@@ -1194,7 +1371,8 @@ class _SecurityTab extends ConsumerWidget {
                   icon: Icons.phone_android_rounded,
                   title: 'Số điện thoại',
                   verified: profile.isPhoneVerified == true,
-                  fallbackText: profile.phoneNumber ?? 'Chưa cập nhật số điện thoại',
+                  fallbackText:
+                      profile.phoneNumber ?? 'Chưa cập nhật số điện thoại',
                 ),
                 if (profile.isEmailVerified != true) ...[
                   _divider(colors),
@@ -1225,14 +1403,21 @@ class _SecurityTab extends ConsumerWidget {
                   ),
                 ],
               ],
-              loading: () => [const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator()),
-              )],
-              error: (_, _) => [Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text('Không thể tải trạng thái', style: TextStyle(color: colors.textSecondary)),
-              )],
+              loading: () => [
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ],
+              error: (_, _) => [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Không thể tải trạng thái',
+                    style: TextStyle(color: colors.textSecondary),
+                  ),
+                ),
+              ],
             ),
           ]),
           const SizedBox(height: 24),
@@ -1254,7 +1439,11 @@ class _SecurityTab extends ConsumerWidget {
               icon: Icons.security_rounded,
               title: 'Mật khẩu mạnh',
               subtitle: 'Tối thiểu 8 ký tự, nên có chữ hoa và số',
-              trailing: Icon(Icons.check_circle_rounded, color: colors.success, size: 20),
+              trailing: Icon(
+                Icons.check_circle_rounded,
+                color: colors.success,
+                size: 20,
+              ),
             ),
           ]),
           const SizedBox(height: 24),
@@ -1269,14 +1458,21 @@ class _SecurityTab extends ConsumerWidget {
               title: 'Thiết bị hiện tại',
               subtitle: 'Đang hoạt động',
               trailing: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: colors.success.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   'Online',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: colors.success),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: colors.success,
+                  ),
                 ),
               ),
             ),
@@ -1307,7 +1503,11 @@ class _SecurityTab extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Text(
                       'Xóa tài khoản cá nhân',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.error),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: colors.error,
+                      ),
                     ),
                   ],
                 ),
@@ -1315,7 +1515,11 @@ class _SecurityTab extends ConsumerWidget {
                 Text(
                   'Khi thực hiện xóa tài khoản, tất cả dữ liệu cá nhân, hồ sơ thi đấu và thông tin '
                   'liên quan sẽ bị ẩn vĩnh viễn. Bạn không thể đăng nhập hoặc tham gia giải đấu nào sau hành động này.',
-                  style: TextStyle(fontSize: 12, height: 1.5, color: colors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.5,
+                    color: colors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -1323,13 +1527,18 @@ class _SecurityTab extends ConsumerWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => _confirmDeleteAccount(context, ref),
                     icon: const Icon(Icons.delete_forever_rounded, size: 18),
-                    label: const Text('Xóa tài khoản', style: TextStyle(fontWeight: FontWeight.w800)),
+                    label: const Text(
+                      'Xóa tài khoản',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colors.error,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                        borderRadius: BorderRadius.circular(
+                          AppTheme.radiusMedium,
+                        ),
                       ),
                     ),
                   ),
@@ -1366,7 +1575,9 @@ class _ClubNotificationSettingsCardState
 
   Future<void> _loadPrefs() async {
     try {
-      final list = await ref.read(communityRepositoryProvider).getMyNotificationPreferences();
+      final list = await ref
+          .read(communityRepositoryProvider)
+          .getMyNotificationPreferences();
       if (mounted) {
         setState(() {
           _prefs = list;
@@ -1392,14 +1603,15 @@ class _ClubNotificationSettingsCardState
     // Optimistic update
     setState(() {
       _updatingClubId = communityId;
-      currentList[idx] = currentList[idx].copyWith(notificationPreference: newPref);
+      currentList[idx] = currentList[idx].copyWith(
+        notificationPreference: newPref,
+      );
     });
 
     try {
-      await ref.read(communityRepositoryProvider).updateNotificationPreference(
-        communityId,
-        newPref,
-      );
+      await ref
+          .read(communityRepositoryProvider)
+          .updateNotificationPreference(communityId, newPref);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1407,8 +1619,8 @@ class _ClubNotificationSettingsCardState
               newPref == 'ALL'
                   ? 'Đã bật nhận tất cả thông báo'
                   : newPref == 'MENTIONS_ONLY'
-                      ? 'Chỉ nhận thông báo khi được @nhắc tên'
-                      : 'Đã tắt thông báo CLB (Im lặng)',
+                  ? 'Chỉ nhận thông báo khi được @nhắc tên'
+                  : 'Đã tắt thông báo CLB (Im lặng)',
             ),
           ),
         );
@@ -1416,7 +1628,9 @@ class _ClubNotificationSettingsCardState
     } catch (e) {
       if (mounted) {
         setState(() {
-          currentList[idx] = currentList[idx].copyWith(notificationPreference: oldPref);
+          currentList[idx] = currentList[idx].copyWith(
+            notificationPreference: oldPref,
+          );
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Không thể cập nhật cài đặt thông báo')),
@@ -1457,170 +1671,209 @@ class _ClubNotificationSettingsCardState
                   ),
                 )
               : (_prefs == null || _prefs!.isEmpty)
-                  ? Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          Icon(Icons.groups_outlined, size: 36, color: colors.textMuted),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Bạn chưa tham gia câu lạc bộ nào',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Khi gia nhập CLB, bạn có thể tùy chỉnh nhận thông báo tại đây.',
-                            style: TextStyle(fontSize: 11, color: colors.textSecondary),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+              ? Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.groups_outlined,
+                        size: 36,
+                        color: colors.textMuted,
                       ),
-                    )
-                  : ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _prefs!.length,
-                      separatorBuilder: (_, index) => _divider(colors),
-                      itemBuilder: (context, index) {
-                        final club = _prefs![index];
-                        final isUpdating = _updatingClubId == club.communityId;
+                      const SizedBox(height: 8),
+                      Text(
+                        'Bạn chưa tham gia câu lạc bộ nào',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Khi gia nhập CLB, bạn có thể tùy chỉnh nhận thông báo tại đây.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _prefs!.length,
+                  separatorBuilder: (_, index) => _divider(colors),
+                  itemBuilder: (context, index) {
+                    final club = _prefs![index];
+                    final isUpdating = _updatingClubId == club.communityId;
 
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 18,
-                                    backgroundColor: const Color(0xFFEFF6FF),
-                                    backgroundImage: club.logoUrl != null && club.logoUrl!.isNotEmpty
-                                        ? NetworkImage(club.logoUrl!)
-                                        : null,
-                                    child: club.logoUrl == null || club.logoUrl!.isEmpty
-                                        ? Text(
-                                            club.communityName.isNotEmpty
-                                                ? club.communityName[0].toUpperCase()
-                                                : 'C',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 14,
-                                              color: Color(0xFF2563EB),
-                                            ),
-                                          )
-                                        : null,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                club.communityName,
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: colors.textPrimary,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 6,
-                                                vertical: 2,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: colors.bgDark,
-                                                borderRadius: BorderRadius.circular(4),
-                                              ),
-                                              child: Text(
-                                                club.role,
-                                                style: TextStyle(
-                                                  fontSize: 9,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: colors.textSecondary,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundColor: const Color(0xFFEFF6FF),
+                                backgroundImage:
+                                    club.logoUrl != null &&
+                                        club.logoUrl!.isNotEmpty
+                                    ? NetworkImage(club.logoUrl!)
+                                    : null,
+                                child:
+                                    club.logoUrl == null ||
+                                        club.logoUrl!.isEmpty
+                                    ? Text(
+                                        club.communityName.isNotEmpty
+                                            ? club.communityName[0]
+                                                  .toUpperCase()
+                                            : 'C',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 14,
+                                          color: Color(0xFF2563EB),
                                         ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          club.notificationPreference == 'ALL'
-                                              ? 'Nhận tất cả tin nhắn & thông báo'
-                                              : club.notificationPreference == 'MENTIONS_ONLY'
-                                                  ? 'Chỉ nhận thông báo khi được @nhắc tên'
-                                                  : 'Đã tắt thông báo (Im lặng)',
-                                          style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            club.communityName,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w700,
+                                              color: colors.textPrimary,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: colors.bgDark,
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            club.role,
+                                            style: TextStyle(
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.w800,
+                                              color: colors.textSecondary,
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                  if (isUpdating)
-                                    const Padding(
-                                      padding: EdgeInsets.only(left: 8),
-                                      child: SizedBox(
-                                        width: 14,
-                                        height: 14,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      club.notificationPreference == 'ALL'
+                                          ? 'Nhận tất cả tin nhắn & thông báo'
+                                          : club.notificationPreference ==
+                                                'MENTIONS_ONLY'
+                                          ? 'Chỉ nhận thông báo khi được @nhắc tên'
+                                          : 'Đã tắt thông báo (Im lặng)',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: colors.textSecondary,
                                       ),
                                     ),
-                                ],
+                                  ],
+                                ),
                               ),
-                              const SizedBox(height: 10),
-                              // 3-Option Segmented Row
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildSegmentButton(
-                                      title: 'Tất cả',
-                                      icon: Icons.notifications_active_outlined,
-                                      isSelected: club.notificationPreference == 'ALL',
-                                      activeColor: const Color(0xFF2563EB),
-                                      colors: colors,
-                                      onTap: isUpdating ? null : () => _updatePref(club.communityId, 'ALL'),
+                              if (isUpdating)
+                                const Padding(
+                                  padding: EdgeInsets.only(left: 8),
+                                  child: SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
                                     ),
                                   ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: _buildSegmentButton(
-                                      title: 'Chỉ @tag',
-                                      icon: Icons.alternate_email_rounded,
-                                      isSelected: club.notificationPreference == 'MENTIONS_ONLY',
-                                      activeColor: const Color(0xFFD97706),
-                                      colors: colors,
-                                      onTap: isUpdating ? null : () => _updatePref(club.communityId, 'MENTIONS_ONLY'),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: _buildSegmentButton(
-                                      title: 'Tắt',
-                                      icon: Icons.notifications_off_outlined,
-                                      isSelected: club.notificationPreference == 'MUTED',
-                                      activeColor: const Color(0xFFE11D48),
-                                      colors: colors,
-                                      onTap: isUpdating ? null : () => _updatePref(club.communityId, 'MUTED'),
-                                    ),
-                                  ),
-                                ],
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          // 3-Option Segmented Row
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildSegmentButton(
+                                  title: 'Tất cả',
+                                  icon: Icons.notifications_active_outlined,
+                                  isSelected:
+                                      club.notificationPreference == 'ALL',
+                                  activeColor: const Color(0xFF2563EB),
+                                  colors: colors,
+                                  onTap: isUpdating
+                                      ? null
+                                      : () => _updatePref(
+                                          club.communityId,
+                                          'ALL',
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: _buildSegmentButton(
+                                  title: 'Chỉ @tag',
+                                  icon: Icons.alternate_email_rounded,
+                                  isSelected:
+                                      club.notificationPreference ==
+                                      'MENTIONS_ONLY',
+                                  activeColor: const Color(0xFFD97706),
+                                  colors: colors,
+                                  onTap: isUpdating
+                                      ? null
+                                      : () => _updatePref(
+                                          club.communityId,
+                                          'MENTIONS_ONLY',
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: _buildSegmentButton(
+                                  title: 'Tắt',
+                                  icon: Icons.notifications_off_outlined,
+                                  isSelected:
+                                      club.notificationPreference == 'MUTED',
+                                  activeColor: const Color(0xFFE11D48),
+                                  colors: colors,
+                                  onTap: isUpdating
+                                      ? null
+                                      : () => _updatePref(
+                                          club.communityId,
+                                          'MUTED',
+                                        ),
+                                ),
                               ),
                             ],
                           ),
-                        );
-                      },
-                    ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -1641,10 +1894,14 @@ class _ClubNotificationSettingsCardState
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 6),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor.withValues(alpha: 0.1) : colors.bgDark,
+          color: isSelected
+              ? activeColor.withValues(alpha: 0.1)
+              : colors.bgDark,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? activeColor.withValues(alpha: 0.5) : colors.border,
+            color: isSelected
+                ? activeColor.withValues(alpha: 0.5)
+                : colors.border,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -1745,7 +2002,9 @@ Widget _dropdown(
         icon: Icon(Icons.arrow_drop_down_rounded, color: colors.textMuted),
         style: TextStyle(fontSize: 14, color: colors.textPrimary),
         dropdownColor: colors.bgCard,
-        items: effectiveItems.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        items: effectiveItems
+            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+            .toList(),
         onChanged: onChange,
       ),
     ),
@@ -1759,7 +2018,11 @@ Widget _divider(AppColorsExtension colors) {
   );
 }
 
-Widget _saveButton(BuildContext context, bool isLoading, Future<void> Function() onSave) {
+Widget _saveButton(
+  BuildContext context,
+  bool isLoading,
+  Future<void> Function() onSave,
+) {
   return SizedBox(
     width: double.infinity,
     height: 52,
@@ -1779,16 +2042,22 @@ Widget _saveButton(BuildContext context, bool isLoading, Future<void> Function()
           ? const SizedBox(
               width: 24,
               height: 24,
-              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2.5,
+              ),
             )
           : const Text(
               'Lưu thay đổi',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
     ),
   );
 }
-
 
 Widget _securityRow(
   AppColorsExtension colors, {
@@ -1815,7 +2084,14 @@ Widget _securityRow(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: TextStyle(fontSize: 11, color: colors.textMuted, fontWeight: FontWeight.w500)),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: colors.textMuted,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               const SizedBox(height: 2),
               Text(
                 fallbackText ?? (verified ? 'Đã xác thực' : 'Chưa xác thực'),
@@ -1833,14 +2109,18 @@ Widget _securityRow(
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: (verified ? colors.success : colors.warning).withValues(alpha: 0.12),
+            color: (verified ? colors.success : colors.warning).withValues(
+              alpha: 0.12,
+            ),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                verified ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+                verified
+                    ? Icons.check_circle_rounded
+                    : Icons.error_outline_rounded,
                 size: 13,
                 color: verified ? colors.success : colors.warning,
               ),
@@ -1890,22 +2170,41 @@ Widget _actionRow(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(subtitle, style: TextStyle(fontSize: 12, color: colors.textMuted)),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 12, color: colors.textMuted),
+                ),
               ],
             ),
           ),
-          if (trailing != null) trailing
+          if (trailing != null)
+            trailing
           else if (onTap != null)
-            Icon(Icons.chevron_right_rounded, size: 20, color: colors.textMuted),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: colors.textMuted,
+            ),
         ],
       ),
     ),
   );
 }
 
-Widget _buildErrorState(AppColorsExtension colors, String message, VoidCallback onRetry) {
+Widget _buildErrorState(
+  AppColorsExtension colors,
+  String message,
+  VoidCallback onRetry,
+) {
   return Center(
     child: Padding(
       padding: const EdgeInsets.all(32),
@@ -1914,7 +2213,14 @@ Widget _buildErrorState(AppColorsExtension colors, String message, VoidCallback 
         children: [
           Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
           const SizedBox(height: 16),
-          Text(message, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+          Text(
+            message,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 16),
           FilledButton(onPressed: onRetry, child: const Text('Thử lại')),
         ],

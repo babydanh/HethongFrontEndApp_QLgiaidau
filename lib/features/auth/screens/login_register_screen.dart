@@ -93,7 +93,9 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
         _isLoading = false;
         _errorMessage =
             auth.errorMessage ??
-            (_isRegisterMode ? l10n.loginRegister_registerFailed : l10n.loginRegister_loginFailed);
+            (_isRegisterMode
+                ? l10n.loginRegister_registerFailed
+                : l10n.loginRegister_loginFailed);
       });
     }
   }
@@ -116,10 +118,11 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       await googleSignIn.signOut();
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
-        setState(() => _isLoading = false);
+        if (mounted) setState(() => _isLoading = false);
         return;
       }
       final googleAuth = await googleUser.authentication;
+      if (!mounted) return;
       final idToken = googleAuth.idToken;
       if (idToken == null) {
         throw Exception(
@@ -139,7 +142,8 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
         final l10n = AppLocalizations.of(context)!;
         setState(() {
           _isLoading = false;
-          _errorMessage = auth.errorMessage ?? l10n.loginRegister_googleLoginFailed;
+          _errorMessage =
+              auth.errorMessage ?? l10n.loginRegister_googleLoginFailed;
         });
       }
     } catch (e) {
@@ -172,6 +176,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
           AppleIDAuthorizationScopes.fullName,
         ],
       );
+      if (!mounted) return;
       final idToken = credential.identityToken;
       if (idToken == null) {
         throw Exception(
@@ -199,7 +204,8 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
         final l10n = AppLocalizations.of(context)!;
         setState(() {
           _isLoading = false;
-          _errorMessage = auth.errorMessage ?? l10n.loginRegister_appleLoginFailed;
+          _errorMessage =
+              auth.errorMessage ?? l10n.loginRegister_appleLoginFailed;
         });
       }
     } on SignInWithAppleAuthorizationException catch (e) {
@@ -291,9 +297,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: Text(
-                        _isRegisterMode
-                            ? l10n.registerTitle
-                            : l10n.loginTitle,
+                        _isRegisterMode ? l10n.registerTitle : l10n.loginTitle,
                         key: ValueKey<bool>(_isRegisterMode),
                         style: TextStyle(
                           fontSize: 34.0,
@@ -380,7 +384,8 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                         if (_isRegisterMode &&
                                             (val == null ||
                                                 val.trim().isEmpty)) {
-                                          return l10n.loginRegister_fullNameRequired;
+                                          return l10n
+                                              .loginRegister_fullNameRequired;
                                         }
                                         return null;
                                       },
@@ -487,7 +492,9 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                 : AnimatedSwitcher(
                                     duration: const Duration(milliseconds: 200),
                                     child: Text(
-                                      _isRegisterMode ? l10n.registerButton : l10n.loginButton,
+                                      _isRegisterMode
+                                          ? l10n.registerButton
+                                          : l10n.loginButton,
                                       key: ValueKey<bool>(_isRegisterMode),
                                       style: TextStyle(
                                         fontSize: 16.0,
@@ -568,7 +575,9 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                 ),
                               ),
                             ),
-                            if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS) ...[
+                            if (defaultTargetPlatform == TargetPlatform.iOS ||
+                                defaultTargetPlatform ==
+                                    TargetPlatform.macOS) ...[
                               const SizedBox(height: 12),
                               SizedBox(
                                 width: double.infinity,
@@ -588,9 +597,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          _isRegisterMode
-                              ? l10n.hasAccount
-                              : l10n.noAccount,
+                          _isRegisterMode ? l10n.hasAccount : l10n.noAccount,
                           style: TextStyle(
                             color: textSecondaryColor,
                             fontSize: 14.0,
@@ -605,7 +612,9 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                             });
                           },
                           child: Text(
-                            _isRegisterMode ? l10n.loginRegister_loginNowAction : l10n.registerNow,
+                            _isRegisterMode
+                                ? l10n.loginRegister_loginNowAction
+                                : l10n.registerNow,
                             style: const TextStyle(
                               color: Color(0xFF2979FF),
                               fontWeight: FontWeight.bold,

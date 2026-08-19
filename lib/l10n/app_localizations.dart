@@ -380,6 +380,114 @@ abstract class AppLocalizations {
   /// **'Đăng xuất'**
   String get settingsLogout;
 
+  /// No description provided for @changePassword_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi mật khẩu'**
+  String get changePassword_title;
+
+  /// No description provided for @changePassword_currentLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu hiện tại'**
+  String get changePassword_currentLabel;
+
+  /// No description provided for @changePassword_currentHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập mật khẩu hiện tại'**
+  String get changePassword_currentHint;
+
+  /// No description provided for @changePassword_currentRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập mật khẩu hiện tại'**
+  String get changePassword_currentRequired;
+
+  /// No description provided for @changePassword_newLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu mới'**
+  String get changePassword_newLabel;
+
+  /// No description provided for @changePassword_newHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập mật khẩu mới'**
+  String get changePassword_newHint;
+
+  /// No description provided for @changePassword_newRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập mật khẩu mới'**
+  String get changePassword_newRequired;
+
+  /// No description provided for @changePassword_minLength.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có ít nhất 6 ký tự'**
+  String get changePassword_minLength;
+
+  /// No description provided for @changePassword_uppercase.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có ít nhất 1 chữ hoa'**
+  String get changePassword_uppercase;
+
+  /// No description provided for @changePassword_number.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có ít nhất 1 chữ số'**
+  String get changePassword_number;
+
+  /// No description provided for @changePassword_confirmLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận mật khẩu mới'**
+  String get changePassword_confirmLabel;
+
+  /// No description provided for @changePassword_confirmHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập lại mật khẩu mới'**
+  String get changePassword_confirmHint;
+
+  /// No description provided for @changePassword_confirmRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng xác nhận mật khẩu mới'**
+  String get changePassword_confirmRequired;
+
+  /// No description provided for @changePassword_mismatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu xác nhận không khớp'**
+  String get changePassword_mismatch;
+
+  /// No description provided for @changePassword_success.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi mật khẩu thành công'**
+  String get changePassword_success;
+
+  /// No description provided for @changePassword_errorGeneric.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể đổi mật khẩu. Vui lòng thử lại.'**
+  String get changePassword_errorGeneric;
+
+  /// No description provided for @changePassword_button.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi mật khẩu'**
+  String get changePassword_button;
+
+  /// No description provided for @changePassword_help.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa và chữ số để bảo mật tài khoản của bạn.'**
+  String get changePassword_help;
+
   /// No description provided for @languageVi.
   ///
   /// In vi, this message translates to:
@@ -3817,6 +3925,30 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Apple'**
   String get loginRegister_appleLabel;
+
+  /// No description provided for @loginRegister_googleSignInButton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng nhập bằng Google'**
+  String get loginRegister_googleSignInButton;
+
+  /// No description provided for @loginRegister_appleSignInButton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng nhập bằng Apple'**
+  String get loginRegister_appleSignInButton;
+
+  /// No description provided for @loginRegister_googleTokenMissing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không nhận được ID Token từ Google'**
+  String get loginRegister_googleTokenMissing;
+
+  /// No description provided for @loginRegister_appleTokenMissing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không nhận được ID Token từ Apple'**
+  String get loginRegister_appleTokenMissing;
 
   /// No description provided for @loginRegister_loginNowAction.
   ///

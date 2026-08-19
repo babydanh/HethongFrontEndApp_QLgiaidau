@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -56,7 +58,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Đổi mật khẩu thành công'),
+          content: Text(AppLocalizations.of(context)!.changePassword_success),
+
           backgroundColor: context.colors.success,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -68,9 +71,11 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       context.go('/profile');
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
+          content: Text(ErrorParser.parse(e, l10n.changePassword_errorGeneric)),
+
           backgroundColor: context.colors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -83,6 +88,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final newPassword = _newPasswordController.text;
 
     return Scaffold(
@@ -95,7 +101,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
           onPressed: () => context.go('/profile'),
         ),
         title: Text(
-          'Đổi mật khẩu',
+          l10n.changePassword_title,
+
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.w900,
@@ -136,11 +143,13 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Current password
-                    const _FieldLabel(text: 'Mật khẩu hiện tại'),
+                    _FieldLabel(text: l10n.changePassword_currentLabel),
+
                     const SizedBox(height: 6),
                     AppTextFormField(
                       controller: _currentPasswordController,
-                      hint: 'Nhập mật khẩu hiện tại',
+                      hint: l10n.changePassword_currentHint,
+
                       obscureText: _obscureCurrent,
                       prefixIcon: Icons.lock_outline,
                       suffixIcon: _obscureCurrent
@@ -151,7 +160,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                       },
                       validator: (val) {
                         if (val == null || val.isEmpty) {
-                          return 'Vui lòng nhập mật khẩu hiện tại';
+                          return l10n.changePassword_currentRequired;
                         }
                         return null;
                       },
@@ -159,11 +168,13 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     const SizedBox(height: 20),
 
                     // New password
-                    const _FieldLabel(text: 'Mật khẩu mới'),
+                    _FieldLabel(text: l10n.changePassword_newLabel),
+
                     const SizedBox(height: 6),
                     AppTextFormField(
                       controller: _newPasswordController,
-                      hint: 'Nhập mật khẩu mới',
+                      hint: l10n.changePassword_newHint,
+
                       obscureText: _obscureNew,
                       prefixIcon: Icons.lock_outline,
                       suffixIcon: _obscureNew
@@ -175,10 +186,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                       onChanged: (_) => setState(() {}),
                       validator: (val) {
                         if (val == null || val.isEmpty) {
-                          return 'Vui lòng nhập mật khẩu mới';
+                          return l10n.changePassword_newRequired;
                         }
                         if (val.length < 6) {
-                          return 'Mật khẩu phải có ít nhất 6 ký tự';
+                          return l10n.changePassword_minLength;
                         }
                         return null;
                       },
@@ -187,27 +198,32 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
                     // Password requirements
                     _buildRequirementRow(
-                      'Có ít nhất 6 ký tự',
+                      l10n.changePassword_minLength,
+
                       _hasMinLength(newPassword),
                     ),
                     const SizedBox(height: 6),
                     _buildRequirementRow(
-                      'Có ít nhất 1 chữ hoa',
+                      l10n.changePassword_uppercase,
+
                       _hasUppercase(newPassword),
                     ),
                     const SizedBox(height: 6),
                     _buildRequirementRow(
-                      'Có ít nhất 1 chữ số',
+                      l10n.changePassword_number,
+
                       _hasNumber(newPassword),
                     ),
                     const SizedBox(height: 20),
 
                     // Confirm password
-                    const _FieldLabel(text: 'Xác nhận mật khẩu mới'),
+                    _FieldLabel(text: l10n.changePassword_confirmLabel),
+
                     const SizedBox(height: 6),
                     AppTextFormField(
                       controller: _confirmPasswordController,
-                      hint: 'Nhập lại mật khẩu mới',
+                      hint: l10n.changePassword_confirmHint,
+
                       obscureText: _obscureConfirm,
                       prefixIcon: Icons.lock_outline,
                       suffixIcon: _obscureConfirm
@@ -218,10 +234,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                       },
                       validator: (val) {
                         if (val == null || val.isEmpty) {
-                          return 'Vui lòng xác nhận mật khẩu mới';
+                          return l10n.changePassword_confirmRequired;
                         }
                         if (val != _newPasswordController.text) {
-                          return 'Mật khẩu xác nhận không khớp';
+                          return l10n.changePassword_mismatch;
                         }
                         return null;
                       },
@@ -237,7 +253,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primary,
                           foregroundColor: Colors.white,
-                          disabledBackgroundColor: AppTheme.primary.withValues(alpha: 0.4),
+                          disabledBackgroundColor: AppTheme.primary.withValues(
+                            alpha: 0.4,
+                          ),
                           shadowColor: Colors.transparent,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
@@ -253,8 +271,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                                   strokeWidth: 2.5,
                                 ),
                               )
-                            : const Text(
-                                'Đổi mật khẩu',
+                            : Text(
+                                l10n.changePassword_button,
+
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -292,7 +311,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa và chữ số để bảo mật tài khoản của bạn.',
+                          l10n.changePassword_help,
+
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,

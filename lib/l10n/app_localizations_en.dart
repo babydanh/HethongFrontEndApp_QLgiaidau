@@ -150,6 +150,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLogout => 'Log Out';
 
   @override
+  String get changePassword_title => 'Change Password';
+
+  @override
+  String get changePassword_currentLabel => 'Current password';
+
+  @override
+  String get changePassword_currentHint => 'Enter current password';
+
+  @override
+  String get changePassword_currentRequired =>
+      'Please enter your current password';
+
+  @override
+  String get changePassword_newLabel => 'New password';
+
+  @override
+  String get changePassword_newHint => 'Enter new password';
+
+  @override
+  String get changePassword_newRequired => 'Please enter a new password';
+
+  @override
+  String get changePassword_minLength => 'At least 6 characters';
+
+  @override
+  String get changePassword_uppercase => 'At least 1 uppercase letter';
+
+  @override
+  String get changePassword_number => 'At least 1 number';
+
+  @override
+  String get changePassword_confirmLabel => 'Confirm new password';
+
+  @override
+  String get changePassword_confirmHint => 'Re-enter new password';
+
+  @override
+  String get changePassword_confirmRequired =>
+      'Please confirm your new password';
+
+  @override
+  String get changePassword_mismatch => 'Password confirmation does not match';
+
+  @override
+  String get changePassword_success => 'Password changed successfully';
+
+  @override
+  String get changePassword_errorGeneric =>
+      'Could not change password. Please try again.';
+
+  @override
+  String get changePassword_button => 'Change Password';
+
+  @override
+  String get changePassword_help =>
+      'Your password must contain at least 6 characters, including an uppercase letter and a number, to keep your account secure.';
+
+  @override
   String get languageVi => 'Tiếng Việt';
 
   @override
@@ -1986,6 +2044,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loginRegister_appleLabel => 'Apple';
+
+  @override
+  String get loginRegister_googleSignInButton => 'Đăng nhập bằng Google';
+
+  @override
+  String get loginRegister_appleSignInButton => 'Đăng nhập bằng Apple';
+
+  @override
+  String get loginRegister_googleTokenMissing =>
+      'Không nhận được ID Token từ Google';
+
+  @override
+  String get loginRegister_appleTokenMissing =>
+      'Không nhận được ID Token từ Apple';
 
   @override
   String get loginRegister_loginNowAction => 'Login now';
