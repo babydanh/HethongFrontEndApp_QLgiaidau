@@ -174,7 +174,9 @@ class _BannerCarousel extends StatelessWidget {
                   itemCount: images.length,
                   onPageChanged: onPageChanged,
                   itemBuilder: (context, index) {
-                    final resolvedList = images.map((i) => _resolveImageUrl(i)).toList();
+                    final resolvedList = images
+                        .map((i) => _resolveImageUrl(i))
+                        .toList();
                     return GestureDetector(
                       onTap: () {
                         AppImageViewer.showGallery(
@@ -240,7 +242,7 @@ class _FallbackBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return SvgPicture.network(
-                      "https://sporto.asia/sporto_v1.svg",
+      "https://sporto.asia/sporto_v1.svg",
       fit: BoxFit.contain,
       placeholderBuilder: (_) => Container(
         color: const Color(0xFF1E293B),
@@ -267,6 +269,7 @@ class _HeaderBadges extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final bracketLabel =
         AppConstants.bracketTypeNames[tournament.bracketType] ??
         tournament.bracketType.replaceAll('_', ' ').toUpperCase();
@@ -278,7 +281,7 @@ class _HeaderBadges extends StatelessWidget {
         SportPill(sportKey: tournament.sport),
         StatusBadge(statusKey: tournament.status),
         _HeaderTag(
-          tournament.isRanked ? 'XẾP HẠNG ELO' : 'PHONG TRÀO',
+          tournament.isRanked ? l10n.rankedELO : l10n.unranked,
           icon: tournament.isRanked
               ? Icons.stars_rounded
               : Icons.sports_score_rounded,
@@ -370,20 +373,30 @@ class _HeaderMeta extends StatelessWidget {
                     text: _formatDateRange(
                       tournament.registrationStartDate,
                       tournament.registrationEndDate,
+                      l10n.notUpdated,
                     ),
                   ),
                   _HeaderIconText(
                     icon: Icons.location_on_outlined,
-                    text: ([tournament.venueName, tournament.locationAddress, tournament.city]
-                                .whereType<String>()
-                                .where((value) => value.trim().isNotEmpty)
-                                .join(' • ')
-                                .trim()
-                                .isNotEmpty)
-                        ? [tournament.venueName, tournament.locationAddress, tournament.city]
+                    text:
+                        ([
+                              tournament.venueName,
+                              tournament.locationAddress,
+                              tournament.city,
+                            ]
                             .whereType<String>()
                             .where((value) => value.trim().isNotEmpty)
                             .join(' • ')
+                            .trim()
+                            .isNotEmpty)
+                        ? [
+                                tournament.venueName,
+                                tournament.locationAddress,
+                                tournament.city,
+                              ]
+                              .whereType<String>()
+                              .where((value) => value.trim().isNotEmpty)
+                              .join(' • ')
                         : l10n.locationNotUpdated,
                   ),
                 ],
@@ -593,7 +606,7 @@ class _FallbackLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SvgPicture.network(
-                      "https://sporto.asia/sporto_v1.svg",
+      "https://sporto.asia/sporto_v1.svg",
       fit: BoxFit.contain,
       placeholderBuilder: (_) => Icon(Icons.emoji_events, size: size * 0.5),
     );
@@ -605,9 +618,9 @@ String _resolveImageUrl(String url) {
   return "https://sporto.asia$url";
 }
 
-String _formatDateRange(DateTime? start, DateTime? end) {
+String _formatDateRange(DateTime? start, DateTime? end, String fallback) {
   if (start == null && end == null) {
-    return "Chưa cập nhật";
+    return fallback;
   }
   final startStr = start != null
       ? "${start.day.toString().padLeft(2, '0')}/${start.month.toString().padLeft(2, '0')}/${start.year}"
@@ -661,7 +674,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
               color: colors.bgCard,
               child: images.isEmpty
                   ? SvgPicture.network(
-                                      "https://sporto.asia/sporto_v1.svg",
+                      "https://sporto.asia/sporto_v1.svg",
                       fit: BoxFit.contain,
                       placeholderBuilder: (_) => Container(
                         color: const Color(0xFF1E293B),
@@ -695,7 +708,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return SvgPicture.network(
-                                              "https://sporto.asia/sporto_v1.svg",
+                              "https://sporto.asia/sporto_v1.svg",
                               fit: BoxFit.contain,
                               placeholderBuilder: (_) => Container(
                                 color: const Color(0xFF1E293B),
@@ -891,6 +904,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                               _formatDateRange(
                                 widget.tournament.registrationStartDate,
                                 widget.tournament.registrationEndDate,
+                                l10n.notUpdated,
                               ),
                               colors,
                             ),
@@ -921,9 +935,9 @@ class _TournamentBannerState extends State<TournamentBanner> {
     );
   }
 
-  String _formatDateRange(DateTime? start, DateTime? end) {
+  String _formatDateRange(DateTime? start, DateTime? end, String fallback) {
     if (start == null && end == null) {
-      return "Chưa cập nhật";
+      return fallback;
     }
     final startStr = start != null
         ? "${start.day.toString().padLeft(2, '0')}/${start.month.toString().padLeft(2, '0')}/${start.year}"
@@ -1003,15 +1017,12 @@ class _TournamentBannerState extends State<TournamentBanner> {
   }
 
   String _locationLabel(Tournament tournament) {
-    final parts = [
-      tournament.venueName,
-      tournament.locationAddress,
-      tournament.city,
-    ]
-        .whereType<String>()
-        .map((value) => value.trim())
-        .where((value) => value.isNotEmpty)
-        .toList();
+    final parts =
+        [tournament.venueName, tournament.locationAddress, tournament.city]
+            .whereType<String>()
+            .map((value) => value.trim())
+            .where((value) => value.isNotEmpty)
+            .toList();
     return parts.isEmpty
         ? AppLocalizations.of(context)!.locationNotUpdated
         : parts.join(' • ');

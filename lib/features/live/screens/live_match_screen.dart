@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_filter_segment.dart';
 
@@ -30,11 +31,16 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final divisionsAsync = ref.watch(tournamentDivisionsProvider(widget.tournamentId));
-    final matchesAsync = ref.watch(matchesWithDivisionProvider((
-      tournamentId: widget.tournamentId,
-      divisionId: _selectedDivisionId,
-    )));
+    final l10n = AppLocalizations.of(context)!;
+    final divisionsAsync = ref.watch(
+      tournamentDivisionsProvider(widget.tournamentId),
+    );
+    final matchesAsync = ref.watch(
+      matchesWithDivisionProvider((
+        tournamentId: widget.tournamentId,
+        divisionId: _selectedDivisionId,
+      )),
+    );
     final tournamentAsync = ref.watch(tournamentProvider(widget.tournamentId));
 
     return Scaffold(
@@ -43,7 +49,10 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
         backgroundColor: context.colors.bgDark,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: context.colors.textPrimary,
+          ),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -53,7 +62,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
           },
         ),
         title: Text(
-          'Trận đấu trực tiếp',
+          l10n.liveMatchesTitle,
           style: TextStyle(
             color: context.colors.textPrimary,
             fontSize: 16,
@@ -64,7 +73,8 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
       body: divisionsAsync.when(
         data: (divisions) {
           return matchesAsync.when(
-            data: (matches) => _buildContent(context, matches, tournamentAsync, divisions),
+            data: (matches) =>
+                _buildContent(context, matches, tournamentAsync, divisions),
             loading: () => _buildShimmerLoading(context),
             error: (e, _) => _buildErrorState(context, e),
           );
@@ -84,36 +94,52 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
     AsyncValue tournamentAsync,
     List<Map<String, dynamic>> divisions,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final validMatches = matches.where((m) {
-      if (m.status == AppConstants.matchLive || m.status == AppConstants.matchCompleted) return true;
-      final hasTeams = m.team1Name.trim() != 'TBD' && m.team2Name.trim() != 'TBD';
+      if (m.status == AppConstants.matchLive ||
+          m.status == AppConstants.matchCompleted) {
+        return true;
+      }
+      final hasTeams =
+          m.team1Name.trim() != 'TBD' && m.team2Name.trim() != 'TBD';
       return hasTeams;
     }).toList();
 
-    if (validMatches.isEmpty) return _buildEmptyState(context, tournamentAsync, divisions);
+    if (validMatches.isEmpty) {
+      return _buildEmptyState(context, tournamentAsync, divisions);
+    }
 
     final showLive = _statusFilter == 'all' || _statusFilter == 'live';
     final showUpcoming = _statusFilter == 'all' || _statusFilter == 'upcoming';
-    final showCompleted = _statusFilter == 'all' || _statusFilter == 'completed';
+    final showCompleted =
+        _statusFilter == 'all' || _statusFilter == 'completed';
 
     final liveMatches = showLive
         ? validMatches.where((m) => m.status == AppConstants.matchLive).toList()
         : <MatchModel>[];
     final completedMatches = showCompleted
-        ? validMatches.where((m) => m.status == AppConstants.matchCompleted).toList()
+        ? validMatches
+              .where((m) => m.status == AppConstants.matchCompleted)
+              .toList()
         : <MatchModel>[];
     final upcomingMatches = showUpcoming
-        ? validMatches.where((m) => m.status == AppConstants.matchScheduled).toList()
+        ? validMatches
+              .where((m) => m.status == AppConstants.matchScheduled)
+              .toList()
         : <MatchModel>[];
 
-    final liveCount = validMatches.where((m) => m.status == AppConstants.matchLive).length;
+    final liveCount = validMatches
+        .where((m) => m.status == AppConstants.matchLive)
+        .length;
 
     return RefreshIndicator(
       onRefresh: () async {
-        ref.invalidate(matchesWithDivisionProvider((
-          tournamentId: widget.tournamentId,
-          divisionId: _selectedDivisionId,
-        )));
+        ref.invalidate(
+          matchesWithDivisionProvider((
+            tournamentId: widget.tournamentId,
+            divisionId: _selectedDivisionId,
+          )),
+        );
         ref.invalidate(tournamentDivisionsProvider(widget.tournamentId));
         await Future.delayed(const Duration(milliseconds: 100));
       },
@@ -122,8 +148,13 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
         physics: const BouncingScrollPhysics(),
         slivers: [
           // ─── Header Banner ───
-          _buildHeaderBanner(context, tournamentAsync,
-              liveCount, validMatches.length, validMatches),
+          _buildHeaderBanner(
+            context,
+            tournamentAsync,
+            liveCount,
+            validMatches.length,
+            validMatches,
+          ),
 
           // ─── Division Filter Segment ───
           if (divisions.isNotEmpty)
@@ -131,19 +162,25 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
               child: Padding(
                 padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
                 child: DivisionFilterSegment(
-                  divisions: ['Tất cả', ...divisions.map((d) => d['name'] as String)],
+                  divisions: [
+                    l10n.matchesFilterAll,
+                    ...divisions.map((d) => d['name'] as String),
+                  ],
                   selectedDivision: _selectedDivisionId == null
-                      ? 'Tất cả'
+                      ? l10n.matchesFilterAll
                       : (divisions.firstWhere(
-                          (d) => d['id'] == _selectedDivisionId,
-                          orElse: () => {'name': 'Tất cả'},
-                        )['name'] as String),
+                              (d) => d['id'] == _selectedDivisionId,
+                              orElse: () => {'name': l10n.matchesFilterAll},
+                            )['name']
+                            as String),
                   onDivisionChanged: (name) {
                     setState(() {
-                      if (name == 'Tất cả') {
+                      if (name == l10n.matchesFilterAll) {
                         _selectedDivisionId = null;
                       } else {
-                        final div = divisions.firstWhere((d) => d['name'] == name);
+                        final div = divisions.firstWhere(
+                          (d) => d['name'] == name,
+                        );
                         _selectedDivisionId = div['id'] as String;
                       }
                     });
@@ -159,13 +196,25 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  _buildFilterChip('all', 'Tất cả (${validMatches.length})'),
+                  _buildFilterChip(
+                    'all',
+                    '${l10n.matchesFilterAll} (${validMatches.length})',
+                  ),
                   const SizedBox(width: 8),
-                  _buildFilterChip('live', 'Đang Live ($liveCount)'),
+                  _buildFilterChip(
+                    'live',
+                    '${l10n.matchesStatusLive} ($liveCount)',
+                  ),
                   const SizedBox(width: 8),
-                  _buildFilterChip('upcoming', 'Sắp diễn ra (${validMatches.where((m) => m.status == AppConstants.matchScheduled).length})'),
+                  _buildFilterChip(
+                    'upcoming',
+                    '${l10n.matchesStatusScheduled} (${validMatches.where((m) => m.status == AppConstants.matchScheduled).length})',
+                  ),
                   const SizedBox(width: 8),
-                  _buildFilterChip('completed', 'Đã kết thúc (${validMatches.where((m) => m.status == AppConstants.matchCompleted).length})'),
+                  _buildFilterChip(
+                    'completed',
+                    '${l10n.matchesStatusCompleted} (${validMatches.where((m) => m.status == AppConstants.matchCompleted).length})',
+                  ),
                 ],
               ),
             ),
@@ -177,21 +226,22 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
               child: _buildSectionHeader(
                 context,
                 icon: Icons.sensors_rounded,
-                title: 'Đang thi đấu',
+                title: l10n.matchesStatusLive,
                 count: liveMatches.length,
                 color: context.colors.error,
-                badge: 'LIVE',
+                badge: l10n.matchLiveStatus,
               ),
             ),
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
-                  (context, index) => LiveMatchCardV2(
-                    match: liveMatches[index],
-                    isLive: true,
-                    onTap: () => _openMatch(liveMatches[index]),
-                  ).animate().slideX(
+                  (context, index) =>
+                      LiveMatchCardV2(
+                        match: liveMatches[index],
+                        isLive: true,
+                        onTap: () => _openMatch(liveMatches[index]),
+                      ).animate().slideX(
                         begin: 0.1,
                         duration: 300.ms,
                         delay: (index * 80).ms,
@@ -210,7 +260,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
               child: _buildSectionHeader(
                 context,
                 icon: Icons.calendar_today_rounded,
-                title: 'Sắp diễn ra',
+                title: l10n.matchesStatusScheduled,
                 count: upcomingMatches.length,
                 color: context.colors.info,
               ),
@@ -222,10 +272,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                   (context, index) => LiveMatchCardV2(
                     match: upcomingMatches[index],
                     onTap: () => _openMatch(upcomingMatches[index]),
-                  ).animate().fadeIn(
-                        duration: 300.ms,
-                        delay: (index * 60).ms,
-                      ),
+                  ).animate().fadeIn(duration: 300.ms, delay: (index * 60).ms),
                   childCount: upcomingMatches.length,
                 ),
               ),
@@ -239,7 +286,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
               child: _buildSectionHeader(
                 context,
                 icon: Icons.check_circle_outline_rounded,
-                title: 'Đã kết thúc',
+                title: l10n.matchesStatusCompleted,
                 count: completedMatches.length,
                 color: context.colors.success,
               ),
@@ -252,10 +299,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                     match: completedMatches[index],
                     isCompleted: true,
                     onTap: () => _openMatch(completedMatches[index]),
-                  ).animate().fadeIn(
-                        duration: 300.ms,
-                        delay: (index * 40).ms,
-                      ),
+                  ).animate().fadeIn(duration: 300.ms, delay: (index * 40).ms),
                   childCount: completedMatches.length,
                 ),
               ),
@@ -271,8 +315,11 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 80),
                 child: Center(
                   child: Text(
-                    'Không có trận đấu nào phù hợp bộ lọc',
-                    style: TextStyle(color: context.colors.textMuted, fontSize: 13),
+                    l10n.liveMatchesFilteredEmpty,
+                    style: TextStyle(
+                      color: context.colors.textMuted,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ),
@@ -306,7 +353,9 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
       backgroundColor: colors.bgCard,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        side: BorderSide(color: isSelected ? Colors.transparent : colors.border),
+        side: BorderSide(
+          color: isSelected ? Colors.transparent : colors.border,
+        ),
       ),
       showCheckmark: false,
     );
@@ -322,6 +371,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
     int totalCount,
     List<MatchModel> matches,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return SliverToBoxAdapter(
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -371,7 +421,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                     children: [
                       tournamentAsync.when(
                         data: (t) => Text(
-                          t?.name ?? 'Giải đấu',
+                          t?.name ?? l10n.tournamentNotFound,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -381,18 +431,18 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        loading: () => const Text(
-                          'Đang tải...',
+                        loading: () => Text(
+                          l10n.tournamentLoading,
                           style: TextStyle(color: Colors.white70),
                         ),
-                        error: (context, error) => const Text(
-                          'Giải đấu',
+                        error: (context, error) => Text(
+                          l10n.tournamentNotFound,
                           style: TextStyle(color: Colors.white70),
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '$totalCount trận đấu',
+                        l10n.matchesCount(totalCount),
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 12,
@@ -405,7 +455,9 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                 if (liveCount > 0)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: context.colors.error,
                       borderRadius: BorderRadius.circular(AppTheme.radiusXL),
@@ -416,32 +468,35 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                         ),
                       ],
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          '$liveCount LIVE',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ).animate(onPlay: (c) => c.repeat()).shimmer(
-                          duration: 800.ms,
-                          color: Colors.white.withValues(alpha: 0.3),
-                        ),
+                    child:
+                        Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  '$liveCount ${l10n.matchLiveStatus}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            )
+                            .animate(onPlay: (c) => c.repeat())
+                            .shimmer(
+                              duration: 800.ms,
+                              color: Colors.white.withValues(alpha: 0.3),
+                            ),
                   ),
               ],
             ),
@@ -452,7 +507,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                 _buildStatItem(
                   icon: Icons.sensors_rounded,
                   value: '$liveCount',
-                  label: 'Đang đấu',
+                  label: l10n.matchesStatusLive,
                   color: context.colors.error,
                 ),
                 const SizedBox(width: 12),
@@ -467,7 +522,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                   icon: Icons.check_circle_outline_rounded,
                   value:
                       '${matches.where((m) => m.status == AppConstants.matchCompleted).length}',
-                  label: 'Xong',
+                  label: l10n.matchesStatusCompleted,
                   color: context.colors.success,
                 ),
               ],
@@ -598,12 +653,15 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
     AsyncValue tournamentAsync,
     List<Map<String, dynamic>> divisions,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return RefreshIndicator(
       onRefresh: () async {
-        ref.invalidate(matchesWithDivisionProvider((
-          tournamentId: widget.tournamentId,
-          divisionId: _selectedDivisionId,
-        )));
+        ref.invalidate(
+          matchesWithDivisionProvider((
+            tournamentId: widget.tournamentId,
+            divisionId: _selectedDivisionId,
+          )),
+        );
         ref.invalidate(tournamentDivisionsProvider(widget.tournamentId));
         await Future.delayed(const Duration(milliseconds: 100));
       },
@@ -618,10 +676,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    const Color(0xFF0F172A),
-                    const Color(0xFF1E293B),
-                  ],
+                  colors: [const Color(0xFF0F172A), const Color(0xFF1E293B)],
                 ),
                 borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               ),
@@ -644,7 +699,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                   Expanded(
                     child: tournamentAsync.when(
                       data: (t) => Text(
-                        t?.name ?? 'Giải đấu',
+                        t?.name ?? l10n.tournamentNotFound,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -653,12 +708,12 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      loading: () => const Text(
-                        'Giải đấu',
+                      loading: () => Text(
+                        l10n.tournamentLoading,
                         style: TextStyle(color: Colors.white70),
                       ),
-                      error: (context, error) => const Text(
-                        'Giải đấu',
+                      error: (context, error) => Text(
+                        l10n.tournamentNotFound,
                         style: TextStyle(color: Colors.white70),
                       ),
                     ),
@@ -674,19 +729,25 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
               child: Padding(
                 padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
                 child: DivisionFilterSegment(
-                  divisions: ['Tất cả', ...divisions.map((d) => d['name'] as String)],
+                  divisions: [
+                    l10n.matchesFilterAll,
+                    ...divisions.map((d) => d['name'] as String),
+                  ],
                   selectedDivision: _selectedDivisionId == null
-                      ? 'Tất cả'
+                      ? l10n.matchesFilterAll
                       : (divisions.firstWhere(
-                          (d) => d['id'] == _selectedDivisionId,
-                          orElse: () => {'name': 'Tất cả'},
-                        )['name'] as String),
+                              (d) => d['id'] == _selectedDivisionId,
+                              orElse: () => {'name': l10n.matchesFilterAll},
+                            )['name']
+                            as String),
                   onDivisionChanged: (name) {
                     setState(() {
-                      if (name == 'Tất cả') {
+                      if (name == l10n.matchesFilterAll) {
                         _selectedDivisionId = null;
                       } else {
-                        final div = divisions.firstWhere((d) => d['name'] == name);
+                        final div = divisions.firstWhere(
+                          (d) => d['name'] == name,
+                        );
                         _selectedDivisionId = div['id'] as String;
                       }
                     });
@@ -715,7 +776,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Chưa có trận đấu',
+                    l10n.liveMatchesNoMatches,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -724,7 +785,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Chờ ban tổ chức bốc thăm và xếp lịch\nCác trận đấu sẽ xuất hiện tại đây',
+                    l10n.liveMatchesNoMatchesDescription,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
@@ -735,15 +796,21 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                   const SizedBox(height: 24),
                   GestureDetector(
                     onTap: () {
-                      ref.invalidate(matchesWithDivisionProvider((
-                        tournamentId: widget.tournamentId,
-                        divisionId: _selectedDivisionId,
-                      )));
-                      ref.invalidate(tournamentDivisionsProvider(widget.tournamentId));
+                      ref.invalidate(
+                        matchesWithDivisionProvider((
+                          tournamentId: widget.tournamentId,
+                          divisionId: _selectedDivisionId,
+                        )),
+                      );
+                      ref.invalidate(
+                        tournamentDivisionsProvider(widget.tournamentId),
+                      );
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: context.colors.info.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
@@ -754,11 +821,14 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.refresh_rounded,
-                              size: 16, color: context.colors.info),
+                          Icon(
+                            Icons.refresh_rounded,
+                            size: 16,
+                            color: context.colors.info,
+                          ),
                           const SizedBox(width: 6),
                           Text(
-                            'Tải lại',
+                            l10n.liveMatchesReload,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
@@ -846,6 +916,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
   // ERROR STATE
   // ─────────────────────────────────────────────────────
   Widget _buildErrorState(BuildContext context, Object error) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -867,7 +938,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Không thể tải trận đấu',
+              l10n.matchesLoadError,
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
@@ -878,24 +949,25 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
             Text(
               '$error',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: context.colors.textMuted,
-              ),
+              style: TextStyle(fontSize: 12, color: context.colors.textMuted),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: () {
-                ref.invalidate(matchesWithDivisionProvider((
-                  tournamentId: widget.tournamentId,
-                  divisionId: _selectedDivisionId,
-                )));
-                ref.invalidate(tournamentDivisionsProvider(widget.tournamentId));
+                ref.invalidate(
+                  matchesWithDivisionProvider((
+                    tournamentId: widget.tournamentId,
+                    divisionId: _selectedDivisionId,
+                  )),
+                );
+                ref.invalidate(
+                  tournamentDivisionsProvider(widget.tournamentId),
+                );
               },
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Thử lại'),
+              label: Text(l10n.matchesRetry),
               style: FilledButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusXL),

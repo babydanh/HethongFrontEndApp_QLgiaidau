@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class ShimmerPlaceholder extends StatelessWidget {
   final double height;
@@ -57,13 +58,11 @@ class ShimmerBody extends StatelessWidget {
 class NotFoundView extends StatelessWidget {
   final VoidCallback onGoHome;
 
-  const NotFoundView({
-    super.key,
-    required this.onGoHome,
-  });
+  const NotFoundView({super.key, required this.onGoHome});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -75,7 +74,7 @@ class NotFoundView extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            "Giải đấu không tồn tại",
+            l10n.tournamentNotFound,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -86,7 +85,7 @@ class NotFoundView extends StatelessWidget {
           FilledButton.icon(
             onPressed: onGoHome,
             icon: const Icon(Icons.home_rounded),
-            label: const Text("Về trang chủ"),
+            label: Text(l10n.matchGoHome),
           ),
         ],
       ),
@@ -98,14 +97,11 @@ class ErrorView extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
 
-  const ErrorView({
-    super.key,
-    required this.message,
-    required this.onRetry,
-  });
+  const ErrorView({super.key, required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -119,7 +115,7 @@ class ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              "Không thể tải giải đấu",
+              l10n.tournamentLoadError,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -129,10 +125,7 @@ class ErrorView extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               message,
-              style: TextStyle(
-                fontSize: 14,
-                color: context.colors.textMuted,
-              ),
+              style: TextStyle(fontSize: 14, color: context.colors.textMuted),
               textAlign: TextAlign.center,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
@@ -141,7 +134,7 @@ class ErrorView extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text("Thử lại"),
+              label: Text(l10n.infoRetry),
             ),
           ],
         ),

@@ -989,7 +989,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get matchLiveCheerError => 'Could not send cheer. Please try again.';
 
   @override
-  String get matchLiveTitle => 'Live';
+  String get matchLiveTitle => 'Live Matches';
+
+  @override
+  String get liveMatchesTitle => 'Live Matches';
+
+  @override
+  String get liveMatchesRemainingStat => 'Remaining';
+
+  @override
+  String get liveMatchesNoMatches => 'No matches yet';
+
+  @override
+  String get liveMatchesNoMatchesDescription =>
+      'Waiting for the organizer to draw and schedule matches\nMatches will appear here';
+
+  @override
+  String get liveMatchesFilteredEmpty => 'No matches match the selected filter';
+
+  @override
+  String get contactWebsite => 'Website';
+
+  @override
+  String get contactPhone => 'Phone';
+
+  @override
+  String get contactEmail => 'Email';
+
+  @override
+  String get contactZalo => 'Zalo';
+
+  @override
+  String get contactFacebook => 'Facebook';
+
+  @override
+  String get imageZoomHint => 'Tap to zoom';
+
+  @override
+  String get liveMatchesReload => 'Reload';
+
+  @override
+  String liveMatchMaxScore(Object score) {
+    return 'Max score: $score';
+  }
+
+  @override
+  String get liveMatchCompletedStatus => 'COMPLETED';
+
+  @override
+  String get liveMatchScheduledStatus => 'UPCOMING';
 
   @override
   String get matchDetailTitle => 'Match Details';

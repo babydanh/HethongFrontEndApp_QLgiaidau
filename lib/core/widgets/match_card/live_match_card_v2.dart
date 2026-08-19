@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Sport-tech match card — dùng cho cả 3 trạng thái: live / scheduled / completed
 class LiveMatchCardV2 extends StatefulWidget {
@@ -36,9 +37,10 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
         vsync: this,
         duration: const Duration(milliseconds: 1200),
       )..repeat(reverse: true);
-      _pulseAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
-        CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
-      );
+      _pulseAnim = Tween<double>(
+        begin: 0.85,
+        end: 1.0,
+      ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
       _hasLiveAnim = true;
     }
   }
@@ -55,10 +57,8 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
     if (widget.isLive) {
       return AnimatedBuilder(
         animation: _pulseAnim,
-        builder: (context, child) => Transform.scale(
-          scale: _pulseAnim.value,
-          child: child,
-        ),
+        builder: (context, child) =>
+            Transform.scale(scale: _pulseAnim.value, child: child),
         child: card,
       );
     }
@@ -66,11 +66,12 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
   }
 
   Widget _buildCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final borderColor = widget.isLive
         ? context.colors.error
         : widget.isCompleted
-            ? context.colors.success
-            : context.colors.border;
+        ? context.colors.success
+        : context.colors.border;
     final borderWidth = widget.isLive ? 2.0 : 1.0;
     final glowColor = widget.isLive
         ? context.colors.error.withValues(alpha: 0.15)
@@ -114,7 +115,8 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
                         context,
                         teamName: widget.match.team1Name,
                         score: widget.match.score1,
-                        isWinner: widget.isCompleted &&
+                        isWinner:
+                            widget.isCompleted &&
                             widget.match.winnerId == widget.match.team1Id,
                         alignment: CrossAxisAlignment.start,
                       ),
@@ -125,13 +127,15 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: context.colors.bgSurface,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            'VS',
+                            l10n.matchVsLabel,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
@@ -141,7 +145,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'V${widget.match.round}',
+                          l10n.matchRound(widget.match.round),
                           style: TextStyle(
                             fontSize: 10,
                             color: context.colors.textMuted,
@@ -166,7 +170,8 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
                         context,
                         teamName: widget.match.team2Name,
                         score: widget.match.score2,
-                        isWinner: widget.isCompleted &&
+                        isWinner:
+                            widget.isCompleted &&
                             widget.match.winnerId == widget.match.team2Id,
                         alignment: CrossAxisAlignment.end,
                       ),
@@ -176,8 +181,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
               ),
 
               // ─── Set Scores (nếu có) ───
-              if (widget.match.sets.isNotEmpty)
-                _buildSetScores(context),
+              if (widget.match.sets.isNotEmpty) _buildSetScores(context),
 
               // ─── Bottom Info ───
               if (widget.match.scheduledTime != null ||
@@ -191,29 +195,30 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
   }
 
   Widget _buildLiveBar(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 5),
-      decoration: BoxDecoration(
-        gradient: context.liveGradient,
-      ),
+      decoration: BoxDecoration(gradient: context.liveGradient),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 7,
-            height: 7,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-          ).animate(onPlay: (c) => c.repeat()).shimmer(
+                width: 7,
+                height: 7,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+              )
+              .animate(onPlay: (c) => c.repeat())
+              .shimmer(
                 duration: 800.ms,
                 color: Colors.white.withValues(alpha: 0.3),
               ),
           const SizedBox(width: 6),
-          const Text(
-            'LIVE',
+          Text(
+            l10n.matchLiveStatus,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w900,
@@ -224,11 +229,8 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
           if (widget.match.maxScore != null) ...[
             const SizedBox(width: 12),
             Text(
-              'Điểm tối đa: ${widget.match.maxScore}',
-              style: const TextStyle(
-                fontSize: 9,
-                color: Colors.white70,
-              ),
+              l10n.liveMatchMaxScore(widget.match.maxScore!),
+              style: const TextStyle(fontSize: 9, color: Colors.white70),
             ),
           ],
         ],
@@ -237,6 +239,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
   }
 
   Widget _buildCompletedBar(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 5),
@@ -254,7 +257,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
           const Icon(Icons.emoji_events_rounded, size: 12, color: Colors.white),
           const SizedBox(width: 6),
           Text(
-            'HOÀN THÀNH',
+            l10n.liveMatchCompletedStatus,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w900,
@@ -268,22 +271,29 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
   }
 
   Widget _buildScheduledBar(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 5),
       decoration: BoxDecoration(
         color: context.colors.bgSurface,
         border: Border(
-          bottom: BorderSide(color: context.colors.border.withValues(alpha: 0.5)),
+          bottom: BorderSide(
+            color: context.colors.border.withValues(alpha: 0.5),
+          ),
         ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.schedule_rounded, size: 11, color: context.colors.textMuted),
+          Icon(
+            Icons.schedule_rounded,
+            size: 11,
+            color: context.colors.textMuted,
+          ),
           const SizedBox(width: 6),
           Text(
-            'SẮP DIỄN RA',
+            l10n.liveMatchScheduledStatus,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w700,
@@ -314,9 +324,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
             color: context.colors.bgSurface,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isWinner
-                  ? context.colors.success
-                  : context.colors.border,
+              color: isWinner ? context.colors.success : context.colors.border,
               width: isWinner ? 2 : 1,
             ),
           ),
@@ -360,8 +368,8 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
             color: widget.isLive
                 ? context.colors.textPrimary
                 : isWinner
-                    ? context.colors.success
-                    : context.colors.textPrimary,
+                ? context.colors.success
+                : context.colors.textPrimary,
             height: 1.1,
           ),
         ),
@@ -390,8 +398,9 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
                   '${set.score1}',
                   style: TextStyle(
                     fontSize: 11,
-                    fontWeight:
-                        isSet1Winner ? FontWeight.w800 : FontWeight.w500,
+                    fontWeight: isSet1Winner
+                        ? FontWeight.w800
+                        : FontWeight.w500,
                     color: isSet1Winner
                         ? context.colors.success
                         : context.colors.textSecondary,
@@ -411,8 +420,9 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
                   '${set.score2}',
                   style: TextStyle(
                     fontSize: 11,
-                    fontWeight:
-                        !isSet1Winner ? FontWeight.w800 : FontWeight.w500,
+                    fontWeight: !isSet1Winner
+                        ? FontWeight.w800
+                        : FontWeight.w500,
                     color: !isSet1Winner
                         ? context.colors.success
                         : context.colors.textSecondary,
@@ -438,33 +448,36 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
         children: [
           if (widget.match.refereeName != null &&
               widget.match.refereeName!.isNotEmpty) ...[
-            Icon(Icons.person_outline_rounded,
-                size: 12, color: context.colors.textMuted),
+            Icon(
+              Icons.person_outline_rounded,
+              size: 12,
+              color: context.colors.textMuted,
+            ),
             const SizedBox(width: 4),
             Text(
               widget.match.refereeName!,
-              style: TextStyle(
-                fontSize: 10,
-                color: context.colors.textMuted,
-              ),
+              style: TextStyle(fontSize: 10, color: context.colors.textMuted),
             ),
             const SizedBox(width: 12),
           ],
           if (widget.match.scheduledTime != null) ...[
-            Icon(Icons.access_time_rounded,
-                size: 12, color: context.colors.textMuted),
+            Icon(
+              Icons.access_time_rounded,
+              size: 12,
+              color: context.colors.textMuted,
+            ),
             const SizedBox(width: 4),
             Text(
               '${widget.match.scheduledTime!.hour.toString().padLeft(2, '0')}:${widget.match.scheduledTime!.minute.toString().padLeft(2, '0')}',
-              style: TextStyle(
-                fontSize: 10,
-                color: context.colors.textMuted,
-              ),
+              style: TextStyle(fontSize: 10, color: context.colors.textMuted),
             ),
           ],
           const Spacer(),
-          Icon(Icons.arrow_forward_ios_rounded,
-              size: 12, color: context.colors.textMuted),
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 12,
+            color: context.colors.textMuted,
+          ),
         ],
       ),
     );

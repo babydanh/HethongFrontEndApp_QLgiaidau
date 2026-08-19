@@ -1842,6 +1842,78 @@ abstract class AppLocalizations {
   /// **'Trực tiếp'**
   String get matchLiveTitle;
 
+  /// No description provided for @liveMatchesTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đấu trực tiếp'**
+  String get liveMatchesTitle;
+
+  /// No description provided for @liveMatchesRemainingStat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Còn lại'**
+  String get liveMatchesRemainingStat;
+
+  /// No description provided for @liveMatchesNoMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận đấu'**
+  String get liveMatchesNoMatches;
+
+  /// No description provided for @liveMatchesNoMatchesDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ ban tổ chức bốc thăm và xếp lịch\\nCác trận đấu sẽ xuất hiện tại đây'**
+  String get liveMatchesNoMatchesDescription;
+
+  /// No description provided for @liveMatchesFilteredEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có trận đấu nào phù hợp bộ lọc'**
+  String get liveMatchesFilteredEmpty;
+
+  /// No description provided for @contactWebsite.
+  String get contactWebsite;
+
+  /// No description provided for @contactPhone.
+  String get contactPhone;
+
+  /// No description provided for @contactEmail.
+  String get contactEmail;
+
+  /// No description provided for @contactZalo.
+  String get contactZalo;
+
+  /// No description provided for @contactFacebook.
+  String get contactFacebook;
+
+  /// No description provided for @imageZoomHint.
+  String get imageZoomHint;
+
+  /// No description provided for @liveMatchesReload.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải lại'**
+  String get liveMatchesReload;
+
+  /// No description provided for @liveMatchMaxScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm tối đa: {score}'**
+  String liveMatchMaxScore(Object score);
+
+  /// No description provided for @liveMatchCompletedStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'HOÀN THÀNH'**
+  String get liveMatchCompletedStatus;
+
+  /// No description provided for @liveMatchScheduledStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'SẮP DIỄN RA'**
+  String get liveMatchScheduledStatus;
+
   /// No description provided for @matchDetailTitle.
   ///
   /// In vi, this message translates to:

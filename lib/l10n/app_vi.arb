@@ -322,6 +322,26 @@
   "matchesStatusWalkover": "Bỏ cuộc",
   "matchLiveCheerError": "Chưa thể gửi cổ vũ. Vui lòng thử lại.",
   "matchLiveTitle": "Trực tiếp",
+  "liveMatchesTitle": "Trận đấu trực tiếp",
+  "liveMatchesRemainingStat": "Còn lại",
+  "liveMatchesNoMatches": "Chưa có trận đấu",
+  "liveMatchesNoMatchesDescription": "Chờ ban tổ chức bốc thăm và xếp lịch\nCác trận đấu sẽ xuất hiện tại đây",
+  "liveMatchesFilteredEmpty": "Không có trận đấu nào phù hợp bộ lọc",
+  "contactWebsite": "Website",
+  "contactPhone": "Điện thoại",
+  "contactEmail": "Email",
+  "contactZalo": "Zalo",
+  "contactFacebook": "Facebook",
+  "imageZoomHint": "Chạm để phóng to",
+  "liveMatchesReload": "Tải lại",
+  "liveMatchMaxScore": "Điểm tối đa: {score}",
+  "liveMatchCompletedStatus": "HOÀN THÀNH",
+  "liveMatchScheduledStatus": "SẮP DIỄN RA",
+  "@liveMatchMaxScore": {
+    "placeholders": {
+      "score": {}
+    }
+  },
   "matchDetailTitle": "Chi Tiết Trận Đấu",
   "matchRefereeDesk": "Bàn Trọng Tài",
   "matchScoringButton": "Tính điểm",
@@ -1442,6 +1462,7 @@
   "rank_activity": "HOẠT ĐỘNG",
   "rank_decay": "Suy giảm ELO (không thi đấu)",
   "rank_update": "Cập nhật ELO",
+  "tournamentNotFound": "Giải đấu không tồn tại",
   "@edit_profile_load_error": {
     "placeholders": {
       "error": {}

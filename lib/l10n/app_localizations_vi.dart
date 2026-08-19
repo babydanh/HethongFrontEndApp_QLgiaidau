@@ -989,6 +989,54 @@ class AppLocalizationsVi extends AppLocalizations {
   String get matchLiveTitle => 'Trực tiếp';
 
   @override
+  String get liveMatchesTitle => 'Trận đấu trực tiếp';
+
+  @override
+  String get liveMatchesRemainingStat => 'Còn lại';
+
+  @override
+  String get liveMatchesNoMatches => 'Chưa có trận đấu';
+
+  @override
+  String get liveMatchesNoMatchesDescription =>
+      'Chờ ban tổ chức bốc thăm và xếp lịch\nCác trận đấu sẽ xuất hiện tại đây';
+
+  @override
+  String get liveMatchesFilteredEmpty => 'Không có trận đấu nào phù hợp bộ lọc';
+
+  @override
+  String get contactWebsite => 'Website';
+
+  @override
+  String get contactPhone => 'Điện thoại';
+
+  @override
+  String get contactEmail => 'Email';
+
+  @override
+  String get contactZalo => 'Zalo';
+
+  @override
+  String get contactFacebook => 'Facebook';
+
+  @override
+  String get imageZoomHint => 'Chạm để phóng to';
+
+  @override
+  String get liveMatchesReload => 'Tải lại';
+
+  @override
+  String liveMatchMaxScore(Object score) {
+    return 'Điểm tối đa: $score';
+  }
+
+  @override
+  String get liveMatchCompletedStatus => 'HOÀN THÀNH';
+
+  @override
+  String get liveMatchScheduledStatus => 'SẮP DIỄN RA';
+
+  @override
   String get matchDetailTitle => 'Chi Tiết Trận Đấu';
 
   @override

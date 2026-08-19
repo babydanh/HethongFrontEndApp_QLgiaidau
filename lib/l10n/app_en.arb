@@ -321,7 +321,27 @@
   "matchesStatusCompleted": "Completed",
   "matchesStatusWalkover": "Walkover",
   "matchLiveCheerError": "Could not send cheer. Please try again.",
-  "matchLiveTitle": "Live",
+  "matchLiveTitle": "Live Matches",
+  "liveMatchesTitle": "Live Matches",
+  "liveMatchesRemainingStat": "Remaining",
+  "liveMatchesNoMatches": "No matches yet",
+  "liveMatchesNoMatchesDescription": "Waiting for the organizer to draw and schedule matches\nMatches will appear here",
+  "liveMatchesFilteredEmpty": "No matches match the selected filter",
+  "contactWebsite": "Website",
+  "contactPhone": "Phone",
+  "contactEmail": "Email",
+  "contactZalo": "Zalo",
+  "contactFacebook": "Facebook",
+  "imageZoomHint": "Tap to zoom",
+  "liveMatchesReload": "Reload",
+  "liveMatchMaxScore": "Max score: {score}",
+  "liveMatchCompletedStatus": "COMPLETED",
+  "liveMatchScheduledStatus": "UPCOMING",
+  "@liveMatchMaxScore": {
+    "placeholders": {
+      "score": {}
+    }
+  },
   "matchDetailTitle": "Match Details",
   "matchRefereeDesk": "Referee Desk",
   "matchScoringButton": "Scoring",

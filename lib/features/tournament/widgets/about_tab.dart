@@ -58,7 +58,9 @@ class AboutTab extends StatelessWidget {
                           : null,
                       child: resolvedAvatar.isEmpty
                           ? Text(
-                              creatorName.isNotEmpty ? creatorName[0].toUpperCase() : 'B',
+                              creatorName.isNotEmpty
+                                  ? creatorName[0].toUpperCase()
+                                  : 'B',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -119,7 +121,10 @@ class AboutTab extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             l10n.tournamentFounder,
-                            style: TextStyle(fontSize: 13, color: colors.textMuted),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: colors.textMuted,
+                            ),
                           ),
                         ],
                       ),
@@ -145,24 +150,29 @@ class AboutTab extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildInfoRow(
                   label: l10n.sportLabel,
-                  value: AppConstants.sportNames[tournament.sport] ?? tournament.sport,
+                  value:
+                      AppConstants.sportNames[tournament.sport] ??
+                      tournament.sport,
                   colors: colors,
                 ),
                 const SizedBox(height: 12),
                 _buildInfoRow(
                   label: l10n.formatLabel,
-                  value: AppConstants.formatNames[tournament.format] ??
+                  value:
+                      AppConstants.formatNames[tournament.format] ??
                       tournament.format.replaceAll('_', ' '),
                   colors: colors,
                 ),
                 const SizedBox(height: 12),
                 _buildInfoRow(
                   label: l10n.bracketTypeLabel,
-                  value: AppConstants.bracketTypeNames[tournament.bracketType] ??
+                  value:
+                      AppConstants.bracketTypeNames[tournament.bracketType] ??
                       tournament.bracketType,
                   colors: colors,
                 ),
-                if (tournament.bracketType != AppConstants.bracketRoundRobin) ...[
+                if (tournament.bracketType !=
+                    AppConstants.bracketRoundRobin) ...[
                   const SizedBox(height: 12),
                   _buildInfoRow(
                     label: l10n.maxTeamsLabel,
@@ -246,10 +256,7 @@ class AboutTab extends StatelessWidget {
   }
 
   Widget _sectionDivider(AppColorsExtension colors) {
-    return Container(
-      height: 1,
-      color: colors.border.withValues(alpha: 0.5),
-    );
+    return Container(height: 1, color: colors.border.withValues(alpha: 0.5));
   }
 
   Widget _buildInfoRow({
@@ -302,7 +309,10 @@ class AboutTab extends StatelessWidget {
   }
 
   Widget _buildContactCard(
-      Map<String, dynamic>? contactInfo, AppColorsExtension colors, AppLocalizations l10n) {
+    Map<String, dynamic>? contactInfo,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
     if (contactInfo == null || contactInfo.isEmpty) {
       return Text(
         l10n.notUpdated,
@@ -311,8 +321,7 @@ class AboutTab extends StatelessWidget {
     }
 
     final items = <Widget>[];
-    void addItem(IconData icon, String? value, String label,
-        {String? action}) {
+    void addItem(IconData icon, String? value, String label, {String? action}) {
       if (value == null || value.toString().trim().isEmpty) return;
       items.add(
         InkWell(
@@ -350,28 +359,46 @@ class AboutTab extends StatelessWidget {
       );
     }
 
-    addItem(Icons.language_rounded, 'sporto.asia', 'Website', action: 'https://sporto.asia');
-    addItem(Icons.phone_rounded, contactInfo['phone']?.toString(), 'Phone',
-        action: contactInfo['phone'] != null
-            ? 'tel:${contactInfo['phone']}'
-            : null);
-    addItem(Icons.email_rounded, contactInfo['email']?.toString(), 'Email',
-        action: contactInfo['email'] != null
-            ? 'mailto:${contactInfo['email']}'
-            : null);
-    addItem(Icons.chat_rounded, contactInfo['zalo']?.toString(), 'Zalo',
-        action: contactInfo['zalo'] != null
-            ? (contactInfo['zalo'].toString().startsWith('http')
+    addItem(
+      Icons.language_rounded,
+      'sporto.asia',
+      l10n.contactWebsite,
+      action: 'https://sporto.asia',
+    );
+    addItem(
+      Icons.phone_rounded,
+      contactInfo['phone']?.toString(),
+      l10n.contactPhone,
+      action: contactInfo['phone'] != null
+          ? 'tel:${contactInfo['phone']}'
+          : null,
+    );
+    addItem(
+      Icons.email_rounded,
+      contactInfo['email']?.toString(),
+      l10n.contactEmail,
+      action: contactInfo['email'] != null
+          ? 'mailto:${contactInfo['email']}'
+          : null,
+    );
+    addItem(
+      Icons.chat_rounded,
+      contactInfo['zalo']?.toString(),
+      l10n.contactZalo,
+      action: contactInfo['zalo'] != null
+          ? (contactInfo['zalo'].toString().startsWith('http')
                 ? contactInfo['zalo'].toString()
                 : 'https://zalo.me/${contactInfo['zalo']}')
-            : null);
+          : null,
+    );
     addItem(
-        Icons.facebook_rounded,
-        contactInfo['facebook']?.toString(),
-        'Facebook',
-        action: contactInfo['facebook']?.toString() != null
-            ? contactInfo['facebook'].toString()
-            : null);
+      Icons.facebook_rounded,
+      contactInfo['facebook']?.toString(),
+      l10n.contactFacebook,
+      action: contactInfo['facebook']?.toString() != null
+          ? contactInfo['facebook'].toString()
+          : null,
+    );
 
     if (items.isEmpty) {
       return Text(
@@ -384,20 +411,27 @@ class AboutTab extends StatelessWidget {
   }
 
   Widget _buildRegistrationInfoCard(
-      BuildContext context, Tournament tournament) {
+    BuildContext context,
+    Tournament tournament,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     final colors = Theme.of(context).extension<AppColorsExtension>()!;
     final slotsFilled = tournament.maxTeams > 0
-        ? tournament.divisions
-            .fold<int>(0, (sum, d) => sum + d.participantCount)
+        ? tournament.divisions.fold<int>(
+            0,
+            (sum, d) => sum + d.participantCount,
+          )
         : 0;
     final now = DateTime.now();
 
-    final isBeforeStart = tournament.registrationStartDate != null &&
+    final isBeforeStart =
+        tournament.registrationStartDate != null &&
         now.isBefore(tournament.registrationStartDate!);
-    final isBeforeEnd = tournament.registrationEndDate != null &&
+    final isBeforeEnd =
+        tournament.registrationEndDate != null &&
         now.isBefore(tournament.registrationEndDate!);
-    final isEnded = tournament.registrationEndDate != null &&
+    final isEnded =
+        tournament.registrationEndDate != null &&
         now.isAfter(tournament.registrationEndDate!);
 
     return Container(
@@ -415,16 +449,23 @@ class AboutTab extends StatelessWidget {
           const SizedBox(height: 16),
           // Entry fee
           if (tournament.entryFee != null && tournament.entryFee! > 0) ...[
-            _buildRegInfoRow(l10n.entryFeeLabel,
-                '${tournament.entryFee!.toStringAsFixed(0)} ${l10n.vnd}', colors),
+            _buildRegInfoRow(
+              l10n.entryFeeLabel,
+              '${tournament.entryFee!.toStringAsFixed(0)} ${l10n.vnd}',
+              colors,
+            ),
             const SizedBox(height: 12),
-          ] else if (tournament.entryFee != null && tournament.entryFee! == 0) ...[
+          ] else if (tournament.entryFee != null &&
+              tournament.entryFee! == 0) ...[
             _buildRegInfoRow(l10n.entryFeeLabel, l10n.freePrice, colors),
             const SizedBox(height: 12),
           ],
           // Max participants
-          _buildRegInfoRow(l10n.maxQuantityLabel, '${tournament.maxTeams} ${l10n.teamsUnit}',
-              colors),
+          _buildRegInfoRow(
+            l10n.maxQuantityLabel,
+            '${tournament.maxTeams} ${l10n.teamsUnit}',
+            colors,
+          ),
           const SizedBox(height: 12),
           // Registration period
           if (tournament.registrationStartDate != null) ...[
@@ -445,7 +486,12 @@ class AboutTab extends StatelessWidget {
           ],
           // Slot progress bar
           if (tournament.maxTeams > 0) ...[
-            _buildSlotProgressBar(slotsFilled, tournament.maxTeams, colors, l10n),
+            _buildSlotProgressBar(
+              slotsFilled,
+              tournament.maxTeams,
+              colors,
+              l10n,
+            ),
             const SizedBox(height: 16),
           ],
           // ── Smart Countdown Logic: Mở trước -> Đóng sau ──
@@ -481,13 +527,14 @@ class AboutTab extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(100),
                     ),
                   ),
-                  onPressed: () =>
-                      context.push('/register/${tournament.id}'),
+                  onPressed: () => context.push('/register/${tournament.id}'),
                   child: Text(
                     l10n.register,
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
@@ -506,8 +553,11 @@ class AboutTab extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.timer_off_rounded,
-                      size: 18, color: colors.textMuted),
+                  Icon(
+                    Icons.timer_off_rounded,
+                    size: 18,
+                    color: colors.textMuted,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     l10n.registrationEnded,
@@ -523,7 +573,10 @@ class AboutTab extends StatelessWidget {
   }
 
   Widget _buildRegInfoRow(
-      String label, String value, AppColorsExtension colors) {
+    String label,
+    String value,
+    AppColorsExtension colors,
+  ) {
     return Row(
       children: [
         Container(
@@ -553,13 +606,17 @@ class AboutTab extends StatelessWidget {
   }
 
   Widget _buildSlotProgressBar(
-      int filled, int max, AppColorsExtension colors, AppLocalizations l10n) {
+    int filled,
+    int max,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
     final ratio = max > 0 ? filled / max : 0.0;
     final progressColor = ratio >= 0.9
         ? colors.error
         : ratio >= 0.7
-            ? colors.warning
-            : colors.success;
+        ? colors.warning
+        : colors.success;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -583,9 +640,10 @@ class AboutTab extends StatelessWidget {
             Text(
               '${(ratio * 100).toStringAsFixed(0)}%',
               style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: progressColor),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: progressColor,
+              ),
             ),
           ],
         ),
@@ -658,10 +716,13 @@ class AboutTab extends StatelessWidget {
                 );
               }
             } else if (type == 'image') {
-              final url = (data['file']?['url'] ?? data['url'] ?? '').toString();
+              final url = (data['file']?['url'] ?? data['url'] ?? '')
+                  .toString();
               final caption = (data['caption'] ?? '').toString();
               if (url.isNotEmpty) {
-                widgets.add(_buildZoomableImage(context, url, caption: caption));
+                widgets.add(
+                  _buildZoomableImage(context, url, caption: caption),
+                );
               }
             } else if (type == 'list') {
               final items = data['items'] as List?;
@@ -682,7 +743,9 @@ class AboutTab extends StatelessWidget {
                               color: AppTheme.primary,
                             ),
                           ),
-                          Expanded(child: _buildRichTextSpan(context, item.toString())),
+                          Expanded(
+                            child: _buildRichTextSpan(context, item.toString()),
+                          ),
                         ],
                       ),
                     ),
@@ -692,7 +755,10 @@ class AboutTab extends StatelessWidget {
             }
           }
           if (widgets.isNotEmpty) {
-            return Column(crossAxisAlignment: CrossAxisAlignment.start, children: widgets);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: widgets,
+            );
           }
         }
       } catch (_) {}
@@ -704,7 +770,10 @@ class AboutTab extends StatelessWidget {
 
   Widget _buildHtmlContent(BuildContext context, String rawHtml) {
     final decoded = _decodeHtmlEntities(rawHtml);
-    final imgRegex = RegExp('<img[^>]+src=["\']([^"\']+)["\'][^>]*>', caseSensitive: false);
+    final imgRegex = RegExp(
+      '<img[^>]+src=["\']([^"\']+)["\'][^>]*>',
+      caseSensitive: false,
+    );
     final matches = imgRegex.allMatches(decoded).toList();
 
     if (matches.isEmpty) {
@@ -774,10 +843,16 @@ class AboutTab extends StatelessWidget {
         final rawSub = cleanText.substring(lastMatchEnd, match.start);
         final stripped = _stripHtml(rawSub);
         if (stripped.isNotEmpty) {
-          spans.add(TextSpan(
-            text: stripped,
-            style: TextStyle(color: colors.textSecondary, fontSize: 13, height: 1.5),
-          ));
+          spans.add(
+            TextSpan(
+              text: stripped,
+              style: TextStyle(
+                color: colors.textSecondary,
+                fontSize: 13,
+                height: 1.5,
+              ),
+            ),
+          );
         }
       }
       final tag = match.group(1)?.toLowerCase();
@@ -786,16 +861,18 @@ class AboutTab extends StatelessWidget {
       final isItalic = tag == 'i';
 
       if (innerText.isNotEmpty) {
-        spans.add(TextSpan(
-          text: innerText,
-          style: TextStyle(
-            color: colors.textPrimary,
-            fontSize: 13,
-            height: 1.5,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-            fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
+        spans.add(
+          TextSpan(
+            text: innerText,
+            style: TextStyle(
+              color: colors.textPrimary,
+              fontSize: 13,
+              height: 1.5,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
+            ),
           ),
-        ));
+        );
       }
       lastMatchEnd = match.end;
     }
@@ -804,18 +881,22 @@ class AboutTab extends StatelessWidget {
       final rawSub = cleanText.substring(lastMatchEnd);
       final stripped = _stripHtml(rawSub);
       if (stripped.isNotEmpty) {
-        spans.add(TextSpan(
-          text: stripped,
-          style: TextStyle(color: colors.textSecondary, fontSize: 13, height: 1.5),
-        ));
+        spans.add(
+          TextSpan(
+            text: stripped,
+            style: TextStyle(
+              color: colors.textSecondary,
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+        );
       }
     }
 
     if (spans.isEmpty) return const SizedBox.shrink();
 
-    return RichText(
-      text: TextSpan(children: spans),
-    );
+    return RichText(text: TextSpan(children: spans));
   }
 
   String _decodeHtmlEntities(String input) {
@@ -832,7 +913,11 @@ class AboutTab extends StatelessWidget {
     return result;
   }
 
-  Widget _buildZoomableImage(BuildContext context, String imageUrl, {String? caption}) {
+  Widget _buildZoomableImage(
+    BuildContext context,
+    String imageUrl, {
+    String? caption,
+  }) {
     final colors = context.colors;
     final resolvedUrl = resolveImageUrl(imageUrl);
     return Padding(
@@ -860,18 +945,25 @@ class AboutTab extends StatelessWidget {
                   bottom: 8,
                   right: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.65),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.zoom_in_rounded, color: Colors.white, size: 14),
+                        Icon(
+                          Icons.zoom_in_rounded,
+                          color: Colors.white,
+                          size: 14,
+                        ),
                         SizedBox(width: 4),
                         Text(
-                          'Chạm để phóng to',
+                          AppLocalizations.of(context)!.imageZoomHint,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 10,
@@ -907,4 +999,3 @@ class AboutTab extends StatelessWidget {
     return decoded.replaceAll(RegExp(r'<[^>]*>'), '').trim();
   }
 }
-
