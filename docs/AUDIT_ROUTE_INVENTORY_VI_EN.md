@@ -11,7 +11,7 @@ Tài liệu này là danh mục kiểm tra từng route và màn hình của app
 | Hạng mục / Area | Trạng thái / Status | Ghi chú / Notes |
 |---|---|---|
 | App startup and security | Đã audit một phần / Partially audited | Đã bỏ global certificate bypass. |
-| Localization VI/EN | Đang triển khai / In progress | Settings có language card và lưu locale. Các màn hình khác còn chuỗi cứng. |
+| Localization VI/EN | Đang triển khai / In progress | Settings, Auth và nhóm Profile đã được chuẩn hóa theo ARB; các nhóm khác còn chuỗi cứng. |
 | Route inventory | Đã lập / Inventoried | Danh sách bên dưới bao phủ router hiện tại. |
 | Full analyzer | Còn tồn tại diagnostics / Diagnostics remain | Baseline sau các đợt gần nhất: 228 warning/info, chưa ghi nhận compile error trong báo cáo. |
 | Test suite | Bị chặn bởi môi trường / Environment-blocked | Windows runner báo thiếu `%PROGRAMFILES(X86)%`; cần xác nhận lại trên môi trường Flutter chuẩn. |
@@ -34,7 +34,7 @@ Tài liệu này là danh mục kiểm tra từng route và màn hình của app
 | Community children | `/club/:id/chat`, `/club/:id/create-tournament`, `/club/:id/edit`, `/club/:id/manage`, `/club/:id/tournaments` | Club chat, create/edit/manage/tournaments | Owner/member roles | Chưa audit đầy đủ |
 | Community aliases | `/communities/:id/chat`, `/communities/:id/...` | Same club flows through alias | Alias parity and access consistency | Chưa audit đầy đủ |
 | Social | `/admin/social/:id`, `/admin/chat/:id`, `/admin/social/:id` variants | CommunitySocialScreen, ClubChatScreen | Community membership and target post | Chưa audit đầy đủ |
-| Profile | `/profile`, `/profile/edit`, `/profile/settings`, `/profile/change-password`, `/profile/elo`, `/profile/user/:id` | Profile, settings, password, ELO, user profile | Auth, own profile versus public profile | Settings partially audited |
+| Profile | `/profile`, `/profile/edit`, `/profile/settings`, `/profile/change-password`, `/profile/elo`, `/profile/user/:id` | Profile, settings, password, ELO, user profile | Auth, own profile versus public profile | Auth/profile/settings/user-profile audited; edit/ELO follow-up |
 | Registration | `/register/:id`, `/register/:id/doubles`, `/register/:id/team` | Singles/doubles/team registration | Invite, division, participant and team-size validation | Chưa audit đầy đủ |
 | Join | `/join/:inviteCode`, `/join-team`, `/lite-join/:inviteCode`, `/lite/tournaments/join/:inviteCode` | Invite join and lite join | Public invite validity and safe fallback | Chưa audit đầy đủ |
 | Lite tournament | `/lite-pairing/:id`, `/lite-manage/:id`, `/lite/tournaments/:id/manage` | Pairing and management | Organizer access and alias parity | Chưa audit đầy đủ |
@@ -46,6 +46,26 @@ Tài liệu này là danh mục kiểm tra từng route và màn hình của app
 | Football | `/football-teams` | FootballTeamsScreen | Team ownership and query team ID | Chưa audit đầy đủ |
 | Payment | `/payments`, `/payment/checkout`, `/payment/payos-verify`, `/payment/result` | Payment flow | Auth, amount/order integrity and callback safety | Chưa audit đầy đủ |
 | Club invites | `/club-invites` | ClubInvitesScreen | Auth and invite actions | Chưa audit đầy đủ |
+
+## Verified audit records / Bản ghi audit đã xác minh
+
+### Auth routes / Route xác thực
+
+| Route / Route | Access & redirect / Quyền và redirect | Data and safety / Dữ liệu và an toàn | Localization and verification / Ngôn ngữ và xác minh |
+|---|---|---|---|
+| `/`, `/login`, `/login-loading` | Public entry; authenticated users are redirected through the centralized router. | Google/Apple token flows now guard `mounted` after asynchronous credential calls; loading and error paths were reviewed. | Social-button labels and token-missing messages use ARB. Targeted analyzer passed for the changed Auth files. |
+| `/forgot-password`, `/reset-password` | Public recovery flow; reset token is passed through the route contract. | Reset-password flow now checks `mounted` after the API call before presenting UI feedback. | Visible recovery feedback remains localized where touched; a broader Auth string sweep is still pending. |
+
+### Profile routes / Route hồ sơ
+
+| Route / Route | Access & redirect / Quyền và redirect | Data and safety / Dữ liệu và an toàn | Localization and verification / Ngôn ngữ và xác minh |
+|---|---|---|---|
+| `/profile` | Authenticated own-profile screen; unauthenticated state provides a safe login route. | Image picker permission/error branches and upload success feedback were reviewed; async UI updates guard `mounted`. | Login prompt, registration CTA, image-picker actions, permission errors, and upload feedback use ARB. |
+| `/profile/settings` | Authenticated settings route with profile, banking, and security tabs. | Locale selection persists through the existing locale provider and shared preferences. | VI/EN language card added; settings tab labels and change-password entry point use ARB. |
+| `/profile/change-password` | Authenticated security route. | Validation, API error handling, and post-submit context safety were reviewed. | Title, labels, hints, validators, success/error messages, button, and help text use ARB. |
+| `/profile/user/:id` | Public profile route; profile data is loaded by the requested user ID. | Loading shimmer, API error placeholder, empty ranking/match/achievement states, and null-safe profile fields were reviewed. | Tabs, role labels, statistics, achievements, ELO action, share metadata, club-title labels, and match states use ARB. Targeted analyzer passed with no issues. |
+
+> **Current limitation / Giới hạn hiện tại:** `/profile/edit` and `/profile/elo` remain inventoried but require separate screen-level verification. Role data is not present on `UserPublicProfile`, so the public-profile role badge currently uses the existing default-player fallback until the API model exposes a role field.
 
 ## Audit order / Thứ tự thực hiện
 

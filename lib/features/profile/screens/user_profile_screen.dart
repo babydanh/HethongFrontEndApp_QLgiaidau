@@ -70,7 +70,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     );
   }
 
-  Widget _buildBody(BuildContext context, UserPublicProfile profile, AppColorsExtension colors) {
+  Widget _buildBody(
+    BuildContext context,
+    UserPublicProfile profile,
+    AppColorsExtension colors,
+  ) {
     return NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) => [
         SliverAppBar(
@@ -85,7 +89,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 color: colors.bgCard.withValues(alpha: 0.8),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.arrow_back_rounded, color: colors.textPrimary, size: 20),
+              child: Icon(
+                Icons.arrow_back_rounded,
+                color: colors.textPrimary,
+                size: 20,
+              ),
             ),
             onPressed: () => context.pop(),
           ),
@@ -97,16 +105,20 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   color: colors.bgCard.withValues(alpha: 0.8),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.share_rounded, color: colors.textPrimary, size: 20),
+                child: Icon(
+                  Icons.share_rounded,
+                  color: colors.textPrimary,
+                  size: 20,
+                ),
               ),
               onPressed: () {
                 AppShareModal.show(
                   context: context,
                   title: profile.fullName,
-                  subtitle: profile.bio ?? 'Hồ sơ Vận động viên',
+                  subtitle: profile.bio ?? l10n.publicProfileShareSubtitle,
                   webUrl: 'https://sporto.asia/profile/user/${widget.userId}',
                   imageUrl: profile.avatarUrl,
-                  badgeText: 'Thẻ VĐV & ELO',
+                  badgeText: l10n.publicProfileShareBadge,
                 );
               },
             ),
@@ -125,13 +137,19 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 indicatorSize: TabBarIndicatorSize.label,
                 labelColor: AppTheme.primary,
                 unselectedLabelColor: colors.textMuted,
-                labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-                unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                tabs: const [
-                  Tab(text: 'Tổng quan'),
-                  Tab(text: 'Trận đấu'),
-                  Tab(text: 'Danh hiệu'),
-                  Tab(text: 'ELO'),
+                labelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                tabs: [
+                  Tab(text: l10n.publicProfileTabOverview),
+                  Tab(text: l10n.publicProfileTabMatches),
+                  Tab(text: l10n.publicProfileTabAchievements),
+                  Tab(text: l10n.publicProfileTabElo),
                 ],
               ),
             ),
@@ -152,18 +170,19 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 _buildUserInfoHeader(context, profile, colors),
                 const SizedBox(height: 20),
                 // Danh hiệu CLB (tag preset) — chỉ khi mở từ ngữ cảnh CLB
-                if (widget.communityId != null)
-                  _buildClubTitlesSection(colors),
+                if (widget.communityId != null) _buildClubTitlesSection(colors),
                 // Thống kê tổng quan
                 _buildStatsOverview(context, profile, colors),
                 const SizedBox(height: 24),
                 // Xếp hạng theo môn
-                _sectionTitle(colors, 'Xếp hạng theo bộ môn'),
+                _sectionTitle(colors, l10n.publicProfileRankBySport),
                 const SizedBox(height: 12),
                 if (profile.ranks.isEmpty)
                   _buildNoRank(colors)
                 else
-                  ...profile.ranks.map((rank) => _buildRankCard(context, rank, colors)),
+                  ...profile.ranks.map(
+                    (rank) => _buildRankCard(context, rank, colors),
+                  ),
                 const SizedBox(height: 24),
               ],
             ),
@@ -206,10 +225,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   /// (khớp popup profile web: UserProfilePopover "Danh hiệu CLB").
   Widget _buildClubTitlesSection(AppColorsExtension colors) {
     final communityId = widget.communityId!;
-    final directory =
-        ref.watch(communityMemberDirectoryProvider(communityId)).asData?.value;
-    final presets =
-        ref.watch(communityTagPresetsProvider(communityId)).asData?.value;
+    final directory = ref
+        .watch(communityMemberDirectoryProvider(communityId))
+        .asData
+        ?.value;
+    final presets = ref
+        .watch(communityTagPresetsProvider(communityId))
+        .asData
+        ?.value;
     final tags = directory?[widget.userId]?.tags ?? const <String>[];
     if (tags.isEmpty) return const SizedBox.shrink();
 
@@ -229,7 +252,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             Row(
               children: [
                 Text(
-                  'DANH HIỆU CLB',
+                  l10n.publicProfileClubTitles,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -239,7 +262,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '${tags.length} nhãn',
+                  '${tags.length} ${l10n.publicProfileTagUnit}',
                   style: TextStyle(fontSize: 10, color: colors.textMuted),
                 ),
               ],
@@ -252,8 +275,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   .map(
                     (tag) => PresetTagChip(
                       label: tag,
-                      color:
-                          presets == null ? null : resolvePresetColor(presets, tag),
+                      color: presets == null
+                          ? null
+                          : resolvePresetColor(presets, tag),
                       showDot: true,
                     ),
                   )
@@ -265,42 +289,102 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     );
   }
 
-  Widget _buildMatchesTab(BuildContext context, UserPublicProfile profile, AppColorsExtension colors) {
+  Widget _buildMatchesTab(
+    BuildContext context,
+    UserPublicProfile profile,
+    AppColorsExtension colors,
+  ) {
     final matchesAsync = ref.watch(publicUserMatchesProvider(profile.id));
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       child: matchesAsync.when(
-        loading: () => const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator())),
-        error: (err, stack) => _buildEmptyPlaceholder(colors, Icons.sports_tennis_outlined, 'Chưa tải được lịch sử trận đấu'),
+        loading: () => const Center(
+          child: Padding(
+            padding: EdgeInsets.all(40),
+            child: CircularProgressIndicator(),
+          ),
+        ),
+        error: (err, stack) => _buildEmptyPlaceholder(
+          colors,
+          Icons.sports_tennis_outlined,
+          l10n.publicProfileMatchesLoadError,
+        ),
         data: (matches) => matches.isEmpty
-            ? _buildEmptyPlaceholder(colors, Icons.sports_tennis_outlined, 'Chưa có trận đấu công khai')
-            : Column(children: matches.map((match) => _buildPublicMatchCard(match, colors)).toList()),
+            ? _buildEmptyPlaceholder(
+                colors,
+                Icons.sports_tennis_outlined,
+                l10n.publicProfileNoPublicMatches,
+              )
+            : Column(
+                children: matches
+                    .map((match) => _buildPublicMatchCard(match, colors))
+                    .toList(),
+              ),
       ),
     );
   }
 
   Widget _buildPublicMatchCard(MatchModel match, AppColorsExtension colors) {
-    final completed = match.status.toLowerCase() == 'completed' || match.completedAt != null;
+    final completed =
+        match.status.toLowerCase() == 'completed' || match.completedAt != null;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: colors.bgCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: colors.border)),
-      child: Row(children: [
-        Icon(completed ? Icons.check_circle_outline_rounded : Icons.schedule_rounded, color: completed ? Colors.green : AppTheme.primary),
-        const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('${match.team1Name}  vs  ${match.team2Name}', style: TextStyle(fontWeight: FontWeight.w700, color: colors.textPrimary), maxLines: 2, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 4),
-          Text('${match.tournamentName ?? 'Giải đấu'}  •  ${completed ? 'Đã kết thúc' : 'Chưa diễn ra'}', style: TextStyle(fontSize: 12, color: colors.textMuted)),
-        ])),
-        Text('${match.score1} - ${match.score2}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: colors.textPrimary)),
-      ]),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            completed
+                ? Icons.check_circle_outline_rounded
+                : Icons.schedule_rounded,
+            color: completed ? Colors.green : AppTheme.primary,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${match.team1Name}  vs  ${match.team2Name}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${match.tournamentName ?? l10n.publicProfileTournamentFallback}  •  ${completed ? l10n.publicProfileMatchCompleted : l10n.publicProfileMatchUpcoming}',
+                  style: TextStyle(fontSize: 12, color: colors.textMuted),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '${match.score1} - ${match.score2}',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              color: colors.textPrimary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   // ─── ACHIEVEMENTS SECTION ──────────────────────────────────────────
-  Widget _buildAchievementsSection(BuildContext context, UserPublicProfile profile, AppColorsExtension colors) {
+  Widget _buildAchievementsSection(
+    BuildContext context,
+    UserPublicProfile profile,
+    AppColorsExtension colors,
+  ) {
     final achievements = List<UserPublicAchievement>.from(profile.achievements)
       ..sort((a, b) => a.rank.compareTo(b.rank));
 
@@ -309,7 +393,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     final thirdCategories = achievements.where((a) => a.rank == 3).toList();
 
     // If no real achievements, find categories with most wins
-    final hasAchievements = championCategories.isNotEmpty ||
+    final hasAchievements =
+        championCategories.isNotEmpty ||
         runnerUpCategories.isNotEmpty ||
         thirdCategories.isNotEmpty;
 
@@ -325,11 +410,19 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.emoji_events_rounded, size: 20, color: AppTheme.primary),
+              Icon(
+                Icons.emoji_events_rounded,
+                size: 20,
+                color: AppTheme.primary,
+              ),
               const SizedBox(width: 8),
               Text(
-                'Thành tích nổi bật',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: colors.textPrimary),
+                l10n.publicProfileAchievementsTitle,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                ),
               ),
             ],
           ),
@@ -340,10 +433,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.emoji_events_outlined, size: 40, color: colors.textMuted.withValues(alpha: 0.5)),
+                    Icon(
+                      Icons.emoji_events_outlined,
+                      size: 40,
+                      color: colors.textMuted.withValues(alpha: 0.5),
+                    ),
                     const SizedBox(height: 8),
                     Text(
-                      'Chưa có thành tích nào',
+                      l10n.publicProfileNoAchievements,
                       style: TextStyle(fontSize: 13, color: colors.textMuted),
                     ),
                   ],
@@ -356,9 +453,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               _buildMedalItem(
                 colors: colors,
                 medal: '🥇',
-                title: 'Quán quân',
+                title: l10n.publicProfileChampion,
                 count: championCategories.length,
-                categories: championCategories.map((a) => a.tournamentName).toList(),
+                categories: championCategories
+                    .map((a) => a.tournamentName)
+                    .toList(),
               ),
               const SizedBox(height: 12),
             ],
@@ -367,9 +466,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               _buildMedalItem(
                 colors: colors,
                 medal: '🥈',
-                title: 'Á quân',
+                title: l10n.publicProfileRunnerUp,
                 count: runnerUpCategories.length,
-                categories: runnerUpCategories.map((a) => a.tournamentName).toList(),
+                categories: runnerUpCategories
+                    .map((a) => a.tournamentName)
+                    .toList(),
               ),
               const SizedBox(height: 12),
             ],
@@ -378,9 +479,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               _buildMedalItem(
                 colors: colors,
                 medal: '🥉',
-                title: 'Hạng ba',
+                title: l10n.publicProfileThirdPlace,
                 count: thirdCategories.length,
-                categories: thirdCategories.map((a) => a.tournamentName).toList(),
+                categories: thirdCategories
+                    .map((a) => a.tournamentName)
+                    .toList(),
               ),
             ],
           ],
@@ -413,11 +516,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$count bộ môn · ${categories.take(2).join(', ')}${categories.length > 2 ? '...' : ''}',
+                  '$count ${l10n.publicProfileCategoryUnit} · ${categories.take(2).join(', ')}${categories.length > 2 ? '...' : ''}',
                   style: TextStyle(fontSize: 11, color: colors.textMuted),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -434,7 +541,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             ),
             child: Text(
               '$count',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: colors.textPrimary),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: colors.textPrimary,
+              ),
             ),
           ),
         ],
@@ -443,11 +554,19 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   }
 
   // ─── ELO CHART ─────────────────────────────────────────────────────
-  Widget _buildEloChart(BuildContext context, UserPublicProfile profile, AppColorsExtension colors) {
+  Widget _buildEloChart(
+    BuildContext context,
+    UserPublicProfile profile,
+    AppColorsExtension colors,
+  ) {
     final userId = profile.id;
 
     if (userId.isEmpty) {
-      return _buildEmptyPlaceholder(colors, Icons.show_chart_outlined, 'Không có dữ liệu người dùng');
+      return _buildEmptyPlaceholder(
+        colors,
+        Icons.show_chart_outlined,
+        l10n.publicProfileNoUserData,
+      );
     }
 
     final query = (
@@ -460,9 +579,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     );
     final historyAsync = ref.watch(eloHistoryProvider(query));
     final history = historyAsync.asData?.value ?? [];
-    final currentElo = profile.ranks.isNotEmpty ? profile.ranks.first.eloPoints : 1000;
-    final tierName = profile.ranks.isNotEmpty ? profile.ranks.first.tierName : null;
-    final userName = profile.fullName.isNotEmpty ? profile.fullName : 'Người dùng';
+    final currentElo = profile.ranks.isNotEmpty
+        ? profile.ranks.first.eloPoints
+        : 1000;
+    final tierName = profile.ranks.isNotEmpty
+        ? profile.ranks.first.tierName
+        : null;
+    final userName = profile.fullName.isNotEmpty
+        ? profile.fullName
+        : l10n.publicProfileUserFallback;
 
     // Build chart data points from history
     List<(String, int)> chartData;
@@ -512,15 +637,27 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   ),
                 );
               },
-              icon: Icon(Icons.history_rounded, size: 16, color: AppTheme.primary),
+              icon: Icon(
+                Icons.history_rounded,
+                size: 16,
+                color: AppTheme.primary,
+              ),
               label: Text(
-                'Xem lịch sử chi tiết',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.primary),
+                l10n.publicProfileDetailedHistory,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.primary,
+                ),
               ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.3)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                side: BorderSide(
+                  color: AppTheme.primary.withValues(alpha: 0.3),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
@@ -530,13 +667,27 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   }
 
   // ─── DETAILED STATS ───────────────────────────────────────────────
-  Widget _buildDetailedStats(BuildContext context, UserPublicProfile profile, AppColorsExtension colors) {
-    final totalMatches = profile.ranks.fold<int>(0, (sum, r) => sum + r.matchesPlayed);
-    final totalWins = profile.ranks.fold<int>(0, (sum, r) => sum + r.matchesWon);
+  Widget _buildDetailedStats(
+    BuildContext context,
+    UserPublicProfile profile,
+    AppColorsExtension colors,
+  ) {
+    final totalMatches = profile.ranks.fold<int>(
+      0,
+      (sum, r) => sum + r.matchesPlayed,
+    );
+    final totalWins = profile.ranks.fold<int>(
+      0,
+      (sum, r) => sum + r.matchesWon,
+    );
     final totalLosses = totalMatches - totalWins;
-    final winRate = totalMatches > 0 ? (totalWins / totalMatches * 100).round() : 0;
+    final winRate = totalMatches > 0
+        ? (totalWins / totalMatches * 100).round()
+        : 0;
     final totalElo = profile.ranks.fold<int>(0, (sum, r) => sum + r.eloPoints);
-    final avgElo = profile.ranks.isNotEmpty ? (totalElo / profile.ranks.length).round() : 0;
+    final avgElo = profile.ranks.isNotEmpty
+        ? (totalElo / profile.ranks.length).round()
+        : 0;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -549,23 +700,58 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         children: [
           Row(
             children: [
-              _detailStatItem(colors, Icons.sports_rounded, 'Bộ môn', '${profile.ranks.length}'),
-              _detailStatItem(colors, Icons.emoji_events_rounded, 'Tổng ELO', '$totalElo'),
+              _detailStatItem(
+                colors,
+                Icons.sports_rounded,
+                l10n.filterSport,
+                '${profile.ranks.length}',
+              ),
+              _detailStatItem(
+                colors,
+                Icons.emoji_events_rounded,
+                l10n.publicProfileTotalElo,
+                '$totalElo',
+              ),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              _detailStatItem(colors, Icons.show_chart_rounded, 'ELO TB', '$avgElo'),
-              _detailStatItem(colors, Icons.check_circle_outline, 'Tỉ lệ thắng', '$winRate%'),
+              _detailStatItem(
+                colors,
+                Icons.show_chart_rounded,
+                l10n.publicProfileAverageElo,
+                '$avgElo',
+              ),
+              _detailStatItem(
+                colors,
+                Icons.check_circle_outline,
+                l10n.infoWinRate,
+                '$winRate%',
+              ),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              _detailStatItem(colors, Icons.sports_score_rounded, 'Tổng trận', '$totalMatches'),
-              _detailStatItem(colors, Icons.thumb_up_alt_outlined, 'Thắng', '$totalWins'),
-              _detailStatItem(colors, Icons.thumb_down_alt_outlined, 'Thua', '$totalLosses'),
+              _detailStatItem(
+                colors,
+                Icons.sports_score_rounded,
+                l10n.publicProfileTotalMatches,
+                '$totalMatches',
+              ),
+              _detailStatItem(
+                colors,
+                Icons.thumb_up_alt_outlined,
+                l10n.infoWin,
+                '$totalWins',
+              ),
+              _detailStatItem(
+                colors,
+                Icons.thumb_down_alt_outlined,
+                l10n.infoLoss,
+                '$totalLosses',
+              ),
             ],
           ),
         ],
@@ -573,7 +759,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     );
   }
 
-  Widget _detailStatItem(AppColorsExtension colors, IconData icon, String label, String value) {
+  Widget _detailStatItem(
+    AppColorsExtension colors,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     return Expanded(
       child: Column(
         children: [
@@ -581,12 +772,20 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           const SizedBox(height: 4),
           Text(
             value,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: colors.textPrimary),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: colors.textPrimary,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(fontSize: 10, color: colors.textMuted, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 10,
+              color: colors.textMuted,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -594,7 +793,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   }
 
   // ─── COVER ──────────────────────────────────────────────────
-  Widget _buildCoverSection(BuildContext context, UserPublicProfile profile, AppColorsExtension colors) {
+  Widget _buildCoverSection(
+    BuildContext context,
+    UserPublicProfile profile,
+    AppColorsExtension colors,
+  ) {
     final hasCover = profile.coverUrl != null && profile.coverUrl!.isNotEmpty;
     return Stack(
       fit: StackFit.expand,
@@ -604,13 +807,19 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             gradient: hasCover
                 ? null
                 : const LinearGradient(
-                    colors: [Color(0xFF1A1A2E), Color(0xFF16213E), Color(0xFF0F3460)],
+                    colors: [
+                      Color(0xFF1A1A2E),
+                      Color(0xFF16213E),
+                      Color(0xFF0F3460),
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
           ),
           child: hasCover
-              ? Image.network(profile.coverUrl!, fit: BoxFit.cover,
+              ? Image.network(
+                  profile.coverUrl!,
+                  fit: BoxFit.cover,
                   errorBuilder: (ctx, err, stack) => _coverGradient(),
                 )
               : _coverGradient(),
@@ -624,7 +833,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             height: 80,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.transparent, colors.bgDark.withValues(alpha: 0.9)],
+                colors: [
+                  Colors.transparent,
+                  colors.bgDark.withValues(alpha: 0.9),
+                ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -634,6 +846,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       ],
     );
   }
+
   Widget _coverGradient() {
     return const DecoratedBox(
       decoration: BoxDecoration(
@@ -647,37 +860,44 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   }
 
   String _formatUserRole(String? role) {
-    if (role == null || role.trim().isEmpty) return 'Vận động viên';
+    if (role == null || role.trim().isEmpty) return l10n.infoPlayer;
     final r = role.trim().toUpperCase();
     switch (r) {
       case 'ADMIN':
       case 'SUPER_ADMIN':
-        return 'Quản trị viên';
+        return l10n.infoAdmin;
       case 'ORGANIZER':
-        return 'Ban tổ chức';
+        return l10n.infoOrganizer;
       case 'REFEREE':
-        return 'Trọng tài';
+        return l10n.infoReferee;
       case 'LEADER':
       case 'CAPTAIN':
-        return 'Trưởng nhóm';
+        return l10n.infoLeader;
       case 'COACH':
-        return 'Huấn luyện viên';
+        return l10n.infoCoach;
       case 'MEMBER':
       case 'USER':
       case 'PLAYER':
       case 'ATHLETE':
       default:
-        return 'Vận động viên';
+        return l10n.infoPlayer;
     }
   }
 
   // ─── USER INFO HEADER ───────────────────────────────────────
-  Widget _buildUserInfoHeader(BuildContext context, UserPublicProfile profile, AppColorsExtension colors) {
+  Widget _buildUserInfoHeader(
+    BuildContext context,
+    UserPublicProfile profile,
+    AppColorsExtension colors,
+  ) {
     final roleText = _formatUserRole(null); // default fallback
-    final featuredRank = profile.ranks.where((rank) => rank.matchesPlayed > 0).fold<UserPublicRank?>(
-      null,
-      (best, rank) => best == null || rank.eloPoints > best.eloPoints ? rank : best,
-    );
+    final featuredRank = profile.ranks
+        .where((rank) => rank.matchesPlayed > 0)
+        .fold<UserPublicRank?>(
+          null,
+          (best, rank) =>
+              best == null || rank.eloPoints > best.eloPoints ? rank : best,
+        );
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Row(
@@ -704,14 +924,23 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     Flexible(
                       child: Text(
                         profile.fullName,
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: colors.textPrimary, letterSpacing: -0.3),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: colors.textPrimary,
+                          letterSpacing: -0.3,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (profile.isVerified) ...[
                       const SizedBox(width: 6),
-                      const Icon(Icons.verified_rounded, size: 18, color: Color(0xFF22C55E)),
+                      const Icon(
+                        Icons.verified_rounded,
+                        size: 18,
+                        color: Color(0xFF22C55E),
+                      ),
                     ],
                   ],
                 ),
@@ -719,11 +948,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
+                        border: Border.all(
+                          color: AppTheme.primary.withValues(alpha: 0.25),
+                        ),
                       ),
                       child: Text(
                         roleText,
@@ -734,11 +968,24 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                         ),
                       ),
                     ),
-                    if (profile.gender != null && profile.gender!.isNotEmpty) ...[
+                    if (profile.gender != null &&
+                        profile.gender!.isNotEmpty) ...[
                       const SizedBox(width: 8),
-                      Icon(profile.gender == 'Nam' ? Icons.male_rounded : Icons.female_rounded, size: 14, color: colors.textMuted),
+                      Icon(
+                        profile.gender == 'Nam'
+                            ? Icons.male_rounded
+                            : Icons.female_rounded,
+                        size: 14,
+                        color: colors.textMuted,
+                      ),
                       const SizedBox(width: 3),
-                      Text(profile.gender!, style: TextStyle(fontSize: 12, color: colors.textSecondary)),
+                      Text(
+                        profile.gender!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textSecondary,
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -746,7 +993,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   const SizedBox(height: 6),
                   Text(
                     profile.bio!,
-                    style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.4),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colors.textSecondary,
+                      height: 1.4,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -760,11 +1011,23 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   }
 
   // ─── STATS OVERVIEW ─────────────────────────────────────────
-  Widget _buildStatsOverview(BuildContext context, UserPublicProfile profile, AppColorsExtension colors) {
-    final totalMatches = profile.ranks.fold<int>(0, (sum, r) => sum + r.matchesPlayed);
-    final totalWins = profile.ranks.fold<int>(0, (sum, r) => sum + r.matchesWon);
+  Widget _buildStatsOverview(
+    BuildContext context,
+    UserPublicProfile profile,
+    AppColorsExtension colors,
+  ) {
+    final totalMatches = profile.ranks.fold<int>(
+      0,
+      (sum, r) => sum + r.matchesPlayed,
+    );
+    final totalWins = profile.ranks.fold<int>(
+      0,
+      (sum, r) => sum + r.matchesWon,
+    );
     final totalLosses = totalMatches - totalWins;
-    final winRate = totalMatches > 0 ? (totalWins / totalMatches * 100).round() : 0;
+    final winRate = totalMatches > 0
+        ? (totalWins / totalMatches * 100).round()
+        : 0;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -775,15 +1038,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       ),
       child: Row(
         children: [
-          _statItem(colors, '${profile.ranks.length}', 'Bộ môn'),
+          _statItem(colors, '${profile.ranks.length}', l10n.filterSport),
           _statDivider(colors),
-          _statItem(colors, '$totalMatches', 'Tổng trận'),
+          _statItem(colors, '$totalMatches', l10n.publicProfileTotalMatches),
           _statDivider(colors),
-          _statItem(colors, '$totalWins', 'Thắng'),
+          _statItem(colors, '$totalWins', l10n.infoWin),
           _statDivider(colors),
-          _statItem(colors, '$totalLosses', 'Thua'),
+          _statItem(colors, '$totalLosses', l10n.infoLoss),
           _statDivider(colors),
-          _statItem(colors, '$winRate%', 'Tỉ lệ'),
+          _statItem(colors, '$winRate%', l10n.publicProfileWinRateShort),
         ],
       ),
     );
@@ -793,22 +1056,46 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     return Expanded(
       child: Column(
         children: [
-          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: colors.textPrimary)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: colors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(label, style: TextStyle(fontSize: 10, color: colors.textMuted, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: colors.textMuted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _statDivider(AppColorsExtension colors) {
-    return Container(width: 1, height: 32, color: colors.border.withValues(alpha: 0.5));
+    return Container(
+      width: 1,
+      height: 32,
+      color: colors.border.withValues(alpha: 0.5),
+    );
   }
 
   // ─── RANK CARD ──────────────────────────────────────────────
-  Widget _buildRankCard(BuildContext context, UserPublicRank rank, AppColorsExtension colors) {
+  Widget _buildRankCard(
+    BuildContext context,
+    UserPublicRank rank,
+    AppColorsExtension colors,
+  ) {
     final palette = TierPalette.fromElo(rank.eloPoints, rank.tierName);
-    final wr = rank.matchesPlayed > 0 ? (rank.matchesWon / rank.matchesPlayed * 100).round() : 0;
+    final wr = rank.matchesPlayed > 0
+        ? (rank.matchesWon / rank.matchesPlayed * 100).round()
+        : 0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -828,18 +1115,49 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           Row(
             children: [
               Container(
-                width: 32, height: 32,
-                decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.sports_tennis_rounded, size: 18, color: AppTheme.primary),
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.sports_tennis_rounded,
+                  size: 18,
+                  color: AppTheme.primary,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(rank.categoryName, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                child: Text(
+                  rank.categoryName,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: palette.soft, borderRadius: BorderRadius.circular(8), border: Border.all(color: palette.color.withValues(alpha: 0.3))),
-                child: Text(rank.tierName ?? 'Chưa xếp hạng', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: palette.color)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: palette.soft,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: palette.color.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Text(
+                  rank.tierName ?? l10n.infoUnranked,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: palette.color,
+                  ),
+                ),
               ),
             ],
           ),
@@ -850,15 +1168,33 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('ELO', style: TextStyle(fontSize: 10, color: colors.textMuted, fontWeight: FontWeight.w600)),
+                    Text(
+                      'ELO',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: colors.textMuted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text('${rank.eloPoints}', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: palette.color)),
+                    Text(
+                      '${rank.eloPoints}',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: palette.color,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              _statBox('Trận', '${rank.matchesPlayed}', colors),
-              _statBox('Thắng', '${rank.matchesWon}', colors),
-              _statBox('Tỉ lệ', '$wr%', colors),
+              _statBox(
+                l10n.publicProfileMatchesShort,
+                '${rank.matchesPlayed}',
+                colors,
+              ),
+              _statBox(l10n.infoWin, '${rank.matchesWon}', colors),
+              _statBox(l10n.publicProfileWinRateShort, '$wr%', colors),
             ],
           ),
           if (rank.matchesPlayed > 0) ...[
@@ -869,7 +1205,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 value: (wr / 100).clamp(0.0, 1.0),
                 minHeight: 5,
                 backgroundColor: colors.border,
-                valueColor: AlwaysStoppedAnimation<Color>(wr >= 60 ? colors.success : palette.color),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  wr >= 60 ? colors.success : palette.color,
+                ),
               ),
             ),
           ],
@@ -883,8 +1221,22 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       padding: const EdgeInsets.only(left: 16),
       child: Column(
         children: [
-          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: colors.textPrimary)),
-          Text(label, style: TextStyle(fontSize: 9, color: colors.textMuted, fontWeight: FontWeight.w600)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: colors.textPrimary,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              color: colors.textMuted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -897,25 +1249,47 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         padding: const EdgeInsets.symmetric(vertical: 32),
         child: Column(
           children: [
-            Icon(Icons.emoji_events_outlined, size: 48, color: colors.textMuted),
+            Icon(
+              Icons.emoji_events_outlined,
+              size: 48,
+              color: colors.textMuted,
+            ),
             const SizedBox(height: 12),
-            Text('Chưa có dữ liệu xếp hạng', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colors.textSecondary)),
+            Text(
+              l10n.publicProfileNoRankData,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: colors.textSecondary,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildEmptyPlaceholder(AppColorsExtension colors, IconData icon, String message) {
+  Widget _buildEmptyPlaceholder(
+    AppColorsExtension colors,
+    IconData icon,
+    String message,
+  ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 24),
-      decoration: BoxDecoration(color: colors.bgCard, borderRadius: BorderRadius.circular(AppTheme.radiusLarge), border: Border.all(color: colors.border)),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        border: Border.all(color: colors.border),
+      ),
       child: Column(
         children: [
           Icon(icon, size: 32, color: colors.textMuted.withValues(alpha: 0.5)),
           const SizedBox(height: 8),
-          Text(message, style: TextStyle(fontSize: 13, color: colors.textMuted)),
+          Text(
+            message,
+            style: TextStyle(fontSize: 13, color: colors.textMuted),
+          ),
         ],
       ),
     );
@@ -927,12 +1301,21 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Text(
         title,
-        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: colors.textSecondary, letterSpacing: 0.3),
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w800,
+          color: colors.textSecondary,
+          letterSpacing: 0.3,
+        ),
       ),
     );
   }
 
-  Widget _buildError(BuildContext context, AppColorsExtension colors, String message) {
+  Widget _buildError(
+    BuildContext context,
+    AppColorsExtension colors,
+    String message,
+  ) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -941,17 +1324,30 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           children: [
             Icon(Icons.person_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 16),
-            Text('Không thể tải thông tin', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+            Text(
+              l10n.publicProfileLoadError,
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: colors.textPrimary,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(message, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: colors.textSecondary)),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: colors.textSecondary),
+            ),
             const SizedBox(height: 20),
-            FilledButton(onPressed: () => context.go('/home'), child: const Text('Về trang chủ')),
+            FilledButton(
+              onPressed: () => context.go('/home'),
+              child: Text(l10n.publicProfileHomeButton),
+            ),
           ],
         ),
       ),
     );
   }
-
 }
 
 // ─── SHIMMER ───────────────────────────────────────────────────
@@ -979,28 +1375,81 @@ class _ProfileShimmer extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Container(width: 80, height: 80, decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white)),
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                      ),
                       const SizedBox(width: 16),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(width: 160, height: 20, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8))),
+                          Container(
+                            width: 160,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
                           const SizedBox(height: 8),
-                          Container(width: 100, height: 14, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6))),
+                          Container(
+                            width: 100,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
                         ],
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  Container(height: 60, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20))),
+                  Container(
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
                   const SizedBox(height: 24),
-                  Container(width: 120, height: 16, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8))),
+                  Container(
+                    width: 120,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   const SizedBox(height: 12),
-                  Container(height: 160, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20))),
+                  Container(
+                    height: 160,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
                   const SizedBox(height: 24),
-                  Container(width: 120, height: 16, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8))),
+                  Container(
+                    width: 120,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   const SizedBox(height: 12),
-                  Container(height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20))),
+                  Container(
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
                 ],
               ),
             ),

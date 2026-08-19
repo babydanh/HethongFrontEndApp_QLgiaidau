@@ -22,9 +22,9 @@ class DateParser {
   /// Hỗ trợ: DateTime, String (ISO 8601), int (milliseconds epoch).
   /// Fallback: DateTime.now()
   static DateTime parseDate(dynamic date) {
-    if (date is DateTime) return date;
-    if (date is String) return DateTime.tryParse(date) ?? DateTime.now();
-    if (date is int) return DateTime.fromMillisecondsSinceEpoch(date);
+    if (date is DateTime) return date.toLocal();
+    if (date is String) return DateTime.tryParse(date)?.toLocal() ?? DateTime.now();
+    if (date is int) return DateTime.fromMillisecondsSinceEpoch(date).toLocal();
     return DateTime.now();
   }
 
@@ -32,9 +32,9 @@ class DateParser {
   /// Trả về null nếu value là null hoặc không parse được.
   static DateTime? parseDateOptional(dynamic date) {
     if (date == null) return null;
-    if (date is DateTime) return date;
-    if (date is String) return DateTime.tryParse(date);
-    if (date is int) return DateTime.fromMillisecondsSinceEpoch(date);
+    if (date is DateTime) return date.toLocal();
+    if (date is String) return DateTime.tryParse(date)?.toLocal();
+    if (date is int) return DateTime.fromMillisecondsSinceEpoch(date).toLocal();
     return null;
   }
 }

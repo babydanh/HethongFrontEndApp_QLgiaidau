@@ -632,6 +632,10 @@ abstract class AppLocalizations {
   /// **'Trọng tài'**
   String get infoReferee;
 
+  String get infoLeader;
+
+  String get infoCoach;
+
   /// No description provided for @infoJoinedAt.
   ///
   /// In vi, this message translates to:
@@ -673,6 +677,96 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Bạn chưa theo dõi giải nào.'**
   String get infoFollowedEmpty;
+
+  String get profileLoginGreeting;
+
+  String get profileLoginDescription;
+
+  String get profileLoginButton;
+
+  String get profileChangeCover;
+
+  String get profileChangeAvatar;
+
+  String get profileTakePhoto;
+
+  String get profileChooseFromGallery;
+
+  String get profileCameraPermissionDenied;
+
+  String get profileGalleryPermissionDenied;
+
+  String get profileImagePickerError;
+
+  String get profileCoverUpdated;
+
+  String get profileAvatarUpdated;
+
+  String get publicProfileTabOverview;
+
+  String get publicProfileTabMatches;
+
+  String get publicProfileTabAchievements;
+
+  String get publicProfileTabElo;
+
+  String get publicProfileShareSubtitle;
+
+  String get publicProfileShareBadge;
+
+  String get publicProfileClubTitles;
+
+  String get publicProfileTagUnit;
+
+  String get publicProfileRankBySport;
+
+  String get publicProfileEloChart;
+
+  String get publicProfileDetailedStats;
+
+  String get publicProfileMatchesLoadError;
+
+  String get publicProfileNoPublicMatches;
+
+  String get publicProfileTournamentFallback;
+
+  String get publicProfileMatchCompleted;
+
+  String get publicProfileMatchUpcoming;
+
+  String get publicProfileNoUserData;
+
+  String get publicProfileDetailedHistory;
+
+  String get publicProfileAchievementsTitle;
+
+  String get publicProfileNoAchievements;
+
+  String get publicProfileChampion;
+
+  String get publicProfileRunnerUp;
+
+  String get publicProfileThirdPlace;
+
+  String get publicProfileCategoryUnit;
+
+  String get publicProfileTotalElo;
+
+  String get publicProfileAverageElo;
+
+  String get publicProfileTotalMatches;
+
+  String get publicProfileMatchesShort;
+
+  String get publicProfileWinRateShort;
+
+  String get publicProfileNoRankData;
+
+  String get publicProfileLoadError;
+
+  String get publicProfileHomeButton;
+
+  String get publicProfileUserFallback;
 
   /// No description provided for @vietnam.
   ///

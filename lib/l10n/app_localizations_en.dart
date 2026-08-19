@@ -280,6 +280,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get infoReferee => 'Referee';
 
   @override
+  String get infoLeader => 'Team Leader';
+
+  @override
+  String get infoCoach => 'Coach';
+
+  @override
   String get infoJoinedAt => 'Joined since';
 
   @override
@@ -301,6 +307,145 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get infoFollowedEmpty => 'You haven\'t followed any tournaments yet.';
+
+  @override
+  String get profileLoginGreeting => 'Hello!';
+
+  @override
+  String get profileLoginDescription =>
+      'Sign in to view your profile, follow tournaments, and connect with the sports community.';
+
+  @override
+  String get profileLoginButton => 'Sign In';
+
+  @override
+  String get profileChangeCover => 'Change cover photo';
+
+  @override
+  String get profileChangeAvatar => 'Change profile photo';
+
+  @override
+  String get profileTakePhoto => 'Take a new photo';
+
+  @override
+  String get profileChooseFromGallery => 'Choose from gallery';
+
+  @override
+  String get profileCameraPermissionDenied =>
+      'Camera permission has not been granted for Sporto.';
+
+  @override
+  String get profileGalleryPermissionDenied =>
+      'Photo library permission has not been granted for Sporto.';
+
+  @override
+  String get profileImagePickerError =>
+      'Could not open the camera or photo library.';
+
+  @override
+  String get profileCoverUpdated => 'Cover photo updated';
+
+  @override
+  String get profileAvatarUpdated => 'Profile photo updated';
+
+  @override
+  String get publicProfileTabOverview => 'Overview';
+
+  @override
+  String get publicProfileTabMatches => 'Matches';
+
+  @override
+  String get publicProfileTabAchievements => 'Achievements';
+
+  @override
+  String get publicProfileTabElo => 'ELO';
+
+  @override
+  String get publicProfileShareSubtitle => 'Athlete Profile';
+
+  @override
+  String get publicProfileShareBadge => 'Athlete Card & ELO';
+
+  @override
+  String get publicProfileClubTitles => 'CLUB TITLES';
+
+  @override
+  String get publicProfileTagUnit => 'tags';
+
+  @override
+  String get publicProfileRankBySport => 'Ranking by sport';
+
+  @override
+  String get publicProfileEloChart => 'ELO Chart';
+
+  @override
+  String get publicProfileDetailedStats => 'Detailed Statistics';
+
+  @override
+  String get publicProfileMatchesLoadError => 'Could not load match history';
+
+  @override
+  String get publicProfileNoPublicMatches => 'No public matches';
+
+  @override
+  String get publicProfileTournamentFallback => 'Tournament';
+
+  @override
+  String get publicProfileMatchCompleted => 'Completed';
+
+  @override
+  String get publicProfileMatchUpcoming => 'Not started';
+
+  @override
+  String get publicProfileNoUserData => 'No user data';
+
+  @override
+  String get publicProfileDetailedHistory => 'View detailed history';
+
+  @override
+  String get publicProfileAchievementsTitle => 'Featured Achievements';
+
+  @override
+  String get publicProfileNoAchievements => 'No achievements yet';
+
+  @override
+  String get publicProfileChampion => 'Champion';
+
+  @override
+  String get publicProfileRunnerUp => 'Runner-up';
+
+  @override
+  String get publicProfileThirdPlace => 'Third place';
+
+  @override
+  String get publicProfileCategoryUnit => 'categories';
+
+  @override
+  String get publicProfileTotalElo => 'Total ELO';
+
+  @override
+  String get publicProfileAverageElo => 'Avg. ELO';
+
+  @override
+  String get publicProfileTotalMatches => 'Total matches';
+
+  @override
+  String get publicProfileMatchesShort => 'Matches';
+
+  @override
+  String get publicProfileWinRateShort => 'Win rate';
+
+  @override
+  String get publicProfileNoRankData => 'No ranking data';
+
+  @override
+  String get publicProfileLoadError => 'Could not load profile information';
+
+  @override
+  String get publicProfileHomeButton => 'Go to home';
+
+  @override
+  String get publicProfileUserFallback => 'User';
 
   @override
   String get vietnam => 'Vietnam';

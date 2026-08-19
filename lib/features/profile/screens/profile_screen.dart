@@ -54,6 +54,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _pickImage(bool isCover) async {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       backgroundColor: colors.bgSurface,
@@ -76,7 +77,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                isCover ? 'Thay đổi ảnh bìa' : 'Thay đổi ảnh đại diện',
+                isCover ? l10n.profileChangeCover : l10n.profileChangeAvatar,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -90,7 +91,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   color: AppTheme.primary,
                 ),
                 title: Text(
-                  'Chụp ảnh mới',
+                  l10n.profileTakePhoto,
                   style: TextStyle(color: colors.textPrimary),
                 ),
                 onTap: () => Navigator.pop(context, ImageSource.camera),
@@ -101,7 +102,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   color: AppTheme.primary,
                 ),
                 title: Text(
-                  'Chọn từ thư viện',
+                  l10n.profileChooseFromGallery,
                   style: TextStyle(color: colors.textPrimary),
                 ),
                 onTap: () => Navigator.pop(context, ImageSource.gallery),
@@ -126,10 +127,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     } on PlatformException catch (e) {
       if (!mounted) return;
       final message = e.code == 'camera_access_denied'
-          ? 'Bạn chưa cấp quyền camera cho Sporto.'
+          ? l10n.profileCameraPermissionDenied
           : e.code == 'photo_access_denied'
-          ? 'Bạn chưa cấp quyền thư viện ảnh cho Sporto.'
-          : 'Không thể mở camera hoặc thư viện ảnh.';
+          ? l10n.profileGalleryPermissionDenied
+          : l10n.profileImagePickerError;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
@@ -137,8 +138,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Không thể mở camera hoặc thư viện ảnh.'),
+        SnackBar(
+          content: Text(l10n.profileImagePickerError),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -157,8 +158,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ref.invalidate(userProfileProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Ảnh bìa đã được cập nhật'),
+            SnackBar(
+              content: Text(l10n.profileCoverUpdated),
               backgroundColor: Color(0xFF10B981),
               behavior: SnackBarBehavior.floating,
             ),
@@ -187,8 +188,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ref.invalidate(userProfileProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Ảnh đại diện đã được cập nhật'),
+            SnackBar(
+              content: Text(l10n.profileAvatarUpdated),
               backgroundColor: Color(0xFF10B981),
               behavior: SnackBarBehavior.floating,
             ),
@@ -324,7 +325,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(height: 28),
               Text(
-                'Xin chào!',
+                l10n.profileLoginGreeting,
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
@@ -334,7 +335,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                'Đăng nhập để xem hồ sơ, theo dõi giải đấu và kết nối với cộng đồng thể thao.',
+                l10n.profileLoginDescription,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -349,8 +350,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: FilledButton.icon(
                   onPressed: () => context.go('/login'),
                   icon: const Icon(Icons.login_rounded, size: 20),
-                  label: const Text(
-                    'Đăng nhập',
+                  label: Text(
+                    l10n.profileLoginButton,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   style: FilledButton.styleFrom(
@@ -364,9 +365,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () => context.go('/login'),
-                child: const Text(
-                  'Chưa có tài khoản? Đăng ký ngay',
-                  style: TextStyle(
+                child: Text(
+                  '${l10n.noAccount} ${l10n.registerNow}',
+                  style: const TextStyle(
                     fontSize: 13.5,
                     color: AppTheme.primary,
                     fontWeight: FontWeight.w700,
@@ -1903,7 +1904,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ? Image.network(
               url,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _defaultSportoLogo(),
+              errorBuilder: (_, _, _) => _defaultSportoLogo(),
             )
           : _defaultSportoLogo(),
     );

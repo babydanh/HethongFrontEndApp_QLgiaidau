@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -34,13 +34,17 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
 
   String _statusLabel(String? status) {
     final l10n = AppLocalizations.of(context)!;
-    if (l10n == null) return '';
     switch (status) {
-      case 'scheduled': return l10n.matchesStatusScheduled;
-      case 'live': return l10n.matchesStatusLive;
-      case 'completed': return l10n.matchesStatusCompleted;
-      case 'walkover': return l10n.matchesStatusWalkover;
-      default: return l10n.matchesStatusAll;
+      case 'scheduled':
+        return l10n.matchesStatusScheduled;
+      case 'live':
+        return l10n.matchesStatusLive;
+      case 'completed':
+        return l10n.matchesStatusCompleted;
+      case 'walkover':
+        return l10n.matchesStatusWalkover;
+      default:
+        return l10n.matchesStatusAll;
     }
   }
 
@@ -373,7 +377,9 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
             const SizedBox(width: 8),
             // Location filter
             _FilterChip(
-              label: _selectedLocation.isEmpty ? l10n.matchesFilterLocation : _selectedLocation,
+              label: _selectedLocation.isEmpty
+                  ? l10n.matchesFilterLocation
+                  : _selectedLocation,
               icon: Icons.location_on_rounded,
               isActive: _selectedLocation.isNotEmpty,
               colors: colors,
@@ -386,7 +392,6 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
   }
 
   Widget _buildActiveFilters(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context)!;
     final chips = <Widget>[];
     if (_selectedSport.isNotEmpty) {
       chips.add(
@@ -581,7 +586,10 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.matchesCancel, style: TextStyle(color: colors.textMuted)),
+            child: Text(
+              l10n.matchesCancel,
+              style: TextStyle(color: colors.textMuted),
+            ),
           ),
           FilledButton(
             onPressed: () {

@@ -279,6 +279,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get infoReferee => 'Trọng tài';
 
   @override
+  String get infoLeader => 'Trưởng nhóm';
+
+  @override
+  String get infoCoach => 'Huấn luyện viên';
+
+  @override
   String get infoJoinedAt => 'Đã tham gia từ';
 
   @override
@@ -298,6 +304,145 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get infoFollowedEmpty => 'Bạn chưa theo dõi giải nào.';
+
+  @override
+  String get profileLoginGreeting => 'Xin chào!';
+
+  @override
+  String get profileLoginDescription =>
+      'Đăng nhập để xem hồ sơ, theo dõi giải đấu và kết nối với cộng đồng thể thao.';
+
+  @override
+  String get profileLoginButton => 'Đăng nhập';
+
+  @override
+  String get profileChangeCover => 'Thay đổi ảnh bìa';
+
+  @override
+  String get profileChangeAvatar => 'Thay đổi ảnh đại diện';
+
+  @override
+  String get profileTakePhoto => 'Chụp ảnh mới';
+
+  @override
+  String get profileChooseFromGallery => 'Chọn từ thư viện';
+
+  @override
+  String get profileCameraPermissionDenied =>
+      'Bạn chưa cấp quyền camera cho Sporto.';
+
+  @override
+  String get profileGalleryPermissionDenied =>
+      'Bạn chưa cấp quyền thư viện ảnh cho Sporto.';
+
+  @override
+  String get profileImagePickerError =>
+      'Không thể mở camera hoặc thư viện ảnh.';
+
+  @override
+  String get profileCoverUpdated => 'Ảnh bìa đã được cập nhật';
+
+  @override
+  String get profileAvatarUpdated => 'Ảnh đại diện đã được cập nhật';
+
+  @override
+  String get publicProfileTabOverview => 'Tổng quan';
+
+  @override
+  String get publicProfileTabMatches => 'Trận đấu';
+
+  @override
+  String get publicProfileTabAchievements => 'Danh hiệu';
+
+  @override
+  String get publicProfileTabElo => 'ELO';
+
+  @override
+  String get publicProfileShareSubtitle => 'Hồ sơ Vận động viên';
+
+  @override
+  String get publicProfileShareBadge => 'Thẻ VĐV & ELO';
+
+  @override
+  String get publicProfileClubTitles => 'DANH HIỆU CLB';
+
+  @override
+  String get publicProfileTagUnit => 'nhãn';
+
+  @override
+  String get publicProfileRankBySport => 'Xếp hạng theo bộ môn';
+
+  @override
+  String get publicProfileEloChart => 'Biểu đồ ELO';
+
+  @override
+  String get publicProfileDetailedStats => 'Thống kê chi tiết';
+
+  @override
+  String get publicProfileMatchesLoadError => 'Chưa tải được lịch sử trận đấu';
+
+  @override
+  String get publicProfileNoPublicMatches => 'Chưa có trận đấu công khai';
+
+  @override
+  String get publicProfileTournamentFallback => 'Giải đấu';
+
+  @override
+  String get publicProfileMatchCompleted => 'Đã kết thúc';
+
+  @override
+  String get publicProfileMatchUpcoming => 'Chưa diễn ra';
+
+  @override
+  String get publicProfileNoUserData => 'Không có dữ liệu người dùng';
+
+  @override
+  String get publicProfileDetailedHistory => 'Xem lịch sử chi tiết';
+
+  @override
+  String get publicProfileAchievementsTitle => 'Thành tích nổi bật';
+
+  @override
+  String get publicProfileNoAchievements => 'Chưa có thành tích nào';
+
+  @override
+  String get publicProfileChampion => 'Quán quân';
+
+  @override
+  String get publicProfileRunnerUp => 'Á quân';
+
+  @override
+  String get publicProfileThirdPlace => 'Hạng ba';
+
+  @override
+  String get publicProfileCategoryUnit => 'bộ môn';
+
+  @override
+  String get publicProfileTotalElo => 'Tổng ELO';
+
+  @override
+  String get publicProfileAverageElo => 'ELO TB';
+
+  @override
+  String get publicProfileTotalMatches => 'Tổng trận';
+
+  @override
+  String get publicProfileMatchesShort => 'Trận';
+
+  @override
+  String get publicProfileWinRateShort => 'Tỉ lệ';
+
+  @override
+  String get publicProfileNoRankData => 'Chưa có dữ liệu xếp hạng';
+
+  @override
+  String get publicProfileLoadError => 'Không thể tải thông tin';
+
+  @override
+  String get publicProfileHomeButton => 'Về trang chủ';
+
+  @override
+  String get publicProfileUserFallback => 'Người dùng';
 
   @override
   String get vietnam => 'Việt Nam';
