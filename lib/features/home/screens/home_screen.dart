@@ -601,14 +601,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                     ],
-                    SliverToBoxAdapter(
-                      child: _buildSectionTitle(
-                        title: l10n.liveMatches,
-                        isLive: true,
-                      ),
-                    ),
                     _TournamentSectionList(
                       tournaments: allTournaments,
+                      sectionTitle: l10n.liveMatches,
+                      isLive: true,
                       filterStatus: 'live',
                       searchQuery: _searchQueries[0] ?? '',
                       contentFilter: _exploreContent,
@@ -618,11 +614,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           _exploreStatus == 'all' || _exploreStatus == 'live',
                       emptyMessage: l10n.noLiveMatches,
                     ),
-                    SliverToBoxAdapter(
-                      child: _buildSectionTitle(title: l10n.upcomingMatches),
-                    ),
                     _TournamentSectionList(
                       tournaments: allTournaments,
+                      sectionTitle: l10n.upcomingMatches,
                       filterStatus: 'scheduled',
                       searchQuery: _searchQueries[0] ?? '',
                       contentFilter: _exploreContent,
@@ -633,11 +627,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           _exploreStatus == 'scheduled',
                       emptyMessage: l10n.noUpcomingMatches,
                     ),
-                    SliverToBoxAdapter(
-                      child: _buildSectionTitle(title: 'Trận đấu vừa kết thúc'),
-                    ),
                     _TournamentSectionList(
                       tournaments: allTournaments,
+                      sectionTitle: 'Trận đấu vừa kết thúc',
                       filterStatus: 'completed',
                       searchQuery: _searchQueries[0] ?? '',
                       contentFilter: _exploreContent,
@@ -4035,6 +4027,8 @@ class _TournamentSectionList extends ConsumerWidget {
   final String rankedFilter;
   final bool enabled;
   final String emptyMessage;
+  final String? sectionTitle;
+  final bool isLive;
 
   const _TournamentSectionList({
     required this.tournaments,
@@ -4045,28 +4039,33 @@ class _TournamentSectionList extends ConsumerWidget {
     this.rankedFilter = 'all',
     this.enabled = true,
     required this.emptyMessage,
+    this.sectionTitle,
+    this.isLive = false,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (!enabled) return const SliverToBoxAdapter(child: SizedBox.shrink());
     if (tournaments.isEmpty) {
-      return SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Center(
-            child: Text(
-              emptyMessage,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF94A3B8),
-                fontWeight: FontWeight.w500,
+      if (searchQuery.isNotEmpty) {
+        return SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Center(
+              child: Text(
+                emptyMessage,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF94A3B8),
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
           ),
-        ),
-      );
+        );
+      }
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
     final activeTournaments = <Tournament>[];
@@ -4101,10 +4100,16 @@ class _TournamentSectionList extends ConsumerWidget {
         if (q.isNotEmpty && !matchText.contains(q)) return false;
 
         if (filterStatus == 'live') return m.isLive;
-        if (filterStatus == 'completed') return m.isCompleted;
+        if (filterStatus == 'completed') {
+          final status = m.status.toUpperCase();
+          return m.isCompleted ||
+              status == 'COMPLETED' ||
+              status == 'FINISHED' ||
+              status == 'DONE' ||
+              status == 'ENDED' ||
+              m.completedAt != null;
+        }
         if (filterStatus == 'scheduled') {
-          // Do not classify an unknown/failed response as scheduled. Only
-          // persisted not-started matches belong in the upcoming section.
           return m.isScheduled ||
               (m.scheduledTime != null && !m.isLive && !m.isCompleted);
         }
@@ -4117,39 +4122,77 @@ class _TournamentSectionList extends ConsumerWidget {
     }
 
     if (activeTournaments.isEmpty) {
-      return SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Center(
-            child: Text(
-              hasLoadingMatches
-                  ? 'Đang tải dữ liệu trận đấu...'
-                  : hasMatchError
-                  ? 'Không tải được dữ liệu trận đấu. Vui lòng thử lại.'
-                  : emptyMessage,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF94A3B8),
-                fontWeight: FontWeight.w500,
+      if (searchQuery.isNotEmpty) {
+        return SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Center(
+              child: Text(
+                hasLoadingMatches
+                    ? 'Đang tải dữ liệu trận đấu...'
+                    : hasMatchError
+                    ? 'Không tải được dữ liệu trận đấu. Vui lòng thử lại.'
+                    : emptyMessage,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF94A3B8),
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      }
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    return SliverMainAxisGroup(
+      slivers: [
+        if (sectionTitle != null && sectionTitle!.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    sectionTitle!,
+                    style: TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      color: context.colors.textPrimary,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  if (isLive) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEF4444),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => LiveTournamentWithMatchesCard(
+                tournament: activeTournaments[index],
+                filterStatus: filterStatus,
+              ),
+              childCount: activeTournaments.length,
             ),
           ),
         ),
-      );
-    }
-
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) => LiveTournamentWithMatchesCard(
-            tournament: activeTournaments[index],
-            filterStatus: filterStatus,
-          ),
-          childCount: activeTournaments.length,
-        ),
-      ),
+      ],
     );
   }
 }
