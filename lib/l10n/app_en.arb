@@ -1635,5 +1635,20 @@
   "myReportsResolutionNote": "Resolution note",
   "myReportsPageCount": "Page {page}/{totalPages}",
   "myReportsPreviousPage": "Previous page",
-  "myReportsNextPage": "Next page"
+  "myReportsNextPage": "Next page",
+  "settingsPrivacyTitle": "Privacy",
+  "settingsStrangerMessages": "Messages from strangers",
+  "settingsStrangerMessagesDescription": "Allow people who are not connected with you to start a conversation.",
+  "settingsStrangerMessagesOn": "Allowed",
+  "settingsStrangerMessagesOff": "Blocked",
+  "settingsStrangerMessagesUpdated": "Message privacy updated",
+  "settingsStrangerMessagesUpdateError": "Unable to update message privacy",
+  "dashboardRankings": "Public rankings",
+  "dashboardRankingsSub": "Follow player rankings and form",
+  "dashboardChat": "Messages",
+  "dashboardChatSub": "Chat with players and clubs",
+  "dashboardReports": "Report history",
+  "dashboardReportsSub": "Track the reports you have submitted",
+  "dashboardFootballTeams": "My football teams",
+  "dashboardFootballTeamsSub": "Manage squads and football ELO"
 }

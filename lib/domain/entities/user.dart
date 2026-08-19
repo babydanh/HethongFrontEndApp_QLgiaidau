@@ -13,6 +13,7 @@ class UserProfile {
   final bool? isEmailVerified;
   final bool? isPhoneVerified;
   final bool? isGenderLocked;
+  final bool? allowStrangerMessages;
   final String? bankName;
   final String? bankAccountNumber;
   final String? bankAccountName;
@@ -36,6 +37,7 @@ class UserProfile {
     this.isEmailVerified,
     this.isPhoneVerified,
     this.isGenderLocked,
+    this.allowStrangerMessages,
     this.bankName,
     this.bankAccountNumber,
     this.bankAccountName,
@@ -75,6 +77,7 @@ class UserProfile {
       isEmailVerified: _parseBool(p['isEmailVerified']),
       isPhoneVerified: _parseBool(p['isPhoneVerified']),
       isGenderLocked: _parseBool(p['isGenderLocked']),
+      allowStrangerMessages: _parseBool(p['allowStrangerMessages']),
       bankName: p['bankName']?.toString(),
       bankAccountNumber: p['bankAccountNumber']?.toString(),
       bankAccountName: p['bankAccountName']?.toString(),
@@ -101,6 +104,8 @@ class UserProfile {
       if (isEmailVerified != null) 'isEmailVerified': isEmailVerified,
       if (isPhoneVerified != null) 'isPhoneVerified': isPhoneVerified,
       if (isGenderLocked != null) 'isGenderLocked': isGenderLocked,
+      if (allowStrangerMessages != null)
+        'allowStrangerMessages': allowStrangerMessages,
       if (bankName != null) 'bankName': bankName,
       if (bankAccountNumber != null) 'bankAccountNumber': bankAccountNumber,
       if (bankAccountName != null) 'bankAccountName': bankAccountName,
@@ -125,6 +130,7 @@ class UserProfile {
     bool? isEmailVerified,
     bool? isPhoneVerified,
     bool? isGenderLocked,
+    bool? allowStrangerMessages,
     String? bankName,
     String? bankAccountNumber,
     String? bankAccountName,
@@ -147,6 +153,8 @@ class UserProfile {
       isEmailVerified: isEmailVerified ?? this.isEmailVerified,
       isPhoneVerified: isPhoneVerified ?? this.isPhoneVerified,
       isGenderLocked: isGenderLocked ?? this.isGenderLocked,
+      allowStrangerMessages:
+          allowStrangerMessages ?? this.allowStrangerMessages,
       bankName: bankName ?? this.bankName,
       bankAccountNumber: bankAccountNumber ?? this.bankAccountNumber,
       bankAccountName: bankAccountName ?? this.bankAccountName,
@@ -157,7 +165,8 @@ class UserProfile {
   }
 
   @override
-  String toString() => 'UserProfile(id: $id, fullName: $fullName, email: $email)';
+  String toString() =>
+      'UserProfile(id: $id, fullName: $fullName, email: $email)';
 
   static bool? _parseBool(dynamic value) {
     if (value == null) return null;
@@ -211,17 +220,25 @@ class UserPublicProfile {
       isVerified: json['isVerified'] == true,
       ranks: [
         ...((json['ranks'] as List<dynamic>?)
-              ?.map((e) => UserPublicRank.fromJson(e as Map<String, dynamic>))
-              .toList() ?? []),
+                ?.map((e) => UserPublicRank.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            []),
         ...((json['pairRanks'] as List<dynamic>?)
-              ?.map((e) => UserPublicRank.fromJson({
+                ?.map(
+                  (e) => UserPublicRank.fromJson({
                     ...(e as Map<String, dynamic>),
                     'matchType': e['matchType'] ?? 'DOUBLES',
-                  }))
-              .toList() ?? []),
+                  }),
+                )
+                .toList() ??
+            []),
       ],
-      achievements: (json['achievements'] as List<dynamic>?)
-              ?.map((e) => UserPublicAchievement.fromJson(e as Map<String, dynamic>))
+      achievements:
+          (json['achievements'] as List<dynamic>?)
+              ?.map(
+                (e) =>
+                    UserPublicAchievement.fromJson(e as Map<String, dynamic>),
+              )
               .toList() ??
           [],
     );

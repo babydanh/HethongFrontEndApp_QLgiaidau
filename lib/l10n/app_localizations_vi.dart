@@ -4173,4 +4173,52 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get myReportsNextPage => 'Trang sau';
+
+  @override
+  String get settingsPrivacyTitle => 'Quyền riêng tư';
+
+  @override
+  String get settingsStrangerMessages => 'Tin nhắn từ người lạ';
+
+  @override
+  String get settingsStrangerMessagesDescription =>
+      'Cho phép người chưa kết nối với bạn bắt đầu cuộc trò chuyện.';
+
+  @override
+  String get settingsStrangerMessagesOn => 'Đang cho phép';
+
+  @override
+  String get settingsStrangerMessagesOff => 'Đang chặn';
+
+  @override
+  String get settingsStrangerMessagesUpdated =>
+      'Đã cập nhật quyền nhận tin nhắn';
+
+  @override
+  String get settingsStrangerMessagesUpdateError =>
+      'Không thể cập nhật quyền nhận tin nhắn';
+
+  @override
+  String get dashboardRankings => 'Bảng xếp hạng công khai';
+
+  @override
+  String get dashboardRankingsSub => 'Theo dõi thứ hạng và phong độ người chơi';
+
+  @override
+  String get dashboardChat => 'Tin nhắn';
+
+  @override
+  String get dashboardChatSub => 'Trò chuyện với người chơi và câu lạc bộ';
+
+  @override
+  String get dashboardReports => 'Lịch sử báo cáo';
+
+  @override
+  String get dashboardReportsSub => 'Theo dõi các báo cáo bạn đã gửi';
+
+  @override
+  String get dashboardFootballTeams => 'Đội bóng của tôi';
+
+  @override
+  String get dashboardFootballTeamsSub => 'Quản lý đội hình và ELO bóng đá';
 }

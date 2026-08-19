@@ -14,14 +14,17 @@ import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/user_stats_card.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
   final String selectedSport;
   final String searchQuery;
+  final bool standalone;
   const LeaderboardScreen({
     super.key,
     this.selectedSport = 'all',
     this.searchQuery = '',
+    this.standalone = false,
   });
 
   @override
@@ -112,13 +115,14 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
             final rankingsAsync = ref.watch(rankingsProvider(query));
             final tiersAsync = ref.watch(eloTiersProvider(effectiveCategoryId));
+            final l10n = AppLocalizations.of(context)!;
 
-            return SingleChildScrollView(
+            final content = SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 160),
+                  SizedBox(height: widget.standalone ? 20 : 160),
                   _buildRankingFilters(colors),
                   const SizedBox(height: 10),
                   _buildProvinceFilter(colors),
@@ -151,7 +155,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       context,
                       icon: Icons.cloud_off_rounded,
                       title: 'Không thể tải bảng xếp hạng',
-                      subtitle: ErrorParser.parse(e, 'Vui lòng kiểm tra kết nối mạng hoặc thử lại sau.'),
+                      subtitle: ErrorParser.parse(
+                        e,
+                        'Vui lòng kiểm tra kết nối mạng hoặc thử lại sau.',
+                      ),
                       onRetry: () =>
                           ref.refresh(rankingsProvider(_rankingQuery)),
                     ),
@@ -159,13 +166,28 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 ],
               ),
             );
+
+            if (!widget.standalone) return content;
+            return Scaffold(
+              backgroundColor: colors.bgDark,
+              appBar: AppBar(
+                title: Text(l10n.navRankings),
+                backgroundColor: colors.bgDark,
+                foregroundColor: colors.textPrimary,
+                elevation: 0,
+              ),
+              body: content,
+            );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => _emptyState(
             context,
             icon: Icons.warning_amber_rounded,
             title: 'Lỗi tải danh sách môn thể thao',
-            subtitle: ErrorParser.parse(e, 'Vui lòng kiểm tra lại kết nối mạng.'),
+            subtitle: ErrorParser.parse(
+              e,
+              'Vui lòng kiểm tra lại kết nối mạng.',
+            ),
             onRetry: () => ref.refresh(categoriesProvider),
           ),
         ),
@@ -181,8 +203,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     if (matchType == 'MIXED_DOUBLES') return 'Đôi nam nữ';
     return 'ELO toàn quốc';
   }
-
-
 
   Widget _buildRankingFilters(AppColorsExtension colors) {
     const formats = [
@@ -740,4 +760,3 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     );
   }
 }
-

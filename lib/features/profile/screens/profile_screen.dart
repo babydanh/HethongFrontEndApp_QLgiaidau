@@ -2348,6 +2348,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final l = AppLocalizations.of(context)!;
     final items = [
       _MenuItem(Icons.dashboard_rounded, l.settingsDashboard, '/dashboard'),
+      _MenuItem(Icons.leaderboard_rounded, l.navRankings, '/rankings'),
       _MenuItem(
         Icons.person_outline_rounded,
         l.settingsEditProfile,
@@ -2527,8 +2528,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _langSegmentButton('vi', 'VI', ref.watch(localeProvider).languageCode == 'vi', ref),
-                      _langSegmentButton('en', 'EN', ref.watch(localeProvider).languageCode == 'en', ref),
+                      _langSegmentButton(
+                        'vi',
+                        'VI',
+                        ref.watch(localeProvider).languageCode == 'vi',
+                        ref,
+                      ),
+                      _langSegmentButton(
+                        'en',
+                        'EN',
+                        ref.watch(localeProvider).languageCode == 'en',
+                        ref,
+                      ),
                     ],
                   ),
                 ),
@@ -2612,7 +2623,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _langSegmentButton(String code, String label, bool isSelected, WidgetRef ref) {
+  Widget _langSegmentButton(
+    String code,
+    String label,
+    bool isSelected,
+    WidgetRef ref,
+  ) {
     return GestureDetector(
       onTap: () {
         if (!isSelected) {

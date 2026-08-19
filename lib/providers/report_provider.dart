@@ -32,10 +32,9 @@ class MyReportsController extends AsyncNotifier<MyReportsState> {
   }
 
   Future<MyReportsState> _loadPage(int page) async {
-    final result = await ref.read(reportRepositoryProvider).getMine(
-          cursor: _cursorByPage[page],
-          limit: _pageSize,
-        );
+    final result = await ref
+        .read(reportRepositoryProvider)
+        .getMine(cursor: _cursorByPage[page], limit: _pageSize);
     _cursorByPage[page + 1] = result.nextCursor;
     final inferredTotalPages = result.nextCursor == null ? page : page + 1;
     return MyReportsState(
@@ -48,6 +47,7 @@ class MyReportsController extends AsyncNotifier<MyReportsState> {
   }
 }
 
-final myReportsProvider = AsyncNotifierProvider<MyReportsController, MyReportsState>(
-  MyReportsController.new,
-);
+final myReportsProvider =
+    AsyncNotifierProvider<MyReportsController, MyReportsState>(
+      MyReportsController.new,
+    );

@@ -1,9 +1,4 @@
-enum ReportTargetType {
-  user,
-  tournament,
-  match,
-  community,
-}
+enum ReportTargetType { user, tournament, match, community }
 
 enum ReportCategory {
   cheating,
@@ -25,31 +20,31 @@ enum ReportStatus {
 }
 
 ReportTargetType reportTargetTypeFromApi(String? value) => switch (value) {
-      'USER' => ReportTargetType.user,
-      'TOURNAMENT' => ReportTargetType.tournament,
-      'MATCH' => ReportTargetType.match,
-      'COMMUNITY' => ReportTargetType.community,
-      _ => ReportTargetType.user,
-    };
+  'USER' => ReportTargetType.user,
+  'TOURNAMENT' => ReportTargetType.tournament,
+  'MATCH' => ReportTargetType.match,
+  'COMMUNITY' => ReportTargetType.community,
+  _ => ReportTargetType.user,
+};
 
 ReportCategory reportCategoryFromApi(String? value) => switch (value) {
-      'CHEATING' => ReportCategory.cheating,
-      'RULE_VIOLATION' => ReportCategory.ruleViolation,
-      'ABUSIVE_BEHAVIOR' => ReportCategory.abusiveBehavior,
-      'FAKE_INFORMATION' => ReportCategory.fakeInformation,
-      'PAYMENT_FRAUD' => ReportCategory.paymentFraud,
-      'UNSAFE_ORGANIZATION' => ReportCategory.unsafeOrganization,
-      _ => ReportCategory.other,
-    };
+  'CHEATING' => ReportCategory.cheating,
+  'RULE_VIOLATION' => ReportCategory.ruleViolation,
+  'ABUSIVE_BEHAVIOR' => ReportCategory.abusiveBehavior,
+  'FAKE_INFORMATION' => ReportCategory.fakeInformation,
+  'PAYMENT_FRAUD' => ReportCategory.paymentFraud,
+  'UNSAFE_ORGANIZATION' => ReportCategory.unsafeOrganization,
+  _ => ReportCategory.other,
+};
 
 ReportStatus reportStatusFromApi(String? value) => switch (value) {
-      'TRIAGED' => ReportStatus.triaged,
-      'UNDER_REVIEW' => ReportStatus.underReview,
-      'ESCALATED' => ReportStatus.escalated,
-      'RESOLVED' => ReportStatus.resolved,
-      'REJECTED' => ReportStatus.rejected,
-      _ => ReportStatus.submitted,
-    };
+  'TRIAGED' => ReportStatus.triaged,
+  'UNDER_REVIEW' => ReportStatus.underReview,
+  'ESCALATED' => ReportStatus.escalated,
+  'RESOLVED' => ReportStatus.resolved,
+  'REJECTED' => ReportStatus.rejected,
+  _ => ReportStatus.submitted,
+};
 
 class ReportTargetSummary {
   final String id;

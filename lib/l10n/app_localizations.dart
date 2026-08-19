@@ -7915,6 +7915,96 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Trang sau'**
   String get myReportsNextPage;
+
+  /// No description provided for @settingsPrivacyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quyền riêng tư'**
+  String get settingsPrivacyTitle;
+
+  /// No description provided for @settingsStrangerMessages.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tin nhắn từ người lạ'**
+  String get settingsStrangerMessages;
+
+  /// No description provided for @settingsStrangerMessagesDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép người chưa kết nối với bạn bắt đầu cuộc trò chuyện.'**
+  String get settingsStrangerMessagesDescription;
+
+  /// No description provided for @settingsStrangerMessagesOn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang cho phép'**
+  String get settingsStrangerMessagesOn;
+
+  /// No description provided for @settingsStrangerMessagesOff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chặn'**
+  String get settingsStrangerMessagesOff;
+
+  /// No description provided for @settingsStrangerMessagesUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật quyền nhận tin nhắn'**
+  String get settingsStrangerMessagesUpdated;
+
+  /// No description provided for @settingsStrangerMessagesUpdateError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật quyền nhận tin nhắn'**
+  String get settingsStrangerMessagesUpdateError;
+
+  /// No description provided for @dashboardRankings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng xếp hạng công khai'**
+  String get dashboardRankings;
+
+  /// No description provided for @dashboardRankingsSub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo dõi thứ hạng và phong độ người chơi'**
+  String get dashboardRankingsSub;
+
+  /// No description provided for @dashboardChat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tin nhắn'**
+  String get dashboardChat;
+
+  /// No description provided for @dashboardChatSub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trò chuyện với người chơi và câu lạc bộ'**
+  String get dashboardChatSub;
+
+  /// No description provided for @dashboardReports.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sử báo cáo'**
+  String get dashboardReports;
+
+  /// No description provided for @dashboardReportsSub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo dõi các báo cáo bạn đã gửi'**
+  String get dashboardReportsSub;
+
+  /// No description provided for @dashboardFootballTeams.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội bóng của tôi'**
+  String get dashboardFootballTeams;
+
+  /// No description provided for @dashboardFootballTeamsSub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý đội hình và ELO bóng đá'**
+  String get dashboardFootballTeamsSub;
 }
 
 class _AppLocalizationsDelegate

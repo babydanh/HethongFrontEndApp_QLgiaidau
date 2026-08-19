@@ -4178,4 +4178,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get myReportsNextPage => 'Next page';
+
+  @override
+  String get settingsPrivacyTitle => 'Privacy';
+
+  @override
+  String get settingsStrangerMessages => 'Messages from strangers';
+
+  @override
+  String get settingsStrangerMessagesDescription =>
+      'Allow people who are not connected with you to start a conversation.';
+
+  @override
+  String get settingsStrangerMessagesOn => 'Allowed';
+
+  @override
+  String get settingsStrangerMessagesOff => 'Blocked';
+
+  @override
+  String get settingsStrangerMessagesUpdated => 'Message privacy updated';
+
+  @override
+  String get settingsStrangerMessagesUpdateError =>
+      'Unable to update message privacy';
+
+  @override
+  String get dashboardRankings => 'Public rankings';
+
+  @override
+  String get dashboardRankingsSub => 'Follow player rankings and form';
+
+  @override
+  String get dashboardChat => 'Messages';
+
+  @override
+  String get dashboardChatSub => 'Chat with players and clubs';
+
+  @override
+  String get dashboardReports => 'Report history';
+
+  @override
+  String get dashboardReportsSub => 'Track the reports you have submitted';
+
+  @override
+  String get dashboardFootballTeams => 'My football teams';
+
+  @override
+  String get dashboardFootballTeamsSub => 'Manage squads and football ELO';
 }

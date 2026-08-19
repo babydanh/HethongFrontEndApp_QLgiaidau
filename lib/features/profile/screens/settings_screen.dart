@@ -1479,6 +1479,10 @@ class _SecurityTab extends ConsumerWidget {
           ]),
           const SizedBox(height: 24),
 
+          // Quyền riêng tư
+          const _StrangerMessagesSettingsCard(),
+          const SizedBox(height: 24),
+
           // Thông báo Câu lạc bộ
           const _ClubNotificationSettingsCard(),
           const SizedBox(height: 24),
@@ -1563,6 +1567,115 @@ class _SecurityTab extends ConsumerWidget {
           const SizedBox(height: 32),
         ],
       ),
+    );
+  }
+}
+
+class _StrangerMessagesSettingsCard extends ConsumerStatefulWidget {
+  const _StrangerMessagesSettingsCard();
+
+  @override
+  ConsumerState<_StrangerMessagesSettingsCard> createState() =>
+      _StrangerMessagesSettingsCardState();
+}
+
+class _StrangerMessagesSettingsCardState
+    extends ConsumerState<_StrangerMessagesSettingsCard> {
+  bool? _value;
+  bool _isUpdating = false;
+
+  Future<void> _update(bool value, bool previousValue) async {
+    setState(() {
+      _value = value;
+      _isUpdating = true;
+    });
+
+    try {
+      final updated = await ref.read(userRepositoryProvider).updateProfile({
+        'allowStrangerMessages': value,
+      });
+      ref.invalidate(userProfileProvider);
+      if (!mounted) return;
+      setState(() {
+        _value = updated.allowStrangerMessages ?? value;
+        _isUpdating = false;
+      });
+      final l = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.settingsStrangerMessagesUpdated)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _value = previousValue;
+        _isUpdating = false;
+      });
+      final l = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.settingsStrangerMessagesUpdateError)),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final l = AppLocalizations.of(context)!;
+    final profileAsync = ref.watch(userProfileProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle(colors, l.settingsPrivacyTitle),
+        const SizedBox(height: 10),
+        _card(colors, [
+          profileAsync.when(
+            data: (profile) {
+              final currentValue =
+                  _value ?? profile.allowStrangerMessages ?? true;
+              return SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                secondary: Icon(
+                  Icons.mark_unread_chat_alt_outlined,
+                  color: AppTheme.primary,
+                ),
+                title: Text(
+                  l.settingsStrangerMessages,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  '${currentValue ? l.settingsStrangerMessagesOn : l.settingsStrangerMessagesOff}\n${l.settingsStrangerMessagesDescription}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.35,
+                    color: colors.textSecondary,
+                  ),
+                ),
+                value: currentValue,
+                onChanged: _isUpdating
+                    ? null
+                    : (value) => _update(value, currentValue),
+                activeThumbColor: AppTheme.primary,
+              );
+            },
+            loading: () => const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, _) => Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                l.settingsStrangerMessagesUpdateError,
+                style: TextStyle(color: colors.textSecondary),
+              ),
+            ),
+          ),
+        ]),
+      ],
     );
   }
 }

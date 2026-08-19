@@ -106,7 +106,9 @@ class _ReportsContent extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         itemCount: data.reports.length + (data.totalPages > 1 ? 1 : 0),
         separatorBuilder: (_, index) => SizedBox(
-          height: index == data.reports.length - 1 && data.totalPages > 1 ? 12 : 10,
+          height: index == data.reports.length - 1 && data.totalPages > 1
+              ? 12
+              : 10,
         ),
         itemBuilder: (context, index) {
           if (index == data.reports.length) {
@@ -114,10 +116,14 @@ class _ReportsContent extends ConsumerWidget {
               page: data.page,
               totalPages: data.totalPages,
               onPrevious: data.page > 1
-                  ? () => ref.read(myReportsProvider.notifier).loadPage(data.page - 1)
+                  ? () => ref
+                        .read(myReportsProvider.notifier)
+                        .loadPage(data.page - 1)
                   : null,
               onNext: data.page < data.totalPages
-                  ? () => ref.read(myReportsProvider.notifier).loadPage(data.page + 1)
+                  ? () => ref
+                        .read(myReportsProvider.notifier)
+                        .loadPage(data.page + 1)
                   : null,
             );
           }
@@ -134,46 +140,47 @@ class _ReportCard extends StatelessWidget {
   const _ReportCard({required this.report});
 
   String _targetLabel(AppLocalizations l10n) => switch (report.targetType) {
-        ReportTargetType.user => l10n.myReportsTargetUser,
-        ReportTargetType.tournament => l10n.myReportsTargetTournament,
-        ReportTargetType.match => l10n.myReportsTargetMatch,
-        ReportTargetType.community => l10n.myReportsTargetCommunity,
-      };
+    ReportTargetType.user => l10n.myReportsTargetUser,
+    ReportTargetType.tournament => l10n.myReportsTargetTournament,
+    ReportTargetType.match => l10n.myReportsTargetMatch,
+    ReportTargetType.community => l10n.myReportsTargetCommunity,
+  };
 
   String _categoryLabel(AppLocalizations l10n) => switch (report.category) {
-        ReportCategory.cheating => l10n.myReportsCategoryCheating,
-        ReportCategory.ruleViolation => l10n.myReportsCategoryRuleViolation,
-        ReportCategory.abusiveBehavior => l10n.myReportsCategoryAbusiveBehavior,
-        ReportCategory.fakeInformation => l10n.myReportsCategoryFakeInformation,
-        ReportCategory.paymentFraud => l10n.myReportsCategoryPaymentFraud,
-        ReportCategory.unsafeOrganization => l10n.myReportsCategoryUnsafeOrganization,
-        ReportCategory.other => l10n.myReportsCategoryOther,
-      };
+    ReportCategory.cheating => l10n.myReportsCategoryCheating,
+    ReportCategory.ruleViolation => l10n.myReportsCategoryRuleViolation,
+    ReportCategory.abusiveBehavior => l10n.myReportsCategoryAbusiveBehavior,
+    ReportCategory.fakeInformation => l10n.myReportsCategoryFakeInformation,
+    ReportCategory.paymentFraud => l10n.myReportsCategoryPaymentFraud,
+    ReportCategory.unsafeOrganization =>
+      l10n.myReportsCategoryUnsafeOrganization,
+    ReportCategory.other => l10n.myReportsCategoryOther,
+  };
 
   String _statusLabel(AppLocalizations l10n) => switch (report.status) {
-        ReportStatus.submitted => l10n.myReportsStatusSubmitted,
-        ReportStatus.triaged => l10n.myReportsStatusTriaged,
-        ReportStatus.underReview => l10n.myReportsStatusUnderReview,
-        ReportStatus.escalated => l10n.myReportsStatusEscalated,
-        ReportStatus.resolved => l10n.myReportsStatusResolved,
-        ReportStatus.rejected => l10n.myReportsStatusRejected,
-      };
+    ReportStatus.submitted => l10n.myReportsStatusSubmitted,
+    ReportStatus.triaged => l10n.myReportsStatusTriaged,
+    ReportStatus.underReview => l10n.myReportsStatusUnderReview,
+    ReportStatus.escalated => l10n.myReportsStatusEscalated,
+    ReportStatus.resolved => l10n.myReportsStatusResolved,
+    ReportStatus.rejected => l10n.myReportsStatusRejected,
+  };
 
   Color _statusColor() => switch (report.status) {
-        ReportStatus.submitted => Colors.blue,
-        ReportStatus.triaged => Colors.indigo,
-        ReportStatus.underReview => Colors.orange,
-        ReportStatus.escalated => Colors.deepOrange,
-        ReportStatus.resolved => Colors.green,
-        ReportStatus.rejected => Colors.red,
-      };
+    ReportStatus.submitted => Colors.blue,
+    ReportStatus.triaged => Colors.indigo,
+    ReportStatus.underReview => Colors.orange,
+    ReportStatus.escalated => Colors.deepOrange,
+    ReportStatus.resolved => Colors.green,
+    ReportStatus.rejected => Colors.red,
+  };
 
   String? _targetRoute() => switch (report.targetType) {
-        ReportTargetType.user => '/profile/user/${report.targetId}',
-        ReportTargetType.tournament => '/tournaments/${report.targetId}',
-        ReportTargetType.match => '/live/${report.targetId}',
-        ReportTargetType.community => '/communities/${report.targetId}',
-      };
+    ReportTargetType.user => '/profile/user/${report.targetId}',
+    ReportTargetType.tournament => '/tournaments/${report.targetId}',
+    ReportTargetType.match => '/live/${report.targetId}',
+    ReportTargetType.community => '/communities/${report.targetId}',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -181,14 +188,14 @@ class _ReportCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final date = report.createdAt == null
         ? l10n.myReportsUnknownDate
-        : DateFormat.yMd(Localizations.localeOf(context).languageCode)
-            .add_jm()
-            .format(report.createdAt!.toLocal());
+        : DateFormat.yMd(
+            Localizations.localeOf(context).languageCode,
+          ).add_jm().format(report.createdAt!.toLocal());
     final targetName = report.target?.name.isNotEmpty == true
         ? report.target!.name
         : report.targetId.length > 8
-            ? report.targetId.substring(0, 8)
-            : report.targetId;
+        ? report.targetId.substring(0, 8)
+        : report.targetId;
     final route = _targetRoute();
     final statusColor = _statusColor();
 
@@ -210,8 +217,14 @@ class _ReportCard extends StatelessWidget {
               runSpacing: 8,
               children: [
                 _Badge(label: _statusLabel(l10n), color: statusColor),
-                _MetaLabel(label: _targetLabel(l10n), color: colors.textSecondary),
-                _MetaLabel(label: _categoryLabel(l10n), color: colors.textSecondary),
+                _MetaLabel(
+                  label: _targetLabel(l10n),
+                  color: colors.textSecondary,
+                ),
+                _MetaLabel(
+                  label: _categoryLabel(l10n),
+                  color: colors.textSecondary,
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -320,11 +333,7 @@ class _MetaLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label,
-      style: TextStyle(
-        color: color,
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
-      ),
+      style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700),
     );
   }
 }
@@ -392,7 +401,10 @@ class _ErrorState extends StatelessWidget {
             Text(
               l10n.myReportsLoadError,
               textAlign: TextAlign.center,
-              style: TextStyle(color: colors.error, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                color: colors.error,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             if (message.isNotEmpty) ...[
               const SizedBox(height: 6),

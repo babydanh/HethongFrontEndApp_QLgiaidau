@@ -11,11 +11,10 @@ class ApiReportRepository implements IReportRepository {
   ApiReportRepository(this._dioClient);
 
   @override
-  Future<ViolationReportPage> getMine({
-    String? cursor,
-    int limit = 10,
-  }) async {
-    _log.info('Lấy báo cáo của người dùng: cursor=${cursor != null}, limit=$limit');
+  Future<ViolationReportPage> getMine({String? cursor, int limit = 10}) async {
+    _log.info(
+      'Lấy báo cáo của người dùng: cursor=${cursor != null}, limit=$limit',
+    );
     try {
       final response = await _dioClient.dio.get(
         '/users/reports/me',
@@ -35,16 +34,18 @@ class ApiReportRepository implements IReportRepository {
       final list = data is List
           ? data
           : data is Map && data['data'] is List
-              ? data['data'] as List
-              : const <dynamic>[];
+          ? data['data'] as List
+          : const <dynamic>[];
       final meta = raw['meta'] is Map
           ? Map<String, dynamic>.from(raw['meta'] as Map)
           : data is Map && data['meta'] is Map
-              ? Map<String, dynamic>.from(data['meta'] as Map)
-              : const <String, dynamic>{};
+          ? Map<String, dynamic>.from(data['meta'] as Map)
+          : const <String, dynamic>{};
       final items = list
           .whereType<Map>()
-          .map((item) => ViolationReport.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) => ViolationReport.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList(growable: false);
 
       return ViolationReportPage(
@@ -55,10 +56,12 @@ class ApiReportRepository implements IReportRepository {
     } catch (error, stack) {
       _log.error('Lỗi lấy lịch sử báo cáo', error, stack);
       if (error is DioException) {
-        throw Exception(_parseNestJsError(
-          error.response?.data,
-          error.message ?? 'Lỗi kết nối đến máy chủ',
-        ));
+        throw Exception(
+          _parseNestJsError(
+            error.response?.data,
+            error.message ?? 'Lỗi kết nối đến máy chủ',
+          ),
+        );
       }
       rethrow;
     }

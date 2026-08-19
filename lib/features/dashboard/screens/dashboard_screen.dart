@@ -67,7 +67,10 @@ class DashboardScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
                 Text(
                   l10n.dashboard_loginPrompt,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
@@ -113,7 +116,9 @@ class DashboardScreen extends ConsumerWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1180),
               child: Padding(
-                padding: AppResponsive.padding(MediaQuery.sizeOf(context).width),
+                padding: AppResponsive.padding(
+                  MediaQuery.sizeOf(context).width,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -130,9 +135,8 @@ class DashboardScreen extends ConsumerWidget {
                             .read(myTournamentWorkspaceProvider.notifier)
                             .refresh(),
                       ),
-                      data: (workspace) => _WorkspaceDashboardContent(
-                        workspace: workspace,
-                      ),
+                      data: (workspace) =>
+                          _WorkspaceDashboardContent(workspace: workspace),
                     ),
                     const SizedBox(height: 16),
                     _QuickActions(),
@@ -212,9 +216,7 @@ class _DashboardHeader extends StatelessWidget {
     final footballTeams = footballTeamsAsync.asData?.value ?? const [];
     final bestFootballTeam = footballTeams.isEmpty
         ? null
-        : footballTeams.reduce(
-            (a, b) => a.eloPoints >= b.eloPoints ? a : b,
-          );
+        : footballTeams.reduce((a, b) => a.eloPoints >= b.eloPoints ? a : b);
 
     return EloProgressCard(
       userName: name,
@@ -421,7 +423,9 @@ class _AssignedMatchesSection extends StatelessWidget {
     final matches = workspace.refereeMatches.take(3).toList();
     return _SectionCard(
       title: l10n.dashboard_assignedMatches,
-      actionLabel: workspace.refereeMatches.isNotEmpty ? l10n.dashboard_viewInvites : null,
+      actionLabel: workspace.refereeMatches.isNotEmpty
+          ? l10n.dashboard_viewInvites
+          : null,
       onTap: workspace.refereeMatches.isNotEmpty
           ? () => context.push('/referee/invites')
           : null,
@@ -449,7 +453,10 @@ class _AssignedMatchesSection extends StatelessWidget {
     );
   }
 
-  String _formatMatchMeta(TournamentAssignedMatch match, AppLocalizations l10n) {
+  String _formatMatchMeta(
+    TournamentAssignedMatch match,
+    AppLocalizations l10n,
+  ) {
     final parts = <String>[];
     if (match.courtName.isNotEmpty) {
       parts.add(match.courtName);
@@ -469,10 +476,12 @@ class _UnifiedTournamentsSection extends StatefulWidget {
   final TournamentWorkspace workspace;
 
   @override
-  State<_UnifiedTournamentsSection> createState() => _UnifiedTournamentsSectionState();
+  State<_UnifiedTournamentsSection> createState() =>
+      _UnifiedTournamentsSectionState();
 }
 
-class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> {
+class _UnifiedTournamentsSectionState
+    extends State<_UnifiedTournamentsSection> {
   bool _isExpanded = false;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -573,7 +582,11 @@ class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> 
                 decoration: InputDecoration(
                   hintText: l10n.dashboard_searchHint,
                   hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
-                  prefixIcon: Icon(Icons.search_rounded, size: 18, color: colors.textMuted),
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    size: 18,
+                    color: colors.textMuted,
+                  ),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear_rounded, size: 16),
@@ -598,13 +611,20 @@ class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> 
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.emoji_events_outlined, size: 36, color: colors.textMuted),
+                    Icon(
+                      Icons.emoji_events_outlined,
+                      size: 36,
+                      color: colors.textMuted,
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       _searchQuery.isNotEmpty
                           ? l10n.dashboard_noSearchResults
                           : l10n.dashboard_noTournaments,
-                      style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -613,9 +633,15 @@ class _UnifiedTournamentsSectionState extends State<_UnifiedTournamentsSection> 
           else ...[
             Column(
               children: visibleTournaments.map((tournament) {
-                final isOwner = workspace.organizedTournaments.any((item) => item.id == tournament.id);
-                final isCoOrg = workspace.coOrganizerTournaments.any((item) => item.id == tournament.id);
-                final isParticipant = workspace.participatingTournaments.any((item) => item.id == tournament.id);
+                final isOwner = workspace.organizedTournaments.any(
+                  (item) => item.id == tournament.id,
+                );
+                final isCoOrg = workspace.coOrganizerTournaments.any(
+                  (item) => item.id == tournament.id,
+                );
+                final isParticipant = workspace.participatingTournaments.any(
+                  (item) => item.id == tournament.id,
+                );
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -695,8 +721,8 @@ class _QuickActions extends ConsumerWidget {
           const SizedBox(height: 16),
           _QuickActionRow(
             icon: Icons.bolt_rounded,
-            title: 'Tạo giải nhanh',
-            subtitle: 'Tạo nhanh trên app, quản lý đầy đủ trên web',
+            title: l10n.dashboard_createLite,
+            subtitle: l10n.dashboard_createLiteSub,
             onTap: () => _openLiteCreation(context),
           ),
           const Divider(height: 24),
@@ -708,9 +734,30 @@ class _QuickActions extends ConsumerWidget {
           ),
           const Divider(height: 24),
           _QuickActionRow(
+            icon: Icons.leaderboard_rounded,
+            title: l10n.dashboardRankings,
+            subtitle: l10n.dashboardRankingsSub,
+            onTap: () => context.push('/rankings'),
+          ),
+          const Divider(height: 24),
+          _QuickActionRow(
+            icon: Icons.chat_bubble_outline_rounded,
+            title: l10n.dashboardChat,
+            subtitle: l10n.dashboardChatSub,
+            onTap: () => context.push('/chat'),
+          ),
+          const Divider(height: 24),
+          _QuickActionRow(
+            icon: Icons.flag_outlined,
+            title: l10n.dashboardReports,
+            subtitle: l10n.dashboardReportsSub,
+            onTap: () => context.push('/profile/reports'),
+          ),
+          const Divider(height: 24),
+          _QuickActionRow(
             icon: Icons.sports_soccer_rounded,
-            title: 'Đội bóng của tôi',
-            subtitle: 'Quản lý đội hình và ELO bóng đá',
+            title: l10n.dashboardFootballTeams,
+            subtitle: l10n.dashboardFootballTeamsSub,
             onTap: () => context.push('/football-teams'),
           ),
           const Divider(height: 24),
@@ -1006,25 +1053,25 @@ class _TournamentTile extends StatelessWidget {
     }
 
     return InkWell(
-        onTap: () {
-          if (isOwner || isCoOrg) {
-            if (isClubLite) {
-              context.push('/lite-manage/${tournament.id}');
-            } else {
-              showDialog<void>(
-                context: context,
-                builder: (dialogContext) => AlertDialog(
-                  title: Text(l10n.dashboard_manageAdvancedTitle),
-                  content: Text(l10n.dashboard_manageAdvancedContent),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      child: Text(l10n.dashboard_gotIt),
-                    ),
-                  ],
-                ),
-              );
-            }
+      onTap: () {
+        if (isOwner || isCoOrg) {
+          if (isClubLite) {
+            context.push('/lite-manage/${tournament.id}');
+          } else {
+            showDialog<void>(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: Text(l10n.dashboard_manageAdvancedTitle),
+                content: Text(l10n.dashboard_manageAdvancedContent),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: Text(l10n.dashboard_gotIt),
+                  ),
+                ],
+              ),
+            );
+          }
         } else {
           context.push('/intro/${tournament.id}');
         }
@@ -1048,18 +1095,25 @@ class _TournamentTile extends StatelessWidget {
                 border: Border.all(color: colors.border),
               ),
               clipBehavior: Clip.antiAlias,
-              child: (tournament.logoUrl != null && tournament.logoUrl!.isNotEmpty)
+              child:
+                  (tournament.logoUrl != null && tournament.logoUrl!.isNotEmpty)
                   ? Image.network(
                       tournament.logoUrl!,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Padding(
                         padding: const EdgeInsets.all(8),
-                        child: Image.asset('assets/images/sporto_v1_with_text.png', fit: BoxFit.contain),
+                        child: Image.asset(
+                          'assets/images/sporto_v1_with_text.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     )
                   : Padding(
                       padding: const EdgeInsets.all(8),
-                      child: Image.asset('assets/images/sporto_v1_with_text.png', fit: BoxFit.contain),
+                      child: Image.asset(
+                        'assets/images/sporto_v1_with_text.png',
+                        fit: BoxFit.contain,
+                      ),
                     ),
             ),
             const SizedBox(width: 12),
@@ -1067,8 +1121,8 @@ class _TournamentTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Text(
-                     tournament.name,
+                  Text(
+                    tournament.name,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
@@ -1076,7 +1130,7 @@ class _TournamentTile extends StatelessWidget {
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                   ),
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     isClubLite
@@ -1094,7 +1148,10 @@ class _TournamentTile extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: badgeBg,
                           borderRadius: BorderRadius.circular(6),
@@ -1113,7 +1170,10 @@ class _TournamentTile extends StatelessWidget {
                       Flexible(
                         child: Text(
                           _buildTournamentMeta(tournament, l10n),
-                          style: TextStyle(fontSize: 11, color: colors.textMuted),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colors.textMuted,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1260,4 +1320,3 @@ class _DashboardErrorCard extends StatelessWidget {
     );
   }
 }
-

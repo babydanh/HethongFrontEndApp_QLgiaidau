@@ -1640,6 +1640,21 @@
   "myReportsResolutionNote": "Ghi chú xử lý",
   "myReportsPageCount": "Trang {page}/{totalPages}",
   "myReportsPreviousPage": "Trang trước",
-  "myReportsNextPage": "Trang sau"
+  "myReportsNextPage": "Trang sau",
+  "settingsPrivacyTitle": "Quyền riêng tư",
+  "settingsStrangerMessages": "Tin nhắn từ người lạ",
+  "settingsStrangerMessagesDescription": "Cho phép người chưa kết nối với bạn bắt đầu cuộc trò chuyện.",
+  "settingsStrangerMessagesOn": "Đang cho phép",
+  "settingsStrangerMessagesOff": "Đang chặn",
+  "settingsStrangerMessagesUpdated": "Đã cập nhật quyền nhận tin nhắn",
+  "settingsStrangerMessagesUpdateError": "Không thể cập nhật quyền nhận tin nhắn",
+  "dashboardRankings": "Bảng xếp hạng công khai",
+  "dashboardRankingsSub": "Theo dõi thứ hạng và phong độ người chơi",
+  "dashboardChat": "Tin nhắn",
+  "dashboardChatSub": "Trò chuyện với người chơi và câu lạc bộ",
+  "dashboardReports": "Lịch sử báo cáo",
+  "dashboardReportsSub": "Theo dõi các báo cáo bạn đã gửi",
+  "dashboardFootballTeams": "Đội bóng của tôi",
+  "dashboardFootballTeamsSub": "Quản lý đội hình và ELO bóng đá"
 }
 

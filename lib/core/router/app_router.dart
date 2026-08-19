@@ -37,6 +37,7 @@ import 'package:app_quanly_giaidau/features/profile/screens/settings_screen.dart
 import 'package:app_quanly_giaidau/features/profile/screens/change_password_screen.dart';
 import 'package:app_quanly_giaidau/features/reports/screens/my_reports_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
+import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/admin/screens/admin_clubs_screen.dart';
 import 'package:app_quanly_giaidau/features/admin/screens/change_requests_screen.dart';
@@ -113,6 +114,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           !currentPath.startsWith('/chat') &&
           !currentPath.startsWith('/user') &&
           !currentPath.startsWith('/series') &&
+          !currentPath.startsWith('/rankings') &&
           !isPublicRegistrationRoute) {
         return '/home';
       }
@@ -180,6 +182,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           final initialTab = int.tryParse(tabStr ?? '') ?? 0;
           return HomeScreen(initialTab: initialTab);
         },
+      ),
+
+      // ─── Public Leaderboard ───
+      GoRoute(
+        path: '/rankings',
+        builder: (context, state) => LeaderboardScreen(
+          standalone: true,
+          selectedSport: state.uri.queryParameters['sport'] ?? 'all',
+          searchQuery: state.uri.queryParameters['q'] ?? '',
+        ),
       ),
 
       // ─── QR Scanner ───
@@ -503,7 +515,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final id = state.pathParameters['id']!;
               final name = state.uri.queryParameters['name'] ?? 'Cộng đồng';
-              return CommunitySocialScreen(communityId: id, communityName: name);
+              return CommunitySocialScreen(
+                communityId: id,
+                communityName: name,
+              );
             },
           ),
         ],
@@ -669,8 +684,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             categoryId: state.uri.queryParameters['categoryId'],
             inviteCode: state.uri.queryParameters['invite'],
             participantId: state.uri.queryParameters['participantId'],
-            teamSize: int.tryParse(state.uri.queryParameters['teamSize'] ?? '') ?? 7,
-            maxReserve: int.tryParse(state.uri.queryParameters['maxReserve'] ?? '') ?? 0,
+            teamSize:
+                int.tryParse(state.uri.queryParameters['teamSize'] ?? '') ?? 7,
+            maxReserve:
+                int.tryParse(state.uri.queryParameters['maxReserve'] ?? '') ??
+                0,
           );
         },
       ),
