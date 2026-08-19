@@ -25,6 +25,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/community_social_s
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_social_screen.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 
 class ClubDetailScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -2377,7 +2378,13 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         children: [
           GestureDetector(
             onTap: canViewProfile
-                ? () => context.push('/profile/user/${m.userId}')
+                ? () => UserProfileBottomSheet.show(
+                    context,
+                    userId: m.userId,
+                    communityId: widget.clubId,
+                    initialFullName: m.userFullName,
+                    initialAvatarUrl: m.userAvatarUrl,
+                  )
                 : null,
             child: _buildUserAvatar(
               name: m.userFullName,
@@ -2390,7 +2397,13 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           Expanded(
             child: GestureDetector(
               onTap: canViewProfile
-                  ? () => context.push('/profile/user/${m.userId}')
+                  ? () => UserProfileBottomSheet.show(
+                      context,
+                      userId: m.userId,
+                      communityId: widget.clubId,
+                      initialFullName: m.userFullName,
+                      initialAvatarUrl: m.userAvatarUrl,
+                    )
                   : null,
               behavior: HitTestBehavior.opaque,
               child: Column(

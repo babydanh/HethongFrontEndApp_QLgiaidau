@@ -32,6 +32,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   List<CommunityMemberModel> _invitedMembers = [];
   List<CommunityMemberModel> _bannedMembers = [];
   List<CommunityPostModel> _pendingPosts = [];
+  List<CommunityReportModel> _reports = [];
   bool _isLoading = true;
   bool _isModeratingPost = false;
 
@@ -61,15 +62,18 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
         repo.getMembers(widget.clubId, limit: 200),
         repo.getJoinRequests(widget.clubId),
         ref.read(communitySocialRepositoryProvider).getPendingPosts(widget.clubId),
+        ref.read(communitySocialRepositoryProvider).getReports(widget.clubId),
       ]);
       final all = results[0] as List<CommunityMemberModel>;
       final requests = results[1] as List<CommunityMemberModel>;
       final pendingPosts = results[2] as List<CommunityPostModel>;
+      final reports = results[3] as List<CommunityReportModel>;
 
       setState(() {
         _allMembers = all;
         _joinRequests = requests.where((r) => r.status == 'PENDING').toList();
         _pendingPosts = pendingPosts;
+        _reports = reports;
         _invitedMembers = all.where((m) => m.status.toUpperCase() == 'INVITED').toList();
         _bannedMembers = all.where((m) => m.status.toUpperCase() == 'BANNED').toList();
         _isLoading = false;
@@ -118,6 +122,8 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                   _buildStatsRow(colors),
                   const SizedBox(height: 16),
                   _buildPendingPostsSection(colors),
+                  const SizedBox(height: 16),
+                  _buildReportsSection(colors),
                   const SizedBox(height: 16),
                   _buildTournamentsManagementSection(colors),
                   const SizedBox(height: 16),
@@ -199,6 +205,65 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không thể xử lý bài viết.')));
     } finally {
       if (mounted) setState(() => _isModeratingPost = false);
+    }
+  }
+
+  Widget _buildReportsSection(AppColorsExtension colors) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: colors.bgCard, borderRadius: BorderRadius.circular(20), border: Border.all(color: colors.border)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        _sectionHeader('Báo cáo bài viết (${_reports.length})', const Color(0xFFEF4444), colors),
+        const SizedBox(height: 10),
+        if (_reports.isEmpty)
+          Text('Không có báo cáo đang chờ xử lý.', style: TextStyle(color: colors.textMuted, fontSize: 12))
+        else
+          ..._reports.map((report) => _buildReportCard(report, colors)),
+      ]),
+    );
+  }
+
+  Widget _buildReportCard(CommunityReportModel report, AppColorsExtension colors) {
+    final reason = const {
+      'SPAM': 'Spam / quảng cáo',
+      'HARASSMENT': 'Quấy rối / xúc phạm',
+      'HATE': 'Thù ghét / phân biệt',
+      'SEXUAL': 'Nội dung phản cảm',
+      'VIOLENCE': 'Bạo lực / đe doạ',
+      'OTHER': 'Lý do khác',
+    }[report.reason] ?? report.reason;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(10), border: Border.all(color: colors.borderLight)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(reason, style: TextStyle(fontWeight: FontWeight.w700, color: colors.textPrimary)),
+        const SizedBox(height: 3),
+        Text('Báo cáo bởi ${report.reporterName}${report.reporterEmail == null ? '' : ' · ${report.reporterEmail}'}', style: TextStyle(color: colors.textMuted, fontSize: 11)),
+        if (report.details != null) ...[
+          const SizedBox(height: 6),
+          Text(report.details!, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.textSecondary, fontSize: 12)),
+        ],
+        const SizedBox(height: 6),
+        Text('Bài của ${report.postAuthorName}: ${report.postText}', maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.textSecondary, fontSize: 12)),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(child: OutlinedButton(onPressed: () => _updateReport(report, 'DISMISSED'), child: const Text('Bỏ qua'))),
+          const SizedBox(width: 8),
+          Expanded(child: FilledButton(onPressed: () => _updateReport(report, 'RESOLVED'), child: const Text('Đã xử lý'))),
+        ]),
+      ]),
+    );
+  }
+
+  Future<void> _updateReport(CommunityReportModel report, String status) async {
+    try {
+      await ref.read(communitySocialRepositoryProvider).updateReportStatus(widget.clubId, report.id, status: status);
+      if (!mounted) return;
+      setState(() => _reports.removeWhere((item) => item.id == report.id));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(status == 'RESOLVED' ? 'Đã ghi nhận xử lý báo cáo.' : 'Đã bỏ qua báo cáo.')));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không thể cập nhật báo cáo.')));
     }
   }
 

@@ -200,7 +200,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final id = state.pathParameters['id']!;
               final name = state.uri.queryParameters['name'] ?? 'Cộng đồng';
-              return CommunitySocialScreen(communityId: id, communityName: name);
+              return CommunitySocialScreen(
+                communityId: id,
+                communityName: name,
+                targetPostId: state.uri.queryParameters['postId'],
+              );
             },
           ),
           GoRoute(

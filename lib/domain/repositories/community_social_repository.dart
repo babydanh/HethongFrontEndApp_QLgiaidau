@@ -36,6 +36,10 @@ abstract class ICommunitySocialRepository {
 
   Future<List<CommunityPostModel>> getPendingPosts(String communityId);
 
+  Future<List<CommunityReportModel>> getReports(String communityId, {String status = 'OPEN'});
+
+  Future<void> updateReportStatus(String communityId, String reportId, {required String status});
+
   Future<void> moderatePost(
     String communityId,
     String postId, {

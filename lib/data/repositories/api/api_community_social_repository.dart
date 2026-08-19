@@ -170,6 +170,26 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
   }
 
   @override
+  Future<List<CommunityReportModel>> getReports(String communityId, {String status = 'OPEN'}) async {
+    final response = await _dioClient.dio.get(
+      '/communities/$communityId/moderation/reports',
+      queryParameters: {'status': status},
+    );
+    final payload = _asMap(response.data);
+    final raw = payload['data'] ?? payload;
+    if (raw is! List) return const [];
+    return raw.map(_asMap).map(CommunityReportModel.fromJson).where((item) => item.id.isNotEmpty).toList(growable: false);
+  }
+
+  @override
+  Future<void> updateReportStatus(String communityId, String reportId, {required String status}) async {
+    await _dioClient.dio.patch(
+      '/communities/$communityId/moderation/reports/$reportId',
+      data: {'status': status},
+    );
+  }
+
+  @override
   Future<void> moderatePost(
     String communityId,
     String postId, {

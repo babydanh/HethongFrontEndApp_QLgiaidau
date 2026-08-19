@@ -85,6 +85,11 @@ class AppNotification {
       case 'CLUB_INVITE':
         return communityId == null ? null : '/club/$communityId';
 
+      case 'COMMUNITY_POST_MENTIONED':
+      case 'COMMUNITY_POST_COMMENTED':
+        return _normalizeRedirectUrl(redirectUrl) ??
+            (communityId == null ? null : '/club/$communityId');
+
       case 'DOUBLES_TEAM_INVITE':
         if (tournamentId != null) return '/register/$tournamentId/doubles';
         return null;
@@ -181,9 +186,19 @@ class AppNotification {
     if (segments.length >= 2 && segments[0] == 'matches') {
       return '/live/${segments[1]}';
     }
-    if (segments.length >= 2 &&
-        (segments[0] == 'communities' || segments[0] == 'clubs')) {
-      return '/club/${segments[1]}';
+    if (segments.length >= 2 && segments[0] == 'communities') {
+      final postId = uri.queryParameters['postId'];
+      final query = postId == null || postId.isEmpty
+          ? ''
+          : '?postId=${Uri.encodeQueryComponent(postId)}';
+      return '/communities/${segments[1]}/social$query';
+    }
+    if (segments.length >= 2 && segments[0] == 'clubs') {
+      final postId = uri.queryParameters['postId'];
+      final query = postId == null || postId.isEmpty
+          ? ''
+          : '?postId=${Uri.encodeQueryComponent(postId)}';
+      return '/communities/${segments[1]}/social$query';
     }
     if (path == '/reset-password') {
       final token = uri.queryParameters['token'];

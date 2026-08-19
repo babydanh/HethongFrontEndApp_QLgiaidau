@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/features/community/social/widgets/community_c
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_post_composer_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_post_card.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/tag_assign_sheet.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -19,12 +20,14 @@ class CommunitySocialScreen extends ConsumerStatefulWidget {
   final String communityId;
   final String communityName;
   final bool showHeader;
+  final String? targetPostId;
 
   const CommunitySocialScreen({
     super.key,
     required this.communityId,
     required this.communityName,
     this.showHeader = true,
+    this.targetPostId,
   });
 
   @override
@@ -36,13 +39,41 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
   @override
   void initState() {
     super.initState();
-    Future<void>.microtask(() {
-      if (mounted)
-        ref
-            .read(communityFeedProvider(widget.communityId).notifier)
-            .loadInitial();
+    Future<void>.microtask(() async {
+      await ref
+          .read(communityFeedProvider(widget.communityId).notifier)
+          .loadInitial();
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _scrollToTargetPost();
+        });
+      }
     });
   }
+
+  void _scrollToTargetPost() {
+    final targetPostId = widget.targetPostId;
+    if (targetPostId == null || targetPostId.isEmpty) return;
+    final key = _postKeys[targetPostId];
+    if (key?.currentContext != null) {
+      Scrollable.ensureVisible(
+        key!.currentContext!,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOut,
+        alignment: 0.18,
+      );
+      return;
+    }
+    final feed = ref.read(communityFeedProvider(widget.communityId));
+    if (feed.hasMore && !feed.isLoading) {
+      Future<void>.microtask(() async {
+        await ref.read(communityFeedProvider(widget.communityId).notifier).loadMore();
+        if (mounted) _scrollToTargetPost();
+      });
+    }
+  }
+
+  final Map<String, GlobalKey> _postKeys = <String, GlobalKey>{};
 
   /// Gắn controller riêng vào ListView bên trong NestedScrollView sẽ phá vỡ
   /// phối hợp scroll (2 list scroll riêng). Dùng notification để loadMore —
@@ -126,15 +157,17 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
       await ref
           .read(communityFeedProvider(widget.communityId).notifier)
           .loadInitial();
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Đã xóa bài viết.')));
+      }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Không thể xóa bài viết.')),
         );
+      }
     }
   }
 
@@ -268,27 +301,35 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                   child: const _FeedEmpty(),
                 ),
               ...state.posts.map(
-                (post) => CommunityPostCard(
-                  post: post,
-                  communityId: widget.communityId,
-                  commentsEnabled: socialSettings.commentsEnabled,
-                  onReact: (reaction) => ref
-                      .read(communityFeedProvider(widget.communityId).notifier)
-                      .reactToPost(post.id, reaction),
-                  currentUserId: currentUserId,
-                  canModerateComments: isModerator,
-                  onCommentUpdated: () => ref
-                      .read(communityFeedProvider(widget.communityId).notifier)
-                      .loadInitial(),
-                  onAuthorTap: post.authorId.isEmpty
-                      ? null
-                      : () => context.push(
-                          '/profile/user/${post.authorId}?communityId=${widget.communityId}'),
-                  onDelete:
-                      (currentUserId.isNotEmpty &&
-                          (post.authorId == currentUserId || isModerator))
-                      ? () => _confirmDeletePost(post.id)
-                      : null,
+                (post) => KeyedSubtree(
+                  key: _postKeys.putIfAbsent(post.id, GlobalKey.new),
+                  child: CommunityPostCard(
+                    post: post,
+                    communityId: widget.communityId,
+                    commentsEnabled: socialSettings.commentsEnabled,
+                    onReact: (reaction) => ref
+                        .read(communityFeedProvider(widget.communityId).notifier)
+                        .reactToPost(post.id, reaction),
+                    currentUserId: currentUserId,
+                    canModerateComments: isModerator,
+                    onCommentUpdated: () => ref
+                        .read(communityFeedProvider(widget.communityId).notifier)
+                        .loadInitial(),
+                    onAuthorTap: post.authorId.isEmpty
+                        ? null
+                        : () => UserProfileBottomSheet.show(
+                            context,
+                            userId: post.authorId,
+                            communityId: widget.communityId,
+                            initialFullName: post.authorName,
+                            initialAvatarUrl: post.authorAvatarUrl,
+                          ),
+                    onDelete:
+                        (currentUserId.isNotEmpty &&
+                            (post.authorId == currentUserId || isModerator))
+                        ? () => _confirmDeletePost(post.id)
+                        : null,
+                  ),
                 ),
               ),
               if (state.isLoading && state.posts.isNotEmpty)

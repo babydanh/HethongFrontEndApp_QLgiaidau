@@ -183,6 +183,47 @@ class CommunityPostModel {
   }
 }
 
+class CommunityReportModel {
+  final String id;
+  final String reason;
+  final String? details;
+  final String status;
+  final DateTime? createdAt;
+  final String reporterName;
+  final String? reporterEmail;
+  final String postText;
+  final String postAuthorName;
+
+  const CommunityReportModel({
+    required this.id,
+    required this.reason,
+    required this.status,
+    required this.reporterName,
+    required this.postText,
+    required this.postAuthorName,
+    this.details,
+    this.createdAt,
+    this.reporterEmail,
+  });
+
+  factory CommunityReportModel.fromJson(Map<String, dynamic> json) {
+    final report = _asMap(json['report']);
+    final post = _asMap(json['post']);
+    final reporter = _asMap(json['reporter']);
+    return CommunityReportModel(
+      id: _asString(report['id'] ?? json['id']) ?? '',
+      reason: _asString(report['reason'] ?? json['reason']) ?? 'OTHER',
+      details: _asString(report['details'] ?? json['details']),
+      status: _asString(report['status'] ?? json['status']) ?? 'OPEN',
+      createdAt: _asDateTime(report['createdAt'] ?? json['createdAt']),
+      reporterName: _asString(reporter['fullName'] ?? reporter['name'] ?? json['reporterName']) ?? 'Thành viên',
+      reporterEmail: _asString(reporter['email'] ?? json['reporterEmail']),
+      postText: _asString(post['text'] ?? post['body'] ?? json['postText']) ?? '',
+      postAuthorName: _asString(post['authorName'] ?? _asMap(post['author'])['fullName'] ?? json['postAuthorName']) ?? 'Thành viên',
+    );
+  }
+}
+
 class CommunityCommentModel {
   final String id;
   final String authorId;

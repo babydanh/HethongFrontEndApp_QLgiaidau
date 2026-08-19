@@ -2,12 +2,11 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 class CommunityCommentSheet extends ConsumerStatefulWidget {
   final String communityId;
@@ -598,8 +597,13 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
           GestureDetector(
             onTap: comment.authorId.isEmpty
                 ? null
-                : () => context.push(
-                    '/profile/user/${comment.authorId}?communityId=${widget.communityId}'),
+                : () => UserProfileBottomSheet.show(
+                    context,
+                    userId: comment.authorId,
+                    communityId: widget.communityId,
+                    initialFullName: comment.authorName,
+                    initialAvatarUrl: comment.authorAvatarUrl,
+                  ),
             child: CircleAvatar(
               radius: isReply ? 14 : 18,
               backgroundColor: AppTheme.primaryLight,
@@ -647,8 +651,13 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                           GestureDetector(
                             onTap: comment.authorId.isEmpty
                                 ? null
-                                : () => context.push(
-                                    '/profile/user/${comment.authorId}?communityId=${widget.communityId}'),
+                                : () => UserProfileBottomSheet.show(
+                                    context,
+                                    userId: comment.authorId,
+                                    communityId: widget.communityId,
+                                    initialFullName: comment.authorName,
+                                    initialAvatarUrl: comment.authorAvatarUrl,
+                                  ),
                             child: Text(
                               comment.authorName,
                               style: TextStyle(
