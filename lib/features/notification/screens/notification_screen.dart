@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/domain/entities/app_notification.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {
@@ -94,6 +95,27 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             );
         ref.invalidate(myCommunityInvitesProvider);
         ref.invalidate(communityDetailProvider(communityId));
+      } else if (notif.isFootballTeamInvite) {
+        final teamId = notif.footballTeamId;
+        if (teamId == null || teamId.isEmpty) {
+          throw StateError('Lời mời đội bóng không có mã đội.');
+        }
+        await ref.read(footballTeamApiProvider).respondToFootballTeamInvite(
+              teamId,
+              accept ? 'ACCEPTED' : 'DECLINED',
+            );
+      } else if (notif.isRefereeInvite) {
+        final uri = Uri.tryParse(notif.redirectUrl ?? '');
+        final tournamentId = uri?.queryParameters['tournamentId'];
+        final refereeId = uri?.queryParameters['refereeId'];
+        if (tournamentId == null || refereeId == null) {
+          throw StateError('Lời mời trọng tài không có đủ thông tin.');
+        }
+        await ref.read(myTournamentWorkspaceProvider.notifier).respondToRefereeInvite(
+              tournamentId: tournamentId,
+              refereeId: refereeId,
+              action: accept ? 'ACCEPT' : 'DECLINE',
+            );
       } else {
         throw StateError('Loại lời mời này chưa có thao tác tương ứng.');
       }
@@ -134,7 +156,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(accept
-                  ? 'Bạn đã là thành viên của câu lạc bộ này.'
+                  ? (notif.isFootballTeamInvite
+                      ? 'Bạn đã là thành viên của đội bóng này.'
+                      : 'Bạn đã là thành viên của câu lạc bộ này.')
                   : 'Lời mời này đã được xử lý trước đó.'),
               backgroundColor: const Color(0xFF059669),
               behavior: SnackBarBehavior.floating,

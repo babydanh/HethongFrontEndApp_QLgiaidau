@@ -53,6 +53,15 @@ class AppNotification {
     return null;
   }
 
+  String? get footballTeamId {
+    final value = data?['teamId'] ?? data?['team_id'];
+    if (value is String && value.isNotEmpty) return value;
+    if (value is num) return value.toString();
+    final uri = Uri.tryParse(redirectUrl ?? '');
+    final queryId = uri?.queryParameters['teamId'];
+    return queryId == null || queryId.isEmpty ? null : queryId;
+  }
+
   /// Đường dẫn đích dựa trên loại thông báo + data
   String? get routeTarget {
     switch (type) {
@@ -81,6 +90,10 @@ class AppNotification {
         return '/profile';
 
       default:
+        if (type.startsWith('FOOTBALL_TEAM_')) {
+          if (footballTeamId != null) return '/football-teams?teamId=$footballTeamId';
+          return _normalizeRedirectUrl(redirectUrl);
+        }
         if (type.contains('MATCH') && matchId != null) {
           return '/live/$matchId';
         }
@@ -116,7 +129,7 @@ class AppNotification {
     final path = uri.path;
     final segments = uri.pathSegments;
 
-    if (path == '/profile' || path == '/notifications') return path;
+    if (path == '/profile' || path == '/notifications' || path == '/football-teams') return raw;
     if (segments.length >= 2 && segments[0] == 'tournaments') {
       final participantId = uri.queryParameters['participantId'];
       if (participantId != null && participantId.isNotEmpty) {
@@ -183,20 +196,24 @@ class AppNotification {
 
   /// Kiểm tra nếu là lời mời trọng tài
   bool get isRefereeInvite {
-    return type == 'REFEREE_INVITE' || type.contains('REFEREE');
+    return type == 'REFEREE_INVITE' || type == 'REFEREE_INVITED';
   }
 
   /// Kiểm tra nếu thông báo có chứa action accept/decline
+  bool get isFootballTeamInvite => type == 'FOOTBALL_TEAM_INVITED';
+
   bool get isInvite {
     return type == 'CLUB_INVITE' ||
         type == 'COMMUNITY_INVITED' ||
         type == 'INVITE' ||
         type == 'PARTNER_INVITE_RECEIVED' ||
+        isFootballTeamInvite ||
         isRefereeInvite;
   }
 
   /// Icon theo loại thông báo
   IconData get icon {
+    if (type.startsWith('FOOTBALL_TEAM_')) return Icons.sports_soccer_rounded;
     switch (type) {
       case 'TOURNAMENT':
       case 'TOURNAMENT_REGISTER_PENDING':
@@ -208,6 +225,7 @@ class AppNotification {
         return Icons.emoji_events_rounded;
       case 'MATCH':
       case 'MATCH_SCHEDULED':
+      case 'MATCH_REMINDER':
       case 'MATCH_COMPLETED':
         return Icons.sports_tennis_rounded;
       case 'PAYMENT':
@@ -225,6 +243,7 @@ class AppNotification {
 
   /// Màu theo loại thông báo
   Color get color {
+    if (type.startsWith('FOOTBALL_TEAM_')) return const Color(0xFF059669);
     switch (type) {
       case 'TOURNAMENT':
       case 'TOURNAMENT_REGISTER_PENDING':
@@ -236,6 +255,7 @@ class AppNotification {
         return const Color(0xFFF59E0B);
       case 'MATCH':
       case 'MATCH_SCHEDULED':
+      case 'MATCH_REMINDER':
       case 'MATCH_COMPLETED':
         return const Color(0xFF2979FF);
       case 'PAYMENT':

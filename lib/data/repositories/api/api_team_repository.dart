@@ -72,6 +72,14 @@ class ApiTeamRepository implements ITeamRepository {
     await _dioClient.dio.delete('/football-teams/$teamId/invites/$userId');
   }
 
+  Future<void> respondToFootballTeamInvite(String teamId, String status) async {
+    _log.info('Responding football team invite: $teamId -> $status');
+    await _dioClient.dio.post(
+      '/football-teams/$teamId/invites/respond',
+      data: {'status': status},
+    );
+  }
+
   Future<void> updateFootballTeamMember(String teamId, String userId, String role) async {
     await _dioClient.dio.patch('/football-teams/$teamId/members/$userId', data: {'role': role});
   }

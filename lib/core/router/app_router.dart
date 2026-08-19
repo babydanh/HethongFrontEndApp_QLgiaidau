@@ -526,7 +526,9 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       GoRoute(
         path: '/football-teams',
-        builder: (context, state) => const FootballTeamsScreen(),
+        builder: (context, state) => FootballTeamsScreen(
+          initialTeamId: state.uri.queryParameters['teamId'],
+        ),
       ),
 
       // ─── Profile & Subroutes ───

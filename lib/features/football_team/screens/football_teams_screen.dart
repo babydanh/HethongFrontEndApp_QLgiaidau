@@ -7,7 +7,9 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
 
 class FootballTeamsScreen extends ConsumerStatefulWidget {
-  const FootballTeamsScreen({super.key});
+  final String? initialTeamId;
+
+  const FootballTeamsScreen({super.key, this.initialTeamId});
   @override
   ConsumerState<FootballTeamsScreen> createState() => _FootballTeamsScreenState();
 }
@@ -41,7 +43,9 @@ class _FootballTeamsScreenState extends ConsumerState<FootballTeamsScreen> {
           ? rawCategories.whereType<Map>().cast<Map<String, dynamic>>().firstWhere((item) => item['isActive'] != false && RegExp(r'football|bóng đá|soccer', caseSensitive: false).hasMatch('${item['name']} ${item['slug']}'), orElse: () => <String, dynamic>{})
           : <String, dynamic>{};
       if (!mounted) return;
-      setState(() { _footballCategoryId = footballCategory['id']?.toString(); _teams = teams.where((team) => team.status == 'ACTIVE').toList(); _selected ??= _teams.firstOrNull; _name.text = _selected?.name ?? ''; });
+      final activeTeams = teams.where((team) => team.status == 'ACTIVE').toList();
+      final requested = activeTeams.where((team) => team.id == widget.initialTeamId).firstOrNull;
+      setState(() { _footballCategoryId = footballCategory['id']?.toString(); _teams = activeTeams; _selected = requested ?? _selected ?? activeTeams.firstOrNull; _name.text = _selected?.name ?? ''; });
     } catch (error) { if (mounted) _showError(error); }
     finally { if (mounted) setState(() => _loading = false); }
   }
