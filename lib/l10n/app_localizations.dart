@@ -7723,6 +7723,198 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã sao chép link tạo giải'**
   String get clubTournamentsLinkCopied;
+
+  /// No description provided for @myReportsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo của tôi'**
+  String get myReportsTitle;
+
+  /// No description provided for @myReportsBack.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quay lại'**
+  String get myReportsBack;
+
+  /// No description provided for @myReportsRefresh.
+  ///
+  /// In vi, this message translates to:
+  /// **'Làm mới báo cáo'**
+  String get myReportsRefresh;
+
+  /// No description provided for @myReportsLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải lịch sử báo cáo'**
+  String get myReportsLoadError;
+
+  /// No description provided for @myReportsRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get myReportsRetry;
+
+  /// No description provided for @myReportsEmptyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa gửi báo cáo nào'**
+  String get myReportsEmptyTitle;
+
+  /// No description provided for @myReportsEmptySubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các báo cáo bạn gửi sẽ được hiển thị tại đây để theo dõi trạng thái xử lý.'**
+  String get myReportsEmptySubtitle;
+
+  /// No description provided for @myReportsStatusSubmitted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi'**
+  String get myReportsStatusSubmitted;
+
+  /// No description provided for @myReportsStatusTriaged.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã phân loại'**
+  String get myReportsStatusTriaged;
+
+  /// No description provided for @myReportsStatusUnderReview.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang xem xét'**
+  String get myReportsStatusUnderReview;
+
+  /// No description provided for @myReportsStatusEscalated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chuyển cấp'**
+  String get myReportsStatusEscalated;
+
+  /// No description provided for @myReportsStatusResolved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã giải quyết'**
+  String get myReportsStatusResolved;
+
+  /// No description provided for @myReportsStatusRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã từ chối'**
+  String get myReportsStatusRejected;
+
+  /// No description provided for @myReportsTargetUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người dùng'**
+  String get myReportsTargetUser;
+
+  /// No description provided for @myReportsTargetTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu'**
+  String get myReportsTargetTournament;
+
+  /// No description provided for @myReportsTargetMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đấu'**
+  String get myReportsTargetMatch;
+
+  /// No description provided for @myReportsTargetCommunity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cộng đồng'**
+  String get myReportsTargetCommunity;
+
+  /// No description provided for @myReportsCategoryCheating.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gian lận'**
+  String get myReportsCategoryCheating;
+
+  /// No description provided for @myReportsCategoryRuleViolation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vi phạm luật'**
+  String get myReportsCategoryRuleViolation;
+
+  /// No description provided for @myReportsCategoryAbusiveBehavior.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hành vi xúc phạm'**
+  String get myReportsCategoryAbusiveBehavior;
+
+  /// No description provided for @myReportsCategoryFakeInformation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin giả mạo'**
+  String get myReportsCategoryFakeInformation;
+
+  /// No description provided for @myReportsCategoryPaymentFraud.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gian lận thanh toán'**
+  String get myReportsCategoryPaymentFraud;
+
+  /// No description provided for @myReportsCategoryUnsafeOrganization.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổ chức không an toàn'**
+  String get myReportsCategoryUnsafeOrganization;
+
+  /// No description provided for @myReportsCategoryOther.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khác'**
+  String get myReportsCategoryOther;
+
+  /// No description provided for @myReportsUnknownTarget.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đối tượng không xác định'**
+  String get myReportsUnknownTarget;
+
+  /// No description provided for @myReportsUnknownDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không rõ thời gian'**
+  String get myReportsUnknownDate;
+
+  /// No description provided for @myReportsViewTarget.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem đối tượng'**
+  String get myReportsViewTarget;
+
+  /// No description provided for @myReportsSentAt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi: {date}'**
+  String myReportsSentAt(Object date);
+
+  /// No description provided for @myReportsResolutionNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú xử lý'**
+  String get myReportsResolutionNote;
+
+  /// No description provided for @myReportsPageCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang {page}/{totalPages}'**
+  String myReportsPageCount(Object page, Object totalPages);
+
+  /// No description provided for @myReportsPreviousPage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang trước'**
+  String get myReportsPreviousPage;
+
+  /// No description provided for @myReportsNextPage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang sau'**
+  String get myReportsNextPage;
 }
 
 class _AppLocalizationsDelegate

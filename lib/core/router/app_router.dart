@@ -35,6 +35,7 @@ import 'package:app_quanly_giaidau/features/profile/screens/profile_screen.dart'
 import 'package:app_quanly_giaidau/features/profile/screens/user_profile_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/settings_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/change_password_screen.dart';
+import 'package:app_quanly_giaidau/features/reports/screens/my_reports_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/admin/screens/admin_clubs_screen.dart';
@@ -551,6 +552,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'settings',
             builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: 'reports',
+            builder: (context, state) => const MyReportsScreen(),
           ),
           GoRoute(
             path: 'elo',

@@ -885,17 +885,6 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     }
   }
 
-  Widget _label(String text, AppColorsExtension colors) {
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w700,
-        color: colors.textSecondary,
-      ),
-    );
-  }
-
   Widget _buildSportSelector() {
     final categories =
         ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];

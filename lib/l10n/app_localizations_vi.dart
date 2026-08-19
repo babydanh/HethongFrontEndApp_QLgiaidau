@@ -4072,4 +4072,105 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get clubTournamentsLinkCopied => 'Đã sao chép link tạo giải';
+
+  @override
+  String get myReportsTitle => 'Báo cáo của tôi';
+
+  @override
+  String get myReportsBack => 'Quay lại';
+
+  @override
+  String get myReportsRefresh => 'Làm mới báo cáo';
+
+  @override
+  String get myReportsLoadError => 'Không thể tải lịch sử báo cáo';
+
+  @override
+  String get myReportsRetry => 'Thử lại';
+
+  @override
+  String get myReportsEmptyTitle => 'Bạn chưa gửi báo cáo nào';
+
+  @override
+  String get myReportsEmptySubtitle =>
+      'Các báo cáo bạn gửi sẽ được hiển thị tại đây để theo dõi trạng thái xử lý.';
+
+  @override
+  String get myReportsStatusSubmitted => 'Đã gửi';
+
+  @override
+  String get myReportsStatusTriaged => 'Đã phân loại';
+
+  @override
+  String get myReportsStatusUnderReview => 'Đang xem xét';
+
+  @override
+  String get myReportsStatusEscalated => 'Đã chuyển cấp';
+
+  @override
+  String get myReportsStatusResolved => 'Đã giải quyết';
+
+  @override
+  String get myReportsStatusRejected => 'Đã từ chối';
+
+  @override
+  String get myReportsTargetUser => 'Người dùng';
+
+  @override
+  String get myReportsTargetTournament => 'Giải đấu';
+
+  @override
+  String get myReportsTargetMatch => 'Trận đấu';
+
+  @override
+  String get myReportsTargetCommunity => 'Cộng đồng';
+
+  @override
+  String get myReportsCategoryCheating => 'Gian lận';
+
+  @override
+  String get myReportsCategoryRuleViolation => 'Vi phạm luật';
+
+  @override
+  String get myReportsCategoryAbusiveBehavior => 'Hành vi xúc phạm';
+
+  @override
+  String get myReportsCategoryFakeInformation => 'Thông tin giả mạo';
+
+  @override
+  String get myReportsCategoryPaymentFraud => 'Gian lận thanh toán';
+
+  @override
+  String get myReportsCategoryUnsafeOrganization => 'Tổ chức không an toàn';
+
+  @override
+  String get myReportsCategoryOther => 'Khác';
+
+  @override
+  String get myReportsUnknownTarget => 'Đối tượng không xác định';
+
+  @override
+  String get myReportsUnknownDate => 'Không rõ thời gian';
+
+  @override
+  String get myReportsViewTarget => 'Xem đối tượng';
+
+  @override
+  String myReportsSentAt(Object date) {
+    return 'Đã gửi: $date';
+  }
+
+  @override
+  String get myReportsResolutionNote => 'Ghi chú xử lý';
+
+  @override
+  String myReportsPageCount(Object page, Object totalPages) {
+    return 'Trang $page/$totalPages';
+  }
+
+  @override
+  String get myReportsPreviousPage => 'Trang trước';
+
+  @override
+  String get myReportsNextPage => 'Trang sau';
 }

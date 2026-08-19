@@ -1483,6 +1483,20 @@ class _SecurityTab extends ConsumerWidget {
           const _ClubNotificationSettingsCard(),
           const SizedBox(height: 24),
 
+          // Báo cáo của tôi
+          _sectionTitle(colors, 'An toàn cộng đồng'),
+          const SizedBox(height: 10),
+          _card(colors, [
+            _actionRow(
+              colors,
+              icon: Icons.flag_outlined,
+              title: 'Báo cáo của tôi',
+              subtitle: 'Theo dõi trạng thái và kết quả xử lý báo cáo',
+              onTap: () => context.push('/profile/reports'),
+            ),
+          ]),
+          const SizedBox(height: 24),
+
           // Vùng nguy hiểm
           _sectionTitle(colors, 'Vùng nguy hiểm'),
           const SizedBox(height: 10),

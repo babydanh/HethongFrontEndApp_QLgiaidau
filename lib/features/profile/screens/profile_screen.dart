@@ -2373,6 +2373,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         l.settingsEloHistory,
         '/profile/elo',
       ),
+      _MenuItem(Icons.flag_outlined, l.myReportsTitle, '/profile/reports'),
     ];
 
     return Container(

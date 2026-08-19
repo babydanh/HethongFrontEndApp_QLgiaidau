@@ -4077,4 +4077,105 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clubTournamentsLinkCopied => 'Tournament creation link copied';
+
+  @override
+  String get myReportsTitle => 'My Reports';
+
+  @override
+  String get myReportsBack => 'Back';
+
+  @override
+  String get myReportsRefresh => 'Refresh reports';
+
+  @override
+  String get myReportsLoadError => 'Unable to load report history';
+
+  @override
+  String get myReportsRetry => 'Try again';
+
+  @override
+  String get myReportsEmptyTitle => 'You have not submitted any reports';
+
+  @override
+  String get myReportsEmptySubtitle =>
+      'Reports you submit will appear here so you can track their status.';
+
+  @override
+  String get myReportsStatusSubmitted => 'Submitted';
+
+  @override
+  String get myReportsStatusTriaged => 'Triaged';
+
+  @override
+  String get myReportsStatusUnderReview => 'Under review';
+
+  @override
+  String get myReportsStatusEscalated => 'Escalated';
+
+  @override
+  String get myReportsStatusResolved => 'Resolved';
+
+  @override
+  String get myReportsStatusRejected => 'Rejected';
+
+  @override
+  String get myReportsTargetUser => 'User';
+
+  @override
+  String get myReportsTargetTournament => 'Tournament';
+
+  @override
+  String get myReportsTargetMatch => 'Match';
+
+  @override
+  String get myReportsTargetCommunity => 'Community';
+
+  @override
+  String get myReportsCategoryCheating => 'Cheating';
+
+  @override
+  String get myReportsCategoryRuleViolation => 'Rule violation';
+
+  @override
+  String get myReportsCategoryAbusiveBehavior => 'Abusive behavior';
+
+  @override
+  String get myReportsCategoryFakeInformation => 'Fake information';
+
+  @override
+  String get myReportsCategoryPaymentFraud => 'Payment fraud';
+
+  @override
+  String get myReportsCategoryUnsafeOrganization => 'Unsafe organization';
+
+  @override
+  String get myReportsCategoryOther => 'Other';
+
+  @override
+  String get myReportsUnknownTarget => 'Unknown target';
+
+  @override
+  String get myReportsUnknownDate => 'Unknown date';
+
+  @override
+  String get myReportsViewTarget => 'View target';
+
+  @override
+  String myReportsSentAt(Object date) {
+    return 'Submitted: $date';
+  }
+
+  @override
+  String get myReportsResolutionNote => 'Resolution note';
+
+  @override
+  String myReportsPageCount(Object page, Object totalPages) {
+    return 'Page $page/$totalPages';
+  }
+
+  @override
+  String get myReportsPreviousPage => 'Previous page';
+
+  @override
+  String get myReportsNextPage => 'Next page';
 }
