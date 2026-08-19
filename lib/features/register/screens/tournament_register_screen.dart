@@ -196,6 +196,29 @@ class _TournamentRegisterScreenState
   Widget _buildCustomFields(Tournament tournament) {
     final fields = _activeRegistrationFields(tournament);
     if (fields.isEmpty) return const SizedBox.shrink();
+
+    // Tự động điền sẵn Email và Số điện thoại từ profile nếu trường chưa có giá trị
+    final userProfileAsync = ref.watch(userProfileProvider);
+    final userProfile = userProfileAsync.asData?.value;
+    if (userProfile != null) {
+      for (final field in fields) {
+        final id = field['id']?.toString() ?? '';
+        if (id.isEmpty) continue;
+        if (!_customResponses.containsKey(id) || _customResponses[id] == null || _customResponses[id].toString().trim().isEmpty) {
+          final label = (field['label']?.toString() ?? '').toLowerCase();
+          final type = field['type']?.toString();
+          final isEmailField = type == 'EMAIL' || label.contains('email') || label.contains('gmail');
+          final isPhoneField = type == 'PHONE' || label.contains('điện thoại') || label.contains('sđt') || label.contains('phone');
+
+          if (isEmailField && userProfile.email != null && userProfile.email!.isNotEmpty) {
+            _customResponses[id] = userProfile.email;
+          } else if (isPhoneField && userProfile.phoneNumber != null && userProfile.phoneNumber!.isNotEmpty) {
+            _customResponses[id] = userProfile.phoneNumber;
+          }
+        }
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(color: context.colors.bgSurface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25))),
