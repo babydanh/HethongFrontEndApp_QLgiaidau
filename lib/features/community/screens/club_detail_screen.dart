@@ -465,44 +465,69 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               fontWeight: FontWeight.bold,
               color: colors.textPrimary,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          centerTitle: true,
+          centerTitle: false,
           actions: [
             _buildFollowFavoriteButtons(club, colors, l10n),
             if (_myMembership?.role == 'OWNER' ||
                 _myMembership?.role == 'ADMIN' ||
                 _myMembership?.role == 'MODERATOR') ...[
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: TextButton.icon(
-                  onPressed: () => context.push(
-                    '/club/${widget.clubId}/manage',
-                    extra: _myMembership?.role == 'OWNER',
+              PopupMenuButton<String>(
+                icon: Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
                   ),
-                  icon: const Icon(Icons.tune_rounded, size: 16),
-                  label: Text(
-                    l10n.club_manageShort,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
-                    ),
+                  child: const Icon(
+                    Icons.more_vert_rounded,
+                    color: AppTheme.primary,
+                    size: 20,
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: TextButton.icon(
-                  onPressed: () => context.push('/club/${widget.clubId}/edit'),
-                  icon: const Icon(Icons.edit_rounded, size: 16),
-                  label: Text(
-                    l10n.infoEdit,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
+                tooltip: 'Quản trị CLB',
+                onSelected: (val) {
+                  if (val == 'manage') {
+                    context.push(
+                      '/club/${widget.clubId}/manage',
+                      extra: _myMembership?.role == 'OWNER',
+                    );
+                  } else if (val == 'edit') {
+                    context.push('/club/${widget.clubId}/edit');
+                  }
+                },
+                itemBuilder: (ctx) => [
+                  PopupMenuItem(
+                    value: 'manage',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.tune_rounded, size: 18, color: AppTheme.primary),
+                        const SizedBox(width: 10),
+                        Text(
+                          l10n.club_manageShort,
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                      ],
                     ),
                   ),
-                ),
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit_rounded, size: 18, color: colors.textPrimary),
+                        const SizedBox(width: 10),
+                        Text(
+                          l10n.infoEdit,
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(width: 6),
             ],
           ],
         ),
@@ -1089,6 +1114,65 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                           child: Row(
                             children: [
                               ...sportTagWidgets,
+                              if (_myMembership?.role == 'OWNER') ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.shield_rounded, size: 11, color: Color(0xFF6366F1)),
+                                      SizedBox(width: 3),
+                                      Text(
+                                        'CHỦ CLB',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF6366F1),
+                                          letterSpacing: 0.2,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                              ] else if (_myMembership?.role == 'ADMIN' || _myMembership?.role == 'MODERATOR') ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.admin_panel_settings_rounded, size: 11, color: Color(0xFFF59E0B)),
+                                      SizedBox(width: 3),
+                                      Text(
+                                        'QUẢN TRỊ VIÊN',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFFF59E0B),
+                                          letterSpacing: 0.2,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
                               const SizedBox(width: 2),
                               _buildJoinModeBadge(club.joinMode),
                             ],
