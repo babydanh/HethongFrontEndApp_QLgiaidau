@@ -145,10 +145,13 @@ class ErrorParser {
         if (code == 400) return 'Yêu cầu gửi đi không hợp lệ (Lỗi 400).';
         if (code == 401) return 'Email hoặc mật khẩu không chính xác.';
         if (code == 403) return 'Bạn không có quyền thực hiện hành động này.';
-        if (code == 404)
+        if (code == 404) {
           return 'Không tìm thấy tài nguyên được yêu cầu (Lỗi 404).';
-        if (code != null && code >= 500)
+        }
+        if (code != null && code >= 500) {
           return 'Lỗi hệ thống phía máy chủ (Lỗi $code).';
+        }
+
         return 'Máy chủ phản hồi mã lỗi (Lỗi $code).';
       case DioExceptionType.cancel:
         return 'Yêu cầu đã bị hủy bỏ.';

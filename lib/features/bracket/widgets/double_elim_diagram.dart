@@ -59,11 +59,17 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
       final scaleY = viewport.height / canvas.height;
       final fitScale = (scaleX < scaleY ? scaleX : scaleY) * 0.85;
 
-      final dx = ((viewport.width - canvas.width * fitScale) / 2).clamp(16.0, double.infinity);
-      final dy = ((viewport.height - canvas.height * fitScale) / 2).clamp(16.0, double.infinity);
+      final dx = ((viewport.width - canvas.width * fitScale) / 2).clamp(
+        16.0,
+        double.infinity,
+      );
+      final dy = ((viewport.height - canvas.height * fitScale) / 2).clamp(
+        16.0,
+        double.infinity,
+      );
       _tc.value = Matrix4.identity()
-        ..translate(dx, dy)
-        ..scale(fitScale);
+        ..translateByDouble(dx.toDouble(), dy.toDouble(), 0, 1)
+        ..scaleByDouble(fitScale, fitScale, 1, 1);
     });
   }
 
@@ -90,10 +96,16 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
     }
     // Sort positions within each round
     for (final r in winners.values) {
-      r.sort((a, b) => a.bracketPosition.position.compareTo(b.bracketPosition.position));
+      r.sort(
+        (a, b) =>
+            a.bracketPosition.position.compareTo(b.bracketPosition.position),
+      );
     }
     for (final r in losers.values) {
-      r.sort((a, b) => a.bracketPosition.position.compareTo(b.bracketPosition.position));
+      r.sort(
+        (a, b) =>
+            a.bracketPosition.position.compareTo(b.bracketPosition.position),
+      );
     }
     // Sort finals by round
     finals.sort((a, b) => a.round.compareTo(b.round));
@@ -108,7 +120,10 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
 
     if (bands.winners.isEmpty && bands.losers.isEmpty && bands.finals.isEmpty) {
       return Center(
-        child: Text('Chưa có sơ đồ', style: TextStyle(color: colors.textSecondary)),
+        child: Text(
+          'Chưa có sơ đồ',
+          style: TextStyle(color: colors.textSecondary),
+        ),
       );
     }
 
@@ -146,123 +161,128 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
           maxScale: 2.5,
           child: RepaintBoundary(
             child: Padding(
-            padding: const EdgeInsets.all(40),
-            child: SizedBox(
-              width: layout.width,
-              height: layout.height,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-              // ── Band background labels ──
-              if (wRounds.isNotEmpty)
-                Positioned(
-                  left: 0,
-                  top: layout.winnersTop - 80,
-                  child: _DeBandLabel(
-                    title: '▲ NHÁNH THẮNG (Winners)',
-                    subtitle: 'Đội thắng đi tiếp - Đội thua xuống nhánh thua',
-                    color: const Color(0xFF0284C7),
-                    width: layout.winnersBandWidth,
-                  ),
+              padding: const EdgeInsets.all(40),
+              child: SizedBox(
+                width: layout.width,
+                height: layout.height,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    // ── Band background labels ──
+                    if (wRounds.isNotEmpty)
+                      Positioned(
+                        left: 0,
+                        top: layout.winnersTop - 80,
+                        child: _DeBandLabel(
+                          title: '▲ NHÁNH THẮNG (Winners)',
+                          subtitle:
+                              'Đội thắng đi tiếp - Đội thua xuống nhánh thua',
+                          color: const Color(0xFF0284C7),
+                          width: layout.winnersBandWidth,
+                        ),
+                      ),
+                    if (lRounds.isNotEmpty)
+                      Positioned(
+                        left: 0,
+                        top: layout.losersTop - 80,
+                        child: _DeBandLabel(
+                          title: '▼ NHÁNH THUA (Losers)',
+                          subtitle: 'Đội thua lần đầu - Thua nữa là bị loại',
+                          color: colors.textSecondary,
+                          width: layout.losersBandWidth,
+                        ),
+                      ),
+                    if (bands.finals.isNotEmpty)
+                      Positioned(
+                        left: layout.grandFinalX,
+                        top: layout.grandFinalTop - 36,
+                        width: _kCardW,
+                        child: _DeRoundHeader(label: 'CHUNG KẾT TỔNG'),
+                      ),
+
+                    // ── Connector lines ──
+                    Positioned.fill(
+                      child: RepaintBoundary(
+                        child: CustomPaint(
+                          painter: _DoubleElimPainter(
+                            matches: widget.matches,
+                            positions: positions,
+                            cardW: _kCardW,
+                            cardH: _kCardH,
+                            primaryColor: colors.border.withValues(alpha: 0.8),
+                            loserColor: colors.border.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // ── Round headers — winners band ──
+                    ...wRounds.asMap().entries.map((e) {
+                      final ci = e.key;
+                      final round = e.value;
+                      final fromEnd = wRounds.length - (ci + 1);
+                      String label;
+                      if (fromEnd == 0) {
+                        label = 'CK NHÁNH THẮNG';
+                      } else if (fromEnd == 1) {
+                        label = 'BK NHÁNH THẮNG';
+                      } else {
+                        label = MatchRoundLabel.doubleUpperHeader(fromEnd);
+                      }
+                      return Positioned(
+                        left: layout.winnerColumnX(round),
+                        top: layout.winnersTop - 36,
+                        width: _kCardW,
+                        child: _DeRoundHeader(label: label),
+                      );
+                    }),
+
+                    // ── Round headers — losers band ──
+                    ...lRounds.asMap().entries.map((e) {
+                      final ci = e.key;
+                      final round = e.value;
+                      final fromEnd = lRounds.length - (ci + 1);
+                      String label;
+                      if (fromEnd == 0) {
+                        label = 'CK NHÁNH THUA';
+                      } else if (fromEnd == 1) {
+                        label = 'BK NHÁNH THUA';
+                      } else {
+                        label = MatchRoundLabel.doubleLowerHeader(
+                          fromEnd,
+                          round,
+                        );
+                      }
+                      return Positioned(
+                        left: layout.loserColumnX(round),
+                        top: layout.losersTop - 36,
+                        width: _kCardW,
+                        child: _DeRoundHeader(label: label),
+                      );
+                    }),
+
+                    // ── Match cards ──
+                    ...widget.matches.map((match) {
+                      final pos = positions[match.id];
+                      if (pos == null) return const SizedBox.shrink();
+                      return Positioned(
+                        left: pos.dx,
+                        top: pos.dy,
+                        width: _kCardW,
+                        height: _kCardH,
+                        child: BracketMatchCard(
+                          match: match,
+                          tournamentId: widget.tournamentId,
+                          isReferee: widget.isReferee,
+                          isReadOnly: widget.isReadOnly,
+                          isGrandFinal: match.nextMatchId.isEmpty,
+                        ),
+                      );
+                    }),
+                  ],
                 ),
-              if (lRounds.isNotEmpty)
-                Positioned(
-                  left: 0,
-                  top: layout.losersTop - 80,
-                  child: _DeBandLabel(
-                    title: '▼ NHÁNH THUA (Losers)',
-                    subtitle: 'Đội thua lần đầu - Thua nữa là bị loại',
-                    color: colors.textSecondary,
-                    width: layout.losersBandWidth,
-                  ),
-                ),
-              if (bands.finals.isNotEmpty)
-                Positioned(
-                  left: layout.grandFinalX,
-                  top: layout.grandFinalTop - 36,
-                  width: _kCardW,
-                  child: _DeRoundHeader(label: 'CHUNG KẾT TỔNG'),
-                ),
-
-              // ── Connector lines ──
-              Positioned.fill(
-                child: RepaintBoundary(
-                  child: CustomPaint(
-                  painter: _DoubleElimPainter(
-                    matches: widget.matches,
-                    positions: positions,
-                    cardW: _kCardW,
-                    cardH: _kCardH,
-                    primaryColor: colors.border.withValues(alpha: 0.8),
-                    loserColor: colors.border.withValues(alpha: 0.8),
-                  ),
-                )),
-              ),
-
-              // ── Round headers — winners band ──
-              ...wRounds.asMap().entries.map((e) {
-                final ci = e.key;
-                final round = e.value;
-                final fromEnd = wRounds.length - (ci + 1);
-                String label;
-                if (fromEnd == 0) {
-                  label = 'CK NHÁNH THẮNG';
-                } else if (fromEnd == 1) {
-                  label = 'BK NHÁNH THẮNG';
-                } else {
-                  label = MatchRoundLabel.doubleUpperHeader(fromEnd);
-                }
-                return Positioned(
-                  left: layout.winnerColumnX(round),
-                  top: layout.winnersTop - 36,
-                  width: _kCardW,
-                  child: _DeRoundHeader(label: label),
-                );
-              }),
-
-              // ── Round headers — losers band ──
-              ...lRounds.asMap().entries.map((e) {
-                final ci = e.key;
-                final round = e.value;
-                final fromEnd = lRounds.length - (ci + 1);
-                String label;
-                if (fromEnd == 0) {
-                  label = 'CK NHÁNH THUA';
-                } else if (fromEnd == 1) {
-                  label = 'BK NHÁNH THUA';
-                } else {
-                  label = MatchRoundLabel.doubleLowerHeader(fromEnd, round);
-                }
-                return Positioned(
-                  left: layout.loserColumnX(round),
-                  top: layout.losersTop - 36,
-                  width: _kCardW,
-                  child: _DeRoundHeader(label: label),
-                );
-              }),
-
-              // ── Match cards ──
-              ...widget.matches.map((match) {
-                final pos = positions[match.id];
-                if (pos == null) return const SizedBox.shrink();
-                return Positioned(
-                  left: pos.dx,
-                  top: pos.dy,
-                  width: _kCardW,
-                  height: _kCardH,
-                  child: BracketMatchCard(
-                    match: match,
-                    tournamentId: widget.tournamentId,
-                    isReferee: widget.isReferee,
-                    isReadOnly: widget.isReadOnly,
-                    isGrandFinal: match.nextMatchId.isEmpty,
-                  ),
-                );
-              }),
-                ],
               ),
             ),
-          ),
           ),
         );
       },
@@ -294,7 +314,9 @@ class _DeBandLabel extends StatelessWidget {
           topLeft: Radius.circular(8),
           topRight: Radius.circular(8),
         ),
-        border: Border(top: BorderSide(color: color.withValues(alpha: 0.35), width: 2)),
+        border: Border(
+          top: BorderSide(color: color.withValues(alpha: 0.35), width: 2),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,8 +373,6 @@ class _DeRoundHeader extends StatelessWidget {
   }
 }
 
-
-
 // ── Connector painter ─────────────────────────────────────────────────────────
 class _DoubleElimPainter extends CustomPainter {
   final List<MatchModel> matches;
@@ -402,7 +422,6 @@ class _DoubleElimPainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-
   @override
   bool shouldRepaint(covariant _DoubleElimPainter oldDelegate) {
     return oldDelegate.matches != matches ||
@@ -417,5 +436,9 @@ class _BandData {
   final Map<int, List<MatchModel>> winners;
   final Map<int, List<MatchModel>> losers;
   final List<MatchModel> finals;
-  const _BandData({required this.winners, required this.losers, required this.finals});
+  const _BandData({
+    required this.winners,
+    required this.losers,
+    required this.finals,
+  });
 }

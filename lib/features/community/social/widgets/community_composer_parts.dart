@@ -53,7 +53,10 @@ class ComposerSheetHeader extends StatelessWidget {
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   shape: RoundedRectangleBorder(
@@ -106,40 +109,42 @@ class ComposerImagePreviewGrid extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        ...urls.map((url) => Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    url,
-                    width: 96,
-                    height: 72,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      width: 96,
-                      height: 72,
-                      color: colors.bgSurface,
+        ...urls.map(
+          (url) => Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  url,
+                  width: 96,
+                  height: 72,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, error, stackTrace) =>
+                      Container(width: 96, height: 72, color: colors.bgSurface),
+                ),
+              ),
+              Positioned(
+                right: 0,
+                top: 0,
+                child: GestureDetector(
+                  onTap: () => onRemove(url),
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: colors.bgDark.withValues(alpha: 0.7),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      size: 14,
+                      color: Colors.white,
                     ),
                   ),
                 ),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: GestureDetector(
-                    onTap: () => onRemove(url),
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: colors.bgDark.withValues(alpha: 0.7),
-                        shape: BoxShape.circle,
-                      ),
-                      child:
-                          const Icon(Icons.close_rounded, size: 14, color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
-            )),
+              ),
+            ],
+          ),
+        ),
         if (isUploading)
           Container(
             width: 96,
@@ -210,7 +215,8 @@ class ComposerMentionSuggestions extends StatelessWidget {
         shrinkWrap: true,
         physics: const ClampingScrollPhysics(),
         itemCount: members.length,
-        separatorBuilder: (_, __) => Divider(height: 1, color: colors.borderLight),
+        separatorBuilder: (_, index) =>
+            Divider(height: 1, color: colors.borderLight),
         itemBuilder: (context, index) => _SuggestionRow(
           member: members[index],
           canManageTags: canManageTags,
@@ -247,8 +253,9 @@ class _SuggestionRow extends StatelessWidget {
             CircleAvatar(
               radius: 16,
               backgroundImage: member.mentionAvatarProvider,
-              child:
-                  member.mentionAvatarProvider == null ? Text(member.mentionInitial) : null,
+              child: member.mentionAvatarProvider == null
+                  ? Text(member.mentionInitial)
+                  : null,
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -256,11 +263,17 @@ class _SuggestionRow extends StatelessWidget {
                 member.mentionDisplayName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
               ),
             ),
             if (member.tags.isNotEmpty)
-              MemberTagChip(label: member.tags.first, kind: MemberTagChipKind.bqt),
+              MemberTagChip(
+                label: member.tags.first,
+                kind: MemberTagChipKind.bqt,
+              ),
             if (canManageTags && onTag != null)
               IconButton(
                 tooltip: 'Gán nhãn vui',

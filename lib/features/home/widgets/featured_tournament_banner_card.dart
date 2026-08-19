@@ -6,7 +6,6 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart';
 
 class FeaturedTournamentBannerCard extends StatelessWidget {
   final Tournament tournament;
@@ -31,14 +30,6 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
       }
     } catch (_) {}
     return '${apiBase.replaceAll('/api/v1', '')}$firstUrl';
-  }
-
-  String _dateRange() {
-    final start = tournament.startDate;
-    final end = tournament.endDate;
-    if (start == null || end == null) return 'Chưa cập nhật lịch';
-    final formatter = DateFormat('dd/MM/yyyy');
-    return '${formatter.format(start)} - ${formatter.format(end)}';
   }
 
   String _sportLabel() {

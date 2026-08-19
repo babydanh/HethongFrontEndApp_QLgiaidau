@@ -37,8 +37,6 @@ class CommunityPostCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final separatorColor = isDark ? const Color(0xFF18191A) : const Color(0xFFF0F2F5);
 
     return Container(
       color: colors.bgCard,
@@ -76,87 +74,110 @@ class CommunityPostCard extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Builder(builder: (context) {
-                        final presets = ref
-                            .watch(communityTagPresetsProvider(communityId))
-                            .asData
-                            ?.value;
-                        final member = ref
-                            .watch(communityMemberDirectoryProvider(communityId))
-                            .asData
-                            ?.value[post.authorId];
-                        final memberRole = member?.role?.toString().toUpperCase();
-                        final tags = (member?.tags ?? const <String>[]).take(2).toList();
-                        return Wrap(
-                          spacing: 6,
-                          runSpacing: 3,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            GestureDetector(
-                              onTap: onAuthorTap,
-                              child: Text(
-                                post.authorName,
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14.5,
-                                ),
-                              ),
-                            ),
-                            if (memberRole == 'OWNER')
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primary.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Text(
-                                  'Chủ CLB',
-                                  style: TextStyle(
-                                    color: AppTheme.primaryDark,
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
+                      Builder(
+                        builder: (context) {
+                          final presets = ref
+                              .watch(communityTagPresetsProvider(communityId))
+                              .asData
+                              ?.value;
+                          final member = ref
+                              .watch(
+                                communityMemberDirectoryProvider(communityId),
                               )
-                            else if (memberRole == 'ADMIN' || memberRole == 'MODERATOR')
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: colors.info.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
+                              .asData
+                              ?.value[post.authorId];
+                          final memberRole = member?.role
+                              .toString()
+                              .toUpperCase();
+                          final tags = (member?.tags ?? const <String>[])
+                              .take(2)
+                              .toList();
+                          return Wrap(
+                            spacing: 6,
+                            runSpacing: 3,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              GestureDetector(
+                                onTap: onAuthorTap,
                                 child: Text(
-                                  'BQT',
-                                  style: TextStyle(
-                                    color: colors.info,
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w700,
+                                  post.authorName,
+                                  style: Theme.of(context).textTheme.titleSmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14.5,
+                                      ),
+                                ),
+                              ),
+                              if (memberRole == 'OWNER')
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primary.withValues(
+                                      alpha: 0.15,
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text(
+                                    'Chủ CLB',
+                                    style: TextStyle(
+                                      color: AppTheme.primaryDark,
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                )
+                              else if (memberRole == 'ADMIN' ||
+                                  memberRole == 'MODERATOR')
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colors.info.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'BQT',
+                                    style: TextStyle(
+                                      color: colors.info,
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
+                              ...tags.map(
+                                (tag) => PresetTagChip(
+                                  label: tag,
+                                  color: presets == null
+                                      ? null
+                                      : resolvePresetColor(presets, tag),
+                                ),
                               ),
-                            ...tags.map(
-                              (tag) => PresetTagChip(
-                                label: tag,
-                                color: presets == null
-                                    ? null
-                                    : resolvePresetColor(presets, tag),
-                              ),
-                            ),
-                          ],
-                        );
-                      }),
+                            ],
+                          );
+                        },
+                      ),
                       const SizedBox(height: 2),
                       Row(
                         children: [
                           Text(
                             _relativeTime(post.createdAt),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: colors.textMuted,
-                              fontSize: 12,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: colors.textMuted,
+                                  fontSize: 12,
+                                ),
                           ),
                           const SizedBox(width: 4),
-                          Icon(Icons.public_rounded, size: 12, color: colors.textMuted),
+                          Icon(
+                            Icons.public_rounded,
+                            size: 12,
+                            color: colors.textMuted,
+                          ),
                         ],
                       ),
                     ],
@@ -165,7 +186,11 @@ class CommunityPostCard extends ConsumerWidget {
                 if (post.isPinned)
                   Padding(
                     padding: const EdgeInsets.only(right: 4),
-                    child: Icon(Icons.push_pin_rounded, size: 18, color: colors.info),
+                    child: Icon(
+                      Icons.push_pin_rounded,
+                      size: 18,
+                      color: colors.info,
+                    ),
                   ),
                 if (onDelete != null)
                   IconButton(
@@ -201,15 +226,24 @@ class CommunityPostCard extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 9,
+                ),
                 decoration: BoxDecoration(
                   color: colors.warning.withValues(alpha: .12),
                   borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                  border: Border.all(color: colors.warning.withValues(alpha: .3)),
+                  border: Border.all(
+                    color: colors.warning.withValues(alpha: .3),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.hourglass_empty_rounded, size: 16, color: colors.warning),
+                    Icon(
+                      Icons.hourglass_empty_rounded,
+                      size: 16,
+                      color: colors.warning,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -299,11 +333,18 @@ class CommunityPostCard extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.collections_rounded, color: Colors.white, size: 14),
+                                const Icon(
+                                  Icons.collections_rounded,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
                                 const SizedBox(width: 5),
                                 Text(
                                   '1/${post.mediaUrls.length}',
@@ -339,7 +380,11 @@ class CommunityPostCard extends ConsumerWidget {
                             color: Color(0xFFEF4444),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.favorite_rounded, size: 10, color: Colors.white),
+                          child: const Icon(
+                            Icons.favorite_rounded,
+                            size: 10,
+                            color: Colors.white,
+                          ),
                         ),
                         const SizedBox(width: 6),
                         Text(
@@ -502,7 +547,11 @@ class CommunityPostCard extends ConsumerWidget {
                   post.mediaUrls[index],
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) => const Center(
-                    child: Icon(Icons.broken_image_outlined, color: Colors.white, size: 40),
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      color: Colors.white,
+                      size: 40,
+                    ),
                   ),
                 ),
               ),
@@ -531,8 +580,14 @@ class CommunityPostCard extends ConsumerWidget {
     return '${difference.inDays} ngày trước';
   }
 
-  Widget _buildRichText(String text, BuildContext context, AppColorsExtension colors) {
-    final regex = RegExp(r'(@[^\s@#]+(?:\s+[^\s@#]+)*|#[a-zA-Z0-9_\u00C0-\u1EF9]+)');
+  Widget _buildRichText(
+    String text,
+    BuildContext context,
+    AppColorsExtension colors,
+  ) {
+    final regex = RegExp(
+      r'(@[^\s@#]+(?:\s+[^\s@#]+)*|#[a-zA-Z0-9_\u00C0-\u1EF9]+)',
+    );
     final matches = regex.allMatches(text).toList();
     if (matches.isEmpty) {
       return Text(
@@ -550,30 +605,44 @@ class CommunityPostCard extends ConsumerWidget {
 
     for (final match in matches) {
       if (match.start > lastEnd) {
-        spans.add(TextSpan(
-          text: text.substring(lastEnd, match.start),
-          style: TextStyle(fontSize: 15, height: 1.45, color: colors.textPrimary),
-        ));
+        spans.add(
+          TextSpan(
+            text: text.substring(lastEnd, match.start),
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.45,
+              color: colors.textPrimary,
+            ),
+          ),
+        );
       }
       final token = match.group(0)!;
       final isMention = token.startsWith('@');
-      spans.add(TextSpan(
-        text: token,
-        style: TextStyle(
-          fontSize: 15,
-          height: 1.45,
-          fontWeight: FontWeight.w700,
-          color: isMention ? AppTheme.primary : AppTheme.primaryDark,
+      spans.add(
+        TextSpan(
+          text: token,
+          style: TextStyle(
+            fontSize: 15,
+            height: 1.45,
+            fontWeight: FontWeight.w700,
+            color: isMention ? AppTheme.primary : AppTheme.primaryDark,
+          ),
         ),
-      ));
+      );
       lastEnd = match.end;
     }
 
     if (lastEnd < text.length) {
-      spans.add(TextSpan(
-        text: text.substring(lastEnd),
-        style: TextStyle(fontSize: 15, height: 1.45, color: colors.textPrimary),
-      ));
+      spans.add(
+        TextSpan(
+          text: text.substring(lastEnd),
+          style: TextStyle(
+            fontSize: 15,
+            height: 1.45,
+            color: colors.textPrimary,
+          ),
+        ),
+      );
     }
 
     return RichText(text: TextSpan(children: spans));

@@ -65,12 +65,13 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     _chatSocket.onRevoked = _onSocketRevoked;
     _chatSocket.onPinned = _onSocketPinned;
     _chatSocket.onTyping = (data) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _typingUser = data['isTyping'] == true
               ? data['userId']?.toString()
               : null,
         );
+      }
     };
     _loadRoom();
     _loadBlockedUsers();
@@ -82,8 +83,12 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
 
   Future<void> _loadNotificationPref() async {
     try {
-      final prefs = await ref.read(communityRepositoryProvider).getMyNotificationPreferences();
-      final found = prefs.where((p) => p.communityId == widget.communityId).firstOrNull;
+      final prefs = await ref
+          .read(communityRepositoryProvider)
+          .getMyNotificationPreferences();
+      final found = prefs
+          .where((p) => p.communityId == widget.communityId)
+          .firstOrNull;
       if (found != null && mounted) {
         setState(() => _notificationPref = found.notificationPreference);
       }
@@ -94,10 +99,9 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     final oldPref = _notificationPref;
     setState(() => _notificationPref = newPref);
     try {
-      await ref.read(communityRepositoryProvider).updateNotificationPreference(
-        widget.communityId,
-        newPref,
-      );
+      await ref
+          .read(communityRepositoryProvider)
+          .updateNotificationPreference(widget.communityId, newPref);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -105,8 +109,8 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
               newPref == 'ALL'
                   ? 'Đã bật nhận tất cả thông báo CLB'
                   : newPref == 'MENTIONS_ONLY'
-                      ? 'Chỉ nhận thông báo khi được @nhắc tên'
-                      : 'Đã tắt thông báo CLB (Im lặng)',
+                  ? 'Chỉ nhận thông báo khi được @nhắc tên'
+                  : 'Đã tắt thông báo CLB (Im lặng)',
             ),
           ),
         );
@@ -115,7 +119,9 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
       if (mounted) {
         setState(() => _notificationPref = oldPref);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể cập nhật cài đặt thông báo.')),
+          const SnackBar(
+            content: Text('Không thể cập nhật cài đặt thông báo.'),
+          ),
         );
       }
     }
@@ -134,14 +140,21 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
           builder: (sheetContext, setSheetState) {
             return SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 20,
+                  horizontal: 16,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.notifications_outlined, color: Color(0xFF2563EB), size: 22),
+                        const Icon(
+                          Icons.notifications_outlined,
+                          color: Color(0xFF2563EB),
+                          size: 22,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -158,12 +171,16 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                     const SizedBox(height: 6),
                     Text(
                       'Tùy chỉnh nhận tin nhắn và thông báo từ ${widget.communityName}',
-                      style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colors.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     _buildNotificationOption(
                       title: 'Tất cả tin nhắn',
-                      subtitle: 'Nhận thông báo cho mọi tin nhắn mới (Mặc định)',
+                      subtitle:
+                          'Nhận thông báo cho mọi tin nhắn mới (Mặc định)',
                       icon: Icons.notifications_active_outlined,
                       iconColor: const Color(0xFF2563EB),
                       value: 'ALL',
@@ -176,7 +193,8 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                     const SizedBox(height: 8),
                     _buildNotificationOption(
                       title: 'Chỉ khi được @tag',
-                      subtitle: 'Chỉ thông báo khi có người nhắc tên bạn hoặc @all',
+                      subtitle:
+                          'Chỉ thông báo khi có người nhắc tên bạn hoặc @all',
                       icon: Icons.alternate_email_rounded,
                       iconColor: const Color(0xFFD97706),
                       value: 'MENTIONS_ONLY',
@@ -228,7 +246,9 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
           color: isSelected ? iconColor.withValues(alpha: 0.08) : colors.bgDark,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? iconColor.withValues(alpha: 0.4) : colors.border,
+            color: isSelected
+                ? iconColor.withValues(alpha: 0.4)
+                : colors.border,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -244,7 +264,9 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                     title,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w600,
                       color: colors.textPrimary,
                     ),
                   ),
@@ -279,11 +301,18 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                 color: Color(0xFFFEE2E2),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.delete_outline_rounded, color: Color(0xFFE11D48), size: 22),
+              child: const Icon(
+                Icons.delete_outline_rounded,
+                color: Color(0xFFE11D48),
+                size: 22,
+              ),
             ),
             const SizedBox(width: 10),
             const Expanded(
-              child: Text('Xóa đoạn chat?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+              child: Text(
+                'Xóa đoạn chat?',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+              ),
             ),
           ],
         ),
@@ -294,15 +323,26 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Hủy', style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w600)),
+            child: Text(
+              'Hủy',
+              style: TextStyle(
+                color: colors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFE11D48),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Xóa đoạn chat', style: TextStyle(fontWeight: FontWeight.w700)),
+            child: const Text(
+              'Xóa đoạn chat',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
           ),
         ],
       ),
@@ -319,7 +359,9 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
       } catch (e) {
         if (!mounted || !context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể xóa lịch sử đoạn chat lúc này.')),
+          const SnackBar(
+            content: Text('Không thể xóa lịch sử đoạn chat lúc này.'),
+          ),
         );
       }
     }
@@ -359,19 +401,22 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
           ? (raw.isEmpty ? const <String, dynamic>{} : _asMap(raw.first))
           : _asMap(raw ?? payload);
       final id = room['id']?.toString();
-      if (id == null || id.isEmpty)
+      if (id == null || id.isEmpty) {
         throw const FormatException('Không tạo được phòng chat');
+      }
+
       if (!mounted) return;
       setState(() => _roomId = id);
       await _chatSocket.connect(id);
       await _refreshMessages(initial: true);
     } catch (error, stack) {
       _log.error('Không thể mở chat CLB', error, stack);
-      if (mounted)
+      if (mounted) {
         setState(() {
           _loading = false;
           _error = 'Chưa thể mở trò chuyện. Thử lại sau.';
         });
+      }
     }
   }
 
@@ -385,7 +430,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
       final raw = payload['data'] is List
           ? payload['data'] as List
           : const <Object?>[];
-      if (mounted)
+      if (mounted) {
         setState(
           () => _blockedUserIds.addAll(
             raw
@@ -393,6 +438,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                 .whereType<String>(),
           ),
         );
+      }
     } catch (_) {
       // Blocking is optional UI state; chat remains usable if this request fails.
     }
@@ -454,19 +500,22 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
       }
     } catch (error, stack) {
       _log.error('Không thể đồng bộ chat CLB', error, stack);
-      if (mounted && initial)
+      if (mounted && initial) {
         setState(() {
           _loading = false;
           _error = 'Mất kết nối. Kéo xuống để thử lại.';
         });
+      }
     }
   }
 
   Future<void> _loadOlder() async {
     final roomId = _roomId;
     final cursor = _cursor;
-    if (roomId == null || cursor == null || cursor.isEmpty || _loadingOlder)
+    if (roomId == null || cursor == null || cursor.isEmpty || _loadingOlder) {
       return;
+    }
+
     setState(() => _loadingOlder = true);
     try {
       final response = await ref
@@ -508,8 +557,10 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     final text = _messageController.text.trim();
     if (roomId == null ||
         (text.isEmpty && _selectedAttachments.isEmpty) ||
-        _sending)
+        _sending) {
       return;
+    }
+
     setState(() => _sending = true);
     try {
       if (_socketConnected &&
@@ -538,10 +589,11 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
       _scrollToBottom();
     } catch (error, stack) {
       _log.error('Không thể gửi tin chat CLB', error, stack);
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Gửi tin nhắn thất bại.')));
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -561,10 +613,11 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
           .uploadImage(await picked.readAsBytes(), picked.name);
       if (mounted) setState(() => _selectedAttachments.add(url));
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Không thể tải ảnh lên.')));
+      }
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -578,10 +631,11 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
           .post('/chat/messages/${message.id}/revoke');
       await _refreshMessages();
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Không thể thu hồi tin nhắn.')),
         );
+      }
     }
   }
 
@@ -593,15 +647,17 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
           .read(dioClientProvider)
           .dio
           .post('/chat/rooms/$roomId/messages/${message.id}/pin');
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Đã ghim tin nhắn.')));
+      }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Không thể ghim tin nhắn.')),
         );
+      }
     }
   }
 
@@ -624,8 +680,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
       if (firstTag != null)
         PresetTagChip(
           label: firstTag,
-          color:
-              presets == null ? null : resolvePresetColor(presets, firstTag),
+          color: presets == null ? null : resolvePresetColor(presets, firstTag),
         ),
     ];
   }
@@ -679,12 +734,14 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
 
   void _onSocketMessage(Map<String, dynamic> data) {
     final message = _ClubChatMessage.fromJson(data);
-    final targetRoomId = data['roomId']?.toString() ?? message.id;
+
     if (!mounted ||
         message.id.isEmpty ||
         (data['roomId'] != null && data['roomId']?.toString() != _roomId) ||
-        _messages.any((item) => item.id == message.id))
+        _messages.any((item) => item.id == message.id)) {
       return;
+    }
+
     setState(
       () =>
           _messages = [..._messages, message]
@@ -695,8 +752,12 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
 
   void _onSocketReaction(Map<String, dynamic> data) {
     final messageId = data['messageId']?.toString();
-    if (!mounted || messageId == null || data['roomId']?.toString() != _roomId)
+    if (!mounted ||
+        messageId == null ||
+        data['roomId']?.toString() != _roomId) {
       return;
+    }
+
     final raw = data['reactions'];
     if (raw is! List) return;
     final reactions = raw
@@ -756,17 +817,19 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
       });
     } catch (error, stack) {
       _log.error('Không thể cập nhật cảm xúc tin nhắn', error, stack);
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Không thể thả cảm xúc lúc này.')),
         );
+      }
     }
   }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients)
+      if (_scrollController.hasClients) {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
     });
   }
 
@@ -775,11 +838,16 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     final colors = context.colors;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.communityName, style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(
+          widget.communityName,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert_rounded),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+            ),
             onSelected: (value) {
               if (value == 'notification') {
                 _showNotificationPreferenceSheet(context);
@@ -796,13 +864,19 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                       _notificationPref == 'MUTED'
                           ? Icons.notifications_off_outlined
                           : _notificationPref == 'MENTIONS_ONLY'
-                              ? Icons.alternate_email_rounded
-                              : Icons.notifications_active_outlined,
+                          ? Icons.alternate_email_rounded
+                          : Icons.notifications_active_outlined,
                       size: 20,
                       color: const Color(0xFF2563EB),
                     ),
                     const SizedBox(width: 10),
-                    const Text('Thông báo CLB', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    const Text(
+                      'Thông báo CLB',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -811,9 +885,20 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                 value: 'clear',
                 child: Row(
                   children: [
-                    Icon(Icons.delete_outline_rounded, size: 20, color: Color(0xFFE11D48)),
+                    Icon(
+                      Icons.delete_outline_rounded,
+                      size: 20,
+                      color: Color(0xFFE11D48),
+                    ),
                     SizedBox(width: 10),
-                    Text('Xóa đoạn chat', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFE11D48))),
+                    Text(
+                      'Xóa đoạn chat',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFE11D48),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -839,15 +924,19 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
   Widget _buildMessages(AppColorsExtension colors) {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null) return Center(child: Text(_error!));
-    if (_messages.isEmpty)
+    if (_messages.isEmpty) {
       return const Center(child: Text('Chưa có tin nhắn nào.'));
+    }
+
     final visibleMessages = _messages
         .where((message) => !_blockedUserIds.contains(message.senderId))
         .toList();
     final currentUserId = ref.watch(userProfileProvider).asData?.value.id ?? '';
     // Tag/role người gửi — resolve 1 lần như web (UnifiedChatWidget club rooms).
-    final chatPresets =
-        ref.watch(communityTagPresetsProvider(widget.communityId)).asData?.value;
+    final chatPresets = ref
+        .watch(communityTagPresetsProvider(widget.communityId))
+        .asData
+        ?.value;
     final chatDirectory = ref
         .watch(communityMemberDirectoryProvider(widget.communityId))
         .asData
@@ -861,7 +950,8 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
         final isMine =
             currentUserId.isNotEmpty && message.senderId == currentUserId;
         // Chỉ gắn tag ở tin ĐẦU chuỗi liên tiếp của người gửi (khớp web).
-        final isFirstOfRun = index == 0 ||
+        final isFirstOfRun =
+            index == 0 ||
             visibleMessages[index - 1].senderId != message.senderId;
         return Align(
           alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
@@ -908,11 +998,12 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                                   color: colors.textMuted,
                                 ),
                               ),
-                              if (isFirstOfRun) ..._senderBadges(
-                                message.senderId,
-                                chatDirectory,
-                                chatPresets,
-                              ),
+                              if (isFirstOfRun)
+                                ..._senderBadges(
+                                  message.senderId,
+                                  chatDirectory,
+                                  chatPresets,
+                                ),
                             ],
                           ),
                         const SizedBox(height: 3),
@@ -982,7 +1073,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                 width: 220,
                 height: 160,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+                errorBuilder: (_, _, _) => const Icon(Icons.broken_image),
               ),
             ),
           ),
@@ -1025,7 +1116,8 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _selectedAttachments.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 6),
+              separatorBuilder: (_, _) => const SizedBox(width: 6),
+
               itemBuilder: (_, i) => Image.network(
                 _selectedAttachments[i],
                 width: 58,
@@ -1187,7 +1279,9 @@ class _SenderAvatar extends StatelessWidget {
 
 Map<String, dynamic> _asMap(Object? value) {
   if (value is Map<String, dynamic>) return value;
-  if (value is Map)
+  if (value is Map) {
     return value.map((key, item) => MapEntry(key.toString(), item));
+  }
+
   return const <String, dynamic>{};
 }

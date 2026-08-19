@@ -42,7 +42,8 @@ class AchievementsTab extends ConsumerWidget {
     for (int i = 0; i < userTournaments.length; i++) {
       final t = userTournaments[i];
       final statusLower = t.status.toLowerCase();
-      final isCompleted = statusLower == 'completed' || statusLower == 'finished';
+      final isCompleted =
+          statusLower == 'completed' || statusLower == 'finished';
 
       // Chỉ xét giải đã KẾT THÚC
       if (!isCompleted) continue;
@@ -59,17 +60,21 @@ class AchievementsTab extends ConsumerWidget {
       final sport = t.sport.toLowerCase();
       final dateStr = DateFormat('dd/MM/yyyy').format(tDate);
 
-      apiAchievements.add(_AchievementData(
-        sportId: sport.isEmpty ? 'pickleball' : sport,
-        icon: _getSportIcon(sport),
-        cardColor: _getCardColorForLabel(rankLabel),
-        tournamentName: t.name.isNotEmpty ? t.name : 'Giải đấu',
-        date: dateStr,
-        achievementLabel: rankLabel,
-        logoUrl: (t.logoUrl != null && t.logoUrl!.isNotEmpty) ? t.logoUrl : t.bannerUrl,
-        isRecent: isWithin30Days,
-        rawDate: tDate,
-      ));
+      apiAchievements.add(
+        _AchievementData(
+          sportId: sport.isEmpty ? 'pickleball' : sport,
+          icon: _getSportIcon(sport),
+          cardColor: _getCardColorForLabel(rankLabel),
+          tournamentName: t.name.isNotEmpty ? t.name : 'Giải đấu',
+          date: dateStr,
+          achievementLabel: rankLabel,
+          logoUrl: (t.logoUrl != null && t.logoUrl!.isNotEmpty)
+              ? t.logoUrl
+              : t.bannerUrl,
+          isRecent: isWithin30Days,
+          rawDate: tDate,
+        ),
+      );
     }
 
     final achievementsList = apiAchievements;
@@ -78,15 +83,29 @@ class AchievementsTab extends ConsumerWidget {
     final filteredAchievements = achievementsList.where((a) {
       if (selectedSport == 'all') return true;
       final s = a.sportId.toLowerCase();
-      if (selectedSport == 'pickleball' && (s.contains('pickle') || s.contains('padd'))) return true;
-      if (selectedSport == 'badminton' && (s.contains('badminton') || s.contains('cầu'))) return true;
-      if (selectedSport == 'table_tennis' && (s.contains('table') || s.contains('bàn'))) return true;
+      if (selectedSport == 'pickleball' &&
+          (s.contains('pickle') || s.contains('padd'))) {
+        return true;
+      }
+
+      if (selectedSport == 'badminton' &&
+          (s.contains('badminton') || s.contains('cầu'))) {
+        return true;
+      }
+
+      if (selectedSport == 'table_tennis' &&
+          (s.contains('table') || s.contains('bàn'))) {
+        return true;
+      }
+
       if (selectedSport == 'tennis' && s.contains('tennis')) return true;
       return s == selectedSport;
     }).toList();
 
     // 30-Day Recent achievements ONLY
-    final recentAchievements = filteredAchievements.where((a) => a.isRecent).toList();
+    final recentAchievements = filteredAchievements
+        .where((a) => a.isRecent)
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,7 +116,11 @@ class AchievementsTab extends ConsumerWidget {
           colors,
           'Thành tích gần đây (30 ngày)',
           onSeeAllTap: filteredAchievements.isNotEmpty
-              ? () => _showAllAchievementsModal(context, filteredAchievements, colors)
+              ? () => _showAllAchievementsModal(
+                  context,
+                  filteredAchievements,
+                  colors,
+                )
               : null,
         ),
         const SizedBox(height: 10),
@@ -136,9 +159,7 @@ class AchievementsTab extends ConsumerWidget {
             ),
           )
         else
-          ...recentAchievements.map(
-            (a) => _AchievementCard(achievement: a),
-          ),
+          ...recentAchievements.map((a) => _AchievementCard(achievement: a)),
       ],
     );
   }
@@ -155,15 +176,27 @@ class AchievementsTab extends ConsumerWidget {
     final l = label.toLowerCase();
     if (l.contains('vô địch')) return const Color(0xFFF59E0B);
     if (l.contains('á quân')) return const Color(0xFF94A3B8);
-    if (l.contains('hạng 3') || l.contains('top 4')) return const Color(0xFFCD7F32);
+    if (l.contains('hạng 3') || l.contains('top 4')) {
+      return const Color(0xFFCD7F32);
+    }
+
     return const Color(0xFF8B5CF6);
   }
 
   static IconData _getSportIcon(String sport) {
     final s = sport.toLowerCase();
-    if (s.contains('pickle') || s.contains('padd')) return Icons.sports_tennis_rounded;
-    if (s.contains('badminton') || s.contains('cầu')) return Icons.sports_tennis_outlined;
-    if (s.contains('foot') || s.contains('socc') || s.contains('bóng')) return Icons.sports_soccer_rounded;
+    if (s.contains('pickle') || s.contains('padd')) {
+      return Icons.sports_tennis_rounded;
+    }
+
+    if (s.contains('badminton') || s.contains('cầu')) {
+      return Icons.sports_tennis_outlined;
+    }
+
+    if (s.contains('foot') || s.contains('socc') || s.contains('bóng')) {
+      return Icons.sports_soccer_rounded;
+    }
+
     if (s.contains('tennis')) return Icons.sports_baseball_rounded;
     return Icons.emoji_events_rounded;
   }
@@ -276,7 +309,9 @@ class AchievementsTab extends ConsumerWidget {
                       controller: controller,
                       itemCount: allAchievements.length,
                       itemBuilder: (context, i) {
-                        return _AchievementCard(achievement: allAchievements[i]);
+                        return _AchievementCard(
+                          achievement: allAchievements[i],
+                        );
                       },
                     ),
                   ),
@@ -318,12 +353,18 @@ class _BadgeStyle {
   final Color bg;
   final Color text;
   final Color border;
-  const _BadgeStyle({required this.bg, required this.text, required this.border});
+  const _BadgeStyle({
+    required this.bg,
+    required this.text,
+    required this.border,
+  });
 }
 
 _BadgeStyle _getBadgeStyle(String label) {
   final l = label.toLowerCase();
-  if (l.contains('vô địch') || l.contains('quán quân') || l.contains('hạng 1')) {
+  if (l.contains('vô địch') ||
+      l.contains('quán quân') ||
+      l.contains('hạng 1')) {
     return const _BadgeStyle(
       bg: Color(0xFFFEF3C7),
       text: Color(0xFFB45309),
@@ -335,7 +376,9 @@ _BadgeStyle _getBadgeStyle(String label) {
       text: Color(0xFF475569),
       border: Color(0xFFE2E8F0),
     );
-  } else if (l.contains('hạng 3') || l.contains('top 4') || l.contains('đồng')) {
+  } else if (l.contains('hạng 3') ||
+      l.contains('top 4') ||
+      l.contains('đồng')) {
     return const _BadgeStyle(
       bg: Color(0xFFFFEDD5),
       text: Color(0xFFC2410C),
@@ -399,7 +442,8 @@ class _AchievementCard extends StatelessWidget {
                     width: 40,
                     height: 40,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const _FallbackSportoLogo(),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const _FallbackSportoLogo(),
                   )
                 : const _FallbackSportoLogo(),
           ),
@@ -477,7 +521,7 @@ class _FallbackSportoLogo extends StatelessWidget {
           fit: BoxFit.contain,
           width: 24,
           height: 24,
-          errorBuilder: (_, __, ___) => const Text(
+          errorBuilder: (_, _, _) => const Text(
             "SPORTO",
             style: TextStyle(
               fontSize: 8,

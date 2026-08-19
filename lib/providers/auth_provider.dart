@@ -228,7 +228,10 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi đăng nhập', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: ErrorParser.parse(e, 'Đăng nhập thất bại. Vui lòng thử lại.'),
+        errorMessage: ErrorParser.parse(
+          e,
+          'Đăng nhập thất bại. Vui lòng thử lại.',
+        ),
       );
       return false;
     }
@@ -255,14 +258,21 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi đăng nhập Google', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: ErrorParser.parse(e, 'Đăng nhập Google thất bại. Vui lòng thử lại.'),
+        errorMessage: ErrorParser.parse(
+          e,
+          'Đăng nhập Google thất bại. Vui lòng thử lại.',
+        ),
       );
       return false;
     }
   }
 
   /// Đăng nhập bằng Apple
-  Future<bool> loginWithApple(String idToken, {String? nonce, String? fullName}) async {
+  Future<bool> loginWithApple(
+    String idToken, {
+    String? nonce,
+    String? fullName,
+  }) async {
     _log.info('Đăng nhập bằng Apple via NestJS Mobile API');
     state = state.copyWith(status: AuthStatus.validating);
 
@@ -282,7 +292,10 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi đăng nhập Apple', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: ErrorParser.parse(e, 'Đăng nhập Apple thất bại. Vui lòng thử lại.'),
+        errorMessage: ErrorParser.parse(
+          e,
+          'Đăng nhập Apple thất bại. Vui lòng thử lại.',
+        ),
       );
       return false;
     }
@@ -309,7 +322,10 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi đăng nhập Facebook', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: ErrorParser.parse(e, 'Đăng nhập Facebook thất bại. Vui lòng thử lại.'),
+        errorMessage: ErrorParser.parse(
+          e,
+          'Đăng nhập Facebook thất bại. Vui lòng thử lại.',
+        ),
       );
       return false;
     }
@@ -340,7 +356,10 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi đăng ký', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: ErrorParser.parse(e, 'Đăng ký thất bại. Vui lòng kiểm tra thông tin và thử lại.'),
+        errorMessage: ErrorParser.parse(
+          e,
+          'Đăng ký thất bại. Vui lòng kiểm tra thông tin và thử lại.',
+        ),
       );
       return false;
     }
@@ -358,8 +377,10 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   void _startTokenListener(String tokenCode) {
-    if (tokenCode == 'SESSION')
+    if (tokenCode == 'SESSION') {
       return; // Không cần listen token của email session
+    }
+
     _tokenSubscription?.cancel();
     _tokenSubscription = ref
         .read(tokenRepositoryProvider)

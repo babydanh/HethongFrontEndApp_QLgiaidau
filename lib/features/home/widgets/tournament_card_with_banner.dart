@@ -248,7 +248,7 @@ class _TournamentCardWithBannerState
                           Image.network(
                             resolvedBannerUrl,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
+                            errorBuilder: (_, _, _) => Container(
                               decoration: const BoxDecoration(
                                 gradient: LinearGradient(
                                   begin: Alignment.topLeft,
@@ -544,7 +544,7 @@ class _TournamentCardWithBannerState
                         ? Image.network(
                             resolvedLogoUrl,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
+                            errorBuilder: (_, _, _) => Container(
                               color: AppTheme.primary.withValues(alpha: 0.1),
                               padding: const EdgeInsets.all(8),
                               child: Image.asset(

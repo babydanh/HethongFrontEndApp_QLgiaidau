@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -84,7 +84,10 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
     } catch (e, stack) {
       _log.error('Lỗi khởi tạo chat room', e, stack);
       if (mounted) {
-        setState(() => _errorMessage = 'Không thể kết nối phòng chat. Vui lòng thử lại.');
+        setState(
+          () =>
+              _errorMessage = 'Không thể kết nối phòng chat. Vui lòng thử lại.',
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -138,7 +141,9 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
       if (mounted) {
         _msgCtrl.text = text;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể gửi tin nhắn. Vui lòng thử lại.')),
+          const SnackBar(
+            content: Text('Không thể gửi tin nhắn. Vui lòng thử lại.'),
+          ),
         );
       }
     }
@@ -160,12 +165,15 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(_errorMessage!, style: TextStyle(fontSize: 12, color: colors.textMuted)),
+                      Text(
+                        _errorMessage!,
+                        style: TextStyle(fontSize: 12, color: colors.textMuted),
+                      ),
                       const SizedBox(height: 10),
                       OutlinedButton.icon(
                         onPressed: _initRoom,
                         icon: const Icon(Icons.refresh_rounded, size: 16),
-                        label: Text(l10n?.infoRetry ?? 'Thử lại'),
+                        label: Text(l10n.infoRetry),
                       ),
                     ],
                   ),
@@ -182,7 +190,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        l10n?.matchChatNoMessages ?? 'Chưa có tin nhắn',
+                        l10n.matchChatNoMessages,
                         style: TextStyle(fontSize: 12, color: colors.textMuted),
                       ),
                     ],
@@ -201,7 +209,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                     final sender =
                         msg['senderName'] as String? ??
                         msg['sender']?['fullName'] as String? ??
-                        (l10n?.unnamed ?? '(Chưa có tên)');
+                        (l10n.unnamed);
                     final content =
                         msg['content'] as String? ??
                         msg['messageText'] as String? ??
@@ -217,13 +225,21 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                         children: [
                           CircleAvatar(
                             radius: 14,
-                            backgroundColor: colors.border.withValues(alpha: 0.3),
-                            backgroundImage: (msg['senderAvatar'] != null && (msg['senderAvatar'] as String).isNotEmpty)
+                            backgroundColor: colors.border.withValues(
+                              alpha: 0.3,
+                            ),
+                            backgroundImage:
+                                (msg['senderAvatar'] != null &&
+                                    (msg['senderAvatar'] as String).isNotEmpty)
                                 ? NetworkImage(msg['senderAvatar'] as String)
                                 : null,
-                            child: (msg['senderAvatar'] == null || (msg['senderAvatar'] as String).isEmpty)
+                            child:
+                                (msg['senderAvatar'] == null ||
+                                    (msg['senderAvatar'] as String).isEmpty)
                                 ? Text(
-                                    sender.isNotEmpty ? sender[0].toUpperCase() : '?',
+                                    sender.isNotEmpty
+                                        ? sender[0].toUpperCase()
+                                        : '?',
                                     style: TextStyle(
                                       color: colors.textPrimary,
                                       fontWeight: FontWeight.w700,
@@ -359,7 +375,7 @@ class LiveCameraPlaceholder extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              l10n?.matchCamLabel ?? 'CAM 1 (SÂN CHÍNH)',
+              l10n.matchCamLabel,
               style: TextStyle(
                 fontSize: 14,
                 color: colors.textMuted,

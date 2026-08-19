@@ -21,8 +21,16 @@ class ReportReason {
 }
 
 const _reportReasons = [
-  ReportReason(key: 'spam', label: 'Spam / Quảng cáo', icon: Icons.campaign_rounded),
-  ReportReason(key: 'inappropriate', label: 'Nội dung không phù hợp', icon: Icons.block_rounded),
+  ReportReason(
+    key: 'spam',
+    label: 'Spam / Quảng cáo',
+    icon: Icons.campaign_rounded,
+  ),
+  ReportReason(
+    key: 'inappropriate',
+    label: 'Nội dung không phù hợp',
+    icon: Icons.block_rounded,
+  ),
   ReportReason(key: 'cheating', label: 'Gian lận', icon: Icons.gavel_rounded),
   ReportReason(key: 'other', label: 'Khác', icon: Icons.more_horiz_rounded),
 ];
@@ -51,7 +59,8 @@ class ReportSheet extends ConsumerStatefulWidget {
   });
 
   /// Show bottom sheet và trả về true nếu gửi thành công
-  static Future<bool> show(BuildContext context, {
+  static Future<bool> show(
+    BuildContext context, {
     required String targetId,
     required String targetType,
   }) {
@@ -91,13 +100,18 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
     try {
       final dio = ref.read(dioClientProvider).dio;
       final description = _reasonController.text.trim();
-      await dio.post('/reports', data: {
-        'targetId': widget.targetId,
-        'targetType': widget.targetType.toUpperCase(),
-        'category': _categoryForReason(_selectedReason),
-        'reason': description.isEmpty ? 'Báo cáo: $_selectedReason' : description,
-        'evidenceUrls': _evidenceUrls,
-      });
+      await dio.post(
+        '/reports',
+        data: {
+          'targetId': widget.targetId,
+          'targetType': widget.targetType.toUpperCase(),
+          'category': _categoryForReason(_selectedReason),
+          'reason': description.isEmpty
+              ? 'Báo cáo: $_selectedReason'
+              : description,
+          'evidenceUrls': _evidenceUrls,
+        },
+      );
 
       _log.info('Báo cáo thành công: ${widget.targetType}/${widget.targetId}');
 
@@ -136,13 +150,20 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
     }
     setState(() => _isUploading = true);
     try {
-      final response = await ref.read(dioClientProvider).dio.post(
-        '/upload/image',
-          data: FormData.fromMap({'file': MultipartFile.fromBytes(bytes, filename: file.name)}),
-        options: Options(contentType: 'multipart/form-data'),
-      );
+      final response = await ref
+          .read(dioClientProvider)
+          .dio
+          .post(
+            '/upload/image',
+            data: FormData.fromMap({
+              'file': MultipartFile.fromBytes(bytes, filename: file.name),
+            }),
+            options: Options(contentType: 'multipart/form-data'),
+          );
       final url = response.data['url']?.toString();
-      if (url == null || url.isEmpty) throw Exception('Không nhận được liên kết tệp');
+      if (url == null || url.isEmpty) {
+        throw Exception('Không nhận được liên kết tệp');
+      }
       if (mounted) setState(() => _evidenceUrls.add(url));
     } catch (_) {
       _showMessage('Tải tệp thất bại. Vui lòng thử lại.');
@@ -153,7 +174,9 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -196,7 +219,11 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                     color: colors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Icons.flag_rounded, color: colors.error, size: 22),
+                  child: Icon(
+                    Icons.flag_rounded,
+                    color: colors.error,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -219,7 +246,9 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
             const SizedBox(height: 20),
 
             // Reason options
-            ..._reportReasons.map((reason) => _buildReasonOption(reason, colors)),
+            ..._reportReasons.map(
+              (reason) => _buildReasonOption(reason, colors),
+            ),
             const SizedBox(height: 16),
 
             // Additional description
@@ -254,10 +283,27 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
 
             Row(
               children: [
-                Expanded(child: Text('Minh chứng (không bắt buộc)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.textSecondary))),
+                Expanded(
+                  child: Text(
+                    'Minh chứng (không bắt buộc)',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ),
                 TextButton.icon(
-                  onPressed: _isUploading || _evidenceUrls.length >= 5 ? null : _pickEvidence,
-                  icon: _isUploading ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.upload_file_rounded, size: 18),
+                  onPressed: _isUploading || _evidenceUrls.length >= 5
+                      ? null
+                      : _pickEvidence,
+                  icon: _isUploading
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.upload_file_rounded, size: 18),
                   label: const Text('Tải tệp'),
                 ),
               ],
@@ -268,26 +314,67 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                 runSpacing: 8,
                 children: List.generate(_evidenceUrls.length, (index) {
                   final url = _evidenceUrls[index];
-                  final isImage = RegExp(r'\.(png|jpe?g|webp)(\?|$)', caseSensitive: false).hasMatch(url);
+                  final isImage = RegExp(
+                    r'\.(png|jpe?g|webp)(\?|$)',
+                    caseSensitive: false,
+                  ).hasMatch(url);
                   return Stack(
                     children: [
                       Container(
                         width: 76,
                         height: 76,
                         clipBehavior: Clip.antiAlias,
-                        decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(10), border: Border.all(color: colors.border)),
+                        decoration: BoxDecoration(
+                          color: colors.bgSurface,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: colors.border),
+                        ),
                         child: InkWell(
-                          onTap: isImage ? null : () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
-                          child: isImage ? Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_outlined)) : const Icon(Icons.insert_drive_file_outlined, size: 30),
+                          onTap: isImage
+                              ? null
+                              : () => launchUrl(
+                                  Uri.parse(url),
+                                  mode: LaunchMode.externalApplication,
+                                ),
+                          child: isImage
+                              ? Image.network(
+                                  url,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) =>
+                                      const Icon(Icons.broken_image_outlined),
+                                )
+                              : const Icon(
+                                  Icons.insert_drive_file_outlined,
+                                  size: 30,
+                                ),
                         ),
                       ),
-                      Positioned(right: 2, top: 2, child: InkWell(onTap: () => setState(() => _evidenceUrls.removeAt(index)), child: const CircleAvatar(radius: 10, backgroundColor: Colors.black54, child: Icon(Icons.close, size: 13, color: Colors.white)))),
+                      Positioned(
+                        right: 2,
+                        top: 2,
+                        child: InkWell(
+                          onTap: () =>
+                              setState(() => _evidenceUrls.removeAt(index)),
+                          child: const CircleAvatar(
+                            radius: 10,
+                            backgroundColor: Colors.black54,
+                            child: Icon(
+                              Icons.close,
+                              size: 13,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   );
                 }),
               ),
             const SizedBox(height: 8),
-            Text('${_evidenceUrls.length}/5 tệp đã tải lên', style: TextStyle(fontSize: 12, color: colors.textMuted)),
+            Text(
+              '${_evidenceUrls.length}/5 tệp đã tải lên',
+              style: TextStyle(fontSize: 12, color: colors.textMuted),
+            ),
             const SizedBox(height: 12),
 
             // Submit button
@@ -371,7 +458,11 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                   color: colors.error,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_rounded, size: 14, color: Colors.white),
+                child: const Icon(
+                  Icons.check_rounded,
+                  size: 14,
+                  color: Colors.white,
+                ),
               ),
           ],
         ),

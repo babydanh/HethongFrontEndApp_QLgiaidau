@@ -36,7 +36,9 @@ class AppUpdateInfo {
       final match = RegExp(r'^\d+').firstMatch(part);
       return int.tryParse(match?.group(0) ?? '0') ?? 0;
     }).toList();
-    while (parts.length < 3) parts.add(0);
+    while (parts.length < 3) {
+      parts.add(0);
+    }
     return parts.take(3).toList();
   }
 }
@@ -50,8 +52,13 @@ class AppUpdateService {
     if (kIsWeb) return null;
     final platform = Platform.isIOS ? 'ios' : 'android';
     final packageInfo = await PackageInfo.fromPlatform();
-    final response = await dio.get('/app/version', queryParameters: {'platform': platform});
-    final data = response.data is Map ? Map<String, dynamic>.from(response.data as Map) : null;
+    final response = await dio.get(
+      '/app/version',
+      queryParameters: {'platform': platform},
+    );
+    final data = response.data is Map
+        ? Map<String, dynamic>.from(response.data as Map)
+        : null;
     if (data == null) return null;
     return AppUpdateInfo(
       currentVersion: packageInfo.version,

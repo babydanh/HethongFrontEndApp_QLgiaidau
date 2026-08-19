@@ -1,4 +1,3 @@
-
 // ─── Sport Rule Kinds ───
 
 enum SportRuleKind {
@@ -13,7 +12,10 @@ enum SportRuleKind {
 
   static SportRuleKind fromString(String? s) {
     if (s == null) return SportRuleKind.badminton;
-    final normalized = s.trim().toUpperCase().replaceAll(RegExp(r'[\s-]+'), '_');
+    final normalized = s.trim().toUpperCase().replaceAll(
+      RegExp(r'[\s-]+'),
+      '_',
+    );
     switch (normalized) {
       case 'BADMINTON':
       case 'CẦU LÔNG':
@@ -41,8 +43,8 @@ enum SportRuleKind {
 // ─── Scoring Models ───
 
 enum SportScoringModel {
-  rallyPointSet('RALLY_POINT_SET'),  // badminton, table tennis, pickleball rally
-  tennisSet('TENNIS_SET'),           // tennis game-based
+  rallyPointSet('RALLY_POINT_SET'), // badminton, table tennis, pickleball rally
+  tennisSet('TENNIS_SET'), // tennis game-based
   pickleballSideOut('PICKLEBALL_SIDE_OUT'); // pickleball side-out
 
   final String value;
@@ -50,9 +52,12 @@ enum SportScoringModel {
 
   static SportScoringModel fromString(String s) {
     switch (s.toUpperCase()) {
-      case 'TENNIS_SET': return SportScoringModel.tennisSet;
-      case 'PICKLEBALL_SIDE_OUT': return SportScoringModel.pickleballSideOut;
-      default: return SportScoringModel.rallyPointSet;
+      case 'TENNIS_SET':
+        return SportScoringModel.tennisSet;
+      case 'PICKLEBALL_SIDE_OUT':
+        return SportScoringModel.pickleballSideOut;
+      default:
+        return SportScoringModel.rallyPointSet;
     }
   }
 }
@@ -84,7 +89,7 @@ class SportConfig {
 
   @override
   String toString() =>
-    'SportConfig(kind=$kind, model=$scoringModel, BO$bestOf, ${pointsPerSet}pts, winBy2=$mustWinByTwo)';
+      'SportConfig(kind=$kind, model=$scoringModel, BO$bestOf, ${pointsPerSet}pts, winBy2=$mustWinByTwo)';
 }
 
 // ─── Defaults map ───
@@ -146,7 +151,10 @@ const _sportDefaults = <SportRuleKind, SportConfig>{
 // ─── Resolve ───
 
 /// Giải SportConfig từ tournament sportRules (Map từ BE JSONB) hoặc fallback
-SportConfig resolveSportConfig(Map<String, dynamic>? sportRules, [SportRuleKind fallback = SportRuleKind.badminton]) {
+SportConfig resolveSportConfig(
+  Map<String, dynamic>? sportRules, [
+  SportRuleKind fallback = SportRuleKind.badminton,
+]) {
   if (sportRules == null || sportRules.isEmpty) {
     return _sportDefaults[fallback]!;
   }
@@ -156,7 +164,9 @@ SportConfig resolveSportConfig(Map<String, dynamic>? sportRules, [SportRuleKind 
 
   // Nếu sportRules có scoringModel override
   final rawModel = sportRules['scoringModel']?.toString();
-  final scoringModel = rawModel != null ? SportScoringModel.fromString(rawModel) : defaults.scoringModel;
+  final scoringModel = rawModel != null
+      ? SportScoringModel.fromString(rawModel)
+      : defaults.scoringModel;
 
   return SportConfig(
     kind: kind,
@@ -164,10 +174,12 @@ SportConfig resolveSportConfig(Map<String, dynamic>? sportRules, [SportRuleKind 
     bestOf: _readInt(sportRules, 'bestOf') ?? defaults.bestOf,
     setsToWin: _readInt(sportRules, 'setsToWin') ?? defaults.setsToWin,
     pointsPerSet: _readInt(sportRules, 'pointsPerSet') ?? defaults.pointsPerSet,
-    mustWinByTwo: _readBool(sportRules, 'mustWinByTwo') ?? defaults.mustWinByTwo,
+    mustWinByTwo:
+        _readBool(sportRules, 'mustWinByTwo') ?? defaults.mustWinByTwo,
     maxPoints: _readInt(sportRules, 'maxPoints') ?? defaults.maxPoints,
     tiebreakAt: _readInt(sportRules, 'tiebreakAt') ?? defaults.tiebreakAt,
-    tiebreakPoints: _readInt(sportRules, 'tiebreakPoints') ?? defaults.tiebreakPoints,
+    tiebreakPoints:
+        _readInt(sportRules, 'tiebreakPoints') ?? defaults.tiebreakPoints,
   );
 }
 
@@ -175,8 +187,11 @@ SportConfig resolveSportConfig(Map<String, dynamic>? sportRules, [SportRuleKind 
 (int team1Sets, int team2Sets) computeMatchSetsWon(List<SetScoreData> sets) {
   int t1 = 0, t2 = 0;
   for (final s in sets) {
-    if (s.score1 > s.score2) t1++;
-    else if (s.score2 > s.score1) t2++;
+    if (s.score1 > s.score2) {
+      t1++;
+    } else if (s.score2 > s.score1) {
+      t2++;
+    }
   }
   return (t1, t2);
 }
@@ -235,9 +250,10 @@ class SetScoreData {
     isFinished: json['isFinished'] as bool? ?? false,
   );
 
-  SetScoreData copyWith({int? score1, int? score2, bool? isFinished}) => SetScoreData(
-    score1: score1 ?? this.score1,
-    score2: score2 ?? this.score2,
-    isFinished: isFinished ?? this.isFinished,
-  );
+  SetScoreData copyWith({int? score1, int? score2, bool? isFinished}) =>
+      SetScoreData(
+        score1: score1 ?? this.score1,
+        score2: score2 ?? this.score2,
+        isFinished: isFinished ?? this.isFinished,
+      );
 }

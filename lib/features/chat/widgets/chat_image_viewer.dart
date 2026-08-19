@@ -58,13 +58,20 @@ class ChatImageViewer extends StatelessWidget {
                     child: CircularProgressIndicator(color: Colors.white),
                   );
                 },
-                errorBuilder: (_, __, ___) => const Center(
+                errorBuilder: (_, error, stackTrace) => const Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.broken_image_rounded, color: Colors.white60, size: 48),
+                      Icon(
+                        Icons.broken_image_rounded,
+                        color: Colors.white60,
+                        size: 48,
+                      ),
                       SizedBox(height: 8),
-                      Text('Không thể tải hình ảnh', style: TextStyle(color: Colors.white70)),
+                      Text(
+                        'Không thể tải hình ảnh',
+                        style: TextStyle(color: Colors.white70),
+                      ),
                     ],
                   ),
                 ),
@@ -97,7 +104,11 @@ class ChatImageViewer extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 22),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                     tooltip: 'Đóng',
                     onPressed: () => Navigator.pop(context),
                   ),
