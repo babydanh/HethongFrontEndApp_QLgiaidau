@@ -1492,5 +1492,35 @@
     "placeholders": {
       "error": {}
     }
-  }
+  },
+  "exploreHeaderTitle": "Khám phá",
+  "exploreHeaderSubtitle": "Tìm giải đấu phù hợp với bạn",
+  "exploreSearchHint": "Tìm giải đấu, môn thể thao...",
+  "exploreFeaturedTitle": "Giải đấu nổi bật",
+  "exploreLiveTitle": "Trận đấu đang diễn ra",
+  "exploreLiveEmpty": "Chưa có trận đấu nào đang diễn ra",
+  "exploreRecentResultsTitle": "Kết quả trận đấu vừa qua",
+  "exploreUpcomingTitle": "Lịch thi đấu sắp diễn ra",
+  "exploreViewAll": "Xem tất cả",
+  "exploreEmptyTitle": "Không tìm thấy giải đấu",
+  "exploreEmptyHint": "Thử thay đổi bộ lọc hoặc từ khoá tìm kiếm",
+  "exploreRankedTournament": "Giải xếp hạng",
+  "exploreFriendlyTournament": "Giải đấu giao lưu",
+  "exploreBracketLosers": "NHÁNH THUA",
+  "exploreBracketGroup": "VÒNG BẢNG",
+  "exploreBracketKnockout": "VÒNG KNOCKOUT",
+  "exploreCourtNotAssigned": "Chưa xếp sân",
+  "exploreByeAdvance": "Vô thẳng",
+  "exploreCheer": "Cổ vũ",
+  "exploreDetails": "Chi tiết",
+  "exploreShareSubtitle": "Giải đấu: {tournament} • {court}",
+  "@exploreShareSubtitle": {
+    "placeholders": {
+      "tournament": {},
+      "court": {}
+    }
+  },
+  "exploreLiveBadge": "Trận đấu đang Live 🔴",
+  "exploreMatchBadge": "Trận đấu"
 }
+

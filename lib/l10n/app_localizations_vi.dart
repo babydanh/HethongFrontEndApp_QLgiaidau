@@ -3766,4 +3766,74 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get rank_update => 'Cập nhật ELO';
+
+  @override
+  String get exploreHeaderTitle => 'Khám phá';
+
+  @override
+  String get exploreHeaderSubtitle => 'Tìm giải đấu phù hợp với bạn';
+
+  @override
+  String get exploreSearchHint => 'Tìm giải đấu, môn thể thao...';
+
+  @override
+  String get exploreFeaturedTitle => 'Giải đấu nổi bật';
+
+  @override
+  String get exploreLiveTitle => 'Trận đấu đang diễn ra';
+
+  @override
+  String get exploreLiveEmpty => 'Chưa có trận đấu nào đang diễn ra';
+
+  @override
+  String get exploreRecentResultsTitle => 'Kết quả trận đấu vừa qua';
+
+  @override
+  String get exploreUpcomingTitle => 'Lịch thi đấu sắp diễn ra';
+
+  @override
+  String get exploreViewAll => 'Xem tất cả';
+
+  @override
+  String get exploreEmptyTitle => 'Không tìm thấy giải đấu';
+
+  @override
+  String get exploreEmptyHint => 'Thử thay đổi bộ lọc hoặc từ khoá tìm kiếm';
+
+  @override
+  String get exploreRankedTournament => 'Giải xếp hạng';
+
+  @override
+  String get exploreFriendlyTournament => 'Giải đấu giao lưu';
+
+  @override
+  String get exploreBracketLosers => 'NHÁNH THUA';
+
+  @override
+  String get exploreBracketGroup => 'VÒNG BẢNG';
+
+  @override
+  String get exploreBracketKnockout => 'VÒNG KNOCKOUT';
+
+  @override
+  String get exploreCourtNotAssigned => 'Chưa xếp sân';
+
+  @override
+  String get exploreByeAdvance => 'Vô thẳng';
+
+  @override
+  String get exploreCheer => 'Cổ vũ';
+
+  @override
+  String get exploreDetails => 'Chi tiết';
+
+  @override
+  String exploreShareSubtitle(Object tournament, Object court) =>
+      'Giải đấu: $tournament • $court';
+
+  @override
+  String get exploreLiveBadge => 'Trận đấu đang Live 🔴';
+
+  @override
+  String get exploreMatchBadge => 'Trận đấu';
 }

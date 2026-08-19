@@ -91,76 +91,7 @@ class _LiveTournamentWithMatchesCardState
         // Match sections must render only persisted matches matching the
         // requested status. Never fall back to another status or fake scores.
         if (validMatches.isEmpty) return const SizedBox.shrink();
-        List<MatchModel> displayMatches = validMatches;
-
-        if (displayMatches.isEmpty) {
-          displayMatches = [
-            MatchModel(
-              id: 'm1_${widget.tournament.id}',
-              round: 2,
-              matchNumber: 1,
-              team1Name: 'Lê Hoàng Cường',
-              team2Name: 'Vũ Quốc Phong',
-              score1: 8,
-              score2: 11,
-              status: 'COMPLETED',
-              stageName: 'Playoff - Tứ kết',
-              bracketPosition: const BracketPosition(round: 2, position: 1),
-              updatedAt: DateTime.now(),
-              tournamentName: widget.tournament.name,
-              sportKey: widget.tournament.sport,
-              court: widget.tournament.locationAddress ?? 'Chưa xếp sân',
-            ),
-            MatchModel(
-              id: 'm2_${widget.tournament.id}',
-              round: 2,
-              matchNumber: 2,
-              team1Name: 'Phạm Hải Dũng',
-              team2Name: 'Bùi Minh Trí',
-              score1: 11,
-              score2: 9,
-              status: 'COMPLETED',
-              stageName: 'Playoff - Tứ kết',
-              bracketPosition: const BracketPosition(round: 2, position: 2),
-              updatedAt: DateTime.now(),
-              tournamentName: widget.tournament.name,
-              sportKey: widget.tournament.sport,
-              court: widget.tournament.locationAddress ?? 'Chưa xếp sân',
-            ),
-            MatchModel(
-              id: 'm3_${widget.tournament.id}',
-              round: 1,
-              matchNumber: 3,
-              team1Name: 'Đỗ Thùy Trang',
-              team2Name: 'Hồ Đức Hải',
-              score1: 11,
-              score2: 9,
-              status: 'COMPLETED',
-              stageName: 'Playoff - Vòng 16',
-              bracketPosition: const BracketPosition(round: 1, position: 3),
-              updatedAt: DateTime.now(),
-              tournamentName: widget.tournament.name,
-              sportKey: widget.tournament.sport,
-              court: widget.tournament.locationAddress ?? 'Chưa xếp sân',
-            ),
-            MatchModel(
-              id: 'm4_${widget.tournament.id}',
-              round: 3,
-              matchNumber: 4,
-              team1Name: 'Nguyễn Minh Danh',
-              team2Name: 'Trần Minh Bình',
-              score1: 11,
-              score2: 9,
-              status: 'COMPLETED',
-              stageName: 'Playoff - Chung kết',
-              bracketPosition: const BracketPosition(round: 3, position: 4),
-              updatedAt: DateTime.now(),
-              tournamentName: widget.tournament.name,
-              sportKey: widget.tournament.sport,
-              court: widget.tournament.locationAddress ?? 'Chưa xếp sân',
-            ),
-          ];
-        }
+        final displayMatches = validMatches;
 
         // Calculate total pages (each page shows up to 4 matches)
         final totalPages = (displayMatches.length / _pageSize).ceil();
@@ -781,7 +712,9 @@ class _LiveTournamentWithMatchesCardState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          isCheered ? Icons.favorite : Icons.favorite_border_rounded,
+                          isCheered
+                              ? Icons.favorite
+                              : Icons.favorite_border_rounded,
                           size: 16,
                           color: isCheered
                               ? const Color(0xFFDC2626)

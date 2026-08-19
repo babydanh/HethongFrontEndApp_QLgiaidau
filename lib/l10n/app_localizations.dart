@@ -6947,6 +6947,75 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Cập nhật ELO'**
   String get rank_update;
+
+  /// No description provided for @exploreHeaderTitle.
+  String get exploreHeaderTitle;
+
+  /// No description provided for @exploreHeaderSubtitle.
+  String get exploreHeaderSubtitle;
+
+  /// No description provided for @exploreSearchHint.
+  String get exploreSearchHint;
+
+  /// No description provided for @exploreFeaturedTitle.
+  String get exploreFeaturedTitle;
+
+  /// No description provided for @exploreLiveTitle.
+  String get exploreLiveTitle;
+
+  /// No description provided for @exploreLiveEmpty.
+  String get exploreLiveEmpty;
+
+  /// No description provided for @exploreRecentResultsTitle.
+  String get exploreRecentResultsTitle;
+
+  /// No description provided for @exploreUpcomingTitle.
+  String get exploreUpcomingTitle;
+
+  /// No description provided for @exploreViewAll.
+  String get exploreViewAll;
+
+  /// No description provided for @exploreEmptyTitle.
+  String get exploreEmptyTitle;
+
+  /// No description provided for @exploreEmptyHint.
+  String get exploreEmptyHint;
+
+  /// No description provided for @exploreRankedTournament.
+  String get exploreRankedTournament;
+
+  /// No description provided for @exploreFriendlyTournament.
+  String get exploreFriendlyTournament;
+
+  /// No description provided for @exploreBracketLosers.
+  String get exploreBracketLosers;
+
+  /// No description provided for @exploreBracketGroup.
+  String get exploreBracketGroup;
+
+  /// No description provided for @exploreBracketKnockout.
+  String get exploreBracketKnockout;
+
+  /// No description provided for @exploreCourtNotAssigned.
+  String get exploreCourtNotAssigned;
+
+  /// No description provided for @exploreByeAdvance.
+  String get exploreByeAdvance;
+
+  /// No description provided for @exploreCheer.
+  String get exploreCheer;
+
+  /// No description provided for @exploreDetails.
+  String get exploreDetails;
+
+  /// No description provided for @exploreShareSubtitle.
+  String exploreShareSubtitle(Object tournament, Object court);
+
+  /// No description provided for @exploreLiveBadge.
+  String get exploreLiveBadge;
+
+  /// No description provided for @exploreMatchBadge.
+  String get exploreMatchBadge;
 }
 
 class _AppLocalizationsDelegate

@@ -3771,4 +3771,74 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rank_update => 'ELO Update';
+
+  @override
+  String get exploreHeaderTitle => 'Explore';
+
+  @override
+  String get exploreHeaderSubtitle => 'Find the right tournament for you';
+
+  @override
+  String get exploreSearchHint => 'Search tournaments, sports...';
+
+  @override
+  String get exploreFeaturedTitle => 'Featured tournaments';
+
+  @override
+  String get exploreLiveTitle => 'Live matches';
+
+  @override
+  String get exploreLiveEmpty => 'No matches are currently live';
+
+  @override
+  String get exploreRecentResultsTitle => 'Recent match results';
+
+  @override
+  String get exploreUpcomingTitle => 'Upcoming schedule';
+
+  @override
+  String get exploreViewAll => 'View all';
+
+  @override
+  String get exploreEmptyTitle => 'No tournaments found';
+
+  @override
+  String get exploreEmptyHint => 'Try changing the filters or search keywords';
+
+  @override
+  String get exploreRankedTournament => 'Ranked tournament';
+
+  @override
+  String get exploreFriendlyTournament => 'Friendly tournament';
+
+  @override
+  String get exploreBracketLosers => 'LOSERS BRACKET';
+
+  @override
+  String get exploreBracketGroup => 'GROUP STAGE';
+
+  @override
+  String get exploreBracketKnockout => 'KNOCKOUT';
+
+  @override
+  String get exploreCourtNotAssigned => 'Court not assigned';
+
+  @override
+  String get exploreByeAdvance => 'Advanced by bye';
+
+  @override
+  String get exploreCheer => 'Cheer';
+
+  @override
+  String get exploreDetails => 'Details';
+
+  @override
+  String exploreShareSubtitle(Object tournament, Object court) =>
+      'Tournament: $tournament • $court';
+
+  @override
+  String get exploreLiveBadge => 'Live match 🔴';
+
+  @override
+  String get exploreMatchBadge => 'Match';
 }

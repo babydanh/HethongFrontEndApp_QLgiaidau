@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'dart:math' as math;
@@ -194,8 +195,6 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
       .where((t) => t.status == AppConstants.statusInProgress)
       .toList();
 
-  
-
   @override
   Widget build(BuildContext context) {
     return FadeTransition(
@@ -204,13 +203,13 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
         physics: const BouncingScrollPhysics(),
         slivers: [
           // ── Wave Header ──
-          SliverToBoxAdapter(child: _buildWaveHeader()),
+          SliverToBoxAdapter(child: _buildWaveHeader(context)),
 
           // ── Search ──
-          SliverToBoxAdapter(child: _buildSearch()),
+          SliverToBoxAdapter(child: _buildSearch(context)),
 
           // ── Sport Filter ──
-          SliverToBoxAdapter(child: _buildSportFilter()),
+          SliverToBoxAdapter(child: _buildSportFilter(context)),
 
           // ── SECTION: Giải đấu sắp diễn ra / đăng ký ──
           if (_upcomingTournaments.isNotEmpty) ...[
@@ -218,7 +217,9 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
               child: _buildSectionHeader(
                 icon: Icons.emoji_events_rounded,
                 iconColor: const Color(0xFFF59E0B),
-                title: 'Giải đấu nổi bật',
+                title:
+                    AppLocalizations.of(context)?.exploreFeaturedTitle ??
+                    'Giải đấu nổi bật',
                 onMore: widget.onViewAllTournaments,
               ),
             ),
@@ -232,17 +233,20 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
             child: _buildSectionHeader(
               icon: Icons.sensors_rounded,
               iconColor: const Color(0xFFEF4444),
-              title: 'Trận đấu đang diễn ra',
+              title:
+                  AppLocalizations.of(context)?.exploreLiveTitle ??
+                  'Trận đấu đang diễn ra',
               badge: 'LIVE',
             ),
           ),
           if (_liveTournaments.isEmpty)
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Center(
                   child: Text(
-                    'Chưa có trận đấu nào đang diễn ra',
+                    AppLocalizations.of(context)?.exploreLiveEmpty ??
+                        'Chưa có trận đấu nào đang diễn ra',
                     style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
                   ),
                 ),
@@ -264,7 +268,9 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
             child: _buildSectionHeader(
               icon: Icons.check_circle_outline_rounded,
               iconColor: const Color(0xFF2563EB),
-              title: 'Kết quả trận đấu vừa qua',
+              title:
+                  AppLocalizations.of(context)?.exploreRecentResultsTitle ??
+                  'Kết quả trận đấu vừa qua',
             ),
           ),
           SliverToBoxAdapter(
@@ -276,7 +282,9 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
             child: _buildSectionHeader(
               icon: Icons.calendar_today_rounded,
               iconColor: const Color(0xFF16A34A),
-              title: 'Lịch thi đấu sắp diễn ra',
+              title:
+                  AppLocalizations.of(context)?.exploreUpcomingTitle ??
+                  'Lịch thi đấu sắp diễn ra',
             ),
           ),
           SliverList(
@@ -293,7 +301,8 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
           ),
 
           // ── Empty State ──
-          if (_filtered.isEmpty) SliverFillRemaining(child: _buildEmptyState()),
+          if (_filtered.isEmpty)
+            SliverFillRemaining(child: _buildEmptyState(context)),
 
           // Bottom padding
           const SliverToBoxAdapter(child: SizedBox(height: 120)),
@@ -305,7 +314,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
   // ─────────────────────────────────────
   // Wave Header
   // ─────────────────────────────────────
-  Widget _buildWaveHeader() {
+  Widget _buildWaveHeader(BuildContext context) {
     final auth = ref.watch(authProvider);
     final isAuth = auth.isAuthenticated;
 
@@ -420,8 +429,9 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                   const SizedBox(height: 14),
 
                   // Hero text
-                  const Text(
-                    'Khám phá',
+                  Text(
+                    AppLocalizations.of(context)?.exploreHeaderTitle ??
+                        'Khám phá',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 26,
@@ -430,8 +440,9 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                       height: 1.1,
                     ),
                   ),
-                  const Text(
-                    'Tìm giải đấu phù hợp với bạn',
+                  Text(
+                    AppLocalizations.of(context)?.exploreHeaderSubtitle ??
+                        'Tìm giải đấu phù hợp với bạn',
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: 13,
@@ -611,7 +622,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
   // ─────────────────────────────────────
   // Search Bar
   // ─────────────────────────────────────
-  Widget _buildSearch() {
+  Widget _buildSearch(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Container(
@@ -635,7 +646,9 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
             color: Color(0xFF0F172A),
           ),
           decoration: InputDecoration(
-            hintText: 'Tìm giải đấu, môn thể thao...',
+            hintText:
+                AppLocalizations.of(context)?.exploreSearchHint ??
+                'Tìm giải đấu, môn thể thao...',
             hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
             prefixIcon: const Icon(
               Icons.search_rounded,
@@ -666,11 +679,15 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
   // ─────────────────────────────────────
   // Sport Filter Chips
   // ─────────────────────────────────────
-  Widget _buildSportFilter() {
+  Widget _buildSportFilter(BuildContext context) {
     final categories =
         ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
     final sports = [
-      (key: 'all', label: 'Tất cả', icon: Icons.grid_view_rounded),
+      (
+        key: 'all',
+        label: AppLocalizations.of(context)?.infoAll ?? 'Tất cả',
+        icon: Icons.grid_view_rounded,
+      ),
       ...categories.map(
         (category) => (
           key: category.slug,
@@ -806,10 +823,11 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
           if (onMore != null)
             GestureDetector(
               onTap: onMore,
-              child: const Row(
+              child: Row(
                 children: [
                   Text(
-                    'Xem tất cả',
+                    AppLocalizations.of(context)?.exploreViewAll ??
+                        'Xem tất cả',
                     style: TextStyle(
                       color: AppTheme.primary,
                       fontSize: 13,
@@ -847,12 +865,10 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
     );
   }
 
-  
-
   // ─────────────────────────────────────
   // Empty State
   // ─────────────────────────────────────
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -871,8 +887,9 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Không tìm thấy giải đấu',
+          Text(
+            AppLocalizations.of(context)?.exploreEmptyTitle ??
+                'Không tìm thấy giải đấu',
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -880,8 +897,9 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Thử thay đổi bộ lọc hoặc từ khoá tìm kiếm',
+          Text(
+            AppLocalizations.of(context)?.exploreEmptyHint ??
+                'Thử thay đổi bộ lọc hoặc từ khoá tìm kiếm',
             style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
           ),
         ],
@@ -1147,8 +1165,6 @@ class _PulseDotState extends State<_PulseDot>
     );
   }
 }
-
-
 
 class MatchExploreCard extends ConsumerStatefulWidget {
   final MatchModel match;

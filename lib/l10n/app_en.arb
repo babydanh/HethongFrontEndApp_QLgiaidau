@@ -1487,5 +1487,34 @@
     "placeholders": {
       "error": {}
     }
-  }
+  },
+  "exploreHeaderTitle": "Explore",
+  "exploreHeaderSubtitle": "Find the right tournament for you",
+  "exploreSearchHint": "Search tournaments, sports...",
+  "exploreFeaturedTitle": "Featured tournaments",
+  "exploreLiveTitle": "Live matches",
+  "exploreLiveEmpty": "No matches are currently live",
+  "exploreRecentResultsTitle": "Recent match results",
+  "exploreUpcomingTitle": "Upcoming schedule",
+  "exploreViewAll": "View all",
+  "exploreEmptyTitle": "No tournaments found",
+  "exploreEmptyHint": "Try changing the filters or search keywords",
+  "exploreRankedTournament": "Ranked tournament",
+  "exploreFriendlyTournament": "Friendly tournament",
+  "exploreBracketLosers": "LOSERS BRACKET",
+  "exploreBracketGroup": "GROUP STAGE",
+  "exploreBracketKnockout": "KNOCKOUT",
+  "exploreCourtNotAssigned": "Court not assigned",
+  "exploreByeAdvance": "Advanced by bye",
+  "exploreCheer": "Cheer",
+  "exploreDetails": "Details",
+  "exploreShareSubtitle": "Tournament: {tournament} • {court}",
+  "@exploreShareSubtitle": {
+    "placeholders": {
+      "tournament": {},
+      "court": {}
+    }
+  },
+  "exploreLiveBadge": "Live match 🔴",
+  "exploreMatchBadge": "Match"
 }
