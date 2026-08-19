@@ -392,7 +392,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                                 color: Color(0xFFEF4444),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Text(
+                              child: Text(
                                 '3',
                                 style: TextStyle(
                                   color: Colors.white,
@@ -1215,8 +1215,11 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Chưa thể gửi cổ vũ. Vui lòng thử lại.'),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)?.matchLiveCheerError ??
+                  'Chưa thể gửi cổ vũ. Vui lòng thử lại.',
+            ),
           ),
         );
       }
@@ -1228,6 +1231,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context);
     final m = widget.match;
     final isT1Tbd =
         m.team1Name.trim().toUpperCase() == 'TBD' ||
@@ -1238,21 +1242,26 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
     final isByeMatch = m.isBye || isT1Tbd || isT2Tbd;
 
     final statusText = m.isLive
-        ? 'ĐANG DIỄN RA • VÒNG ${m.round}'
+        ? (l10n?.exploreMatchStatusLive(m.round) ??
+              'ĐANG DIỄN RA • VÒNG ${m.round}')
         : m.isCompleted
-        ? 'ĐÃ HOÀN THÀNH • VÒNG ${m.round}'
-        : 'SẮP DIỄN RA • VÒNG ${m.round}';
+        ? (l10n?.exploreMatchStatusCompleted(m.round) ??
+              'ĐÃ HOÀN THÀNH • VÒNG ${m.round}')
+        : (l10n?.exploreMatchStatusScheduled(m.round) ??
+              'SẮP DIỄN RA • VÒNG ${m.round}');
     final bracketText =
         m.stageName ??
         (m.bracketPosition.bracket == 'losers'
-            ? 'NHÁNH THUA'
-            : 'VÒNG KNOCKOUT');
+            ? (l10n?.exploreBracketLosers ?? 'NHÁNH THUA')
+            : (l10n?.exploreBracketKnockout ?? 'VÒNG KNOCKOUT'));
     final sportText =
         AppConstants.sportNames[m.sportKey ?? widget.tournament?.sport] ??
         m.sportKey ??
         widget.tournament?.sport ??
         'Pickleball';
-    final courtText = m.court.isNotEmpty ? m.court : 'Chưa xếp sân';
+    final courtText = m.court.isNotEmpty
+        ? m.court
+        : (l10n?.exploreCourtNotAssigned ?? 'Chưa xếp sân');
 
     List<String> getInitials(String name) {
       final parts = name
@@ -1413,8 +1422,8 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         color: const Color(0xFFDCFCE7),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text(
-                        'Vô thẳng',
+                      child: Text(
+                        l10n?.exploreByeAdvance ?? 'Vô thẳng',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -1468,8 +1477,8 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         color: const Color(0xFFDCFCE7),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text(
-                        'Vô thẳng',
+                      child: Text(
+                        l10n?.exploreByeAdvance ?? 'Vô thẳng',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -1575,7 +1584,9 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                               ),
                         const SizedBox(width: 6),
                         Text(
-                          cheerCount > 0 ? 'Cổ vũ ($cheerCount)' : 'Cổ vũ',
+                          cheerCount > 0
+                              ? '${l10n?.exploreCheer ?? 'Cổ vũ'} ($cheerCount)'
+                              : (l10n?.exploreCheer ?? 'Cổ vũ'),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -1615,7 +1626,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'Chi tiết',
+                          l10n?.exploreDetails ?? 'Chi tiết',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -1637,11 +1648,15 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                       context: context,
                       title: '${m.team1Name} VS ${m.team2Name}',
                       subtitle:
+                          l10n?.exploreShareSubtitle(
+                            m.tournamentName ?? 'Giao hữu',
+                            m.court.isNotEmpty ? m.court : l10n.matchLiveTitle,
+                          ) ??
                           'Giải đấu: ${m.tournamentName ?? "Giao hữu"} • ${m.court.isNotEmpty ? m.court : "Đang thi đấu"}',
                       webUrl: 'https://sporto.asia/live/${m.id}',
                       badgeText: m.isLive
-                          ? 'Trận đấu đang Live 🔴'
-                          : 'Trận đấu',
+                          ? (l10n?.exploreLiveBadge ?? 'Trận đấu đang Live 🔴')
+                          : (l10n?.exploreMatchBadge ?? 'Trận đấu'),
                     );
                   },
                   borderRadius: BorderRadius.circular(10),
@@ -1658,7 +1673,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         Icon(Icons.reply_rounded, size: 15, color: colors.info),
                         const SizedBox(width: 6),
                         Text(
-                          'Chia sẻ',
+                          l10n?.share ?? 'Chia sẻ',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -1759,6 +1774,7 @@ class _RecentCompletedMatches extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final completedTournaments = <Tournament>[];
     var hasLoadingMatches = false;
     var hasMatchError = false;
@@ -1788,16 +1804,23 @@ class _RecentCompletedMatches extends ConsumerWidget {
     }
 
     if (completedTournaments.isEmpty && hasLoadingMatches) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
-        child: Center(child: Text('Đang tải kết quả trận đấu...')),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Center(
+          child: Text(
+            l10n?.exploreRecentResultsLoading ?? 'Đang tải kết quả trận đấu...',
+          ),
+        ),
       );
     }
     if (completedTournaments.isEmpty && hasMatchError) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Center(
-          child: Text('Không tải được kết quả trận đấu. Vui lòng thử lại.'),
+          child: Text(
+            l10n?.exploreRecentResultsLoadError ??
+                'Không tải được kết quả trận đấu. Vui lòng thử lại.',
+          ),
         ),
       );
     }
@@ -1806,7 +1829,8 @@ class _RecentCompletedMatches extends ConsumerWidget {
         padding: EdgeInsets.symmetric(vertical: 16),
         child: Center(
           child: Text(
-            'Chưa có trận nào kết thúc gần đây',
+            l10n?.exploreRecentResultsEmpty ??
+                'Chưa có trận nào kết thúc gần đây',
             style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
           ),
         ),

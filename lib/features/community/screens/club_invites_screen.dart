@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/data/models/community_invite_model.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Màn hình danh sách lời mời tham gia CLB của người dùng.
 ///
@@ -22,15 +23,25 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
   static const _log = AppLogger('ClubInvites');
 
   Future<void> _handleAction(String communityId, String action) async {
+    final l10n = AppLocalizations.of(context)!;
     _log.info('$action lời mời CLB $communityId');
+
     try {
-      await ref.read(communityRepositoryProvider).respondToInvite(communityId, action);
+      await ref
+          .read(communityRepositoryProvider)
+          .respondToInvite(communityId, action);
       ref.invalidate(myCommunityInvitesProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(action == 'accept' ? 'Đã chấp nhận lời mời!' : 'Đã từ chối lời mời'),
-            backgroundColor: action == 'accept' ? context.colors.success : context.colors.textSecondary,
+            content: Text(
+              action == 'accept'
+                  ? l10n.notification_inviteAccepted
+                  : l10n.notification_inviteDeclined,
+            ),
+            backgroundColor: action == 'accept'
+                ? context.colors.success
+                : context.colors.textSecondary,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -38,7 +49,8 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
     } catch (e, stack) {
       _log.error('Lỗi $action lời mời', e, stack);
       final rawError = e.toString().toLowerCase();
-      final isAlreadyJoined = rawError.contains('not found') ||
+      final isAlreadyJoined =
+          rawError.contains('not found') ||
           rawError.contains('no pending') ||
           rawError.contains('đã tham gia') ||
           rawError.contains('đã được xử lý') ||
@@ -48,7 +60,7 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Bạn đã là thành viên của câu lạc bộ này.'),
+              content: Text(l10n.clubInvitesAlreadyMember),
               backgroundColor: context.colors.success,
               behavior: SnackBarBehavior.floating,
             ),
@@ -57,7 +69,9 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '').replaceAll('StateError: ', '')}'),
+            content: Text(
+              '${l10n.clubInvitesActionError} ${e.toString().replaceAll('Exception: ', '').replaceAll('StateError: ', '')}',
+            ),
             backgroundColor: context.colors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -69,6 +83,7 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final invitesAsync = ref.watch(myCommunityInvitesProvider);
 
     return Scaffold(
@@ -87,32 +102,46 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
           },
         ),
         title: Text(
-          'Lời mời CLB',
-          style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w900, fontSize: 20),
+          l10n.clubInvitesTitle,
+          style: TextStyle(
+            color: colors.textPrimary,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+          ),
         ),
         centerTitle: true,
       ),
       body: invitesAsync.when(
         data: (invites) {
           final pending = invites.where((i) => i.isPending).toList();
-          if (pending.isEmpty) return _buildEmpty(colors);
+          if (pending.isEmpty) return _buildEmpty(colors, l10n);
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(myCommunityInvitesProvider),
             child: ListView.builder(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
               itemCount: pending.length,
-              itemBuilder: (context, i) => _buildInviteCard(pending[i], i, colors),
+              itemBuilder: (context, i) =>
+                  _buildInviteCard(pending[i], i, colors, l10n),
             ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => _buildError(colors, () => ref.invalidate(myCommunityInvitesProvider)),
+        error: (e, _) => _buildError(
+          colors,
+          l10n,
+          () => ref.invalidate(myCommunityInvitesProvider),
+        ),
       ),
     );
   }
 
-  Widget _buildInviteCard(CommunityInviteModel invite, int index, AppColorsExtension colors) {
+  Widget _buildInviteCard(
+    CommunityInviteModel invite,
+    int index,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -134,14 +163,27 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
                   color: AppTheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: invite.communityLogoUrl != null && invite.communityLogoUrl!.isNotEmpty
+                child:
+                    invite.communityLogoUrl != null &&
+                        invite.communityLogoUrl!.isNotEmpty
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(11),
-                        child: Image.network(invite.communityLogoUrl!, fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.groups_rounded, color: AppTheme.primary, size: 24),
+                        child: Image.network(
+                          invite.communityLogoUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
+                                Icons.groups_rounded,
+                                color: AppTheme.primary,
+                                size: 24,
+                              ),
                         ),
                       )
-                    : const Icon(Icons.groups_rounded, color: AppTheme.primary, size: 24),
+                    : const Icon(
+                        Icons.groups_rounded,
+                        color: AppTheme.primary,
+                        size: 24,
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -150,14 +192,18 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
                   children: [
                     Text(
                       invite.communityName,
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: colors.textPrimary),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     if (invite.inviterName.isNotEmpty)
                       Text(
-                        'Được mời bởi ${invite.inviterName}',
+                        l10n.clubInvitesInvitedBy(invite.inviterName),
                         style: TextStyle(fontSize: 12, color: colors.textMuted),
                       ),
                   ],
@@ -165,14 +211,21 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
               ),
               // Status badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
-                  'Chờ duyệt',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFFF59E0B)),
+                child: Text(
+                  l10n.clubInvitesPending,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFFF59E0B),
+                  ),
                 ),
               ),
             ],
@@ -185,11 +238,18 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
                 child: FilledButton.icon(
                   onPressed: () => _handleAction(invite.communityId, 'accept'),
                   icon: const Icon(Icons.check_rounded, size: 18),
-                  label: const Text('Chấp nhận', style: TextStyle(fontWeight: FontWeight.w800)),
+                  label: Text(
+                    l10n.notification_accept,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF10B981),
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.radiusMedium,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -198,12 +258,19 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
                 child: OutlinedButton.icon(
                   onPressed: () => _handleAction(invite.communityId, 'decline'),
                   icon: const Icon(Icons.close_rounded, size: 18),
-                  label: const Text('Từ chối', style: TextStyle(fontWeight: FontWeight.w800)),
+                  label: Text(
+                    l10n.notification_decline,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: colors.textSecondary,
                     side: BorderSide(color: colors.border),
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.radiusMedium,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -214,7 +281,7 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
     ).animate().fadeIn(duration: 300.ms, delay: (50 * index).ms);
   }
 
-  Widget _buildEmpty(AppColorsExtension colors) {
+  Widget _buildEmpty(AppColorsExtension colors, AppLocalizations l10n) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -224,17 +291,28 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
             Container(
               width: 80,
               height: 80,
-              decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(20)),
-              child: Icon(Icons.mail_outline_rounded, size: 40, color: colors.textMuted.withValues(alpha: 0.5)),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.mail_outline_rounded,
+                size: 40,
+                color: colors.textMuted.withValues(alpha: 0.5),
+              ),
             ),
             const SizedBox(height: 16),
             Text(
-              'Không có lời mời nào',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: colors.textPrimary),
+              l10n.clubInvitesEmptyTitle,
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: colors.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Các lời mời tham gia câu lạc bộ sẽ hiển thị tại đây',
+              l10n.clubInvitesEmptySubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: colors.textMuted),
             ),
@@ -244,7 +322,11 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
     );
   }
 
-  Widget _buildError(AppColorsExtension colors, VoidCallback onRetry) {
+  Widget _buildError(
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+    VoidCallback onRetry,
+  ) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -253,9 +335,16 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
           children: [
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 16),
-            Text('Không thể tải lời mời', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+            Text(
+              l10n.clubInvitesLoadError,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: colors.textPrimary,
+              ),
+            ),
             const SizedBox(height: 20),
-            FilledButton(onPressed: onRetry, child: const Text('Thử lại')),
+            FilledButton(onPressed: onRetry, child: Text(l10n.infoRetry)),
           ],
         ),
       ),

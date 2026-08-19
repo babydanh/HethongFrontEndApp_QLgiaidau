@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class ClubRankingWidget extends ConsumerStatefulWidget {
   final String clubId;
@@ -73,6 +74,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   }
 
   Future<void> _fetchRankings({bool showLoading = true}) async {
+    final l10n = AppLocalizations.of(context)!;
     if (showLoading) {
       setState(() {
         _loading = true;
@@ -99,7 +101,8 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         categories = matched;
       }
       _availableCategories = categories;
-      final categoryId = _selectedCategoryId ??
+      final categoryId =
+          _selectedCategoryId ??
           (categories.isNotEmpty ? categories.first.id : null);
       if (categoryId == null || categoryId.isEmpty) {
         _selectedCategoryId = null;
@@ -112,7 +115,8 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
       final categoryLabel = selectedCategory == null
           ? ''
           : '${selectedCategory.slug} ${selectedCategory.name}'.toLowerCase();
-      final isFootball = categoryLabel.contains('football') ||
+      final isFootball =
+          categoryLabel.contains('football') ||
           categoryLabel.contains('bóng đá') ||
           categoryLabel.contains('bong da');
       if (isFootball && categoryId != null && categoryId.isNotEmpty) {
@@ -131,7 +135,10 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         final teams = dataList.map((item) {
           final json = item as Map<String, dynamic>;
           final name =
-              (json['teamName'] ?? json['team_name'] ?? 'Đội bóng').toString();
+              (json['teamName'] ??
+                      json['team_name'] ??
+                      l10n.clubRankingTeamFallback)
+                  .toString();
           return PlayerRanking(
             id: (json['id'] ?? json['teamId'] ?? name).toString(),
             userId: '',
@@ -146,15 +153,13 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                     .toInt(),
             peakElo: ((json['peakElo'] ?? json['peak_elo']) as num?)?.toInt(),
             matchesPlayed:
-                ((json['matchesPlayed'] ?? json['matches_played'] ?? 0)
-                        as num)
+                ((json['matchesPlayed'] ?? json['matches_played'] ?? 0) as num)
                     .toInt(),
             matchesWon:
                 ((json['matchesWon'] ?? json['matches_won'] ?? 0) as num)
                     .toInt(),
-            winStreak:
-                ((json['winStreak'] ?? json['win_streak'] ?? 0) as num)
-                    .toInt(),
+            winStreak: ((json['winStreak'] ?? json['win_streak'] ?? 0) as num)
+                .toInt(),
             tierName: json['tierName']?.toString() ?? '',
           );
         }).toList();
@@ -172,13 +177,11 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         'scope': 'COMMUNITY',
         'matchType': _selectedMatchType,
         'genderRestriction': _selectedGender,
-        if (categoryId != null && categoryId.isNotEmpty) 'categoryId': categoryId,
+        if (categoryId != null && categoryId.isNotEmpty)
+          'categoryId': categoryId,
         'limit': widget.compact ? 3 : 20,
       };
-      final response = await dio.get(
-        '/rankings',
-        queryParameters: queryParams,
-      );
+      final response = await dio.get('/rankings', queryParameters: queryParams);
       final raw = response.data;
       final List<dynamic> dataList = raw is Map<String, dynamic>
           ? (raw['data'] as List<dynamic>? ?? [])
@@ -187,24 +190,32 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
           .map((json) => PlayerRanking.fromJson(json as Map<String, dynamic>))
           .toList();
       if (rankings.isEmpty && _selectedMatchType == 'SINGLES') {
-        final membersResponse = await dio.get('/communities/${widget.clubId}/members');
+        final membersResponse = await dio.get(
+          '/communities/${widget.clubId}/members',
+        );
         final rawMembers = membersResponse.data is Map<String, dynamic>
             ? (membersResponse.data['data'] as List<dynamic>? ?? const [])
             : (membersResponse.data as List<dynamic>? ?? const []);
         rankings = rawMembers
-            .map((item) => CommunityMemberModel.fromJson(item as Map<String, dynamic>))
+            .map(
+              (item) =>
+                  CommunityMemberModel.fromJson(item as Map<String, dynamic>),
+            )
             .where((member) => member.status == 'JOINED')
             .map(
               (member) => PlayerRanking(
                 id: 'community-member-${member.id}',
                 userId: member.userId,
-                fullName: member.userFullName ?? member.userEmail ?? 'Thành viên',
+                fullName:
+                    member.userFullName ??
+                    member.userEmail ??
+                    l10n.clubRankingMemberFallback,
                 avatarUrl: member.userAvatarUrl,
                 categoryId: categoryId,
                 matchType: _selectedMatchType,
                 genderRestriction: _selectedGender,
                 eloPoints: 1000,
-                tierName: 'Chưa xếp hạng',
+                tierName: l10n.clubRankingUnranked,
               ),
             )
             .toList();
@@ -236,6 +247,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     if (_loading) {
       return const Center(
@@ -255,15 +267,21 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     final rankings = query.isEmpty
         ? allRankings
         : allRankings
-            .where((ranking) => ranking.fullName.toLowerCase().contains(query))
-            .toList();
+              .where(
+                (ranking) => ranking.fullName.toLowerCase().contains(query),
+              )
+              .toList();
     final filteredRankings = rankings;
     final isSearching = query.isNotEmpty;
     final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
     final myRanking = currentUserId == null
         ? null
-        : allRankings.where((ranking) => ranking.userId == currentUserId).firstOrNull;
-    final myRank = myRanking == null ? null : allRankings.indexOf(myRanking) + 1;
+        : allRankings
+              .where((ranking) => ranking.userId == currentUserId)
+              .firstOrNull;
+    final myRank = myRanking == null
+        ? null
+        : allRankings.indexOf(myRanking) + 1;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,7 +296,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             ),
             const SizedBox(width: 6),
             Text(
-              'Xếp hạng CLB',
+              l10n.clubRankingTitle,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -296,7 +314,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             controller: _searchController,
             onChanged: (value) => setState(() => _searchQuery = value),
             decoration: InputDecoration(
-              hintText: 'Tìm thành viên trong top 20...',
+              hintText: l10n.clubRankingSearchHint,
               prefixIcon: const Icon(Icons.search_rounded, size: 18),
               isDense: true,
               filled: true,
@@ -310,7 +328,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                 borderSide: BorderSide(color: colors.border),
               ),
               suffixIcon: IconButton(
-                tooltip: 'Bộ lọc xếp hạng',
+                tooltip: l10n.clubRankingFilterTooltip,
                 visualDensity: VisualDensity.compact,
                 onPressed: _openFilterSheet,
                 icon: Stack(
@@ -337,22 +355,25 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
           ),
           if (myRanking != null) ...[
             const SizedBox(height: 8),
-            _buildMyRankingCard(myRanking, myRank, colors),
+            _buildMyRankingCard(myRanking, myRank, colors, l10n),
           ],
         ],
         // ── Nội dung: dữ liệu / trống / lỗi (search + filter luôn hiện) ──
         if (_error != null)
-          _buildEmptyRanking(colors, error: true)
+          _buildEmptyRanking(colors, l10n, error: true)
         else if (allRankings.isEmpty)
-          _buildEmptyRanking(colors)
+          _buildEmptyRanking(colors, l10n)
         else if (filteredRankings.isEmpty)
-          _buildEmptyRanking(colors, searching: true)
+          _buildEmptyRanking(colors, l10n, searching: true)
         else ...[
           if (!isSearching) _buildPodiumRow(filteredRankings),
           // ── Ranks 4-10 List ──
-          if (!widget.compact && filteredRankings.length > (isSearching ? 0 : 3)) ...[
+          if (!widget.compact &&
+              filteredRankings.length > (isSearching ? 0 : 3)) ...[
             const SizedBox(height: 10),
-            ...List.generate(filteredRankings.length - (isSearching ? 0 : 3), (i) {
+            ...List.generate(filteredRankings.length - (isSearching ? 0 : 3), (
+              i,
+            ) {
               final index = isSearching ? i : i + 3;
               final r = filteredRankings[index];
               final actualRank = allRankings.indexOf(r) + 1;
@@ -365,7 +386,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
           const SizedBox(height: 8),
           Center(
             child: Text(
-              'Tự động cập nhật mỗi 30 giây',
+              l10n.clubRankingAutoRefresh,
               style: TextStyle(fontSize: 10, color: colors.textMuted),
             ),
           ),
@@ -383,7 +404,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
               ),
               child: Center(
                 child: Text(
-                  'Xem tất cả xếp hạng →',
+                  l10n.clubRankingViewAll,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -399,6 +420,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   }
 
   void _openFilterSheet() {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -407,32 +429,135 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         child: Container(
           constraints: const BoxConstraints(maxHeight: 520),
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          decoration: BoxDecoration(color: context.colors.bgCard, borderRadius: const BorderRadius.vertical(top: Radius.circular(22))),
+          decoration: BoxDecoration(
+            color: context.colors.bgCard,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+          ),
           child: StatefulBuilder(
             builder: (context, setSheetState) => Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [Expanded(child: Text('Bộ lọc xếp hạng', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: context.colors.textPrimary))), IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded))]),
-                Text('Chọn môn, thể thức và giới tính', style: TextStyle(fontSize: 12, color: context.colors.textMuted)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.clubRankingFilterTitle,
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: context.colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+                Text(
+                  l10n.clubRankingFilterHint,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.colors.textMuted,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 if (_availableCategories.length > 1) ...[
-                  Text('Môn thể thao', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
+                  Text(
+                    l10n.clubRankingSport,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Wrap(spacing: 8, runSpacing: 8, children: _availableCategories.map((category) => ChoiceChip(label: Text(category.name), selected: _selectedCategoryId == category.id, onSelected: (_) { setState(() => _selectedCategoryId = category.id); setSheetState(() {}); _fetchRankings(); })).toList()),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _availableCategories
+                        .map(
+                          (category) => ChoiceChip(
+                            label: Text(category.name),
+                            selected: _selectedCategoryId == category.id,
+                            onSelected: (_) {
+                              setState(() => _selectedCategoryId = category.id);
+                              setSheetState(() {});
+                              _fetchRankings();
+                            },
+                          ),
+                        )
+                        .toList(),
+                  ),
                   const SizedBox(height: 16),
                 ],
-                Text('Thể thức', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
+                Text(
+                  l10n.clubRankingFormat,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: context.colors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Wrap(spacing: 8, runSpacing: 8, children: [_filterChoice('Đơn', 'SINGLES', setSheetState), _filterChoice('Đôi', 'DOUBLES', setSheetState), _filterChoice('Đôi nam nữ', 'MIXED_DOUBLES', setSheetState)]),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _filterChoice(
+                      l10n.clubRankingSingles,
+                      'SINGLES',
+                      setSheetState,
+                    ),
+                    _filterChoice(
+                      l10n.clubRankingDoubles,
+                      'DOUBLES',
+                      setSheetState,
+                    ),
+                    _filterChoice(
+                      l10n.clubRankingMixedDoubles,
+                      'MIXED_DOUBLES',
+                      setSheetState,
+                    ),
+                  ],
+                ),
                 if (_selectedMatchType != 'MIXED_DOUBLES') ...[
                   const SizedBox(height: 16),
-                  Text('Giới tính', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
+                  Text(
+                    l10n.clubRankingGender,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Wrap(spacing: 8, children: [_genderChoice('Nam', 'MALE', setSheetState), _genderChoice('Nữ', 'FEMALE', setSheetState)]),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      _genderChoice(
+                        l10n.clubRankingMale,
+                        'MALE',
+                        setSheetState,
+                      ),
+                      _genderChoice(
+                        l10n.clubRankingFemale,
+                        'FEMALE',
+                        setSheetState,
+                      ),
+                    ],
+                  ),
                 ],
                 const SizedBox(height: 18),
-                SizedBox(width: double.infinity, child: FilledButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Áp dụng'))),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(sheetContext),
+                    child: Text(l10n.clubRankingApply),
+                  ),
+                ),
               ],
             ),
           ),
@@ -441,9 +566,30 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     );
   }
 
-  Widget _filterChoice(String label, String value, StateSetter setSheetState) => ChoiceChip(label: Text(label), selected: _selectedMatchType == value, onSelected: (_) { setState(() { _selectedMatchType = value; if (value == 'MIXED_DOUBLES') _selectedGender = 'MALE'; }); setSheetState(() {}); _fetchRankings(); });
+  Widget _filterChoice(String label, String value, StateSetter setSheetState) =>
+      ChoiceChip(
+        label: Text(label),
+        selected: _selectedMatchType == value,
+        onSelected: (_) {
+          setState(() {
+            _selectedMatchType = value;
+            if (value == 'MIXED_DOUBLES') _selectedGender = 'MALE';
+          });
+          setSheetState(() {});
+          _fetchRankings();
+        },
+      );
 
-  Widget _genderChoice(String label, String value, StateSetter setSheetState) => ChoiceChip(label: Text(label), selected: _selectedGender == value, onSelected: (_) { setState(() => _selectedGender = value); setSheetState(() {}); _fetchRankings(); });
+  Widget _genderChoice(String label, String value, StateSetter setSheetState) =>
+      ChoiceChip(
+        label: Text(label),
+        selected: _selectedGender == value,
+        onSelected: (_) {
+          setState(() => _selectedGender = value);
+          setSheetState(() {});
+          _fetchRankings();
+        },
+      );
 
   // ─── Gender Filter ───
 
@@ -451,6 +597,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     PlayerRanking ranking,
     int? rank,
     AppColorsExtension colors,
+    AppLocalizations l10n,
   ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -466,7 +613,11 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             backgroundColor: AppTheme.primary,
             child: Text(
               rank == null ? '—' : '#$rank',
-              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -474,26 +625,63 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Xếp hạng của bạn', style: TextStyle(color: AppTheme.primary, fontSize: 11, fontWeight: FontWeight.w800)),
-                Text(ranking.fullName, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.textPrimary, fontSize: 13, fontWeight: FontWeight.w700)),
+                Text(
+                  l10n.clubRankingMyRank,
+                  style: TextStyle(
+                    color: AppTheme.primary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  ranking.fullName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('${ranking.eloPoints} ELO', style: TextStyle(color: AppTheme.primary, fontSize: 12, fontWeight: FontWeight.w800)),
+              Text(
+                '${ranking.eloPoints} ${l10n.rankingElo}',
+                style: TextStyle(
+                  color: AppTheme.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
               if (ranking.winStreak > 0)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text('🔥', style: TextStyle(fontSize: 10)),
                     const SizedBox(width: 2),
-                    Text('${ranking.winStreak}', style: TextStyle(color: AppTheme.primary, fontSize: 10, fontWeight: FontWeight.w600)),
+                    Text(
+                      '${ranking.winStreak}',
+                      style: TextStyle(
+                        color: AppTheme.primary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               if (ranking.peakElo != null)
-                Text('Peak: ${ranking.peakElo}', style: TextStyle(color: colors.textMuted, fontSize: 9, fontWeight: FontWeight.w500)),
+                Text(
+                  l10n.clubRankingPeak(ranking.peakElo!),
+                  style: TextStyle(
+                    color: colors.textMuted,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
             ],
           ),
         ],
@@ -504,7 +692,8 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   // ─── Empty / Error card (hiện dưới thanh tìm kiếm khi không có dữ liệu) ───
 
   Widget _buildEmptyRanking(
-    AppColorsExtension colors, {
+    AppColorsExtension colors,
+    AppLocalizations l10n, {
     bool error = false,
     bool searching = false,
   }) {
@@ -520,40 +709,41 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(3, (i) => Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8),
-              width: i == 1 ? 52 : 44,
-              height: i == 1 ? 52 : 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: colors.borderLight, width: 1.5),
-                color: colors.bgSurface,
-              ),
-              child: Center(
-                child: Text(
-                  '#${i + 1}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textMuted,
+            children: List.generate(
+              3,
+              (i) => Container(
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+                width: i == 1 ? 52 : 44,
+                height: i == 1 ? 52 : 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: colors.borderLight, width: 1.5),
+                  color: colors.bgSurface,
+                ),
+                child: Center(
+                  child: Text(
+                    '#${i + 1}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textMuted,
+                    ),
                   ),
                 ),
               ),
-            )),
+            ),
           ),
           const SizedBox(height: 10),
           Text(
             error
-                ? 'Không thể tải xếp hạng'
+                ? l10n.clubRankingError
                 : searching
-                    ? 'Không tìm thấy thành viên'
-                    : 'Chưa có dữ liệu xếp hạng',
+                ? l10n.clubRankingSearchEmpty
+                : l10n.clubRankingEmpty,
             style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
           ),
           Text(
-            error
-                ? 'Vui lòng thử lại sau'
-                : 'Chọn bộ lọc khác hoặc tham gia thi đấu để có ELO',
+            error ? l10n.clubRankingErrorHint : l10n.clubRankingEmptyHint,
             style: TextStyle(
               fontSize: 11,
               color: colors.textMuted.withValues(alpha: 0.7),
@@ -579,7 +769,10 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         children: [
           // Silver (rank 2) - left
           if (rank2 != null)
-            Expanded(flex: 3, child: _buildPodiumCard(rank2, 2, isCenter: false))
+            Expanded(
+              flex: 3,
+              child: _buildPodiumCard(rank2, 2, isCenter: false),
+            )
           else
             const Expanded(flex: 3, child: SizedBox()),
 
@@ -592,7 +785,10 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
 
           // Bronze (rank 3) - right
           if (rank3 != null)
-            Expanded(flex: 3, child: _buildPodiumCard(rank3, 3, isCenter: false))
+            Expanded(
+              flex: 3,
+              child: _buildPodiumCard(rank3, 3, isCenter: false),
+            )
           else
             const Expanded(flex: 3, child: SizedBox()),
         ],
@@ -612,10 +808,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
 
     return Container(
       height: isCenter ? 160 : 138,
-      padding: EdgeInsets.symmetric(
-        horizontal: 6,
-        vertical: isCenter ? 8 : 6,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: isCenter ? 8 : 6),
       decoration: BoxDecoration(
         color: medalColors.bg.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
@@ -650,8 +843,8 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                   rank == 1
                       ? Icons.emoji_events_rounded
                       : rank == 2
-                          ? Icons.military_tech_rounded
-                          : Icons.workspace_premium_rounded,
+                      ? Icons.military_tech_rounded
+                      : Icons.workspace_premium_rounded,
                   size: isCenter ? 13 : 11,
                   color: medalColors.icon,
                 ),
@@ -702,7 +895,10 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                 ),
                 const SizedBox(width: 3),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: tierInfo.bgColor,
                     borderRadius: BorderRadius.circular(4),
@@ -762,9 +958,17 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
 
           // Đôi hiển thị đủ avatar của cả hai người trong cùng một hạng.
           if (player.partnerName != null) ...[
-            _buildMiniAvatar(player.fullName.split(' / ').first, player.avatarUrl, player),
+            _buildMiniAvatar(
+              player.fullName.split(' / ').first,
+              player.avatarUrl,
+              player,
+            ),
             const SizedBox(width: 2),
-            _buildMiniAvatar(player.partnerName!, player.partnerAvatarUrl, player),
+            _buildMiniAvatar(
+              player.partnerName!,
+              player.partnerAvatarUrl,
+              player,
+            ),
           ] else
             _buildMiniAvatar(player.fullName, player.avatarUrl, player),
           const SizedBox(width: 7),
@@ -825,7 +1029,10 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                 ),
                 const SizedBox(width: 3),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 3,
+                    vertical: 0.5,
+                  ),
                   decoration: BoxDecoration(
                     color: tierInfo.bgColor,
                     borderRadius: BorderRadius.circular(3),
@@ -875,7 +1082,11 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     );
   }
 
-  Widget _buildMiniAvatar(String name, String? avatarUrl, PlayerRanking player) {
+  Widget _buildMiniAvatar(
+    String name,
+    String? avatarUrl,
+    PlayerRanking player,
+  ) {
     return RankAvatar(
       imageUrl: avatarUrl,
       name: name,
@@ -893,19 +1104,23 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
       _buildMiniAvatar(firstName, player.avatarUrl, player),
     ];
     if (player.partnerName != null) {
-      avatars.add(_buildMiniAvatar(player.partnerName!, player.partnerAvatarUrl, player));
+      avatars.add(
+        _buildMiniAvatar(player.partnerName!, player.partnerAvatarUrl, player),
+      );
     }
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: avatars
-          .map((avatar) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 1),
-                child: SizedBox(
-                  width: avatarSize,
-                  height: avatarSize,
-                  child: FittedBox(child: avatar),
-                ),
-              ))
+          .map(
+            (avatar) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 1),
+              child: SizedBox(
+                width: avatarSize,
+                height: avatarSize,
+                child: FittedBox(child: avatar),
+              ),
+            ),
+          )
           .toList(),
     );
   }
@@ -947,7 +1162,10 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
 
   _EloTierInfo _getEloTierInfo(PlayerRanking player) {
     final colors = context.colors;
-    final tier = resolveEloTier(elo: player.eloPoints, tierName: player.tierName);
+    final tier = resolveEloTier(
+      elo: player.eloPoints,
+      tierName: player.tierName,
+    );
     switch (tier.role) {
       case EloTierRole.s: // Tier S — amber (AppTheme.warning)
         return _EloTierInfo(

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
@@ -54,6 +55,7 @@ class _LiveTournamentWithMatchesCardState
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context);
     final matchesAsync = ref.watch(matchesProvider(widget.tournament.id));
     final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl);
 
@@ -180,8 +182,10 @@ class _LiveTournamentWithMatchesCardState
                             const SizedBox(height: 2),
                             Text(
                               widget.tournament.isRanked
-                                  ? "Giải xếp hạng"
-                                  : "Giải đấu giao lưu",
+                                  ? (l10n?.exploreRankedTournament ??
+                                        'Giải xếp hạng')
+                                  : (l10n?.exploreFriendlyTournament ??
+                                        'Giải đấu giao lưu'),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: colors.textMuted,
@@ -345,6 +349,7 @@ class _LiveTournamentWithMatchesCardState
 
   Widget _buildMatchCard(BuildContext context, MatchModel match) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context);
     final isT1Tbd =
         match.team1Name.trim().toUpperCase() == 'TBD' ||
         match.team1Name.trim().toUpperCase() == 'BYE';
@@ -356,15 +361,17 @@ class _LiveTournamentWithMatchesCardState
     final bracketText =
         match.stageName ??
         (match.bracketPosition.bracket == 'losers'
-            ? 'NHÁNH THUA'
+            ? (l10n?.exploreBracketLosers ?? 'NHÁNH THUA')
             : (widget.tournament.bracketType == 'round_robin'
-                  ? 'VÒNG BẢNG'
-                  : 'VÒNG KNOCKOUT'));
+                  ? (l10n?.exploreBracketGroup ?? 'VÒNG BẢNG')
+                  : (l10n?.exploreBracketKnockout ?? 'VÒNG KNOCKOUT')));
     final sportText =
         AppConstants.sportNames[match.sportKey ?? widget.tournament.sport] ??
         match.sportKey ??
         widget.tournament.sport;
-    final courtText = match.court.isNotEmpty ? match.court : 'Chưa xếp sân';
+    final courtText = match.court.isNotEmpty
+        ? match.court
+        : (l10n?.exploreCourtNotAssigned ?? 'Chưa xếp sân');
 
     List<String> getInitials(String name) {
       final parts = name
@@ -492,8 +499,8 @@ class _LiveTournamentWithMatchesCardState
                           color: const Color(0xFFDCFCE7),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Text(
-                          'Vô thẳng',
+                        child: Text(
+                          l10n?.exploreByeAdvance ?? 'Vô thẳng',
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w700,
@@ -580,8 +587,8 @@ class _LiveTournamentWithMatchesCardState
                           color: const Color(0xFFDCFCE7),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Text(
-                          'Vô thẳng',
+                        child: Text(
+                          l10n?.exploreByeAdvance ?? 'Vô thẳng',
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w700,
@@ -746,12 +753,18 @@ class _LiveTournamentWithMatchesCardState
                       context: context,
                       title: '${match.team1Name} VS ${match.team2Name}',
                       subtitle:
+                          l10n?.exploreShareSubtitle(
+                            widget.tournament.name,
+                            match.court.isNotEmpty
+                                ? match.court
+                                : l10n.matchLiveTitle,
+                          ) ??
                           'Giải đấu: ${widget.tournament.name} • ${match.court.isNotEmpty ? match.court : "Đang thi đấu"}',
                       webUrl: 'https://sporto.asia/live/${match.id}',
                       imageUrl: widget.tournament.logoUrl,
                       badgeText: match.isLive
-                          ? 'Trận đấu đang Live 🔴'
-                          : 'Trận đấu',
+                          ? (l10n?.exploreLiveBadge ?? 'Trận đấu đang Live 🔴')
+                          : (l10n?.exploreMatchBadge ?? 'Trận đấu'),
                     );
                   },
                   borderRadius: BorderRadius.circular(20),

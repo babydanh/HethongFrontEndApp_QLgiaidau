@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Một dòng xếp hạng (hạng 4 trở đi). Hiển thị số hạng, avatar chữ, tên,
 // tier badge, ELO, W/L và tỉ lệ thắng.
@@ -26,6 +27,7 @@ class RankingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     // Fixed color for avatar initial based on rank or name
     final List<Color> avatarColors = [
@@ -102,8 +104,8 @@ class RankingRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'DẪN ĐẦU NHÓM',
+                    Text(
+                      l10n.rankingLeadGroup,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
@@ -126,11 +128,8 @@ class RankingRow extends StatelessWidget {
                     Text(
                       formatLabel != null && formatLabel!.isNotEmpty
                           ? formatLabel!
-                          : 'Vận động viên xuất sắc',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: colors.textMuted,
-                      ),
+                          : l10n.rankingTopAthlete,
+                      style: TextStyle(fontSize: 11, color: colors.textMuted),
                     ),
                   ],
                 ),
@@ -147,8 +146,8 @@ class RankingRow extends StatelessWidget {
                       color: Color(0xFFB45309),
                     ),
                   ),
-                  const Text(
-                    'ELO',
+                  Text(
+                    l10n.rankingElo,
                     style: TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.w800,
@@ -256,7 +255,7 @@ class RankingRow extends StatelessWidget {
                     ),
                     const SizedBox(width: 3),
                     Text(
-                      'ELO',
+                      l10n.rankingElo,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -273,10 +272,18 @@ class RankingRow extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatarWidget(BuildContext context, dynamic colors, Color avatarColor) {
+  Widget _buildAvatarWidget(
+    BuildContext context,
+    dynamic colors,
+    Color avatarColor,
+  ) {
     final nameParts = ranking.fullName.split('/');
-    final isDoublesFormat = (formatLabel != null && formatLabel!.toLowerCase().contains('đôi')) ||
-        (ranking.matchType != null && ranking.matchType!.toLowerCase().contains('double')) ||
+    final normalizedFormatLabel = formatLabel?.toLowerCase() ?? '';
+    final isDoublesFormat =
+        (normalizedFormatLabel.contains('đôi') ||
+            normalizedFormatLabel.contains('double')) ||
+        (ranking.matchType != null &&
+            ranking.matchType!.toLowerCase().contains('double')) ||
         nameParts.length >= 2;
 
     if (isDoublesFormat) {
@@ -297,12 +304,19 @@ class RankingRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFF2563EB),
                   shape: BoxShape.circle,
-                  border: Border.all(color: isMe ? const Color(0xFF1E40AF) : colors.bgCard, width: 2),
+                  border: Border.all(
+                    color: isMe ? const Color(0xFF1E40AF) : colors.bgCard,
+                    width: 2,
+                  ),
                 ),
                 child: Center(
                   child: Text(
                     _initials(name1),
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -317,12 +331,19 @@ class RankingRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFF10B981),
                   shape: BoxShape.circle,
-                  border: Border.all(color: isMe ? const Color(0xFF1E40AF) : colors.bgCard, width: 2),
+                  border: Border.all(
+                    color: isMe ? const Color(0xFF1E40AF) : colors.bgCard,
+                    width: 2,
+                  ),
                 ),
                 child: Center(
                   child: Text(
                     name2.isNotEmpty ? _initials(name2) : '+1',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),

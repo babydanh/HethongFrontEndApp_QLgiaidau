@@ -60,8 +60,8 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             .read(notificationStateProvider.notifier)
             .loadPage(s.currentPage + 1)
             .then((_) {
-          if (mounted) setState(() => _isLoadingMore = false);
-        });
+              if (mounted) setState(() => _isLoadingMore = false);
+            });
       }
     }
   }
@@ -78,8 +78,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     }
   }
 
-  Future<void> _handleInviteAction(
-      AppNotification notif, bool accept) async {
+  Future<void> _handleInviteAction(AppNotification notif, bool accept) async {
     if (_handlingInviteIds.contains(notif.id)) return;
     setState(() => _handlingInviteIds.add(notif.id));
 
@@ -90,10 +89,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         if (communityId == null || communityId.isEmpty) {
           throw StateError('Lời mời không có mã cộng đồng.');
         }
-        await ref.read(communityRepositoryProvider).respondToInvite(
-              communityId,
-              accept ? 'accept' : 'decline',
-            );
+        await ref
+            .read(communityRepositoryProvider)
+            .respondToInvite(communityId, accept ? 'accept' : 'decline');
         ref.invalidate(myCommunityInvitesProvider);
         ref.invalidate(communityDetailProvider(communityId));
       } else if (notif.isFootballTeamInvite) {
@@ -101,7 +99,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         if (teamId == null || teamId.isEmpty) {
           throw StateError('Lời mời đội bóng không có mã đội.');
         }
-        await ref.read(footballTeamApiProvider).respondToFootballTeamInvite(
+        await ref
+            .read(footballTeamApiProvider)
+            .respondToFootballTeamInvite(
               teamId,
               accept ? 'ACCEPTED' : 'DECLINED',
             );
@@ -112,7 +112,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         if (tournamentId == null || refereeId == null) {
           throw StateError('Lời mời trọng tài không có đủ thông tin.');
         }
-        await ref.read(myTournamentWorkspaceProvider.notifier).respondToRefereeInvite(
+        await ref
+            .read(myTournamentWorkspaceProvider.notifier)
+            .respondToRefereeInvite(
               tournamentId: tournamentId,
               refereeId: refereeId,
               action: accept ? 'ACCEPT' : 'DECLINE',
@@ -121,14 +123,16 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         final uri = Uri.tryParse(notif.redirectUrl ?? '');
         final segments = uri?.pathSegments ?? const <String>[];
         final participantIndex = segments.indexOf('participants');
-        final participantId = participantIndex >= 0 &&
-                participantIndex + 1 < segments.length
+        final participantId =
+            participantIndex >= 0 && participantIndex + 1 < segments.length
             ? segments[participantIndex + 1]
             : null;
         if (participantId == null || participantId.isEmpty) {
           throw StateError('Lời mời ghép đôi không có mã đăng ký.');
         }
-        await ref.read(dioProvider).post(
+        await ref
+            .read(dioProvider)
+            .post(
               '/tournaments/participants/$participantId/${accept ? 'accept-partner' : 'reject-partner'}',
             );
       } else {
@@ -139,8 +143,14 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         setState(() => _handledInviteIds.add(notif.id));
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(accept ? l10n.notification_inviteAccepted : l10n.notification_inviteDeclined),
-            backgroundColor: accept ? const Color(0xFF059669) : context.colors.textSecondary,
+            content: Text(
+              accept
+                  ? l10n.notification_inviteAccepted
+                  : l10n.notification_inviteDeclined,
+            ),
+            backgroundColor: accept
+                ? const Color(0xFF059669)
+                : context.colors.textSecondary,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -170,11 +180,13 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
           setState(() => _handledInviteIds.add(notif.id));
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(accept
-                  ? (notif.isFootballTeamInvite
-                      ? 'Bạn đã là thành viên của đội bóng này.'
-                      : 'Bạn đã là thành viên của câu lạc bộ này.')
-                  : 'Lời mời này đã được xử lý trước đó.'),
+              content: Text(
+                accept
+                    ? (notif.isFootballTeamInvite
+                          ? 'Bạn đã là thành viên của đội bóng này.'
+                          : 'Bạn đã là thành viên của câu lạc bộ này.')
+                    : 'Lời mời này đã được xử lý trước đó.',
+              ),
               backgroundColor: const Color(0xFF059669),
               behavior: SnackBarBehavior.floating,
             ),
@@ -182,10 +194,15 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         }
       } else {
         if (mounted) {
-          final cleanMsg = e.toString().replaceAll('Exception: ', '').replaceAll('StateError: ', '');
+          final cleanMsg = e
+              .toString()
+              .replaceAll('Exception: ', '')
+              .replaceAll('StateError: ', '');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${accept ? l10n.notification_acceptError : l10n.notification_declineError} $cleanMsg'),
+              content: Text(
+                '${accept ? l10n.notification_acceptError : l10n.notification_declineError} $cleanMsg',
+              ),
               backgroundColor: context.colors.error,
               behavior: SnackBarBehavior.floating,
             ),
@@ -235,7 +252,10 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
               onPressed: _markAllAsRead,
               child: Text(
                 l10n.notification_readAll,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
         ],
@@ -246,20 +266,25 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
           Expanded(
             child: stateNotif.notifications.isEmpty && stateNotif.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : stateNotif.notifications.isEmpty && stateNotif.errorMessage != null
-                    ? _buildError(stateNotif.errorMessage!, colors, l10n)
-                    : stateNotif.notifications.isEmpty
-                        ? _buildEmpty(colors, l10n)
-                        : displayedNotifications.isEmpty
-                            ? _buildFilteredEmpty(colors, l10n)
-                            : _buildList(displayedNotifications, colors, l10n),
+                : stateNotif.notifications.isEmpty &&
+                      stateNotif.errorMessage != null
+                ? _buildError(stateNotif.errorMessage!, colors, l10n)
+                : stateNotif.notifications.isEmpty
+                ? _buildEmpty(colors, l10n)
+                : displayedNotifications.isEmpty
+                ? _buildFilteredEmpty(colors, l10n)
+                : _buildList(displayedNotifications, colors, l10n),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFilterBar(AppColorsExtension colors, int totalUnread, AppLocalizations l10n) {
+  Widget _buildFilterBar(
+    AppColorsExtension colors,
+    int totalUnread,
+    AppLocalizations l10n,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -276,7 +301,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
           ),
           const SizedBox(width: 8),
           _FilterSegment(
-            label: totalUnread > 0 ? '${l10n.notification_unread} ($totalUnread)' : l10n.notification_unread,
+            label: totalUnread > 0
+                ? '${l10n.notification_unread} ($totalUnread)'
+                : l10n.notification_unread,
             isActive: _unreadOnly,
             colors: colors,
             count: totalUnread,
@@ -287,19 +314,24 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     );
   }
 
-  Widget _buildEmpty(AppColorsExtension colors, AppLocalizations l10n) => Center(
+  Widget _buildEmpty(AppColorsExtension colors, AppLocalizations l10n) =>
+      Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.notifications_none_rounded,
-                size: 64, color: colors.textMuted),
+            Icon(
+              Icons.notifications_none_rounded,
+              size: 64,
+              color: colors.textMuted,
+            ),
             const SizedBox(height: 16),
             Text(
               l10n.notification_emptyTitle,
               style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: colors.textPrimary),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: colors.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -310,51 +342,69 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         ),
       );
 
-  Widget _buildFilteredEmpty(AppColorsExtension colors, AppLocalizations l10n) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.done_all_rounded, size: 48, color: colors.success.withValues(alpha: 0.5)),
-            const SizedBox(height: 12),
-            Text(
-              l10n.notification_filteredEmptyTitle,
-              style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textSecondary),
-            ),
-            const SizedBox(height: 4),
-            TextButton(
-              onPressed: () => setState(() => _unreadOnly = false),
-              child: Text(l10n.notification_viewAll),
-            ),
-          ],
+  Widget _buildFilteredEmpty(
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.done_all_rounded,
+          size: 48,
+          color: colors.success.withValues(alpha: 0.5),
         ),
-      );
-
-  Widget _buildError(String message, AppColorsExtension colors, AppLocalizations l10n) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
-              const SizedBox(height: 12),
-              Text(message,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: colors.textSecondary)),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () =>
-                    ref.read(notificationStateProvider.notifier).loadPage(1),
-                child: Text(l10n.infoRetry),
-              ),
-            ],
+        const SizedBox(height: 12),
+        Text(
+          l10n.notification_filteredEmptyTitle,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: colors.textSecondary,
           ),
         ),
-      );
+        const SizedBox(height: 4),
+        TextButton(
+          onPressed: () => setState(() => _unreadOnly = false),
+          child: Text(l10n.notification_viewAll),
+        ),
+      ],
+    ),
+  );
 
-  Widget _buildList(List<AppNotification> notifications, AppColorsExtension colors, AppLocalizations l10n) {
+  Widget _buildError(
+    String message,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: colors.textSecondary),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () =>
+                ref.read(notificationStateProvider.notifier).loadPage(1),
+            child: Text(l10n.infoRetry),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _buildList(
+    List<AppNotification> notifications,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
     final workspaceAsync = ref.watch(myTournamentWorkspaceProvider);
 
     final grouped = <String, List<AppNotification>>{};
@@ -367,10 +417,10 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       final key = diff.inDays == 0
           ? todayLabel
           : diff.inDays == 1
-              ? yesterdayLabel
-              : diff.inDays < 7
-                  ? thisWeekLabel
-                  : '${n.createdAt.day}/${n.createdAt.month}/${n.createdAt.year}';
+          ? yesterdayLabel
+          : diff.inDays < 7
+          ? thisWeekLabel
+          : '${n.createdAt.day}/${n.createdAt.month}/${n.createdAt.year}';
       grouped.putIfAbsent(key, () => []).add(n);
     }
 
@@ -392,32 +442,30 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
           if (hasWorkspace)
-            _buildMyTournaments(
-              workspaceAsync.asData!.value,
-              colors,
-              l10n,
-            ),
+            _buildMyTournaments(workspaceAsync.asData!.value, colors, l10n),
           for (final entryKey in orderedKeys)
-            Builder(builder: (context) {
-              final items = grouped[entryKey]!;
-              return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text(
-                  entryKey,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: colors.textSecondary,
-                  ),
-                ),
-              ),
-              ...items.map((n) => _buildCard(n, colors, l10n)),
-            ],
-          );
-            }),
+            Builder(
+              builder: (context) {
+                final items = grouped[entryKey]!;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Text(
+                        entryKey,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ),
+                    ...items.map((n) => _buildCard(n, colors, l10n)),
+                  ],
+                );
+              },
+            ),
           if (_isLoadingMore)
             const Padding(
               padding: EdgeInsets.all(16),
@@ -428,26 +476,56 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     );
   }
 
-  Widget _buildMyTournaments(TournamentWorkspace workspace, AppColorsExtension colors, AppLocalizations l10n) {
+  Widget _buildMyTournaments(
+    TournamentWorkspace workspace,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
     final items = <_TournamentWithRole>[];
     for (final t in workspace.organizedTournaments) {
-      items.add(_TournamentWithRole(t, l10n.notification_roleBtc, const Color(0xFF2979FF)));
+      items.add(
+        _TournamentWithRole(
+          t,
+          l10n.notification_roleBtc,
+          const Color(0xFF2979FF),
+        ),
+      );
     }
     for (final t in workspace.coOrganizerTournaments) {
-      items.add(_TournamentWithRole(t, l10n.notification_roleBtc, const Color(0xFF2979FF)));
+      items.add(
+        _TournamentWithRole(
+          t,
+          l10n.notification_roleBtc,
+          const Color(0xFF2979FF),
+        ),
+      );
     }
     for (final refInvite in workspace.refereeTournaments) {
       Tournament? t = workspace.organizedTournaments
-          .where((ot) => ot.id == refInvite.tournamentId).firstOrNull;
+          .where((ot) => ot.id == refInvite.tournamentId)
+          .firstOrNull;
       t ??= workspace.participatingTournaments
-          .where((pt) => pt.id == refInvite.tournamentId).firstOrNull;
+          .where((pt) => pt.id == refInvite.tournamentId)
+          .firstOrNull;
       if (t != null && !items.any((i) => i.tournament.id == t!.id)) {
-        items.add(_TournamentWithRole(t, l10n.notification_roleReferee, const Color(0xFFF59E0B)));
+        items.add(
+          _TournamentWithRole(
+            t,
+            l10n.notification_roleReferee,
+            const Color(0xFFF59E0B),
+          ),
+        );
       }
     }
     for (final t in workspace.participatingTournaments) {
       if (!items.any((i) => i.tournament.id == t.id)) {
-        items.add(_TournamentWithRole(t, l10n.notification_rolePlayer, const Color(0xFF10B981)));
+        items.add(
+          _TournamentWithRole(
+            t,
+            l10n.notification_rolePlayer,
+            const Color(0xFF10B981),
+          ),
+        );
       }
     }
 
@@ -523,7 +601,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: item.roleColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
@@ -548,7 +628,11 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     );
   }
 
-  Widget _buildCard(AppNotification notif, AppColorsExtension colors, AppLocalizations l10n) {
+  Widget _buildCard(
+    AppNotification notif,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
     final isInvite = notif.isInvite;
     final pendingInvitesAsync = ref.watch(myCommunityInvitesProvider);
     final pendingCommunityIds = pendingInvitesAsync.asData?.value
@@ -557,7 +641,8 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
 
     final isCommunityInvite =
         notif.type == 'CLUB_INVITE' || notif.type == 'COMMUNITY_INVITED';
-    final isHandled = _handledInviteIds.contains(notif.id) ||
+    final isHandled =
+        _handledInviteIds.contains(notif.id) ||
         (isCommunityInvite &&
             pendingCommunityIds != null &&
             notif.communityId != null &&
@@ -573,9 +658,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
           } catch (_) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content:
-                        Text(l10n.notification_updateStatusError)),
+                SnackBar(content: Text(l10n.notification_updateStatusError)),
               );
             }
           }
@@ -640,22 +723,22 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                             ),
                         ],
                       ),
-                      if (notif.body != null && notif.body!.isNotEmpty)
-                        ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            notif.body!,
-                            style: TextStyle(
-                                fontSize: 12, color: colors.textSecondary),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
+                      if (notif.body != null && notif.body!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          notif.body!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textSecondary,
                           ),
-                        ],
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                       const SizedBox(height: 4),
                       Text(
                         notif.timeAgo,
-                        style: TextStyle(
-                            fontSize: 11, color: colors.textMuted),
+                        style: TextStyle(fontSize: 11, color: colors.textMuted),
                       ),
                     ],
                   ),
@@ -666,7 +749,10 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
               const SizedBox(height: 12),
               if (isHandled) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF059669).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
@@ -674,7 +760,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                       color: const Color(0xFF059669).withValues(alpha: 0.3),
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
@@ -684,7 +770,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                       ),
                       SizedBox(width: 5),
                       Text(
-                        'Đã phản hồi lời mời',
+                        l10n.notification_inviteHandled,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -706,7 +792,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                         foregroundColor: colors.textMuted,
                         side: BorderSide(color: colors.border),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -727,7 +815,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                       style: FilledButton.styleFrom(
                         backgroundColor: const Color(0xFF2979FF),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -808,13 +898,9 @@ class _FilterSegment extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              isActive
-                  ? Icons.filter_alt_rounded
-                  : Icons.filter_alt_outlined,
+              isActive ? Icons.filter_alt_rounded : Icons.filter_alt_outlined,
               size: 16,
-              color: isActive
-                  ? const Color(0xFF2979FF)
-                  : colors.textMuted,
+              color: isActive ? const Color(0xFF2979FF) : colors.textMuted,
             ),
             const SizedBox(width: 6),
             Text(

@@ -101,12 +101,18 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           children: [
             const SizedBox(height: 12),
             ListTile(
-              leading: const Icon(Icons.camera_alt_rounded, color: AppTheme.primary),
+              leading: const Icon(
+                Icons.camera_alt_rounded,
+                color: AppTheme.primary,
+              ),
               title: const Text('Chụp ảnh mới'),
               onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library_rounded, color: AppTheme.primary),
+              leading: const Icon(
+                Icons.photo_library_rounded,
+                color: AppTheme.primary,
+              ),
               title: const Text('Chọn từ thư viện'),
               onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
             ),
@@ -117,7 +123,10 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     );
     if (source == null || !mounted) return;
 
-    final picked = await ImagePicker().pickImage(source: source, imageQuality: 88);
+    final picked = await ImagePicker().pickImage(
+      source: source,
+      imageQuality: 88,
+    );
     if (picked == null || !mounted) return;
     setState(() => _isLoading = true);
     try {
@@ -126,16 +135,18 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           .read(communitySocialRepositoryProvider)
           .uploadImage(bytes, picked.name);
       await ref.read(communityRepositoryProvider).updateCommunity(
-            widget.clubId,
-            {isLogo ? 'logoUrl' : 'bannerUrl': url},
-          );
+        widget.clubId,
+        {isLogo ? 'logoUrl' : 'bannerUrl': url},
+      );
       ref.invalidate(communityDetailProvider(widget.clubId));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isLogo
-                ? 'Đã cập nhật ảnh đại diện (PNG, JPG tỉ lệ 1:1)'
-                : 'Đã cập nhật ảnh bìa (khuyên dùng 1200x400 px)'),
+            content: Text(
+              isLogo
+                  ? 'Đã cập nhật ảnh đại diện (PNG, JPG tỉ lệ 1:1)'
+                  : 'Đã cập nhật ảnh bìa (khuyên dùng 1200x400 px)',
+            ),
           ),
         );
       }
@@ -155,7 +166,9 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedSport.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Câu lạc bộ phải có đúng 1 môn thể thao chính.')),
+        const SnackBar(
+          content: Text('Câu lạc bộ phải có đúng 1 môn thể thao chính.'),
+        ),
       );
       return;
     }
@@ -353,7 +366,8 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
             const SizedBox(height: 6),
             AppTextFormField(
               controller: _descCtrl,
-              hint: 'Giới thiệu về mục đích hoạt động, lịch sinh hoạt cố định...',
+              hint:
+                  'Giới thiệu về mục đích hoạt động, lịch sinh hoạt cố định...',
               maxLines: 3,
               prefixIcon: Icons.notes_rounded,
             ),
@@ -427,7 +441,8 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                   IconButton.filledTonal(
                     onPressed: () {
                       final question = _joinQuestionCtrl.text.trim();
-                      if (question.isEmpty || _joinQuestions.contains(question)) {
+                      if (question.isEmpty ||
+                          _joinQuestions.contains(question)) {
                         return;
                       }
                       setState(() {
@@ -441,19 +456,18 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                 ],
               ),
               ..._joinQuestions.asMap().entries.map(
-                    (entry) => ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: Text('${entry.key + 1}.'),
-                      title: Text(entry.value),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 18),
-                        onPressed: () => setState(
-                          () => _joinQuestions.removeAt(entry.key),
-                        ),
-                      ),
-                    ),
+                (entry) => ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Text('${entry.key + 1}.'),
+                  title: Text(entry.value),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    onPressed: () =>
+                        setState(() => _joinQuestions.removeAt(entry.key)),
                   ),
+                ),
+              ),
               const SizedBox(height: 24),
             ],
 
@@ -483,7 +497,10 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                     : const Icon(Icons.save_rounded),
                 label: Text(
                   _isLoading ? 'Đang lưu...' : 'Lưu toàn bộ cài đặt',
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
                 ),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.primary,
@@ -532,25 +549,39 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
               ),
               clipBehavior: Clip.antiAlias,
               child: imageUrl == null || imageUrl.isEmpty
-                  ? Icon(Icons.image_outlined, color: colors.textMuted, size: 24)
+                  ? Icon(
+                      Icons.image_outlined,
+                      color: colors.textMuted,
+                      size: 24,
+                    )
                   : Image.network(
                       imageUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          Icon(Icons.broken_image_outlined, color: colors.textMuted),
+                      errorBuilder: (_, error, stackTrace) => Icon(
+                        Icons.broken_image_outlined,
+                        color: colors.textMuted,
+                      ),
                     ),
             ),
             const SizedBox(height: 8),
-            Text(title,
-                style: TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w800, color: colors.textPrimary)),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: colors.textPrimary,
+              ),
+            ),
             const SizedBox(height: 2),
             Text(hint, style: TextStyle(fontSize: 10, color: colors.textMuted)),
             const SizedBox(height: 4),
             Text(
               'Thay đổi',
               style: TextStyle(
-                  fontSize: 11, fontWeight: FontWeight.w800, color: AppTheme.primary),
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.primary,
+              ),
             ),
           ],
         ),
@@ -568,7 +599,10 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           children: [
             Text(
               'Vùng nguy hiểm',
-              style: TextStyle(color: colors.error, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                color: colors.error,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: 6),
             const Text(
@@ -613,7 +647,9 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                 TextField(
                   controller: controller,
                   onChanged: (value) => setDialogState(() => typedName = value),
-                  decoration: const InputDecoration(labelText: 'Tên câu lạc bộ'),
+                  decoration: const InputDecoration(
+                    labelText: 'Tên câu lạc bộ',
+                  ),
                 ),
               ],
             ),
@@ -638,7 +674,9 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
       );
       if (confirmed != true || !mounted) return;
       setState(() => _isLoading = true);
-      await ref.read(communityRepositoryProvider).deleteCommunity(widget.clubId);
+      await ref
+          .read(communityRepositoryProvider)
+          .deleteCommunity(widget.clubId);
       invalidateCommunityCollections(ref);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -705,10 +743,16 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
   Widget _buildJoinModeSelector() {
     final modes = [
       ('OPEN', 'Mở tự do', 'Thành viên nhấn tham gia là vào nhóm ngay.'),
-      ('APPROVAL', 'Cần phê duyệt đơn',
-          'Phải trả lời câu hỏi và chờ BQT chấp thuận.'),
-      ('INVITE_ONLY', 'Chỉ nhận lời mời',
-          'Chỉ thành viên được mời mới có thể tham gia.'),
+      (
+        'APPROVAL',
+        'Cần phê duyệt đơn',
+        'Phải trả lời câu hỏi và chờ BQT chấp thuận.',
+      ),
+      (
+        'INVITE_ONLY',
+        'Chỉ nhận lời mời',
+        'Chỉ thành viên được mời mới có thể tham gia.',
+      ),
     ];
     return Column(
       children: modes.map((m) {
@@ -758,7 +802,9 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                         Text(
                           m.$3,
                           style: TextStyle(
-                              fontSize: 11, color: context.colors.textMuted),
+                            fontSize: 11,
+                            color: context.colors.textMuted,
+                          ),
                         ),
                       ],
                     ),

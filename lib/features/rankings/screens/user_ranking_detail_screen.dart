@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 // ═══════════════════════════════════════════════════════════
 //  USER RANKING DETAIL SCREEN — Thông tin xếp hạng cá nhân
@@ -14,15 +15,25 @@ class UserRankingDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final rankingAsync = ref.watch(userRankingsProvider);
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: colors.bgDark,
       body: rankingAsync.when(
         data: (rankings) {
-          final ranking = rankings.isNotEmpty ? rankings.first : const PlayerRanking(
-            id: '', userId: '', fullName: 'Người dùng', eloPoints: 0, tierName: '', rank: 0, matchesPlayed: 0, matchesWon: 0,
-          );
-          return _buildContent(context, ranking);
+          final ranking = rankings.isNotEmpty
+              ? rankings.first
+              : PlayerRanking(
+                  id: '',
+                  userId: '',
+                  fullName: l10n.rankingUserFallback,
+                  eloPoints: 0,
+                  tierName: '',
+                  rank: 0,
+                  matchesPlayed: 0,
+                  matchesWon: 0,
+                );
+          return _buildContent(context, ranking, l10n);
         },
         loading: () => Center(
           child: CircularProgressIndicator(
@@ -36,10 +47,14 @@ class UserRankingDetailScreen extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+                Icon(
+                  Icons.cloud_off_rounded,
+                  size: 48,
+                  color: colors.textMuted,
+                ),
                 const SizedBox(height: 16),
                 Text(
-                  'Không thể tải thông tin',
+                  l10n.rankingLoadErrorTitle,
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
@@ -48,7 +63,7 @@ class UserRankingDetailScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '$e',
+                  l10n.rankingLoadErrorSubtitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, color: colors.textMuted),
                   maxLines: 2,
@@ -62,7 +77,11 @@ class UserRankingDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, PlayerRanking ranking) {
+  Widget _buildContent(
+    BuildContext context,
+    PlayerRanking ranking,
+    AppLocalizations l10n,
+  ) {
     final colors = context.colors;
     final winRate = ranking.winRate;
     final matchesLost = ranking.matchesLost;
@@ -95,8 +114,8 @@ class UserRankingDetailScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  'Thông tin xếp hạng',
+                Text(
+                  l10n.rankingTitle,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
@@ -117,7 +136,11 @@ class UserRankingDetailScreen extends ConsumerWidget {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF1A56DB), Color(0xFF0E3FAA), Color(0xFF071F6B)],
+                  colors: [
+                    Color(0xFF1A56DB),
+                    Color(0xFF0E3FAA),
+                    Color(0xFF071F6B),
+                  ],
                 ),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
@@ -168,7 +191,10 @@ class UserRankingDetailScreen extends ConsumerWidget {
 
                   // Tier badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFD700).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(16),
@@ -194,8 +220,8 @@ class UserRankingDetailScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
 
                   // ELO Big Display
-                  const Text(
-                    'ELO RATING',
+                  Text(
+                    l10n.rankingEloRating,
                     style: TextStyle(
                       color: Colors.white60,
                       fontSize: 10,
@@ -225,14 +251,23 @@ class UserRankingDetailScreen extends ConsumerWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildStatItemWhite('${ranking.matchesPlayed}', 'Trận'),
+                        _buildStatItemWhite(
+                          '${ranking.matchesPlayed}',
+                          l10n.rankingMatches,
+                        ),
                         _buildStatDivider(),
-                        _buildStatItemWhite('${ranking.matchesWon}', 'Thắng'),
+                        _buildStatItemWhite(
+                          '${ranking.matchesWon}',
+                          l10n.rankingWins,
+                        ),
                         _buildStatDivider(),
-                        _buildStatItemWhite('$matchesLost', 'Thua'),
+                        _buildStatItemWhite('$matchesLost', l10n.rankingLosses),
                         _buildStatDivider(),
-                        _buildStatItemWhite('${winRate.toStringAsFixed(0)}%', 'Win rate',
-                            valueColor: const Color(0xFF4ADE80)),
+                        _buildStatItemWhite(
+                          '${winRate.toStringAsFixed(0)}%',
+                          l10n.rankingWinRate,
+                          valueColor: const Color(0xFF4ADE80),
+                        ),
                       ],
                     ),
                   ),
@@ -244,8 +279,8 @@ class UserRankingDetailScreen extends ConsumerWidget {
 
             // ── Recent Matches Section ──
             const SizedBox(height: 20),
-            const Text(
-              'Trận đấu gần đây',
+            Text(
+              l10n.rankingRecentMatches,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
@@ -271,7 +306,7 @@ class UserRankingDetailScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Chưa có dữ liệu trận đấu',
+                    l10n.rankingNoMatchData,
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withValues(alpha: 0.5),
@@ -322,7 +357,8 @@ class UserRankingDetailScreen extends ConsumerWidget {
   String _getInitials(String name) {
     final parts = name.trim().split(' ');
     if (parts.length >= 2) {
-      return '${parts[parts.length - 2][0]}${parts[parts.length - 1][0]}'.toUpperCase();
+      return '${parts[parts.length - 2][0]}${parts[parts.length - 1][0]}'
+          .toUpperCase();
     }
     return name.isNotEmpty ? name[0].toUpperCase() : '??';
   }

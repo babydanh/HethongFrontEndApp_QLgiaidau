@@ -2222,6 +2222,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notification_accept => 'Chấp nhận';
 
   @override
+  String get notification_inviteHandled => 'Đã phản hồi lời mời';
+
+  @override
   String get payments_close => 'Đóng';
 
   @override
@@ -3836,4 +3839,228 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get exploreMatchBadge => 'Trận đấu';
+
+  @override
+  String exploreMatchStatusLive(Object round) => 'ĐANG DIỄN RA • VÒNG $round';
+
+  @override
+  String exploreMatchStatusCompleted(Object round) =>
+      'ĐÃ HOÀN THÀNH • VÒNG $round';
+
+  @override
+  String exploreMatchStatusScheduled(Object round) =>
+      'SẮP DIỄN RA • VÒNG $round';
+
+  @override
+  String get exploreRecentResultsLoading => 'Đang tải kết quả trận đấu...';
+
+  @override
+  String get exploreRecentResultsLoadError =>
+      'Không tải được kết quả trận đấu. Vui lòng thử lại.';
+
+  @override
+  String get exploreRecentResultsEmpty => 'Chưa có trận nào kết thúc gần đây';
+
+  @override
+  String get rankingTitle => 'Thông tin xếp hạng';
+
+  @override
+  String get rankingLoadErrorTitle => 'Không thể tải thông tin xếp hạng';
+
+  @override
+  String get rankingLoadErrorSubtitle => 'Vui lòng thử lại sau.';
+
+  @override
+  String get rankingUserFallback => 'Người dùng';
+
+  @override
+  String get rankingEloRating => 'ĐIỂM ELO';
+
+  @override
+  String get rankingMatches => 'Trận';
+
+  @override
+  String get rankingWins => 'Thắng';
+
+  @override
+  String get rankingLosses => 'Thua';
+
+  @override
+  String get rankingWinRate => 'Tỷ lệ thắng';
+
+  @override
+  String get rankingRecentMatches => 'Trận đấu gần đây';
+
+  @override
+  String get rankingNoMatchData => 'Chưa có dữ liệu trận đấu';
+
+  @override
+  String get rankingLeadGroup => 'DẪN ĐẦU NHÓM';
+
+  @override
+  String get rankingTopAthlete => 'Vận động viên xuất sắc';
+
+  @override
+  String get rankingElo => 'ELO';
+
+  @override
+  String get clubRankingTitle => 'Xếp hạng CLB';
+
+  @override
+  String get clubRankingSearchHint => 'Tìm thành viên trong top 20...';
+
+  @override
+  String get clubRankingFilterTooltip => 'Bộ lọc xếp hạng';
+
+  @override
+  String get clubRankingAutoRefresh => 'Tự động cập nhật mỗi 30 giây';
+
+  @override
+  String get clubRankingViewAll => 'Xem tất cả xếp hạng →';
+
+  @override
+  String get clubRankingFilterTitle => 'Bộ lọc xếp hạng';
+
+  @override
+  String get clubRankingFilterHint => 'Chọn môn, thể thức và giới tính';
+
+  @override
+  String get clubRankingSport => 'Môn thể thao';
+
+  @override
+  String get clubRankingFormat => 'Thể thức';
+
+  @override
+  String get clubRankingGender => 'Giới tính';
+
+  @override
+  String get clubRankingSingles => 'Đơn';
+
+  @override
+  String get clubRankingDoubles => 'Đôi';
+
+  @override
+  String get clubRankingMixedDoubles => 'Đôi nam nữ';
+
+  @override
+  String get clubRankingMale => 'Nam';
+
+  @override
+  String get clubRankingFemale => 'Nữ';
+
+  @override
+  String get clubRankingApply => 'Áp dụng';
+
+  @override
+  String get clubRankingMyRank => 'Xếp hạng của bạn';
+
+  @override
+  String clubRankingPeak(Object elo) => 'Cao nhất: $elo';
+
+  @override
+  String get clubRankingError => 'Không thể tải xếp hạng';
+
+  @override
+  String get clubRankingSearchEmpty => 'Không tìm thấy thành viên';
+
+  @override
+  String get clubRankingEmpty => 'Chưa có dữ liệu xếp hạng';
+
+  @override
+  String get clubRankingEmptyHint =>
+      'Chọn bộ lọc khác hoặc tham gia thi đấu để có ELO';
+
+  @override
+  String get clubRankingErrorHint => 'Vui lòng thử lại sau';
+
+  @override
+  String get clubRankingTeamFallback => 'Đội bóng';
+
+  @override
+  String get clubRankingMemberFallback => 'Thành viên';
+
+  @override
+  String get clubRankingUnranked => 'Chưa xếp hạng';
+
+  @override
+  String get clubInvitesTitle => 'Lời mời CLB';
+
+  @override
+  String clubInvitesInvitedBy(Object name) => 'Được mời bởi $name';
+
+  @override
+  String get clubInvitesPending => 'Chờ duyệt';
+
+  @override
+  String get clubInvitesEmptyTitle => 'Không có lời mời nào';
+
+  @override
+  String get clubInvitesEmptySubtitle =>
+      'Các lời mời tham gia câu lạc bộ sẽ hiển thị tại đây';
+
+  @override
+  String get clubInvitesLoadError => 'Không thể tải lời mời';
+
+  @override
+  String get clubInvitesAlreadyMember =>
+      'Bạn đã là thành viên của câu lạc bộ này.';
+
+  @override
+  String get clubInvitesActionError => 'Lỗi xử lý lời mời.';
+
+  @override
+  String get clubTournamentsTitle => 'Giải đấu';
+
+  @override
+  String get clubTournamentsEmpty => 'Chưa có giải đấu';
+
+  @override
+  String get clubTournamentsCreate => 'Tạo giải đấu';
+
+  @override
+  String get clubTournamentsLoadError => 'Không thể tải danh sách giải đấu';
+
+  @override
+  String get clubTournamentsChooseType => 'Chọn loại giải đấu';
+
+  @override
+  String get clubTournamentsChooseTypeHint =>
+      'Chọn hình thức tạo giải phù hợp cho câu lạc bộ của bạn';
+
+  @override
+  String get clubTournamentsLiteTitle => 'Giải Nhanh (Lite)';
+
+  @override
+  String get clubTournamentsLiteDescription =>
+      'Tạo nhanh trong 30 giây. Sinh mã QR và link mời để chia sẻ trực tiếp cho các thành viên.';
+
+  @override
+  String get clubTournamentsWebTitle => 'Tạo nhanh trên Web';
+
+  @override
+  String get clubTournamentsWebDescription =>
+      'Form nhanh đầy đủ hơn Lite; giải vẫn thuộc CLB và mở quản lý nâng cao trên web.';
+
+  @override
+  String get clubTournamentsAdvancedTitle => 'Tạo giải nâng cao trên Web';
+
+  @override
+  String get clubTournamentsAdvancedBadge => 'Tạo trên Web';
+
+  @override
+  String get clubTournamentsAdvancedDescription =>
+      'Giải đấu nâng cao có nhiều cấu hình chuyên sâu (Vòng bảng, Knockout, Lịch thi đấu, Lệ phí và Giải thưởng).\n\nVui lòng truy cập trang web sporto.asia trên máy tính để tạo giải nâng cao cho câu lạc bộ!';
+
+  @override
+  String get clubTournamentsAdvancedCardDescription =>
+      'Chỉ khởi tạo trên Web sporto.asia. Đầy đủ cấu hình: Thể thức Vòng bảng, Knockout, Lịch thi đấu và Giải thưởng.';
+
+  @override
+  String get clubTournamentsClose => 'Đóng';
+
+  @override
+  String get clubTournamentsCopyWebLink => 'Sao chép link Web';
+
+  @override
+  String get clubTournamentsLinkCopied => 'Đã sao chép link tạo giải';
 }

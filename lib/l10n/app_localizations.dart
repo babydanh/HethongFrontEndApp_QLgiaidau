@@ -4068,6 +4068,9 @@ abstract class AppLocalizations {
   /// **'Chấp nhận'**
   String get notification_accept;
 
+  /// No description provided for @notification_inviteHandled.
+  String get notification_inviteHandled;
+
   /// No description provided for @payments_close.
   ///
   /// In vi, this message translates to:
@@ -7016,6 +7019,154 @@ abstract class AppLocalizations {
 
   /// No description provided for @exploreMatchBadge.
   String get exploreMatchBadge;
+
+  /// No description provided for @exploreMatchStatusLive.
+  String exploreMatchStatusLive(Object round);
+
+  /// No description provided for @exploreMatchStatusCompleted.
+  String exploreMatchStatusCompleted(Object round);
+
+  /// No description provided for @exploreMatchStatusScheduled.
+  String exploreMatchStatusScheduled(Object round);
+
+  /// No description provided for @exploreRecentResultsLoading.
+  String get exploreRecentResultsLoading;
+
+  /// No description provided for @exploreRecentResultsLoadError.
+  String get exploreRecentResultsLoadError;
+
+  /// No description provided for @exploreRecentResultsEmpty.
+  String get exploreRecentResultsEmpty;
+
+  String get rankingTitle;
+
+  String get rankingLoadErrorTitle;
+
+  String get rankingLoadErrorSubtitle;
+
+  String get rankingUserFallback;
+
+  String get rankingEloRating;
+
+  String get rankingMatches;
+
+  String get rankingWins;
+
+  String get rankingLosses;
+
+  String get rankingWinRate;
+
+  String get rankingRecentMatches;
+
+  String get rankingNoMatchData;
+
+  String get rankingLeadGroup;
+
+  String get rankingTopAthlete;
+
+  String get rankingElo;
+
+  String get clubRankingTitle;
+
+  String get clubRankingSearchHint;
+
+  String get clubRankingFilterTooltip;
+
+  String get clubRankingAutoRefresh;
+
+  String get clubRankingViewAll;
+
+  String get clubRankingFilterTitle;
+
+  String get clubRankingFilterHint;
+
+  String get clubRankingSport;
+
+  String get clubRankingFormat;
+
+  String get clubRankingGender;
+
+  String get clubRankingSingles;
+
+  String get clubRankingDoubles;
+
+  String get clubRankingMixedDoubles;
+
+  String get clubRankingMale;
+
+  String get clubRankingFemale;
+
+  String get clubRankingApply;
+
+  String get clubRankingMyRank;
+
+  String clubRankingPeak(Object elo);
+
+  String get clubRankingError;
+
+  String get clubRankingSearchEmpty;
+
+  String get clubRankingEmpty;
+
+  String get clubRankingEmptyHint;
+
+  String get clubRankingErrorHint;
+
+  String get clubRankingTeamFallback;
+
+  String get clubRankingMemberFallback;
+
+  String get clubRankingUnranked;
+
+  String get clubInvitesTitle;
+
+  String clubInvitesInvitedBy(Object name);
+
+  String get clubInvitesPending;
+
+  String get clubInvitesEmptyTitle;
+
+  String get clubInvitesEmptySubtitle;
+
+  String get clubInvitesLoadError;
+
+  String get clubInvitesAlreadyMember;
+
+  String get clubInvitesActionError;
+
+  String get clubTournamentsTitle;
+
+  String get clubTournamentsEmpty;
+
+  String get clubTournamentsCreate;
+
+  String get clubTournamentsLoadError;
+
+  String get clubTournamentsChooseType;
+
+  String get clubTournamentsChooseTypeHint;
+
+  String get clubTournamentsLiteTitle;
+
+  String get clubTournamentsLiteDescription;
+
+  String get clubTournamentsWebTitle;
+
+  String get clubTournamentsWebDescription;
+
+  String get clubTournamentsAdvancedTitle;
+
+  String get clubTournamentsAdvancedBadge;
+
+  String get clubTournamentsAdvancedDescription;
+
+  String get clubTournamentsAdvancedCardDescription;
+
+  String get clubTournamentsClose;
+
+  String get clubTournamentsCopyWebLink;
+
+  String get clubTournamentsLinkCopied;
 }
 
 class _AppLocalizationsDelegate

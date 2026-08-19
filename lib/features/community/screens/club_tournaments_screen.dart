@@ -6,6 +6,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+
 import 'package:intl/intl.dart';
 
 final _clubTournamentsProvider =
@@ -32,11 +34,12 @@ class ClubTournamentsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final async = ref.watch(_clubTournamentsProvider(clubId));
     return Scaffold(
       backgroundColor: context.colors.bgDark,
       appBar: AppBar(
-        title: const Text('Giải đấu'),
+        title: Text(l10n.clubTournamentsTitle),
         centerTitle: true,
         actions: [
           IconButton(
@@ -47,7 +50,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
       ),
       body: async.when(
         data: (list) {
-          if (list.isEmpty) return _buildEmpty(context);
+          if (list.isEmpty) return _buildEmpty(context, l10n);
           return RefreshIndicator(
             onRefresh: () async =>
                 ref.refresh(_clubTournamentsProvider(clubId)),
@@ -59,12 +62,12 @@ class ClubTournamentsScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Lỗi: $e')),
+        error: (e, _) => Center(child: Text(l10n.clubTournamentsLoadError)),
       ),
     );
   }
 
-  Widget _buildEmpty(BuildContext context) => Center(
+  Widget _buildEmpty(BuildContext context, AppLocalizations l10n) => Center(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -82,15 +85,15 @@ class ClubTournamentsScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-        const Text(
-          'Chưa có giải đấu',
+        Text(
+          l10n.clubTournamentsEmpty,
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 24),
         ElevatedButton.icon(
           onPressed: () => _showTypeSheet(context, clubId),
           icon: const Icon(Icons.add),
-          label: const Text('Tạo giải đấu'),
+          label: Text(l10n.clubTournamentsCreate),
         ),
       ],
     ),
@@ -108,7 +111,8 @@ class ClubTournamentsScreen extends ConsumerWidget {
     // KHÔNG suy từ mode (cách tính điểm LITE) hay inviteCode (mọi giải đều có).
     final cfg = t['tournamentConfig'];
     final cfgMap = cfg is Map ? cfg : const <String, dynamic>{};
-    final isLite = cfgMap['isLite'] == true ||
+    final isLite =
+        cfgMap['isLite'] == true ||
         (cfgMap['mode'] == 'LITE' && cfgMap['hideAdvancedSettings'] == true);
 
     return Container(
@@ -241,6 +245,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
 
   void _showTypeSheet(BuildContext context, String clubId) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -267,7 +272,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Chọn loại giải đấu',
+              l10n.clubTournamentsChooseType,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
@@ -276,7 +281,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Chọn hình thức tạo giải phù hợp cho câu lạc bộ của bạn',
+              l10n.clubTournamentsChooseTypeHint,
               style: TextStyle(fontSize: 12, color: colors.textMuted),
             ),
             const SizedBox(height: 20),
@@ -320,7 +325,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
                           Row(
                             children: [
                               Text(
-                                'Giải Nhanh (Lite)',
+                                l10n.clubTournamentsLiteTitle,
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -350,7 +355,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Tạo nhanh trong 30 giây. Sinh mã QR & Link mời chia sẻ trực tiếp cho các thành viên.',
+                            l10n.clubTournamentsLiteDescription,
                             style: TextStyle(
                               fontSize: 12,
                               color: colors.textSecondary,
@@ -371,7 +376,9 @@ class ClubTournamentsScreen extends ConsumerWidget {
             InkWell(
               onTap: () async {
                 Navigator.pop(ctx);
-                final uri = Uri.parse('https://sporto.asia/organizer/tournaments/create?communityId=$clubId');
+                final uri = Uri.parse(
+                  'https://sporto.asia/organizer/tournaments/create?communityId=$clubId',
+                );
                 await launchUrl(uri, mode: LaunchMode.externalApplication);
               },
               borderRadius: BorderRadius.circular(16),
@@ -380,18 +387,53 @@ class ClubTournamentsScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFF10B981).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                  ),
                 ),
-                child: Row(children: [
-                  Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.flash_on_rounded, color: Color(0xFF10B981), size: 24)),
-                  const SizedBox(width: 14),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Tạo nhanh trên Web', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.textPrimary)),
-                    const SizedBox(height: 4),
-                    Text('Form nhanh đầy đủ hơn Lite; giải vẫn thuộc CLB và mở quản lý nâng cao trên web.', style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.3)),
-                  ])),
-                  Icon(Icons.open_in_new_rounded, color: colors.textMuted),
-                ]),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.flash_on_rounded,
+                        color: Color(0xFF10B981),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.clubTournamentsWebTitle,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.clubTournamentsWebDescription,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.textSecondary,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.open_in_new_rounded, color: colors.textMuted),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -403,37 +445,51 @@ class ClubTournamentsScreen extends ConsumerWidget {
                 showDialog(
                   context: context,
                   builder: (dialogCtx) => AlertDialog(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    title: const Row(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    title: Row(
                       children: [
-                        Icon(Icons.laptop_chromebook_rounded, color: Color(0xFF2563EB)),
+                        Icon(
+                          Icons.laptop_chromebook_rounded,
+                          color: Color(0xFF2563EB),
+                        ),
                         SizedBox(width: 10),
-                        Text('Tạo giải nâng cao trên Web', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                        Text(
+                          l10n.clubTournamentsAdvancedTitle,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
-                    content: const Text(
-                      'Giải đấu nâng cao có nhiều cấu hình chuyên sâu (Vòng bảng, Knockout, Lịch thi đấu, Lệ phí & Giải thưởng).\n\nVui lòng truy cập trang web sporto.asia trên máy tính để tạo giải nâng cao cho câu lạc bộ!',
+                    content: Text(
+                      l10n.clubTournamentsAdvancedDescription,
                       style: TextStyle(fontSize: 13, height: 1.5),
                     ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(dialogCtx),
-                        child: const Text('Đóng'),
+                        child: Text(l10n.clubTournamentsClose),
                       ),
                       FilledButton.icon(
                         onPressed: () {
-                          Clipboard.setData(ClipboardData(
-                            text: 'https://sporto.asia/organizer/tournaments/create?communityId=$clubId&mode=advanced',
-                          ));
+                          Clipboard.setData(
+                            ClipboardData(
+                              text:
+                                  'https://sporto.asia/organizer/tournaments/create?communityId=$clubId&mode=advanced',
+                            ),
+                          );
                           Navigator.pop(dialogCtx);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Đã sao chép link tạo giải'),
+                            SnackBar(
+                              content: Text(l10n.clubTournamentsLinkCopied),
                             ),
                           );
                         },
                         icon: const Icon(Icons.copy_rounded, size: 16),
-                        label: const Text('Sao chép link Web'),
+                        label: Text(l10n.clubTournamentsCopyWebLink),
                       ),
                     ],
                   ),
@@ -472,7 +528,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
                           Row(
                             children: [
                               Text(
-                                'Giải Nâng Cao',
+                                l10n.clubTournamentsAdvancedTitle,
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -489,8 +545,8 @@ class ClubTournamentsScreen extends ConsumerWidget {
                                   color: const Color(0xFF2563EB),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: const Text(
-                                  '💻 Tạo trên Web',
+                                child: Text(
+                                  l10n.clubTournamentsAdvancedBadge,
                                   style: TextStyle(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w900,
@@ -502,7 +558,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Chỉ khởi tạo trên Web sporto.asia. Đầy đủ cấu hình: Thể thức Vòng bảng, Knockout, Lịch thi đấu & Giải thưởng.',
+                            l10n.clubTournamentsAdvancedCardDescription,
                             style: TextStyle(
                               fontSize: 12,
                               color: colors.textSecondary,
@@ -512,7 +568,10 @@ class ClubTournamentsScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    Icon(Icons.open_in_browser_rounded, color: const Color(0xFF2563EB)),
+                    Icon(
+                      Icons.open_in_browser_rounded,
+                      color: const Color(0xFF2563EB),
+                    ),
                   ],
                 ),
               ),

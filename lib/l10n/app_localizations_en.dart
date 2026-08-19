@@ -2227,6 +2227,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notification_accept => 'Accept';
 
   @override
+  String get notification_inviteHandled => 'Invite response recorded';
+
+  @override
   String get payments_close => 'Close';
 
   @override
@@ -3841,4 +3844,229 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exploreMatchBadge => 'Match';
+
+  @override
+  String exploreMatchStatusLive(Object round) => 'LIVE • ROUND $round';
+
+  @override
+  String exploreMatchStatusCompleted(Object round) => 'COMPLETED • ROUND $round';
+
+  @override
+  String exploreMatchStatusScheduled(Object round) => 'UPCOMING • ROUND $round';
+
+  @override
+  String get exploreRecentResultsLoading => 'Loading match results...';
+
+  @override
+  String get exploreRecentResultsLoadError =>
+      'Could not load match results. Please try again.';
+
+  @override
+  String get exploreRecentResultsEmpty => 'No recently completed matches';
+
+  @override
+  String get rankingTitle => 'Ranking information';
+
+  @override
+  String get rankingLoadErrorTitle => 'Could not load ranking information';
+
+  @override
+  String get rankingLoadErrorSubtitle => 'Please try again later.';
+
+  @override
+  String get rankingUserFallback => 'User';
+
+  @override
+  String get rankingEloRating => 'ELO RATING';
+
+  @override
+  String get rankingMatches => 'Matches';
+
+  @override
+  String get rankingWins => 'Wins';
+
+  @override
+  String get rankingLosses => 'Losses';
+
+  @override
+  String get rankingWinRate => 'Win rate';
+
+  @override
+  String get rankingRecentMatches => 'Recent matches';
+
+  @override
+  String get rankingNoMatchData => 'No match data available';
+
+  @override
+  String get rankingLeadGroup => 'GROUP LEADER';
+
+  @override
+  String get rankingTopAthlete => 'Top athlete';
+
+  @override
+  String get rankingElo => 'ELO';
+
+  @override
+  String get clubRankingTitle => 'Club rankings';
+
+  @override
+  String get clubRankingSearchHint => 'Search members in the top 20...';
+
+  @override
+  String get clubRankingFilterTooltip => 'Ranking filters';
+
+  @override
+  String get clubRankingAutoRefresh =>
+      'Automatically updates every 30 seconds';
+
+  @override
+  String get clubRankingViewAll => 'View all rankings →';
+
+  @override
+  String get clubRankingFilterTitle => 'Ranking filters';
+
+  @override
+  String get clubRankingFilterHint => 'Choose sport, format, and gender';
+
+  @override
+  String get clubRankingSport => 'Sport';
+
+  @override
+  String get clubRankingFormat => 'Format';
+
+  @override
+  String get clubRankingGender => 'Gender';
+
+  @override
+  String get clubRankingSingles => 'Singles';
+
+  @override
+  String get clubRankingDoubles => 'Doubles';
+
+  @override
+  String get clubRankingMixedDoubles => 'Mixed doubles';
+
+  @override
+  String get clubRankingMale => 'Male';
+
+  @override
+  String get clubRankingFemale => 'Female';
+
+  @override
+  String get clubRankingApply => 'Apply';
+
+  @override
+  String get clubRankingMyRank => 'Your ranking';
+
+  @override
+  String clubRankingPeak(Object elo) => 'Peak: $elo';
+
+  @override
+  String get clubRankingError => 'Could not load rankings';
+
+  @override
+  String get clubRankingSearchEmpty => 'No members found';
+
+  @override
+  String get clubRankingEmpty => 'No ranking data';
+
+  @override
+  String get clubRankingEmptyHint =>
+      'Choose another filter or play matches to earn ELO';
+
+  @override
+  String get clubRankingErrorHint => 'Please try again later';
+
+  @override
+  String get clubRankingTeamFallback => 'Team';
+
+  @override
+  String get clubRankingMemberFallback => 'Member';
+
+  @override
+  String get clubRankingUnranked => 'Unranked';
+
+  @override
+  String get clubInvitesTitle => 'Club invites';
+
+  @override
+  String clubInvitesInvitedBy(Object name) => 'Invited by $name';
+
+  @override
+  String get clubInvitesPending => 'Pending';
+
+  @override
+  String get clubInvitesEmptyTitle => 'No invites';
+
+  @override
+  String get clubInvitesEmptySubtitle =>
+      'Club invitations will appear here';
+
+  @override
+  String get clubInvitesLoadError => 'Could not load invites';
+
+  @override
+  String get clubInvitesAlreadyMember =>
+      'You are already a member of this club.';
+
+  @override
+  String get clubInvitesActionError => 'Could not process the invite.';
+
+  @override
+  String get clubTournamentsTitle => 'Tournaments';
+
+  @override
+  String get clubTournamentsEmpty => 'No tournaments yet';
+
+  @override
+  String get clubTournamentsCreate => 'Create tournament';
+
+  @override
+  String get clubTournamentsLoadError => 'Could not load tournaments';
+
+  @override
+  String get clubTournamentsChooseType => 'Choose tournament type';
+
+  @override
+  String get clubTournamentsChooseTypeHint =>
+      'Choose the creation flow that fits your club';
+
+  @override
+  String get clubTournamentsLiteTitle => 'Quick Tournament (Lite)';
+
+  @override
+  String get clubTournamentsLiteDescription =>
+      'Create in 30 seconds. Generate a QR code and invite link to share directly with members.';
+
+  @override
+  String get clubTournamentsWebTitle => 'Create quickly on Web';
+
+  @override
+  String get clubTournamentsWebDescription =>
+      'A fuller quick form than Lite; the tournament remains under the club and opens advanced management on the web.';
+
+  @override
+  String get clubTournamentsAdvancedTitle =>
+      'Create advanced tournament on Web';
+
+  @override
+  String get clubTournamentsAdvancedBadge => 'Create on Web';
+
+  @override
+  String get clubTournamentsAdvancedDescription =>
+      'Advanced tournaments offer deeper configuration (group stage, knockout, scheduling, fees and prizes).\n\nPlease visit sporto.asia on a computer to create an advanced tournament for the club!';
+
+  @override
+  String get clubTournamentsAdvancedCardDescription =>
+      'Created only on sporto.asia. Full configuration: group stage, knockout, scheduling and prizes.';
+
+  @override
+  String get clubTournamentsClose => 'Close';
+
+  @override
+  String get clubTournamentsCopyWebLink => 'Copy Web link';
+
+  @override
+  String get clubTournamentsLinkCopied =>
+      'Tournament creation link copied';
 }
