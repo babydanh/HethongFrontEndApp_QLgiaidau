@@ -262,8 +262,12 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       if (!mounted) return;
       setState(() => _reports.removeWhere((item) => item.id == report.id));
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(status == 'RESOLVED' ? 'Đã ghi nhận xử lý báo cáo.' : 'Đã bỏ qua báo cáo.')));
-    } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không thể cập nhật báo cáo.')));
+    } catch (e, stack) {
+      _log.error('Lỗi cập nhật báo cáo', e, stack);
+      if (mounted) {
+        final message = e.toString().replaceAll('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Không thể cập nhật báo cáo: $message')));
+      }
     }
   }
 
