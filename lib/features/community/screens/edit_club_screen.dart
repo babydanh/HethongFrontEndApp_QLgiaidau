@@ -297,189 +297,271 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
 
   Widget _buildForm(AppColorsExtension colors, Community? club) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       physics: const BouncingScrollPhysics(),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Ảnh đại diện & Ảnh bìa (preview riêng như web) ──
-            _label('Ảnh đại diện & Ảnh bìa', colors),
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: _imagePickerCard(
-                    colors: colors,
-                    title: 'Logo CLB',
-                    hint: 'PNG, JPG tỉ lệ 1:1',
-                    imageUrl: club?.logoUrl,
-                    isCircle: true,
-                    onTap: () => _pickAndUploadImage(isLogo: true),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: _imagePickerCard(
-                    colors: colors,
-                    title: 'Ảnh bìa',
-                    hint: 'Khuyên dùng 1200x400 px',
-                    imageUrl: club?.bannerUrl,
-                    isCircle: false,
-                    onTap: () => _pickAndUploadImage(isLogo: false),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // ── Thông tin cơ bản ──
-            _label('Tên câu lạc bộ *', colors),
-            const SizedBox(height: 6),
-            AppTextFormField(
-              controller: _nameCtrl,
-              hint: 'VD: CLB Cầu lông ABC',
-              prefixIcon: Icons.edit_rounded,
-              validator: (v) {
-                final value = v?.trim() ?? '';
-                if (value.isEmpty) return 'Vui lòng nhập tên câu lạc bộ.';
-                if (value.length > 255) return 'Tên tối đa 255 ký tự.';
-                return null;
-              },
-            ),
-            const SizedBox(height: 20),
-
-            _label('Môn thể thao chính *', colors),
-            const SizedBox(height: 6),
-            Text(
-              'Mỗi CLB chỉ có một môn thể thao chính.',
-              style: TextStyle(fontSize: 12, color: colors.textMuted),
-            ),
-            const SizedBox(height: 6),
-            _buildSportSelector(),
-            const SizedBox(height: 20),
-
-            _label('Mô tả', colors),
-            const SizedBox(height: 6),
-            AppTextFormField(
-              controller: _descCtrl,
-              hint:
-                  'Giới thiệu về mục đích hoạt động, lịch sinh hoạt cố định...',
-              maxLines: 3,
-              prefixIcon: Icons.notes_rounded,
-            ),
-            const SizedBox(height: 24),
-
-            // ── Địa điểm & Khu vực hoạt động ──
-            _label('Địa điểm & Khu vực hoạt động', colors),
-            const SizedBox(height: 8),
-            ClubRegionSelector(
-              initialProvinceCode: club?.provinceCode ?? '',
-              initialWardCode: club?.wardCode ?? '',
-              onChanged: (selection) => _region = selection,
-            ),
-            const SizedBox(height: 12),
-            AppTextFormField(
-              controller: _locationCtrl,
-              hint:
-                  'Địa chỉ sân nhà / địa điểm sinh hoạt cụ thể (VD: Sân Thể Thao Tuổi Trẻ, Số 123 Lê Lợi...)',
-              prefixIcon: Icons.location_on_outlined,
-            ),
-            const SizedBox(height: 24),
-
-            // ── Quyền riêng tư & Cách thức tham gia ──
-            _label('Quyền riêng tư', colors),
-            const SizedBox(height: 8),
-            ClubVisibilitySelector(
-              value: _visibility,
-              onChanged: (value) => setState(() => _visibility = value),
-            ),
-            const SizedBox(height: 20),
-
-            _label('Cách thức tham gia', colors),
-            const SizedBox(height: 8),
-            _buildJoinModeSelector(),
-            const SizedBox(height: 20),
-
-            AppTextFormField(
-              controller: _maxMembersCtrl,
-              label: 'Số thành viên tối đa',
-              hint: 'Không giới hạn',
-              keyboardType: TextInputType.number,
-              prefixIcon: Icons.people_alt_outlined,
-            ),
-            const SizedBox(height: 20),
-
-            _label('Nội quy câu lạc bộ', colors),
-            const SizedBox(height: 6),
-            AppTextFormField(
-              controller: _rulesCtrl,
-              hint: 'Quy định ứng xử, thời gian sinh hoạt, đóng quỹ...',
-              maxLines: 3,
-              prefixIcon: Icons.rule_rounded,
-            ),
-            const SizedBox(height: 24),
-
-            // ── Câu hỏi xét duyệt (chỉ khi joinMode == APPROVAL, như web) ──
-            if (_joinMode == 'APPROVAL') ...[
-              _label('Câu hỏi xét duyệt thành viên', colors),
-              const SizedBox(height: 6),
-              Row(
+            // ── Card 1: Nhận diện thương hiệu (Logo & Ảnh bìa) ──
+            _sectionCard(
+              colors: colors,
+              title: 'HÌNH ẢNH & NHẬN DIỆN',
+              subtitle: 'Logo và ảnh bìa đại diện cho câu lạc bộ trên hệ thống',
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: AppTextFormField(
-                      controller: _joinQuestionCtrl,
-                      hint:
-                          'Nhập câu hỏi (VD: Trình độ ELO / DUPR hiện tại của bạn là bao nhiêu?)...',
-                      prefixIcon: Icons.help_outline_rounded,
+                    flex: 1,
+                    child: _imagePickerCard(
+                      colors: colors,
+                      title: 'Logo CLB',
+                      hint: 'Tỉ lệ 1:1',
+                      imageUrl: club?.logoUrl,
+                      isCircle: true,
+                      onTap: () => _pickAndUploadImage(isLogo: true),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton.filledTonal(
-                    onPressed: () {
-                      final question = _joinQuestionCtrl.text.trim();
-                      if (question.isEmpty ||
-                          _joinQuestions.contains(question)) {
-                        return;
-                      }
-                      setState(() {
-                        _joinQuestions.add(question);
-                        _joinQuestionCtrl.clear();
-                      });
-                    },
-                    icon: const Icon(Icons.add_rounded),
-                    tooltip: 'Thêm câu hỏi',
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: _imagePickerCard(
+                      colors: colors,
+                      title: 'Ảnh bìa',
+                      hint: 'Tỉ lệ 3:1 (1200×400)',
+                      imageUrl: club?.bannerUrl,
+                      isCircle: false,
+                      onTap: () => _pickAndUploadImage(isLogo: false),
+                    ),
                   ),
                 ],
               ),
-              ..._joinQuestions.asMap().entries.map(
-                (entry) => ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  leading: Text('${entry.key + 1}.'),
-                  title: Text(entry.value),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 18),
-                    onPressed: () =>
-                        setState(() => _joinQuestions.removeAt(entry.key)),
+            ),
+            const SizedBox(height: 16),
+
+            // ── Card 2: Thông tin cơ bản ──
+            _sectionCard(
+              colors: colors,
+              title: 'THÔNG TIN CƠ BẢN',
+              subtitle: 'Tên, môn thể thao chính và giới thiệu câu lạc bộ',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _fieldLabel('Tên câu lạc bộ', isRequired: true, colors: colors),
+                  const SizedBox(height: 6),
+                  AppTextFormField(
+                    controller: _nameCtrl,
+                    hint: 'VD: CLB Pickleball Trang Hưng',
+                    prefixIcon: Icons.badge_outlined,
+                    validator: (v) {
+                      final value = v?.trim() ?? '';
+                      if (value.isEmpty) return 'Vui lòng nhập tên câu lạc bộ.';
+                      if (value.length > 255) return 'Tên tối đa 255 ký tự.';
+                      return null;
+                    },
                   ),
+                  const SizedBox(height: 16),
+
+                  _fieldLabel('Môn thể thao chính', isRequired: true, colors: colors),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Mỗi CLB gắn liền với một bộ môn thi đấu chính.',
+                    style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSportSelector(),
+                  const SizedBox(height: 16),
+
+                  _fieldLabel('Giới thiệu & Mô tả', colors: colors),
+                  const SizedBox(height: 6),
+                  AppTextFormField(
+                    controller: _descCtrl,
+                    hint: 'Mục đích hoạt động, thời gian sinh hoạt, tiêu chí...',
+                    maxLines: 3,
+                    prefixIcon: Icons.description_outlined,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ── Card 3: Địa điểm hoạt động ──
+            _sectionCard(
+              colors: colors,
+              title: 'ĐỊA ĐIỂM & KHU VỰC HOẠT ĐỘNG',
+              subtitle: 'Khu vực hành chính và địa chỉ sân sinh hoạt',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _fieldLabel('Khu vực hành chính', isRequired: true, colors: colors),
+                  const SizedBox(height: 6),
+                  ClubRegionSelector(
+                    initialProvinceCode: club?.provinceCode ?? '',
+                    initialWardCode: club?.wardCode ?? '',
+                    onChanged: (selection) => _region = selection,
+                  ),
+                  const SizedBox(height: 12),
+
+                  _fieldLabel('Địa chỉ sân chi tiết', colors: colors),
+                  const SizedBox(height: 6),
+                  AppTextFormField(
+                    controller: _locationCtrl,
+                    hint: 'Số nhà, tên đường, cụm sân thi đấu...',
+                    prefixIcon: Icons.location_on_outlined,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ── Card 4: Quyền riêng tư & Cách thức tham gia ──
+            _sectionCard(
+              colors: colors,
+              title: 'QUYỀN RIÊNG TƯ & THÀNH VIÊN',
+              subtitle: 'Quy chế xét duyệt, giới hạn số lượng và nội quy',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _fieldLabel('Chế độ hiển thị', isRequired: true, colors: colors),
+                  const SizedBox(height: 6),
+                  ClubVisibilitySelector(
+                    value: _visibility,
+                    onChanged: (value) => setState(() => _visibility = value),
+                  ),
+                  const SizedBox(height: 16),
+
+                  _fieldLabel('Cách thức tiếp nhận thành viên', isRequired: true, colors: colors),
+                  const SizedBox(height: 6),
+                  _buildJoinModeSelector(),
+                  const SizedBox(height: 16),
+
+                  _fieldLabel('Giới hạn số lượng thành viên', colors: colors),
+                  const SizedBox(height: 6),
+                  AppTextFormField(
+                    controller: _maxMembersCtrl,
+                    hint: 'Để trống nếu không giới hạn số lượng',
+                    keyboardType: TextInputType.number,
+                    prefixIcon: Icons.group_outlined,
+                  ),
+                  const SizedBox(height: 16),
+
+                  _fieldLabel('Nội quy câu lạc bộ', colors: colors),
+                  const SizedBox(height: 6),
+                  AppTextFormField(
+                    controller: _rulesCtrl,
+                    hint: 'Quy định ứng xử, đóng quỹ định kỳ, kỷ luật...',
+                    maxLines: 3,
+                    prefixIcon: Icons.gavel_rounded,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ── Card 5: Câu hỏi xét duyệt (khi APPROVAL) ──
+            if (_joinMode == 'APPROVAL') ...[
+              _sectionCard(
+                colors: colors,
+                title: 'CÂU HỎI XÉT DUYỆT ĐƠN',
+                subtitle: 'Người xin gia nhập phải trả lời câu hỏi này để BQT duyệt',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppTextFormField(
+                            controller: _joinQuestionCtrl,
+                            hint: 'Nhập câu hỏi (VD: Trình độ ELO/DUPR?)...',
+                            prefixIcon: Icons.help_outline_rounded,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton.filled(
+                          onPressed: () {
+                            final question = _joinQuestionCtrl.text.trim();
+                            if (question.isEmpty ||
+                                _joinQuestions.contains(question)) {
+                              return;
+                            }
+                            setState(() {
+                              _joinQuestions.add(question);
+                              _joinQuestionCtrl.clear();
+                            });
+                          },
+                          icon: const Icon(Icons.add_rounded, color: Colors.white),
+                          style: IconButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            padding: const EdgeInsets.all(12),
+                          ),
+                          tooltip: 'Thêm câu hỏi',
+                        ),
+                      ],
+                    ),
+                    if (_joinQuestions.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      ..._joinQuestions.asMap().entries.map(
+                        (entry) => Container(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: colors.bgDark,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: colors.border),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                '${entry.key + 1}.',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.primary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  entry.value,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: colors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.close_rounded, size: 16, color: colors.textSecondary),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () =>
+                                    setState(() => _joinQuestions.removeAt(entry.key)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
             ],
 
-            // ── Mạng xã hội & Kênh liên hệ ──
-            _label('Mạng xã hội & Kênh liên hệ', colors),
-            const SizedBox(height: 8),
-            ClubSocialLinksEditor(
-              initialLinks: _socialLinks,
-              onChanged: (links) => _socialLinks = links,
+            // ── Card 6: Mạng xã hội ──
+            _sectionCard(
+              colors: colors,
+              title: 'MẠNG XÃ HỘI & KÊNH LIÊN HỆ',
+              subtitle: 'Liên kết Facebook, Zalo, Tiktok... của câu lạc bộ',
+              child: ClubSocialLinksEditor(
+                initialLinks: _socialLinks,
+                onChanged: (links) => _socialLinks = links,
+              ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
+            // Nút Lưu chính
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -494,9 +576,9 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Icon(Icons.save_rounded),
+                    : const Icon(Icons.check_circle_outline_rounded, size: 20),
                 label: Text(
-                  _isLoading ? 'Đang lưu...' : 'Lưu toàn bộ cài đặt',
+                  _isLoading ? 'Đang lưu...' : 'Lưu toàn bộ thay đổi',
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 15,
@@ -504,17 +586,87 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                 ),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+
             _buildDangerZone(colors),
             const SizedBox(height: 32),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _sectionCard({
+    required AppColorsExtension colors,
+    required String title,
+    required String subtitle,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.primary,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 11,
+              color: colors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 14),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _fieldLabel(String text, {bool isRequired = false, required AppColorsExtension colors}) {
+    return RichText(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: colors.textPrimary,
+        ),
+        children: [
+          if (isRequired)
+            const TextSpan(
+              text: ' *',
+              style: TextStyle(color: Color(0xFFE11D48), fontWeight: FontWeight.bold),
+            ),
+        ],
       ),
     );
   }
@@ -531,9 +683,9 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: colors.bgCard,
+          color: colors.bgSurface.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: colors.border),
         ),
@@ -541,46 +693,58 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           children: [
             Container(
               width: double.infinity,
-              height: 64,
+              height: 70,
               decoration: BoxDecoration(
-                color: colors.bgSurface,
+                color: colors.bgDark,
                 shape: isCircle ? BoxShape.circle : BoxShape.rectangle,
                 borderRadius: isCircle ? null : BorderRadius.circular(8),
+                border: Border.all(color: colors.border),
               ),
               clipBehavior: Clip.antiAlias,
               child: imageUrl == null || imageUrl.isEmpty
                   ? Icon(
                       Icons.image_outlined,
-                      color: colors.textMuted,
-                      size: 24,
+                      color: colors.textSecondary,
+                      size: 26,
                     )
                   : Image.network(
                       imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (_, error, stackTrace) => Icon(
                         Icons.broken_image_outlined,
-                        color: colors.textMuted,
+                        color: colors.textSecondary,
                       ),
                     ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text(
               title,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w800,
                 color: colors.textPrimary,
               ),
             ),
             const SizedBox(height: 2),
-            Text(hint, style: TextStyle(fontSize: 10, color: colors.textMuted)),
-            const SizedBox(height: 4),
             Text(
-              'Thay đổi',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.primary,
+              hint,
+              style: TextStyle(fontSize: 10, color: colors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'Thay đổi',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.primary,
+                ),
               ),
             ),
           ],
@@ -590,34 +754,54 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
   }
 
   Widget _buildDangerZone(AppColorsExtension colors) {
-    return Card(
-      color: colors.error.withValues(alpha: .06),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Vùng nguy hiểm',
-              style: TextStyle(
-                color: colors.error,
-                fontWeight: FontWeight.w700,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.error.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.error.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, size: 18, color: colors.error),
+              const SizedBox(width: 6),
+              Text(
+                'VÙNG NGUY HIỂM',
+                style: TextStyle(
+                  color: colors.error,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11,
+                  letterSpacing: 0.4,
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Hành động này sẽ xoá vĩnh viễn Câu lạc bộ cùng toàn bộ bài viết, bảng xếp hạng và lịch sử giải đấu.',
+            style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.4),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _isLoading ? null : _confirmDeleteClub,
+            icon: Icon(Icons.delete_forever_rounded, size: 18, color: colors.error),
+            label: Text(
+              'Xoá vĩnh viễn câu lạc bộ',
+              style: TextStyle(color: colors.error, fontWeight: FontWeight.w700, fontSize: 13),
             ),
-            const SizedBox(height: 6),
-            const Text(
-              'Hành động này sẽ xóa vĩnh viễn Câu lạc bộ này cùng toàn bộ bài viết, '
-              'bảng xếp hạng và lịch sử giải đấu. Không thể hoàn tác sau khi xác nhận.',
-              style: TextStyle(fontSize: 12),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: colors.error.withValues(alpha: 0.5)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: _isLoading ? null : _confirmDeleteClub,
-              icon: const Icon(Icons.delete_forever_outlined),
-              label: const Text('Xoá vĩnh viễn câu lạc bộ'),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
