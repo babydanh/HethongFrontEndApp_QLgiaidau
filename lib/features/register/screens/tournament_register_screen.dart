@@ -104,12 +104,7 @@ class _TournamentRegisterScreenState
           payload['registered'] == true &&
           participant != null) {
         final status = participant['teamStatus']?.toString();
-        const closedStatuses = {
-          'WITHDRAWN',
-          'REJECTED',
-          'KICKED',
-          'EXPIRED',
-        };
+        const closedStatuses = {'WITHDRAWN', 'REJECTED', 'KICKED', 'EXPIRED'};
         if (closedStatuses.contains(status)) {
           if (mounted) {
             setState(() {
@@ -166,7 +161,11 @@ class _TournamentRegisterScreenState
   List<Map<String, dynamic>> _activeRegistrationFields(Tournament tournament) {
     final divisionId = _selectedDiv;
     if (divisionId == null || divisionId.isEmpty) return const [];
-    if (tournament.registrationFormDivisionIds.isNotEmpty && !tournament.registrationFormDivisionIds.contains(divisionId)) return const [];
+    if (tournament.registrationFormDivisionIds.isNotEmpty &&
+        !tournament.registrationFormDivisionIds.contains(divisionId)) {
+      return const [];
+    }
+
     return tournament.registrationFields;
   }
 
@@ -174,21 +173,38 @@ class _TournamentRegisterScreenState
     for (final field in _activeRegistrationFields(tournament)) {
       final id = field['id']?.toString() ?? '';
       final value = _customResponses[id];
-      final empty = value == null || value.toString().trim().isEmpty || (value is List && value.isEmpty);
+      final empty =
+          value == null ||
+          value.toString().trim().isEmpty ||
+          (value is List && value.isEmpty);
       final label = field['label']?.toString() ?? id;
       if (field['required'] == true && empty) return 'Vui lòng điền “$label”.';
       if (empty) continue;
-      if (field['type'] == 'EMAIL' && !RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(value.toString())) return '“$label” phải là email hợp lệ.';
+      if (field['type'] == 'EMAIL' &&
+          !RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(value.toString())) {
+        return '“$label” phải là email hợp lệ.';
+      }
+
       if (field['type'] == 'NUMBER') {
         final number = num.tryParse(value.toString());
         if (number == null) return '“$label” phải là số.';
         final min = num.tryParse(field['min']?.toString() ?? '');
         final max = num.tryParse(field['max']?.toString() ?? '');
-        if (min != null && number < min) return '“$label” không được nhỏ hơn $min.';
-        if (max != null && number > max) return '“$label” không được lớn hơn $max.';
+        if (min != null && number < min) {
+          return '“$label” không được nhỏ hơn $min.';
+        }
+        if (max != null && number > max) {
+          return '“$label” không được lớn hơn $max.';
+        }
       }
-      if (field['type'] == 'SELECT' && field['options'] is List && !(field['options'] as List).contains(value)) return 'Lựa chọn của “$label” không hợp lệ.';
-      if (field['type'] == 'CHECKBOX' && value != true) return 'Bạn cần xác nhận “$label”.';
+      if (field['type'] == 'SELECT' &&
+          field['options'] is List &&
+          !(field['options'] as List).contains(value)) {
+        return 'Lựa chọn của “$label” không hợp lệ.';
+      }
+      if (field['type'] == 'CHECKBOX' && value != true) {
+        return 'Bạn cần xác nhận “$label”.';
+      }
     }
     return null;
   }
@@ -204,15 +220,28 @@ class _TournamentRegisterScreenState
       for (final field in fields) {
         final id = field['id']?.toString() ?? '';
         if (id.isEmpty) continue;
-        if (!_customResponses.containsKey(id) || _customResponses[id] == null || _customResponses[id].toString().trim().isEmpty) {
+        if (!_customResponses.containsKey(id) ||
+            _customResponses[id] == null ||
+            _customResponses[id].toString().trim().isEmpty) {
           final label = (field['label']?.toString() ?? '').toLowerCase();
           final type = field['type']?.toString();
-          final isEmailField = type == 'EMAIL' || label.contains('email') || label.contains('gmail');
-          final isPhoneField = type == 'PHONE' || label.contains('điện thoại') || label.contains('sđt') || label.contains('phone');
+          final isEmailField =
+              type == 'EMAIL' ||
+              label.contains('email') ||
+              label.contains('gmail');
+          final isPhoneField =
+              type == 'PHONE' ||
+              label.contains('điện thoại') ||
+              label.contains('sđt') ||
+              label.contains('phone');
 
-          if (isEmailField && userProfile.email != null && userProfile.email!.isNotEmpty) {
+          if (isEmailField &&
+              userProfile.email != null &&
+              userProfile.email!.isNotEmpty) {
             _customResponses[id] = userProfile.email;
-          } else if (isPhoneField && userProfile.phoneNumber != null && userProfile.phoneNumber!.isNotEmpty) {
+          } else if (isPhoneField &&
+              userProfile.phoneNumber != null &&
+              userProfile.phoneNumber!.isNotEmpty) {
             _customResponses[id] = userProfile.phoneNumber;
           }
         }
@@ -221,23 +250,90 @@ class _TournamentRegisterScreenState
 
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: context.colors.bgSurface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25))),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Thông tin đăng ký bổ sung', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 4),
-        Text('Ban tổ chức yêu cầu các thông tin dưới đây cho nội dung bạn đã chọn.', style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
-        const SizedBox(height: 12),
-        ...fields.map((field) {
-          final id = field['id']?.toString() ?? '';
-          final label = field['label']?.toString() ?? id;
-          final required = field['required'] == true;
-          final type = field['type']?.toString();
-          final help = field['helpText']?.toString();
-          if (type == 'CHECKBOX') return CheckboxListTile(contentPadding: EdgeInsets.zero, value: _customResponses[id] == true, onChanged: (value) => setState(() => _customResponses[id] = value == true), title: Text('$label${required ? ' *' : ''}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)));
-          if (type == 'SELECT') return DropdownButtonFormField<String>(value: _customResponses[id]?.toString(), decoration: InputDecoration(labelText: '$label${required ? ' *' : ''}', helperText: help), items: [const DropdownMenuItem(value: '', child: Text('Chọn một lựa chọn')), ...((field['options'] as List? ?? const []).map((option) => DropdownMenuItem(value: option.toString(), child: Text(option.toString()))))], onChanged: (value) => setState(() => _customResponses[id] = value));
-          return Padding(padding: const EdgeInsets.only(bottom: 10), child: TextFormField(initialValue: _customResponses[id]?.toString() ?? '', keyboardType: type == 'NUMBER' ? TextInputType.number : type == 'EMAIL' ? TextInputType.emailAddress : type == 'PHONE' ? TextInputType.phone : TextInputType.text, maxLines: type == 'TEXTAREA' ? 3 : 1, decoration: InputDecoration(labelText: '$label${required ? ' *' : ''}', helperText: help), onChanged: (value) => _customResponses[id] = value));
-        }),
-      ]),
+      decoration: BoxDecoration(
+        color: context.colors.bgSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Thông tin đăng ký bổ sung',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Ban tổ chức yêu cầu các thông tin dưới đây cho nội dung bạn đã chọn.',
+            style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          ...fields.map((field) {
+            final id = field['id']?.toString() ?? '';
+            final label = field['label']?.toString() ?? id;
+            final required = field['required'] == true;
+            final type = field['type']?.toString();
+            final help = field['helpText']?.toString();
+            if (type == 'CHECKBOX') {
+              return CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _customResponses[id] == true,
+                onChanged: (value) =>
+                    setState(() => _customResponses[id] = value == true),
+                title: Text(
+                  '$label${required ? ' *' : ''}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              );
+            }
+            if (type == 'SELECT') {
+              return DropdownButtonFormField<String>(
+                initialValue: _customResponses[id]?.toString(),
+                decoration: InputDecoration(
+                  labelText: '$label${required ? ' *' : ''}',
+                  helperText: help,
+                ),
+                items: [
+                  const DropdownMenuItem(
+                    value: '',
+                    child: Text('Chọn một lựa chọn'),
+                  ),
+                  ...((field['options'] as List? ?? const []).map(
+                    (option) => DropdownMenuItem(
+                      value: option.toString(),
+                      child: Text(option.toString()),
+                    ),
+                  )),
+                ],
+                onChanged: (value) =>
+                    setState(() => _customResponses[id] = value),
+              );
+            }
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: TextFormField(
+                initialValue: _customResponses[id]?.toString() ?? '',
+                keyboardType: type == 'NUMBER'
+                    ? TextInputType.number
+                    : type == 'EMAIL'
+                    ? TextInputType.emailAddress
+                    : type == 'PHONE'
+                    ? TextInputType.phone
+                    : TextInputType.text,
+                maxLines: type == 'TEXTAREA' ? 3 : 1,
+                decoration: InputDecoration(
+                  labelText: '$label${required ? ' *' : ''}',
+                  helperText: help,
+                ),
+                onChanged: (value) => _customResponses[id] = value,
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 
@@ -323,10 +419,7 @@ class _TournamentRegisterScreenState
       }
     } catch (_) {
       if (mounted) {
-        setState(
-          () => _eloError =
-              l10n.registerEloCheckError,
-        );
+        setState(() => _eloError = l10n.registerEloCheckError);
       }
     } finally {
       if (mounted) setState(() => _eloChecking = false);
@@ -361,18 +454,24 @@ class _TournamentRegisterScreenState
 
   Future<void> _register() async {
     if (_alreadyRegistered) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.registerAlreadyRegistered)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.registerAlreadyRegistered)));
       return;
     }
     if (!_formKey.currentState!.validate()) return;
     final userAsync = ref.read(userProfileProvider);
     final user = userAsync.asData?.value;
     final missingFields = <String>[];
-    if (user?.fullName == null || user!.fullName!.trim().isEmpty) missingFields.add('Họ tên');
-    if (user?.phoneNumber == null || user!.phoneNumber!.trim().isEmpty) missingFields.add('Số điện thoại');
-    if (user?.gender == null || user!.gender!.trim().isEmpty) missingFields.add('Giới tính');
+    if (user?.fullName == null || user!.fullName!.trim().isEmpty) {
+      missingFields.add('Họ tên');
+    }
+    if (user?.phoneNumber == null || user!.phoneNumber!.trim().isEmpty) {
+      missingFields.add('Số điện thoại');
+    }
+    if (user?.gender == null || user!.gender!.trim().isEmpty) {
+      missingFields.add('Giới tính');
+    }
 
     if (missingFields.isNotEmpty) {
       if (mounted) {
@@ -418,11 +517,18 @@ class _TournamentRegisterScreenState
       }
       return;
     }
-    final tournament = ref.read(tournamentProvider(widget.tournamentId)).asData?.value;
+    final tournament = ref
+        .read(tournamentProvider(widget.tournamentId))
+        .asData
+        ?.value;
     if (tournament?.isRanked == true && !_rankingConsent) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vui lòng đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng.')),
+          const SnackBar(
+            content: Text(
+              'Vui lòng đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng.',
+            ),
+          ),
         );
       }
       return;
@@ -440,23 +546,43 @@ class _TournamentRegisterScreenState
     if (tournament != null) {
       final customError = _validateCustomResponses(tournament);
       if (customError != null) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(customError)));
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(customError)));
+        }
+
         return;
       }
     }
     // Team sport (bóng đá): config có teamSize → đăng ký đội nhiều người
-    final tournamentForTeam = ref.read(tournamentProvider(widget.tournamentId)).asData?.value;
-    if (tournamentForTeam != null && (tournamentForTeam.teamSize != null || tournamentForTeam.minTeamSize != null)) {
+    final tournamentForTeam = ref
+        .read(tournamentProvider(widget.tournamentId))
+        .asData
+        ?.value;
+    if (tournamentForTeam != null &&
+        (tournamentForTeam.teamSize != null ||
+            tournamentForTeam.minTeamSize != null)) {
       final inviteCode = _localInviteCode ?? widget.inviteCode ?? '';
-      final selectedTeamDivision = divisions?.where((d) => d.id == divisionId).firstOrNull;
+      final selectedTeamDivision = divisions
+          ?.where((d) => d.id == divisionId)
+          .firstOrNull;
       final query = <String, String>{
         'invite': inviteCode,
         ...?(divisionId == null ? null : {'divisionId': divisionId}),
-        if (selectedTeamDivision?.categoryId != null) 'categoryId': selectedTeamDivision!.categoryId!,
-        if (tournamentForTeam.teamSize != null) 'teamSize': '${tournamentForTeam.teamSize}',
-        if (tournamentForTeam.maxReserve != null) 'maxReserve': '${tournamentForTeam.maxReserve}',
+        if (selectedTeamDivision?.categoryId != null)
+          'categoryId': selectedTeamDivision!.categoryId!,
+        if (tournamentForTeam.teamSize != null)
+          'teamSize': '${tournamentForTeam.teamSize}',
+        if (tournamentForTeam.maxReserve != null)
+          'maxReserve': '${tournamentForTeam.maxReserve}',
       };
-      await context.push(Uri(path: '/register/${widget.tournamentId}/team', queryParameters: query).toString());
+      await context.push(
+        Uri(
+          path: '/register/${widget.tournamentId}/team',
+          queryParameters: query,
+        ).toString(),
+      );
       if (mounted) {
         // The team flow mutates the participant/division counters outside this
         // screen. Refresh them when it returns instead of showing stale data.
@@ -534,7 +660,8 @@ class _TournamentRegisterScreenState
         String msg = ErrorParser.parse(e, l10n.registerError);
         if (msg == l10n.registerError || msg.contains('Không thể đăng ký')) {
           final raw = e.toString();
-          if (raw.contains('BadRequestException:') || raw.contains('Exception:')) {
+          if (raw.contains('BadRequestException:') ||
+              raw.contains('Exception:')) {
             msg = raw.replaceAll(RegExp(r'.*Exception:\s*'), '');
           } else {
             msg = raw;
@@ -637,7 +764,6 @@ class _TournamentRegisterScreenState
     return items;
   }
 
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -654,10 +780,7 @@ class _TournamentRegisterScreenState
 
     return Scaffold(
       backgroundColor: context.colors.bgDark,
-      appBar: AppBar(
-        title: Text(l10n.registerTitle),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(l10n.registerTitle), centerTitle: true),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16),
@@ -690,10 +813,14 @@ class _TournamentRegisterScreenState
                     : [
                         TournamentDivisionOption(
                           id: 'default_${t.id}',
-                          name: t.name.isNotEmpty ? t.name : l10n.registerContentTitle,
+                          name: t.name.isNotEmpty
+                              ? t.name
+                              : l10n.registerContentTitle,
                           matchType:
                               t.format.toLowerCase() == 'doubles' ||
-                                  t.name.toLowerCase().contains(l10n.registerTypeDoubles)
+                                  t.name.toLowerCase().contains(
+                                    l10n.registerTypeDoubles,
+                                  )
                               ? 'DOUBLES'
                               : 'SINGLES',
                           entryFee: t.entryFee,
@@ -711,10 +838,14 @@ class _TournamentRegisterScreenState
                 final fallbackDivs = [
                   TournamentDivisionOption(
                     id: 'default_${t.id}',
-                    name: t.name.isNotEmpty ? t.name : l10n.registerContentTitle,
+                    name: t.name.isNotEmpty
+                        ? t.name
+                        : l10n.registerContentTitle,
                     matchType:
                         t.format.toLowerCase() == 'doubles' ||
-                            t.name.toLowerCase().contains(l10n.registerTypeDoubles)
+                            t.name.toLowerCase().contains(
+                              l10n.registerTypeDoubles,
+                            )
                         ? 'DOUBLES'
                         : 'SINGLES',
                     entryFee: t.entryFee,
@@ -820,7 +951,8 @@ class _TournamentRegisterScreenState
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: () {
-                  final inviteCode = _localInviteCode ?? widget.inviteCode ?? '';
+                  final inviteCode =
+                      _localInviteCode ?? widget.inviteCode ?? '';
                   context.push(
                     '/register/${widget.tournamentId}/doubles?divisionId=${_existingDivisionId ?? ''}&invite=$inviteCode',
                     extra: existingDivision,
@@ -869,7 +1001,10 @@ class _TournamentRegisterScreenState
               context.go('/intro/${tournament.id}');
             },
             icon: Icon(Icons.exit_to_app_rounded, color: context.colors.error),
-            label: Text(l10n.registerWithdraw, style: TextStyle(color: context.colors.error)),
+            label: Text(
+              l10n.registerWithdraw,
+              style: TextStyle(color: context.colors.error),
+            ),
           ),
           const SizedBox(height: 8),
           SizedBox(
@@ -910,17 +1045,37 @@ class _TournamentRegisterScreenState
       ),
       child: Column(
         children: rows.entries
-            .map((entry) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: Text(entry.key, style: TextStyle(color: context.colors.textMuted, fontSize: 12))),
-                      const SizedBox(width: 12),
-                      Flexible(child: Text(entry.value, textAlign: TextAlign.right, style: TextStyle(color: context.colors.textPrimary, fontSize: 12, fontWeight: FontWeight.w700))),
-                    ],
-                  ),
-                ))
+            .map(
+              (entry) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        entry.key,
+                        style: TextStyle(
+                          color: context.colors.textMuted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Text(
+                        entry.value,
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          color: context.colors.textPrimary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
             .toList(),
       ),
     );
@@ -1170,7 +1325,9 @@ class _TournamentRegisterScreenState
                   )
                 : const Icon(Icons.login_rounded),
             label: Text(
-              _inviteValidating ? l10n.registerInviteValidating : l10n.registerInviteConfirm,
+              _inviteValidating
+                  ? l10n.registerInviteValidating
+                  : l10n.registerInviteConfirm,
             ),
             style: FilledButton.styleFrom(
               shape: RoundedRectangleBorder(
@@ -1202,10 +1359,7 @@ class _TournamentRegisterScreenState
               color: context.colors.textMuted,
             ),
             const SizedBox(height: 12),
-            Text(
-              l10n.registerLoginPrompt,
-              textAlign: TextAlign.center,
-            ),
+            Text(l10n.registerLoginPrompt, textAlign: TextAlign.center),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: () {
@@ -1441,9 +1595,7 @@ class _TournamentRegisterScreenState
                           color: AppTheme.primary.withValues(alpha: 0.2),
                         ),
                       ),
-                      child: Text(
-                        l10n.registerTeamNameNext,
-                      ),
+                      child: Text(l10n.registerTeamNameNext),
                     ),
                 const SizedBox(height: 16),
                 divAsync.when(
@@ -1475,9 +1627,9 @@ class _TournamentRegisterScreenState
                           final formatLabel = _divisionTypeLabel(d);
                           final hasFormatLabel =
                               formatLabel != l10n.registerContentTitle;
-                          final meta = _divisionMeta(d)
-                              .where((label) => label != formatLabel)
-                              .toList();
+                          final meta = _divisionMeta(
+                            d,
+                          ).where((label) => label != formatLabel).toList();
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: GestureDetector(
@@ -1520,7 +1672,8 @@ class _TournamentRegisterScreenState
                                                 name,
                                                 style: TextStyle(
                                                   fontSize: 12,
-                                                  color: context.colors.textMuted,
+                                                  color:
+                                                      context.colors.textMuted,
                                                 ),
                                               ),
                                             ),
@@ -1733,9 +1886,7 @@ class _TournamentRegisterScreenState
                       color: context.colors.error.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text(
-                      l10n.registerDivisionLoadError,
-                    ),
+                    child: Text(l10n.registerDivisionLoadError),
                   ),
                 ),
                 _buildCustomFields(t),
@@ -1751,10 +1902,20 @@ class _TournamentRegisterScreenState
                     child: CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
                       value: _rankingConsent,
-                      onChanged: (value) => setState(() => _rankingConsent = value ?? false),
+                      onChanged: (value) =>
+                          setState(() => _rankingConsent = value ?? false),
                       controlAffinity: ListTileControlAffinity.leading,
-                      title: const Text('Đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                      subtitle: const Text('Giải có xếp hạng chỉ ghi nhận ELO sau khi bạn đồng ý.', style: TextStyle(fontSize: 12)),
+                      title: const Text(
+                        'Đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      subtitle: const Text(
+                        'Giải có xếp hạng chỉ ghi nhận ELO sau khi bạn đồng ý.',
+                        style: TextStyle(fontSize: 12),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -2041,13 +2202,29 @@ class _RegistrationCountdownCardState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildTimeUnit('$days'.padLeft(2, '0'), l10n.registerDays, colors),
+              _buildTimeUnit(
+                '$days'.padLeft(2, '0'),
+                l10n.registerDays,
+                colors,
+              ),
               _buildColon(colors),
-              _buildTimeUnit('$hours'.padLeft(2, '0'), l10n.registerHours, colors),
+              _buildTimeUnit(
+                '$hours'.padLeft(2, '0'),
+                l10n.registerHours,
+                colors,
+              ),
               _buildColon(colors),
-              _buildTimeUnit('$minutes'.padLeft(2, '0'), l10n.registerMinutes, colors),
+              _buildTimeUnit(
+                '$minutes'.padLeft(2, '0'),
+                l10n.registerMinutes,
+                colors,
+              ),
               _buildColon(colors),
-              _buildTimeUnit('$seconds'.padLeft(2, '0'), l10n.registerSeconds, colors),
+              _buildTimeUnit(
+                '$seconds'.padLeft(2, '0'),
+                l10n.registerSeconds,
+                colors,
+              ),
             ],
           ),
         ],
@@ -2109,6 +2286,3 @@ class _RegistrationCountdownCardState
     );
   }
 }
-
-
-

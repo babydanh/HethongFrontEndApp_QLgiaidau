@@ -11,7 +11,6 @@ import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart'
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
-import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
@@ -89,8 +88,8 @@ class _DoublesRegistrationFlowState
       final regData = body is Map && body['data'] is Map
           ? body['data'] as Map
           : body is Map
-              ? body
-              : null;
+          ? body
+          : null;
       if (mounted && regData != null) {
         if (regData['registered'] == true && regData['participant'] is Map) {
           final participant = regData['participant'] as Map;
@@ -99,9 +98,8 @@ class _DoublesRegistrationFlowState
           final link = participant['teamInviteLink']?.toString();
           final pId = participant['id']?.toString();
           final name = participant['teamName']?.toString();
-          final fee = double.tryParse(
-                participant['entryFee']?.toString() ?? '',
-              ) ??
+          final fee =
+              double.tryParse(participant['entryFee']?.toString() ?? '') ??
               widget.division.entryFee ??
               0;
 
@@ -120,7 +118,9 @@ class _DoublesRegistrationFlowState
               _step = 2;
             });
             _startPolling();
-          } else if (status == 'COMPLETE' || status == 'PENDING_APPROVAL' || status == 'WAITLISTED') {
+          } else if (status == 'COMPLETE' ||
+              status == 'PENDING_APPROVAL' ||
+              status == 'WAITLISTED') {
             setState(() {
               _participantId = pId;
               _teamInviteToken = token;
@@ -257,16 +257,23 @@ class _DoublesRegistrationFlowState
 
   Future<bool> _recoverRegistrationAfterSubmitFailure() async {
     try {
-      final response = await ref.read(dioClientProvider).dio.get(
-        '/tournaments/${widget.tournamentId}/my-registration',
-        queryParameters: {
-          'divisionId': widget.division.id,
-          '_t': DateTime.now().millisecondsSinceEpoch.toString(),
-        },
-      );
+      final response = await ref
+          .read(dioClientProvider)
+          .dio
+          .get(
+            '/tournaments/${widget.tournamentId}/my-registration',
+            queryParameters: {
+              'divisionId': widget.division.id,
+              '_t': DateTime.now().millisecondsSinceEpoch.toString(),
+            },
+          );
       final body = response.data;
-      final raw = body is Map && body['data'] is Map ? body['data'] as Map : body;
-      if (raw is! Map || raw['registered'] != true || raw['participant'] is! Map) {
+      final raw = body is Map && body['data'] is Map
+          ? body['data'] as Map
+          : body;
+      if (raw is! Map ||
+          raw['registered'] != true ||
+          raw['participant'] is! Map) {
         return false;
       }
 
@@ -279,7 +286,8 @@ class _DoublesRegistrationFlowState
       _teamStatus = status;
       _teamInviteToken = participant['teamInviteToken']?.toString();
       _teamInviteLink = participant['teamInviteLink']?.toString();
-      _entryFee = double.tryParse(participant['entryFee']?.toString() ?? '') ?? 0;
+      _entryFee =
+          double.tryParse(participant['entryFee']?.toString() ?? '') ?? 0;
       _isPaid = participant['isPaid'] == true;
 
       if (!mounted) return true;
@@ -322,7 +330,8 @@ class _DoublesRegistrationFlowState
         ?.value;
     setState(() => _submitting = true);
     try {
-      _partnerContact = _selectedPartner?.email ??
+      _partnerContact =
+          _selectedPartner?.email ??
           (_inviteLater ? null : _partnerSearchCtrl.text.trim());
       final result = await ref
           .read(tournamentRepositoryProvider)
@@ -402,7 +411,9 @@ class _DoublesRegistrationFlowState
     _partnerInviteExpiresAt ??= DateTime.now().add(const Duration(minutes: 60));
     _pollElapsed = 0;
     _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final remaining = _partnerInviteExpiresAt!.difference(DateTime.now()).inSeconds;
+      final remaining = _partnerInviteExpiresAt!
+          .difference(DateTime.now())
+          .inSeconds;
       if (remaining <= 0) {
         _pollTimer?.cancel();
         if (mounted) {
@@ -413,9 +424,9 @@ class _DoublesRegistrationFlowState
         }
         return;
       }
-      
+
       setState(() {}); // Update countdown UI
-      
+
       _pollElapsed++;
       // Check backend every 5 seconds to avoid spamming
       if (_pollElapsed % 5 == 0) {
@@ -846,9 +857,10 @@ class _DoublesRegistrationFlowState
             : null);
     final inviteLink = rawInviteLink == null
         ? null
-        : rawInviteLink.startsWith('http://') || rawInviteLink.startsWith('https://')
-            ? rawInviteLink
-            : 'https://sporto.asia${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
+        : rawInviteLink.startsWith('http://') ||
+              rawInviteLink.startsWith('https://')
+        ? rawInviteLink
+        : 'https://sporto.asia${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
     final showInvite = inviteLink != null || _teamInviteToken != null;
 
     return Column(
@@ -1052,9 +1064,8 @@ class _DoublesRegistrationFlowState
                 divisionId: widget.division.id,
                 hasPaid: false,
               );
-              if (withdrew && context.mounted) {
-                context.go('/intro/${widget.tournamentId}');
-              }
+              if (!mounted || !withdrew) return;
+              context.go('/intro/${widget.tournamentId}');
             },
             icon: Icon(
               Icons.exit_to_app_rounded,
@@ -1133,15 +1144,17 @@ class _DoublesRegistrationFlowState
 
   Widget _buildStep3(Tournament t, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    final rawInviteLink = _teamInviteLink ??
+    final rawInviteLink =
+        _teamInviteLink ??
         (_teamInviteToken != null
             ? '/tournaments/${widget.tournamentId}/join-team?pid=$_participantId&token=$_teamInviteToken'
             : null);
     final inviteLink = rawInviteLink == null
         ? null
-        : rawInviteLink.startsWith('http://') || rawInviteLink.startsWith('https://')
-            ? rawInviteLink
-            : 'https://sporto.asia${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
+        : rawInviteLink.startsWith('http://') ||
+              rawInviteLink.startsWith('https://')
+        ? rawInviteLink
+        : 'https://sporto.asia${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
     final canPay =
         _entryFee != null &&
         _entryFee! > 0 &&
@@ -1168,8 +1181,8 @@ class _DoublesRegistrationFlowState
           ),
         ),
         const SizedBox(height: 4),
-              Text(
-                statusLabel,
+        Text(
+          statusLabel,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
@@ -1186,7 +1199,9 @@ class _DoublesRegistrationFlowState
                   context: context,
                   title: 'Tham gia đội ${_teamNameCtrl.text}',
                   subtitle: 'Giải ${t.name} - Partner: $_partnerContact',
-                  webUrl: inviteLink ?? 'https://sporto.asia/tournaments/${widget.tournamentId}',
+                  webUrl:
+                      inviteLink ??
+                      'https://sporto.asia/tournaments/${widget.tournamentId}',
                   imageUrl: t.logoUrl,
                   badgeText: 'Lời mời ghép đôi',
                 );
@@ -1314,9 +1329,8 @@ class _DoublesRegistrationFlowState
                 // đk có phí THỰC SỰ >0 thì mới cần nhập/hoàn bank. (fix #35)
                 hasPaid: _isPaid && _entryFee != null && _entryFee! > 0,
               );
-              if (withdrew && context.mounted) {
-                context.go('/intro/${widget.tournamentId}');
-              }
+              if (!mounted || !withdrew) return;
+              context.go('/intro/${widget.tournamentId}');
             },
             icon: Icon(
               Icons.exit_to_app_rounded,
@@ -1374,9 +1388,8 @@ class _DoublesRegistrationFlowState
                     divisionId: widget.division.id,
                     hasPaid: _entryFee != null && _entryFee! > 0,
                   );
-                  if (withdrew && context.mounted) {
-                    context.go('/intro/${widget.tournamentId}');
-                  }
+                  if (!mounted || !withdrew) return;
+                  context.go('/intro/${widget.tournamentId}');
                 },
                 icon: Icon(
                   Icons.exit_to_app_rounded,
