@@ -8005,6 +8005,75 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Quản lý đội hình và ELO bóng đá'**
   String get dashboardFootballTeamsSub;
+
+  /// No description provided for @chatScreenTitle.
+  String get chatScreenTitle;
+
+  /// No description provided for @chatScreenConversations.
+  String get chatScreenConversations;
+
+  /// No description provided for @chatScreenAiAssistant.
+  String get chatScreenAiAssistant;
+
+  /// No description provided for @chatScreenSupport.
+  String get chatScreenSupport;
+
+  /// No description provided for @chatScreenSearchHint.
+  String get chatScreenSearchHint;
+
+  /// No description provided for @chatScreenClubBadge.
+  String get chatScreenClubBadge;
+
+  /// No description provided for @chatScreenRevokedMessage.
+  String get chatScreenRevokedMessage;
+
+  /// No description provided for @chatScreenImageMessage.
+  String get chatScreenImageMessage;
+
+  /// No description provided for @chatScreenStartConversation.
+  String get chatScreenStartConversation;
+
+  /// No description provided for @chatScreenNoSearchResults.
+  String get chatScreenNoSearchResults;
+
+  /// No description provided for @chatScreenNoConversations.
+  String get chatScreenNoConversations;
+
+  /// No description provided for @chatScreenAiGreeting.
+  String get chatScreenAiGreeting;
+
+  /// No description provided for @chatScreenAiPromptRegistration.
+  String get chatScreenAiPromptRegistration;
+
+  /// No description provided for @chatScreenAiPromptElo.
+  String get chatScreenAiPromptElo;
+
+  /// No description provided for @chatScreenAiPromptCreateClub.
+  String get chatScreenAiPromptCreateClub;
+
+  /// No description provided for @chatScreenAiPromptRules.
+  String get chatScreenAiPromptRules;
+
+  /// No description provided for @chatScreenAiTyping.
+  String get chatScreenAiTyping;
+
+  /// No description provided for @chatScreenAiInputHint.
+  String get chatScreenAiInputHint;
+
+  /// No description provided for @chatScreenAiFallbackReply.
+  String get chatScreenAiFallbackReply;
+
+  /// No description provided for @chatScreenAiErrorReply.
+  String get chatScreenAiErrorReply;
+
+  /// No description provided for @chatScreenSupportTitle.
+  String get chatScreenSupportTitle;
+
+  /// No description provided for @chatScreenSupportDescription.
+  String get chatScreenSupportDescription;
+
+  /// No description provided for @chatScreenSupportInputHint.
+  String get chatScreenSupportInputHint;
 }
 
 class _AppLocalizationsDelegate

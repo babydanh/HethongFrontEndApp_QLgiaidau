@@ -4225,4 +4225,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardFootballTeamsSub => 'Manage squads and football ELO';
+
+  @override
+  String get chatScreenTitle => 'Chats';
+
+  @override
+  String get chatScreenConversations => 'Conversations';
+
+  @override
+  String get chatScreenAiAssistant => 'AI Assistant';
+
+  @override
+  String get chatScreenSupport => 'Customer support';
+
+  @override
+  String get chatScreenSearchHint => 'Search messages, players, or clubs...';
+
+  @override
+  String get chatScreenClubBadge => 'CLUB';
+
+  @override
+  String get chatScreenRevokedMessage => 'Message was revoked';
+
+  @override
+  String get chatScreenImageMessage => '[Image]';
+
+  @override
+  String get chatScreenStartConversation => 'Start a conversation';
+
+  @override
+  String get chatScreenNoSearchResults => 'No matching conversations found.';
+
+  @override
+  String get chatScreenNoConversations => 'No conversations yet.';
+
+  @override
+  String get chatScreenAiGreeting =>
+      'Hello! I am Sporto AI assistant. You can ask about competition rules, ELO calculations, or how to join tournaments!';
+
+  @override
+  String get chatScreenAiPromptRegistration => 'How do I join a tournament?';
+
+  @override
+  String get chatScreenAiPromptElo => 'How is ELO calculated?';
+
+  @override
+  String get chatScreenAiPromptCreateClub => 'How do I create a club?';
+
+  @override
+  String get chatScreenAiPromptRules => 'What are the Pickleball rules?';
+
+  @override
+  String get chatScreenAiTyping => 'Sporto AI is composing a reply...';
+
+  @override
+  String get chatScreenAiInputHint => 'Ask Sporto AI anything...';
+
+  @override
+  String get chatScreenAiFallbackReply =>
+      'Sporto AI is processing your request...';
+
+  @override
+  String get chatScreenAiErrorReply =>
+      'Sorry, the AI service is busy right now. Please try again in a few minutes.';
+
+  @override
+  String get chatScreenSupportTitle => 'Sporto support center';
+
+  @override
+  String get chatScreenSupportDescription =>
+      'Send your question and our support team will assist you as soon as possible.';
+
+  @override
+  String get chatScreenSupportInputHint => 'Enter your support question...';
 }

@@ -4221,4 +4221,79 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get dashboardFootballTeamsSub => 'Quản lý đội hình và ELO bóng đá';
+
+  @override
+  String get chatScreenTitle => 'Đoạn chat';
+
+  @override
+  String get chatScreenConversations => 'Trò chuyện';
+
+  @override
+  String get chatScreenAiAssistant => 'AI Trợ lý';
+
+  @override
+  String get chatScreenSupport => 'Hỗ trợ CSKH';
+
+  @override
+  String get chatScreenSearchHint =>
+      'Tìm kiếm tin nhắn, người chơi hoặc CLB...';
+
+  @override
+  String get chatScreenClubBadge => 'CLB';
+
+  @override
+  String get chatScreenRevokedMessage => 'Tin nhắn đã bị thu hồi';
+
+  @override
+  String get chatScreenImageMessage => '[Hình ảnh]';
+
+  @override
+  String get chatScreenStartConversation => 'Bắt đầu cuộc trò chuyện';
+
+  @override
+  String get chatScreenNoSearchResults =>
+      'Không tìm thấy cuộc trò chuyện phù hợp.';
+
+  @override
+  String get chatScreenNoConversations => 'Chưa có cuộc trò chuyện nào.';
+
+  @override
+  String get chatScreenAiGreeting =>
+      'Xin chào! Mình là trợ lý AI Sporto. Bạn có thể hỏi về luật thi đấu, cách tính điểm ELO, hay cách đăng ký tham gia các giải đấu!';
+
+  @override
+  String get chatScreenAiPromptRegistration => 'Cách đăng ký giải đấu?';
+
+  @override
+  String get chatScreenAiPromptElo => 'Hệ số ELO tính thế nào?';
+
+  @override
+  String get chatScreenAiPromptCreateClub => 'Làm sao để tạo CLB?';
+
+  @override
+  String get chatScreenAiPromptRules => 'Luật thi đấu Pickleball?';
+
+  @override
+  String get chatScreenAiTyping => 'Sporto AI đang soạn câu trả lời...';
+
+  @override
+  String get chatScreenAiInputHint => 'Hỏi AI Sporto bất cứ điều gì...';
+
+  @override
+  String get chatScreenAiFallbackReply =>
+      'Sporto AI đang xử lý yêu cầu của bạn...';
+
+  @override
+  String get chatScreenAiErrorReply =>
+      'Xin lỗi, tạm thời hệ thống AI đang bận. Bạn có thể thử lại sau ít phút nhé!';
+
+  @override
+  String get chatScreenSupportTitle => 'Trung tâm hỗ trợ Sporto';
+
+  @override
+  String get chatScreenSupportDescription =>
+      'Hãy gửi câu hỏi, nhân viên CSKH sẽ hỗ trợ bạn sớm nhất.';
+
+  @override
+  String get chatScreenSupportInputHint => 'Nhập nội dung cần hỗ trợ...';
 }

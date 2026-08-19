@@ -206,11 +206,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _sectionTitle(colors, 'Biểu đồ ELO'),
+                _sectionTitle(colors, l10n.publicProfileEloChart),
                 const SizedBox(height: 12),
                 _buildEloChart(context, profile, colors),
                 const SizedBox(height: 24),
-                _sectionTitle(colors, 'Thống kê chi tiết'),
+                _sectionTitle(colors, l10n.publicProfileDetailedStats),
                 const SizedBox(height: 12),
                 _buildDetailedStats(context, profile, colors),
               ],

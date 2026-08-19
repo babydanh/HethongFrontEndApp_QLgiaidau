@@ -120,6 +120,14 @@ Tài liệu này là danh mục kiểm tra từng route và màn hình của app
 | `LiteManagementScreen` | Removed the unreachable legacy TAB 4 matches/operations block and its unused `MatchModel` import; the active overview, participants, and bracket tabs remain unchanged. / Xóa block TAB 4 matches/operations không thể truy cập và import `MatchModel` không dùng; ba tab overview, participants và bracket đang hoạt động không đổi. | Focused analyzer: **No issues found**. |
 | `HomeScreen` | Removed confirmed-unreferenced token, club, loading, tournament-card, and sticky-header legacy sections; cleaned dead imports/helpers and added braces to the remaining branch. Active Home/Explore/Ranking content remains intact. / Xóa các section legacy token, club, loading, tournament-card và sticky-header đã xác nhận không được tham chiếu; dọn import/helper dư và bổ sung braces cho nhánh còn lại. Nội dung Home/Explore/Ranking đang hoạt động được giữ nguyên. | Focused analyzer: **No issues found**. Graph refreshed: **12,075 nodes / 15,521 edges**. |
 
+## Web-vs-Flutter parity implementation evidence / Bằng chứng triển khai parity Web-Flutter
+
+| Surface / Khu vực | Implemented evidence / Bằng chứng đã triển khai | Verification / Xác minh |
+|---|---|---|
+| `ChatScreen` | Existing conversation search, AI Sporto tab, and live customer-support tab are now fully sourced from the manual VI/EN localization catalog, including tabs, search hint, empty states, AI prompts, typing/fallback/error messages, and support guidance. / Tab trò chuyện, tìm kiếm, AI Sporto và hỗ trợ CSKH hiện dùng đầy đủ catalog VI/EN thủ công, gồm tab, hint tìm kiếm, trạng thái rỗng, prompt AI, trạng thái đang soạn, fallback/lỗi và hướng dẫn hỗ trợ. | Focused analyzer: **No issues found**. Existing API and socket behavior preserved. / Giữ nguyên API và socket hiện có. |
+| `UserProfileScreen` | Public profile already exposes Overview, Matches, Achievements, and ELO tabs; remaining ELO chart and detailed-stat headings now use `publicProfileEloChart` and `publicProfileDetailedStats` instead of literals. / Hồ sơ công khai đã có các tab Tổng quan, Trận đấu, Danh hiệu và ELO; tiêu đề biểu đồ ELO và thống kê chi tiết đã chuyển sang ARB thay vì literal. | Focused analyzer: **No issues found**. |
+| `DashboardScreen` | Added discoverable quick actions for public rankings (`/rankings`), chat (`/chat`), and report history (`/profile/reports`), while localizing the existing create-tournament and football-team actions. / Bổ sung quick action dễ tìm cho xếp hạng công khai (`/rankings`), chat (`/chat`) và lịch sử báo cáo (`/profile/reports`), đồng thời đưa action tạo giải và đội bóng vào localization. | Focused analyzer: **No issues found** for dashboard and localization batch. |
+
 ## Audit order / Thứ tự thực hiện
 
 1. **Auth, Profile, Settings:** establish locale, session, and permission baseline.
