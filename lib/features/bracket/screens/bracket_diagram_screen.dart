@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.
 import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
+import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 
 /// Full-screen bracket diagram for all 3 format types.
 /// Navigated to from the "Xem sơ đồ" button in BracketViewScreen.
@@ -20,6 +21,7 @@ class BracketDiagramScreen extends ConsumerStatefulWidget {
   final String bracketType;
   final bool isReferee;
   final bool isReadOnly;
+  final bool canEditBracket;
 
   const BracketDiagramScreen({
     super.key,
@@ -28,10 +30,12 @@ class BracketDiagramScreen extends ConsumerStatefulWidget {
     required this.bracketType,
     this.isReferee = false,
     this.isReadOnly = true,
+    this.canEditBracket = false,
   });
 
   @override
-  ConsumerState<BracketDiagramScreen> createState() => _BracketDiagramScreenState();
+  ConsumerState<BracketDiagramScreen> createState() =>
+      _BracketDiagramScreenState();
 }
 
 class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
@@ -72,6 +76,30 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
     }
   }
 
+  Future<void> _updateBracketSlots(
+    BracketSlotDragData source,
+    BracketSlotDragData target,
+  ) async {
+    if (source.matchId == target.matchId && source.slot == target.slot) return;
+    if (!source.hasParticipant || target.isBye) return;
+    final repo = ref.read(tournamentRepositoryProvider);
+    final operation = target.hasParticipant ? 'SWAP' : 'MOVE';
+    await repo.updateBracketSlots(
+      widget.tournamentId,
+      divisionId: widget.divisionId,
+      operations: [
+        {
+          'operation': operation,
+          'fromMatchId': source.matchId,
+          'fromSlot': source.slot,
+          'toMatchId': target.matchId,
+          'toSlot': target.slot,
+        },
+      ],
+    );
+    await _fetchBracket();
+  }
+
   @override
   void dispose() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -81,9 +109,11 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final isRoundRobin = widget.bracketType == AppConstants.bracketRoundRobin;
-    final isDouble = widget.bracketType == AppConstants.bracketDoubleElimination;
-    final isGroupStageKnockout = widget.bracketType == AppConstants.bracketGroupStageKnockout;
+    final bracketType = widget.bracketType.trim().toLowerCase();
+    final isRoundRobin = bracketType == AppConstants.bracketRoundRobin;
+    final isDouble = bracketType == AppConstants.bracketDoubleElimination;
+    final isGroupStageKnockout =
+        bracketType == AppConstants.bracketGroupStageKnockout;
 
     final String title;
     if (isRoundRobin) {
@@ -143,14 +173,19 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? _buildEmpty(colors)
-              : (_bracketMatches == null || _bracketMatches!.isEmpty)
-                  ? _buildEmpty(colors)
-                  : _buildDiagram(colors, isRoundRobin, isDouble, isGroupStageKnockout),
+          ? _buildEmpty(colors)
+          : (_bracketMatches == null || _bracketMatches!.isEmpty)
+          ? _buildEmpty(colors)
+          : _buildDiagram(colors, isRoundRobin, isDouble, isGroupStageKnockout),
     );
   }
 
-  Widget _buildDiagram(AppColorsExtension colors, bool isRoundRobin, bool isDouble, bool isGroupStageKnockout) {
+  Widget _buildDiagram(
+    AppColorsExtension colors,
+    bool isRoundRobin,
+    bool isDouble,
+    bool isGroupStageKnockout,
+  ) {
     final matches = _bracketMatches!;
 
     if (isRoundRobin) {
@@ -192,6 +227,8 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         tournamentId: widget.tournamentId,
         isReferee: widget.isReferee,
         isReadOnly: widget.isReadOnly,
+        isEditable: widget.canEditBracket,
+        onSlotDrop: _updateBracketSlots,
       );
     }
 
@@ -201,6 +238,8 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
       tournamentId: widget.tournamentId,
       isReferee: widget.isReferee,
       isReadOnly: widget.isReadOnly,
+      isEditable: widget.canEditBracket,
+      onSlotDrop: _updateBracketSlots,
     );
   }
 

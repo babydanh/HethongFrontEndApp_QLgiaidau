@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/team_row.dart';
+import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 
 /// Unified bracket match card used in both single-elim and double-elim diagrams.
 /// Replaces the former _BracketMatchCard (single_elim_diagram) and _DeBracketMatchCard (double_elim_diagram).
@@ -13,6 +14,10 @@ class BracketMatchCard extends StatelessWidget {
   final bool isReferee;
   final bool isReadOnly;
   final bool isGrandFinal;
+  final bool isSlotEditable;
+  final BracketSlotDragData? selectedSlot;
+  final ValueChanged<BracketSlotDragData>? onSlotTap;
+  final BracketSlotDropCallback? onSlotDrop;
 
   const BracketMatchCard({
     super.key,
@@ -21,6 +26,10 @@ class BracketMatchCard extends StatelessWidget {
     required this.isReferee,
     required this.isReadOnly,
     this.isGrandFinal = false,
+    this.isSlotEditable = false,
+    this.selectedSlot,
+    this.onSlotTap,
+    this.onSlotDrop,
   });
 
   void _onTap(BuildContext context) {
@@ -48,6 +57,116 @@ class BracketMatchCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSlotRow({
+    required BuildContext context,
+    required String name,
+    required String? logoUrl,
+    required int score,
+    required List<int>? sets,
+    required List<int>? opponentSets,
+    required int maxSetsCount,
+    required bool isWinner,
+    required bool isLive,
+    required bool isBye,
+    required bool isGrandFinalWinner,
+    required String slot,
+    required String participantId,
+  }) {
+    final row = TeamRow(
+      name: name,
+      logoUrl: logoUrl,
+      score: score,
+      sets: sets,
+      opponentSets: opponentSets,
+      maxSetsCount: maxSetsCount,
+      isWinner: isWinner,
+      isLive: isLive,
+      isBye: isBye,
+      isGrandFinalWinner: isGrandFinalWinner,
+    );
+    if (!isSlotEditable || onSlotDrop == null || onSlotTap == null) return row;
+
+    final dragData = BracketSlotDragData(
+      matchId: match.id,
+      slot: slot,
+      participantId: participantId,
+      isBye: isBye,
+    );
+    final isSelected = selectedSlot == dragData;
+    final canDrag = dragData.hasParticipant;
+
+    return DragTarget<BracketSlotDragData>(
+      onWillAcceptWithDetails: (details) =>
+          details.data != dragData &&
+          details.data.hasParticipant &&
+          !dragData.isBye,
+      onAcceptWithDetails: (details) => onSlotDrop!(details.data, dragData),
+      builder: (context, candidates, rejected) {
+        final isDropTarget = candidates.isNotEmpty;
+        final colors = context.colors;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          decoration: BoxDecoration(
+            color: isDropTarget
+                ? AppTheme.primary.withValues(alpha: 0.14)
+                : isSelected
+                ? AppTheme.primary.withValues(alpha: 0.09)
+                : null,
+            border: Border.all(
+              color: isDropTarget || isSelected
+                  ? AppTheme.primary
+                  : Colors.transparent,
+              width: isDropTarget || isSelected ? 1.5 : 0,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: LongPressDraggable<BracketSlotDragData>(
+            data: dragData,
+            maxSimultaneousDrags: canDrag ? 1 : 0,
+            feedback: Material(
+              color: Colors.transparent,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints.tightFor(
+                  width: 220,
+                  height: 40,
+                ),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.bgCard,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.primary, width: 1.5),
+                    boxShadow: const [
+                      BoxShadow(blurRadius: 12, color: Colors.black26),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            childWhenDragging: Opacity(opacity: 0.38, child: row),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: canDrag || dragData.canReceiveMove
+                  ? () => onSlotTap!(dragData)
+                  : null,
+              child: row,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -88,7 +207,10 @@ class BracketMatchCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: cardBgColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor, width: isGrandFinalWinner ? 2.0 : 1.0),
+          border: Border.all(
+            color: borderColor,
+            width: isGrandFinalWinner ? 2.0 : 1.0,
+          ),
           boxShadow: [
             BoxShadow(
               color: isGrandFinalWinner
@@ -103,7 +225,8 @@ class BracketMatchCard extends StatelessWidget {
           children: [
             // ── Team 1 ──
             Expanded(
-              child: TeamRow(
+              child: _buildSlotRow(
+                context: context,
                 name: isBye1 ? 'Miễn đấu' : match.team1Name,
                 logoUrl: isBye1 ? null : match.team1LogoUrl,
                 score: match.score1,
@@ -118,12 +241,15 @@ class BracketMatchCard extends StatelessWidget {
                 isLive: match.isLive,
                 isBye: isBye1,
                 isGrandFinalWinner: isGrandFinalWinner,
+                slot: 'participant1',
+                participantId: match.team1Id,
               ),
             ),
             Divider(height: 1, thickness: 1, color: colors.border),
             // ── Team 2 ──
             Expanded(
-              child: TeamRow(
+              child: _buildSlotRow(
+                context: context,
                 name: isBye2 ? 'Miễn đấu' : match.team2Name,
                 logoUrl: isBye2 ? null : match.team2LogoUrl,
                 score: match.score2,
@@ -138,6 +264,8 @@ class BracketMatchCard extends StatelessWidget {
                 isLive: match.isLive,
                 isBye: isBye2,
                 isGrandFinalWinner: isGrandFinalWinner,
+                slot: 'participant2',
+                participantId: match.team2Id,
               ),
             ),
             // ── Footer: status + action ──
@@ -195,8 +323,8 @@ class BracketMatchCard extends StatelessWidget {
                           fontSize: 8,
                           fontWeight: FontWeight.bold,
                           color: isGrandFinalWinner
-                                ? colors.warning
-                                : colors.textMuted,
+                              ? colors.warning
+                              : colors.textMuted,
                         ),
                       ),
                     ),

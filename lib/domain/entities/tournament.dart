@@ -210,12 +210,18 @@ class Tournament {
 
     final registrationForm = config['registrationForm'];
     final registrationFields = <Map<String, dynamic>>[];
-    final registrationFormDivisionIds = registrationForm is Map && registrationForm['divisionIds'] is List
+    final registrationFormDivisionIds =
+        registrationForm is Map && registrationForm['divisionIds'] is List
         ? (registrationForm['divisionIds'] as List).whereType<String>().toList()
         : <String>[];
-    if (registrationForm is Map && registrationForm['status'] == 'PUBLISHED' && registrationForm['fields'] is List) {
+    if (registrationForm is Map &&
+        registrationForm['status'] == 'PUBLISHED' &&
+        registrationForm['fields'] is List) {
       for (final field in registrationForm['fields'] as List) {
-        if (field is Map && field['id'] != null && field['label'] != null && field['type'] != null) {
+        if (field is Map &&
+            field['id'] != null &&
+            field['label'] != null &&
+            field['type'] != null) {
           registrationFields.add(Map<String, dynamic>.from(field));
         }
       }
@@ -510,6 +516,9 @@ class TournamentDivision {
         divisionConfig['roundRobinLegs'] ??
         groupsConfig['roundsToPlay'];
 
+    final rawBracketType =
+        json['bracketType']?.toString() ?? json['bracket_type']?.toString();
+
     return TournamentDivision(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
@@ -517,8 +526,7 @@ class TournamentDivision {
           json['matchType']?.toString() ??
           json['match_type']?.toString() ??
           'SINGLES',
-      bracketType:
-          json['bracketType']?.toString() ?? json['bracket_type']?.toString(),
+      bracketType: rawBracketType?.trim().toLowerCase(),
       roundRobinLegs: int.tryParse((rawLegs ?? '').toString()),
       genderRestriction:
           json['genderRestriction']?.toString() ??

@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_match_card.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
+import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 
 const _kCardW = 240.0;
 const _kCardH = 88.0;
@@ -14,6 +15,12 @@ class SingleElimDiagram extends StatefulWidget {
   final String tournamentId;
   final bool isReferee;
   final bool isReadOnly;
+  final bool isEditable;
+  final Future<void> Function(
+    BracketSlotDragData source,
+    BracketSlotDragData target,
+  )?
+  onSlotDrop;
 
   const SingleElimDiagram({
     super.key,
@@ -21,6 +28,8 @@ class SingleElimDiagram extends StatefulWidget {
     required this.tournamentId,
     this.isReferee = false,
     this.isReadOnly = true,
+    this.isEditable = false,
+    this.onSlotDrop,
   });
 
   @override
@@ -30,6 +39,47 @@ class SingleElimDiagram extends StatefulWidget {
 class _SingleElimDiagramState extends State<SingleElimDiagram> {
   final TransformationController _tc = TransformationController();
   bool _didCenterInitialView = false;
+  BracketSlotDragData? _selectedSlot;
+  bool _isUpdating = false;
+
+  Future<void> _handleSlotDrop(
+    BracketSlotDragData source,
+    BracketSlotDragData target,
+  ) async {
+    if (_isUpdating || widget.onSlotDrop == null) return;
+    setState(() {
+      _isUpdating = true;
+      _selectedSlot = null;
+    });
+    try {
+      await widget.onSlotDrop!(source, target);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể cập nhật vị trí: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUpdating = false);
+    }
+  }
+
+  void _handleSlotTap(BracketSlotDragData slot) {
+    if (_isUpdating || !widget.isEditable) return;
+    final selected = _selectedSlot;
+    if (selected == null) {
+      // Empty/TBD/BYE rows are destinations only; they cannot be a source.
+      if (!slot.hasParticipant) return;
+      setState(() => _selectedSlot = slot);
+      return;
+    }
+    if (selected == slot) {
+      setState(() => _selectedSlot = null);
+      return;
+    }
+    if (slot.isBye) return;
+    _handleSlotDrop(selected, slot);
+  }
 
   @override
   void dispose() {
@@ -39,10 +89,12 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
 
   Map<int, List<MatchModel>> _buildRoundMap() {
     final valid = widget.matches
-        .where((m) =>
-            m.status != 'cancelled' &&
-            !m.isFullByeMatch &&
-            isKnockoutMatch(m))
+        .where(
+          (m) =>
+              m.status != 'cancelled' &&
+              !m.isFullByeMatch &&
+              isKnockoutMatch(m),
+        )
         .toList();
 
     final map = <int, List<MatchModel>>{};
@@ -51,9 +103,8 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     }
     for (final key in map.keys) {
       map[key]!.sort(
-        (a, b) => a.bracketPosition.position.compareTo(
-          b.bracketPosition.position,
-        ),
+        (a, b) =>
+            a.bracketPosition.position.compareTo(b.bracketPosition.position),
       );
     }
     return map;
@@ -108,14 +159,18 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
   }
 
   String? _findFinalMatchId(List<MatchModel> matches) {
-    final terminalMatches = matches
-        .where((match) => match.nextMatchId.isEmpty && match.loserNextMatchId.isEmpty)
-        .toList()
-      ..sort((a, b) {
-        final roundCompare = b.round.compareTo(a.round);
-        if (roundCompare != 0) return roundCompare;
-        return a.matchNumber.compareTo(b.matchNumber);
-      });
+    final terminalMatches =
+        matches
+            .where(
+              (match) =>
+                  match.nextMatchId.isEmpty && match.loserNextMatchId.isEmpty,
+            )
+            .toList()
+          ..sort((a, b) {
+            final roundCompare = b.round.compareTo(a.round);
+            if (roundCompare != 0) return roundCompare;
+            return a.matchNumber.compareTo(b.matchNumber);
+          });
 
     return terminalMatches.isEmpty ? null : terminalMatches.first.id;
   }
@@ -154,7 +209,10 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     final roundMap = _buildRoundMap();
     if (roundMap.isEmpty) {
       return Center(
-        child: Text('Chưa có sơ đồ', style: TextStyle(color: colors.textSecondary)),
+        child: Text(
+          'Chưa có sơ đồ',
+          style: TextStyle(color: colors.textSecondary),
+        ),
       );
     }
 
@@ -183,7 +241,7 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
           canvasSize,
         );
 
-                return InteractiveViewer(
+        return InteractiveViewer(
           transformationController: _tc,
           constrained: false,
           boundaryMargin: const EdgeInsets.all(800),
@@ -191,58 +249,66 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
           maxScale: 2.5,
           child: RepaintBoundary(
             child: Padding(
-            padding: const EdgeInsets.all(40),
-            child: SizedBox(
-              width: canvasW,
-              height: canvasH,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned.fill(
-                    child: RepaintBoundary(
-                      child: CustomPaint(
-                      painter: _BracketConnectorPainter(
-                        matches: diagramMatches,
-                        positions: positions,
-                        lineColor: colors.border.withValues(alpha: 0.8),
-                        cardW: _kCardW,
-                        cardH: _kCardH,
-                        colGap: _kColGap,
+              padding: const EdgeInsets.all(40),
+              child: SizedBox(
+                width: canvasW,
+                height: canvasH,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned.fill(
+                      child: RepaintBoundary(
+                        child: CustomPaint(
+                          painter: _BracketConnectorPainter(
+                            matches: diagramMatches,
+                            positions: positions,
+                            lineColor: colors.border.withValues(alpha: 0.8),
+                            cardW: _kCardW,
+                            cardH: _kCardH,
+                            colGap: _kColGap,
+                          ),
+                        ),
                       ),
-                    )),
-                  ),
-                  ...sortedRounds.asMap().entries.map((entry) {
-                    final columnIndex = entry.key;
-                    final colX = columnIndex * (_kCardW + _kColGap);
-                    final roundName = _getRoundLabel(columnIndex, totalRounds);
-                    return Positioned(
-                      left: colX,
-                      top: -42,
-                      width: _kCardW,
-                      child: _RoundHeader(label: roundName),
-                    );
-                  }),
-                  ...diagramMatches.map((match) {
-                    final pos = positions[match.id];
-                    if (pos == null) return const SizedBox.shrink();
-                    return Positioned(
-                      left: pos.dx,
-                      top: pos.dy,
-                      width: _kCardW,
-                      height: _kCardH,
-                      child: BracketMatchCard(
-                        match: match,
-                        tournamentId: widget.tournamentId,
-                        isReferee: widget.isReferee,
-                        isReadOnly: widget.isReadOnly,
-                        isGrandFinal: match.id == finalMatchId,
-                      ),
-                    );
-                  }),
-                ],
+                    ),
+                    ...sortedRounds.asMap().entries.map((entry) {
+                      final columnIndex = entry.key;
+                      final colX = columnIndex * (_kCardW + _kColGap);
+                      final roundName = _getRoundLabel(
+                        columnIndex,
+                        totalRounds,
+                      );
+                      return Positioned(
+                        left: colX,
+                        top: -42,
+                        width: _kCardW,
+                        child: _RoundHeader(label: roundName),
+                      );
+                    }),
+                    ...diagramMatches.map((match) {
+                      final pos = positions[match.id];
+                      if (pos == null) return const SizedBox.shrink();
+                      return Positioned(
+                        left: pos.dx,
+                        top: pos.dy,
+                        width: _kCardW,
+                        height: _kCardH,
+                        child: BracketMatchCard(
+                          match: match,
+                          tournamentId: widget.tournamentId,
+                          isReferee: widget.isReferee,
+                          isReadOnly: widget.isReadOnly,
+                          isGrandFinal: match.id == finalMatchId,
+                          isSlotEditable: widget.isEditable && !_isUpdating,
+                          selectedSlot: _selectedSlot,
+                          onSlotTap: _handleSlotTap,
+                          onSlotDrop: _handleSlotDrop,
+                        ),
+                      );
+                    }),
+                  ],
+                ),
               ),
             ),
-          ),
           ),
         );
       },

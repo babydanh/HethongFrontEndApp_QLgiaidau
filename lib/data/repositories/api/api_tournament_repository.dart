@@ -32,7 +32,9 @@ class ApiTournamentRepository implements ITournamentRepository {
       'name': tournament.name,
       'categoryId': categoryId,
       'tournamentType': 'PUBLIC',
-      'visibility': tournament.visibility.isNotEmpty ? tournament.visibility : 'PUBLIC',
+      'visibility': tournament.visibility.isNotEmpty
+          ? tournament.visibility
+          : 'PUBLIC',
       'matchType': matchType,
       'description': tournament.description,
       'entryFee': 0,
@@ -75,7 +77,9 @@ class ApiTournamentRepository implements ITournamentRepository {
       }
     }
 
-    throw Exception('Không tìm thấy bộ môn "${sportSlug.isEmpty ? 'không xác định' : sportSlug}" trên hệ thống');
+    throw Exception(
+      'Không tìm thấy bộ môn "${sportSlug.isEmpty ? 'không xác định' : sportSlug}" trên hệ thống',
+    );
   }
 
   String _resolveMatchType({
@@ -188,7 +192,8 @@ class ApiTournamentRepository implements ITournamentRepository {
         final data = response.data['data'];
         if (data != null) {
           if ((data['divisions'] == null ||
-                  (data['divisions'] is List && (data['divisions'] as List).isEmpty)) &&
+                  (data['divisions'] is List &&
+                      (data['divisions'] as List).isEmpty)) &&
               divResponse != null &&
               divResponse.statusCode == 200) {
             final divData = divResponse.data['data'] ?? divResponse.data;
@@ -251,7 +256,9 @@ class ApiTournamentRepository implements ITournamentRepository {
     required String refereeId,
     required String action,
   }) async {
-    _log.info('Responding referee invite: $tournamentId / $refereeId -> $action');
+    _log.info(
+      'Responding referee invite: $tournamentId / $refereeId -> $action',
+    );
     await _dioClient.dio.patch(
       '/tournaments/$tournamentId/referees/$refereeId/respond',
       data: {'action': action},
@@ -287,12 +294,15 @@ class ApiTournamentRepository implements ITournamentRepository {
     try {
       final tournament = await getById(tournamentId);
       if (tournament != null) {
-        final isDoubles = tournament.format.toLowerCase() == 'doubles' ||
+        final isDoubles =
+            tournament.format.toLowerCase() == 'doubles' ||
             tournament.name.toLowerCase().contains('đôi');
         return [
           TournamentDivisionOption(
             id: 'default_$tournamentId',
-            name: tournament.name.isNotEmpty ? tournament.name : 'Nội dung chính',
+            name: tournament.name.isNotEmpty
+                ? tournament.name
+                : 'Nội dung chính',
             matchType: isDoubles ? 'DOUBLES' : 'SINGLES',
             entryFee: tournament.entryFee,
             maxParticipants: tournament.maxTeams,
@@ -322,7 +332,10 @@ class ApiTournamentRepository implements ITournamentRepository {
       queryParameters['invite'] = inviteCode.trim();
     }
 
-    final validDivisionId = (divisionId != null && !divisionId.startsWith('default_') && divisionId.isNotEmpty)
+    final validDivisionId =
+        (divisionId != null &&
+            !divisionId.startsWith('default_') &&
+            divisionId.isNotEmpty)
         ? divisionId
         : null;
 
@@ -331,14 +344,17 @@ class ApiTournamentRepository implements ITournamentRepository {
       data: {
         'teamName': teamName.trim(),
         ...?(validDivisionId == null ? null : {'divisionId': validDivisionId}),
-        if (partnerEmailOrPhone != null && partnerEmailOrPhone.trim().isNotEmpty)
+        if (partnerEmailOrPhone != null &&
+            partnerEmailOrPhone.trim().isNotEmpty)
           'partnerEmailOrPhone': partnerEmailOrPhone.trim(),
         if (footballTeamId != null && footballTeamId.trim().isNotEmpty)
           'footballTeamId': footballTeamId.trim(),
         if (memberIds != null && memberIds.isNotEmpty) 'memberIds': memberIds,
-        if (reserveMemberIds != null && reserveMemberIds.isNotEmpty) 'reserveMemberIds': reserveMemberIds,
+        if (reserveMemberIds != null && reserveMemberIds.isNotEmpty)
+          'reserveMemberIds': reserveMemberIds,
         'rankingConsent': rankingConsent,
-        if (customResponses != null && customResponses.isNotEmpty) 'customResponses': customResponses,
+        if (customResponses != null && customResponses.isNotEmpty)
+          'customResponses': customResponses,
       },
       queryParameters: queryParameters.isNotEmpty ? queryParameters : null,
     );
@@ -355,16 +371,25 @@ class ApiTournamentRepository implements ITournamentRepository {
   @override
   Future<void> joinLite(String inviteCode) async {
     final code = inviteCode.trim();
-    if (code.isEmpty) throw const FormatException('Mã tham gia giải không hợp lệ.');
+    if (code.isEmpty) {
+      throw const FormatException('Mã tham gia giải không hợp lệ.');
+    }
     await _dioClient.dio.post('/tournaments/lite/join/$code');
   }
 
   @override
-  Future<FootballRosterStatus> getFootballRosterStatus({required String tournamentId, required String participantId}) async {
-    final response = await _dioClient.dio.get('/tournaments/$tournamentId/participants/$participantId/football-roster');
+  Future<FootballRosterStatus> getFootballRosterStatus({
+    required String tournamentId,
+    required String participantId,
+  }) async {
+    final response = await _dioClient.dio.get(
+      '/tournaments/$tournamentId/participants/$participantId/football-roster',
+    );
     final body = response.data;
     final data = body is Map && body['data'] is Map ? body['data'] : body;
-    if (data is! Map) throw const FormatException('Phản hồi roster bóng đá không hợp lệ.');
+    if (data is! Map) {
+      throw const FormatException('Phản hồi roster bóng đá không hợp lệ.');
+    }
     return FootballRosterStatus.fromJson(Map<String, dynamic>.from(data));
   }
 
@@ -377,19 +402,22 @@ class ApiTournamentRepository implements ITournamentRepository {
   }) async {
     final response = await _dioClient.dio.patch(
       '/tournaments/$tournamentId/participants/$participantId/football-roster',
-      data: {
-        'memberIds': memberIds,
-        'reserveMemberIds': reserveMemberIds,
-      },
+      data: {'memberIds': memberIds, 'reserveMemberIds': reserveMemberIds},
     );
     final body = response.data;
     final data = body is Map && body['data'] is Map ? body['data'] : body;
-    if (data is! Map) throw const FormatException('Phản hồi cập nhật roster không hợp lệ.');
+    if (data is! Map) {
+      throw const FormatException('Phản hồi cập nhật roster không hợp lệ.');
+    }
     return FootballRosterStatus.fromJson(Map<String, dynamic>.from(data));
   }
 
   @override
-  Future<void> respondFootballRoster({required String tournamentId, required String participantId, required String action}) async {
+  Future<void> respondFootballRoster({
+    required String tournamentId,
+    required String participantId,
+    required String action,
+  }) async {
     if (action != 'CONFIRM' && action != 'DECLINE') {
       throw ArgumentError.value(action, 'action', 'Must be CONFIRM or DECLINE');
     }
@@ -437,7 +465,11 @@ class ApiTournamentRepository implements ITournamentRepository {
         if (updated != null) lastKnown = updated;
         if (!updates.isClosed) updates.add(lastKnown);
       } catch (error, stack) {
-        _log.error('Keeping cached tournament after realtime refresh failure', error, stack);
+        _log.error(
+          'Keeping cached tournament after realtime refresh failure',
+          error,
+          stack,
+        );
       }
     }
 
@@ -449,7 +481,10 @@ class ApiTournamentRepository implements ITournamentRepository {
       socketService.connect(null, joinMatch: false);
       socketService.joinTournament(id);
     }
-    refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) => refresh());
+    refreshTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => refresh(),
+    );
 
     try {
       yield* updates.stream;
@@ -478,7 +513,7 @@ class ApiTournamentRepository implements ITournamentRepository {
     } else if (rawData is List) {
       list = rawData;
     }
-    
+
     final List<Tournament> result = [];
     for (final item in list) {
       if (item is! Map) continue;
@@ -496,6 +531,7 @@ class ApiTournamentRepository implements ITournamentRepository {
 
   /// Backend giới hạn limit tối đa 50/trang (QueryTournamentDto.limit @Max(50)).
   static const int _publicPageSize = 50;
+
   /// Tối đa số trang sẽ tải — giới hạn an toàn cho feed (tối đa 500 giải).
   static const int _publicMaxPages = 10;
 
@@ -563,9 +599,7 @@ class ApiTournamentRepository implements ITournamentRepository {
           yield* Stream<List<Tournament>>.error(e, stack);
         }
         await Future<void>.delayed(retryDelay);
-        retryDelay = Duration(
-          seconds: (retryDelay.inSeconds * 2).clamp(5, 60),
-        );
+        retryDelay = Duration(seconds: (retryDelay.inSeconds * 2).clamp(5, 60));
       }
     }
   }
@@ -585,7 +619,9 @@ class ApiTournamentRepository implements ITournamentRepository {
   @override
   Future<void> updateToken(String id, String role, String newToken) async {
     // Thường được Web Admin quản lý
-    _log.warning('updateToken not supported/required directly from mobile API client.');
+    _log.warning(
+      'updateToken not supported/required directly from mobile API client.',
+    );
   }
 
   @override
@@ -597,7 +633,10 @@ class ApiTournamentRepository implements ITournamentRepository {
   // ─── Group Standings API ──────────────────────────────────────────────────
 
   @override
-  Future<Map<String, dynamic>> getGroupStandings(String tournamentId, {String? divisionId}) async {
+  Future<Map<String, dynamic>> getGroupStandings(
+    String tournamentId, {
+    String? divisionId,
+  }) async {
     _log.debug('Fetching group standings for tournament $tournamentId');
     try {
       final queryParams = <String, dynamic>{};
@@ -609,7 +648,10 @@ class ApiTournamentRepository implements ITournamentRepository {
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
       if (response.statusCode == 200) {
-        final data = response.data['data'] as Map<String, dynamic>? ?? response.data as Map<String, dynamic>? ?? {};
+        final data =
+            response.data['data'] as Map<String, dynamic>? ??
+            response.data as Map<String, dynamic>? ??
+            {};
         return data;
       }
       return {};
@@ -630,11 +672,15 @@ class ApiTournamentRepository implements ITournamentRepository {
     String? divisionId,
     bool allowAggregateFallback = true,
   }) async {
-    _log.debug('Fetching bracket matches for tournament $tournamentId (division: $divisionId)');
+    _log.debug(
+      'Fetching bracket matches for tournament $tournamentId (division: $divisionId)',
+    );
     try {
       final response = await _dioClient.dio.get(
         '/tournaments/$tournamentId/bracket',
-        queryParameters: divisionId != null && divisionId.isNotEmpty ? {'divisionId': divisionId} : null,
+        queryParameters: divisionId != null && divisionId.isNotEmpty
+            ? {'divisionId': divisionId}
+            : null,
       );
       if (response.statusCode == 200 && response.data['data'] != null) {
         final rawPayload = response.data;
@@ -661,12 +707,14 @@ class ApiTournamentRepository implements ITournamentRepository {
               for (final json in rawMatches) {
                 if (json is! Map<String, dynamic>) continue;
                 try {
-                  allMatches.add(_parseBracketMatch(
-                    json,
-                    groupName: groupName,
-                    stageName: stageName,
-                    stageType: stageType,
-                  ));
+                  allMatches.add(
+                    _parseBracketMatch(
+                      json,
+                      groupName: groupName,
+                      stageName: stageName,
+                      stageType: stageType,
+                    ),
+                  );
                 } catch (e) {
                   _log.warning('Failed to parse bracket match: $e');
                 }
@@ -680,7 +728,9 @@ class ApiTournamentRepository implements ITournamentRepository {
             final r = a.round.compareTo(b.round);
             return r != 0 ? r : a.matchNumber.compareTo(b.matchNumber);
           });
-          _log.info('Bracket: ${allMatches.length} matches loaded for $tournamentId');
+          _log.info(
+            'Bracket: ${allMatches.length} matches loaded for $tournamentId',
+          );
           return allMatches;
         }
       }
@@ -691,13 +741,17 @@ class ApiTournamentRepository implements ITournamentRepository {
       }
 
       // Fallback for "Tất cả" (divisionId == null): Query all divisions & aggregate matches
-      if (allowAggregateFallback && (divisionId == null || divisionId.isEmpty)) {
+      if (allowAggregateFallback &&
+          (divisionId == null || divisionId.isEmpty)) {
         final divOptions = await getDivisions(tournamentId);
         if (divOptions.isNotEmpty) {
           final aggregatedMatches = <MatchModel>[];
           final matchIds = <String>{};
           for (final div in divOptions) {
-            final divMatches = await getBracketMatches(tournamentId, divisionId: div.id);
+            final divMatches = await getBracketMatches(
+              tournamentId,
+              divisionId: div.id,
+            );
             for (final m in divMatches) {
               if (matchIds.add(m.id)) {
                 aggregatedMatches.add(m);
@@ -709,7 +763,9 @@ class ApiTournamentRepository implements ITournamentRepository {
               final r = a.round.compareTo(b.round);
               return r != 0 ? r : a.matchNumber.compareTo(b.matchNumber);
             });
-            _log.info('Bracket fallback "Tất cả": ${aggregatedMatches.length} matches aggregated for $tournamentId');
+            _log.info(
+              'Bracket fallback "Tất cả": ${aggregatedMatches.length} matches aggregated for $tournamentId',
+            );
             return aggregatedMatches;
           }
         }
@@ -723,10 +779,41 @@ class ApiTournamentRepository implements ITournamentRepository {
   }
 
   @override
-  Stream<List<MatchModel>> watchBracketMatches(String tournamentId, {String? divisionId}) async* {
+  Future<void> updateBracketSlots(
+    String tournamentId, {
+    String? divisionId,
+    required List<Map<String, dynamic>> operations,
+  }) async {
+    _log.debug(
+      'Updating bracket slots for tournament $tournamentId (division: $divisionId)',
+    );
+    try {
+      if (divisionId == null || divisionId.isEmpty) {
+        throw ArgumentError('divisionId is required to update bracket slots');
+      }
+      final response = await _dioClient.dio.patch(
+        '/tournaments/$tournamentId/divisions/$divisionId/bracket/slots',
+        data: {'operations': operations},
+      );
+      final statusCode = response.statusCode ?? 0;
+      if (statusCode < 200 || statusCode >= 300) {
+        throw Exception('Bracket slots update failed ($statusCode)');
+      }
+    } catch (e, stack) {
+      _log.error('Error updating bracket slots', e, stack);
+      rethrow;
+    }
+  }
+
+  @override
+  Stream<List<MatchModel>> watchBracketMatches(
+    String tournamentId, {
+    String? divisionId,
+  }) async* {
     yield await getBracketMatches(tournamentId, divisionId: divisionId);
-    yield* Stream.periodic(const Duration(seconds: 30))
-        .asyncMap((_) => getBracketMatches(tournamentId, divisionId: divisionId));
+    yield* Stream.periodic(
+      const Duration(seconds: 30),
+    ).asyncMap((_) => getBracketMatches(tournamentId, divisionId: divisionId));
   }
 
   static String _mapBracketMatchStatus(String? status) {
@@ -782,22 +869,37 @@ class ApiTournamentRepository implements ITournamentRepository {
   }) {
     final p1 = json['participant1'] as Map<String, dynamic>?;
     final p2 = json['participant2'] as Map<String, dynamic>?;
-    final team1Name = p1?['teamName']?.toString() ??
+    final team1Name =
+        p1?['teamName']?.toString() ??
         json['team1Name']?.toString() ??
         json['participant1Name']?.toString() ??
         '';
-    final team2Name = p2?['teamName']?.toString() ??
+    final team2Name =
+        p2?['teamName']?.toString() ??
         json['team2Name']?.toString() ??
         json['participant2Name']?.toString() ??
         '';
     String? participantLogo(Map<String, dynamic>? participant) {
       final value = participant?['logoUrl'] ?? participant?['logo_url'];
-      return value?.toString().trim().isNotEmpty == true ? value.toString() : null;
+      return value?.toString().trim().isNotEmpty == true
+          ? value.toString()
+          : null;
     }
+
     final rosters1 = (p1?['members'] ?? p1?['rosters']) as List<dynamic>?;
-    final team1Members = rosters1?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
+    final team1Members =
+        rosters1
+            ?.map((r) => r['fullName']?.toString() ?? '')
+            .where((n) => n.isNotEmpty)
+            .toList() ??
+        <String>[];
     final rosters2 = (p2?['members'] ?? p2?['rosters']) as List<dynamic>?;
-    final team2Members = rosters2?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
+    final team2Members =
+        rosters2
+            ?.map((r) => r['fullName']?.toString() ?? '')
+            .where((n) => n.isNotEmpty)
+            .toList() ??
+        <String>[];
 
     final roundNumber = json['roundNumber'] is num
         ? (json['roundNumber'] as num).toInt()
@@ -812,7 +914,9 @@ class ApiTournamentRepository implements ITournamentRepository {
     final rawStage = rawGroup?['stage'] as Map<String, dynamic>?;
     final resolvedStageName = stageName ?? rawStage?['name']?.toString();
     final resolvedStageType =
-        stageType ?? rawStage?['type']?.toString() ?? json['stageType']?.toString();
+        stageType ??
+        rawStage?['type']?.toString() ??
+        json['stageType']?.toString();
 
     int parseScore(dynamic value) {
       if (value is num) return value.toInt();
@@ -828,17 +932,23 @@ class ApiTournamentRepository implements ITournamentRepository {
 
     final tournamentJson = asMap(json['tournament']);
     final stageJson = asMap(rawStage);
-    final sportRules = asMap(json['sportRules']) ??
+    final sportRules =
+        asMap(json['sportRules']) ??
         asMap(tournamentJson?['sportRules']) ??
         asMap(stageJson?['sportRules']) ??
         asMap(json['matchConfig']);
-    final tournamentConfig = asMap(json['tournamentConfig']) ??
+    final tournamentConfig =
+        asMap(json['tournamentConfig']) ??
         asMap(tournamentJson?['tournamentConfig']);
     final rawSets = scoreDetails?['sets'] as List<dynamic>? ?? const [];
     final sets = rawSets.whereType<Map>().map((rawSet) {
       return SetScore(
-        score1: parseScore(rawSet['team1Score'] ?? rawSet['score1'] ?? rawSet['p1']),
-        score2: parseScore(rawSet['team2Score'] ?? rawSet['score2'] ?? rawSet['p2']),
+        score1: parseScore(
+          rawSet['team1Score'] ?? rawSet['score1'] ?? rawSet['p1'],
+        ),
+        score2: parseScore(
+          rawSet['team2Score'] ?? rawSet['score2'] ?? rawSet['p2'],
+        ),
       );
     }).toList();
 
@@ -846,12 +956,20 @@ class ApiTournamentRepository implements ITournamentRepository {
       id: json['id']?.toString() ?? '',
       round: roundNumber,
       matchNumber: matchOrder,
-      team1Id: p1?['id']?.toString() ?? json['participant1Id']?.toString() ?? '',
+      team1Id:
+          p1?['id']?.toString() ?? json['participant1Id']?.toString() ?? '',
       team1Name: team1Name.isNotEmpty ? team1Name : 'TBD',
-      team1LogoUrl: participantLogo(p1) ?? json['team1LogoUrl']?.toString() ?? json['team1Logo']?.toString(),
-      team2Id: p2?['id']?.toString() ?? json['participant2Id']?.toString() ?? '',
+      team1LogoUrl:
+          participantLogo(p1) ??
+          json['team1LogoUrl']?.toString() ??
+          json['team1Logo']?.toString(),
+      team2Id:
+          p2?['id']?.toString() ?? json['participant2Id']?.toString() ?? '',
       team2Name: team2Name.isNotEmpty ? team2Name : 'TBD',
-      team2LogoUrl: participantLogo(p2) ?? json['team2LogoUrl']?.toString() ?? json['team2Logo']?.toString(),
+      team2LogoUrl:
+          participantLogo(p2) ??
+          json['team2LogoUrl']?.toString() ??
+          json['team2Logo']?.toString(),
       score1: json['p1SetsWon'] is num
           ? (json['p1SetsWon'] as num).toInt()
           : int.tryParse(json['p1SetsWon']?.toString() ?? '') ?? 0,
@@ -885,9 +1003,9 @@ class ApiTournamentRepository implements ITournamentRepository {
       setsToWin: json['setsToWin'] is num
           ? (json['setsToWin'] as num).toInt()
           : sportRules?['setsToWin'] is num
-              ? (sportRules?['setsToWin'] as num).toInt()
-              : sportRules?['sets_to_win'] is num
-                  ? (sportRules?['sets_to_win'] as num).toInt()
+          ? (sportRules?['setsToWin'] as num).toInt()
+          : sportRules?['sets_to_win'] is num
+          ? (sportRules?['sets_to_win'] as num).toInt()
           : null,
       team1Members: team1Members,
       team2Members: team2Members,
@@ -927,7 +1045,12 @@ class ApiTournamentRepository implements ITournamentRepository {
       final response = await _dioClient.dio.get('/tournaments/my/followed');
       if (response.statusCode == 200) {
         final data = response.data['data'] as List<dynamic>? ?? [];
-        return data.map((json) => Tournament.fromJson(json as Map<String, dynamic>, json['id'])).toList();
+        return data
+            .map(
+              (json) =>
+                  Tournament.fromJson(json as Map<String, dynamic>, json['id']),
+            )
+            .toList();
       }
       return [];
     } catch (e, stack) {

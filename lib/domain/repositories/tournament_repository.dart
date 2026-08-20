@@ -27,14 +27,21 @@ abstract class ITournamentRepository {
     bool rankingConsent = false,
     Map<String, dynamic>? customResponses,
   });
-  Future<FootballRosterStatus> getFootballRosterStatus({required String tournamentId, required String participantId});
+  Future<FootballRosterStatus> getFootballRosterStatus({
+    required String tournamentId,
+    required String participantId,
+  });
   Future<FootballRosterStatus> updateFootballRoster({
     required String tournamentId,
     required String participantId,
     required List<String> memberIds,
     required List<String> reserveMemberIds,
   });
-  Future<void> respondFootballRoster({required String tournamentId, required String participantId, required String action});
+  Future<void> respondFootballRoster({
+    required String tournamentId,
+    required String participantId,
+    required String action,
+  });
   Stream<Tournament?> watch(String id);
   Stream<List<Tournament>> watchAll();
   Future<void> update(String id, Map<String, dynamic> data);
@@ -43,7 +50,10 @@ abstract class ITournamentRepository {
   Future<void> delete(String id);
 
   // Group Standings
-  Future<Map<String, dynamic>> getGroupStandings(String tournamentId, {String? divisionId});
+  Future<Map<String, dynamic>> getGroupStandings(
+    String tournamentId, {
+    String? divisionId,
+  });
 
   // Follow / Unfollow
   Future<void> followTournament(String id);
@@ -61,6 +71,17 @@ abstract class ITournamentRepository {
   });
 
   // Bracket
-  Future<List<MatchModel>> getBracketMatches(String tournamentId, {String? divisionId});
-  Stream<List<MatchModel>> watchBracketMatches(String tournamentId, {String? divisionId});
+  Future<List<MatchModel>> getBracketMatches(
+    String tournamentId, {
+    String? divisionId,
+  });
+  Future<void> updateBracketSlots(
+    String tournamentId, {
+    String? divisionId,
+    required List<Map<String, dynamic>> operations,
+  });
+  Stream<List<MatchModel>> watchBracketMatches(
+    String tournamentId, {
+    String? divisionId,
+  });
 }

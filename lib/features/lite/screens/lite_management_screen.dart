@@ -177,16 +177,39 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       _buildParticipantsTab(colors, state, notifier),
                     );
                   case 2:
-                    // Do not call the public bracket endpoint before the organizer
-                    // has created a Lite bracket.
-                    return state.hasBracket
-                        ? frame(
-                            BracketViewScreen(
-                              tournamentId: widget.tournamentId,
-                              isEmbedded: true,
-                            ),
-                          )
-                        : frame(_buildBracketTab(colors, state, notifier));
+                    {
+                      // Do not call the public bracket endpoint before the organizer
+                      // has created a Lite bracket. A Lite tournament normally has
+                      // one division; pass its identity so edit-mode PATCH requests
+                      // target the same division that was loaded for the diagram.
+                      final liteDivision =
+                          state.tournament?.divisions.isNotEmpty == true
+                          ? state.tournament!.divisions.first
+                          : null;
+                      final divisions = state.tournament?.divisions ?? const [];
+                      final hasSingleDivision = divisions.length == 1;
+                      final bracketType =
+                          (liteDivision?.bracketType ??
+                                  state.tournament?.bracketType ??
+                                  AppConstants.bracketSingleElimination)
+                              .trim()
+                              .toLowerCase();
+                      return state.hasBracket
+                          ? frame(
+                              BracketViewScreen(
+                                tournamentId: widget.tournamentId,
+                                divisionId: liteDivision?.id,
+                                bracketType: bracketType,
+                                isEmbedded: true,
+                                canEditBracket:
+                                    hasSingleDivision &&
+                                    liteDivision?.id.isNotEmpty == true &&
+                                    bracketType ==
+                                        AppConstants.bracketSingleElimination,
+                              ),
+                            )
+                          : frame(_buildBracketTab(colors, state, notifier));
+                    }
                   default:
                     return const SizedBox.shrink();
                 }

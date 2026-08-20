@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
@@ -90,7 +91,11 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
         'description': _descCtrl.text.trim(),
         'isRanked': _isRanked,
-        if (_startDate != null) 'startDate': _startDate!.toIso8601String(),
+        if (_startDate != null) ...{
+          'startDate': _startDate!.toIso8601String(),
+          'startTime':
+              '${_startDate!.hour.toString().padLeft(2, '0')}:${_startDate!.minute.toString().padLeft(2, '0')}',
+        },
         if (_isRecurring) ...{
           'isRecurring': true,
           'recurringFrequency': _recurringFrequency,
@@ -118,10 +123,27 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
     } catch (e, stack) {
       _log.error('Lỗi tạo giải đấu trong CLB', e, stack);
       if (mounted) {
+        String msg = 'Đã có lỗi xảy ra khi tạo giải đấu.';
+        if (e is DioException) {
+          final resData = e.response?.data;
+          if (resData is Map<String, dynamic>) {
+            final serverMsg = resData['message'];
+            if (serverMsg is String) {
+              msg = serverMsg;
+            } else if (serverMsg is List) {
+              msg = serverMsg.join(', ');
+            }
+          } else if (e.response?.statusCode == 403) {
+            msg = 'Bạn không có quyền tạo giải trong CLB này hoặc tài khoản chưa xác thực email.';
+          }
+        } else {
+          msg = e.toString().replaceAll('Exception: ', '');
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}'),
+            content: Text(msg),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -157,23 +179,42 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   }
 
   Future<void> _pickStartDate() async {
-    final today = DateTime.now();
-    // Lite chỉ nhập ngày, không nhập giờ. Backend sẽ tự đặt hạn đăng ký
-    // trước giờ bắt đầu một tiếng, vì vậy ngày bắt đầu phải từ ngày mai để
-    // không tạo ra hạn đăng ký đã nằm trong quá khứ.
-    final firstAvailableDate = DateTime(today.year, today.month, today.day + 1);
-    final picked = await showDatePicker(
+    final now = DateTime.now();
+    final firstAvailableDate = DateTime(now.year, now.month, now.day);
+    final pickedDate = await showDatePicker(
       context: context,
-      initialDate: _startDate ?? firstAvailableDate,
+      initialDate: _startDate ?? now.add(const Duration(days: 1)),
       firstDate: firstAvailableDate,
-      lastDate: DateTime(today.year + 3, 12, 31),
+      lastDate: DateTime(now.year + 3, 12, 31),
       helpText: 'Chọn ngày bắt đầu giải',
       cancelText: 'Hủy',
-      confirmText: 'Chọn ngày',
+      confirmText: 'Tiếp tục',
     );
-    if (picked != null && mounted) {
-      setState(() => _startDate = DateTime(picked.year, picked.month, picked.day));
-    }
+    if (pickedDate == null || !mounted) return;
+
+    final initialTime = _startDate != null
+        ? TimeOfDay(hour: _startDate!.hour, minute: _startDate!.minute)
+        : const TimeOfDay(hour: 8, minute: 0);
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+      helpText: 'Chọn giờ bắt đầu giải',
+      cancelText: 'Mặc định (08:00)',
+      confirmText: 'Xong',
+    );
+
+    if (!mounted) return;
+    final time = pickedTime ?? const TimeOfDay(hour: 8, minute: 0);
+    setState(() {
+      _startDate = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        time.hour,
+        time.minute,
+      );
+    });
   }
 
   Future<void> _pickRecurringTime() async {
@@ -274,7 +315,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                   child: Text(
                     _startDate == null
                         ? 'Chưa chọn'
-                        : DateFormat('dd/MM/yyyy').format(_startDate!),
+                        : DateFormat('HH:mm - dd/MM/yyyy').format(_startDate!),
                     style: TextStyle(
                       color: _startDate == null ? colors.textMuted : colors.textPrimary,
                       fontSize: 14,
