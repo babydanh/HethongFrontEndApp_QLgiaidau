@@ -170,6 +170,10 @@ jobs:
                        -configuration Release \
                        -derivedDataPath build \
                        -archivePath build/Runner.xcarchive \
+                       -authenticationKeyPath "$KEY_PATH" \
+                       -authenticationKeyID "$API_KEY_ID" \
+                       -authenticationKeyIssuerID "$API_ISSUER_ID" \
+                       -allowProvisioningUpdates \
                        archive
 
             xcodebuild -exportArchive \
