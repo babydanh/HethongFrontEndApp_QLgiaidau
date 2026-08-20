@@ -47,8 +47,8 @@ class SeriesDetail {
       slug: json['slug'] ?? '',
       description: json['description'],
       status: json['status'] ?? 'UPCOMING',
-      startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate']) : null,
-      endDate: json['endDate'] != null ? DateTime.tryParse(json['endDate']) : null,
+      startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate'])?.toLocal() : null,
+      endDate: json['endDate'] != null ? DateTime.tryParse(json['endDate'])?.toLocal() : null,
       bannerUrl: json['bannerUrl'],
       legCount: json['_count']?['legs'] ?? json['legCount'] ?? legsList?.length ?? 0,
       participantCount: json['_count']?['participants'] ?? json['participantCount'] ?? 0,
@@ -80,7 +80,7 @@ class SeriesLeg {
     name: json['name'] ?? json['title'] ?? '',
     slug: json['slug'],
     status: json['status'] ?? 'UPCOMING',
-    startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate']) : null,
+    startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate'])?.toLocal() : null,
     participantCount: json['_count']?['participants'] ?? json['participantCount'] ?? 0,
   );
 }

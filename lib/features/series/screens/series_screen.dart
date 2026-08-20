@@ -29,8 +29,8 @@ class SeriesItem {
     description: json['description'], status: json['status'] ?? 'UPCOMING',
     legCount: json['_count']?['legs'] ?? json['legCount'] ?? 0,
     participantCount: json['_count']?['participants'] ?? json['participantCount'] ?? 0,
-    startDate: json['startDate'] != null ? DateTime.parse(json['startDate']) : null,
-    endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
+    startDate: json['startDate'] != null ? DateTime.parse(json['startDate']).toLocal() : null,
+    endDate: json['endDate'] != null ? DateTime.parse(json['endDate']).toLocal() : null,
     bannerUrl: json['bannerUrl'],
   );
 }

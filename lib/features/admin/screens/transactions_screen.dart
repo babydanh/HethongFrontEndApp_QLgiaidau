@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:intl/intl.dart';
 
 /// Admin — Lịch sử giao dịch (Transactions)
@@ -229,13 +230,18 @@ class _AdminTransactionsScreenState extends ConsumerState<AdminTransactionsScree
           ],
           if (createdAt.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(createdAt.length >= 16 ? createdAt.substring(0, 16).replaceAll('T', ' ') : createdAt,
+            Text(_formatTransactionDate(createdAt),
                 style: TextStyle(fontSize: 10, color: colors.textMuted)),
           ],
         ],
       ),
     ).animate().fadeIn(duration: 300.ms);
   }
+}
+
+String _formatTransactionDate(String value) {
+  final parsed = DateTime.tryParse(value);
+  return parsed == null ? value : DateFormatterUtils.formatDateTime(parsed);
 }
 
 final _adminTransactionsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
