@@ -1,15 +1,19 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/chat_socket_service.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
+import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_poll_dialog.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_room_settings_sheet.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_reaction_detail_sheet.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_image_viewer.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -904,6 +908,12 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final title = widget.roomName ?? 'Phòng chat';
+    final memberDirectory = widget.communityId == null
+        ? null
+        : ref.watch(communityMemberDirectoryProvider(widget.communityId!)).asData?.value;
+    final tagPresets = widget.communityId == null
+        ? null
+        : ref.watch(communityTagPresetsProvider(widget.communityId!)).asData?.value;
 
     final hasValidPinned =
         _pinnedMessage != null &&
@@ -1268,6 +1278,11 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                 isDark,
                                 isFirstInGroup: isFirstInGroup,
                                 isLastInGroup: isLastInGroup,
+                                senderTags: memberDirectory?[msg.senderId]?.tags
+                                        .take(AppConstants.memberTagMax)
+                                        .toList(growable: false) ??
+                                    const <String>[],
+                                tagPresets: tagPresets,
                               ),
                               if (readers.isNotEmpty)
                                 Align(
@@ -1555,6 +1570,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     bool isDark, {
     required bool isFirstInGroup,
     required bool isLastInGroup,
+    required List<String> senderTags,
+    List<CommunityTagPreset>? tagPresets,
   }) {
     final isMine = msg.isMine;
     final bubbleBg = isMine
@@ -1644,13 +1661,29 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       (widget.roomType == 'CLUB' || widget.roomType == 'GROUP'))
                     Padding(
                       padding: const EdgeInsets.only(left: 4, bottom: 3),
-                      child: Text(
-                        msg.senderName,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textMuted,
-                        ),
+                      child: Wrap(
+                        spacing: 4,
+                        runSpacing: 3,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            msg.senderName,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                          ...senderTags.map(
+                            (tag) => PresetTagChip(
+                              label: tag,
+                              color: tagPresets == null
+                                  ? null
+                                  : resolvePresetColor(tagPresets, tag),
+                              style: PresetTagChipStyle.solid,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 

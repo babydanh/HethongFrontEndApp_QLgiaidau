@@ -5,7 +5,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.da
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 
 /// P2C.5 — Bottom sheet gán tag BQT cho thành viên (OWNER/MODERATOR).
-/// Replace toàn bộ khi lưu; mảng rỗng = xoá hết. Tối đa 5 tag, mỗi tag ≤ 24 ký tự.
+/// Replace toàn bộ khi lưu; mảng rỗng = xoá hết. Tối đa 3 tag, mỗi tag ≤ 15 ký tự.
 /// Màu/spacing từ AppTheme, chuỗi từ AppConstants — không hardcode.
 class TagAssignSheet extends StatefulWidget {
   final String memberName;
@@ -256,7 +256,7 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
                   child: TextField(
                     controller: _controller,
                     enabled: !_saving && !maxReached,
-                    maxLength: AppConstants.memberTagMaxLength + 8,
+                    maxLength: AppConstants.memberTagMaxLength,
                     onSubmitted: (_) => _addTag(),
                     onChanged: (_) => setState(() => _error = null),
                     decoration: InputDecoration(

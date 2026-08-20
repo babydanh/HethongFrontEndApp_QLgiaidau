@@ -8007,72 +8007,141 @@ abstract class AppLocalizations {
   String get dashboardFootballTeamsSub;
 
   /// No description provided for @chatScreenTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đoạn chat'**
   String get chatScreenTitle;
 
   /// No description provided for @chatScreenConversations.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trò chuyện'**
   String get chatScreenConversations;
 
   /// No description provided for @chatScreenAiAssistant.
+  ///
+  /// In vi, this message translates to:
+  /// **'AI Trợ lý'**
   String get chatScreenAiAssistant;
 
   /// No description provided for @chatScreenSupport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hỗ trợ CSKH'**
   String get chatScreenSupport;
 
   /// No description provided for @chatScreenSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm tin nhắn, người chơi hoặc CLB...'**
   String get chatScreenSearchHint;
 
   /// No description provided for @chatScreenClubBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'CLB'**
   String get chatScreenClubBadge;
 
   /// No description provided for @chatScreenRevokedMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tin nhắn đã bị thu hồi'**
   String get chatScreenRevokedMessage;
 
   /// No description provided for @chatScreenImageMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'[Hình ảnh]'**
   String get chatScreenImageMessage;
 
   /// No description provided for @chatScreenStartConversation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu cuộc trò chuyện'**
   String get chatScreenStartConversation;
 
   /// No description provided for @chatScreenNoSearchResults.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy cuộc trò chuyện phù hợp.'**
   String get chatScreenNoSearchResults;
 
   /// No description provided for @chatScreenNoConversations.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có cuộc trò chuyện nào.'**
   String get chatScreenNoConversations;
 
   /// No description provided for @chatScreenAiGreeting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xin chào! Mình là trợ lý AI Sporto. Bạn có thể hỏi về luật thi đấu, cách tính điểm ELO, hay cách đăng ký tham gia các giải đấu!'**
   String get chatScreenAiGreeting;
 
   /// No description provided for @chatScreenAiPromptRegistration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cách đăng ký giải đấu?'**
   String get chatScreenAiPromptRegistration;
 
   /// No description provided for @chatScreenAiPromptElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hệ số ELO tính thế nào?'**
   String get chatScreenAiPromptElo;
 
   /// No description provided for @chatScreenAiPromptCreateClub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Làm sao để tạo CLB?'**
   String get chatScreenAiPromptCreateClub;
 
   /// No description provided for @chatScreenAiPromptRules.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luật thi đấu Pickleball?'**
   String get chatScreenAiPromptRules;
 
   /// No description provided for @chatScreenAiTyping.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sporto AI đang soạn câu trả lời...'**
   String get chatScreenAiTyping;
 
   /// No description provided for @chatScreenAiInputHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hỏi AI Sporto bất cứ điều gì...'**
   String get chatScreenAiInputHint;
 
   /// No description provided for @chatScreenAiFallbackReply.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sporto AI đang xử lý yêu cầu của bạn...'**
   String get chatScreenAiFallbackReply;
 
   /// No description provided for @chatScreenAiErrorReply.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xin lỗi, tạm thời hệ thống AI đang bận. Bạn có thể thử lại sau ít phút nhé!'**
   String get chatScreenAiErrorReply;
 
   /// No description provided for @chatScreenSupportTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trung tâm hỗ trợ Sporto'**
   String get chatScreenSupportTitle;
 
   /// No description provided for @chatScreenSupportDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy gửi câu hỏi, nhân viên CSKH sẽ hỗ trợ bạn sớm nhất.'**
   String get chatScreenSupportDescription;
 
   /// No description provided for @chatScreenSupportInputHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập nội dung cần hỗ trợ...'**
   String get chatScreenSupportInputHint;
 }
 

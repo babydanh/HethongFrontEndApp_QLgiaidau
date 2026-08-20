@@ -90,7 +90,7 @@ class CommunityPostCard extends ConsumerWidget {
                               .toString()
                               .toUpperCase();
                           final tags = (member?.tags ?? const <String>[])
-                              .take(2)
+                              .take(3)
                               .toList();
                           return Wrap(
                             spacing: 6,

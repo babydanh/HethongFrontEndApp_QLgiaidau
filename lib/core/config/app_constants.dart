@@ -38,20 +38,20 @@ class AppConstants {
   };
 
   // ─── Tag BQT (P2C.4/P2C.5) ───
-  static const int memberTagMax = 5;
-  static const int memberTagMaxLength = 24;
+  static const int memberTagMax = 3;
+  static const int memberTagMaxLength = 15;
   static const String memberTagMenu = 'Gán tag';
   static const String memberTagAssignTitle = 'Gán tag cho thành viên';
   static const String memberTagAssignDesc =
-      'Tag hiển thị cạnh tên trong danh sách thành viên (tối đa 5 tag).';
+      'Tag hiển thị cạnh tên trong danh sách thành viên (tối đa 3 tag).';
   static const String memberTagAddHint = 'Nhập tag mới...';
   static const String memberTagAdd = 'Thêm';
   static const String memberTagSave = 'Lưu tag';
   static const String memberTagSaving = 'Đang lưu...';
-  static const String memberTagMaxReached = 'Đã đạt tối đa 5 tag';
+  static const String memberTagMaxReached = 'Đã đạt tối đa 3 tag';
   static const String memberTagEmpty =
       'Chưa có tag nào. Thêm tag bên dưới để bắt đầu.';
-  static const String memberTagTooLong = 'Mỗi tag tối đa 24 ký tự.';
+  static const String memberTagTooLong = 'Mỗi tag tối đa 15 ký tự.';
   static const String memberTagInvalid =
       'Tag chỉ được chứa chữ cái, số, khoảng trắng, gạch dưới (_) và gạch ngang (-).';
   static const String memberTagDuplicate = 'Tag này đã tồn tại.';
