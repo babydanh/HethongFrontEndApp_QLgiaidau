@@ -143,8 +143,8 @@ jobs:
             fi
           fi
 
-      # 7. Archive + Export IPA (với App Store Connect API Key)
-      - name: Archive and export IPA
+      # 7. Build và Export IPA (sử dụng Flutter build ipa và App Store Connect API Key)
+      - name: Build and Export IPA
         env:
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID || secrets.APP_STORE_API_KEY_ID }}
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID || secrets.APP_STORE_API_ISSUER_ID }}
@@ -152,33 +152,35 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ~/.appstoreconnect/private_keys
+          mkdir -p ~/.private_keys
           echo "$API_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8
-
+          cp ~/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8 ~/.private_keys/AuthKey_${API_KEY_ID}.p8
           KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8"
-          mkdir -p ~/.private_keys
-          cp "$KEY_PATH" "$HOME/.private_keys/AuthKey_${API_KEY_ID}.p8"
 
-          cd ios
-          mkdir -p ~/.private_keys
-          cp "$KEY_PATH" ./AuthKey_${API_KEY_ID}.p8
+          # Thử build IPA trực tiếp bằng Flutter với ExportOptions
+          if flutter build ipa --release --export-options-plist=ios/ExportOptions.plist; then
+            echo "✓ Flutter build ipa succeeded!"
+            mkdir -p ios/build/ipa
+            cp build/ios/ipa/*.ipa ios/build/ipa/ || true
+          else
+            echo "Flutter build ipa fallback to manual xcodebuild archive & export..."
+            cd ios
+            xcodebuild -workspace Runner.xcworkspace \
+                       -scheme Runner \
+                       -configuration Release \
+                       -derivedDataPath build \
+                       -archivePath build/Runner.xcarchive \
+                       archive
 
-          xcodebuild -workspace Runner.xcworkspace \
-                     -scheme Runner \
-                     -configuration Release \
-                     -derivedDataPath build \
-                     -archivePath build/Runner.xcarchive \
-                     CODE_SIGNING_ALLOWED=NO \
-                     CODE_SIGNING_REQUIRED=NO \
-                     clean archive
-
-          xcodebuild -exportArchive \
-                     -archivePath build/Runner.xcarchive \
-                     -exportOptionsPlist ExportOptions.plist \
-                     -exportPath build/ipa \
-                     -authenticationKeyPath "$KEY_PATH" \
-                     -authenticationKeyID "$API_KEY_ID" \
-                     -authenticationKeyIssuerID "$API_ISSUER_ID" \
-                     -allowProvisioningUpdates
+            xcodebuild -exportArchive \
+                       -archivePath build/Runner.xcarchive \
+                       -exportOptionsPlist ExportOptions.plist \
+                       -exportPath build/ipa \
+                       -authenticationKeyPath "$KEY_PATH" \
+                       -authenticationKeyID "$API_KEY_ID" \
+                       -authenticationKeyIssuerID "$API_ISSUER_ID" \
+                       -allowProvisioningUpdates
+          fi
 
       # 8. Upload lên App Store Connect via native xcrun altool
       - name: Upload to App Store
