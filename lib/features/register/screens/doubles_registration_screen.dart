@@ -44,6 +44,7 @@ class _DoublesRegistrationFlowState
   // Step 1
   final _teamNameCtrl = TextEditingController();
   final _partnerSearchCtrl = TextEditingController();
+  final Map<String, dynamic> _customResponses = {};
   List<UserSearchResult> _searchResults = [];
   UserSearchResult? _selectedPartner;
   bool _searching = false;
@@ -52,6 +53,184 @@ class _DoublesRegistrationFlowState
   String? _genderError;
   String? _eloError;
   bool _eloChecking = false;
+
+  List<Map<String, dynamic>> _activeRegistrationFields(Tournament tournament) {
+    final divisionId = widget.division.id;
+    if (tournament.registrationFormDivisionIds.isNotEmpty &&
+        !tournament.registrationFormDivisionIds.contains(divisionId)) {
+      return const [];
+    }
+    return tournament.registrationFields;
+  }
+
+  String? _validateCustomResponses(Tournament tournament) {
+    for (final field in _activeRegistrationFields(tournament)) {
+      final id = field['id']?.toString() ?? '';
+      final value = _customResponses[id];
+      final empty =
+          value == null ||
+          value.toString().trim().isEmpty ||
+          (value is List && value.isEmpty);
+      final label = field['label']?.toString() ?? id;
+      if (field['required'] == true && empty) return 'Vui lòng điền “$label”.';
+      if (empty) continue;
+      if (field['type'] == 'EMAIL' &&
+          !RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(value.toString())) {
+        return '“$label” phải là email hợp lệ.';
+      }
+
+      if (field['type'] == 'NUMBER') {
+        final number = num.tryParse(value.toString());
+        if (number == null) return '“$label” phải là số.';
+        final min = num.tryParse(field['min']?.toString() ?? '');
+        final max = num.tryParse(field['max']?.toString() ?? '');
+        if (min != null && number < min) {
+          return '“$label” không được nhỏ hơn $min.';
+        }
+        if (max != null && number > max) {
+          return '“$label” không được lớn hơn $max.';
+        }
+      }
+      if (field['type'] == 'SELECT' &&
+          field['options'] is List &&
+          !(field['options'] as List).contains(value)) {
+        return 'Lựa chọn của “$label” không hợp lệ.';
+      }
+      if (field['type'] == 'CHECKBOX' && value != true) {
+        return 'Bạn cần xác nhận “$label”.';
+      }
+    }
+    return null;
+  }
+
+  Widget _buildCustomFields(Tournament tournament) {
+    final fields = _activeRegistrationFields(tournament);
+    if (fields.isEmpty) return const SizedBox.shrink();
+
+    // Tự động điền sẵn Email và Số điện thoại từ profile nếu trường chưa có giá trị
+    final userProfileAsync = ref.watch(userProfileProvider);
+    final userProfile = userProfileAsync.asData?.value;
+    if (userProfile != null) {
+      for (final field in fields) {
+        final id = field['id']?.toString() ?? '';
+        if (id.isEmpty) continue;
+        if (!_customResponses.containsKey(id) ||
+            _customResponses[id] == null ||
+            _customResponses[id].toString().trim().isEmpty) {
+          final label = (field['label']?.toString() ?? '').toLowerCase();
+          final type = field['type']?.toString();
+          final isEmailField =
+              type == 'EMAIL' ||
+              label.contains('email') ||
+              label.contains('gmail');
+          final isPhoneField =
+              type == 'PHONE' ||
+              label.contains('điện thoại') ||
+              label.contains('sđt') ||
+              label.contains('phone');
+
+          if (isEmailField &&
+              userProfile.email != null &&
+              userProfile.email!.isNotEmpty) {
+            _customResponses[id] = userProfile.email;
+          } else if (isPhoneField &&
+              userProfile.phoneNumber != null &&
+              userProfile.phoneNumber!.isNotEmpty) {
+            _customResponses[id] = userProfile.phoneNumber;
+          }
+        }
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.colors.bgSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Thông tin đăng ký bổ sung',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Ban tổ chức yêu cầu các thông tin dưới đây cho nội dung bạn đã chọn.',
+            style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          ...fields.map((field) {
+            final id = field['id']?.toString() ?? '';
+            final label = field['label']?.toString() ?? id;
+            final required = field['required'] == true;
+            final type = field['type']?.toString();
+            final help = field['helpText']?.toString();
+            if (type == 'CHECKBOX') {
+              return CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _customResponses[id] == true,
+                onChanged: (value) =>
+                    setState(() => _customResponses[id] = value == true),
+                title: Text(
+                  '$label${required ? ' *' : ''}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              );
+            }
+            if (type == 'SELECT') {
+              return DropdownButtonFormField<String>(
+                initialValue: _customResponses[id]?.toString(),
+                decoration: InputDecoration(
+                  labelText: '$label${required ? ' *' : ''}',
+                  helperText: help,
+                ),
+                items: [
+                  const DropdownMenuItem(
+                    value: '',
+                    child: Text('Chọn một lựa chọn'),
+                  ),
+                  ...((field['options'] as List? ?? const []).map(
+                    (option) => DropdownMenuItem(
+                      value: option.toString(),
+                      child: Text(option.toString()),
+                    ),
+                  )),
+                ],
+                onChanged: (value) =>
+                    setState(() => _customResponses[id] = value),
+              );
+            }
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: TextFormField(
+                initialValue: _customResponses[id]?.toString() ?? '',
+                keyboardType: type == 'NUMBER'
+                    ? TextInputType.number
+                    : type == 'EMAIL'
+                    ? TextInputType.emailAddress
+                    : type == 'PHONE'
+                    ? TextInputType.phone
+                    : TextInputType.text,
+                maxLines: type == 'TEXTAREA' ? 3 : 1,
+                decoration: InputDecoration(
+                  labelText: '$label${required ? ' *' : ''}',
+                  helperText: help,
+                ),
+                onChanged: (value) => _customResponses[id] = value,
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
 
   // Step 2
   String? _teamInviteToken;
@@ -328,6 +507,15 @@ class _DoublesRegistrationFlowState
         )
         .asData
         ?.value;
+
+    if (tournament != null) {
+      final customError = _validateCustomResponses(tournament);
+      if (customError != null) {
+        _showError(customError);
+        return;
+      }
+    }
+
     setState(() => _submitting = true);
     try {
       _partnerContact =
@@ -344,6 +532,8 @@ class _DoublesRegistrationFlowState
                 _selectedPartner?.email ??
                 (_inviteLater ? null : _partnerSearchCtrl.text.trim()),
             rankingConsent: tournament?.isRanked == true,
+            customResponses:
+                _customResponses.isNotEmpty ? _customResponses : null,
           );
       if (!mounted) return;
       _participantId = result.participantId;
@@ -609,6 +799,7 @@ class _DoublesRegistrationFlowState
           ),
         ),
         const SizedBox(height: 20),
+        _buildCustomFields(t),
         TextField(
           controller: _teamNameCtrl,
           style: TextStyle(color: colors.textPrimary),
