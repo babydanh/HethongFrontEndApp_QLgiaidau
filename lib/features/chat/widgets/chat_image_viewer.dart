@@ -71,7 +71,7 @@ class ChatImageViewer extends StatelessWidget {
                       ),
                       SizedBox(height: 8),
                       Text(
-                        l10n?.chatImageLoadError ?? 'Unable to load image',
+                        l10n!.chatImageLoadError,
                         style: TextStyle(color: Colors.white70),
                       ),
                     ],
@@ -111,7 +111,7 @@ class ChatImageViewer extends StatelessWidget {
                       color: Colors.white,
                       size: 22,
                     ),
-                    tooltip: l10n?.chatImageClose ?? 'Close',
+                    tooltip: l10n!.chatImageClose,
                     onPressed: () => Navigator.pop(context),
                   ),
                   const SizedBox(width: 8),

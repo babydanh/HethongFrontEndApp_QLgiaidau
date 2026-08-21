@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Full-screen bracket diagram for all 3 format types.
 /// Navigated to from the "Xem sơ đồ" button in BracketViewScreen.
@@ -108,6 +109,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final bracketType = widget.bracketType.trim().toLowerCase();
     final isRoundRobin = bracketType == AppConstants.bracketRoundRobin;
@@ -117,13 +119,13 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
 
     final String title;
     if (isRoundRobin) {
-      title = 'Bảng chéo vòng tròn';
+      title = l10n.bracketDiagramRoundRobinTitle;
     } else if (isDouble) {
-      title = 'Sơ đồ nhánh thắng / thua';
+      title = l10n.bracketDiagramDoubleEliminationTitle;
     } else if (isGroupStageKnockout) {
-      title = 'Sơ đồ vòng loại';
+      title = l10n.bracketDiagramGroupStageTitle;
     } else {
-      title = 'Sơ đồ thi đấu';
+      title = l10n.bracketDiagramDefaultTitle;
     }
 
     return Scaffold(
@@ -134,7 +136,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
-          tooltip: 'Quay lại',
+          tooltip: l10n.bracketDiagramBack,
         ),
         title: Text(
           title,

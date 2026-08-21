@@ -251,9 +251,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n!.chatRoomUploadAvatarError)),
         );
       }
@@ -281,9 +279,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              l10n!.chatRoomSettingsUpdateError,
-            ),
+            content: Text(l10n!.chatRoomSettingsUpdateError),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -299,9 +295,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n!.chatRoomClearHistoryTitle),
-        content: Text(
-          l10n!.chatRoomClearHistoryDescription,
-        ),
+        content: Text(l10n!.chatRoomClearHistoryDescription),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -374,9 +368,12 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               leading: const Icon(Icons.person_outline_rounded),
               title: Text(l10n!.chatRoomViewProfile),
               onTap: () {
+                final router = GoRouter.of(context);
                 Navigator.pop(sheetCtx);
                 Navigator.pop(context);
-                context.push('/users/${participant.id}');
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  router.push('/users/${participant.id}');
+                });
               },
             ),
             ListTile(
@@ -421,7 +418,9 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(l10n?.chatRoomBlockedUser(participant.fullName) ?? 'Blocked ${participant.fullName}'),
+                        content: Text(
+                          l10n!.chatRoomBlockedUser(participant.fullName),
+                        ),
                       ),
                     );
                   }
@@ -550,7 +549,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
                 // ── Shared Media Section ──
                 _buildSectionHeader(
-                  l10n?.chatRoomSharedMediaSection(_allSharedMedia.length) ?? 'SHARED PHOTOS & MEDIA (${_allSharedMedia.length})',
+                  l10n!.chatRoomSharedMediaSection(_allSharedMedia.length),
                   Icons.photo_library_outlined,
                   colors,
                 ),
@@ -560,7 +559,9 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
                 // ── Members Section ──
                 _buildSectionHeader(
-                  l10n?.chatRoomMembersSection(_participants.isNotEmpty ? _participants.length : 1) ?? 'ROOM MEMBERS (${_participants.isNotEmpty ? _participants.length : 1})',
+                  l10n!.chatRoomMembersSection(
+                    _participants.isNotEmpty ? _participants.length : 1,
+                  ),
                   Icons.people_alt_outlined,
                   colors,
                 ),
@@ -948,7 +949,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
             ),
             subtitle: Text(
               _slowModeSeconds > 0
-                  ? (l10n?.chatRoomSlowModeWait(_slowModeSeconds) ?? 'Members must wait $_slowModeSeconds seconds between messages')
+                  ? (l10n!.chatRoomSlowModeWait(_slowModeSeconds))
                   : (l10n!.chatRoomSlowModeOffSubtitle),
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
@@ -1161,7 +1162,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n?.chatRoomPinnedFrom(pin.senderName) ?? 'Pinned by: ${pin.senderName}',
+                  l10n!.chatRoomPinnedFrom(pin.senderName),
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -1310,7 +1311,10 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               ),
             ),
             trailing: isOwner
-                ? _buildRoleBadge(l10n!.chatRoomRoleOwner, const Color(0xFFEA580C))
+                ? _buildRoleBadge(
+                    l10n!.chatRoomRoleOwner,
+                    const Color(0xFFEA580C),
+                  )
                 : isAdmin
                 ? _buildRoleBadge(l10n!.chatRoomRoleAdmin, AppTheme.primary)
                 : _buildRoleBadge(l10n!.chatRoomRoleMember, colors.textMuted),

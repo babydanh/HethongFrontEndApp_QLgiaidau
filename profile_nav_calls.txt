@@ -1,0 +1,351 @@
+﻿
+  lib\core\router\app_router.dart:356:      ),
+  lib\core\router\app_router.dart:357:
+> lib\core\router\app_router.dart:358:      // ─── Public User Profile 
+(/user/:id and /users/:id) ───
+  lib\core\router\app_router.dart:359:      GoRoute(
+> lib\core\router\app_router.dart:360:        path: '/user/:id',
+  lib\core\router\app_router.dart:361:        builder: (context, state) {
+  lib\core\router\app_router.dart:362:          final id = 
+state.pathParameters['id']!;
+  lib\core\router\app_router.dart:368:      ),
+  lib\core\router\app_router.dart:369:      GoRoute(
+> lib\core\router\app_router.dart:370:        path: '/users/:id',
+  lib\core\router\app_router.dart:371:        builder: (context, state) {
+  lib\core\router\app_router.dart:372:          final id = 
+state.pathParameters['id']!;
+  lib\data\repositories\api\api_ranking_repository.dart:99:    try {
+  lib\data\repositories\api\api_ranking_repository.dart:100:      final 
+response = await _dioClient.dio.get(
+> lib\data\repositories\api\api_ranking_repository.dart:101:        
+'/rankings/user/$userId',
+  lib\data\repositories\api\api_ranking_repository.dart:102:        
+queryParameters: categoryId.isNotEmpty ? {'categoryId': categoryId} : null,
+  lib\data\repositories\api\api_ranking_repository.dart:103:      );
+  lib\data\repositories\api\api_report_repository.dart:18:    try {
+  lib\data\repositories\api\api_report_repository.dart:19:      final response 
+= await _dioClient.dio.get(
+> lib\data\repositories\api\api_report_repository.dart:20:        
+'/users/reports/me',
+  lib\data\repositories\api\api_report_repository.dart:21:        
+queryParameters: {
+  lib\data\repositories\api\api_report_repository.dart:22:          'limit': 
+limit,
+  lib\data\repositories\api\api_user_repository.dart:15:    _log.info('Lấy 
+thông tin người dùng qua API');
+  lib\data\repositories\api\api_user_repository.dart:16:    try {
+> lib\data\repositories\api\api_user_repository.dart:17:      final response = 
+await _dioClient.dio.get('/users/profile');
+  lib\data\repositories\api\api_user_repository.dart:18:
+  lib\data\repositories\api\api_user_repository.dart:19:      if 
+(response.statusCode == 200 || response.statusCode == 201) {
+  lib\data\repositories\api\api_user_repository.dart:43:    try {
+  lib\data\repositories\api\api_user_repository.dart:44:      final response = 
+await _dioClient.dio.patch(
+> lib\data\repositories\api\api_user_repository.dart:45:        
+'/users/profile',
+  lib\data\repositories\api\api_user_repository.dart:46:        data: data,
+  lib\data\repositories\api\api_user_repository.dart:47:      );
+  lib\data\repositories\api\api_user_repository.dart:80:
+  lib\data\repositories\api\api_user_repository.dart:81:      final response = 
+await _dioClient.dio.post(
+> lib\data\repositories\api\api_user_repository.dart:82:        
+'/users/profile/avatar',
+  lib\data\repositories\api\api_user_repository.dart:83:        data: formData,
+  lib\data\repositories\api\api_user_repository.dart:84:        options: 
+Options(
+  lib\data\repositories\api\api_user_repository.dart:122:
+  lib\data\repositories\api\api_user_repository.dart:123:      final response 
+= await _dioClient.dio.post(
+> lib\data\repositories\api\api_user_repository.dart:124:        
+'/users/profile/cover',
+  lib\data\repositories\api\api_user_repository.dart:125:        data: 
+formData,
+  lib\data\repositories\api\api_user_repository.dart:126:        options: 
+Options(
+  lib\data\repositories\api\api_user_repository.dart:156:    _log.info('Lấy hồ 
+sơ công khai: userId=$userId');
+  lib\data\repositories\api\api_user_repository.dart:157:    try {
+> lib\data\repositories\api\api_user_repository.dart:158:      final response 
+= await _dioClient.dio.get('/users/$userId/public');
+  lib\data\repositories\api\api_user_repository.dart:159:      if 
+(response.statusCode == 200) {
+  lib\data\repositories\api\api_user_repository.dart:160:        final raw = 
+response.data;
+  lib\data\repositories\api\api_user_repository.dart:182:    try {
+  lib\data\repositories\api\api_user_repository.dart:183:      final response 
+= await _dioClient.dio.patch(
+> lib\data\repositories\api\api_user_repository.dart:184:        
+'/users/change-password',
+  lib\data\repositories\api\api_user_repository.dart:185:        data: {
+  lib\data\repositories\api\api_user_repository.dart:186:          
+'oldPassword': oldPassword,
+  lib\data\repositories\api\api_user_repository.dart:211:    _log.info('Tìm 
+kiếm người dùng: $query');
+  lib\data\repositories\api\api_user_repository.dart:212:    try {
+> lib\data\repositories\api\api_user_repository.dart:213:      final response 
+= await _dioClient.dio.get('/users/search', queryParameters: {'q': query});
+  lib\data\repositories\api\api_user_repository.dart:214:      if 
+(response.statusCode == 200) {
+  lib\data\repositories\api\api_user_repository.dart:215:        final raw = 
+response.data;
+  lib\data\repositories\api\api_user_repository.dart:231:    try {
+  lib\data\repositories\api\api_user_repository.dart:232:      final response 
+= await _dioClient.dio.post(
+> lib\data\repositories\api\api_user_repository.dart:233:        
+'/users/delete-account',
+  lib\data\repositories\api\api_user_repository.dart:234:        data: 
+{'password': password},
+  lib\data\repositories\api\api_user_repository.dart:235:      );
+  lib\data\repositories\api\api_user_repository.dart:256:    try {
+  lib\data\repositories\api\api_user_repository.dart:257:      final response 
+= await _dioClient.dio.post(
+> lib\data\repositories\api\api_user_repository.dart:258:        
+'/users/change-requests',
+  lib\data\repositories\api\api_user_repository.dart:259:        data: 
+{'requestType': requestType, 'newValue': newValue},
+  lib\data\repositories\api\api_user_repository.dart:260:      );
+  lib\domain\entities\user.dart:186:}
+  lib\domain\entities\user.dart:187:
+> lib\domain\entities\user.dart:188:/// Hồ sơ công khai của người dùng (GET 
+/users/:id/public).
+  lib\domain\entities\user.dart:189:class UserPublicProfile {
+  lib\domain\entities\user.dart:190:  final String id;
+  lib\domain\entities\user.dart:310:}
+  lib\domain\entities\user.dart:311:
+> lib\domain\entities\user.dart:312:/// Kết quả tìm kiếm người dùng (GET 
+/users/search).
+  lib\domain\entities\user.dart:313:class UserSearchResult {
+  lib\domain\entities\user.dart:314:  final String id;
+  lib\domain\repositories\report_repository.dart:3:abstract class 
+IReportRepository {
+  lib\domain\repositories\report_repository.dart:4:  /// Lấy các báo cáo do 
+người dùng hiện tại gửi.
+> lib\domain\repositories\report_repository.dart:5:  /// GET /users/reports/me
+  lib\domain\repositories\report_repository.dart:6:  
+Future<ViolationReportPage> getMine({String? cursor, int limit = 10});
+  lib\domain\repositories\report_repository.dart:7:}
+  lib\domain\repositories\user_repository.dart:8:  Future<void> 
+changePassword(String oldPassword, String newPassword);
+  lib\domain\repositories\user_repository.dart:9:
+> lib\domain\repositories\user_repository.dart:10:  /// Xóa tài khoản hiện 
+tại. POST /users/delete-account
+  lib\domain\repositories\user_repository.dart:11:  Future<void> 
+deleteAccount(String password);
+  lib\domain\repositories\user_repository.dart:12:
+> lib\domain\repositories\user_repository.dart:13:  /// Gửi yêu cầu đổi dữ 
+liệu bị khóa (VD: giới tính). POST /users/change-requests
+  lib\domain\repositories\user_repository.dart:14:  Future<void> 
+createChangeRequest({required String requestType, required String newValue});
+  lib\domain\repositories\user_repository.dart:15:
+  lib\domain\repositories\user_repository.dart:16:  /// Lấy hồ sơ công khai 
+của người dùng khác.
+> lib\domain\repositories\user_repository.dart:17:  /// GET /users/:id/public
+  lib\domain\repositories\user_repository.dart:18:  Future<UserPublicProfile> 
+getPublicProfile(String userId);
+  lib\domain\repositories\user_repository.dart:19:
+  lib\domain\repositories\user_repository.dart:20:  /// Tìm kiếm người dùng 
+(để mời vào CLB).
+> lib\domain\repositories\user_repository.dart:21:  /// GET /users/search?q=
+  lib\domain\repositories\user_repository.dart:22:  
+Future<List<UserSearchResult>> searchUsers(String query);
+  lib\domain\repositories\user_repository.dart:23:}
+  lib\features\chat\widgets\chat_room_settings_sheet.dart:371:                
+Navigator.pop(sheetCtx);
+  lib\features\chat\widgets\chat_room_settings_sheet.dart:372:                
+Navigator.pop(context);
+> lib\features\chat\widgets\chat_room_settings_sheet.dart:373:                
+context.push('/users/${participant.id}');
+  lib\features\chat\widgets\chat_room_settings_sheet.dart:374:              },
+  lib\features\chat\widgets\chat_room_settings_sheet.dart:375:            ),
+  lib\features\community\screens\club_detail_screen.dart:2932:                 
+     final dio = ref.read(dioProvider);
+  lib\features\community\screens\club_detail_screen.dart:2933:                 
+     final response = await dio.get(
+> lib\features\community\screens\club_detail_screen.dart:2934:                 
+       '/users/search',
+  lib\features\community\screens\club_detail_screen.dart:2935:                 
+       queryParameters: {'q': v.trim()},
+  lib\features\community\screens\club_detail_screen.dart:2936:                 
+     );
+  lib\features\community\screens\club_management_screen.dart:1344:      final 
+dio = ref.read(dioProvider);
+  lib\features\community\screens\club_management_screen.dart:1345:      final 
+response = await dio.get(
+> lib\features\community\screens\club_management_screen.dart:1346:        
+'/users/search',
+  lib\features\community\screens\club_management_screen.dart:1347:        
+queryParameters: {'q': query.trim()},
+  lib\features\community\screens\club_management_screen.dart:1348:      );
+  lib\features\match\screens\live_score_screen.dart:2221:        return 
+InkWell(
+  lib\features\match\screens\live_score_screen.dart:2222:          
+borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+> lib\features\match\screens\live_score_screen.dart:2223:          onTap: () 
+=> context.push('/profile/user/$userId'),
+  lib\features\match\screens\live_score_screen.dart:2224:          child: 
+Padding(
+  lib\features\match\screens\live_score_screen.dart:2225:            padding: 
+const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+  lib\features\profile\screens\settings_screen.dart:108:
+  lib\features\profile\screens\settings_screen.dart:109:// 
+═════════════════════════════════════════════════════════════════════════
+> lib\features\profile\screens\settings_screen.dart:110://  TAB 1: HỒ SƠ — 
+avatar/bìa + PATCH /users/profile
+  lib\features\profile\screens\settings_screen.dart:111:// 
+═════════════════════════════════════════════════════════════════════════
+  lib\features\profile\screens\settings_screen.dart:112:class _ProfileTab 
+extends ConsumerStatefulWidget {
+  lib\features\profile\screens\settings_screen.dart:969:
+  lib\features\profile\screens\settings_screen.dart:970:// 
+═════════════════════════════════════════════════════════════════════════
+> lib\features\profile\screens\settings_screen.dart:971://  TAB 2: NGÂN HÀNG — 
+PATCH /users/profile (bank fields)
+  lib\features\profile\screens\settings_screen.dart:972:// 
+═════════════════════════════════════════════════════════════════════════
+  lib\features\profile\screens\settings_screen.dart:973:class _BankTab extends 
+ConsumerStatefulWidget {
+  lib\features\profile\screens\user_profile_screen.dart:21:/// Trang xem hồ sơ 
+công khai của người dùng khác.
+  lib\features\profile\screens\user_profile_screen.dart:22:///
+> lib\features\profile\screens\user_profile_screen.dart:23:/// Gọi API GET 
+/users/:id/public — hiển thị:
+  lib\features\profile\screens\user_profile_screen.dart:24:/// - Cover photo + 
+Avatar + Tên + Bio + Giới tính + Xác thực
+  lib\features\profile\screens\user_profile_screen.dart:25:/// - ELO + Thống 
+kê theo từng môn
+  lib\features\profile\screens\user_profile_screen.dart:117:                  
+title: profile.fullName,
+  lib\features\profile\screens\user_profile_screen.dart:118:                  
+subtitle: profile.bio ?? l10n.publicProfileShareSubtitle,
+> lib\features\profile\screens\user_profile_screen.dart:119:                  
+webUrl: 'https://sporto.asia/profile/user/${widget.userId}',
+  lib\features\profile\screens\user_profile_screen.dart:120:                  
+imageUrl: profile.avatarUrl,
+  lib\features\profile\screens\user_profile_screen.dart:121:                  
+badgeText: l10n.publicProfileShareBadge,
+  lib\features\profile\widgets\user_profile_bottom_sheet.dart:782:             
+     Navigator.pop(context);
+  lib\features\profile\widgets\user_profile_bottom_sheet.dart:783:             
+     final uri = widget.communityId != null
+> lib\features\profile\widgets\user_profile_bottom_sheet.dart:784:             
+         ? '/profile/user/${widget.userId}?communityId=${widget.communityId}'
+> lib\features\profile\widgets\user_profile_bottom_sheet.dart:785:             
+         : '/profile/user/${widget.userId}';
+  lib\features\profile\widgets\user_profile_bottom_sheet.dart:786:             
+     context.push(uri);
+  lib\features\profile\widgets\user_profile_bottom_sheet.dart:787:             
+   },
+  lib\features\rankings\screens\leaderboard_screen.dart:385:            isMe: 
+isAuth && r.userId == currentUserId,
+  lib\features\rankings\screens\leaderboard_screen.dart:386:            
+highlight: true,
+> lib\features\rankings\screens\leaderboard_screen.dart:387:            onTap: 
+() => context.push('/user/${r.userId}'),
+  lib\features\rankings\screens\leaderboard_screen.dart:388:          );
+  lib\features\rankings\screens\leaderboard_screen.dart:389:        },
+  lib\features\rankings\screens\leaderboard_screen.dart:410:          tiers: 
+tierList,
+  lib\features\rankings\screens\leaderboard_screen.dart:411:          
+formatLabel: formatStr,
+> lib\features\rankings\screens\leaderboard_screen.dart:412:          
+onTapUser: (userId) => context.push('/user/$userId'),
+  lib\features\rankings\screens\leaderboard_screen.dart:413:        ),
+  lib\features\rankings\screens\leaderboard_screen.dart:414:
+  lib\features\rankings\screens\leaderboard_screen.dart:421:              
+isMe: isAuth && rank4.userId == currentUserId,
+  lib\features\rankings\screens\leaderboard_screen.dart:422:              
+formatLabel: formatStr,
+> lib\features\rankings\screens\leaderboard_screen.dart:423:              
+onTap: () => context.push('/user/${rank4.userId}'),
+  lib\features\rankings\screens\leaderboard_screen.dart:424:            ),
+  lib\features\rankings\screens\leaderboard_screen.dart:425:          if 
+(ranks5_10.isNotEmpty) ...[
+  lib\features\rankings\screens\leaderboard_screen.dart:461:                
+isMe: isAuth && r.userId == currentUserId,
+  lib\features\rankings\screens\leaderboard_screen.dart:462:                
+formatLabel: formatStr,
+> lib\features\rankings\screens\leaderboard_screen.dart:463:                
+onTap: () => context.push('/user/${r.userId}'),
+  lib\features\rankings\screens\leaderboard_screen.dart:464:              ),
+  lib\features\rankings\screens\leaderboard_screen.dart:465:            ),
+  lib\features\rankings\screens\leaderboard_screen.dart:612:                
+isMe: isAuth && r.userId == currentUserId,
+  lib\features\rankings\screens\leaderboard_screen.dart:613:                
+formatLabel: formatStr,
+> lib\features\rankings\screens\leaderboard_screen.dart:614:                
+onTap: () => context.push('/user/${r.userId}'),
+  lib\features\rankings\screens\leaderboard_screen.dart:615:              ),
+  lib\features\rankings\screens\leaderboard_screen.dart:616:            )
+  lib\features\reports\screens\my_reports_screen.dart:177:
+  lib\features\reports\screens\my_reports_screen.dart:178:  String? 
+_targetRoute() => switch (report.targetType) {
+> lib\features\reports\screens\my_reports_screen.dart:179:    
+ReportTargetType.user => '/profile/user/${report.targetId}',
+  lib\features\reports\screens\my_reports_screen.dart:180:    
+ReportTargetType.tournament => '/tournaments/${report.targetId}',
+  lib\features\reports\screens\my_reports_screen.dart:181:    
+ReportTargetType.match => '/live/${report.targetId}',
+  lib\features\tournament\widgets\teams_tab.dart:212:                      
+onMemberTap: (userId, memberName) {
+  lib\features\tournament\widgets\teams_tab.dart:213:                        
+if (userId != null && userId.isNotEmpty) {
+> lib\features\tournament\widgets\teams_tab.dart:214:                          
+context.push('/profile/user/$userId');
+  lib\features\tournament\widgets\teams_tab.dart:215:                        } 
+else {
+  lib\features\tournament\widgets\teams_tab.dart:216:                          
+context.push('/profile');
+  lib\providers\ranking_provider.dart:46:
+  lib\providers\ranking_provider.dart:47:/// Provider lấy lịch sử biến động 
+ELO của user.
+> lib\providers\ranking_provider.dart:48:/// GET /rankings/user/:userId/history
+  lib\providers\ranking_provider.dart:49:typedef EloHistoryQuery = ({
+  lib\providers\ranking_provider.dart:50:  String userId,
+  lib\providers\ranking_provider.dart:69:      if (query.communityId != null) 
+params['communityId'] = query.communityId;
+  lib\providers\ranking_provider.dart:70:
+> lib\providers\ranking_provider.dart:71:      final response = await 
+dio.get('/rankings/user/${query.userId}/history', queryParameters: params);
+  lib\providers\ranking_provider.dart:72:      final raw = response.data;
+  lib\providers\ranking_provider.dart:73:      final List<dynamic> list = raw 
+is Map<String, dynamic>
+  lib\providers\ranking_provider.dart:83:);
+  lib\providers\ranking_provider.dart:84:
+> lib\providers\ranking_provider.dart:85:/// Provider lấy tổng hợp ELO của 
+user từ API GET /rankings/user/:userId
+  lib\providers\ranking_provider.dart:86:/// Dùng repository thay vì raw Dio 
+để có auth interceptor
+  lib\providers\ranking_provider.dart:87:final userRankingsSummaryProvider = 
+FutureProvider.family<List<PlayerRanking>, String>((ref, userId) async {
+  lib\providers\ranking_provider.dart:89:    if (userId.isEmpty) return [];
+  lib\providers\ranking_provider.dart:90:    final dio = ref.read(dioProvider);
+> lib\providers\ranking_provider.dart:91:    final response = await 
+dio.get('/rankings/user/$userId');
+  lib\providers\ranking_provider.dart:92:    final raw = response.data;
+  lib\providers\ranking_provider.dart:93:    if (raw is! Map<String, dynamic>) 
+return [];
+  lib\providers\user_provider.dart:55:
+  lib\providers\user_provider.dart:56:/// Provider lấy hồ sơ công khai của 
+người dùng khác.
+> lib\providers\user_provider.dart:57:/// GET /users/:id/public — dùng cho 
+trang xem profile người khác.
+  lib\providers\user_provider.dart:58:final userPublicProfileProvider = 
+FutureProvider.family<UserPublicProfile, String>((ref, userId) async {
+  lib\providers\user_provider.dart:59:  final repo = 
+ref.read(userRepositoryProvider);
+  lib\providers\user_provider.dart:76:});
+  lib\providers\user_provider.dart:77:
+> lib\providers\user_provider.dart:78:/// Gọi GET /api/v1/rankings/user/:userId
+  lib\providers\user_provider.dart:79:/// BE trả về { data: { publicRanks: 
+[...], communityRanks: [...] } }
+  lib\providers\user_provider.dart:80:/// TransformInterceptor wrap: { data: { 
+publicRanks: [...], ... }, message, statusCode }
+  lib\providers\user_provider.dart:89:  try {
+  lib\providers\user_provider.dart:90:    final dio = ref.read(dioProvider);
+> lib\providers\user_provider.dart:91:    final response = await 
+dio.get('/rankings/user/$userId');
+  lib\providers\user_provider.dart:92:
+  lib\providers\user_provider.dart:93:    final raw = response.data;
+
+

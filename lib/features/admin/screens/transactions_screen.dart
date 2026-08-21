@@ -41,7 +41,7 @@ class _AdminTransactionsScreenState
           onPressed: () => context.pop(),
         ),
         title: Text(
-          l10n?.adminTransactionsTitle ?? 'Transaction history',
+          l10n!.adminTransactionsTitle,
           style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
         ),
         centerTitle: true,
@@ -57,22 +57,18 @@ class _AdminTransactionsScreenState
 
   Widget _buildFilterChips(AppColorsExtension colors, AppLocalizations? l10n) {
     final filters = [
-      ('all', l10n?.adminTransactionsFilterAll ?? 'All', AppTheme.primary),
+      ('all', l10n!.adminTransactionsFilterAll, AppTheme.primary),
       (
         'completed',
-        l10n?.adminTransactionsFilterCompleted ?? 'Completed',
+        l10n!.adminTransactionsFilterCompleted,
         const Color(0xFF10B981),
       ),
       (
         'pending',
-        l10n?.adminTransactionsFilterPending ?? 'Pending',
+        l10n!.adminTransactionsFilterPending,
         const Color(0xFFF59E0B),
       ),
-      (
-        'failed',
-        l10n?.adminTransactionsFilterFailed ?? 'Failed',
-        const Color(0xFFEF4444),
-      ),
+      ('failed', l10n!.adminTransactionsFilterFailed, const Color(0xFFEF4444)),
     ];
 
     return Container(
@@ -142,7 +138,7 @@ class _AdminTransactionsScreenState
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  l10n?.adminTransactionsEmpty ?? 'No transactions',
+                  l10n!.adminTransactionsEmpty,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -170,7 +166,7 @@ class _AdminTransactionsScreenState
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
             Text(
-              l10n?.adminTransactionsLoadError ?? 'Unable to load data',
+              l10n!.adminTransactionsLoadError,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -203,7 +199,7 @@ class _AdminTransactionsScreenState
     final userName =
         transaction['user']?['fullName']?.toString() ??
         transaction['userName']?.toString() ??
-        (l10n?.adminTransactionsUserFallback ?? 'User');
+        (l10n!.adminTransactionsUserFallback);
     final createdAt = transaction['createdAt']?.toString() ?? '';
     final reference = transaction['transactionReference']?.toString() ?? '';
 
@@ -215,17 +211,17 @@ class _AdminTransactionsScreenState
     switch (status.toUpperCase()) {
       case 'COMPLETED':
         statusColor = const Color(0xFF10B981);
-        statusLabel = l10n?.adminTransactionsStatusCompleted ?? 'Completed';
+        statusLabel = l10n!.adminTransactionsStatusCompleted;
         statusIcon = Icons.check_circle_rounded;
         break;
       case 'PENDING':
         statusColor = const Color(0xFFF59E0B);
-        statusLabel = l10n?.adminTransactionsStatusPending ?? 'Pending';
+        statusLabel = l10n!.adminTransactionsStatusPending;
         statusIcon = Icons.access_time_rounded;
         break;
       case 'FAILED':
         statusColor = const Color(0xFFEF4444);
-        statusLabel = l10n?.adminTransactionsStatusFailed ?? 'Failed';
+        statusLabel = l10n!.adminTransactionsStatusFailed;
         statusIcon = Icons.cancel_rounded;
         break;
       default:
@@ -283,8 +279,7 @@ class _AdminTransactionsScreenState
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    l10n?.transactionsAmount(fmt.format(amount.ceil())) ??
-                        '${fmt.format(amount.ceil())}đ',
+                    l10n!.transactionsAmount(fmt.format(amount.ceil())),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
@@ -317,8 +312,7 @@ class _AdminTransactionsScreenState
           if (reference.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
-              l10n?.adminTransactionsReference(reference) ??
-                  'Reference: $reference',
+              l10n!.adminTransactionsReference(reference),
               style: TextStyle(fontSize: 10, color: colors.textMuted),
             ),
           ],

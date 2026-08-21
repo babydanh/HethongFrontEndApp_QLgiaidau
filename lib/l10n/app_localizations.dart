@@ -17983,6 +17983,192 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chưa xếp sân'**
   String get matchTableUnassignedCourt;
+
+  /// No description provided for @bracketDiagramRoundRobinTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng chéo vòng tròn'**
+  String get bracketDiagramRoundRobinTitle;
+
+  /// No description provided for @bracketDiagramDoubleEliminationTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sơ đồ nhánh thắng / thua'**
+  String get bracketDiagramDoubleEliminationTitle;
+
+  /// No description provided for @bracketDiagramGroupKnockoutTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sơ đồ vòng loại'**
+  String get bracketDiagramGroupKnockoutTitle;
+
+  /// No description provided for @bracketDiagramDefaultTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sơ đồ thi đấu'**
+  String get bracketDiagramDefaultTitle;
+
+  /// No description provided for @crossTableEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có dữ liệu đội thi đấu'**
+  String get crossTableEmpty;
+
+  /// No description provided for @crossTableError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi: {error}'**
+  String crossTableError(Object error);
+
+  /// No description provided for @crossTableDefaultGroup.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng A'**
+  String get crossTableDefaultGroup;
+
+  /// No description provided for @crossTableLegTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'{title} - Vòng {leg}'**
+  String crossTableLegTitle(Object title, Object leg);
+
+  /// No description provided for @crossTablePreviousLeg.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng trước'**
+  String get crossTablePreviousLeg;
+
+  /// No description provided for @crossTableNextLeg.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng tiếp theo'**
+  String get crossTableNextLeg;
+
+  /// No description provided for @crossTableLegIndicator.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng {current} / {max}'**
+  String crossTableLegIndicator(Object current, Object max);
+
+  /// No description provided for @crossTableTeamCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} đội'**
+  String crossTableTeamCount(Object count);
+
+  /// No description provided for @bracketDiagramGroupStageTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'SÆ¡ Ä‘á»“ vÃ²ng loáº¡i'**
+  String get bracketDiagramGroupStageTitle;
+
+  /// No description provided for @bracketDiagramBack.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quay láº¡i'**
+  String get bracketDiagramBack;
+
+  /// No description provided for @bracketCrossTableRoundProgress.
+  ///
+  /// In vi, this message translates to:
+  /// **'VÃ²ng {current} / {max}'**
+  String bracketCrossTableRoundProgress(Object current, Object max);
+
+  /// No description provided for @bracketCrossTablePreviousRound.
+  ///
+  /// In vi, this message translates to:
+  /// **'VÃ²ng trÆ°á»›c'**
+  String get bracketCrossTablePreviousRound;
+
+  /// No description provided for @bracketCrossTableNextRound.
+  ///
+  /// In vi, this message translates to:
+  /// **'VÃ²ng tiáº¿p theo'**
+  String get bracketCrossTableNextRound;
+
+  /// No description provided for @qrScannerInvalidCode.
+  ///
+  /// In vi, this message translates to:
+  /// **'MÃ£ QR khÃ´ng há»£p lá»‡'**
+  String get qrScannerInvalidCode;
+
+  /// No description provided for @qrScannerTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'QuÃ©t mÃ£ QR'**
+  String get qrScannerTitle;
+
+  /// No description provided for @qrScannerVerifying.
+  ///
+  /// In vi, this message translates to:
+  /// **'Äang xÃ¡c thá»±c...'**
+  String get qrScannerVerifying;
+
+  /// No description provided for @officialScoreScoringTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'TÃ­nh Ä‘iá»ƒm'**
+  String get officialScoreScoringTab;
+
+  /// No description provided for @officialScorePenaltyTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Pháº¡m lá»—i'**
+  String get officialScorePenaltyTab;
+
+  /// No description provided for @doubleElimUpperGrandFinal.
+  ///
+  /// In vi, this message translates to:
+  /// **'CK NHÃNH THáº®NG'**
+  String get doubleElimUpperGrandFinal;
+
+  /// No description provided for @doubleElimUpperSemifinal.
+  ///
+  /// In vi, this message translates to:
+  /// **'BK NHÃNH THáº®NG'**
+  String get doubleElimUpperSemifinal;
+
+  /// No description provided for @doubleElimLowerGrandFinal.
+  ///
+  /// In vi, this message translates to:
+  /// **'CK NHÃNH THUA'**
+  String get doubleElimLowerGrandFinal;
+
+  /// No description provided for @doubleElimLowerSemifinal.
+  ///
+  /// In vi, this message translates to:
+  /// **'BK NHÃNH THUA'**
+  String get doubleElimLowerSemifinal;
+
+  /// No description provided for @liveMatchRemainingLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'CÃ²n láº¡i'**
+  String get liveMatchRemainingLabel;
+
+  /// No description provided for @teamScoreEditForbidden.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lá»—i: Báº¡n khÃ´ng cÃ³ quyá»n sá»­a Ä‘iá»ƒm.'**
+  String get teamScoreEditForbidden;
+
+  /// No description provided for @chatDetailRevokedMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tin nháº¯n Ä‘Ã£ bá»‹ thu há»“i'**
+  String get chatDetailRevokedMessage;
+
+  /// No description provided for @bracketCrossTableTeamCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} Ä‘á»™i'**
+  String bracketCrossTableTeamCount(Object count);
+
+  /// No description provided for @singleElimUpdateError.
+  ///
+  /// In vi, this message translates to:
+  /// **'KhÃ´ng thá»ƒ cáº­p nháº­t vá»‹ trÃ­: {error}'**
+  String singleElimUpdateError(Object error);
 }
 
 class _AppLocalizationsDelegate

@@ -1,6 +1,6 @@
 {
-  "ui_literal_line_count": 104,
-  "file_count": 37,
+  "ui_literal_line_count": 99,
+  "file_count": 36,
   "files": [
     {
       "file": "lib/providers/lite_management_notifier.dart",
@@ -131,52 +131,6 @@
           "file": "lib/features/community/screens/club_detail_screen.dart",
           "line": 3540,
           "text": "_log.error('Lỗi thêm ảnh gallery', e, stack);"
-        }
-      ]
-    },
-    {
-      "file": "lib/features/profile/screens/settings_screen.dart",
-      "count": 8,
-      "matches": [
-        {
-          "file": "lib/features/profile/screens/settings_screen.dart",
-          "line": 95,
-          "text": "Tab(text: l10n?.settingsProfileTab ?? 'Hồ sơ'),"
-        },
-        {
-          "file": "lib/features/profile/screens/settings_screen.dart",
-          "line": 96,
-          "text": "Tab(text: l10n?.settingsBankTab ?? 'Ngân hàng'),"
-        },
-        {
-          "file": "lib/features/profile/screens/settings_screen.dart",
-          "line": 97,
-          "text": "Tab(text: l10n?.settingsSecurityTab ?? 'Bảo mật'),"
-        },
-        {
-          "file": "lib/features/profile/screens/settings_screen.dart",
-          "line": 271,
-          "text": "_log.error('Lỗi tải ảnh đại diện', e, stack);"
-        },
-        {
-          "file": "lib/features/profile/screens/settings_screen.dart",
-          "line": 318,
-          "text": "_log.error('Lỗi tải ảnh bìa', e, stack);"
-        },
-        {
-          "file": "lib/features/profile/screens/settings_screen.dart",
-          "line": 491,
-          "text": "_log.error('Lỗi cập nhật hồ sơ', e, stack);"
-        },
-        {
-          "file": "lib/features/profile/screens/settings_screen.dart",
-          "line": 501,
-          "text": "content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),"
-        },
-        {
-          "file": "lib/features/profile/screens/settings_screen.dart",
-          "line": 1160,
-          "text": "_log.error('Lỗi lưu thông tin ngân hàng', e, stack);"
         }
       ]
     },
@@ -363,6 +317,32 @@
           "file": "lib/features/community/social/community_feed_notifier.dart",
           "line": 106,
           "text": "_log.error('Không thể reaction bài viết CLB', error, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/profile/screens/settings_screen.dart",
+      "count": 4,
+      "matches": [
+        {
+          "file": "lib/features/profile/screens/settings_screen.dart",
+          "line": 269,
+          "text": "_log.error('Lỗi tải ảnh đại diện', e, stack);"
+        },
+        {
+          "file": "lib/features/profile/screens/settings_screen.dart",
+          "line": 316,
+          "text": "_log.error('Lỗi tải ảnh bìa', e, stack);"
+        },
+        {
+          "file": "lib/features/profile/screens/settings_screen.dart",
+          "line": 472,
+          "text": "_log.error('Lỗi cập nhật hồ sơ', e, stack);"
+        },
+        {
+          "file": "lib/features/profile/screens/settings_screen.dart",
+          "line": 1118,
+          "text": "_log.error('Lỗi lưu thông tin ngân hàng', e, stack);"
         }
       ]
     },
@@ -675,17 +655,6 @@
           "file": "lib/features/notification/screens/notification_screen.dart",
           "line": 159,
           "text": "_log.error('Lỗi xử lý lời mời', e, stack);"
-        }
-      ]
-    },
-    {
-      "file": "lib/features/profile/widgets/language_setting_card.dart",
-      "count": 1,
-      "matches": [
-        {
-          "file": "lib/features/profile/widgets/language_setting_card.dart",
-          "line": 76,
-          "text": "child: Text(l10n?.languageVi ?? 'Tiếng Việt'),"
         }
       ]
     },

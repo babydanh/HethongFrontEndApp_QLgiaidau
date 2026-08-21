@@ -59,13 +59,9 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
         .toList();
 
     if (question.isEmpty || options.length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n!.chatPollValidationError,
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n!.chatPollValidationError)));
       return;
     }
 
@@ -119,7 +115,11 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                       color: AppTheme.primary.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.poll_rounded, color: AppTheme.primary, size: 20),
+                    child: const Icon(
+                      Icons.poll_rounded,
+                      color: AppTheme.primary,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Text(
@@ -132,7 +132,11 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: Icon(Icons.close_rounded, color: colors.textMuted, size: 20),
+                    icon: Icon(
+                      Icons.close_rounded,
+                      color: colors.textMuted,
+                      size: 20,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -141,23 +145,35 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
               // Question Input
               TextField(
                 controller: _questionController,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
                 decoration: InputDecoration(
                   hintText: l10n!.chatPollQuestionHint,
                   hintStyle: TextStyle(color: colors.textMuted),
                   filled: true,
-                  fillColor: isDark ? const Color(0xFF242526) : const Color(0xFFF0F2F5),
+                  fillColor: isDark
+                      ? const Color(0xFF242526)
+                      : const Color(0xFFF0F2F5),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 l10n!.chatPollOptionsLabel,
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.textSecondary),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textSecondary,
+                ),
               ),
               const SizedBox(height: 8),
               // Options List
@@ -173,21 +189,30 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                           controller: controller,
                           style: const TextStyle(fontSize: 14),
                           decoration: InputDecoration(
-                            hintText: l10n?.chatPollOptionHint(idx + 1) ?? 'Option ${idx + 1}',
+                            hintText: l10n!.chatPollOptionHint(idx + 1),
                             hintStyle: TextStyle(color: colors.textMuted),
                             filled: true,
-                            fillColor: isDark ? const Color(0xFF242526) : const Color(0xFFF0F2F5),
+                            fillColor: isDark
+                                ? const Color(0xFF242526)
+                                : const Color(0xFFF0F2F5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                           ),
                         ),
                       ),
                       if (_optionControllers.length > 2)
                         IconButton(
-                          icon: Icon(Icons.remove_circle_outline, color: colors.error, size: 20),
+                          icon: Icon(
+                            Icons.remove_circle_outline,
+                            color: colors.error,
+                            size: 20,
+                          ),
                           onPressed: () => _removeOption(idx),
                         ),
                     ],
@@ -223,11 +248,16 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                   child: Text(
                     l10n!.chatPollSubmit,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
               ),

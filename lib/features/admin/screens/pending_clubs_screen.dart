@@ -38,11 +38,25 @@ class PendingClubsScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_outline_rounded, size: 64, color: colors.textMuted),
+                  Icon(
+                    Icons.check_circle_outline_rounded,
+                    size: 64,
+                    color: colors.textMuted,
+                  ),
                   const SizedBox(height: 16),
-                  Text(l10n!.pendingClubsEmpty, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                  Text(
+                    l10n!.pendingClubsEmpty,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Text(l10n!.pendingClubsAllReviewed, style: TextStyle(fontSize: 13, color: colors.textSecondary)),
+                  Text(
+                    l10n!.pendingClubsAllReviewed,
+                    style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                  ),
                 ],
               ),
             );
@@ -50,7 +64,8 @@ class PendingClubsScreen extends ConsumerWidget {
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             itemCount: clubs.length,
-            itemBuilder: (context, i) => _buildClubCard(context, clubs[i], colors, ref),
+            itemBuilder: (context, i) =>
+                _buildClubCard(context, clubs[i], colors, ref),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -60,9 +75,20 @@ class PendingClubsScreen extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+                Icon(
+                  Icons.cloud_off_rounded,
+                  size: 48,
+                  color: colors.textMuted,
+                ),
                 const SizedBox(height: 12),
-                Text(l10n!.pendingClubsLoadError, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                Text(
+                  l10n!.pendingClubsLoadError,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: () => ref.invalidate(pendingCommunitiesProvider),
@@ -76,7 +102,12 @@ class PendingClubsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildClubCard(BuildContext context, Community club, AppColorsExtension colors, WidgetRef ref) {
+  Widget _buildClubCard(
+    BuildContext context,
+    Community club,
+    AppColorsExtension colors,
+    WidgetRef ref,
+  ) {
     final l10n = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -92,15 +123,22 @@ class PendingClubsScreen extends ConsumerWidget {
           Row(
             children: [
               Container(
-                width: 48, height: 48,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [AppTheme.primary, AppTheme.primaryLight]),
+                  gradient: const LinearGradient(
+                    colors: [AppTheme.primary, AppTheme.primaryLight],
+                  ),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Center(
                   child: Text(
                     (club.name.isNotEmpty ? club.name[0] : '?').toUpperCase(),
-                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),
@@ -109,11 +147,29 @@ class PendingClubsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(club.name, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: colors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
-                    if (club.description != null && club.description!.isNotEmpty)
+                    Text(
+                      club.name,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (club.description != null &&
+                        club.description!.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
-                        child: Text(club.description!, style: TextStyle(fontSize: 12, color: colors.textMuted), maxLines: 2, overflow: TextOverflow.ellipsis),
+                        child: Text(
+                          club.description!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textMuted,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                   ],
                 ),
@@ -123,14 +179,31 @@ class PendingClubsScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.person_outline_rounded, size: 14, color: colors.textMuted),
+              Icon(
+                Icons.person_outline_rounded,
+                size: 14,
+                color: colors.textMuted,
+              ),
               const SizedBox(width: 4),
-              Text(l10n?.pendingClubsMemberCount(club.memberCount) ?? '${club.memberCount} members', style: TextStyle(fontSize: 11, color: colors.textMuted)),
+              Text(
+                l10n!.pendingClubsMemberCount(club.memberCount),
+                style: TextStyle(fontSize: 11, color: colors.textMuted),
+              ),
               const SizedBox(width: 16),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: const Color(0xFFF59E0B).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
-                child: Text(l10n!.pendingClubsStatus, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFFF59E0B))),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  l10n!.pendingClubsStatus,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFFF59E0B),
+                  ),
+                ),
               ),
             ],
           ),
@@ -141,28 +214,53 @@ class PendingClubsScreen extends ConsumerWidget {
                 child: GestureDetector(
                   onTap: () async {
                     try {
-                      await ref.read(communityRepositoryProvider).reviewCommunity(club.id, 'APPROVED');
+                      await ref
+                          .read(communityRepositoryProvider)
+                          .reviewCommunity(club.id, 'APPROVED');
                       ref.invalidate(pendingCommunitiesProvider);
                       invalidateCommunityCollections(ref);
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(l10n!.pendingClubsApprovedFeedback), backgroundColor: const Color(0xFF10B981), behavior: SnackBarBehavior.floating,
-                        ));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(l10n!.pendingClubsApprovedFeedback),
+                            backgroundColor: const Color(0xFF10B981),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
                       }
                     } catch (e) {
-                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n!.pendingClubsApproveError), backgroundColor: Colors.red));
+                      if (context.mounted)
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(l10n!.pendingClubsApproveError),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
                     }
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(12)),
-                                        child: Row(
-
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.check_rounded, color: Colors.white, size: 18),
+                        Icon(
+                          Icons.check_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                         SizedBox(width: 6),
-                        Text(l10n!.pendingClubsApprove, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)),
+                        Text(
+                          l10n!.pendingClubsApprove,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -182,9 +280,20 @@ class PendingClubsScreen extends ConsumerWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.close_rounded, color: colors.textSecondary, size: 18),
+                        Icon(
+                          Icons.close_rounded,
+                          color: colors.textSecondary,
+                          size: 18,
+                        ),
                         const SizedBox(width: 6),
-                        Text(l10n!.pendingClubsReject, style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w700, fontSize: 14)),
+                        Text(
+                          l10n!.pendingClubsReject,
+                          style: TextStyle(
+                            color: colors.textSecondary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -197,7 +306,12 @@ class PendingClubsScreen extends ConsumerWidget {
     );
   }
 
-  void _showRejectDialog(BuildContext context, Community club, AppColorsExtension colors, WidgetRef ref) {
+  void _showRejectDialog(
+    BuildContext context,
+    Community club,
+    AppColorsExtension colors,
+    WidgetRef ref,
+  ) {
     final controller = TextEditingController();
     final l10n = AppLocalizations.of(context);
     showDialog(
@@ -206,15 +320,29 @@ class PendingClubsScreen extends ConsumerWidget {
         backgroundColor: colors.bgCard,
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.orange,
+              size: 22,
+            ),
             const SizedBox(width: 8),
-            Text(l10n!.pendingClubsRejectTitle, style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w700, fontSize: 18)),
+            Text(
+              l10n!.pendingClubsRejectTitle,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+              ),
+            ),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(l10n?.pendingClubsRejectQuestion(club.name) ?? 'Reject "${club.name}"?', style: TextStyle(color: colors.textPrimary, fontSize: 15)),
+            Text(
+              l10n!.pendingClubsRejectQuestion(club.name),
+              style: TextStyle(color: colors.textPrimary, fontSize: 15),
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: controller,
@@ -226,32 +354,56 @@ class PendingClubsScreen extends ConsumerWidget {
                 hintStyle: TextStyle(color: colors.textMuted, fontSize: 12),
                 filled: true,
                 fillColor: colors.bgSurface,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n!.pendingClubsCancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n!.pendingClubsCancel),
+          ),
           ElevatedButton(
             onPressed: () async {
               if (controller.text.trim().isEmpty) return;
               try {
-                await ref.read(communityRepositoryProvider).reviewCommunity(club.id, 'REJECTED', rejectedReason: controller.text.trim());
+                await ref
+                    .read(communityRepositoryProvider)
+                    .reviewCommunity(
+                      club.id,
+                      'REJECTED',
+                      rejectedReason: controller.text.trim(),
+                    );
                 ref.invalidate(pendingCommunitiesProvider);
                 invalidateCommunityCollections(ref);
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(l10n!.pendingClubsRejectedFeedback), backgroundColor: Colors.orange, behavior: SnackBarBehavior.floating,
-                  ));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n!.pendingClubsRejectedFeedback),
+                      backgroundColor: Colors.orange,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
                 }
               } catch (e) {
-                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n!.pendingClubsRejectError), backgroundColor: Colors.red));
+                if (context.mounted)
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n!.pendingClubsRejectError),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(l10n!.pendingClubsConfirmReject, style: const TextStyle(color: Colors.white)),
+            child: Text(
+              l10n!.pendingClubsConfirmReject,
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

@@ -42,7 +42,7 @@ class LanguageSettingCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n?.settingsLanguage ?? 'Ngôn ngữ',
+                  l10n!.settingsLanguage,
                   style: TextStyle(
                     color: colors.textPrimary,
                     fontSize: 15,
@@ -52,8 +52,8 @@ class LanguageSettingCard extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   locale.languageCode == 'en'
-                      ? (l10n?.languageEn ?? 'English')
-                      : (l10n?.languageVi ?? 'Tiếng Việt'),
+                      ? (l10n!.languageEn)
+                      : (l10n!.languageVi),
                   style: TextStyle(color: colors.textSecondary, fontSize: 12),
                 ),
               ],
@@ -73,11 +73,11 @@ class LanguageSettingCard extends ConsumerWidget {
               items: [
                 DropdownMenuItem(
                   value: 'vi',
-                  child: Text(l10n?.languageVi ?? 'Tiếng Việt'),
+                  child: Text(l10n!.languageVi),
                 ),
                 DropdownMenuItem(
                   value: 'en',
-                  child: Text(l10n?.languageEn ?? 'English'),
+                  child: Text(l10n!.languageEn),
                 ),
               ],
               onChanged: (languageCode) {

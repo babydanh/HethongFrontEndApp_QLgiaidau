@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_match_card.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 const _kCardW = 240.0;
 const _kCardH = 88.0;
@@ -56,7 +57,7 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Không thể cập nhật vị trí: $error')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.singleElimUpdateError(error.toString()))),
         );
       }
     } finally {

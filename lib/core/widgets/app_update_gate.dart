@@ -28,7 +28,8 @@ class _AppUpdateGateState extends ConsumerState<AppUpdateGate> {
     _checked = true;
     try {
       final info = await AppUpdateService(ref.read(dioProvider)).check();
-      if (!mounted || info == null || !info.hasUpdate || info.storeUrl.isEmpty) return;
+      if (!mounted || info == null || !info.hasUpdate || info.storeUrl.isEmpty)
+        return;
       await showDialog<void>(
         context: context,
         barrierDismissible: !info.isRequired,
@@ -61,13 +62,16 @@ class _UpdateDialog extends StatelessWidget {
       content: SingleChildScrollView(
         child: Text(
           info.releaseNotes.trim().isEmpty
-              ? (l10n?.coreUpdateDescription(info.latestVersion) ?? 'A new Sporto version is available. Update to get the latest improvements.')
+              ? l10n!.coreUpdateDescription(info.latestVersion)
               : info.releaseNotes,
         ),
       ),
       actions: [
         if (!info.isRequired)
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n!.coreUpdateLater)),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n!.coreUpdateLater),
+          ),
         FilledButton(onPressed: _openStore, child: Text(l10n!.coreUpdateNow)),
       ],
     );

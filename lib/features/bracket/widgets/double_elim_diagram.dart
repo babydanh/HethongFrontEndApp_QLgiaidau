@@ -224,9 +224,9 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                       final fromEnd = wRounds.length - (ci + 1);
                       String label;
                       if (fromEnd == 0) {
-                        label = 'CK NHÁNH THẮNG';
+                        label = l10n.doubleElimUpperGrandFinal;
                       } else if (fromEnd == 1) {
-                        label = 'BK NHÁNH THẮNG';
+                        label = l10n.doubleElimUpperSemifinal;
                       } else {
                         label = MatchRoundLabel.doubleUpperHeader(fromEnd);
                       }
@@ -245,9 +245,9 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                       final fromEnd = lRounds.length - (ci + 1);
                       String label;
                       if (fromEnd == 0) {
-                        label = 'CK NHÁNH THUA';
+                        label = l10n.doubleElimLowerGrandFinal;
                       } else if (fromEnd == 1) {
-                        label = 'BK NHÁNH THUA';
+                        label = l10n.doubleElimLowerSemifinal;
                       } else {
                         label = MatchRoundLabel.doubleLowerHeader(
                           fromEnd,

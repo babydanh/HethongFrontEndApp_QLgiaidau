@@ -48,7 +48,11 @@ class AppShareModal {
             // Header
             Row(
               children: [
-                const Icon(Icons.share_rounded, color: AppTheme.primary, size: 22),
+                const Icon(
+                  Icons.share_rounded,
+                  color: AppTheme.primary,
+                  size: 22,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   l10n!.coreShareTitle,
@@ -61,7 +65,11 @@ class AppShareModal {
                 const Spacer(),
                 IconButton(
                   onPressed: () => Navigator.pop(ctx),
-                  icon: Icon(Icons.close_rounded, color: colors.textMuted, size: 20),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: colors.textMuted,
+                    size: 20,
+                  ),
                 ),
               ],
             ),
@@ -98,7 +106,10 @@ class AppShareModal {
                       children: [
                         if (badgeText != null) ...[
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: AppTheme.primary.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
@@ -171,7 +182,8 @@ class AppShareModal {
                     Navigator.pop(ctx);
                     SharePlus.instance.share(
                       ShareParams(
-                        text: '$title\n$subtitle\n\n${l10n?.coreShareDetailsAt(webUrl) ?? 'View details at: $webUrl'}',
+                        text:
+                            '$title\n$subtitle\n\n${l10n!.coreShareDetailsAt(webUrl)}',
                       ),
                     );
                   },
@@ -275,9 +287,9 @@ class AppShareModal {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: url));
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n!.coreLinkCopied)),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l10n!.coreLinkCopied)));
               },
               icon: const Icon(Icons.copy_rounded, size: 16),
               label: Text(l10n!.coreCopyLink),

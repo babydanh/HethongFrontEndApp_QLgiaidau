@@ -9807,4 +9807,112 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get matchTableUnassignedCourt => 'Court not assigned';
+
+  @override
+  String get bracketDiagramRoundRobinTitle => 'Round-robin table';
+
+  @override
+  String get bracketDiagramDoubleEliminationTitle => 'Winners / losers bracket';
+
+  @override
+  String get bracketDiagramGroupKnockoutTitle => 'Qualification bracket';
+
+  @override
+  String get bracketDiagramDefaultTitle => 'Competition bracket';
+
+  @override
+  String get crossTableEmpty => 'No team data yet';
+
+  @override
+  String crossTableError(Object error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get crossTableDefaultGroup => 'Group A';
+
+  @override
+  String crossTableLegTitle(Object title, Object leg) {
+    return '$title - Round $leg';
+  }
+
+  @override
+  String get crossTablePreviousLeg => 'Previous round';
+
+  @override
+  String get crossTableNextLeg => 'Next round';
+
+  @override
+  String crossTableLegIndicator(Object current, Object max) {
+    return 'Round $current / $max';
+  }
+
+  @override
+  String crossTableTeamCount(Object count) {
+    return '$count teams';
+  }
+
+  @override
+  String get bracketDiagramGroupStageTitle => 'Qualification bracket';
+
+  @override
+  String get bracketDiagramBack => 'Back';
+
+  @override
+  String bracketCrossTableRoundProgress(Object current, Object max) {
+    return 'Round $current / $max';
+  }
+
+  @override
+  String get bracketCrossTablePreviousRound => 'Previous round';
+
+  @override
+  String get bracketCrossTableNextRound => 'Next round';
+
+  @override
+  String get qrScannerInvalidCode => 'Invalid QR code';
+
+  @override
+  String get qrScannerTitle => 'Scan QR code';
+
+  @override
+  String get qrScannerVerifying => 'Verifying...';
+
+  @override
+  String get officialScoreScoringTab => 'Scoring';
+
+  @override
+  String get officialScorePenaltyTab => 'Penalties';
+
+  @override
+  String get doubleElimUpperGrandFinal => 'WINNERS BRACKET FINAL';
+
+  @override
+  String get doubleElimUpperSemifinal => 'WINNERS BRACKET SEMIFINAL';
+
+  @override
+  String get doubleElimLowerGrandFinal => 'LOSERS BRACKET FINAL';
+
+  @override
+  String get doubleElimLowerSemifinal => 'LOSERS BRACKET SEMIFINAL';
+
+  @override
+  String get liveMatchRemainingLabel => 'Remaining';
+
+  @override
+  String get teamScoreEditForbidden =>
+      'Error: You do not have permission to edit the score.';
+
+  @override
+  String get chatDetailRevokedMessage => 'This message was revoked';
+
+  @override
+  String bracketCrossTableTeamCount(Object count) {
+    return '$count teams';
+  }
+
+  @override
+  String singleElimUpdateError(Object error) {
+    return 'Unable to update the position: $error';
+  }
 }

@@ -201,6 +201,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     };
     _chatSocket.onRevoked = (data) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         final msgId = data['messageId']?.toString();
         if (msgId != null) {
           setState(() {
@@ -208,7 +209,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             if (idx != -1) {
               _messages[idx] = _messages[idx].copyWith(
                 isRevoked: true,
-                content: 'Tin nhắn đã bị thu hồi',
+                content: l10n.chatDetailRevokedMessage,
               );
             }
           });
@@ -795,11 +796,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     Navigator.pop(sheetCtx);
                     Clipboard.setData(ClipboardData(text: message.content));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          l10n!.chatCopiedFeedback,
-                        ),
-                      ),
+                      SnackBar(content: Text(l10n!.chatCopiedFeedback)),
                     );
                   },
                 ),
@@ -921,8 +918,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     final localeName = Localizations.localeOf(context).toLanguageTag();
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final title =
-        widget.roomName ?? (l10n!.chatDetailRoomFallback);
+    final title = widget.roomName ?? (l10n!.chatDetailRoomFallback);
     final memberDirectory = widget.communityId == null
         ? null
         : ref
@@ -1028,15 +1024,13 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     ),
                     Text(
                       _typingUser != null
-                          ? (l10n?.chatDetailTyping(_typingUser!) ??
-                                '${_typingUser!} is typing...')
+                          ? (l10n!.chatDetailTyping(_typingUser!))
                           : (widget.roomType == 'CLUB' ||
                                     widget.roomType == 'GROUP'
                                 ? (_onlineUserIds.isNotEmpty
-                                      ? (l10n?.chatDetailOnlineCount(
-                                              _onlineUserIds.length,
-                                            ) ??
-                                            '${_onlineUserIds.length} people online')
+                                      ? (l10n!.chatDetailOnlineCount(
+                                          _onlineUserIds.length,
+                                        ))
                                       : (l10n!.chatDetailActive))
                                 : (_participants.any(
                                         (p) =>
@@ -1074,8 +1068,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.info_outline_rounded, size: 22),
-            tooltip:
-                l10n!.chatDetailRoomSettingsTooltip,
+            tooltip: l10n!.chatDetailRoomSettingsTooltip,
             onPressed: _openRoomSettings,
           ),
         ],
@@ -1332,11 +1325,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                             left: 3,
                                           ),
                                           child: Tooltip(
-                                            message:
-                                                l10n?.chatDetailSeenBy(
-                                                  p.fullName,
-                                                ) ??
-                                                'Seen by ${p.fullName}',
+                                            message: l10n!.chatDetailSeenBy(
+                                              p.fullName,
+                                            ),
                                             child: CircleAvatar(
                                               radius: 7.5,
                                               backgroundColor:
@@ -1429,8 +1420,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               alignment: Alignment.centerLeft,
               child: Text(
-                l10n?.chatDetailTyping(_typingUser!) ??
-                    '${_typingUser!} is typing...',
+                l10n!.chatDetailTyping(_typingUser!),
                 style: TextStyle(
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
@@ -1460,8 +1450,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l10n?.chatDetailReplyTo(_replyingTo!.senderName) ??
-                              'Reply to ${_replyingTo!.senderName}',
+                          l10n!.chatDetailReplyTo(_replyingTo!.senderName),
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,

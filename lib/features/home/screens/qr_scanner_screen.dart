@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -25,8 +26,9 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   }
 
   Future<void> _handleBarcode(BarcodeCapture capture) async {
+    final l10n = AppLocalizations.of(context)!;
     if (_isProcessing) return;
-    
+
     final List<Barcode> barcodes = capture.barcodes;
     if (barcodes.isEmpty) return;
 
@@ -47,10 +49,10 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     }
 
     setState(() => _isProcessing = true);
-    
+
     // Attempt to validate token
     final success = await ref.read(authProvider.notifier).validateToken(code);
-    
+
     if (!mounted) return;
 
     if (success) {
@@ -63,7 +65,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
         UserRole.viewer => '/intro/${auth.tournamentId}',
         _ => '/home',
       };
-      
+
       // Stop scanner before navigating away
       _controller.stop();
       context.go(route);
@@ -72,11 +74,11 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       final auth = ref.read(authProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(auth.errorMessage ?? 'Mã QR không hợp lệ'),
+          content: Text(auth.errorMessage ?? l10n.qrScannerInvalidCode),
           backgroundColor: context.colors.error,
         ),
       );
-      
+
       // Wait a bit before allowing another scan
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) {
@@ -87,6 +89,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -96,33 +99,33 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Quét mã QR', style: TextStyle(color: Colors.white)),
+        title: Text(
+          l10n.qrScannerTitle,
+          style: const TextStyle(color: Colors.white),
+        ),
       ),
       body: Stack(
         children: [
-          MobileScanner(
-            controller: _controller,
-            onDetect: _handleBarcode,
-          ),
-          
+          MobileScanner(controller: _controller, onDetect: _handleBarcode),
+
           // Custom scanner overlay
           CustomPaint(
             painter: ScannerOverlayPainter(borderColor: AppTheme.primary),
             child: const SizedBox.expand(),
           ),
-          
+
           // Processing indicator
           if (_isProcessing)
             Container(
               color: Colors.black54,
-              child: const Center(
+              child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     CircularProgressIndicator(color: AppTheme.primary),
                     SizedBox(height: 16),
                     Text(
-                      'Đang xác thực...',
+                      l10n.qrScannerVerifying,
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ],
@@ -150,7 +153,7 @@ class ScannerOverlayPainter extends CustomPainter {
     final bgPaint = Paint()
       ..color = Colors.black.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
-    
+
     // Draw background with cutout
     canvas.drawPath(
       Path.combine(
@@ -178,7 +181,10 @@ class ScannerOverlayPainter extends CustomPainter {
       Path()
         ..moveTo(left, top + cornerLength)
         ..lineTo(left, top + radius)
-        ..arcToPoint(Offset(left + radius, top), radius: Radius.circular(radius))
+        ..arcToPoint(
+          Offset(left + radius, top),
+          radius: Radius.circular(radius),
+        )
         ..lineTo(left + cornerLength, top),
       borderPaint,
     );
@@ -188,7 +194,10 @@ class ScannerOverlayPainter extends CustomPainter {
       Path()
         ..moveTo(left + scanArea - cornerLength, top)
         ..lineTo(left + scanArea - radius, top)
-        ..arcToPoint(Offset(left + scanArea, top + radius), radius: Radius.circular(radius))
+        ..arcToPoint(
+          Offset(left + scanArea, top + radius),
+          radius: Radius.circular(radius),
+        )
         ..lineTo(left + scanArea, top + cornerLength),
       borderPaint,
     );
@@ -198,7 +207,10 @@ class ScannerOverlayPainter extends CustomPainter {
       Path()
         ..moveTo(left + scanArea, top + scanArea - cornerLength)
         ..lineTo(left + scanArea, top + scanArea - radius)
-        ..arcToPoint(Offset(left + scanArea - radius, top + scanArea), radius: Radius.circular(radius))
+        ..arcToPoint(
+          Offset(left + scanArea - radius, top + scanArea),
+          radius: Radius.circular(radius),
+        )
         ..lineTo(left + scanArea - cornerLength, top + scanArea),
       borderPaint,
     );
@@ -208,7 +220,10 @@ class ScannerOverlayPainter extends CustomPainter {
       Path()
         ..moveTo(left + cornerLength, top + scanArea)
         ..lineTo(left + radius, top + scanArea)
-        ..arcToPoint(Offset(left, top + scanArea - radius), radius: Radius.circular(radius))
+        ..arcToPoint(
+          Offset(left, top + scanArea - radius),
+          radius: Radius.circular(radius),
+        )
         ..lineTo(left, top + scanArea - cornerLength),
       borderPaint,
     );

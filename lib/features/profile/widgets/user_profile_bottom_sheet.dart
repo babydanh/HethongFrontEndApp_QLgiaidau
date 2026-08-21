@@ -779,11 +779,17 @@ class _UserProfileBottomSheetState
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () {
-                  Navigator.pop(context);
+                  // Capture the router before dismissing the modal. Using the
+                  // sheet context to push immediately after Navigator.pop can
+                  // reuse a disposed route element on the next profile open.
+                  final router = GoRouter.of(context);
                   final uri = widget.communityId != null
-                      ? '/profile/user/${widget.userId}?communityId=${widget.communityId}'
-                      : '/profile/user/${widget.userId}';
-                  context.push(uri);
+                      ? '/users/${widget.userId}?communityId=${widget.communityId}'
+                      : '/users/${widget.userId}';
+                  Navigator.pop(context);
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    router.push(uri);
+                  });
                 },
                 icon: const Icon(Icons.person_rounded, size: 16),
                 label: Text(

@@ -9784,4 +9784,112 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get matchTableUnassignedCourt => 'Chưa xếp sân';
+
+  @override
+  String get bracketDiagramRoundRobinTitle => 'Bảng chéo vòng tròn';
+
+  @override
+  String get bracketDiagramDoubleEliminationTitle => 'Sơ đồ nhánh thắng / thua';
+
+  @override
+  String get bracketDiagramGroupKnockoutTitle => 'Sơ đồ vòng loại';
+
+  @override
+  String get bracketDiagramDefaultTitle => 'Sơ đồ thi đấu';
+
+  @override
+  String get crossTableEmpty => 'Chưa có dữ liệu đội thi đấu';
+
+  @override
+  String crossTableError(Object error) {
+    return 'Lỗi: $error';
+  }
+
+  @override
+  String get crossTableDefaultGroup => 'Bảng A';
+
+  @override
+  String crossTableLegTitle(Object title, Object leg) {
+    return '$title - Vòng $leg';
+  }
+
+  @override
+  String get crossTablePreviousLeg => 'Vòng trước';
+
+  @override
+  String get crossTableNextLeg => 'Vòng tiếp theo';
+
+  @override
+  String crossTableLegIndicator(Object current, Object max) {
+    return 'Vòng $current / $max';
+  }
+
+  @override
+  String crossTableTeamCount(Object count) {
+    return '$count đội';
+  }
+
+  @override
+  String get bracketDiagramGroupStageTitle => 'SÆ¡ Ä‘á»“ vÃ²ng loáº¡i';
+
+  @override
+  String get bracketDiagramBack => 'Quay láº¡i';
+
+  @override
+  String bracketCrossTableRoundProgress(Object current, Object max) {
+    return 'VÃ²ng $current / $max';
+  }
+
+  @override
+  String get bracketCrossTablePreviousRound => 'VÃ²ng trÆ°á»›c';
+
+  @override
+  String get bracketCrossTableNextRound => 'VÃ²ng tiáº¿p theo';
+
+  @override
+  String get qrScannerInvalidCode => 'MÃ£ QR khÃ´ng há»£p lá»‡';
+
+  @override
+  String get qrScannerTitle => 'QuÃ©t mÃ£ QR';
+
+  @override
+  String get qrScannerVerifying => 'Äang xÃ¡c thá»±c...';
+
+  @override
+  String get officialScoreScoringTab => 'TÃ­nh Ä‘iá»ƒm';
+
+  @override
+  String get officialScorePenaltyTab => 'Pháº¡m lá»—i';
+
+  @override
+  String get doubleElimUpperGrandFinal => 'CK NHÃNH THáº®NG';
+
+  @override
+  String get doubleElimUpperSemifinal => 'BK NHÃNH THáº®NG';
+
+  @override
+  String get doubleElimLowerGrandFinal => 'CK NHÃNH THUA';
+
+  @override
+  String get doubleElimLowerSemifinal => 'BK NHÃNH THUA';
+
+  @override
+  String get liveMatchRemainingLabel => 'CÃ²n láº¡i';
+
+  @override
+  String get teamScoreEditForbidden =>
+      'Lá»—i: Báº¡n khÃ´ng cÃ³ quyá»n sá»­a Ä‘iá»ƒm.';
+
+  @override
+  String get chatDetailRevokedMessage => 'Tin nháº¯n Ä‘Ã£ bá»‹ thu há»“i';
+
+  @override
+  String bracketCrossTableTeamCount(Object count) {
+    return '$count Ä‘á»™i';
+  }
+
+  @override
+  String singleElimUpdateError(Object error) {
+    return 'KhÃ´ng thá»ƒ cáº­p nháº­t vá»‹ trÃ­: $error';
+  }
 }

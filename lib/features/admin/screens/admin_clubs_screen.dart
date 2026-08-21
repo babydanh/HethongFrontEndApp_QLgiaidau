@@ -88,7 +88,11 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
         decoration: InputDecoration(
           hintText: l10n.adminClubsSearchHint,
           hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
-          prefixIcon: Icon(Icons.search_rounded, color: colors.textMuted, size: 20),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            color: colors.textMuted,
+            size: 20,
+          ),
           filled: true,
           fillColor: colors.bgCard,
           border: OutlineInputBorder(
@@ -126,7 +130,9 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
               decoration: BoxDecoration(
                 color: selected ? f.$3.withValues(alpha: 0.12) : colors.bgCard,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: selected ? f.$3.withValues(alpha: 0.4) : colors.border),
+                border: Border.all(
+                  color: selected ? f.$3.withValues(alpha: 0.4) : colors.border,
+                ),
               ),
               child: Text(
                 f.$2,
@@ -152,9 +158,17 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
       data: (clubs) {
         final filtered = clubs.where((c) {
           if (_statusFilter != 'all') {
-            if (_statusFilter == 'INACTIVE' && (c.status == 'INACTIVE' || c.status == 'REJECTED' || c.status == 'DEACTIVATED' || c.status == 'SUSPENDED')) {
+            if (_statusFilter == 'INACTIVE' &&
+                (c.status == 'INACTIVE' ||
+                    c.status == 'REJECTED' ||
+                    c.status == 'DEACTIVATED' ||
+                    c.status == 'SUSPENDED')) {
               // match
-            } else if (_statusFilter == 'REJECTED' && (c.status == 'REJECTED' || c.status == 'INACTIVE' || c.status == 'DEACTIVATED' || c.status == 'SUSPENDED')) {
+            } else if (_statusFilter == 'REJECTED' &&
+                (c.status == 'REJECTED' ||
+                    c.status == 'INACTIVE' ||
+                    c.status == 'DEACTIVATED' ||
+                    c.status == 'SUSPENDED')) {
               // match
             } else if (c.status != _statusFilter) {
               return false;
@@ -181,7 +195,8 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                 itemCount: filtered.length,
-                itemBuilder: (context, i) => _buildClubCard(context, filtered[i], colors),
+                itemBuilder: (context, i) =>
+                    _buildClubCard(context, filtered[i], colors),
               ),
             ),
           ],
@@ -194,14 +209,25 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
           children: [
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
-            Text(l10n.adminClubsLoadError, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+            Text(
+              l10n.adminClubsLoadError,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: colors.textPrimary,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatsRow(AppColorsExtension colors, List<Community> clubs, AppLocalizations l10n) {
+  Widget _buildStatsRow(
+    AppColorsExtension colors,
+    List<Community> clubs,
+    AppLocalizations l10n,
+  ) {
     final active = clubs.where((c) => c.status == 'ACTIVE').length;
     final pending = clubs.where((c) => c.status == 'PENDING').length;
     final rejected = clubs.where((c) => c.status == 'REJECTED').length;
@@ -210,19 +236,44 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          _statChip(colors, l10n?.adminClubsStatTotal ?? 'Total', '${clubs.length}', colors.textPrimary),
+          _statChip(
+            colors,
+            l10n.adminClubsStatTotal,
+            '${clubs.length}',
+            colors.textPrimary,
+          ),
           const SizedBox(width: 8),
-          _statChip(colors, l10n?.adminClubsStatActive ?? 'Active', '$active', const Color(0xFF10B981)),
+          _statChip(
+            colors,
+            l10n.adminClubsStatActive,
+            '$active',
+            const Color(0xFF10B981),
+          ),
           const SizedBox(width: 8),
-          _statChip(colors, l10n?.adminClubsStatPending ?? 'Pending', '$pending', const Color(0xFFF59E0B)),
+          _statChip(
+            colors,
+            l10n.adminClubsStatPending,
+            '$pending',
+            const Color(0xFFF59E0B),
+          ),
           const SizedBox(width: 8),
-          _statChip(colors, l10n?.adminClubsStatRejected ?? 'Rejected', '$rejected', const Color(0xFFEF4444)),
+          _statChip(
+            colors,
+            l10n.adminClubsStatRejected,
+            '$rejected',
+            const Color(0xFFEF4444),
+          ),
         ],
       ),
     );
   }
 
-  Widget _statChip(AppColorsExtension colors, String label, String value, Color color) {
+  Widget _statChip(
+    AppColorsExtension colors,
+    String label,
+    String value,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -233,27 +284,45 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
         ),
         child: Column(
           children: [
-            Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: color)),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: color,
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(label, style: TextStyle(fontSize: 10, color: colors.textMuted, fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: colors.textMuted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-    Widget _buildClubCard(BuildContext context, Community club, AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context);
+  Widget _buildClubCard(
+    BuildContext context,
+    Community club,
+    AppColorsExtension colors,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
     final statusColor = club.status == 'ACTIVE'
         ? const Color(0xFF10B981)
         : club.status == 'PENDING'
-            ? const Color(0xFFF59E0B)
-            : const Color(0xFFEF4444);
+        ? const Color(0xFFF59E0B)
+        : const Color(0xFFEF4444);
     final statusLabel = club.status == 'ACTIVE'
-        ? (l10n?.adminClubsStatusActive ?? 'Active')
+        ? l10n.adminClubsStatusActive
         : club.status == 'PENDING'
-            ? (l10n?.adminClubsStatusPending ?? 'Pending')
-            : (l10n?.adminClubsStatusRejected ?? 'Rejected');
+        ? l10n.adminClubsStatusPending
+        : l10n.adminClubsStatusRejected;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -269,15 +338,22 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
           Row(
             children: [
               Container(
-                width: 48, height: 48,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [AppTheme.primary, AppTheme.primaryLight]),
+                  gradient: const LinearGradient(
+                    colors: [AppTheme.primary, AppTheme.primaryLight],
+                  ),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Center(
                   child: Text(
                     (club.name.isNotEmpty ? club.name[0] : '?').toUpperCase(),
-                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),
@@ -286,22 +362,50 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(club.name, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: colors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
-                    if (club.description != null && club.description!.isNotEmpty)
+                    Text(
+                      club.name,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (club.description != null &&
+                        club.description!.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
-                        child: Text(club.description!, style: TextStyle(fontSize: 11, color: colors.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        child: Text(
+                          club.description!,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colors.textMuted,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(statusLabel, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: statusColor)),
+                child: Text(
+                  statusLabel,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: statusColor,
+                  ),
+                ),
               ),
             ],
           ),
@@ -310,13 +414,26 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
             children: [
               Icon(Icons.group_outlined, size: 14, color: colors.textMuted),
               const SizedBox(width: 4),
-              Text(l10n?.adminClubsMembers(club.memberCount) ?? '${club.memberCount} members', style: TextStyle(fontSize: 11, color: colors.textMuted)),
+              Text(
+                l10n.adminClubsMembers(club.memberCount),
+                style: TextStyle(fontSize: 11, color: colors.textMuted),
+              ),
               const SizedBox(width: 16),
-              if (club.locationAddress != null && club.locationAddress!.isNotEmpty) ...[
-                Icon(Icons.location_on_outlined, size: 14, color: colors.textMuted),
+              if (club.locationAddress != null &&
+                  club.locationAddress!.isNotEmpty) ...[
+                Icon(
+                  Icons.location_on_outlined,
+                  size: 14,
+                  color: colors.textMuted,
+                ),
                 const SizedBox(width: 4),
                 Flexible(
-                  child: Text(club.locationAddress!, style: TextStyle(fontSize: 11, color: colors.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  child: Text(
+                    club.locationAddress!,
+                    style: TextStyle(fontSize: 11, color: colors.textMuted),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ],
@@ -329,7 +446,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
               Expanded(
                 child: _actionBtn(
                   icon: Icons.visibility_rounded,
-                  label: l10n?.adminClubsView ?? 'View',
+                  label: l10n.adminClubsView,
                   color: AppTheme.primary,
                   onTap: () => context.push('/club/${club.id}'),
                 ),
@@ -340,7 +457,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
                 Expanded(
                   child: _actionBtn(
                     icon: Icons.check_rounded,
-                    label: l10n?.adminClubsApprove ?? 'Approve',
+                    label: l10n.adminClubsApprove,
                     color: const Color(0xFF10B981),
                     onTap: () => _handleAction(club.id, 'APPROVED', colors),
                   ),
@@ -380,64 +497,96 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
         decoration: BoxDecoration(
           color: outlined ? Colors.transparent : color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
-          border: outlined ? Border.all(color: color.withValues(alpha: 0.3)) : null,
+          border: outlined
+              ? Border.all(color: color.withValues(alpha: 0.3))
+              : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 14, color: outlined ? color : color),
             const SizedBox(width: 4),
-            Text(label, style: TextStyle(
-              fontSize: 11, fontWeight: FontWeight.w800,
-              color: outlined ? color : color,
-            )),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: outlined ? color : color,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _handleAction(String clubId, String status, AppColorsExtension colors) async {
-    final l10n = AppLocalizations.of(context);
+  Future<void> _handleAction(
+    String clubId,
+    String status,
+    AppColorsExtension colors,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
-      await ref.read(communityRepositoryProvider).reviewCommunity(clubId, status);
+      await ref
+          .read(communityRepositoryProvider)
+          .reviewCommunity(clubId, status);
       ref.invalidate(_adminClubsProvider);
       invalidateCommunityCollections(ref);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(status == 'APPROVED'
-              ? (l10n.adminClubsApprovedFeedback)
-              : (l10n.adminClubsUpdatedFeedback)),
-          backgroundColor: const Color(0xFF10B981),
-          behavior: SnackBarBehavior.floating,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              status == 'APPROVED'
+                  ? (l10n.adminClubsApprovedFeedback)
+                  : (l10n.adminClubsUpdatedFeedback),
+            ),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n.adminClubsActionError),
-          backgroundColor: context.colors.error,
-          behavior: SnackBarBehavior.floating,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.adminClubsActionError),
+            backgroundColor: context.colors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }
 
-  void _showRejectDialog(BuildContext context, Community club, AppColorsExtension colors) {
+  void _showRejectDialog(
+    BuildContext context,
+    Community club,
+    AppColorsExtension colors,
+  ) {
     final controller = TextEditingController();
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: colors.bgCard,
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.orange,
+              size: 22,
+            ),
             const SizedBox(width: 8),
-            Text(club.status == 'PENDING'
-                ? (l10n?.adminClubsRejectTitle ?? 'Reject club')
-                : (l10n?.adminClubsDisableTitle ?? 'Disable club'),
-                style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w700, fontSize: 18)),
+            Text(
+              club.status == 'PENDING'
+                  ? l10n.adminClubsRejectTitle
+                  : l10n.adminClubsDisableTitle,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+              ),
+            ),
           ],
         ),
         content: TextField(
@@ -456,39 +605,50 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n?.adminClubsCancel ?? 'Cancel'),
+            child: Text(l10n.adminClubsCancel),
           ),
           ElevatedButton(
             onPressed: () async {
               if (controller.text.trim().isEmpty) return;
               try {
-                await ref.read(communityRepositoryProvider).reviewCommunity(
-                  club.id,
-                  club.status == 'PENDING' ? 'REJECTED' : 'REJECTED',
-                  rejectedReason: controller.text.trim(),
-                );
+                await ref
+                    .read(communityRepositoryProvider)
+                    .reviewCommunity(
+                      club.id,
+                      club.status == 'PENDING' ? 'REJECTED' : 'REJECTED',
+                      rejectedReason: controller.text.trim(),
+                    );
                 ref.invalidate(_adminClubsProvider);
                 invalidateCommunityCollections(ref);
                 if (ctx.mounted) Navigator.pop(ctx);
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(l10n.adminClubsRejectError),
-                    backgroundColor: context.colors.error,
-                    behavior: SnackBarBehavior.floating,
-                  ));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.adminClubsRejectError),
+                      backgroundColor: context.colors.error,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
                 }
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(l10n?.adminClubsConfirm ?? 'Confirm', style: const TextStyle(color: Colors.white)),
+            child: Text(
+              l10n.adminClubsConfirm,
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEmpty(AppColorsExtension colors, String filter, AppLocalizations l10n) {
+  Widget _buildEmpty(
+    AppColorsExtension colors,
+    String filter,
+    AppLocalizations l10n,
+  ) {
     String message;
     if (filter == 'all') {
       message = l10n.adminClubsEmptyAll;
@@ -503,9 +663,20 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.groups_rounded, size: 64, color: colors.textMuted.withValues(alpha: 0.4)),
+          Icon(
+            Icons.groups_rounded,
+            size: 64,
+            color: colors.textMuted.withValues(alpha: 0.4),
+          ),
           const SizedBox(height: 16),
-          Text(message, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+          Text(
+            message,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
         ],
       ),
     );
@@ -515,10 +686,15 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
 // Provider: lấy tất cả CLB (admin)
 final _adminClubsProvider = FutureProvider<List<Community>>((ref) async {
   final dio = ref.read(dioProvider);
-  final response = await dio.get('/communities', queryParameters: {'limit': 200, 'all': true});
+  final response = await dio.get(
+    '/communities',
+    queryParameters: {'limit': 200, 'all': true},
+  );
   if (response.statusCode == 200) {
     final data = response.data['data'] as List<dynamic>? ?? [];
-    return data.map((e) => Community.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => Community.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
   return [];
 });

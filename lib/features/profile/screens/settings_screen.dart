@@ -231,9 +231,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                   Icons.photo_library_rounded,
                   color: AppTheme.primary,
                 ),
-                title: Text(
-                  l10n!.profileChooseFromGallery,
-                ),
+                title: Text(l10n!.profileChooseFromGallery),
                 onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
               ),
               const SizedBox(height: 12),
@@ -358,20 +356,12 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 if (!ctx.mounted) return;
                 Navigator.of(ctx).pop();
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      l10n!.settingsRequestSent,
-                    ),
-                  ),
+                  SnackBar(content: Text(l10n!.settingsRequestSent)),
                 );
               } catch (e) {
                 if (!ctx.mounted) return;
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      l10n!.settingsRequestFailed,
-                    ),
-                  ),
+                  SnackBar(content: Text(l10n!.settingsRequestFailed)),
                 );
               } finally {
                 if (ctx.mounted) setState(() => isSubmitting = false);
@@ -380,9 +370,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
 
             return AlertDialog(
               backgroundColor: context.colors.bgCard,
-              title: Text(
-                l10n!.settingsGenderChangeTitle,
-              ),
+              title: Text(l10n!.settingsGenderChangeTitle),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,8 +383,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                   DropdownButtonFormField<String>(
                     initialValue: requestedGender,
                     decoration: InputDecoration(
-                      labelText:
-                          l10n!.settingsDesiredGender,
+                      labelText: l10n!.settingsDesiredGender,
                       border: const OutlineInputBorder(),
                     ),
                     items: [
@@ -475,9 +462,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.settingsSaveChanges,
-            ),
+            content: Text(AppLocalizations.of(context)!.settingsSaveChanges),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -574,12 +559,9 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 prefixIcon: Icons.person_outline,
                 validator: (v) {
                   final value = v?.trim() ?? '';
-                  if (value.isEmpty)
-                    return l10n!.settingsFullNameRequired;
-                  if (value.length < 2)
-                    return l10n!.settingsFullNameMin;
-                  if (value.length > 100)
-                    return l10n!.settingsFullNameMax;
+                  if (value.isEmpty) return l10n!.settingsFullNameRequired;
+                  if (value.length < 2) return l10n!.settingsFullNameMin;
+                  if (value.length > 100) return l10n!.settingsFullNameMax;
                   return null;
                 },
               ),
@@ -617,10 +599,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               const SizedBox(height: 6),
               _genderField(colors, genderLocked),
               const SizedBox(height: 16),
-              _fieldLabel(
-                colors,
-                l10n!.settingsCompetitionRegion,
-              ),
+              _fieldLabel(colors, l10n!.settingsCompetitionRegion),
               const SizedBox(height: 6),
               _provinceField(colors),
               const SizedBox(height: 4),
@@ -629,19 +608,14 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 style: TextStyle(fontSize: 11, color: colors.textMuted),
               ),
               const SizedBox(height: 16),
-              _fieldLabel(
-                colors,
-                l10n!.settingsDetailedAddress,
-              ),
+              _fieldLabel(colors, l10n!.settingsDetailedAddress),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _addressCtrl,
-                hint:
-                    l10n!.settingsDetailedAddressHint,
+                hint: l10n!.settingsDetailedAddressHint,
                 prefixIcon: Icons.location_on_outlined,
-                validator: (v) => (v ?? '').length > 255
-                    ? l10n!.settingsAddressMax
-                    : null,
+                validator: (v) =>
+                    (v ?? '').length > 255 ? l10n!.settingsAddressMax : null,
               ),
               if (_autoDetectedProvinceName != null &&
                   _provinceCode.isNotEmpty) ...[
@@ -655,8 +629,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      l10n?.settingsAutoDetected(_autoDetectedProvinceName!) ??
-                          'Automatically detected: $_autoDetectedProvinceName',
+                      l10n!.settingsAutoDetected(_autoDetectedProvinceName!),
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -671,13 +644,11 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _bioCtrl,
-                hint:
-                    l10n!.settingsBioHint,
+                hint: l10n!.settingsBioHint,
                 maxLines: 3,
                 prefixIcon: Icons.edit_note_rounded,
-                validator: (v) => (v ?? '').length > 500
-                    ? l10n!.settingsBioMax
-                    : null,
+                validator: (v) =>
+                    (v ?? '').length > 500 ? l10n!.settingsBioMax : null,
               ),
               const SizedBox(height: 24),
               _saveButton(context, _isLoading, () => _save(genderLocked)),
@@ -858,7 +829,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
   }
 
   Widget _dobField(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return InkWell(
       onTap: _pickDob,
       borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -877,16 +848,12 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
             Expanded(
               child: Text(
                 _dob == null
-                    ? (AppLocalizations.of(
-                            context,
-                          )?.settingsChooseDateOfBirth ??
-                          'Choose date of birth')
-                    : (l10n?.settingsDobDisplay(
-                            _dob!.day.toString().padLeft(2, '0'),
-                            _dob!.month.toString().padLeft(2, '0'),
-                            _dob!.year.toString(),
-                          ) ??
-                          '${_dob!.day.toString().padLeft(2, '0')}/${_dob!.month.toString().padLeft(2, '0')}/${_dob!.year}'),
+                    ? l10n.settingsChooseDateOfBirth
+                    : l10n.settingsDobDisplay(
+                        _dob!.day.toString().padLeft(2, '0'),
+                        _dob!.month.toString().padLeft(2, '0'),
+                        _dob!.year.toString(),
+                      ),
                 style: TextStyle(
                   fontSize: 14,
                   color: _dob == null ? colors.textMuted : colors.textPrimary,
@@ -1138,9 +1105,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              l10n!.settingsRefundSaved,
-            ),
+            content: Text(l10n!.settingsRefundSaved),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -1151,9 +1116,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              l10n!.settingsBankUpdateError,
-            ),
+            content: Text(l10n!.settingsBankUpdateError),
             backgroundColor: context.colors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -1193,9 +1156,8 @@ class _BankTabState extends ConsumerState<_BankTab> {
 
   Widget _buildForm(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context);
-    final noBank = l10n?.settingsNoBank ?? _noBank;
-    String walletPrefix(String wallet) =>
-        l10n?.settingsWalletPrefix(wallet) ?? 'Wallet $wallet';
+    final noBank = l10n!.settingsNoBank;
+    String walletPrefix(String wallet) => l10n!.settingsWalletPrefix(wallet);
     final bankOptions = [noBank, ..._wallets.map(walletPrefix), ..._banks];
     // Giá trị đã lưu ngoài danh sách (nhập tay từ trước) — thêm vào cuối để không mất.
     final isKnown =
@@ -1220,10 +1182,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
             _infoBanner(colors),
             const SizedBox(height: 20),
             _card(colors, [
-              _fieldLabel(
-                colors,
-                l10n!.settingsPayoutMethod,
-              ),
+              _fieldLabel(colors, l10n!.settingsPayoutMethod),
               const SizedBox(height: 6),
               _dropdown(colors, currentLabel, bankOptions, (v) {
                 if (v == null) return;
@@ -1259,15 +1218,11 @@ class _BankTabState extends ConsumerState<_BankTab> {
                 prefixIcon: Icons.numbers_rounded,
               ),
               const SizedBox(height: 16),
-              _fieldLabel(
-                colors,
-                l10n!.settingsAccountHolder,
-              ),
+              _fieldLabel(colors, l10n!.settingsAccountHolder),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _accountNameCtrl,
-                hint:
-                    l10n!.settingsAccountHolderHint,
+                hint: l10n!.settingsAccountHolderHint,
                 prefixIcon: Icons.person_rounded,
                 onChanged: (value) {
                   final normalized = _normalizeAccountName(value);
@@ -1350,11 +1305,7 @@ class _SecurityTab extends ConsumerWidget {
               final password = passwordCtrl.text;
               if (password.isEmpty) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      l10n!.settingsPasswordRequired,
-                    ),
-                  ),
+                  SnackBar(content: Text(l10n!.settingsPasswordRequired)),
                 );
                 return;
               }
@@ -1369,11 +1320,7 @@ class _SecurityTab extends ConsumerWidget {
               } catch (e) {
                 if (!ctx.mounted) return;
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      l10n!.settingsDeleteFailed,
-                    ),
-                  ),
+                  SnackBar(content: Text(l10n!.settingsDeleteFailed)),
                 );
               } finally {
                 if (ctx.mounted) setState(() => isDeleting = false);
@@ -1386,11 +1333,7 @@ class _SecurityTab extends ConsumerWidget {
                 children: [
                   Icon(Icons.warning_amber_rounded, color: colors.error),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n!.settingsConfirmDeleteTitle,
-                    ),
-                  ),
+                  Expanded(child: Text(l10n!.settingsConfirmDeleteTitle)),
                 ],
               ),
               content: Column(
@@ -1407,8 +1350,7 @@ class _SecurityTab extends ConsumerWidget {
                     enabled: !isDeleting,
                     obscureText: obscure,
                     decoration: InputDecoration(
-                      labelText:
-                          l10n!.settingsConfirmPassword,
+                      labelText: l10n!.settingsConfirmPassword,
                       suffixIcon: IconButton(
                         icon: Icon(
                           obscure
@@ -1466,10 +1408,7 @@ class _SecurityTab extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Trạng thái xác thực
-          _sectionTitle(
-            colors,
-            l10n!.settingsVerificationStatus,
-          ),
+          _sectionTitle(colors, l10n!.settingsVerificationStatus),
           const SizedBox(height: 10),
           _card(colors, [
             ...profileAsync.when(
@@ -1490,8 +1429,7 @@ class _SecurityTab extends ConsumerWidget {
                   title: l10n!.infoPhone,
                   verified: profile.isPhoneVerified == true,
                   fallbackText:
-                      profile.phoneNumber ??
-                      (l10n!.settingsPhoneNotUpdated),
+                      profile.phoneNumber ?? (l10n!.settingsPhoneNotUpdated),
                 ),
                 if (profile.isEmailVerified != true) ...[
                   _divider(colors),
@@ -1499,8 +1437,7 @@ class _SecurityTab extends ConsumerWidget {
                     colors,
                     icon: Icons.mark_email_unread_rounded,
                     title: l10n!.settingsVerifyEmail,
-                    subtitle:
-                        l10n!.settingsVerifyEmailSubtitle,
+                    subtitle: l10n!.settingsVerifyEmailSubtitle,
                     onTap: () => startEmailVerificationFlow(
                       context,
                       ref,
@@ -1514,8 +1451,7 @@ class _SecurityTab extends ConsumerWidget {
                     colors,
                     icon: Icons.sms_rounded,
                     title: l10n!.settingsVerifyPhone,
-                    subtitle:
-                        l10n!.settingsVerifyPhoneSubtitle,
+                    subtitle: l10n!.settingsVerifyPhoneSubtitle,
                     onTap: () => startPhoneVerificationFlow(
                       context,
                       ref,
@@ -1551,8 +1487,7 @@ class _SecurityTab extends ConsumerWidget {
               colors,
               icon: Icons.lock_outline_rounded,
               title: l10n!.settingsChangePassword,
-              subtitle:
-                  l10n!.settingsChangePasswordSubtitle,
+              subtitle: l10n!.settingsChangePasswordSubtitle,
               onTap: () => context.push('/profile/change-password'),
             ),
             _divider(colors),
@@ -1560,8 +1495,7 @@ class _SecurityTab extends ConsumerWidget {
               colors,
               icon: Icons.security_rounded,
               title: l10n!.settingsStrongPassword,
-              subtitle:
-                  l10n!.settingsStrongPasswordSubtitle,
+              subtitle: l10n!.settingsStrongPasswordSubtitle,
               trailing: Icon(
                 Icons.check_circle_rounded,
                 color: colors.success,
@@ -1611,18 +1545,14 @@ class _SecurityTab extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Báo cáo của tôi
-          _sectionTitle(
-            colors,
-            l10n!.settingsCommunitySafety,
-          ),
+          _sectionTitle(colors, l10n!.settingsCommunitySafety),
           const SizedBox(height: 10),
           _card(colors, [
             _actionRow(
               colors,
               icon: Icons.flag_outlined,
               title: l10n!.settingsMyReports,
-              subtitle:
-                  l10n!.settingsMyReportsSubtitle,
+              subtitle: l10n!.settingsMyReportsSubtitle,
               onTap: () => context.push('/profile/reports'),
             ),
           ]),
@@ -1887,11 +1817,7 @@ class _ClubNotificationSettingsCardState
           );
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              l10n!.settingsNotificationsUpdateFailed,
-            ),
-          ),
+          SnackBar(content: Text(l10n!.settingsNotificationsUpdateFailed)),
         );
       }
     } finally {
@@ -1909,10 +1835,7 @@ class _ClubNotificationSettingsCardState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionTitle(
-          colors,
-          l10n!.settingsClubNotifications,
-        ),
+        _sectionTitle(colors, l10n!.settingsClubNotifications),
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
@@ -2048,11 +1971,14 @@ class _ClubNotificationSettingsCardState
                                     const SizedBox(height: 2),
                                     Text(
                                       club.notificationPreference == 'ALL'
-                                          ? (l10n!.settingsClubNotificationAllSummary)
+                                          ? (l10n!
+                                                .settingsClubNotificationAllSummary)
                                           : club.notificationPreference ==
                                                 'MENTIONS_ONLY'
-                                          ? (l10n!.settingsClubNotificationMentionsSummary)
-                                          : (l10n!.settingsClubNotificationMutedSummary),
+                                          ? (l10n!
+                                                .settingsClubNotificationMentionsSummary)
+                                          : (l10n!
+                                                .settingsClubNotificationMutedSummary),
                                       style: TextStyle(
                                         fontSize: 11,
                                         color: colors.textSecondary,
@@ -2097,8 +2023,7 @@ class _ClubNotificationSettingsCardState
                               const SizedBox(width: 6),
                               Expanded(
                                 child: _buildSegmentButton(
-                                  title:
-                                      l10n!.settingsNotificationMentions,
+                                  title: l10n!.settingsNotificationMentions,
                                   icon: Icons.alternate_email_rounded,
                                   isSelected:
                                       club.notificationPreference ==
@@ -2116,8 +2041,7 @@ class _ClubNotificationSettingsCardState
                               const SizedBox(width: 6),
                               Expanded(
                                 child: _buildSegmentButton(
-                                  title:
-                                      l10n!.settingsNotificationMuted,
+                                  title: l10n!.settingsNotificationMuted,
                                   icon: Icons.notifications_off_outlined,
                                   isSelected:
                                       club.notificationPreference == 'MUTED',

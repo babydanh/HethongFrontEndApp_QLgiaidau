@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class CrossTableView extends ConsumerStatefulWidget {
   final List<MatchModel> matches;
@@ -29,6 +30,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final standingsAsync = ref.watch(
       standingsWithDivisionProvider((
         tournamentId: widget.tournamentId,
@@ -39,17 +41,21 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
     return standingsAsync.when(
       data: (standings) {
         if (standings.isEmpty) {
-          return _buildEmptyState(context, 'Chưa có dữ liệu đội thi đấu');
+          return _buildEmptyState(context, l10n.crossTableEmpty);
         }
 
-        final groupedStandings = _groupStandings(standings);
-        final matchSnapshot = ref.watch(matchesWithDivisionProvider((
-          tournamentId: widget.tournamentId,
-          divisionId: widget.divisionId,
-        ))).maybeWhen(
-          data: (matches) => matches,
-          orElse: () => widget.matches,
-        );
+        final groupedStandings = _groupStandings(standings, l10n);
+        final matchSnapshot = ref
+            .watch(
+              matchesWithDivisionProvider((
+                tournamentId: widget.tournamentId,
+                divisionId: widget.divisionId,
+              )),
+            )
+            .maybeWhen(
+              data: (matches) => matches,
+              orElse: () => widget.matches,
+            );
         final groupNames = groupedStandings.keys.toList()..sort();
 
         return ListView.builder(
@@ -66,13 +72,19 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
               groupNames.length == 1,
               matchSnapshot,
             );
-            final maxLeg = allGroupMatches.fold<int>(widget.configuredLegs.clamp(1, 5), (currentMax, match) {
-              final leg = _legForMatch(match, groupRows.length);
-              return leg > currentMax ? leg : currentMax;
-            });
+            final maxLeg = allGroupMatches.fold<int>(
+              widget.configuredLegs.clamp(1, 5),
+              (currentMax, match) {
+                final leg = _legForMatch(match, groupRows.length);
+                return leg > currentMax ? leg : currentMax;
+              },
+            );
             final currentLeg = (_groupLegs[groupName] ?? 1).clamp(1, maxLeg);
             final groupMatches = allGroupMatches
-                .where((match) => _legForMatch(match, groupRows.length) == currentLeg)
+                .where(
+                  (match) =>
+                      _legForMatch(match, groupRows.length) == currentLeg,
+                )
                 .toList();
 
             return Padding(
@@ -80,16 +92,19 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
                 bottom: index == groupNames.length - 1 ? 0 : 20,
               ),
               child: _GroupCrossTable(
+                l10n: l10n,
                 title: groupName,
                 standings: groupRows,
                 matches: groupMatches,
                 currentLeg: currentLeg,
                 maxLeg: maxLeg,
                 onPrevLeg: currentLeg > 1
-                    ? () => setState(() => _groupLegs[groupName] = currentLeg - 1)
+                    ? () =>
+                          setState(() => _groupLegs[groupName] = currentLeg - 1)
                     : null,
                 onNextLeg: currentLeg < maxLeg
-                    ? () => setState(() => _groupLegs[groupName] = currentLeg + 1)
+                    ? () =>
+                          setState(() => _groupLegs[groupName] = currentLeg + 1)
                     : null,
               ),
             );
@@ -106,7 +121,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
             Icon(Icons.error_outline, size: 48, color: context.colors.error),
             const SizedBox(height: 12),
             Text(
-              'Lỗi: $e',
+              l10n.crossTableError(e.toString()),
               style: TextStyle(
                 color: context.colors.textSecondary,
                 fontSize: 14,
@@ -118,12 +133,15 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
     );
   }
 
-  Map<String, List<Standing>> _groupStandings(List<Standing> standings) {
+  Map<String, List<Standing>> _groupStandings(
+    List<Standing> standings,
+    AppLocalizations l10n,
+  ) {
     final grouped = <String, List<Standing>>{};
     for (final standing in standings) {
       final groupName = standing.group.trim().isNotEmpty
           ? standing.group.trim()
-          : 'Bảng A';
+          : l10n.crossTableDefaultGroup;
       grouped.putIfAbsent(groupName, () => []).add(standing);
     }
     return grouped;
@@ -179,7 +197,9 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
     // Backend stores roundNumber continuously across legs (for example
     // rounds 1..3 are leg 1 and 4..6 are leg 2). Treating roundNumber as the
     // leg made the second leg reuse the first leg's matrix/score selection.
-    final slots = participantCount.isOdd ? participantCount + 1 : participantCount;
+    final slots = participantCount.isOdd
+        ? participantCount + 1
+        : participantCount;
     final roundsPerLeg = (slots - 1).clamp(1, 1000);
     final round = match.round < 1 ? 1 : match.round;
     return ((round - 1) ~/ roundsPerLeg) + 1;
@@ -207,6 +227,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
 }
 
 class _GroupCrossTable extends StatelessWidget {
+  final AppLocalizations l10n;
   final String title;
   final List<Standing> standings;
   final List<MatchModel> matches;
@@ -216,6 +237,7 @@ class _GroupCrossTable extends StatelessWidget {
   final VoidCallback? onNextLeg;
 
   const _GroupCrossTable({
+    required this.l10n,
     required this.title,
     required this.standings,
     required this.matches,
@@ -267,7 +289,11 @@ class _GroupCrossTable extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    maxLeg > 1 ? '$title - VÒNG $currentLeg'.toUpperCase() : title.toUpperCase(),
+                    maxLeg > 1
+                        ? l10n
+                              .crossTableLegTitle(title, currentLeg)
+                              .toUpperCase()
+                        : title.toUpperCase(),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -280,22 +306,30 @@ class _GroupCrossTable extends StatelessWidget {
                   IconButton(
                     iconSize: 18,
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                    tooltip: 'Vòng trước',
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
+                    ),
+                    tooltip: l10n.crossTablePreviousLeg,
                     onPressed: onPrevLeg,
                     icon: Icon(
                       Icons.chevron_left_rounded,
-                      color: onPrevLeg != null ? AppTheme.primary : colors.textMuted.withValues(alpha: 0.3),
+                      color: onPrevLeg != null
+                          ? AppTheme.primary
+                          : colors.textMuted.withValues(alpha: 0.3),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      'Vòng $currentLeg / $maxLeg',
+                      l10n.crossTableLegIndicator(currentLeg, maxLeg),
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -306,18 +340,23 @@ class _GroupCrossTable extends StatelessWidget {
                   IconButton(
                     iconSize: 18,
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                    tooltip: 'Vòng tiếp theo',
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
+                    ),
+                    tooltip: l10n.crossTableNextLeg,
                     onPressed: onNextLeg,
                     icon: Icon(
                       Icons.chevron_right_rounded,
-                      color: onNextLeg != null ? AppTheme.primary : colors.textMuted.withValues(alpha: 0.3),
+                      color: onNextLeg != null
+                          ? AppTheme.primary
+                          : colors.textMuted.withValues(alpha: 0.3),
                     ),
                   ),
                   const SizedBox(width: 8),
                 ],
                 Text(
-                  '${standings.length} đội',
+                  l10n.crossTableTeamCount(standings.length),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -582,8 +621,8 @@ class _GroupCrossTable extends StatelessWidget {
   _MatchResult _resultFor(MatchModel match, String participantId) {
     if (match.winnerId.isNotEmpty) {
       return match.winnerId == participantId
-        ? _MatchResult.win
-        : _MatchResult.loss;
+          ? _MatchResult.win
+          : _MatchResult.loss;
     }
     final goals = _footballGoals(match);
     final score1 = goals?.$1 ?? match.score1;
@@ -606,7 +645,8 @@ class _GroupCrossTable extends StatelessWidget {
     final p2 = football['team2Goals'] ?? football['p2Goals'];
     final score1 = p1 is num ? p1.toInt() : int.tryParse(p1?.toString() ?? '');
     final score2 = p2 is num ? p2.toInt() : int.tryParse(p2?.toString() ?? '');
-    if (score1 == null || score2 == null || score1 < 0 || score2 < 0) return null;
+    if (score1 == null || score2 == null || score1 < 0 || score2 < 0)
+      return null;
     return (score1, score2);
   }
 }

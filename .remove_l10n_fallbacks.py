@@ -13,6 +13,13 @@ files = [
     'lib/features/profile/screens/settings_screen.dart',
     'lib/core/widgets/app_share_modal.dart',
     'lib/core/widgets/app_update_gate.dart',
+    'lib/core/widgets/countdown_timer.dart',
+    'lib/features/home/widgets/explore_tab.dart',
+    'lib/features/chat/widgets/chat_image_viewer.dart',
+    'lib/features/profile/widgets/language_setting_card.dart',
+    'lib/features/admin/screens/transactions_screen.dart',
+    'lib/features/admin/screens/pending_clubs_screen.dart',
+    'lib/features/admin/screens/disputes_screen.dart',
 ]
 pattern = re.compile(r"l10n\?\.(\w+)\s*\?\?\s*('[^'\n]*'|\"[^\"\n]*\")")
 for rel in files:

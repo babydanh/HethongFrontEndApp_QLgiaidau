@@ -1,0 +1,844 @@
+﻿
+  lib\core\router\app_router.dart:361:        builder: (context, state) {
+  lib\core\router\app_router.dart:362:          final id = 
+state.pathParameters['id']!;
+> lib\core\router\app_router.dart:363:          return UserProfileScreen(
+  lib\core\router\app_router.dart:364:            userId: id,
+  lib\core\router\app_router.dart:365:            communityId: 
+state.uri.queryParameters['communityId'],
+  lib\core\router\app_router.dart:366:          );
+  lib\core\router\app_router.dart:371:        builder: (context, state) {
+  lib\core\router\app_router.dart:372:          final id = 
+state.pathParameters['id']!;
+> lib\core\router\app_router.dart:373:          return UserProfileScreen(
+  lib\core\router\app_router.dart:374:            userId: id,
+  lib\core\router\app_router.dart:375:            communityId: 
+state.uri.queryParameters['communityId'],
+  lib\core\router\app_router.dart:376:          );
+  lib\core\router\app_router.dart:579:              return Consumer(
+  lib\core\router\app_router.dart:580:                builder: (context, ref, 
+_) {
+> lib\core\router\app_router.dart:581:                  final profile = 
+ref.watch(userProfileProvider).asData?.value;
+  lib\core\router\app_router.dart:582:                  final userId = 
+profile?.id ?? '';
+  lib\core\router\app_router.dart:583:                  final userName = 
+profile?.fullName ?? 'Người dùng';
+  lib\core\router\app_router.dart:584:                  final avatarUrl = 
+profile?.avatarUrl;
+  lib\core\router\app_router.dart:598:              final id = 
+state.pathParameters['id']!;
+  lib\core\router\app_router.dart:599:              // Query communityId: mở 
+hồ sơ từ ngữ cảnh CLB → hiện "Danh hiệu CLB".
+> lib\core\router\app_router.dart:600:              return UserProfileScreen(
+  lib\core\router\app_router.dart:601:                userId: id,
+  lib\core\router\app_router.dart:602:                communityId: 
+state.uri.queryParameters['communityId'],
+  lib\core\router\app_router.dart:603:              );
+  lib\core\widgets\floating_bottom_nav.dart:130:    final l10n = 
+AppLocalizations.of(context)!;
+  lib\core\widgets\floating_bottom_nav.dart:131:    final isLoggedIn = 
+ref.watch(authProvider).isAuthenticated;
+> lib\core\widgets\floating_bottom_nav.dart:132:    final userProfileAsync = 
+ref.watch(userProfileProvider);
+  lib\core\widgets\floating_bottom_nav.dart:133:    final avatarUrl = 
+userProfileAsync.asData?.value.avatarUrl;
+  lib\core\widgets\floating_bottom_nav.dart:134:    final isDark = 
+Theme.of(context).brightness == Brightness.dark;
+  lib\core\widgets\floating_bottom_nav.dart:135:    final rankings = 
+ref.watch(userRankingsProvider).asData?.value ?? const [];
+  lib\core\widgets\socket_observer.dart:68:      // These providers are shared 
+by profile, home and the management area.
+  lib\core\widgets\socket_observer.dart:69:      // Invalidating them 
+reconnects the current screens without restarting app.
+> lib\core\widgets\socket_observer.dart:70:      
+ref.invalidate(userProfileProvider);
+  lib\core\widgets\socket_observer.dart:71:      
+ref.invalidate(unreadCountProvider);
+  lib\core\widgets\socket_observer.dart:72:      // Notification state is kept 
+in a Notifier and therefore survives
+  lib\core\widgets\socket_observer.dart:73:      // backgrounding. Reload page 
+1 so notifications created while the app
+  lib\features\auth\screens\login_loading_screen.dart:37:  Widget 
+build(BuildContext context) {
+  lib\features\auth\screens\login_loading_screen.dart:38:    final colors = 
+context.colors;
+> lib\features\auth\screens\login_loading_screen.dart:39:    final 
+userProfileAsync = ref.watch(userProfileProvider);
+  lib\features\auth\screens\login_loading_screen.dart:40:    final size = 
+MediaQuery.of(context).size;
+  lib\features\auth\screens\login_loading_screen.dart:41:    final l10n = 
+AppLocalizations.of(context)!;
+  lib\features\auth\screens\login_loading_screen.dart:42:
+  lib\features\auth\screens\login_register_screen.dart:84:
+  lib\features\auth\screens\login_register_screen.dart:85:    if (success) {
+> lib\features\auth\screens\login_register_screen.dart:86:      
+ref.invalidate(userProfileProvider);
+  lib\features\auth\screens\login_register_screen.dart:87:      
+ref.invalidate(userRankingsProvider);
+  lib\features\auth\screens\login_register_screen.dart:88:      
+context.go("/login-loading", extra: widget.redirectPath);
+  lib\features\auth\screens\login_register_screen.dart:89:    } else {
+  lib\features\auth\screens\login_register_screen.dart:135:      if (!mounted) 
+return;
+  lib\features\auth\screens\login_register_screen.dart:136:      if (success) {
+> lib\features\auth\screens\login_register_screen.dart:137:        
+ref.invalidate(userProfileProvider);
+  lib\features\auth\screens\login_register_screen.dart:138:        
+ref.invalidate(userRankingsProvider);
+  lib\features\auth\screens\login_register_screen.dart:139:        
+context.go("/login-loading", extra: widget.redirectPath);
+  lib\features\auth\screens\login_register_screen.dart:140:      } else {
+  lib\features\auth\screens\login_register_screen.dart:197:      if (!mounted) 
+return;
+  lib\features\auth\screens\login_register_screen.dart:198:      if (success) {
+> lib\features\auth\screens\login_register_screen.dart:199:        
+ref.invalidate(userProfileProvider);
+  lib\features\auth\screens\login_register_screen.dart:200:        
+ref.invalidate(userRankingsProvider);
+  lib\features\auth\screens\login_register_screen.dart:201:        
+context.go("/login-loading", extra: widget.redirectPath);
+  lib\features\auth\screens\login_register_screen.dart:202:      } else {
+  lib\features\chat\screens\chat_detail_screen.dart:142:    
+_chatSocket.onMessage = (data) {
+  lib\features\chat\screens\chat_detail_screen.dart:143:      if (mounted) {
+> lib\features\chat\screens\chat_detail_screen.dart:144:        final 
+currentUserId = ref.read(userProfileProvider).asData?.value.id;
+  lib\features\chat\screens\chat_detail_screen.dart:145:        final msg = 
+ChatMessageModel.fromJson(
+  lib\features\chat\screens\chat_detail_screen.dart:146:          data,
+  lib\features\chat\screens\chat_detail_screen.dart:147:          
+currentUserId: currentUserId,
+  lib\features\chat\screens\chat_detail_screen.dart:316:    try {
+  lib\features\chat\screens\chat_detail_screen.dart:317:      final dio = 
+ref.read(dioClientProvider).dio;
+> lib\features\chat\screens\chat_detail_screen.dart:318:      final 
+currentUserId = ref.read(userProfileProvider).asData?.value.id;
+  lib\features\chat\screens\chat_detail_screen.dart:319:      final res = 
+await dio.get(
+  lib\features\chat\screens\chat_detail_screen.dart:320:        
+'/chat/rooms/${widget.roomId}/messages',
+  lib\features\chat\screens\chat_detail_screen.dart:321:        
+queryParameters: {'limit': 30},
+  lib\features\chat\screens\chat_detail_screen.dart:351:    try {
+  lib\features\chat\screens\chat_detail_screen.dart:352:      final dio = 
+ref.read(dioClientProvider).dio;
+> lib\features\chat\screens\chat_detail_screen.dart:353:      final 
+currentUserId = ref.read(userProfileProvider).asData?.value.id;
+  lib\features\chat\screens\chat_detail_screen.dart:354:      final res = 
+await dio.get(
+  lib\features\chat\screens\chat_detail_screen.dart:355:        
+'/chat/rooms/${widget.roomId}/messages',
+  lib\features\chat\screens\chat_detail_screen.dart:356:        
+queryParameters: {'limit': 30, 'cursor': _cursor},
+  lib\features\chat\screens\chat_detail_screen.dart:380:    try {
+  lib\features\chat\screens\chat_detail_screen.dart:381:      final dio = 
+ref.read(dioClientProvider).dio;
+> lib\features\chat\screens\chat_detail_screen.dart:382:      final 
+currentUserId = ref.read(userProfileProvider).asData?.value.id;
+  lib\features\chat\screens\chat_detail_screen.dart:383:      final res = 
+await dio.get(
+  lib\features\chat\screens\chat_detail_screen.dart:384:        
+'/chat/rooms/${widget.roomId}/messages',
+  lib\features\chat\screens\chat_detail_screen.dart:385:        
+queryParameters: {'limit': 30},
+  lib\features\chat\screens\chat_detail_screen.dart:405:    try {
+  lib\features\chat\screens\chat_detail_screen.dart:406:      final dio = 
+ref.read(dioClientProvider).dio;
+> lib\features\chat\screens\chat_detail_screen.dart:407:      final 
+currentUserId = ref.read(userProfileProvider).asData?.value.id;
+  lib\features\chat\screens\chat_detail_screen.dart:408:      final res = 
+await dio.get('/chat/rooms/${widget.roomId}/pinned');
+  lib\features\chat\screens\chat_detail_screen.dart:409:      final data = 
+res.data is Map ? (res.data['data'] ?? res.data) : null;
+  lib\features\chat\screens\chat_detail_screen.dart:410:      if (data is 
+Map<String, dynamic> &&
+  lib\features\chat\screens\chat_detail_screen.dart:482:
+  lib\features\chat\screens\chat_detail_screen.dart:483:      final res = 
+await dio.post('/chat/messages', data: payload);
+> lib\features\chat\screens\chat_detail_screen.dart:484:      final 
+currentUserId = ref.read(userProfileProvider).asData?.value.id;
+  lib\features\chat\screens\chat_detail_screen.dart:485:      final raw = 
+res.data is Map ? (res.data['data'] ?? res.data) : null;
+  lib\features\chat\screens\chat_detail_screen.dart:486:      if (raw is 
+Map<String, dynamic> && mounted) {
+  lib\features\chat\screens\chat_detail_screen.dart:487:        final newMsg = 
+ChatMessageModel.fromJson(
+  lib\features\chat\screens\chat_detail_screen.dart:649:        data: 
+{'optionId': optionId},
+  lib\features\chat\screens\chat_detail_screen.dart:650:      );
+> lib\features\chat\screens\chat_detail_screen.dart:651:      final 
+currentUserId = ref.read(userProfileProvider).asData?.value.id;
+  lib\features\chat\screens\chat_detail_screen.dart:652:      final raw = 
+res.data is Map ? res.data['data'] : null;
+  lib\features\chat\screens\chat_detail_screen.dart:653:      if (raw is 
+Map<String, dynamic> && raw['poll'] is Map && mounted) {
+  lib\features\chat\screens\chat_detail_screen.dart:654:        final 
+updatedPoll = ChatPollModel.fromJson(
+  lib\features\chat\screens\chat_detail_screen.dart:993:                       
+                     p.id !=
+  lib\features\chat\screens\chat_detail_screen.dart:994:                       
+                         ref
+> lib\features\chat\screens\chat_detail_screen.dart:995:                       
+                             .read(userProfileProvider)
+  lib\features\chat\screens\chat_detail_screen.dart:996:                       
+                             .asData
+  lib\features\chat\screens\chat_detail_screen.dart:997:                       
+                             ?.value
+  lib\features\chat\screens\chat_detail_screen.dart:998:                       
+                             .id &&
+  lib\features\chat\screens\chat_detail_screen.dart:1036:                      
+                      p.id !=
+  lib\features\chat\screens\chat_detail_screen.dart:1037:                      
+                          ref
+> lib\features\chat\screens\chat_detail_screen.dart:1038:                      
+                              .read(userProfileProvider)
+  lib\features\chat\screens\chat_detail_screen.dart:1039:                      
+                              .asData
+  lib\features\chat\screens\chat_detail_screen.dart:1040:                      
+                              ?.value
+  lib\features\chat\screens\chat_detail_screen.dart:1041:                      
+                              .id &&
+  lib\features\chat\screens\chat_detail_screen.dart:1247:
+  lib\features\chat\screens\chat_detail_screen.dart:1248:                      
+    final currentUserId = ref
+> lib\features\chat\screens\chat_detail_screen.dart:1249:                      
+        .read(userProfileProvider)
+  lib\features\chat\screens\chat_detail_screen.dart:1250:                      
+        .asData
+  lib\features\chat\screens\chat_detail_screen.dart:1251:                      
+        ?.value
+  lib\features\chat\screens\chat_detail_screen.dart:1252:                      
+        .id;
+  lib\features\chat\screens\chat_screen.dart:101:    try {
+  lib\features\chat\screens\chat_screen.dart:102:      final dio = 
+ref.read(dioClientProvider).dio;
+> lib\features\chat\screens\chat_screen.dart:103:      final currentUserId = 
+ref.read(userProfileProvider).asData?.value.id;
+  lib\features\chat\screens\chat_screen.dart:104:      final res = await 
+dio.get('/chat/rooms');
+  lib\features\chat\screens\chat_screen.dart:105:      final rawList = 
+res.data is Map
+  lib\features\chat\screens\chat_screen.dart:106:          ? (res.data['data'] 
+?? res.data['items'] ?? [])
+  lib\features\chat\screens\chat_screen.dart:124:    try {
+  lib\features\chat\screens\chat_screen.dart:125:      final dio = 
+ref.read(dioClientProvider).dio;
+> lib\features\chat\screens\chat_screen.dart:126:      final currentUserId = 
+ref.read(userProfileProvider).asData?.value.id;
+  lib\features\chat\screens\chat_screen.dart:127:      final res = await 
+dio.get('/chat/support/me');
+  lib\features\chat\screens\chat_screen.dart:128:      final data = res.data 
+is Map ? (res.data['data'] ?? res.data) : null;
+  lib\features\chat\screens\chat_screen.dart:129:      if (data is Map<String, 
+dynamic> && data['messages'] is List && mounted) {
+  lib\features\chat\screens\chat_screen.dart:149:      final dio = 
+ref.read(dioClientProvider).dio;
+  lib\features\chat\screens\chat_screen.dart:150:      final res = await 
+dio.post('/chat/support', data: {'messageText': text});
+> lib\features\chat\screens\chat_screen.dart:151:      final currentUserId = 
+ref.read(userProfileProvider).asData?.value.id;
+  lib\features\chat\screens\chat_screen.dart:152:      final data = res.data 
+is Map ? (res.data['data'] ?? res.data) : null;
+  lib\features\chat\screens\chat_screen.dart:153:      if (data is Map<String, 
+dynamic> && data['messages'] is List && mounted) {
+  lib\features\chat\screens\chat_screen.dart:154:        final msgs = 
+(data['messages'] as List)
+  lib\features\chat\screens\chat_screen.dart:229:    final colors = 
+context.colors;
+  lib\features\chat\screens\chat_screen.dart:230:    final isDark = 
+Theme.of(context).brightness == Brightness.dark;
+> lib\features\chat\screens\chat_screen.dart:231:    final profile = 
+ref.watch(userProfileProvider).asData?.value;
+  lib\features\chat\screens\chat_screen.dart:232:    final currentUserId = 
+profile?.id;
+  lib\features\chat\screens\chat_screen.dart:233:
+  lib\features\chat\screens\chat_screen.dart:234:    final filteredRooms = 
+_rooms.where((r) {
+  lib\features\chat\widgets\chat_room_settings_sheet.dart:99:
+  lib\features\chat\widgets\chat_room_settings_sheet.dart:100:  String get 
+_myRole {
+> lib\features\chat\widgets\chat_room_settings_sheet.dart:101:    final 
+currentUserId = ref.read(userProfileProvider).asData?.value.id;
+  lib\features\chat\widgets\chat_room_settings_sheet.dart:102:    if 
+(currentUserId == null) return 'MEMBER';
+  lib\features\chat\widgets\chat_room_settings_sheet.dart:103:    final p = 
+_participants
+  lib\features\chat\widgets\chat_room_settings_sheet.dart:104:        
+.where((part) => part.id == currentUserId)
+  lib\features\chat\widgets\chat_room_settings_sheet.dart:333:  void 
+_showParticipantActions(ChatParticipant participant) {
+  lib\features\chat\widgets\chat_room_settings_sheet.dart:334:    final l10n = 
+AppLocalizations.of(context);
+> lib\features\chat\widgets\chat_room_settings_sheet.dart:335:    final 
+currentUserId = ref.read(userProfileProvider).asData?.value.id;
+  lib\features\chat\widgets\chat_room_settings_sheet.dart:336:    if 
+(participant.id == currentUserId) return;
+  lib\features\chat\widgets\chat_room_settings_sheet.dart:337:
+  lib\features\chat\widgets\chat_room_settings_sheet.dart:338:    
+showModalBottomSheet(
+  lib\features\community\screens\club_detail_screen.dart:79:        return;
+  lib\features\community\screens\club_detail_screen.dart:80:      }
+> lib\features\community\screens\club_detail_screen.dart:81:      final 
+profile = ref.read(userProfileProvider).asData?.value;
+  lib\features\community\screens\club_detail_screen.dart:82:      setState(() {
+  lib\features\community\screens\club_detail_screen.dart:83:        
+_myMembership = CommunityMemberModel(
+  lib\features\community\screens\club_detail_screen.dart:84:          id: 
+membership['memberId']?.toString() ?? '',
+  lib\features\community\screens\club_detail_screen.dart:839:  Future<void> 
+_confirmLeaveCommunity() async {
+  lib\features\community\screens\club_detail_screen.dart:840:    final l10n = 
+AppLocalizations.of(context)!;
+> lib\features\community\screens\club_detail_screen.dart:841:    final userId 
+= ref.read(userProfileProvider).asData?.value.id;
+  lib\features\community\screens\club_detail_screen.dart:842:    if (userId == 
+null || userId.isEmpty || !_isMember) return;
+  lib\features\community\screens\club_detail_screen.dart:843:    final 
+confirmed = await showDialog<bool>(
+  lib\features\community\screens\club_detail_screen.dart:844:      context: 
+context,
+  lib\features\community\social\club_chat_screen.dart:726:            ),
+  lib\features\community\social\club_chat_screen.dart:727:            if 
+(message.senderId ==
+> lib\features\community\social\club_chat_screen.dart:728:                
+(ref.read(userProfileProvider).asData?.value.id ?? ''))
+  lib\features\community\social\club_chat_screen.dart:729:              
+ListTile(
+  lib\features\community\social\club_chat_screen.dart:730:                
+leading: const Icon(Icons.delete_outline),
+  lib\features\community\social\club_chat_screen.dart:731:                
+title: Text(l10n.clubChat_revoke),
+  lib\features\community\social\club_chat_screen.dart:944:        
+.where((message) => !_blockedUserIds.contains(message.senderId))
+  lib\features\community\social\club_chat_screen.dart:945:        .toList();
+> lib\features\community\social\club_chat_screen.dart:946:    final 
+currentUserId = ref.watch(userProfileProvider).asData?.value.id ?? '';
+  lib\features\community\social\club_chat_screen.dart:947:    // Tag/role 
+người gửi — resolve 1 lần như web (UnifiedChatWidget club rooms).
+  lib\features\community\social\club_chat_screen.dart:948:    final 
+chatPresets = ref
+  lib\features\community\social\club_chat_screen.dart:949:        
+.watch(communityTagPresetsProvider(widget.communityId))
+  lib\features\community\social\community_social_screen.dart:113:              
+      canManageMemberTags);
+  lib\features\community\social\community_social_screen.dart:114:    final 
+l10n = AppLocalizations.of(context)!;
+> lib\features\community\social\community_social_screen.dart:115:    final 
+profile = ref.read(userProfileProvider).asData?.value;
+  lib\features\community\social\community_social_screen.dart:116:    final 
+authorName = (profile?.fullName?.isNotEmpty == true
+  lib\features\community\social\community_social_screen.dart:117:        ? 
+profile!.fullName!
+  lib\features\community\social\community_social_screen.dart:118:        : 
+l10n.communitySocial_defaultUser).trim();
+  lib\features\community\social\community_social_screen.dart:204:        
+.watch(myCommunityMembershipProvider(widget.communityId))
+  lib\features\community\social\community_social_screen.dart:205:        
+.value;
+> lib\features\community\social\community_social_screen.dart:206:    final 
+profile = ref.watch(userProfileProvider).asData?.value;
+  lib\features\community\social\community_social_screen.dart:207:    final 
+currentUserId = profile?.id ?? '';
+  lib\features\community\social\community_social_screen.dart:208:    final 
+currentAvatarUrl = profile?.avatarUrl?.trim();
+  lib\features\community\social\community_social_screen.dart:209:    final 
+currentAuthorName = (profile?.fullName?.isNotEmpty == true
+  lib\features\community\social\widgets\community_comment_sheet.dart:256:    
+final isDark = Theme.of(context).brightness == Brightness.dark;
+  lib\features\community\social\widgets\community_comment_sheet.dart:257:    
+final bubbleColor = isDark ? const Color(0xFF3A3B3C) : const Color(0xFFF0F2F5);
+> lib\features\community\social\widgets\community_comment_sheet.dart:258:    
+final profile = ref.watch(userProfileProvider).asData?.value;
+  lib\features\community\social\widgets\community_comment_sheet.dart:259:    
+final presets = 
+ref.watch(communityTagPresetsProvider(widget.communityId)).asData?.value;
+  lib\features\community\social\widgets\community_comment_sheet.dart:260:    
+final memberDirectory = 
+ref.watch(communityMemberDirectoryProvider(widget.communityId)).asData?.value;
+  lib\features\community\social\widgets\community_comment_sheet.dart:261:
+  lib\features\community\widgets\club_ranking_widget.dart:274:    final 
+filteredRankings = rankings;
+  lib\features\community\widgets\club_ranking_widget.dart:275:    final 
+isSearching = query.isNotEmpty;
+> lib\features\community\widgets\club_ranking_widget.dart:276:    final 
+currentUserId = ref.watch(userProfileProvider).asData?.value.id;
+  lib\features\community\widgets\club_ranking_widget.dart:277:    final 
+myRanking = currentUserId == null
+  lib\features\community\widgets\club_ranking_widget.dart:278:        ? null
+  lib\features\community\widgets\club_ranking_widget.dart:279:        : 
+allRankings
+  lib\features\dashboard\screens\dashboard_screen.dart:20:  Widget 
+build(BuildContext context, WidgetRef ref) {
+  lib\features\dashboard\screens\dashboard_screen.dart:21:    final l10n = 
+AppLocalizations.of(context)!;
+> lib\features\dashboard\screens\dashboard_screen.dart:22:    final 
+profileAsync = ref.watch(userProfileProvider);
+  lib\features\dashboard\screens\dashboard_screen.dart:23:    final 
+rankingsAsync = ref.watch(userRankingsProvider);
+  lib\features\dashboard\screens\dashboard_screen.dart:24:    final 
+footballTeamsAsync = ref.watch(myFootballTeamsProvider);
+  lib\features\dashboard\screens\dashboard_screen.dart:25:    final 
+workspaceAsync = ref.watch(myTournamentWorkspaceProvider);
+  lib\features\home\screens\home_screen.dart:804:  Widget 
+_buildLoggedInHeaderDetails() {
+  lib\features\home\screens\home_screen.dart:805:    final l10n = 
+AppLocalizations.of(context)!;
+> lib\features\home\screens\home_screen.dart:806:    final profileAsync = 
+ref.watch(userProfileProvider);
+  lib\features\home\screens\home_screen.dart:807:    final rankingsAsync = 
+ref.watch(userRankingsProvider);
+  lib\features\home\screens\home_screen.dart:808:    final provincesAsync = 
+ref.watch(provincesProvider);
+  lib\features\home\screens\home_screen.dart:809:    return profileAsync.when(
+  lib\features\home\screens\qr_scanner_screen.dart:55:
+  lib\features\home\screens\qr_scanner_screen.dart:56:    if (success) {
+> lib\features\home\screens\qr_scanner_screen.dart:57:      
+ref.invalidate(userProfileProvider);
+  lib\features\home\screens\qr_scanner_screen.dart:58:      
+ref.invalidate(userRankingsProvider);
+  lib\features\home\screens\qr_scanner_screen.dart:59:      final auth = 
+ref.read(authProvider);
+  lib\features\home\screens\qr_scanner_screen.dart:60:      final route = 
+switch (auth.role) {
+  lib\features\home\widgets\token_input_sheet.dart:45:
+  lib\features\home\widgets\token_input_sheet.dart:46:    if (success) {
+> lib\features\home\widgets\token_input_sheet.dart:47:      
+ref.invalidate(userProfileProvider);
+  lib\features\home\widgets\token_input_sheet.dart:48:      
+ref.invalidate(userRankingsProvider);
+  lib\features\home\widgets\token_input_sheet.dart:49:      final auth = 
+ref.read(authProvider);
+  lib\features\home\widgets\token_input_sheet.dart:50:      final route = 
+NavigationHelper.getTournamentRoute(auth.role, auth.tournamentId!);
+  lib\features\match\screens\live_score_screen.dart:2221:        return 
+InkWell(
+  lib\features\match\screens\live_score_screen.dart:2222:          
+borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+> lib\features\match\screens\live_score_screen.dart:2223:          onTap: () 
+=> context.push('/profile/user/$userId'),
+  lib\features\match\screens\live_score_screen.dart:2224:          child: 
+Padding(
+  lib\features\match\screens\live_score_screen.dart:2225:            padding: 
+const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+  lib\features\match\screens\live_score_screen.dart:2226:            child: 
+Text(
+  lib\features\profile\screens\achievements_tab.dart:26:
+  lib\features\profile\screens\achievements_tab.dart:27:    // Get logged-in 
+user profile ID
+> lib\features\profile\screens\achievements_tab.dart:28:    final profileAsync 
+= ref.watch(userProfileProvider);
+  lib\features\profile\screens\achievements_tab.dart:29:    final 
+currentUserId = profileAsync.asData?.value.id ?? '';
+  lib\features\profile\screens\achievements_tab.dart:30:
+  lib\features\profile\screens\achievements_tab.dart:31:    // Fetch real 
+tournaments from API
+  lib\features\profile\screens\profile_screen.dart:157:        final repo = 
+ref.read(userRepositoryProvider);
+  lib\features\profile\screens\profile_screen.dart:158:        await 
+repo.uploadCover(bytes, fileName);
+> lib\features\profile\screens\profile_screen.dart:159:        
+ref.invalidate(userProfileProvider);
+  lib\features\profile\screens\profile_screen.dart:160:        if (mounted) {
+  lib\features\profile\screens\profile_screen.dart:161:          
+ScaffoldMessenger.of(context).showSnackBar(
+  lib\features\profile\screens\profile_screen.dart:162:            SnackBar(
+  lib\features\profile\screens\profile_screen.dart:187:        final repo = 
+ref.read(userRepositoryProvider);
+  lib\features\profile\screens\profile_screen.dart:188:        await 
+repo.uploadAvatar(bytes, fileName);
+> lib\features\profile\screens\profile_screen.dart:189:        
+ref.invalidate(userProfileProvider);
+  lib\features\profile\screens\profile_screen.dart:190:        if (mounted) {
+  lib\features\profile\screens\profile_screen.dart:191:          
+ScaffoldMessenger.of(context).showSnackBar(
+  lib\features\profile\screens\profile_screen.dart:192:            SnackBar(
+  lib\features\profile\screens\profile_screen.dart:229:    }
+  lib\features\profile\screens\profile_screen.dart:230:
+> lib\features\profile\screens\profile_screen.dart:231:    final profileAsync 
+= ref.watch(userProfileProvider);
+  lib\features\profile\screens\profile_screen.dart:232:
+  lib\features\profile\screens\profile_screen.dart:233:    return Scaffold(
+  lib\features\profile\screens\profile_screen.dart:234:      backgroundColor: 
+context.colors.bgDark,
+  lib\features\profile\screens\profile_screen.dart:1774:  ) {
+  lib\features\profile\screens\profile_screen.dart:1775:    final l10n = 
+AppLocalizations.of(context)!;
+> lib\features\profile\screens\profile_screen.dart:1776:    final 
+currentUserId = ref.watch(userProfileProvider).value?.id;
+  lib\features\profile\screens\profile_screen.dart:1777:    final isOwner =
+  lib\features\profile\screens\profile_screen.dart:1778:        club.myRole == 
+'OWNER' ||
+  lib\features\profile\screens\profile_screen.dart:1779:        club.myRole == 
+'LEADER' ||
+  lib\features\profile\screens\profile_screen.dart:2625:            onTap: () 
+async {
+  lib\features\profile\screens\profile_screen.dart:2626:              await 
+ref.read(authProvider.notifier).signOut();
+> lib\features\profile\screens\profile_screen.dart:2627:              
+ref.invalidate(userProfileProvider);
+  lib\features\profile\screens\profile_screen.dart:2628:              
+ref.invalidate(userRankingsProvider);
+  lib\features\profile\screens\profile_screen.dart:2629:              if 
+(!context.mounted) return;
+  lib\features\profile\screens\profile_screen.dart:2630:              
+context.go('/home');
+  lib\features\profile\screens\profile_screen.dart:2746:            const 
+SizedBox(height: 20),
+  lib\features\profile\screens\profile_screen.dart:2747:            
+FilledButton(
+> lib\features\profile\screens\profile_screen.dart:2748:              
+onPressed: () => ref.invalidate(userProfileProvider),
+  lib\features\profile\screens\profile_screen.dart:2749:              child: 
+Text(AppLocalizations.of(context)!.infoRetry),
+  lib\features\profile\screens\profile_screen.dart:2750:            ),
+  lib\features\profile\screens\profile_screen.dart:2751:          ],
+  lib\features\profile\screens\settings_screen.dart:253:          
+.read(userRepositoryProvider)
+  lib\features\profile\screens\settings_screen.dart:254:          
+.uploadAvatar(await file.readAsBytes(), file.name);
+> lib\features\profile\screens\settings_screen.dart:255:      
+ref.invalidate(userProfileProvider);
+  lib\features\profile\screens\settings_screen.dart:256:      if (mounted) {
+  lib\features\profile\screens\settings_screen.dart:257:        
+ScaffoldMessenger.of(context).showSnackBar(
+  lib\features\profile\screens\settings_screen.dart:258:          SnackBar(
+  lib\features\profile\screens\settings_screen.dart:300:    try {
+  lib\features\profile\screens\settings_screen.dart:301:      await 
+ref.read(userRepositoryProvider).uploadCover(bytes, file.name);
+> lib\features\profile\screens\settings_screen.dart:302:      
+ref.invalidate(userProfileProvider);
+  lib\features\profile\screens\settings_screen.dart:303:      if (mounted) {
+  lib\features\profile\screens\settings_screen.dart:304:        
+ScaffoldMessenger.of(context).showSnackBar(
+  lib\features\profile\screens\settings_screen.dart:305:          SnackBar(
+  lib\features\profile\screens\settings_screen.dart:458:
+  lib\features\profile\screens\settings_screen.dart:459:      
+_log.success('Cập nhật hồ sơ thành công');
+> lib\features\profile\screens\settings_screen.dart:460:      
+ref.invalidate(userProfileProvider);
+  lib\features\profile\screens\settings_screen.dart:461:
+  lib\features\profile\screens\settings_screen.dart:462:      if (mounted) {
+  lib\features\profile\screens\settings_screen.dart:463:        
+ScaffoldMessenger.of(context).showSnackBar(
+  lib\features\profile\screens\settings_screen.dart:492:  Widget 
+build(BuildContext context) {
+  lib\features\profile\screens\settings_screen.dart:493:    final colors = 
+context.colors;
+> lib\features\profile\screens\settings_screen.dart:494:    final profileAsync 
+= ref.watch(userProfileProvider);
+  lib\features\profile\screens\settings_screen.dart:495:
+  lib\features\profile\screens\settings_screen.dart:496:    return 
+profileAsync.when(
+  lib\features\profile\screens\settings_screen.dart:497:      data: (profile) {
+  lib\features\profile\screens\settings_screen.dart:524:        
+AppLocalizations.of(context)?.settingsProfileLoadError ??
+  lib\features\profile\screens\settings_screen.dart:525:            'Unable to 
+load profile',
+> lib\features\profile\screens\settings_screen.dart:526:        () => 
+ref.invalidate(userProfileProvider),
+  lib\features\profile\screens\settings_screen.dart:527:      ),
+  lib\features\profile\screens\settings_screen.dart:528:    );
+  lib\features\profile\screens\settings_screen.dart:529:  }
+  lib\features\profile\screens\settings_screen.dart:1106:
+  lib\features\profile\screens\settings_screen.dart:1107:      
+_log.success('Lưu thông tin ngân hàng thành công');
+> lib\features\profile\screens\settings_screen.dart:1108:      
+ref.invalidate(userProfileProvider);
+  lib\features\profile\screens\settings_screen.dart:1109:
+  lib\features\profile\screens\settings_screen.dart:1110:      if (mounted) {
+  lib\features\profile\screens\settings_screen.dart:1111:        
+ScaffoldMessenger.of(context).showSnackBar(
+  lib\features\profile\screens\settings_screen.dart:1136:  Widget 
+build(BuildContext context) {
+  lib\features\profile\screens\settings_screen.dart:1137:    final colors = 
+context.colors;
+> lib\features\profile\screens\settings_screen.dart:1138:    final 
+profileAsync = ref.watch(userProfileProvider);
+  lib\features\profile\screens\settings_screen.dart:1139:
+  lib\features\profile\screens\settings_screen.dart:1140:    return 
+profileAsync.when(
+  lib\features\profile\screens\settings_screen.dart:1141:      data: (profile) 
+{
+  lib\features\profile\screens\settings_screen.dart:1155:        
+AppLocalizations.of(context)?.settingsBankLoadError ??
+  lib\features\profile\screens\settings_screen.dart:1156:            'Unable 
+to load bank information',
+> lib\features\profile\screens\settings_screen.dart:1157:        () => 
+ref.invalidate(userProfileProvider),
+  lib\features\profile\screens\settings_screen.dart:1158:      ),
+  lib\features\profile\screens\settings_screen.dart:1159:    );
+  lib\features\profile\screens\settings_screen.dart:1160:  }
+  lib\features\profile\screens\settings_screen.dart:1322:                
+Navigator.of(ctx).pop();
+  lib\features\profile\screens\settings_screen.dart:1323:                await 
+ref.read(authProvider.notifier).signOut();
+> lib\features\profile\screens\settings_screen.dart:1324:                
+ref.invalidate(userProfileProvider);
+  lib\features\profile\screens\settings_screen.dart:1325:                if 
+(context.mounted) context.go('/home');
+  lib\features\profile\screens\settings_screen.dart:1326:              } catch 
+(e) {
+  lib\features\profile\screens\settings_screen.dart:1327:                if 
+(!ctx.mounted) return;
+  lib\features\profile\screens\settings_screen.dart:1406:    final colors = 
+context.colors;
+  lib\features\profile\screens\settings_screen.dart:1407:    final l10n = 
+AppLocalizations.of(context);
+> lib\features\profile\screens\settings_screen.dart:1408:    final 
+profileAsync = ref.watch(userProfileProvider);
+  lib\features\profile\screens\settings_screen.dart:1409:
+  lib\features\profile\screens\settings_screen.dart:1410:    return 
+SingleChildScrollView(
+  lib\features\profile\screens\settings_screen.dart:1411:      padding: const 
+EdgeInsets.all(20),
+  lib\features\profile\screens\settings_screen.dart:1657:        
+'allowStrangerMessages': value,
+  lib\features\profile\screens\settings_screen.dart:1658:      });
+> lib\features\profile\screens\settings_screen.dart:1659:      
+ref.invalidate(userProfileProvider);
+  lib\features\profile\screens\settings_screen.dart:1660:      if (!mounted) 
+return;
+  lib\features\profile\screens\settings_screen.dart:1661:      setState(() {
+  lib\features\profile\screens\settings_screen.dart:1662:        _value = 
+updated.allowStrangerMessages ?? value;
+  lib\features\profile\screens\settings_screen.dart:1684:    final colors = 
+context.colors;
+  lib\features\profile\screens\settings_screen.dart:1685:    final l = 
+AppLocalizations.of(context)!;
+> lib\features\profile\screens\settings_screen.dart:1686:    final 
+profileAsync = ref.watch(userProfileProvider);
+  lib\features\profile\screens\settings_screen.dart:1687:
+  lib\features\profile\screens\settings_screen.dart:1688:    return Column(
+  lib\features\profile\screens\settings_screen.dart:1689:      
+crossAxisAlignment: CrossAxisAlignment.start,
+  lib\features\profile\screens\user_profile_screen.dart:26:/// - Tab Thành 
+tích (Quán quân, Á quân, Hạng ba)
+  lib\features\profile\screens\user_profile_screen.dart:27:/// - Biểu đồ ELO 
+history
+> lib\features\profile\screens\user_profile_screen.dart:28:class 
+UserProfileScreen extends ConsumerStatefulWidget {
+  lib\features\profile\screens\user_profile_screen.dart:29:  final String 
+userId;
+  lib\features\profile\screens\user_profile_screen.dart:30:
+  lib\features\profile\screens\user_profile_screen.dart:31:  /// Ngữ cảnh CLB 
+(khi mở hồ sơ từ bảng tin/chat CLB) — hiển thị thêm
+  lib\features\profile\screens\user_profile_screen.dart:33:  final String? 
+communityId;
+  lib\features\profile\screens\user_profile_screen.dart:34:
+> lib\features\profile\screens\user_profile_screen.dart:35:  const 
+UserProfileScreen({super.key, required this.userId, this.communityId});
+  lib\features\profile\screens\user_profile_screen.dart:36:
+  lib\features\profile\screens\user_profile_screen.dart:37:  @override
+> lib\features\profile\screens\user_profile_screen.dart:38:  
+ConsumerState<UserProfileScreen> createState() => _UserProfileScreenState();
+  lib\features\profile\screens\user_profile_screen.dart:39:}
+  lib\features\profile\screens\user_profile_screen.dart:40:
+> lib\features\profile\screens\user_profile_screen.dart:41:class 
+_UserProfileScreenState extends ConsumerState<UserProfileScreen>
+  lib\features\profile\screens\user_profile_screen.dart:42:    with 
+SingleTickerProviderStateMixin {
+  lib\features\profile\screens\user_profile_screen.dart:43:  AppLocalizations 
+get l10n => AppLocalizations.of(context)!;
+  lib\features\profile\screens\user_profile_screen.dart:44:  late 
+TabController _tabController;
+  lib\features\profile\screens\user_profile_screen.dart:117:                  
+title: profile.fullName,
+  lib\features\profile\screens\user_profile_screen.dart:118:                  
+subtitle: profile.bio ?? l10n.publicProfileShareSubtitle,
+> lib\features\profile\screens\user_profile_screen.dart:119:                  
+webUrl: 'https://sporto.asia/profile/user/${widget.userId}',
+  lib\features\profile\screens\user_profile_screen.dart:120:                  
+imageUrl: profile.avatarUrl,
+  lib\features\profile\screens\user_profile_screen.dart:121:                  
+badgeText: l10n.publicProfileShareBadge,
+  lib\features\profile\screens\user_profile_screen.dart:122:                );
+  lib\features\profile\utils\email_verification_flow.dart:62:              if 
+(!ctx.mounted) return;
+  lib\features\profile\utils\email_verification_flow.dart:63:              
+Navigator.of(ctx).pop();
+> lib\features\profile\utils\email_verification_flow.dart:64:              
+ref.invalidate(userProfileProvider);
+  lib\features\profile\utils\email_verification_flow.dart:65:              if 
+(context.mounted) {
+  lib\features\profile\utils\email_verification_flow.dart:66:                
+messenger.showSnackBar(
+  lib\features\profile\utils\email_verification_flow.dart:67:                  
+SnackBar(content: Text(l10n.emailVerificationSuccess)),
+  lib\features\profile\utils\phone_verification_flow.dart:62:              if 
+(!ctx.mounted) return;
+  lib\features\profile\utils\phone_verification_flow.dart:63:              
+Navigator.of(ctx).pop();
+> lib\features\profile\utils\phone_verification_flow.dart:64:              
+ref.invalidate(userProfileProvider);
+  lib\features\profile\utils\phone_verification_flow.dart:65:              if 
+(context.mounted) {
+  lib\features\profile\utils\phone_verification_flow.dart:66:                
+messenger.showSnackBar(
+  lib\features\profile\utils\phone_verification_flow.dart:67:                  
+SnackBar(content: Text(l10n.phoneVerificationSuccess)),
+  lib\features\profile\widgets\user_profile_bottom_sheet.dart:782:             
+     Navigator.pop(context);
+  lib\features\profile\widgets\user_profile_bottom_sheet.dart:783:             
+     final uri = widget.communityId != null
+> lib\features\profile\widgets\user_profile_bottom_sheet.dart:784:             
+         ? '/profile/user/${widget.userId}?communityId=${widget.communityId}'
+> lib\features\profile\widgets\user_profile_bottom_sheet.dart:785:             
+         : '/profile/user/${widget.userId}';
+  lib\features\profile\widgets\user_profile_bottom_sheet.dart:786:             
+     context.push(uri);
+  lib\features\profile\widgets\user_profile_bottom_sheet.dart:787:             
+   },
+  lib\features\profile\widgets\user_profile_bottom_sheet.dart:788:             
+   icon: const Icon(Icons.person_rounded, size: 16),
+  lib\features\rankings\screens\leaderboard_screen.dart:75:    final authState 
+= ref.watch(authProvider);
+  lib\features\rankings\screens\leaderboard_screen.dart:76:    final isAuth = 
+authState.isAuthenticated;
+> lib\features\rankings\screens\leaderboard_screen.dart:77:    final 
+profileAsync = ref.watch(userProfileProvider);
+  lib\features\rankings\screens\leaderboard_screen.dart:78:    final 
+currentUserId = profileAsync.asData?.value.id;
+  lib\features\rankings\screens\leaderboard_screen.dart:79:    final colors = 
+context.colors;
+  lib\features\rankings\screens\leaderboard_screen.dart:80:
+  lib\features\register\screens\doubles_registration_screen.dart:113:
+  lib\features\register\screens\doubles_registration_screen.dart:114:    // Tự 
+động điền sẵn Email và Số điện thoại từ profile nếu trường chưa có giá trị
+> lib\features\register\screens\doubles_registration_screen.dart:115:    final 
+userProfileAsync = ref.watch(userProfileProvider);
+  lib\features\register\screens\doubles_registration_screen.dart:116:    final 
+userProfile = userProfileAsync.asData?.value;
+  lib\features\register\screens\doubles_registration_screen.dart:117:    if 
+(userProfile != null) {
+  lib\features\register\screens\doubles_registration_screen.dart:118:      for 
+(final field in fields) {
+  lib\features\register\screens\doubles_registration_screen.dart:362:
+  lib\features\register\screens\doubles_registration_screen.dart:363:    // 
+Check gender restriction
+> lib\features\register\screens\doubles_registration_screen.dart:364:    final 
+userAsync = ref.read(userProfileProvider);
+  lib\features\register\screens\doubles_registration_screen.dart:365:    final 
+user = userAsync.asData?.value;
+  lib\features\register\screens\doubles_registration_screen.dart:366:    // 
+Chuẩn hoá cả 2 phía: profile lưu giới tính tiếng Việt ('Nữ') còn
+  lib\features\register\screens\doubles_registration_screen.dart:367:    // 
+division lưu 'FEMALE'/'MALE'. So sánh raw (toUpperCase) là 'NỮ' !=
+  lib\features\register\screens\football_team_register_screen.dart:108:      
+String? currentUserId;
+  lib\features\register\screens\football_team_register_screen.dart:109:      
+try {
+> lib\features\register\screens\football_team_register_screen.dart:110:        
+currentUserId = (await ref.read(userProfileProvider.future)).id;
+  lib\features\register\screens\football_team_register_screen.dart:111:      } 
+catch (_) {
+  lib\features\register\screens\football_team_register_screen.dart:112:        
+currentUserId = null;
+  lib\features\register\screens\football_team_register_screen.dart:113:      }
+  lib\features\register\screens\tournament_register_screen.dart:218:
+  lib\features\register\screens\tournament_register_screen.dart:219:    // Tự 
+động điền sẵn Email và Số điện thoại từ profile nếu trường chưa có giá trị
+> lib\features\register\screens\tournament_register_screen.dart:220:    final 
+userProfileAsync = ref.watch(userProfileProvider);
+  lib\features\register\screens\tournament_register_screen.dart:221:    final 
+userProfile = userProfileAsync.asData?.value;
+  lib\features\register\screens\tournament_register_screen.dart:222:    if 
+(userProfile != null) {
+  lib\features\register\screens\tournament_register_screen.dart:223:      for 
+(final field in fields) {
+  lib\features\register\screens\tournament_register_screen.dart:379:
+  lib\features\register\screens\tournament_register_screen.dart:380:    // 
+Check gender restriction
+> lib\features\register\screens\tournament_register_screen.dart:381:    final 
+userAsync = ref.read(userProfileProvider);
+  lib\features\register\screens\tournament_register_screen.dart:382:    final 
+user = userAsync.asData?.value;
+  lib\features\register\screens\tournament_register_screen.dart:383:    final 
+divGender = _normalizedGender(div.genderRestriction);
+  lib\features\register\screens\tournament_register_screen.dart:384:    if 
+(user != null && divGender != null && divGender != 'MIXED') {
+  lib\features\register\screens\tournament_register_screen.dart:462:    }
+  lib\features\register\screens\tournament_register_screen.dart:463:    if 
+(!_formKey.currentState!.validate()) return;
+> lib\features\register\screens\tournament_register_screen.dart:464:    final 
+userAsync = ref.read(userProfileProvider);
+  lib\features\register\screens\tournament_register_screen.dart:465:    final 
+user = userAsync.asData?.value;
+  lib\features\register\screens\tournament_register_screen.dart:466:    final 
+missingFields = <String>[];
+  lib\features\register\screens\tournament_register_screen.dart:467:    if 
+(user?.fullName == null || user!.fullName!.trim().isEmpty) {
+  lib\features\register\screens\tournament_register_screen.dart:1404:  ) {
+  lib\features\register\screens\tournament_register_screen.dart:1405:    // 
+Check profile completeness
+> lib\features\register\screens\tournament_register_screen.dart:1406:    final 
+userAsync = ref.watch(userProfileProvider);
+  lib\features\register\screens\tournament_register_screen.dart:1407:    final 
+user = userAsync.asData?.value;
+  lib\features\register\screens\tournament_register_screen.dart:1408:    final 
+isIncomplete =
+  lib\features\register\screens\tournament_register_screen.dart:1409:        
+user?.fullName == null ||
+  lib\features\reports\screens\my_reports_screen.dart:177:
+  lib\features\reports\screens\my_reports_screen.dart:178:  String? 
+_targetRoute() => switch (report.targetType) {
+> lib\features\reports\screens\my_reports_screen.dart:179:    
+ReportTargetType.user => '/profile/user/${report.targetId}',
+  lib\features\reports\screens\my_reports_screen.dart:180:    
+ReportTargetType.tournament => '/tournaments/${report.targetId}',
+  lib\features\reports\screens\my_reports_screen.dart:181:    
+ReportTargetType.match => '/live/${report.targetId}',
+  lib\features\reports\screens\my_reports_screen.dart:182:    
+ReportTargetType.community => '/communities/${report.targetId}',
+  lib\features\tournament\widgets\teams_tab.dart:212:                      
+onMemberTap: (userId, memberName) {
+  lib\features\tournament\widgets\teams_tab.dart:213:                        
+if (userId != null && userId.isNotEmpty) {
+> lib\features\tournament\widgets\teams_tab.dart:214:                          
+context.push('/profile/user/$userId');
+  lib\features\tournament\widgets\teams_tab.dart:215:                        } 
+else {
+  lib\features\tournament\widgets\teams_tab.dart:216:                          
+context.push('/profile');
+  lib\features\tournament\widgets\teams_tab.dart:217:                        }
+  lib\providers\user_provider.dart:38:});
+  lib\providers\user_provider.dart:39:
+> lib\providers\user_provider.dart:40:final userProfileProvider = 
+FutureProvider<UserProfile>((ref) async {
+  lib\providers\user_provider.dart:41:  final authState = 
+ref.watch(authProvider);
+  lib\providers\user_provider.dart:42:  if (!authState.isAuthenticated) {
+  lib\providers\user_provider.dart:43:    return const UserProfile(id: '', 
+fullName: 'Khách', email: '');
+  lib\providers\user_provider.dart:80:/// TransformInterceptor wrap: { data: { 
+publicRanks: [...], ... }, message, statusCode }
+  lib\providers\user_provider.dart:81:final userRankingsProvider = 
+FutureProvider<List<PlayerRanking>>((ref) async {
+> lib\providers\user_provider.dart:82:  final profileAsync = 
+ref.watch(userProfileProvider);
+  lib\providers\user_provider.dart:83:  final profile = 
+profileAsync.asData?.value;
+  lib\providers\user_provider.dart:84:  if (profile == null) return [];
+  lib\providers\user_provider.dart:85:
+  lib\shared\widgets\withdraw_sheet.dart:79:      // Dùng .future để await 
+thực sự — tránh trường hợp FutureProvider
+  lib\shared\widgets\withdraw_sheet.dart:80:      // chưa resolve → 
+.asData?.value == null → bỏ sót bank trong profile.
+> lib\shared\widgets\withdraw_sheet.dart:81:      final profile = await 
+ref.read(userProfileProvider.future);
+  lib\shared\widgets\withdraw_sheet.dart:82:      if (!mounted) return;
+  lib\shared\widgets\withdraw_sheet.dart:83:      final hasBank = 
+(profile.bankName?.isNotEmpty ?? false) &&
+  lib\shared\widgets\withdraw_sheet.dart:84:          
+(profile.bankAccountNumber?.isNotEmpty ?? false) &&
+  lib\shared\widgets\withdraw_sheet.dart:138:            'bankAccountName': 
+bankAccountName,
+  lib\shared\widgets\withdraw_sheet.dart:139:          });
+> lib\shared\widgets\withdraw_sheet.dart:140:          
+ref.invalidate(userProfileProvider);
+  lib\shared\widgets\withdraw_sheet.dart:141:        } catch (_) {
+  lib\shared\widgets\withdraw_sheet.dart:142:          // Không block rút lui 
+nếu lưu profile thất bại
+  lib\shared\widgets\withdraw_sheet.dart:143:        }
+
+

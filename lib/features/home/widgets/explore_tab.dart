@@ -1257,18 +1257,15 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
     final isByeMatch = m.isBye || isT1Tbd || isT2Tbd;
 
     final statusText = m.isLive
-        ? (l10n?.exploreMatchStatusLive(m.round) ??
-              'ĐANG DIỄN RA • VÒNG ${m.round}')
+        ? (l10n!.exploreMatchStatusLive(m.round))
         : m.isCompleted
-        ? (l10n?.exploreMatchStatusCompleted(m.round) ??
-              'ĐÃ HOÀN THÀNH • VÒNG ${m.round}')
-        : (l10n?.exploreMatchStatusScheduled(m.round) ??
-              'SẮP DIỄN RA • VÒNG ${m.round}');
+        ? (l10n!.exploreMatchStatusCompleted(m.round))
+        : (l10n!.exploreMatchStatusScheduled(m.round));
     final bracketText =
         m.stageName ??
         (m.bracketPosition.bracket == 'losers'
-            ? (l10n?.exploreBracketLosers ?? 'NHÁNH THUA')
-            : (l10n?.exploreBracketKnockout ?? 'VÒNG KNOCKOUT'));
+            ? (l10n!.exploreBracketLosers)
+            : (l10n!.exploreBracketKnockout));
     final sportText =
         AppConstants.sportNames[m.sportKey ?? widget.tournament?.sport] ??
         m.sportKey ??
@@ -1276,7 +1273,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
         'Pickleball';
     final courtText = m.court.isNotEmpty
         ? m.court
-        : (l10n?.exploreCourtNotAssigned ?? 'Chưa xếp sân');
+        : (l10n!.exploreCourtNotAssigned);
 
     List<String> getInitials(String name) {
       final parts = name
@@ -1438,7 +1435,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        l10n?.exploreByeAdvance ?? 'Vô thẳng',
+                        l10n!.exploreByeAdvance,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -1493,7 +1490,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        l10n?.exploreByeAdvance ?? 'Vô thẳng',
+                        l10n!.exploreByeAdvance,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -1600,8 +1597,8 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         const SizedBox(width: 6),
                         Text(
                           cheerCount > 0
-                              ? '${l10n?.exploreCheer ?? 'Cổ vũ'} ($cheerCount)'
-                              : (l10n?.exploreCheer ?? 'Cổ vũ'),
+                              ? '${l10n!.exploreCheer} ($cheerCount)'
+                              : (l10n!.exploreCheer),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -1641,7 +1638,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          l10n?.exploreDetails ?? 'Chi tiết',
+                          l10n!.exploreDetails,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -1662,16 +1659,14 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                     AppShareModal.show(
                       context: context,
                       title: '${m.team1Name} VS ${m.team2Name}',
-                      subtitle:
-                          l10n?.exploreShareSubtitle(
-                            m.tournamentName ?? 'Giao hữu',
-                            m.court.isNotEmpty ? m.court : l10n.matchLiveTitle,
-                          ) ??
-                          'Giải đấu: ${m.tournamentName ?? "Giao hữu"} • ${m.court.isNotEmpty ? m.court : "Đang thi đấu"}',
+                      subtitle: l10n!.exploreShareSubtitle(
+                        m.tournamentName ?? 'Giao hữu',
+                        m.court.isNotEmpty ? m.court : l10n.matchLiveTitle,
+                      ),
                       webUrl: 'https://sporto.asia/live/${m.id}',
                       badgeText: m.isLive
-                          ? (l10n?.exploreLiveBadge ?? 'Trận đấu đang Live 🔴')
-                          : (l10n?.exploreMatchBadge ?? 'Trận đấu'),
+                          ? (l10n!.exploreLiveBadge)
+                          : (l10n!.exploreMatchBadge),
                     );
                   },
                   borderRadius: BorderRadius.circular(10),
@@ -1688,7 +1683,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         Icon(Icons.reply_rounded, size: 15, color: colors.info),
                         const SizedBox(width: 6),
                         Text(
-                          l10n?.share ?? 'Chia sẻ',
+                          l10n!.share,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -1821,22 +1816,13 @@ class _RecentCompletedMatches extends ConsumerWidget {
     if (completedTournaments.isEmpty && hasLoadingMatches) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Center(
-          child: Text(
-            l10n?.exploreRecentResultsLoading ?? 'Đang tải kết quả trận đấu...',
-          ),
-        ),
+        child: Center(child: Text(l10n!.exploreRecentResultsLoading)),
       );
     }
     if (completedTournaments.isEmpty && hasMatchError) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Center(
-          child: Text(
-            l10n?.exploreRecentResultsLoadError ??
-                'Không tải được kết quả trận đấu. Vui lòng thử lại.',
-          ),
-        ),
+        child: Center(child: Text(l10n!.exploreRecentResultsLoadError)),
       );
     }
     if (completedTournaments.isEmpty) {
@@ -1844,8 +1830,7 @@ class _RecentCompletedMatches extends ConsumerWidget {
         padding: EdgeInsets.symmetric(vertical: 16),
         child: Center(
           child: Text(
-            l10n?.exploreRecentResultsEmpty ??
-                'Chưa có trận nào kết thúc gần đây',
+            l10n!.exploreRecentResultsEmpty,
             style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
           ),
         ),

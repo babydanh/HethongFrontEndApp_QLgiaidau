@@ -514,7 +514,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                 _buildStatItem(
                   icon: Icons.schedule_rounded,
                   value: '${matches.length - liveCount}',
-                  label: 'Còn lại',
+                  label: l10n.liveMatchRemainingLabel,
                   color: context.colors.info,
                 ),
                 const SizedBox(width: 12),

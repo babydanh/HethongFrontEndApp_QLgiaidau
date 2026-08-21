@@ -126,7 +126,15 @@ final myCommunityMembershipProvider =
 final communityTournamentsProvider = FutureProvider.autoDispose
     .family<List<CommunityTournamentModel>, String>((ref, communityId) async {
       final repo = ref.watch(communityRepositoryProvider);
-      return repo.getTournaments(communityId);
+      final tournaments = await repo.getTournaments(communityId);
+      // Keep the card list defensive while backend instances/cache converge:
+      // PENDING_DELETE is hidden by the detail endpoint for non-owners.
+      return tournaments
+          .where((tournament) {
+            final status = tournament.status.trim().toUpperCase();
+            return status != 'PENDING_DELETE';
+          })
+          .toList(growable: false);
     });
 
 /// Provider gallery ảnh CLB

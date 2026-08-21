@@ -46,7 +46,7 @@ class _CountdownTimerState extends State<CountdownTimer> {
     final l10n = AppLocalizations.of(context);
     final diff = widget.targetDate.difference(DateTime.now());
     if (diff.isNegative) {
-      _setText(l10n?.coreRegistrationOpening ?? 'Registration is open');
+      _setText(l10n!.coreRegistrationOpening);
       return;
     }
     final days = diff.inDays;
@@ -55,14 +55,16 @@ class _CountdownTimerState extends State<CountdownTimer> {
     final secs = diff.inSeconds % 60;
 
     if (widget.compact) {
-      _setText(l10n?.coreCountdownDays(days) ?? '$days days remaining');
+      _setText(l10n!.coreCountdownDays(days));
     } else {
       if (days > 0) {
-        final clock = '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-        _setText(l10n?.coreCountdownTime(days, clock) ?? '$days days $clock remaining');
+        final clock =
+            '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+        _setText(l10n!.coreCountdownTime(days, clock));
       } else {
-        final clock = '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-        _setText(l10n?.coreCountdownClock(clock) ?? '$clock remaining');
+        final clock =
+            '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+        _setText(l10n!.coreCountdownClock(clock));
       }
     }
   }
@@ -83,19 +85,29 @@ class _CountdownTimerState extends State<CountdownTimer> {
         decoration: BoxDecoration(
           color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+          border: Border.all(
+            color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 6, height: 6,
-              decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF59E0B)),
+              width: 6,
+              height: 6,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFFF59E0B),
+              ),
             ),
             const SizedBox(width: 4),
             Text(
               _text,
-              style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFFF59E0B)),
+              style: const TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFFF59E0B),
+              ),
             ),
           ],
         ),
@@ -107,13 +119,16 @@ class _CountdownTimerState extends State<CountdownTimer> {
       decoration: BoxDecoration(
         color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.2)),
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 8, height: 8,
+            width: 8,
+            height: 8,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFFF59E0B),
@@ -122,7 +137,11 @@ class _CountdownTimerState extends State<CountdownTimer> {
           const SizedBox(width: 8),
           Text(
             _text,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFFF59E0B)),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFFF59E0B),
+            ),
           ),
         ],
       ),

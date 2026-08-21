@@ -3899,6 +3899,86 @@
       "round": {},
       "match": {}
     }
+  },
+  "bracketDiagramRoundRobinTitle": "Bảng chéo vòng tròn",
+  "bracketDiagramDoubleEliminationTitle": "Sơ đồ nhánh thắng / thua",
+  "bracketDiagramGroupKnockoutTitle": "Sơ đồ vòng loại",
+  "bracketDiagramDefaultTitle": "Sơ đồ thi đấu",
+  "crossTableEmpty": "Chưa có dữ liệu đội thi đấu",
+  "crossTableError": "Lỗi: {error}",
+  "crossTableDefaultGroup": "Bảng A",
+  "crossTableLegTitle": "{title} - Vòng {leg}",
+  "crossTablePreviousLeg": "Vòng trước",
+  "crossTableNextLeg": "Vòng tiếp theo",
+  "crossTableLegIndicator": "Vòng {current} / {max}",
+  "crossTableTeamCount": "{count} đội",
+  "bracketDiagramGroupStageTitle": "Sơ đồ vòng loại",
+  "bracketDiagramBack": "Quay lại",
+  "bracketCrossTableRoundProgress": "Vòng {current} / {max}",
+  "bracketCrossTablePreviousRound": "Vòng trước",
+  "bracketCrossTableNextRound": "Vòng tiếp theo",
+  "qrScannerInvalidCode": "Mã QR không hợp lệ",
+  "qrScannerTitle": "Quét mã QR",
+  "qrScannerVerifying": "Đang xác thực...",
+  "officialScoreScoringTab": "Tính điểm",
+  "officialScorePenaltyTab": "Phạm lỗi",
+  "doubleElimUpperGrandFinal": "CK NHÁNH THẮNG",
+  "doubleElimUpperSemifinal": "BK NHÁNH THẮNG",
+  "doubleElimLowerGrandFinal": "CK NHÁNH THUA",
+  "doubleElimLowerSemifinal": "BK NHÁNH THUA",
+  "liveMatchRemainingLabel": "Còn lại",
+  "teamScoreEditForbidden": "Lỗi: Bạn không có quyền sửa điểm.",
+  "chatDetailRevokedMessage": "Tin nhắn đã bị thu hồi",
+  "@crossTableError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@crossTableLegTitle": {
+    "placeholders": {
+      "title": {},
+      "leg": {}
+    }
+  },
+  "@crossTableLegIndicator": {
+    "placeholders": {
+      "current": {},
+      "max": {}
+    }
+  },
+  "@crossTableTeamCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "bracketDiagramGroupStageTitle": "SÆ¡ Ä‘á»“ vÃ²ng loáº¡i",
+  "bracketDiagramBack": "Quay láº¡i",
+  "bracketCrossTableRoundProgress": "VÃ²ng {current} / {max}",
+  "bracketCrossTablePreviousRound": "VÃ²ng trÆ°á»›c",
+  "bracketCrossTableNextRound": "VÃ²ng tiáº¿p theo",
+  "bracketCrossTableTeamCount": "{count} Ä‘á»™i",
+  "qrScannerInvalidCode": "MÃ£ QR khÃ´ng há»£p lá»‡",
+  "qrScannerTitle": "QuÃ©t mÃ£ QR",
+  "qrScannerVerifying": "Äang xÃ¡c thá»±c...",
+  "officialScoreScoringTab": "TÃ­nh Ä‘iá»ƒm",
+  "officialScorePenaltyTab": "Pháº¡m lá»—i",
+  "doubleElimUpperGrandFinal": "CK NHÃNH THáº®NG",
+  "doubleElimUpperSemifinal": "BK NHÃNH THáº®NG",
+  "doubleElimLowerGrandFinal": "CK NHÃNH THUA",
+  "doubleElimLowerSemifinal": "BK NHÃNH THUA",
+  "liveMatchRemainingLabel": "CÃ²n láº¡i",
+  "teamScoreEditForbidden": "Lá»—i: Báº¡n khÃ´ng cÃ³ quyá»n sá»­a Ä‘iá»ƒm.",
+  "chatDetailRevokedMessage": "Tin nháº¯n Ä‘Ã£ bá»‹ thu há»“i",
+  "singleElimUpdateError": "KhÃ´ng thá»ƒ cáº­p nháº­t vá»‹ trÃ­: {error}",
+  "@bracketCrossTableRoundProgress": {
+    "placeholders": {
+      "current": {},
+      "max": {}
+    }
+  },
+  "@bracketCrossTableTeamCount": {
+    "placeholders": {
+      "count": {}
+    }
   }
 }
-

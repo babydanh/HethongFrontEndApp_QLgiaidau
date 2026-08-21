@@ -3898,5 +3898,86 @@
       "round": {},
       "match": {}
     }
+  },
+  "bracketDiagramRoundRobinTitle": "Round-robin table",
+  "bracketDiagramDoubleEliminationTitle": "Winners / losers bracket",
+  "bracketDiagramGroupKnockoutTitle": "Qualification bracket",
+  "bracketDiagramDefaultTitle": "Competition bracket",
+  "crossTableEmpty": "No team data yet",
+  "crossTableError": "Error: {error}",
+  "crossTableDefaultGroup": "Group A",
+  "crossTableLegTitle": "{title} - Round {leg}",
+  "crossTablePreviousLeg": "Previous round",
+  "crossTableNextLeg": "Next round",
+  "crossTableLegIndicator": "Round {current} / {max}",
+  "crossTableTeamCount": "{count} teams",
+  "bracketDiagramGroupStageTitle": "Qualification bracket",
+  "bracketDiagramBack": "Back",
+  "bracketCrossTableRoundProgress": "Round {current} / {max}",
+  "bracketCrossTablePreviousRound": "Previous round",
+  "bracketCrossTableNextRound": "Next round",
+  "qrScannerInvalidCode": "Invalid QR code",
+  "qrScannerTitle": "Scan QR code",
+  "qrScannerVerifying": "Verifying...",
+  "officialScoreScoringTab": "Scoring",
+  "officialScorePenaltyTab": "Penalties",
+  "doubleElimUpperGrandFinal": "WINNERS BRACKET FINAL",
+  "doubleElimUpperSemifinal": "WINNERS BRACKET SEMIFINAL",
+  "doubleElimLowerGrandFinal": "LOSERS BRACKET FINAL",
+  "doubleElimLowerSemifinal": "LOSERS BRACKET SEMIFINAL",
+  "liveMatchRemainingLabel": "Remaining",
+  "teamScoreEditForbidden": "Error: You do not have permission to edit the score.",
+  "chatDetailRevokedMessage": "This message was revoked",
+  "@crossTableError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@crossTableLegTitle": {
+    "placeholders": {
+      "title": {},
+      "leg": {}
+    }
+  },
+  "@crossTableLegIndicator": {
+    "placeholders": {
+      "current": {},
+      "max": {}
+    }
+  },
+  "@crossTableTeamCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "bracketDiagramGroupStageTitle": "Qualification bracket",
+  "bracketDiagramBack": "Back",
+  "bracketCrossTableRoundProgress": "Round {current} / {max}",
+  "bracketCrossTablePreviousRound": "Previous round",
+  "bracketCrossTableNextRound": "Next round",
+  "bracketCrossTableTeamCount": "{count} teams",
+  "qrScannerInvalidCode": "Invalid QR code",
+  "qrScannerTitle": "Scan QR code",
+  "qrScannerVerifying": "Verifying...",
+  "officialScoreScoringTab": "Scoring",
+  "officialScorePenaltyTab": "Penalties",
+  "doubleElimUpperGrandFinal": "WINNERS BRACKET FINAL",
+  "doubleElimUpperSemifinal": "WINNERS BRACKET SEMIFINAL",
+  "doubleElimLowerGrandFinal": "LOSERS BRACKET FINAL",
+  "doubleElimLowerSemifinal": "LOSERS BRACKET SEMIFINAL",
+  "liveMatchRemainingLabel": "Remaining",
+  "teamScoreEditForbidden": "Error: You do not have permission to edit the score.",
+  "chatDetailRevokedMessage": "This message was revoked",
+  "singleElimUpdateError": "Unable to update the position: {error}",
+  "@bracketCrossTableRoundProgress": {
+    "placeholders": {
+      "current": {},
+      "max": {}
+    }
+  },
+  "@bracketCrossTableTeamCount": {
+    "placeholders": {
+      "count": {}
+    }
   }
 }

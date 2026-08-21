@@ -2220,7 +2220,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         }
         return InkWell(
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          onTap: () => context.push('/profile/user/$userId'),
+          onTap: () => context.push('/users/$userId'),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
             child: Text(

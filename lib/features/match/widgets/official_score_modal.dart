@@ -211,8 +211,8 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                             unselectedLabelColor: colors.textMuted,
                             indicatorColor: AppTheme.primary,
                             tabs: [
-                              const Tab(text: 'Tính điểm'),
-                              const Tab(text: 'Phạm lỗi'),
+                              Tab(text: l10n.officialScoreScoringTab),
+                              Tab(text: l10n.officialScorePenaltyTab),
                             ],
                           ),
                         ),
