@@ -9026,4 +9026,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lite_kickTeamAction => 'Remove team';
+
+  @override
+  String get ranking_userFallback => 'User';
+
+  @override
+  String get ranking_profileTooltip => 'Profile';
+
+  @override
+  String get ranking_categoryLabel => 'Ranking category';
+
+  @override
+  String ranking_topFootballTeam(Object teamName) {
+    return 'Top football team: $teamName';
+  }
+
+  @override
+  String ranking_eloValue(Object elo) {
+    return '$elo ELO';
+  }
+
+  @override
+  String get ranking_progressTitle => 'FEATURED ELO PROGRESS';
+
+  @override
+  String get ranking_overviewLabel => 'Sport • Overview';
+
+  @override
+  String get ranking_maxElo => 'MAX';
+
+  @override
+  String get ranking_matchesLabel => 'Matches';
+
+  @override
+  String get ranking_winsLabel => 'Wins';
+
+  @override
+  String get ranking_winRateLabel => 'Win rate';
+
+  @override
+  String get ranking_peakLabel => 'Peak';
 }

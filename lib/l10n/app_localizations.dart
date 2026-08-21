@@ -16633,6 +16633,78 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Loại đội'**
   String get lite_kickTeamAction;
+
+  /// No description provided for @ranking_userFallback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người dùng'**
+  String get ranking_userFallback;
+
+  /// No description provided for @ranking_profileTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang cá nhân'**
+  String get ranking_profileTooltip;
+
+  /// No description provided for @ranking_categoryLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn xếp hạng'**
+  String get ranking_categoryLabel;
+
+  /// No description provided for @ranking_topFootballTeam.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội bóng cao nhất: {teamName}'**
+  String ranking_topFootballTeam(Object teamName);
+
+  /// No description provided for @ranking_eloValue.
+  ///
+  /// In vi, this message translates to:
+  /// **'{elo} ELO'**
+  String ranking_eloValue(Object elo);
+
+  /// No description provided for @ranking_progressTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'TIẾN TRÌNH ELO NỔI BẬT'**
+  String get ranking_progressTitle;
+
+  /// No description provided for @ranking_overviewLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn thi đấu • Tổng quan'**
+  String get ranking_overviewLabel;
+
+  /// No description provided for @ranking_maxElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'TỐI ĐA'**
+  String get ranking_maxElo;
+
+  /// No description provided for @ranking_matchesLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận'**
+  String get ranking_matchesLabel;
+
+  /// No description provided for @ranking_winsLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng'**
+  String get ranking_winsLabel;
+
+  /// No description provided for @ranking_winRateLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉ lệ'**
+  String get ranking_winRateLabel;
+
+  /// No description provided for @ranking_peakLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cao nhất'**
+  String get ranking_peakLabel;
 }
 
 class _AppLocalizationsDelegate

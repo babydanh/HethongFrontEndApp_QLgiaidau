@@ -9007,4 +9007,44 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lite_kickTeamAction => 'Loại đội';
+
+  @override
+  String get ranking_userFallback => 'Người dùng';
+
+  @override
+  String get ranking_profileTooltip => 'Trang cá nhân';
+
+  @override
+  String get ranking_categoryLabel => 'Môn xếp hạng';
+
+  @override
+  String ranking_topFootballTeam(Object teamName) {
+    return 'Đội bóng cao nhất: $teamName';
+  }
+
+  @override
+  String ranking_eloValue(Object elo) {
+    return '$elo ELO';
+  }
+
+  @override
+  String get ranking_progressTitle => 'TIẾN TRÌNH ELO NỔI BẬT';
+
+  @override
+  String get ranking_overviewLabel => 'Môn thi đấu • Tổng quan';
+
+  @override
+  String get ranking_maxElo => 'TỐI ĐA';
+
+  @override
+  String get ranking_matchesLabel => 'Trận';
+
+  @override
+  String get ranking_winsLabel => 'Thắng';
+
+  @override
+  String get ranking_winRateLabel => 'Tỉ lệ';
+
+  @override
+  String get ranking_peakLabel => 'Cao nhất';
 }
