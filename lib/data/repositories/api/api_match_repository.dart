@@ -25,12 +25,16 @@ Map<String, dynamic>? _readSportRules(Map<String, dynamic> json) {
   }
   final tournament = asMap(json['tournament']);
   return asMap(tournament?['sportRules']) ??
-      asMap(tournament?['tournamentConfig'] is Map
-          ? (tournament?['tournamentConfig'] as Map)['sportRules']
-          : null) ??
-      asMap(json['tournamentConfig'] is Map
-          ? (json['tournamentConfig'] as Map)['sportRules']
-          : null);
+      asMap(
+        tournament?['tournamentConfig'] is Map
+            ? (tournament?['tournamentConfig'] as Map)['sportRules']
+            : null,
+      ) ??
+      asMap(
+        json['tournamentConfig'] is Map
+            ? (json['tournamentConfig'] as Map)['sportRules']
+            : null,
+      );
 }
 
 class ApiMatchRepository implements IMatchRepository {
@@ -42,12 +46,19 @@ class ApiMatchRepository implements IMatchRepository {
 
   @override
   Future<MatchModel> create(String tournamentId, MatchModel match) async {
-    throw UnimplementedError('Mobile app cannot create matches directly. Generated via Backend Bracket.');
+    throw UnimplementedError(
+      'Mobile app cannot create matches directly. Generated via Backend Bracket.',
+    );
   }
 
   @override
-  Future<void> createBatch(String tournamentId, List<MatchModel> matches) async {
-    throw UnimplementedError('Mobile app cannot batch create matches directly.');
+  Future<void> createBatch(
+    String tournamentId,
+    List<MatchModel> matches,
+  ) async {
+    throw UnimplementedError(
+      'Mobile app cannot batch create matches directly.',
+    );
   }
 
   final Map<String, List<MatchModel>> _matchesCache = {};
@@ -92,7 +103,10 @@ class ApiMatchRepository implements IMatchRepository {
     for (var page = 0; page < maxPages; page++) {
       final query = <String, dynamic>{...baseQuery, 'limit': pageSize};
       if (cursor != null) query['cursor'] = cursor;
-      final response = await _dioClient.dio.get('/matches', queryParameters: query);
+      final response = await _dioClient.dio.get(
+        '/matches',
+        queryParameters: query,
+      );
       if (response.statusCode != 200) {
         throw StateError('Unexpected match response: ${response.statusCode}');
       }
@@ -122,23 +136,26 @@ class ApiMatchRepository implements IMatchRepository {
     final inflight = _inflightPublicMatches;
     if (inflight != null) return inflight;
 
-    final request = _getMatchPages(const <String, dynamic>{
-      'publicOnly': true,
-    });
+    final request = _getMatchPages(const <String, dynamic>{'publicOnly': true});
     _inflightPublicMatches = request;
-    return request.then((matches) {
-      _publicMatchesCache = List<MatchModel>.of(matches);
-      _publicMatchesFetchedAt = DateTime.now();
-      return matches;
-    }).whenComplete(() {
-      if (identical(_inflightPublicMatches, request)) {
-        _inflightPublicMatches = null;
-      }
-    });
+    return request
+        .then((matches) {
+          _publicMatchesCache = List<MatchModel>.of(matches);
+          _publicMatchesFetchedAt = DateTime.now();
+          return matches;
+        })
+        .whenComplete(() {
+          if (identical(_inflightPublicMatches, request)) {
+            _inflightPublicMatches = null;
+          }
+        });
   }
 
   @override
-  Stream<List<MatchModel>> watchByTournament(String tournamentId, {String? divisionId}) {
+  Stream<List<MatchModel>> watchByTournament(
+    String tournamentId, {
+    String? divisionId,
+  }) {
     final cacheKey = '$tournamentId-${divisionId ?? 'all'}';
     late StreamController<List<MatchModel>> controller;
     StreamSubscription? socketSub;
@@ -160,7 +177,11 @@ class ApiMatchRepository implements IMatchRepository {
         _matchesCache[cacheKey] = updated;
         if (!controller.isClosed) controller.add(updated);
       } catch (error, stack) {
-        _log.error('Keeping cached tournament matches after refresh failure', error, stack);
+        _log.error(
+          'Keeping cached tournament matches after refresh failure',
+          error,
+          stack,
+        );
         final cached = _matchesCache[cacheKey];
         if (cached == null) {
           if (!controller.isClosed) controller.addError(error, stack);
@@ -219,7 +240,11 @@ class ApiMatchRepository implements IMatchRepository {
         );
         _matchesCache['$tournamentId-all'] = currentList;
       } catch (error, stack) {
-        _log.error('Keeping cached live matches after refresh failure', error, stack);
+        _log.error(
+          'Keeping cached live matches after refresh failure',
+          error,
+          stack,
+        );
         final cached = _matchesCache['$tournamentId-all'];
         if (cached == null) {
           if (!controller.isClosed) controller.addError(error, stack);
@@ -341,38 +366,72 @@ class ApiMatchRepository implements IMatchRepository {
   static String _buildCourtDisplay({
     String? court,
     String? courtName,
-    String? courtAddress,
+    String? tournamentVenueName,
   }) {
-    final name = (courtName ?? court ?? '').toString().trim();
-    final address = (courtAddress ?? '').toString().trim();
-    if (name.isEmpty) return address;
-    if (address.isEmpty) return name;
-    if (name.contains(address)) return name;
-    return '$name - $address';
+    final namedCourt = (courtName ?? '').trim();
+    if (namedCourt.isNotEmpty) return namedCourt;
+
+    final courtValue = (court ?? '').trim();
+    if (courtValue.isNotEmpty) return courtValue;
+
+    return (tournamentVenueName ?? '').trim();
+  }
+
+  static String? _readTournamentVenueName(Map<String, dynamic> json) {
+    final tournament = json['tournament'];
+    if (tournament is! Map) return null;
+
+    final venue = tournament['venue'];
+    final value =
+        tournament['venueName'] ?? (venue is Map ? venue['name'] : null);
+    final name = value?.toString().trim() ?? '';
+    return name.isEmpty ? null : name;
   }
 
   MatchModel _parseMatch(Map<String, dynamic> json) {
     String participantName(dynamic participant) {
       if (participant is! Map) return '';
-      final value = participant['teamName'] ?? participant['name'] ?? participant['displayName'];
+      final value =
+          participant['teamName'] ??
+          participant['name'] ??
+          participant['displayName'];
       return value?.toString().trim() ?? '';
     }
+
     final p1Name = participantName(json['participant1']);
     final p2Name = participantName(json['participant2']);
     final team1Name = p1Name.isNotEmpty
         ? p1Name
-        : (json['team1Name'] ?? json['participant1Name'] ??
-                    (json['team1'] is Map ? (json['team1'] as Map)['name'] : null))
-                ?.toString() ?? 'TBD';
+        : (json['team1Name'] ??
+                      json['participant1Name'] ??
+                      (json['team1'] is Map
+                          ? (json['team1'] as Map)['name']
+                          : null))
+                  ?.toString() ??
+              'TBD';
     final team2Name = p2Name.isNotEmpty
         ? p2Name
-        : (json['team2Name'] ?? json['participant2Name'] ??
-                    (json['team2'] is Map ? (json['team2'] as Map)['name'] : null))
-                ?.toString() ?? 'TBD';
+        : (json['team2Name'] ??
+                      json['participant2Name'] ??
+                      (json['team2'] is Map
+                          ? (json['team2'] as Map)['name']
+                          : null))
+                  ?.toString() ??
+              'TBD';
     final rosters1 = json['participant1']?['rosters'] as List<dynamic>?;
-    final team1Members = rosters1?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
+    final team1Members =
+        rosters1
+            ?.map((r) => r['fullName']?.toString() ?? '')
+            .where((n) => n.isNotEmpty)
+            .toList() ??
+        <String>[];
     final rosters2 = json['participant2']?['rosters'] as List<dynamic>?;
-    final team2Members = rosters2?.map((r) => r['fullName']?.toString() ?? '').where((n) => n.isNotEmpty).toList() ?? <String>[];
+    final team2Members =
+        rosters2
+            ?.map((r) => r['fullName']?.toString() ?? '')
+            .where((n) => n.isNotEmpty)
+            .toList() ??
+        <String>[];
 
     int parseNum(dynamic val) {
       if (val is num) return val.toInt();
@@ -392,16 +451,26 @@ class ApiMatchRepository implements IMatchRepository {
           final sets = details['sets'] as List;
           for (final rawSet in sets) {
             if (rawSet is! Map) continue;
-            parsedSets.add(SetScore(
-              score1: parseNum(rawSet['team1Score'] ?? rawSet['score1'] ?? rawSet['p1']),
-              score2: parseNum(rawSet['team2Score'] ?? rawSet['score2'] ?? rawSet['p2']),
-            ));
+            parsedSets.add(
+              SetScore(
+                score1: parseNum(
+                  rawSet['team1Score'] ?? rawSet['score1'] ?? rawSet['p1'],
+                ),
+                score2: parseNum(
+                  rawSet['team2Score'] ?? rawSet['score2'] ?? rawSet['p2'],
+                ),
+              ),
+            );
           }
           if (sets.isNotEmpty) {
             final lastSet = sets.last;
             if (score1 == 0 && score2 == 0 && lastSet is Map) {
-              score1 = parseNum(lastSet['score1'] ?? lastSet['p1'] ?? lastSet['team1Score']);
-              score2 = parseNum(lastSet['score2'] ?? lastSet['p2'] ?? lastSet['team2Score']);
+              score1 = parseNum(
+                lastSet['score1'] ?? lastSet['p1'] ?? lastSet['team1Score'],
+              );
+              score2 = parseNum(
+                lastSet['score2'] ?? lastSet['p2'] ?? lastSet['team2Score'],
+              );
             }
           }
         }
@@ -414,12 +483,14 @@ class ApiMatchRepository implements IMatchRepository {
       score2 = parseNum(json['p2SetsWon']);
     }
 
-    final rawGroup = json['groupName'] ??
+    final rawGroup =
+        json['groupName'] ??
         json['group_name'] ??
         (json['group'] is Map ? json['group']['name'] : json['group']);
     final groupName = rawGroup?.toString();
 
-    final rawStage = json['stageName'] ??
+    final rawStage =
+        json['stageName'] ??
         json['stage_name'] ??
         json['stage'] ??
         json['stageType'];
@@ -427,14 +498,16 @@ class ApiMatchRepository implements IMatchRepository {
 
     final nextMatchId = (json['nextMatchId'] ?? '').toString();
     final loserNextMatchId = (json['loserNextMatchId'] ?? '').toString();
-    final hasBracketChain = nextMatchId.isNotEmpty || loserNextMatchId.isNotEmpty;
+    final hasBracketChain =
+        nextMatchId.isNotEmpty || loserNextMatchId.isNotEmpty;
 
     String bracketName = 'winners';
     if (json['bracketBranch'] != null) {
       bracketName = _mapBracketBranch(json['bracketBranch'] as String?);
     } else if (hasBracketChain) {
       bracketName = 'winners';
-    } else if ((stageName != null && stageName.toUpperCase().contains('GROUP')) ||
+    } else if ((stageName != null &&
+            stageName.toUpperCase().contains('GROUP')) ||
         (json['stage']?.toString().toUpperCase() == 'GROUP_STAGE')) {
       bracketName = 'group_stage';
     } else if (groupName != null &&
@@ -446,21 +519,28 @@ class ApiMatchRepository implements IMatchRepository {
 
     return MatchModel(
       id: json['id'] ?? '',
-      tournamentId: json['tournamentId']?.toString() ??
+      tournamentId:
+          json['tournamentId']?.toString() ??
           json['tournament_id']?.toString() ??
           (json['tournament'] is Map
               ? (json['tournament'] as Map)['id']?.toString()
               : null),
       round: json['roundNumber'] ?? json['round'] ?? 1,
       matchNumber: json['matchOrder'] ?? json['matchNumber'] ?? 1,
-      team1Id: json['team1Id']?.toString() ??
+      team1Id:
+          json['team1Id']?.toString() ??
           json['participant1Id']?.toString() ??
-          (json['participant1'] is Map ? json['participant1']['id']?.toString() : null) ??
+          (json['participant1'] is Map
+              ? json['participant1']['id']?.toString()
+              : null) ??
           '',
       team1Name: team1Name,
-      team2Id: json['team2Id']?.toString() ??
+      team2Id:
+          json['team2Id']?.toString() ??
           json['participant2Id']?.toString() ??
-          (json['participant2'] is Map ? json['participant2']['id']?.toString() : null) ??
+          (json['participant2'] is Map
+              ? json['participant2']['id']?.toString()
+              : null) ??
           '',
       team2Name: team2Name,
       score1: score1,
@@ -480,29 +560,41 @@ class ApiMatchRepository implements IMatchRepository {
       court: _buildCourtDisplay(
         court: json['court']?.toString(),
         courtName: json['courtName']?.toString(),
-        courtAddress: json['courtAddress']?.toString(),
+        tournamentVenueName: _readTournamentVenueName(json),
       ),
+
       courtAddress: json['courtAddress']?.toString() ?? '',
-            scheduledTime: DateParser.parseDateOptional(json['scheduledTime'] ?? json['scheduled_at']),
-            startedAt: DateParser.parseDateOptional(json['startedAt'] ?? json['started_at']),
-            completedAt: DateParser.parseDateOptional(json['completedAt'] ?? json['completed_at']),
-            updatedAt: DateParser.parseDateOptional(json['updatedAt'] ?? json['updated_at']) ?? DateTime.now(),
-            revision: json['revision'] as int?,
-            refereeId: json['refereeId']?.toString(),
-            refereeName: json['refereeName']?.toString(),
+      scheduledTime: DateParser.parseDateOptional(
+        json['scheduledTime'] ?? json['scheduled_at'],
+      ),
+      startedAt: DateParser.parseDateOptional(
+        json['startedAt'] ?? json['started_at'],
+      ),
+      completedAt: DateParser.parseDateOptional(
+        json['completedAt'] ?? json['completed_at'],
+      ),
+      updatedAt:
+          DateParser.parseDateOptional(
+            json['updatedAt'] ?? json['updated_at'],
+          ) ??
+          DateTime.now(),
+      revision: json['revision'] as int?,
+      refereeId: json['refereeId']?.toString(),
+      refereeName: json['refereeName']?.toString(),
       sportRules: _readSportRules(json),
       tournamentConfig: json['tournamentConfig'] is Map
           ? Map<String, dynamic>.from(json['tournamentConfig'] as Map)
           : json['tournament'] is Map &&
-                  (json['tournament'] as Map)['tournamentConfig'] is Map
-              ? Map<String, dynamic>.from(
-                  (json['tournament'] as Map)['tournamentConfig'] as Map,
-                )
-              : null,
+                (json['tournament'] as Map)['tournamentConfig'] is Map
+          ? Map<String, dynamic>.from(
+              (json['tournament'] as Map)['tournamentConfig'] as Map,
+            )
+          : null,
       scoreDetails: json['scoreDetails'] is Map
           ? Map<String, dynamic>.from(json['scoreDetails'] as Map)
           : null,
-      sportKey: json['sport']?.toString() ??
+      sportKey:
+          json['sport']?.toString() ??
           json['sportKey']?.toString() ??
           (json['tournament'] is Map
               ? (json['tournament'] as Map)['sport']?.toString()
@@ -556,7 +648,9 @@ class ApiMatchRepository implements IMatchRepository {
           }
         });
 
-        tournamentUpdateSub = _socketService.onTournamentMatchUpdate.listen((data) {
+        tournamentUpdateSub = _socketService.onTournamentMatchUpdate.listen((
+          data,
+        ) {
           if (data['id'] == matchId && !controller.isClosed) {
             final newMatch = _parseMatch(data);
             final mergedMatch = _mergeMatchUpdate(newMatch, latestMatch, data);
@@ -567,7 +661,9 @@ class ApiMatchRepository implements IMatchRepository {
 
         // Socket is the fast path; reconcile periodically so a dropped event or
         // a proxy that temporarily falls back to polling cannot leave stale score.
-        reconciliationTimer = Timer.periodic(const Duration(seconds: 12), (_) async {
+        reconciliationTimer = Timer.periodic(const Duration(seconds: 12), (
+          _,
+        ) async {
           final refreshed = await _getMatchById(matchId);
           if (refreshed != null && !controller.isClosed) {
             latestMatch = refreshed;
@@ -596,7 +692,8 @@ class ApiMatchRepository implements IMatchRepository {
     Map<String, dynamic> payload,
   ) {
     if (previous == null) return incoming;
-    final hasScorePayload = payload.containsKey('scoreDetails') ||
+    final hasScorePayload =
+        payload.containsKey('scoreDetails') ||
         payload.containsKey('p1SetsWon') ||
         payload.containsKey('p2SetsWon') ||
         payload.containsKey('score1') ||
@@ -606,13 +703,19 @@ class ApiMatchRepository implements IMatchRepository {
     return incoming.copyWith(
       team1Id: incoming.team1Id.isEmpty ? previous.team1Id : incoming.team1Id,
       team2Id: incoming.team2Id.isEmpty ? previous.team2Id : incoming.team2Id,
-      team1Name: incoming.team1Name == 'TBD' ? previous.team1Name : incoming.team1Name,
-      team2Name: incoming.team2Name == 'TBD' ? previous.team2Name : incoming.team2Name,
+      team1Name: incoming.team1Name == 'TBD'
+          ? previous.team1Name
+          : incoming.team1Name,
+      team2Name: incoming.team2Name == 'TBD'
+          ? previous.team2Name
+          : incoming.team2Name,
       tournamentName: incoming.tournamentName ?? previous.tournamentName,
       sportKey: incoming.sportKey ?? previous.sportKey,
       sportRules: incoming.sportRules ?? previous.sportRules,
       tournamentConfig: incoming.tournamentConfig ?? previous.tournamentConfig,
-      scoreDetails: hasScorePayload ? incoming.scoreDetails : previous.scoreDetails,
+      scoreDetails: hasScorePayload
+          ? incoming.scoreDetails
+          : previous.scoreDetails,
       score1: hasScorePayload ? incoming.score1 : previous.score1,
       score2: hasScorePayload ? incoming.score2 : previous.score2,
       sets: hasScorePayload ? incoming.sets : previous.sets,
@@ -628,7 +731,6 @@ class ApiMatchRepository implements IMatchRepository {
       revision: incoming.revision ?? previous.revision,
     );
   }
-
 
   @override
   Future<void> updateLiveState(
@@ -649,15 +751,21 @@ class ApiMatchRepository implements IMatchRepository {
     final hasScore = score1 != null || score2 != null;
     final hasStatus = status != null;
     final hasConfig =
-        maxScore != null || winByTwo != null || timeLimitMinutes != null || refereeName != null;
+        maxScore != null ||
+        winByTwo != null ||
+        timeLimitMinutes != null ||
+        refereeName != null;
 
     // Status-only (không có score flat) → PATCH /matches/:id/status
     if (hasStatus && !hasScore) {
       final backendStatus = _normalizeStatusToBackend(status);
-      _log.info('Status update for $matchId via /status: $status -> $backendStatus');
-      await _dioClient.dio.patch('/matches/$matchId/status', data: {
-        'status': backendStatus,
-      });
+      _log.info(
+        'Status update for $matchId via /status: $status -> $backendStatus',
+      );
+      await _dioClient.dio.patch(
+        '/matches/$matchId/status',
+        data: {'status': backendStatus},
+      );
       return;
     }
 
@@ -686,7 +794,9 @@ class ApiMatchRepository implements IMatchRepository {
     }
 
     // Events/penalties only — không có endpoint
-    _log.warning('updateLiveState chỉ gồm events/penalties — không có endpoint backend, bỏ qua');
+    _log.warning(
+      'updateLiveState chỉ gồm events/penalties — không có endpoint backend, bỏ qua',
+    );
   }
 
   @override
@@ -698,9 +808,10 @@ class ApiMatchRepository implements IMatchRepository {
     String? refereeName,
   }) async {
     _log.info('Starting match $matchId via API');
-    await _dioClient.dio.patch('/matches/$matchId/status', data: {
-      'status': 'ONGOING',
-    });
+    await _dioClient.dio.patch(
+      '/matches/$matchId/status',
+      data: {'status': 'ONGOING'},
+    );
   }
 
   @override
@@ -722,7 +833,6 @@ class ApiMatchRepository implements IMatchRepository {
     );
   }
 
-
   @override
   Future<void> updateScoreDetails(
     String tournamentId,
@@ -735,7 +845,9 @@ class ApiMatchRepository implements IMatchRepository {
     String? overrideReason,
     int? expectedRevision,
   }) async {
-    _log.info('Updating score details for match $matchId: sets=$p1SetsWon-$p2SetsWon');
+    _log.info(
+      'Updating score details for match $matchId: sets=$p1SetsWon-$p2SetsWon',
+    );
     final payload = <String, dynamic>{
       'p1SetsWon': p1SetsWon,
       'p2SetsWon': p2SetsWon,
@@ -746,15 +858,19 @@ class ApiMatchRepository implements IMatchRepository {
     };
     if (winnerId != null) payload['winnerId'] = winnerId;
     if (overrideReason != null) payload['overrideReason'] = overrideReason;
-        if (expectedRevision != null) payload['expectedRevision'] = expectedRevision;
+    if (expectedRevision != null)
+      payload['expectedRevision'] = expectedRevision;
 
-        try {
-          await _dioClient.dio.patch('/matches/$matchId/score', data: payload);
+    try {
+      await _dioClient.dio.patch('/matches/$matchId/score', data: payload);
     } on DioException catch (error) {
       final body = error.response?.data;
       final rawMessage = body is Map ? body['message'] : null;
       final message = rawMessage is List
-          ? rawMessage.whereType<Object>().map((item) => item.toString()).join('\n')
+          ? rawMessage
+                .whereType<Object>()
+                .map((item) => item.toString())
+                .join('\n')
           : rawMessage?.toString();
       throw Exception(
         message?.trim().isNotEmpty == true
@@ -772,12 +888,19 @@ class ApiMatchRepository implements IMatchRepository {
     required String winnerName,
     required bool isTeam1,
   }) async {
-    throw UnimplementedError('Handled automatically by backend completion workflow.');
+    throw UnimplementedError(
+      'Handled automatically by backend completion workflow.',
+    );
   }
 
   @override
-  Future<List<MatchModel>> getAllByTournament(String tournamentId, {String? divisionId}) async {
-    _log.debug('Fetching all matches for tournament $tournamentId via API (division: $divisionId)');
+  Future<List<MatchModel>> getAllByTournament(
+    String tournamentId, {
+    String? divisionId,
+  }) async {
+    _log.debug(
+      'Fetching all matches for tournament $tournamentId via API (division: $divisionId)',
+    );
     final cacheKey = '$tournamentId-${divisionId ?? 'all'}';
     final inflight = _inflightTournamentMatches[cacheKey];
     if (inflight != null) return inflight;
@@ -834,8 +957,13 @@ class ApiMatchRepository implements IMatchRepository {
   }
 
   @override
-  Future<List<MatchModel>> getMatches({String? status, bool? publicOnly}) async {
-    _log.debug('Fetching matches globally with status: $status, publicOnly: $publicOnly');
+  Future<List<MatchModel>> getMatches({
+    String? status,
+    bool? publicOnly,
+  }) async {
+    _log.debug(
+      'Fetching matches globally with status: $status, publicOnly: $publicOnly',
+    );
     try {
       final queryParams = <String, dynamic>{};
       if (status != null) queryParams['status'] = status;
@@ -858,11 +986,14 @@ class ApiMatchRepository implements IMatchRepository {
   @override
   Future<int> getCheerCount(String matchId) async {
     try {
-      final response = await _dioClient.dio.get('/matches/$matchId/cheer-count');
+      final response = await _dioClient.dio.get(
+        '/matches/$matchId/cheer-count',
+      );
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         if (data is int) return data;
-        if (data is Map) return (data['count'] ?? data['cheerCount'] ?? 0) as int;
+        if (data is Map)
+          return (data['count'] ?? data['cheerCount'] ?? 0) as int;
       }
     } catch (e) {
       _log.error('Error fetching cheer count for match $matchId', e);
@@ -880,10 +1011,7 @@ class ApiMatchRepository implements IMatchRepository {
     String? winnerId,
   }) async {
     _log.info('Match operation: $action for match $matchId');
-    final payload = <String, dynamic>{
-      'action': action,
-      'reason': reason,
-    };
+    final payload = <String, dynamic>{'action': action, 'reason': reason};
     if (winnerId != null) payload['winnerId'] = winnerId;
 
     await _dioClient.dio.patch('/matches/$matchId/operation', data: payload);

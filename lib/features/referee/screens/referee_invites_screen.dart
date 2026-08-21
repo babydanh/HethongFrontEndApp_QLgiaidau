@@ -59,6 +59,7 @@ class RefereeInvitesScreen extends ConsumerWidget {
               itemCount: pendingInvites.length,
               itemBuilder: (context, index) {
                 return _InviteCard(
+                  l10n: l10n,
                   invite: pendingInvites[index],
                   index: index,
                   onAccept: () => _handleAction(
@@ -131,12 +132,14 @@ class RefereeInvitesScreen extends ConsumerWidget {
 
 class _InviteCard extends StatelessWidget {
   const _InviteCard({
+    required this.l10n,
     required this.invite,
     required this.index,
     required this.onAccept,
     required this.onDecline,
   });
 
+  final AppLocalizations l10n;
   final TournamentRefereeInvite invite;
   final int index;
   final VoidCallback onAccept;
@@ -147,7 +150,7 @@ class _InviteCard extends StatelessWidget {
     final colors = context.colors;
     final assignedText = invite.assignedAt != null
         ? DateFormatterUtils.formatDateTime(invite.assignedAt!.toLocal())
-        : 'Chưa rõ lịch';
+        : l10n.refereeInviteUnknownSchedule;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -194,7 +197,7 @@ class _InviteCard extends StatelessWidget {
                     Text(
                       invite.categoryName.isNotEmpty
                           ? invite.categoryName
-                          : 'Phân công trọng tài',
+                          : l10n.refereeInviteAssignmentFallback,
                       style: TextStyle(fontSize: 12, color: colors.textMuted),
                     ),
                   ],
@@ -209,8 +212,8 @@ class _InviteCard extends StatelessWidget {
                   color: AppTheme.refereeColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: const Text(
-                  'Chờ phản hồi',
+                child: Text(
+                  l10n.refereeInvitePending,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -223,13 +226,13 @@ class _InviteCard extends StatelessWidget {
           const SizedBox(height: 14),
           _InviteMetaRow(
             icon: Icons.schedule_rounded,
-            label: 'Ngày mời',
+            label: l10n.refereeInviteDateLabel,
             value: assignedText,
           ),
           const SizedBox(height: 8),
           _InviteMetaRow(
             icon: Icons.flag_rounded,
-            label: 'Trạng thái giải',
+            label: l10n.refereeInviteTournamentStatusLabel,
             value: _mapTournamentStatus(invite.tournamentStatus),
           ),
           const SizedBox(height: 16),
@@ -239,8 +242,8 @@ class _InviteCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: onAccept,
                   icon: const Icon(Icons.check_rounded, size: 18),
-                  label: const Text(
-                    'Nhận nhiệm vụ',
+                  label: Text(
+                    l10n.refereeInviteAccept,
                     style: TextStyle(fontWeight: FontWeight.w800),
                   ),
                   style: FilledButton.styleFrom(
@@ -259,8 +262,8 @@ class _InviteCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onDecline,
                   icon: const Icon(Icons.close_rounded, size: 18),
-                  label: const Text(
-                    'Từ chối',
+                  label: Text(
+                    l10n.refereeInviteDecline,
                     style: TextStyle(fontWeight: FontWeight.w800),
                   ),
                   style: OutlinedButton.styleFrom(

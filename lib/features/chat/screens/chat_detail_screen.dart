@@ -455,6 +455,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     String? customContent,
     Map<String, dynamic>? pollData,
   }) async {
+    final l10n = AppLocalizations.of(context)!;
     final text = (customContent ?? _messageController.text).trim();
     if (text.isEmpty && _pendingMedia.isEmpty && pollData == null) return;
     if (_isSending) return;
@@ -496,7 +497,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ErrorParser.parse(e, 'Không thể gửi tin nhắn.')),
+            content: Text(ErrorParser.parse(e, l10n.chatDetailSendError)),
           ),
         );
       }
@@ -510,6 +511,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final picker = ImagePicker();
       final picked = await picker.pickImage(source: source, imageQuality: 80);
@@ -533,7 +535,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ErrorParser.parse(e, 'Không thể tải ảnh lên.')),
+            content: Text(ErrorParser.parse(e, l10n.chatDetailUploadError)),
           ),
         );
       }
@@ -681,24 +683,23 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   }
 
   Future<void> _revokeMessage(ChatMessageModel message) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Thu hồi tin nhắn?'),
-        content: const Text(
-          'Tin nhắn này sẽ bị gỡ bỏ đối với tất cả mọi người trong phòng chat.',
-        ),
+        title: Text(l10n.chatDetailRevokeTitle),
+        content: Text(l10n.chatDetailRevokeContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Hủy'),
+            child: Text(l10n.chatDetailCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('Thu hồi'),
+            child: Text(l10n.chatDetailRevokeAction),
           ),
         ],
       ),
@@ -712,7 +713,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         if (idx != -1) {
           _messages[idx] = _messages[idx].copyWith(
             isRevoked: true,
-            content: 'Tin nhắn đã bị thu hồi',
+            content: l10n.chatDetailRevoked,
           );
         }
       });
@@ -795,7 +796,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     Clipboard.setData(ClipboardData(text: message.content));
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(l10n?.chatCopiedFeedback ?? 'Copied to clipboard.'),
+                        content: Text(
+                          l10n?.chatCopiedFeedback ?? 'Copied to clipboard.',
+                        ),
                       ),
                     );
                   },
@@ -839,10 +842,11 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   }
 
   void _openRoomSettings() {
+    final l10n = AppLocalizations.of(context)!;
     ChatRoomSettingsSheet.show(
       context,
       roomId: widget.roomId,
-      roomName: widget.roomName ?? 'Phòng chat',
+      roomName: widget.roomName ?? l10n.chatDetailRoomFallback,
       roomAvatar: widget.roomAvatar,
       roomType: widget.roomType,
       communityId: widget.communityId,
@@ -917,13 +921,20 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     final localeName = Localizations.localeOf(context).toLanguageTag();
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final title = widget.roomName ?? (l10n?.chatDetailRoomFallback ?? 'Chat room');
+    final title =
+        widget.roomName ?? (l10n?.chatDetailRoomFallback ?? 'Chat room');
     final memberDirectory = widget.communityId == null
         ? null
-        : ref.watch(communityMemberDirectoryProvider(widget.communityId!)).asData?.value;
+        : ref
+              .watch(communityMemberDirectoryProvider(widget.communityId!))
+              .asData
+              ?.value;
     final tagPresets = widget.communityId == null
         ? null
-        : ref.watch(communityTagPresetsProvider(widget.communityId!)).asData?.value;
+        : ref
+              .watch(communityTagPresetsProvider(widget.communityId!))
+              .asData
+              ?.value;
 
     final hasValidPinned =
         _pinnedMessage != null &&
@@ -1017,12 +1028,17 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     ),
                     Text(
                       _typingUser != null
-                          ? (l10n?.chatDetailTyping(_typingUser!) ?? '${_typingUser!} is typing...')
+                          ? (l10n?.chatDetailTyping(_typingUser!) ??
+                                '${_typingUser!} is typing...')
                           : (widget.roomType == 'CLUB' ||
                                     widget.roomType == 'GROUP'
                                 ? (_onlineUserIds.isNotEmpty
-                                      ? (l10n?.chatDetailOnlineCount(_onlineUserIds.length) ?? '${_onlineUserIds.length} people online')
-                                      : (l10n?.chatDetailActive ?? 'Active now'))
+                                      ? (l10n?.chatDetailOnlineCount(
+                                              _onlineUserIds.length,
+                                            ) ??
+                                            '${_onlineUserIds.length} people online')
+                                      : (l10n?.chatDetailActive ??
+                                            'Active now'))
                                 : (_participants.any(
                                         (p) =>
                                             p.id !=
@@ -1034,7 +1050,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                             _onlineUserIds.contains(p.id),
                                       )
                                       ? (l10n?.chatDetailActive ?? 'Active now')
-                                      : (l10n?.chatDetailRecentlyActive ?? 'Recently active'))),
+                                      : (l10n?.chatDetailRecentlyActive ??
+                                            'Recently active'))),
                       style: TextStyle(
                         fontSize: 11.5,
                         color: _typingUser != null
@@ -1059,7 +1076,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.info_outline_rounded, size: 22),
-            tooltip: l10n?.chatDetailRoomSettingsTooltip ?? 'Options & Notifications',
+            tooltip:
+                l10n?.chatDetailRoomSettingsTooltip ??
+                'Options & Notifications',
             onPressed: _openRoomSettings,
           ),
         ],
@@ -1136,8 +1155,10 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                             _pinnedMessage!.content.trim().isNotEmpty
                                 ? _pinnedMessage!.content.trim()
                                 : (_pinnedMessage!.mediaUrls.isNotEmpty
-                                      ? (l10n?.chatDetailAttachedImage ?? '📷 [Attached image]')
-                                      : (l10n?.chatDetailPollPlaceholder ?? '📊 [Poll]')),
+                                      ? (l10n?.chatDetailAttachedImage ??
+                                            '📷 [Attached image]')
+                                      : (l10n?.chatDetailPollPlaceholder ??
+                                            '📊 [Poll]')),
                             style: TextStyle(
                               fontSize: 12.5,
                               color: isDark
@@ -1191,7 +1212,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              l10n?.chatDetailStartConversation ?? 'Send the first message to start the conversation!',
+                              l10n?.chatDetailStartConversation ??
+                                  'Send the first message to start the conversation!',
                               style: TextStyle(
                                 color: colors.textMuted.withValues(alpha: 0.7),
                                 fontSize: 12,
@@ -1273,7 +1295,11 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text(
-                                      _formatDateSeparator(msg.createdAt, localeName, l10n),
+                                      _formatDateSeparator(
+                                        msg.createdAt,
+                                        localeName,
+                                        l10n,
+                                      ),
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
@@ -1288,7 +1314,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                 isDark,
                                 isFirstInGroup: isFirstInGroup,
                                 isLastInGroup: isLastInGroup,
-                                senderTags: memberDirectory?[msg.senderId]?.tags
+                                senderTags:
+                                    memberDirectory?[msg.senderId]?.tags
                                         .take(AppConstants.memberTagMax)
                                         .toList(growable: false) ??
                                     const <String>[],
@@ -1311,7 +1338,11 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                             left: 3,
                                           ),
                                           child: Tooltip(
-                                            message: l10n?.chatDetailSeenBy(p.fullName) ?? 'Seen by ${p.fullName}',
+                                            message:
+                                                l10n?.chatDetailSeenBy(
+                                                  p.fullName,
+                                                ) ??
+                                                'Seen by ${p.fullName}',
                                             child: CircleAvatar(
                                               radius: 7.5,
                                               backgroundColor:
@@ -1404,7 +1435,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               alignment: Alignment.centerLeft,
               child: Text(
-                l10n?.chatDetailTyping(_typingUser!) ?? '${_typingUser!} is typing...',
+                l10n?.chatDetailTyping(_typingUser!) ??
+                    '${_typingUser!} is typing...',
                 style: TextStyle(
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
@@ -1434,7 +1466,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l10n?.chatDetailReplyTo(_replyingTo!.senderName) ?? 'Reply to ${_replyingTo!.senderName}',
+                          l10n?.chatDetailReplyTo(_replyingTo!.senderName) ??
+                              'Reply to ${_replyingTo!.senderName}',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -1443,7 +1476,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         ),
                         Text(
                           _replyingTo!.content.isEmpty
-                              ? (l10n?.chatDetailMediaPollPlaceholder ?? '[Image / Poll]')
+                              ? (l10n?.chatDetailMediaPollPlaceholder ??
+                                    '[Image / Poll]')
                               : _replyingTo!.content,
                           style: TextStyle(
                             fontSize: 12,
@@ -1583,6 +1617,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     required List<String> senderTags,
     List<CommunityTagPreset>? tagPresets,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     final isMine = msg.isMine;
     final bubbleBg = isMine
         ? AppTheme.primary
@@ -1808,7 +1843,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                         ),
                                         Text(
                                           msg.replyToMessage!.content.isEmpty
-                                              ? '[Hình ảnh / Bình chọn]'
+                                              ? l10n.chatDetailMediaPollPlaceholder
                                               : msg.replyToMessage!.content,
                                           style: TextStyle(
                                             fontSize: 11.5,

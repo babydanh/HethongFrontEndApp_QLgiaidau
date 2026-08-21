@@ -196,9 +196,9 @@ class _DoublesRegistrationFlowState
                   helperText: help,
                 ),
                 items: [
-                  const DropdownMenuItem(
+                  DropdownMenuItem(
                     value: '',
-                    child: Text('Chọn một lựa chọn'),
+                    child: Text(l10n.registerSelectOption),
                   ),
                   ...((field['options'] as List? ?? const []).map(
                     (option) => DropdownMenuItem(
@@ -1160,17 +1160,17 @@ class _DoublesRegistrationFlowState
                   onPressed: () {
                     AppShareModal.show(
                       context: context,
-                      title: 'Mời tham gia đội ${_teamNameCtrl.text}',
-                      subtitle: 'Giải ${t.name}',
+                      title: l10n.doublesRegInviteTeamTitle(_teamNameCtrl.text),
+                      subtitle: l10n.doublesRegTournamentSubtitle(t.name),
                       webUrl: inviteLink ?? _teamInviteToken!,
                       imageUrl: t.logoUrl,
-                      badgeText: 'Lời mời ghép đôi',
+                      badgeText: l10n.doublesRegInviteBadge,
                     );
                   },
                   icon: const Icon(Icons.share_rounded, size: 16),
-                  label: const Text(
-                    'Chia sẻ',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  label: Text(
+                    l10n.doublesRegShareToTeam,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
@@ -1199,7 +1199,7 @@ class _DoublesRegistrationFlowState
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Đã gửi thông báo ghép đội',
+                  l10n.doublesRegInviteSentTitle,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
@@ -1208,7 +1208,7 @@ class _DoublesRegistrationFlowState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Chúng tôi đã gửi thông báo lời mời đến đồng đội của bạn qua tài khoản. Hãy nhắc họ mở ứng dụng hoặc truy cập web để xác nhận tham gia.',
+                  l10n.doublesRegInviteSentDescription,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 12,
@@ -1280,6 +1280,7 @@ class _DoublesRegistrationFlowState
 
   /// Countdown badge for partner invitation — shows HH:MM:SS or MM:SS, pulsing red when ≤30s
   Widget _buildCountdownBadge(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     int remaining = 0;
     if (_partnerInviteExpiresAt != null) {
       remaining = _partnerInviteExpiresAt!.difference(DateTime.now()).inSeconds;
@@ -1314,7 +1315,7 @@ class _DoublesRegistrationFlowState
           ),
           const SizedBox(width: 8),
           Text(
-            'Giữ chỗ trong $timeStr',
+            l10n.doublesRegSpotReserved(timeStr),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w800,
@@ -1359,10 +1360,10 @@ class _DoublesRegistrationFlowState
         (_teamStatus == 'COMPLETE' || _teamStatus == 'PENDING_APPROVAL');
     final isWaitlisted = _teamStatus == 'WAITLISTED';
     final statusLabel = switch (_teamStatus) {
-      'PENDING_APPROVAL' => 'Đã ghép đội, đang chờ BTC duyệt',
-      'COMPLETE' => 'Đã ghép đội và được duyệt',
-      'WAITLISTED' => 'Đã ghép đội, đang ở danh sách chờ',
-      _ => 'Đã ghép đội thành công',
+      'PENDING_APPROVAL' => l10n.doublesRegStatusPendingApproval,
+      'COMPLETE' => l10n.doublesRegStatusComplete,
+      'WAITLISTED' => l10n.doublesRegStatusWaitlisted,
+      _ => l10n.doublesRegStatusSuccess,
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1393,17 +1394,17 @@ class _DoublesRegistrationFlowState
               onPressed: () {
                 AppShareModal.show(
                   context: context,
-                  title: 'Tham gia đội ${_teamNameCtrl.text}',
-                  subtitle: 'Giải ${t.name} - Partner: $_partnerContact',
+                  title: l10n.doublesRegJoinTeamShareTitle(_teamNameCtrl.text),
+                  subtitle: l10n.doublesRegPartnerSubtitle(t.name, _partnerContact!),
                   webUrl:
                       inviteLink ??
                       'https://sporto.asia/tournaments/${widget.tournamentId}',
                   imageUrl: t.logoUrl,
-                  badgeText: 'Lời mời ghép đôi',
+                  badgeText: l10n.doublesRegInviteBadge,
                 );
               },
               icon: const Icon(Icons.share_rounded, size: 18),
-              label: const Text('Chia sẻ tới đồng đội'),
+              label: Text(l10n.doublesRegShareToPartner),
             ),
           ),
           const SizedBox(height: 16),
@@ -1427,7 +1428,7 @@ class _DoublesRegistrationFlowState
               ),
               const SizedBox(height: 16),
               Text(
-                'Đội của bạn: ${_teamNameCtrl.text}',
+                l10n.doublesRegYourTeam(_teamNameCtrl.text),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -1437,7 +1438,7 @@ class _DoublesRegistrationFlowState
               const SizedBox(height: 8),
               if (_selectedPartner != null)
                 Text(
-                  'Cùng: ${_selectedPartner!.fullName}',
+                  l10n.doublesRegWithPartner(_selectedPartner!.fullName),
                   style: TextStyle(fontSize: 14, color: colors.textSecondary),
                 ),
               if (_entryFee != null && _entryFee! > 0) ...[
@@ -1452,7 +1453,9 @@ class _DoublesRegistrationFlowState
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'Phí tham gia: ${NumberFormat('#,###', 'vi_VN').format(_entryFee!.ceil())}đ',
+                    l10n.doublesRegEntryFee(
+                      '${NumberFormat('#,###', 'vi_VN').format(_entryFee!.ceil())}đ',
+                    ),
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       color: colors.warning,
@@ -1463,14 +1466,16 @@ class _DoublesRegistrationFlowState
               if (_entryFee != null && _entryFee! > 0 && !isWaitlisted) ...[
                 const SizedBox(height: 8),
                 Text(
-                  'Trạng thái thanh toán: ${_isPaid ? 'Đã thanh toán' : 'Chưa thanh toán'}',
+                  l10n.doublesRegPaymentStatus(
+                    _isPaid ? l10n.doublesRegPaid : l10n.doublesRegUnpaid,
+                  ),
                   style: TextStyle(fontSize: 13, color: colors.textSecondary),
                 ),
               ],
               if (isWaitlisted) ...[
                 const SizedBox(height: 12),
                 Text(
-                  'Đội đang ở danh sách chờ. Bạn chưa cần thanh toán cho đến khi có suất chính thức.',
+                  l10n.doublesRegWaitlistInfo,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: colors.textSecondary),
                 ),
@@ -1503,7 +1508,7 @@ class _DoublesRegistrationFlowState
                 ? const Icon(Icons.payment_rounded)
                 : const Icon(Icons.check_rounded),
             label: Text(
-              canPay ? 'Tiến hành thanh toán' : l10n.doublesRegComplete,
+              canPay ? l10n.doublesRegProceedPayment : l10n.doublesRegComplete,
             ),
             style: FilledButton.styleFrom(
               shape: RoundedRectangleBorder(

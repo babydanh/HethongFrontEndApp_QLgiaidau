@@ -384,7 +384,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             tiers: tierList,
             isMe: isAuth && r.userId == currentUserId,
             highlight: true,
-            onTap: () => context.go('/profile/user/${r.userId}'),
+            onTap: () => context.push('/user/${r.userId}'),
           );
         },
       );
@@ -405,7 +405,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Bục vinh danh Top 1 - 3 (luôn hiện bục vinh danh)
-        PodiumView(rankings: rankings, tiers: tierList, formatLabel: formatStr),
+        PodiumView(
+          rankings: rankings,
+          tiers: tierList,
+          formatLabel: formatStr,
+          onTapUser: (userId) => context.push('/user/$userId'),
+        ),
 
         // Section 2: Hạng 4 - 10
         if (top4_10.isNotEmpty) ...[
@@ -415,7 +420,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               tiers: tierList,
               isMe: isAuth && rank4.userId == currentUserId,
               formatLabel: formatStr,
-              onTap: () => context.go('/profile/user/${rank4.userId}'),
+              onTap: () => context.push('/user/${rank4.userId}'),
             ),
           if (ranks5_10.isNotEmpty) ...[
             Padding(
@@ -455,7 +460,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 tiers: tierList,
                 isMe: isAuth && r.userId == currentUserId,
                 formatLabel: formatStr,
-                onTap: () => context.go('/profile/user/${r.userId}'),
+                onTap: () => context.push('/user/${r.userId}'),
               ),
             ),
           ],
@@ -606,7 +611,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 tiers: tierList,
                 isMe: isAuth && r.userId == currentUserId,
                 formatLabel: formatStr,
-                onTap: () => context.go('/profile/user/${r.userId}'),
+                onTap: () => context.push('/user/${r.userId}'),
               ),
             )
           else

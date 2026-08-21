@@ -1,4 +1,3 @@
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -11,10 +10,7 @@ import 'package:go_router/go_router.dart';
 class CommunityTournamentPreview extends ConsumerWidget {
   final CommunityPostModel post;
 
-  const CommunityTournamentPreview({
-    super.key,
-    required this.post,
-  });
+  const CommunityTournamentPreview({super.key, required this.post});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -51,7 +47,9 @@ class CommunityTournamentPreview extends ConsumerWidget {
     final hasMatches = validMatches.isNotEmpty;
 
     final tournamentName =
-        tournament?.name ?? post.tournamentName ?? l10n.communityTournamentPreviewDefaultName;
+        tournament?.name ??
+        post.tournamentName ??
+        l10n.communityTournamentPreviewDefaultName;
     final sportText = _sportLabel(tournament?.sport, l10n);
 
     // Pick top 2 matches to preview (prioritizing live or recent matches)
@@ -154,23 +152,26 @@ class CommunityTournamentPreview extends ConsumerWidget {
 
           // ── Matches Preview (if bracket/matches exist) ──
           if (hasMatches) ...[
-            Divider(
-              height: 1,
-              color: colors.border.withValues(alpha: 0.5),
-            ),
+            Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Column(
                 children: previewMatches.map((m) {
                   final s1 = m.sets.isNotEmpty ? m.sets.last.score1 : m.score1;
                   final s2 = m.sets.isNotEmpty ? m.sets.last.score2 : m.score2;
-                  final hasPlayed = m.isCompleted || m.isLive || s1 > 0 || s2 > 0;
-                  final isT1Winner = m.winnerId == m.team1Id || (hasPlayed && s1 > s2);
-                  final isT2Winner = m.winnerId == m.team2Id || (hasPlayed && s2 > s1);
-                  final roundLabel = m.stageName ??
+                  final hasPlayed =
+                      m.isCompleted || m.isLive || s1 > 0 || s2 > 0;
+                  final isT1Winner =
+                      m.winnerId == m.team1Id || (hasPlayed && s1 > s2);
+                  final isT2Winner =
+                      m.winnerId == m.team2Id || (hasPlayed && s2 > s1);
+                  final roundLabel =
+                      m.stageName ??
                       (m.round > 0
                           ? l10n.communityTournamentPreviewRound(m.round)
-                          : l10n.communityTournamentPreviewMatch(m.matchNumber));
+                          : l10n.communityTournamentPreviewMatch(
+                              m.matchNumber,
+                            ));
 
                   return InkWell(
                     onTap: () => context.push('/live/${m.id}'),
@@ -205,8 +206,8 @@ class CommunityTournamentPreview extends ConsumerWidget {
                                   : colors.border.withValues(alpha: 0.35),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                              child: Text(
-                                m.isLive ? l10n.liveLiveBadge : roundLabel,
+                            child: Text(
+                              m.isLive ? l10n.liveLiveBadge : roundLabel,
                               style: TextStyle(
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.w700,
@@ -293,10 +294,7 @@ class CommunityTournamentPreview extends ConsumerWidget {
           ],
 
           // ── Bottom Action Button ──
-          Divider(
-            height: 1,
-            color: colors.border.withValues(alpha: 0.5),
-          ),
+          Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
           InkWell(
             onTap: () {
               if (hasMatches) {
@@ -338,5 +336,23 @@ class CommunityTournamentPreview extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String? _sportLabel(String? sportKey, AppLocalizations l10n) {
+    switch (sportKey?.toUpperCase()) {
+      case 'BADMINTON':
+        return l10n.createClubTournament_sportBadminton;
+      case 'TENNIS':
+        return l10n.createClubTournament_sportTennis;
+      case 'PICKLEBALL':
+        return l10n.createClubTournament_sportPickleball;
+      case 'TABLE_TENNIS':
+      case 'TABLETENNIS':
+        return l10n.createClubTournament_sportTableTennis;
+      case 'FOOTBALL':
+        return l10n.createClubTournament_sportFootball;
+      default:
+        return sportKey;
+    }
   }
 }

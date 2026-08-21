@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/layout/double_elim_layout.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_match_card.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  LAYOUT CONSTANTS
@@ -115,13 +116,14 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final bands = _buildBands();
 
     if (bands.winners.isEmpty && bands.losers.isEmpty && bands.finals.isEmpty) {
       return Center(
         child: Text(
-          'Chưa có sơ đồ',
+          l10n.doubleElimNoBracket,
           style: TextStyle(color: colors.textSecondary),
         ),
       );
@@ -174,9 +176,8 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                         left: 0,
                         top: layout.winnersTop - 80,
                         child: _DeBandLabel(
-                          title: '▲ NHÁNH THẮNG (Winners)',
-                          subtitle:
-                              'Đội thắng đi tiếp - Đội thua xuống nhánh thua',
+                          title: l10n.doubleElimWinnersTitle,
+                          subtitle: l10n.doubleElimWinnersSubtitle,
                           color: const Color(0xFF0284C7),
                           width: layout.winnersBandWidth,
                         ),
@@ -186,8 +187,8 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                         left: 0,
                         top: layout.losersTop - 80,
                         child: _DeBandLabel(
-                          title: '▼ NHÁNH THUA (Losers)',
-                          subtitle: 'Đội thua lần đầu - Thua nữa là bị loại',
+                          title: l10n.doubleElimLosersTitle,
+                          subtitle: l10n.doubleElimLosersSubtitle,
                           color: colors.textSecondary,
                           width: layout.losersBandWidth,
                         ),
@@ -197,7 +198,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                         left: layout.grandFinalX,
                         top: layout.grandFinalTop - 36,
                         width: _kCardW,
-                        child: _DeRoundHeader(label: 'CHUNG KẾT TỔNG'),
+                        child: _DeRoundHeader(label: l10n.doubleElimGrandFinal),
                       ),
 
                     // ── Connector lines ──

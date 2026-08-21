@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Chế độ hiển thị CLB — radio cards giống web (SettingsTab.tsx):
@@ -13,32 +14,32 @@ class ClubVisibilitySelector extends StatelessWidget {
     required this.onChanged,
   });
 
-  static const _options = [
-    (
-      code: 'PUBLIC',
-      label: 'Công khai',
-      description: 'Mọi người đều tìm thấy và xem được thông tin.',
-      icon: Icons.public_rounded,
-    ),
-    (
-      code: 'RESTRICTED',
-      label: 'Hạn chế',
-      description: 'Tìm thấy CLB nhưng nội dung chỉ dành cho thành viên.',
-      icon: Icons.shield_outlined,
-    ),
-    (
-      code: 'PRIVATE',
-      label: 'Riêng tư',
-      description: 'Ẩn khỏi tìm kiếm, chỉ tham gia qua đường link mời.',
-      icon: Icons.lock_rounded,
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
+    final options = [
+      (
+        code: 'PUBLIC',
+        label: l10n.createClub_visibilityPublic,
+        description: l10n.createClub_visibilityPublicDescription,
+        icon: Icons.public_rounded,
+      ),
+      (
+        code: 'RESTRICTED',
+        label: l10n.createClub_visibilityRestricted,
+        description: l10n.createClub_visibilityRestrictedDescription,
+        icon: Icons.shield_outlined,
+      ),
+      (
+        code: 'PRIVATE',
+        label: l10n.createClub_visibilityPrivate,
+        description: l10n.createClub_visibilityPrivateDescription,
+        icon: Icons.lock_rounded,
+      ),
+    ];
     return Column(
-      children: _options.map((option) {
+      children: options.map((option) {
         final selected = value == option.code;
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),

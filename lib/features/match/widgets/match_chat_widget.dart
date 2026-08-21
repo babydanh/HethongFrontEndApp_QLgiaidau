@@ -46,6 +46,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
   }
 
   Future<void> _initRoom() async {
+    final l10n = AppLocalizations.of(context)!;
     _pollTimer?.cancel();
     if (mounted) {
       setState(() {
@@ -84,10 +85,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
     } catch (e, stack) {
       _log.error('Lỗi khởi tạo chat room', e, stack);
       if (mounted) {
-        setState(
-          () =>
-              _errorMessage = 'Không thể kết nối phòng chat. Vui lòng thử lại.',
-        );
+        setState(() => _errorMessage = l10n.matchChatInitError);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -116,6 +114,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
   }
 
   Future<void> _sendMessage() async {
+    final l10n = AppLocalizations.of(context)!;
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _roomId == null) return;
     _msgCtrl.clear();
@@ -140,11 +139,9 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
       _log.error('Lỗi gửi tin nhắn', e, stack);
       if (mounted) {
         _msgCtrl.text = text;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không thể gửi tin nhắn. Vui lòng thử lại.'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.matchChatSendError)));
       }
     }
   }
@@ -304,7 +301,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                   controller: _msgCtrl,
                   style: TextStyle(color: colors.textPrimary, fontSize: 13),
                   decoration: InputDecoration(
-                    hintText: 'Nhập tin nhắn...',
+                    hintText: l10n.matchChatMessageHint,
                     hintStyle: TextStyle(color: colors.textMuted, fontSize: 12),
                     border: InputBorder.none,
                     isDense: true,
@@ -384,7 +381,7 @@ class LiveCameraPlaceholder extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Kết nối camera sân đấu...',
+              l10n.matchChatConnecting,
               style: TextStyle(fontSize: 11, color: colors.textMuted),
             ),
           ],

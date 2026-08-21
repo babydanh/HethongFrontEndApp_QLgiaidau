@@ -599,6 +599,14 @@
   "matchChatLoginRequired": "Login to join",
   "matchChatPlaceholder": "Live Camera",
   "matchChatConnecting": "Connecting court camera...",
+  "chatReactionTitle": "Reactions to this message",
+  "chatReactionTotal": "{count} reactions",
+  "chatReactionMediaPlaceholder": "[Image/Media]",
+  "@chatReactionTotal": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "teamScoreCardError": "Error: You do not have permission to edit scores.",
   "registerSubmitApproval": "Send join request",
   "registerSubmitConfirm": "Confirm registration",
@@ -971,6 +979,11 @@
   "notification_inviteDeclined": "Invite declined.",
   "notification_acceptError": "Error accepting invite.",
   "notification_declineError": "Error declining invite.",
+  "notification_missingCommunityId": "This invitation has no community ID.",
+  "notification_missingTeamId": "This football team invitation has no team ID.",
+  "notification_missingRefereeInfo": "This referee invitation is missing required information.",
+  "notification_missingParticipantId": "This partner invitation has no registration ID.",
+  "notification_unsupportedInviteType": "This invitation type has no supported action yet.",
   "notification_title": "Notifications",
   "notification_readAll": "Mark all read",
   "notification_all": "All",
@@ -989,6 +1002,9 @@
   "notification_decline": "Decline",
   "notification_accept": "Accept",
   "notification_inviteHandled": "Invite response recorded",
+  "notification_alreadyTeamMember": "You are already a member of this team.",
+  "notification_alreadyClubMember": "You are already a member of this club.",
+  "notification_inviteAlreadyHandled": "This invitation was already handled.",
   "payments_close": "Close",
   "payments_createLinkError": "Could not create payment link.",
   "loginRegister_forgotPassword": "Forgot password?",
@@ -1957,6 +1973,13 @@
   "chatDetailRecentlyActive": "Recently active",
   "chatDetailReplyTo": "Reply to {name}",
   "chatDetailMediaPollPlaceholder": "[Image / Poll]",
+  "chatDetailSendError": "Could not send the message.",
+  "chatDetailUploadError": "Could not upload the image.",
+  "chatDetailRevokeTitle": "Revoke message?",
+  "chatDetailRevokeContent": "This message will be removed for everyone in the chat room.",
+  "chatDetailCancel": "Cancel",
+  "chatDetailRevokeAction": "Revoke",
+  "chatDetailRevoked": "Message was revoked",
   "chatDetailSendImage": "Send image",
   "chatDetailTakePhoto": "Take photo",
   "chatDetailMessageHint": "Message...",
@@ -3683,10 +3706,197 @@
   "tournamentInfoNameRequired": "Please enter the tournament name",
   "tournamentInfoDescriptionLabel": "Description (optional)",
   "tournamentInfoDescriptionHint": "Additional information about the tournament, venue, schedule...",
+  "imageViewerZoomOut": "Zoom out",
+  "imageViewerZoomIn": "Zoom in",
+  "doublesRegInviteTeamTitle": "Invite people to join {team}",
+  "doublesRegTournamentSubtitle": "Tournament: {tournament}",
+  "doublesRegInviteBadge": "Doubles invitation",
+  "doublesRegShareToTeam": "Share",
+  "doublesRegInviteSentTitle": "Team invitation sent",
+  "doublesRegInviteSentDescription": "We sent an invitation notification to your teammate's account. Remind them to open the app or visit the website to confirm participation.",
+  "doublesRegJoinTeamShareTitle": "Join team {team}",
+  "doublesRegPartnerSubtitle": "Tournament: {tournament} - Teammate: {partner}",
+  "doublesRegShareToPartner": "Share with teammate",
+  "doublesRegStatusPendingApproval": "Team formed, awaiting organizer approval",
+  "doublesRegStatusComplete": "Team formed and approved",
+  "doublesRegStatusWaitlisted": "Team formed, on the waitlist",
+  "doublesRegStatusSuccess": "Team formed successfully",
+  "doublesRegPaymentStatus": "Payment status: {status}",
+  "doublesRegPaid": "Paid",
+  "doublesRegUnpaid": "Not paid",
+  "seriesNotFound": "Tournament series not found",
+  "seriesLoadError": "Could not load tournament series information",
+  "seriesLegCount": "Legs",
+  "seriesParticipantCount": "Players",
+  "seriesStartDate": "Start date",
+  "seriesEndDate": "End date",
+  "lite_rosterConfirmationDescription": "Confirm the current roster\nNo bracket is created automatically and this is not required.",
+  "lite_rosterConfirmTitle": "Confirm roster?",
+  "lite_rosterConfirmContent": "New participants will not be able to register. You can still create a separate bracket later.",
+  "lite_confirmRosterButton": "Confirm roster",
+  "lite_rosterConfirmAction": "Confirm",
+  "lite_rosterConfirmedSuccess": "The current roster has been confirmed.",
+  "lite_rosterConfirmError": "Could not confirm the roster.",
+  "lite_footballRegisteredTeams": "Registered football teams ({count})",
+  "lite_noRegisteredFootballTeams": "No football teams registered",
+  "doubleElimNoBracket": "No bracket diagram",
+  "doubleElimWinnersTitle": "▲ WINNERS BRACKET",
+  "doubleElimWinnersSubtitle": "Winners advance - Losers drop to the losers bracket",
+  "doubleElimLosersTitle": "▼ LOSERS BRACKET",
+  "doubleElimLosersSubtitle": "Lose once - Lose again and you are eliminated",
+  "doubleElimGrandFinal": "GRAND FINAL",
+  "tournamentCardUnnamed": "(Unnamed)",
+  "tournamentCardDeleteTitle": "Delete tournament?",
+  "tournamentCardDeleteContent": "This action cannot be undone.",
+  "tournamentCardDeleteConfirm": "Delete",
+  "tournamentCardDeleteSuccess": "Tournament deleted successfully",
+  "tournamentCardDeleteError": "Delete error: {error}",
+  "tournamentCardDeleteMenu": "Delete tournament",
+  "tournamentCardDeleteUnknownError": "Unknown error",
+  "matchEventScoreChange": "{points} points",
+  "matchEventYellowCard": "Yellow card",
+  "matchEventRedCard": "Red card",
+  "matchEventFoul": "Foul: {description}",
+  "clubRegionProvinceLabel": "Province / City *",
+  "clubRegionWardLabel": "Ward / Commune / Town (Optional)",
+  "clubRegionChoosePlaceholder": "-- Select --",
+  "clubRegionLegacyValue": "{value} (legacy)",
+  "injuryDialogTitle": "Record Medical Issue/Injury",
+  "injuryDialogTeamPrompt": "Team/player needing medical assistance:",
+  "injuryDialogDescriptionLabel": "Condition description:",
+  "injuryDialogDescriptionHint": "Example: Sprained ankle, muscle strain...",
+  "injuryDialogConfirm": "Confirm",
+  "teamsTabSearchHint": "Search by team or member name...",
+  "refereeInviteUnknownSchedule": "Schedule unavailable",
+  "refereeInviteAssignmentFallback": "Referee assignment",
+  "refereeInvitePending": "Awaiting response",
+  "refereeInviteDateLabel": "Invite date",
+  "refereeInviteTournamentStatusLabel": "Tournament status",
+  "refereeInviteAccept": "Accept assignment",
+  "refereeInviteDecline": "Decline",
+  "liveScoreCompleteTitle": "Confirm match completion",
+  "liveScoreCompleteContent": "Are you sure you want to end this match and finalize the score?",
+  "liveScoreCompleteConfirm": "Confirm",
+  "liveScoreCompleteErrorFallback": "Unable to update the match score. Please try again.",
+  "adminEditScoreTitle": "Admin: Edit result",
+  "adminEditScorePrompt": "Re-enter the score:",
+  "adminEditScoreWinnerPrompt": "Select the winner:",
+  "adminEditScoreSave": "Save result",
+  "@clubRegionLegacyValue": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@matchEventScoreChange": {
+    "placeholders": {
+      "points": {}
+    }
+  },
+  "@matchEventFoul": {
+    "placeholders": {
+      "description": {}
+    }
+  },
+  "@tournamentCardDeleteError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@lite_rosterConfirmationDescription": {},
+  "@lite_rosterConfirmContent": {},
+  "@lite_footballRegisteredTeams": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@doublesRegInviteTeamTitle": {
+    "placeholders": {
+      "team": {}
+    }
+  },
+  "@doublesRegTournamentSubtitle": {
+    "placeholders": {
+      "tournament": {}
+    }
+  },
+  "@doublesRegInviteSentDescription": {},
+  "@doublesRegJoinTeamShareTitle": {
+    "placeholders": {
+      "team": {}
+    }
+  },
+  "@doublesRegPartnerSubtitle": {
+    "placeholders": {
+      "tournament": {},
+      "partner": {}
+    }
+  },
+  "@doublesRegPaymentStatus": {
+    "placeholders": {
+      "status": {}
+    }
+  },
   "@register_rosterInstructions": {
     "placeholders": {
       "teamSize": {},
       "maxReserve": {}
+    }
+  },
+  "payosVerifyPaymentNotReceived": "The payment has not been received yet. Please check again in a few seconds.",
+  "payosVerifyPaymentError": "Unable to verify the payment. Please try again.",
+  "payosVerifyTitle": "Confirm payment",
+  "payosVerifyPayOSHeading": "PayOS payment",
+  "payosVerifyInstruction": "Please complete the bank transfer in the web browser that was just opened.",
+  "payosVerifyQrLabel": "PayOS payment QR code",
+  "payosVerifyAmountLabel": "Amount:",
+  "payosVerifyStatusLabel": "Status:",
+  "payosVerifyPendingStatus": "Waiting for payment...",
+  "payosVerifyOpenPaymentPage": "Open PayOS payment page",
+  "payosVerifyPaidButton": "I have paid",
+  "payosVerifyCancelButton": "Cancel and return home",
+  "matchTableRoundFinal": "Final",
+  "matchTableRoundSemifinal": "Semifinal",
+  "matchTableRoundQuarterfinal": "Quarterfinal",
+  "matchTableRoundOf": "Round of 1/{size}",
+  "matchTableRound": "Round {round}",
+  "matchTableGrandFinal": "Grand final",
+  "matchTableLosersRound": "Losers bracket · Round {round}",
+  "matchTableGroupMatch": "{group} · Match {match}",
+  "matchTableRoundMatch": "{round} · Match {match}",
+  "communityPoll_missingInviteCode": "The tournament invite code is missing.",
+  "seriesOverviewTab": "Overview",
+  "seriesScheduleTab": "Schedule",
+  "seriesRankingsTab": "Standings",
+  "matchTableBye": "BYE",
+  "matchTableLive": "LIVE",
+  "matchTableCompleted": "COMPLETED",
+  "matchTableUpcoming": "UPCOMING",
+  "matchTableUnassignedCourt": "Court not assigned",
+  "@matchTableRoundOf": {
+    "placeholders": {
+      "size": {}
+    }
+  },
+  "@matchTableRound": {
+    "placeholders": {
+      "round": {}
+    }
+  },
+  "@matchTableLosersRound": {
+    "placeholders": {
+      "round": {}
+    }
+  },
+  "@matchTableGroupMatch": {
+    "placeholders": {
+      "group": {},
+      "match": {}
+    }
+  },
+  "@matchTableRoundMatch": {
+    "placeholders": {
+      "round": {},
+      "match": {}
     }
   }
 }

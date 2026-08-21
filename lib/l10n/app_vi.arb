@@ -595,6 +595,14 @@
   "matchChatLoginRequired": "Đăng nhập để tham gia",
   "matchChatPlaceholder": "Camera trực tiếp",
   "matchChatConnecting": "Kết nối camera sân đấu...",
+  "chatReactionTitle": "Cảm xúc về tin nhắn",
+  "chatReactionTotal": "{count} cảm xúc",
+  "chatReactionMediaPlaceholder": "[Hình ảnh/Phương tiện]",
+  "@chatReactionTotal": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "teamScoreCardError": "Lỗi: Bạn không có quyền sửa điểm.",
   "registerSubmitApproval": "Gửi yêu cầu tham gia",
   "registerSubmitConfirm": "Xác nhận đăng ký",
@@ -967,6 +975,11 @@
   "notification_inviteDeclined": "Đã từ chối lời mời.",
   "notification_acceptError": "Lỗi khi chấp nhận lời mời.",
   "notification_declineError": "Lỗi khi từ chối lời mời.",
+  "notification_missingCommunityId": "Lời mời không có mã cộng đồng.",
+  "notification_missingTeamId": "Lời mời đội bóng không có mã đội.",
+  "notification_missingRefereeInfo": "Lời mời trọng tài không có đủ thông tin.",
+  "notification_missingParticipantId": "Lời mời ghép đôi không có mã đăng ký.",
+  "notification_unsupportedInviteType": "Loại lời mời này chưa có thao tác tương ứng.",
   "notification_title": "Thông báo",
   "notification_readAll": "Đọc tất cả",
   "notification_all": "Tất cả",
@@ -985,6 +998,9 @@
   "notification_decline": "Từ chối",
   "notification_accept": "Chấp nhận",
   "notification_inviteHandled": "Đã phản hồi lời mời",
+  "notification_alreadyTeamMember": "Bạn đã là thành viên của đội bóng này.",
+  "notification_alreadyClubMember": "Bạn đã là thành viên của câu lạc bộ này.",
+  "notification_inviteAlreadyHandled": "Lời mời này đã được xử lý trước đó.",
   "payments_close": "Đóng",
   "payments_createLinkError": "Không thể tạo liên kết thanh toán.",
   "loginRegister_forgotPassword": "Quên mật khẩu?",
@@ -1958,6 +1974,13 @@
   "chatDetailRecentlyActive": "Hoạt động gần đây",
   "chatDetailReplyTo": "Trả lời {name}",
   "chatDetailMediaPollPlaceholder": "[Hình ảnh / Bình chọn]",
+  "chatDetailSendError": "Không thể gửi tin nhắn.",
+  "chatDetailUploadError": "Không thể tải ảnh lên.",
+  "chatDetailRevokeTitle": "Thu hồi tin nhắn?",
+  "chatDetailRevokeContent": "Tin nhắn này sẽ bị gỡ bỏ đối với tất cả mọi người trong phòng chat.",
+  "chatDetailCancel": "Hủy",
+  "chatDetailRevokeAction": "Thu hồi",
+  "chatDetailRevoked": "Tin nhắn đã bị thu hồi",
   "chatDetailSendImage": "Gửi ảnh",
   "chatDetailTakePhoto": "Chụp ảnh",
   "chatDetailMessageHint": "Nhắn tin...",
@@ -3684,10 +3707,197 @@
   "tournamentInfoNameRequired": "Vui lòng nhập tên giải đấu",
   "tournamentInfoDescriptionLabel": "Mô tả (tùy chọn)",
   "tournamentInfoDescriptionHint": "Thông tin thêm về giải đấu, địa điểm, thời gian...",
+  "imageViewerZoomOut": "Thu nhỏ",
+  "imageViewerZoomIn": "Phóng to",
+  "doublesRegInviteTeamTitle": "Mời tham gia đội {team}",
+  "doublesRegTournamentSubtitle": "Giải {tournament}",
+  "doublesRegInviteBadge": "Lời mời ghép đôi",
+  "doublesRegShareToTeam": "Chia sẻ",
+  "doublesRegInviteSentTitle": "Đã gửi thông báo ghép đội",
+  "doublesRegInviteSentDescription": "Chúng tôi đã gửi thông báo lời mời đến đồng đội của bạn qua tài khoản. Hãy nhắc họ mở ứng dụng hoặc truy cập web để xác nhận tham gia.",
+  "doublesRegJoinTeamShareTitle": "Tham gia đội {team}",
+  "doublesRegPartnerSubtitle": "Giải {tournament} - Đồng đội: {partner}",
+  "doublesRegShareToPartner": "Chia sẻ tới đồng đội",
+  "doublesRegStatusPendingApproval": "Đã ghép đội, đang chờ BTC duyệt",
+  "doublesRegStatusComplete": "Đã ghép đội và được duyệt",
+  "doublesRegStatusWaitlisted": "Đã ghép đội, đang ở danh sách chờ",
+  "doublesRegStatusSuccess": "Đã ghép đội thành công",
+  "doublesRegPaymentStatus": "Trạng thái thanh toán: {status}",
+  "doublesRegPaid": "Đã thanh toán",
+  "doublesRegUnpaid": "Chưa thanh toán",
+  "seriesNotFound": "Không tìm thấy chuỗi giải",
+  "seriesLoadError": "Không thể tải thông tin chuỗi giải",
+  "seriesLegCount": "Số chặng",
+  "seriesParticipantCount": "Số VĐV",
+  "seriesStartDate": "Ngày bắt đầu",
+  "seriesEndDate": "Ngày kết thúc",
+  "lite_rosterConfirmationDescription": "Chốt danh sách hiện tại\nKhông tự tạo bracket và không bắt buộc.",
+  "lite_rosterConfirmTitle": "Chốt danh sách?",
+  "lite_rosterConfirmContent": "Người mới sẽ không thể đăng ký. Bạn vẫn có thể tạo bracket riêng sau đó.",
+  "lite_confirmRosterButton": "Chốt danh sách",
+  "lite_rosterConfirmAction": "Chốt",
+  "lite_rosterConfirmedSuccess": "Đã chốt danh sách hiện tại.",
+  "lite_rosterConfirmError": "Không thể chốt danh sách.",
+  "lite_footballRegisteredTeams": "Đội bóng đăng ký ({count})",
+  "lite_noRegisteredFootballTeams": "Chưa có đội bóng đăng ký",
+  "doubleElimNoBracket": "Chưa có sơ đồ",
+  "doubleElimWinnersTitle": "▲ NHÁNH THẮNG (Winners)",
+  "doubleElimWinnersSubtitle": "Đội thắng đi tiếp - Đội thua xuống nhánh thua",
+  "doubleElimLosersTitle": "▼ NHÁNH THUA (Losers)",
+  "doubleElimLosersSubtitle": "Đội thua lần đầu - Thua nữa là bị loại",
+  "doubleElimGrandFinal": "CHUNG KẾT TỔNG",
+  "tournamentCardUnnamed": "(Chưa có tên)",
+  "tournamentCardDeleteTitle": "Xóa giải đấu?",
+  "tournamentCardDeleteContent": "Thao tác này không thể hoàn tác.",
+  "tournamentCardDeleteConfirm": "Xóa",
+  "tournamentCardDeleteSuccess": "Đã xóa giải đấu thành công",
+  "tournamentCardDeleteError": "Lỗi khi xóa: {error}",
+  "tournamentCardDeleteMenu": "Xóa giải đấu",
+  "tournamentCardDeleteUnknownError": "Không xác định",
+  "matchEventScoreChange": "{points} điểm",
+  "matchEventYellowCard": "Thẻ Vàng",
+  "matchEventRedCard": "Thẻ Đỏ",
+  "matchEventFoul": "Phạm lỗi: {description}",
+  "clubRegionProvinceLabel": "Tỉnh / Thành phố *",
+  "clubRegionWardLabel": "Phường / Xã / Thị trấn (Tùy chọn)",
+  "clubRegionChoosePlaceholder": "-- Chọn --",
+  "clubRegionLegacyValue": "{value} (cũ)",
+  "injuryDialogTitle": "Ghi nhận Y tế/Chấn thương",
+  "injuryDialogTeamPrompt": "Đội/VĐV cần hỗ trợ y tế:",
+  "injuryDialogDescriptionLabel": "Mô tả tình trạng:",
+  "injuryDialogDescriptionHint": "Ví dụ: Trật sơ mi, Căng cơ...",
+  "injuryDialogConfirm": "Xác nhận",
+  "teamsTabSearchHint": "Tìm theo tên đội hoặc thành viên...",
+  "refereeInviteUnknownSchedule": "Chưa rõ lịch",
+  "refereeInviteAssignmentFallback": "Phân công trọng tài",
+  "refereeInvitePending": "Chờ phản hồi",
+  "refereeInviteDateLabel": "Ngày mời",
+  "refereeInviteTournamentStatusLabel": "Trạng thái giải",
+  "refereeInviteAccept": "Nhận nhiệm vụ",
+  "refereeInviteDecline": "Từ chối",
+  "liveScoreCompleteTitle": "Xác nhận kết thúc trận đấu",
+  "liveScoreCompleteContent": "Bạn có chắc chắn muốn kết thúc trận đấu này và chốt kết quả tỉ số?",
+  "liveScoreCompleteConfirm": "Xác nhận",
+  "liveScoreCompleteErrorFallback": "Không thể cập nhật điểm trận đấu. Vui lòng thử lại.",
+  "adminEditScoreTitle": "Admin: Sửa kết quả",
+  "adminEditScorePrompt": "Nhập lại điểm số:",
+  "adminEditScoreWinnerPrompt": "Chọn đội thắng:",
+  "adminEditScoreSave": "Lưu kết quả",
+  "@clubRegionLegacyValue": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@matchEventScoreChange": {
+    "placeholders": {
+      "points": {}
+    }
+  },
+  "@matchEventFoul": {
+    "placeholders": {
+      "description": {}
+    }
+  },
+  "@tournamentCardDeleteError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@lite_rosterConfirmationDescription": {},
+  "@lite_rosterConfirmContent": {},
+  "@lite_footballRegisteredTeams": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@doublesRegInviteTeamTitle": {
+    "placeholders": {
+      "team": {}
+    }
+  },
+  "@doublesRegTournamentSubtitle": {
+    "placeholders": {
+      "tournament": {}
+    }
+  },
+  "@doublesRegInviteSentDescription": {},
+  "@doublesRegJoinTeamShareTitle": {
+    "placeholders": {
+      "team": {}
+    }
+  },
+  "@doublesRegPartnerSubtitle": {
+    "placeholders": {
+      "tournament": {},
+      "partner": {}
+    }
+  },
+  "@doublesRegPaymentStatus": {
+    "placeholders": {
+      "status": {}
+    }
+  },
   "@register_rosterInstructions": {
     "placeholders": {
       "teamSize": {},
       "maxReserve": {}
+    }
+  },
+  "payosVerifyPaymentNotReceived": "Hệ thống chưa nhận được thanh toán. Vui lòng kiểm tra lại sau vài giây.",
+  "payosVerifyPaymentError": "Không thể xác minh thanh toán. Vui lòng thử lại.",
+  "payosVerifyTitle": "Xác nhận thanh toán",
+  "payosVerifyPayOSHeading": "Thanh toán qua PayOS",
+  "payosVerifyInstruction": "Vui lòng hoàn thành giao dịch chuyển khoản trên trình duyệt web vừa mở.",
+  "payosVerifyQrLabel": "Mã QR thanh toán PayOS",
+  "payosVerifyAmountLabel": "Số tiền:",
+  "payosVerifyStatusLabel": "Trạng thái:",
+  "payosVerifyPendingStatus": "Đang chờ thanh toán...",
+  "payosVerifyOpenPaymentPage": "Mở trang thanh toán PayOS",
+  "payosVerifyPaidButton": "Tôi đã thanh toán",
+  "payosVerifyCancelButton": "Hủy và quay về trang chủ",
+  "matchTableRoundFinal": "Chung kết",
+  "matchTableRoundSemifinal": "Bán kết",
+  "matchTableRoundQuarterfinal": "Tứ kết",
+  "matchTableRoundOf": "Vòng 1/{size}",
+  "matchTableRound": "Vòng {round}",
+  "matchTableGrandFinal": "Chung kết tổng",
+  "matchTableLosersRound": "Nhánh thua Vòng {round}",
+  "matchTableGroupMatch": "{group} - Trận {match}",
+  "matchTableRoundMatch": "{round} - Trận {match}",
+  "communityPoll_missingInviteCode": "Thiếu mã tham gia giải.",
+  "seriesOverviewTab": "Tổng quan",
+  "seriesScheduleTab": "Lịch thi đấu",
+  "seriesRankingsTab": "Bảng xếp hạng",
+  "matchTableBye": "VÀO THẲNG",
+  "matchTableLive": "LIVE",
+  "matchTableCompleted": "ĐÃ KẾT THÚC",
+  "matchTableUpcoming": "SẮP ĐẤU",
+  "matchTableUnassignedCourt": "Chưa xếp sân",
+  "@matchTableRoundOf": {
+    "placeholders": {
+      "size": {}
+    }
+  },
+  "@matchTableRound": {
+    "placeholders": {
+      "round": {}
+    }
+  },
+  "@matchTableLosersRound": {
+    "placeholders": {
+      "round": {}
+    }
+  },
+  "@matchTableGroupMatch": {
+    "placeholders": {
+      "group": {},
+      "match": {}
+    }
+  },
+  "@matchTableRoundMatch": {
+    "placeholders": {
+      "round": {},
+      "match": {}
     }
   }
 }

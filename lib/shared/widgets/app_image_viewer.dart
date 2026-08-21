@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
+
 class AppImageViewer extends StatefulWidget {
   final List<String> imageUrls;
   final int initialIndex;
@@ -117,6 +119,7 @@ class _AppImageViewerState extends State<AppImageViewer> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final hasMultiple = widget.imageUrls.length > 1;
 
     return Scaffold(
@@ -155,15 +158,15 @@ class _AppImageViewerState extends State<AppImageViewer> {
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                         );
                       },
-                      errorBuilder: (_, _, _) => const Center(
+                      errorBuilder: (_, _, _) => Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.broken_image_rounded, color: Colors.white60, size: 54),
-                            SizedBox(height: 12),
+                            const Icon(Icons.broken_image_rounded, color: Colors.white60, size: 54),
+                            const SizedBox(height: 12),
                             Text(
-                              'Không thể tải hình ảnh',
-                              style: TextStyle(color: Colors.white70, fontSize: 14),
+                              l10n.chatImageLoadError,
+                              style: const TextStyle(color: Colors.white70, fontSize: 14),
                             ),
                           ],
                         ),
@@ -208,7 +211,7 @@ class _AppImageViewerState extends State<AppImageViewer> {
                       ),
                       child: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
                     ),
-                    tooltip: 'Đóng',
+                    tooltip: l10n.close,
                     onPressed: () => Navigator.pop(context),
                   ),
                   const SizedBox(width: 8),
@@ -283,7 +286,7 @@ class _AppImageViewerState extends State<AppImageViewer> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.zoom_out_rounded, color: Colors.white, size: 22),
-                    tooltip: 'Thu nhỏ',
+                    tooltip: l10n.imageViewerZoomOut,
                     onPressed: _zoomOut,
                   ),
                   Container(
@@ -293,7 +296,7 @@ class _AppImageViewerState extends State<AppImageViewer> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.zoom_in_rounded, color: Colors.white, size: 22),
-                    tooltip: 'Phóng to',
+                    tooltip: l10n.imageViewerZoomIn,
                     onPressed: _zoomIn,
                   ),
                 ],

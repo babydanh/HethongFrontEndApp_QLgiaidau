@@ -80,8 +80,13 @@ class MatchMemberInfo {
           json['avatar_url']?.toString() ??
           json['photoUrl']?.toString() ??
           json['photo_url']?.toString() ??
-          (profile is Map ? profile['avatarUrl']?.toString() ?? profile['avatar_url']?.toString() : null) ??
-          (user is Map ? user['avatarUrl']?.toString() ?? user['avatar_url']?.toString() : null),
+          (profile is Map
+              ? profile['avatarUrl']?.toString() ??
+                    profile['avatar_url']?.toString()
+              : null) ??
+          (user is Map
+              ? user['avatarUrl']?.toString() ?? user['avatar_url']?.toString()
+              : null),
     );
   }
 
@@ -98,6 +103,7 @@ class MatchMemberInfo {
 
 class MatchModel {
   final String id;
+
   /// Tournament identity returned by the public match feed. Keeping this on
   /// the model lets the app fan one cursor-paginated response back into the
   /// tournament sections without issuing one request per tournament.
@@ -108,6 +114,7 @@ class MatchModel {
   final String team2Id;
   final String team1Name;
   final String team2Name;
+
   /// Snapshot logo captured when a football team enters the tournament.
   /// It must not be resolved from the current team profile at render time.
   final String? team1LogoUrl;
@@ -131,6 +138,7 @@ class MatchModel {
   final DateTime? completedAt;
   final int? timeLimitMinutes;
   final DateTime updatedAt;
+
   /// Monotonic version from backend (optimistic lock + realtime ordering, NOTE-7).
   final int? revision;
   final String? refereeName;
@@ -147,6 +155,7 @@ class MatchModel {
   final List<String>? team2Members;
   final List<MatchMemberInfo> team1MemberInfos;
   final List<MatchMemberInfo> team2MemberInfos;
+
   /// Ranking value for the whole team. For doubles this is pairRanks.eloPoints.
   final int? team1EloPoints;
   final int? team2EloPoints;
@@ -247,7 +256,9 @@ class MatchModel {
     int? participantElo(dynamic participant) {
       if (participant is! Map) return null;
       final value = participant['eloPoints'];
-      return value is num ? value.toInt() : int.tryParse(value?.toString() ?? '');
+      return value is num
+          ? value.toInt()
+          : int.tryParse(value?.toString() ?? '');
     }
 
     final scoreDetails = json['scoreDetails'] is Map
@@ -278,22 +289,45 @@ class MatchModel {
       }).toList();
     }
 
+    final matchCourtName = json['courtName']?.toString().trim() ?? '';
+    final matchCourt = json['court']?.toString().trim() ?? '';
+    final tournamentPayload = json['tournament'];
+    final tournamentVenue = tournamentPayload is Map
+        ? (tournamentPayload['venueName'] ??
+              (tournamentPayload['venue'] is Map
+                  ? tournamentPayload['venue']['name']
+                  : null))
+        : null;
+    final tournamentVenueName = tournamentVenue?.toString().trim() ?? '';
+    final courtDisplay = matchCourtName.isNotEmpty
+        ? matchCourtName
+        : matchCourt.isNotEmpty
+        ? matchCourt
+        : tournamentVenueName;
+
     return MatchModel(
       id: id,
-      tournamentId: json['tournamentId']?.toString() ??
+      tournamentId:
+          json['tournamentId']?.toString() ??
           json['tournament_id']?.toString() ??
           (json['tournament'] is Map
               ? (json['tournament'] as Map)['id']?.toString()
               : null),
       round: json['round'] ?? 1,
       matchNumber: json['matchNumber'] ?? 1,
-      team1Id: json['team1Id']?.toString() ??
+      team1Id:
+          json['team1Id']?.toString() ??
           json['participant1Id']?.toString() ??
-          (json['participant1'] is Map ? json['participant1']['id']?.toString() : null) ??
+          (json['participant1'] is Map
+              ? json['participant1']['id']?.toString()
+              : null) ??
           '',
-      team2Id: json['team2Id']?.toString() ??
+      team2Id:
+          json['team2Id']?.toString() ??
           json['participant2Id']?.toString() ??
-          (json['participant2'] is Map ? json['participant2']['id']?.toString() : null) ??
+          (json['participant2'] is Map
+              ? json['participant2']['id']?.toString()
+              : null) ??
           '',
       team1Name: json['team1Name'] ?? 'TBD',
       team2Name: json['team2Name'] ?? 'TBD',
@@ -310,16 +344,9 @@ class MatchModel {
           : const BracketPosition(round: 1, position: 0),
       nextMatchId: json['nextMatchId'] ?? '',
       loserNextMatchId: json['loserNextMatchId'] ?? '',
-      // A match-level court override wins; otherwise show the tournament's
-      // parent venue name when the schedule has not assigned a specific court.
-      court: json['court']?.toString() ??
-          json['courtName']?.toString() ??
-          (json['tournament'] is Map
-              ? ((json['tournament'] as Map)['venueName'] ??
-                      (json['tournament'] as Map)['venue']?['name'])
-                  ?.toString()
-              : null) ??
-          '',
+      // A match-level courtName override wins over any generic court value;
+      // otherwise show the tournament venue when no specific court is assigned.
+      court: courtDisplay,
       courtAddress:
           json['courtAddress']?.toString() ??
           json['court_address']?.toString() ??
@@ -350,7 +377,8 @@ class MatchModel {
       sportRules: json['tournament'] is Map
           ? (json['tournament'] as Map)['sportRules'] as Map<String, dynamic>?
           : json['sportRules'] as Map<String, dynamic>?,
-      tournamentConfig: json['tournament'] is Map &&
+      tournamentConfig:
+          json['tournament'] is Map &&
               (json['tournament'] as Map)['tournamentConfig'] is Map
           ? Map<String, dynamic>.from(
               (json['tournament'] as Map)['tournamentConfig'] as Map,
@@ -533,12 +561,10 @@ class MatchModel {
 
   // The API has historically returned both enum casing and legacy aliases.
   // Keep these predicates as the single source of truth for every surface.
-  bool get isLive => const {
-        'LIVE',
-        'ONGOING',
-        'IN_PROGRESS',
-      }.contains(normalizedStatus);
-  bool get isCompleted => const {
+  bool get isLive =>
+      const {'LIVE', 'ONGOING', 'IN_PROGRESS'}.contains(normalizedStatus);
+  bool get isCompleted =>
+      const {
         'COMPLETED',
         'FINISHED',
         'DONE',
@@ -546,12 +572,10 @@ class MatchModel {
         'WALKOVER',
         'RETIRED',
         'DISQUALIFIED',
-      }.contains(normalizedStatus) || completedAt != null;
-  bool get isScheduled => const {
-        'SCHEDULED',
-        'PENDING',
-        'NOT_STARTED',
-      }.contains(normalizedStatus);
+      }.contains(normalizedStatus) ||
+      completedAt != null;
+  bool get isScheduled =>
+      const {'SCHEDULED', 'PENDING', 'NOT_STARTED'}.contains(normalizedStatus);
   bool get isWalkover => status == 'walkover';
   bool get hasTeams => team1Id.isNotEmpty && team2Id.isNotEmpty;
   bool get isByeMatch =>

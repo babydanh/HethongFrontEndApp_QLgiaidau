@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AdminEditScoreDialog extends ConsumerStatefulWidget {
@@ -41,10 +43,11 @@ class _AdminEditScoreDialogState extends ConsumerState<AdminEditScoreDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
       backgroundColor: context.colors.bgCard,
       title: Text(
-        'Admin: Sửa kết quả',
+        l10n.adminEditScoreTitle,
         style: TextStyle(color: context.colors.textPrimary),
       ),
       content: SingleChildScrollView(
@@ -53,7 +56,7 @@ class _AdminEditScoreDialogState extends ConsumerState<AdminEditScoreDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Nhập lại điểm số:',
+              l10n.adminEditScorePrompt,
               style: TextStyle(color: context.colors.textSecondary),
             ),
             const SizedBox(height: 12),
@@ -84,7 +87,7 @@ class _AdminEditScoreDialogState extends ConsumerState<AdminEditScoreDialog> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Chọn đội thắng:',
+              l10n.adminEditScoreWinnerPrompt,
               style: TextStyle(color: context.colors.textSecondary),
             ),
             const SizedBox(height: 12),
@@ -118,9 +121,9 @@ class _AdminEditScoreDialogState extends ConsumerState<AdminEditScoreDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text(
-            'Hủy',
-            style: TextStyle(color: AppTheme.secondaryLight),
+          child: Text(
+            l10n.commonCancel,
+            style: const TextStyle(color: AppTheme.secondaryLight),
           ),
         ),
         ElevatedButton(
@@ -145,7 +148,7 @@ class _AdminEditScoreDialogState extends ConsumerState<AdminEditScoreDialog> {
                   });
                 },
           style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
-          child: const Text('Lưu kết quả'),
+          child: Text(l10n.adminEditScoreSave),
         ),
       ],
     );

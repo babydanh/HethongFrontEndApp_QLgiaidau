@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/data/models/match_event_model.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 abstract class IMatchEventRenderer {
   IconData getIcon(MatchEvent event);
   Color getColor(BuildContext context, MatchEvent event);
-  String getActionText(MatchEvent event);
+  String getActionText(MatchEvent event, AppLocalizations l10n);
 }
 
 class ScoreEventRenderer implements IMatchEventRenderer {
@@ -18,8 +19,10 @@ class ScoreEventRenderer implements IMatchEventRenderer {
       event.pointsChange > 0 ? context.colors.success : context.colors.error;
 
   @override
-  String getActionText(MatchEvent event) =>
-      '${event.pointsChange > 0 ? '+' : ''}${event.pointsChange} điểm';
+  String getActionText(MatchEvent event, AppLocalizations l10n) =>
+      l10n.matchEventScoreChange(
+        '${event.pointsChange > 0 ? '+' : ''}${event.pointsChange}',
+      );
 }
 
 class YellowCardEventRenderer implements IMatchEventRenderer {
@@ -31,7 +34,8 @@ class YellowCardEventRenderer implements IMatchEventRenderer {
       Colors.yellow.shade700;
 
   @override
-  String getActionText(MatchEvent event) => 'Thẻ Vàng';
+  String getActionText(MatchEvent event, AppLocalizations l10n) =>
+      l10n.matchEventYellowCard;
 }
 
 class RedCardEventRenderer implements IMatchEventRenderer {
@@ -42,7 +46,8 @@ class RedCardEventRenderer implements IMatchEventRenderer {
   Color getColor(BuildContext context, MatchEvent event) => Colors.red.shade700;
 
   @override
-  String getActionText(MatchEvent event) => 'Thẻ Đỏ';
+  String getActionText(MatchEvent event, AppLocalizations l10n) =>
+      l10n.matchEventRedCard;
 }
 
 class FoulEventRenderer implements IMatchEventRenderer {
@@ -54,7 +59,8 @@ class FoulEventRenderer implements IMatchEventRenderer {
       Colors.orange.shade700;
 
   @override
-  String getActionText(MatchEvent event) => 'Phạm lỗi: ${event.description}';
+  String getActionText(MatchEvent event, AppLocalizations l10n) =>
+      l10n.matchEventFoul(event.description);
 }
 
 class DefaultEventRenderer implements IMatchEventRenderer {
@@ -65,7 +71,8 @@ class DefaultEventRenderer implements IMatchEventRenderer {
   Color getColor(BuildContext context, MatchEvent event) => context.colors.info;
 
   @override
-  String getActionText(MatchEvent event) => event.description;
+  String getActionText(MatchEvent event, AppLocalizations l10n) =>
+      event.description;
 }
 
 class MatchEventRendererFactory {

@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/features/home/widgets/token_input_sheet.dart'
 import 'package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentCard extends ConsumerWidget {
   final Tournament tournament;
@@ -31,6 +32,7 @@ class TournamentCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final sportIcon = AppConstants.sportIcons[tournament.sport] ?? '🏆';
     final sportName =
         AppConstants.sportNames[tournament.sport] ?? tournament.sport;
@@ -131,7 +133,7 @@ class TournamentCard extends ConsumerWidget {
                     Text(
                       tournament.name.isNotEmpty
                           ? tournament.name
-                          : '(Chưa có tên)',
+                          : l10n.tournamentCardUnnamed,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -193,9 +195,9 @@ class TournamentCard extends ConsumerWidget {
                   if (value == 'delete') {
                     final confirm = await showConfirmDialog(
                       context: context,
-                      title: 'Xóa giải đấu?',
-                      content: 'Thao tác này không thể hoàn tác.',
-                      confirmText: 'Xóa',
+                      title: l10n.tournamentCardDeleteTitle,
+                      content: l10n.tournamentCardDeleteContent,
+                      confirmText: l10n.tournamentCardDeleteConfirm,
                     );
                     if (confirm == true && context.mounted) {
                       final success = await ref
@@ -204,8 +206,8 @@ class TournamentCard extends ConsumerWidget {
                       if (context.mounted) {
                         if (success) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Đã xóa giải đấu thành công'),
+                            SnackBar(
+                              content: Text(l10n.tournamentCardDeleteSuccess),
                             ),
                           );
                         } else {
@@ -213,7 +215,13 @@ class TournamentCard extends ConsumerWidget {
                               .read(tournamentActionProvider)
                               .error;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Lỗi khi xóa: $error')),
+                            SnackBar(
+                              content: Text(
+                                l10n.tournamentCardDeleteError(
+                                  error ?? l10n.tournamentCardDeleteUnknownError,
+                                ),
+                              ),
+                            ),
                           );
                         }
                       }
@@ -221,11 +229,11 @@ class TournamentCard extends ConsumerWidget {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Text(
-                      'Xóa giải đấu',
-                      style: TextStyle(color: Colors.red),
+                      l10n.tournamentCardDeleteMenu,
+                      style: const TextStyle(color: Colors.red),
                     ),
                   ),
                 ],

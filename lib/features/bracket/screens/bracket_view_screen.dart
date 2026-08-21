@@ -233,10 +233,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                     fontSize: 13,
                     fontWeight: FontWeight.normal,
                   ),
-                  tabs: const [
-                    Tab(height: 30, text: 'Bảng chéo'),
-                    Tab(height: 30, text: 'Bảng xếp hạng'),
-                    Tab(height: 30, text: 'Lịch thi đấu'),
+                  tabs: [
+                    Tab(height: 30, text: l10n.bracketView_crossTable),
+                    Tab(height: 30, text: l10n.bracketView_standings),
+                    Tab(height: 30, text: l10n.bracketView_schedule),
                   ],
                 ),
               ),

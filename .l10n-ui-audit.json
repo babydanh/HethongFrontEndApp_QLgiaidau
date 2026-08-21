@@ -1,0 +1,748 @@
+{
+  "ui_literal_line_count": 104,
+  "file_count": 37,
+  "files": [
+    {
+      "file": "lib/providers/lite_management_notifier.dart",
+      "count": 16,
+      "matches": [
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 258,
+          "text": "error: 'Tải dữ liệu giải Lite quá lâu. Vui lòng thử lại.',"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 262,
+          "text": "_log.error('Lỗi khởi tạo quản lý Lite', e, stack);"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 265,
+          "text": "error: 'Không thể tải dữ liệu giải Lite. Vui lòng thử lại.',"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 291,
+          "text": "error: 'Đây là giải Nâng Cao. App chỉ hỗ trợ quản lý giải Lite.',"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 323,
+          "text": "_log.error('Lỗi tải thông tin giải', e, stack);"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 357,
+          "text": "_log.error('Lỗi tải danh sách người tham gia', e, stack);"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 389,
+          "text": "_log.error('Lỗi tải danh sách trận Lite', e, stack);"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 417,
+          "text": "error: 'Tải dữ liệu giải Lite quá lâu. Vui lòng thử lại.',"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 473,
+          "text": "_log.error('Lỗi ghép cặp', e);"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 499,
+          "text": "_log.error('Lỗi sinh cặp $strategy', e);"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 514,
+          "text": "_log.error('Lỗi hủy cặp', e);"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 544,
+          "text": "_log.error('Lỗi chốt danh sách Lite', e);"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 562,
+          "text": "_log.error('Lỗi loại participant khỏi giải', e);"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 602,
+          "text": "_log.error('Lỗi tạo bracket', e);"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 615,
+          "text": "_log.error('Lỗi reset bracket', e);"
+        },
+        {
+          "file": "lib/providers/lite_management_notifier.dart",
+          "line": 633,
+          "text": "_log.error('Lỗi tạo VĐV ảo', e);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/community/screens/club_detail_screen.dart",
+      "count": 8,
+      "matches": [
+        {
+          "file": "lib/features/community/screens/club_detail_screen.dart",
+          "line": 384,
+          "text": "_log.error('Lỗi load club detail', e, st);"
+        },
+        {
+          "file": "lib/features/community/screens/club_detail_screen.dart",
+          "line": 874,
+          "text": "_log.error('Lỗi rời CLB', e, stack);"
+        },
+        {
+          "file": "lib/features/community/screens/club_detail_screen.dart",
+          "line": 989,
+          "text": "_log.error('Lỗi khi tham gia CLB (có câu hỏi)', e, stack);"
+        },
+        {
+          "file": "lib/features/community/screens/club_detail_screen.dart",
+          "line": 1050,
+          "text": "_log.error('Lỗi khi tham gia CLB', e, stack);"
+        },
+        {
+          "file": "lib/features/community/screens/club_detail_screen.dart",
+          "line": 1938,
+          "text": "_log.error('Lỗi tải giải đấu của CLB', e, st);"
+        },
+        {
+          "file": "lib/features/community/screens/club_detail_screen.dart",
+          "line": 2542,
+          "text": "_log.error('Lỗi tải thành viên CLB', e, st);"
+        },
+        {
+          "file": "lib/features/community/screens/club_detail_screen.dart",
+          "line": 3501,
+          "text": "_log.error('Lỗi tải gallery', e, st);"
+        },
+        {
+          "file": "lib/features/community/screens/club_detail_screen.dart",
+          "line": 3540,
+          "text": "_log.error('Lỗi thêm ảnh gallery', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/profile/screens/settings_screen.dart",
+      "count": 8,
+      "matches": [
+        {
+          "file": "lib/features/profile/screens/settings_screen.dart",
+          "line": 95,
+          "text": "Tab(text: l10n?.settingsProfileTab ?? 'Hồ sơ'),"
+        },
+        {
+          "file": "lib/features/profile/screens/settings_screen.dart",
+          "line": 96,
+          "text": "Tab(text: l10n?.settingsBankTab ?? 'Ngân hàng'),"
+        },
+        {
+          "file": "lib/features/profile/screens/settings_screen.dart",
+          "line": 97,
+          "text": "Tab(text: l10n?.settingsSecurityTab ?? 'Bảo mật'),"
+        },
+        {
+          "file": "lib/features/profile/screens/settings_screen.dart",
+          "line": 271,
+          "text": "_log.error('Lỗi tải ảnh đại diện', e, stack);"
+        },
+        {
+          "file": "lib/features/profile/screens/settings_screen.dart",
+          "line": 318,
+          "text": "_log.error('Lỗi tải ảnh bìa', e, stack);"
+        },
+        {
+          "file": "lib/features/profile/screens/settings_screen.dart",
+          "line": 491,
+          "text": "_log.error('Lỗi cập nhật hồ sơ', e, stack);"
+        },
+        {
+          "file": "lib/features/profile/screens/settings_screen.dart",
+          "line": 501,
+          "text": "content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),"
+        },
+        {
+          "file": "lib/features/profile/screens/settings_screen.dart",
+          "line": 1160,
+          "text": "_log.error('Lỗi lưu thông tin ngân hàng', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/community/social/widgets/community_poll_widget.dart",
+      "count": 6,
+      "matches": [
+        {
+          "file": "lib/features/community/social/widgets/community_poll_widget.dart",
+          "line": 210,
+          "text": "if (text.contains('Có tham gia') ||"
+        },
+        {
+          "file": "lib/features/community/social/widgets/community_poll_widget.dart",
+          "line": 211,
+          "text": "text.contains('Đăng ký') ||"
+        },
+        {
+          "file": "lib/features/community/social/widgets/community_poll_widget.dart",
+          "line": 214,
+          "text": "if (text.contains('Chưa chắc chắn') ||"
+        },
+        {
+          "file": "lib/features/community/social/widgets/community_poll_widget.dart",
+          "line": 215,
+          "text": "text.contains('suy nghĩ') ||"
+        },
+        {
+          "file": "lib/features/community/social/widgets/community_poll_widget.dart",
+          "line": 218,
+          "text": "if (text.contains('Không') ||"
+        },
+        {
+          "file": "lib/features/community/social/widgets/community_poll_widget.dart",
+          "line": 219,
+          "text": "text.contains('Bận') ||"
+        }
+      ]
+    },
+    {
+      "file": "lib/providers/auth_provider.dart",
+      "count": 6,
+      "matches": [
+        {
+          "file": "lib/providers/auth_provider.dart",
+          "line": 164,
+          "text": "_log.error('Lỗi xác thực token', e, stack);"
+        },
+        {
+          "file": "lib/providers/auth_provider.dart",
+          "line": 228,
+          "text": "_log.error('Lỗi đăng nhập', e, stack);"
+        },
+        {
+          "file": "lib/providers/auth_provider.dart",
+          "line": 258,
+          "text": "_log.error('Lỗi đăng nhập Google', e, stack);"
+        },
+        {
+          "file": "lib/providers/auth_provider.dart",
+          "line": 292,
+          "text": "_log.error('Lỗi đăng nhập Apple', e, stack);"
+        },
+        {
+          "file": "lib/providers/auth_provider.dart",
+          "line": 322,
+          "text": "_log.error('Lỗi đăng nhập Facebook', e, stack);"
+        },
+        {
+          "file": "lib/providers/auth_provider.dart",
+          "line": 356,
+          "text": "_log.error('Lỗi đăng ký', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/bracket/screens/bracket_diagram_screen.dart",
+      "count": 5,
+      "matches": [
+        {
+          "file": "lib/features/bracket/screens/bracket_diagram_screen.dart",
+          "line": 120,
+          "text": "title = 'Bảng chéo vòng tròn';"
+        },
+        {
+          "file": "lib/features/bracket/screens/bracket_diagram_screen.dart",
+          "line": 122,
+          "text": "title = 'Sơ đồ nhánh thắng / thua';"
+        },
+        {
+          "file": "lib/features/bracket/screens/bracket_diagram_screen.dart",
+          "line": 124,
+          "text": "title = 'Sơ đồ vòng loại';"
+        },
+        {
+          "file": "lib/features/bracket/screens/bracket_diagram_screen.dart",
+          "line": 126,
+          "text": "title = 'Sơ đồ thi đấu';"
+        },
+        {
+          "file": "lib/features/bracket/screens/bracket_diagram_screen.dart",
+          "line": 137,
+          "text": "tooltip: 'Quay lại',"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/community/social/club_chat_screen.dart",
+      "count": 5,
+      "matches": [
+        {
+          "file": "lib/features/community/social/club_chat_screen.dart",
+          "line": 414,
+          "text": "_log.error('Không thể mở chat CLB', error, stack);"
+        },
+        {
+          "file": "lib/features/community/social/club_chat_screen.dart",
+          "line": 504,
+          "text": "_log.error('Không thể đồng bộ chat CLB', error, stack);"
+        },
+        {
+          "file": "lib/features/community/social/club_chat_screen.dart",
+          "line": 551,
+          "text": "_log.error('Không thể tải tin cũ trong chat CLB', error, stack);"
+        },
+        {
+          "file": "lib/features/community/social/club_chat_screen.dart",
+          "line": 594,
+          "text": "_log.error('Không thể gửi tin chat CLB', error, stack);"
+        },
+        {
+          "file": "lib/features/community/social/club_chat_screen.dart",
+          "line": 829,
+          "text": "_log.error('Không thể cập nhật cảm xúc tin nhắn', error, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/bracket/widgets/double_elim_diagram.dart",
+      "count": 4,
+      "matches": [
+        {
+          "file": "lib/features/bracket/widgets/double_elim_diagram.dart",
+          "line": 227,
+          "text": "label = 'CK NHÁNH THẮNG';"
+        },
+        {
+          "file": "lib/features/bracket/widgets/double_elim_diagram.dart",
+          "line": 229,
+          "text": "label = 'BK NHÁNH THẮNG';"
+        },
+        {
+          "file": "lib/features/bracket/widgets/double_elim_diagram.dart",
+          "line": 248,
+          "text": "label = 'CK NHÁNH THUA';"
+        },
+        {
+          "file": "lib/features/bracket/widgets/double_elim_diagram.dart",
+          "line": 250,
+          "text": "label = 'BK NHÁNH THUA';"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/community/social/community_feed_notifier.dart",
+      "count": 4,
+      "matches": [
+        {
+          "file": "lib/features/community/social/community_feed_notifier.dart",
+          "line": 32,
+          "text": "_log.error('Không thể tải feed CLB', error, stack);"
+        },
+        {
+          "file": "lib/features/community/social/community_feed_notifier.dart",
+          "line": 57,
+          "text": "_log.error('Không thể tải thêm bài đăng CLB', error, stack);"
+        },
+        {
+          "file": "lib/features/community/social/community_feed_notifier.dart",
+          "line": 91,
+          "text": "_log.error('Không thể đăng bài CLB', error, stack);"
+        },
+        {
+          "file": "lib/features/community/social/community_feed_notifier.dart",
+          "line": 106,
+          "text": "_log.error('Không thể reaction bài viết CLB', error, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/bracket/widgets/cross_table_view.dart",
+      "count": 3,
+      "matches": [
+        {
+          "file": "lib/features/bracket/widgets/cross_table_view.dart",
+          "line": 270,
+          "text": "maxLeg > 1 ? '$title - VÒNG $currentLeg'.toUpperCase() : title.toUpperCase(),"
+        },
+        {
+          "file": "lib/features/bracket/widgets/cross_table_view.dart",
+          "line": 284,
+          "text": "tooltip: 'Vòng trước',"
+        },
+        {
+          "file": "lib/features/bracket/widgets/cross_table_view.dart",
+          "line": 310,
+          "text": "tooltip: 'Vòng tiếp theo',"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/community/screens/edit_club_screen.dart",
+      "count": 3,
+      "matches": [
+        {
+          "file": "lib/features/community/screens/edit_club_screen.dart",
+          "line": 157,
+          "text": "_log.error('Lỗi cập nhật ảnh CLB', e, stack);"
+        },
+        {
+          "file": "lib/features/community/screens/edit_club_screen.dart",
+          "line": 226,
+          "text": "_log.error('Lỗi cập nhật CLB', e, stack);"
+        },
+        {
+          "file": "lib/features/community/screens/edit_club_screen.dart",
+          "line": 878,
+          "text": "_log.error('Lỗi xóa CLB', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/match/notifiers/score_panel_notifier.dart",
+      "count": 3,
+      "matches": [
+        {
+          "file": "lib/features/match/notifiers/score_panel_notifier.dart",
+          "line": 719,
+          "text": "_log.error('Lỗi kết thúc trận', e, stack);"
+        },
+        {
+          "file": "lib/features/match/notifiers/score_panel_notifier.dart",
+          "line": 845,
+          "text": "_log.error('Lỗi đồng bộ tỉ số set lên backend', e);"
+        },
+        {
+          "file": "lib/features/match/notifiers/score_panel_notifier.dart",
+          "line": 891,
+          "text": "_log.error('Lỗi đồng bộ điểm live', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/match/widgets/match_chat_widget.dart",
+      "count": 3,
+      "matches": [
+        {
+          "file": "lib/features/match/widgets/match_chat_widget.dart",
+          "line": 86,
+          "text": "_log.error('Lỗi khởi tạo chat room', e, stack);"
+        },
+        {
+          "file": "lib/features/match/widgets/match_chat_widget.dart",
+          "line": 112,
+          "text": "_log.error('Lỗi tải tin nhắn', e, stack);"
+        },
+        {
+          "file": "lib/features/match/widgets/match_chat_widget.dart",
+          "line": 139,
+          "text": "_log.error('Lỗi gửi tin nhắn', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/community/screens/club_management_screen.dart",
+      "count": 2,
+      "matches": [
+        {
+          "file": "lib/features/community/screens/club_management_screen.dart",
+          "line": 93,
+          "text": "_log.error('Lỗi tải dữ liệu quản lý CLB', e, stack);"
+        },
+        {
+          "file": "lib/features/community/screens/club_management_screen.dart",
+          "line": 403,
+          "text": "_log.error('Lỗi cập nhật báo cáo', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/home/screens/qr_scanner_screen.dart",
+      "count": 2,
+      "matches": [
+        {
+          "file": "lib/features/home/screens/qr_scanner_screen.dart",
+          "line": 75,
+          "text": "content: Text(auth.errorMessage ?? 'Mã QR không hợp lệ'),"
+        },
+        {
+          "file": "lib/features/home/screens/qr_scanner_screen.dart",
+          "line": 99,
+          "text": "title: const Text('Quét mã QR', style: TextStyle(color: Colors.white)),"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/match/widgets/official_score_modal.dart",
+      "count": 2,
+      "matches": [
+        {
+          "file": "lib/features/match/widgets/official_score_modal.dart",
+          "line": 214,
+          "text": "const Tab(text: 'Tính điểm'),"
+        },
+        {
+          "file": "lib/features/match/widgets/official_score_modal.dart",
+          "line": 215,
+          "text": "const Tab(text: 'Phạm lỗi'),"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/register/screens/doubles_registration_screen.dart",
+      "count": 2,
+      "matches": [
+        {
+          "file": "lib/features/register/screens/doubles_registration_screen.dart",
+          "line": 132,
+          "text": "label.contains('điện thoại') ||"
+        },
+        {
+          "file": "lib/features/register/screens/doubles_registration_screen.dart",
+          "line": 133,
+          "text": "label.contains('sđt') ||"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/register/screens/tournament_register_screen.dart",
+      "count": 2,
+      "matches": [
+        {
+          "file": "lib/features/register/screens/tournament_register_screen.dart",
+          "line": 237,
+          "text": "label.contains('điện thoại') ||"
+        },
+        {
+          "file": "lib/features/register/screens/tournament_register_screen.dart",
+          "line": 238,
+          "text": "label.contains('sđt') ||"
+        }
+      ]
+    },
+    {
+      "file": "lib/providers/notification_provider.dart",
+      "count": 2,
+      "matches": [
+        {
+          "file": "lib/providers/notification_provider.dart",
+          "line": 22,
+          "text": ".error('Không lấy được số thông báo chưa đọc', e, stack);"
+        },
+        {
+          "file": "lib/providers/notification_provider.dart",
+          "line": 69,
+          "text": "_log.error('Không thể tải thông báo', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/core/widgets/socket_observer.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/core/widgets/socket_observer.dart",
+          "line": 136,
+          "text": "_log.error('Lỗi parse notification từ socket', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/bracket/widgets/single_elim_diagram.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/features/bracket/widgets/single_elim_diagram.dart",
+          "line": 59,
+          "text": "SnackBar(content: Text('Không thể cập nhật vị trí: $error')),"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/chat/screens/chat_detail_screen.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/features/chat/screens/chat_detail_screen.dart",
+          "line": 211,
+          "text": "content: 'Tin nhắn đã bị thu hồi',"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/chat/screens/chat_screen.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/features/chat/screens/chat_screen.dart",
+          "line": 200,
+          "text": "_log.error('Lỗi gọi AI Chat', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/community/screens/club_invites_screen.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/features/community/screens/club_invites_screen.dart",
+          "line": 50,
+          "text": "_log.error('Lỗi $action lời mời', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/community/screens/create_club_screen.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/features/community/screens/create_club_screen.dart",
+          "line": 190,
+          "text": "_log.error('Lỗi tạo CLB', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/community/screens/create_club_tournament_screen.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/features/community/screens/create_club_tournament_screen.dart",
+          "line": 125,
+          "text": "_log.error('Lỗi tạo giải đấu trong CLB', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/community/social/widgets/community_post_composer_sheet.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/features/community/social/widgets/community_post_composer_sheet.dart",
+          "line": 149,
+          "text": "_log.error('Upload ảnh composer thất bại', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/lite/screens/lite_pairing_screen.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/features/lite/screens/lite_pairing_screen.dart",
+          "line": 151,
+          "text": "_log.error('Lỗi tải danh sách người tham gia', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/live/screens/live_match_screen.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/features/live/screens/live_match_screen.dart",
+          "line": 517,
+          "text": "label: 'Còn lại',"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/match/widgets/team_score_card.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/features/match/widgets/team_score_card.dart",
+          "line": 116,
+          "text": "const SnackBar(content: Text('Lỗi: Bạn không có quyền sửa điểm.')),"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/notification/screens/notification_screen.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/features/notification/screens/notification_screen.dart",
+          "line": 159,
+          "text": "_log.error('Lỗi xử lý lời mời', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/profile/widgets/language_setting_card.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/features/profile/widgets/language_setting_card.dart",
+          "line": 76,
+          "text": "child: Text(l10n?.languageVi ?? 'Tiếng Việt'),"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/referee/screens/referee_invites_screen.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/features/referee/screens/referee_invites_screen.dart",
+          "line": 116,
+          "text": "_log.error('Lỗi xử lý lời mời trọng tài', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/features/tournament/screens/create_public_quick_tournament_screen.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/features/tournament/screens/create_public_quick_tournament_screen.dart",
+          "line": 114,
+          "text": "_log.error('Không thể tạo Public Quick', error, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/providers/my_tournament_workspace_provider.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/providers/my_tournament_workspace_provider.dart",
+          "line": 56,
+          "text": "_log.error('Lỗi phản hồi lời mời trọng tài', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/providers/token_management_notifier.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/providers/token_management_notifier.dart",
+          "line": 37,
+          "text": "_log.error('Lỗi khi tạo token mới', e, stack);"
+        }
+      ]
+    },
+    {
+      "file": "lib/shared/widgets/report_sheet.dart",
+      "count": 1,
+      "matches": [
+        {
+          "file": "lib/shared/widgets/report_sheet.dart",
+          "line": 133,
+          "text": "_log.error('Lỗi gửi báo cáo', e, stack);"
+        }
+      ]
+    }
+  ]
+}

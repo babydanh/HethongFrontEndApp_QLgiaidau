@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,6 +71,7 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     if (_loadingProvinces) {
       return const Padding(
@@ -87,8 +89,9 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
         _dropdown(
           key: const ValueKey('province'),
           context: context,
+          l10n: l10n,
           colors: colors,
-          label: 'Tỉnh / Thành phố *',
+          label: l10n.clubRegionProvinceLabel,
           value: _provinceCode,
           items: _provinces,
           onChanged: (code) {
@@ -105,8 +108,9 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
         _dropdown(
           key: ValueKey('ward-$_provinceCode'),
           context: context,
+          l10n: l10n,
           colors: colors,
-          label: 'Phường / Xã / Thị trấn (Tùy chọn)',
+          label: l10n.clubRegionWardLabel,
           value: _wardCode,
           items: _wards,
           enabled: _provinceCode.isNotEmpty,
@@ -122,6 +126,7 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
   Widget _dropdown({
     Key? key,
     required BuildContext context,
+    required AppLocalizations l10n,
     required AppColorsExtension colors,
     required String label,
     required String value,
@@ -132,7 +137,10 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
     // Giá trị đã lưu nằm ngoài danh sách (dữ liệu cũ) — vẫn hiển thị để không mất.
     final effectiveItems = [...items];
     if (value.isNotEmpty && !items.any((region) => region.code == value)) {
-      effectiveItems.insert(0, Region(code: value, name: '$value (cũ)'));
+      effectiveItems.insert(
+        0,
+        Region(code: value, name: l10n.clubRegionLegacyValue(value)),
+      );
     }
     return DropdownButtonFormField<String>(
       key: key,
@@ -144,7 +152,7 @@ class _ClubRegionSelectorState extends ConsumerState<ClubRegionSelector> {
         fillColor: enabled ? colors.bgCard : colors.bgSurface,
       ),
       items: [
-        const DropdownMenuItem(value: '', child: Text('-- Chọn --')),
+        DropdownMenuItem(value: '', child: Text(l10n.clubRegionChoosePlaceholder)),
         ...effectiveItems.map(
           (region) => DropdownMenuItem(value: region.code, child: Text(region.name)),
         ),

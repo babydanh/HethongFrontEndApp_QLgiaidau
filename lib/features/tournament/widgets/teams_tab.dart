@@ -109,7 +109,7 @@ class _TeamsTabState extends State<TeamsTab> {
               },
               style: TextStyle(fontSize: 13, color: colors.textPrimary),
               decoration: InputDecoration(
-                hintText: 'Tìm theo tên đội hoặc thành viên...',
+                hintText: l10n.teamsTabSearchHint,
                 hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
                 prefixIcon: Icon(Icons.search, size: 18, color: colors.textMuted),
                 suffixIcon: _searchQuery.isNotEmpty

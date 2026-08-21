@@ -409,7 +409,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
+            child: Text(AppLocalizations.of(context)!.commonCancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
@@ -1392,25 +1392,26 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   void _showCompleteMatchDialog(MatchModel match) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.colors.bgCard,
         title: Text(
-          'Xác nhận kết thúc trận đấu',
+          l10n.liveScoreCompleteTitle,
           style: TextStyle(
             color: context.colors.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
-          'Bạn có chắc chắn muốn kết thúc trận đấu này và chốt kết quả tỉ số?',
+          l10n.liveScoreCompleteContent,
           style: TextStyle(color: context.colors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
+            child: Text(AppLocalizations.of(context)!.commonCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1429,7 +1430,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       content: Text(
                         ErrorParser.parse(
                           e,
-                          'Không thể cập nhật điểm trận đấu. Vui lòng thử lại.',
+                          l10n.liveScoreCompleteErrorFallback,
                         ),
                       ),
                     ),
@@ -1440,9 +1441,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.success,
             ),
-            child: const Text(
-              'Xác nhận',
-              style: TextStyle(color: Colors.white),
+            child: Text(
+              l10n.liveScoreCompleteConfirm,
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         ],

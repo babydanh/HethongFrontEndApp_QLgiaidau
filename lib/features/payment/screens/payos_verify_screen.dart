@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:intl/intl.dart';
@@ -62,6 +63,7 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
   }
 
   Future<void> _verifyPaymentStatus({bool silent = false}) async {
+    final l10n = AppLocalizations.of(context)!;
     if (!silent) {
       setState(() => _isChecking = true);
     }
@@ -97,19 +99,19 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
       }
       if (!silent && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Hệ thống chưa nhận được thanh toán. Vui lòng kiểm tra lại sau vài giây.',
-            ),
+          SnackBar(
+            content: Text(l10n.payosVerifyPaymentNotReceived),
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (e) {
       if (!silent && mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(ErrorParser.parse(e, 'Không thể xác minh thanh toán. Vui lòng thử lại.'))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorParser.parse(e, l10n.payosVerifyPaymentError)),
+          ),
+        );
       }
     } finally {
       if (!silent && mounted) {
@@ -120,13 +122,14 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final fmt = NumberFormat('#,###', 'vi_VN');
     final colors = context.colors;
 
     return Scaffold(
       backgroundColor: colors.bgDark,
       appBar: AppBar(
-        title: const Text('Xác nhận thanh toán'),
+        title: Text(l10n.payosVerifyTitle),
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
@@ -156,7 +159,7 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Thanh toán qua PayOS',
+                l10n.payosVerifyPayOSHeading,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
@@ -165,7 +168,7 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Vui lòng hoàn thành giao dịch chuyển khoản trên trình duyệt web vừa mở.',
+                l10n.payosVerifyInstruction,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -190,7 +193,7 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Mã QR thanh toán PayOS',
+                  l10n.payosVerifyQrLabel,
                   style: TextStyle(
                     color: colors.textSecondary,
                     fontWeight: FontWeight.w700,
@@ -211,7 +214,7 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Số tiền:',
+                          l10n.payosVerifyAmountLabel,
                           style: TextStyle(color: colors.textSecondary),
                         ),
                         Text(
@@ -229,7 +232,7 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Trạng thái:',
+                          l10n.payosVerifyStatusLabel,
                           style: TextStyle(color: colors.textSecondary),
                         ),
                         Row(
@@ -244,7 +247,7 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Đang chờ thanh toán...',
+                              l10n.payosVerifyPendingStatus,
                               style: TextStyle(
                                 color: colors.textSecondary,
                                 fontWeight: FontWeight.w600,
@@ -268,7 +271,7 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                       mode: LaunchMode.externalApplication,
                     ),
                     icon: const Icon(Icons.open_in_new_rounded),
-                    label: const Text('Mở trang thanh toán PayOS'),
+                    label: Text(l10n.payosVerifyOpenPaymentPage),
                   ),
                 ),
               const SizedBox(height: 16),
@@ -288,8 +291,8 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                           ),
                         )
                       : const Icon(Icons.check_circle_rounded),
-                  label: const Text(
-                    'Tôi đã thanh toán',
+                  label: Text(
+                    l10n.payosVerifyPaidButton,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   style: FilledButton.styleFrom(
@@ -307,7 +310,7 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                   context.pushReplacement('/home');
                 },
                 child: Text(
-                  'Hủy và quay về trang chủ',
+                  l10n.payosVerifyCancelButton,
                   style: TextStyle(
                     color: colors.textSecondary,
                     fontWeight: FontWeight.w600,

@@ -733,33 +733,31 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 children: [
                   const Icon(Icons.fact_check_outlined, color: Colors.amber),
                   const SizedBox(width: 10),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Chốt danh sách hiện tại\nKhông tự tạo bracket và không bắt buộc.',
-                      style: TextStyle(fontSize: 12),
+                      l10n.lite_rosterConfirmationDescription,
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                   state.rosterConfirmed
-                      ? const Chip(label: Text('Đã chốt'))
+                      ? Chip(label: Text(l10n.lite_rosterConfirmed))
                       : OutlinedButton(
                           onPressed: () async {
                             final confirmed = await showDialog<bool>(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('Chốt danh sách?'),
-                                content: const Text(
-                                  'Người mới sẽ không thể đăng ký. Bạn vẫn có thể tạo bracket riêng sau đó.',
-                                ),
+                                title: Text(l10n.lite_rosterConfirmTitle),
+                                content: Text(l10n.lite_rosterConfirmContent),
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.pop(context, false),
-                                    child: const Text('Hủy'),
+                                    child: Text(l10n.commonCancel),
                                   ),
                                   FilledButton(
                                     onPressed: () =>
                                         Navigator.pop(context, true),
-                                    child: const Text('Chốt danh sách'),
+                                    child: Text(l10n.lite_confirmRosterButton),
                                   ),
                                 ],
                               ),
@@ -769,10 +767,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                               await notifier.confirmRoster(widget.tournamentId);
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Đã chốt danh sách hiện tại.',
-                                    ),
+                                  SnackBar(
+                                    content: Text(l10n.lite_rosterConfirmedSuccess),
                                   ),
                                 );
                               }
@@ -783,14 +779,14 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                                     content: Text(
                                       error.response?.data?['message']
                                               ?.toString() ??
-                                          'Không thể chốt danh sách.',
+                                          l10n.lite_rosterConfirmError,
                                     ),
                                   ),
                                 );
                               }
                             }
                           },
-                          child: const Text('Chốt'),
+                          child: Text(l10n.lite_rosterConfirmAction),
                         ),
                 ],
               ),
@@ -833,12 +829,12 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           if (state.isFootball) ...[
             _sectionHeader(
               colors,
-              'Đội bóng đăng ký (${state.participants.length})',
+              l10n.lite_footballRegisteredTeams(state.participants.length),
               Icons.shield_outlined,
             ),
             const SizedBox(height: 8),
             if (state.participants.isEmpty)
-              _emptyCard(colors, 'Chưa có đội bóng đăng ký')
+              _emptyCard(colors, l10n.lite_noRegisteredFootballTeams)
             else
               FootballRegistrationGroups(
                 participants: state.participants,

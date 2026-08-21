@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class InjuryInputDialog extends StatefulWidget {
   final String team1Name;
@@ -29,6 +30,7 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final canSubmit =
         _selectedTeam != null && _descController.text.trim().isNotEmpty;
 
@@ -41,7 +43,7 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Ghi nhận Y tế/Chấn thương',
+              l10n.injuryDialogTitle,
               style: TextStyle(color: context.colors.textPrimary, fontSize: 16),
             ),
           ),
@@ -53,7 +55,7 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Đội/VĐV cần hỗ trợ y tế:',
+              l10n.injuryDialogTeamPrompt,
               style: TextStyle(
                 color: context.colors.textSecondary,
                 fontWeight: FontWeight.bold,
@@ -70,7 +72,7 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Mô tả tình trạng:',
+              l10n.injuryDialogDescriptionLabel,
               style: TextStyle(
                 color: context.colors.textSecondary,
                 fontWeight: FontWeight.bold,
@@ -83,7 +85,7 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
               style: TextStyle(color: context.colors.textPrimary),
               maxLines: 2,
               decoration: InputDecoration(
-                hintText: 'Ví dụ: Trật sơ mi, Căng cơ...',
+                hintText: l10n.injuryDialogDescriptionHint,
                 filled: true,
                 fillColor: context.colors.bgSurface,
                 border: OutlineInputBorder(
@@ -99,7 +101,10 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Hủy', style: TextStyle(color: context.colors.textMuted)),
+          child: Text(
+            l10n.commonCancel,
+            style: TextStyle(color: context.colors.textMuted),
+          ),
         ),
         ElevatedButton(
           onPressed: canSubmit
@@ -112,7 +117,7 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
             backgroundColor: context.colors.warning,
             foregroundColor: Colors.black,
           ),
-          child: const Text('Xác nhận'),
+          child: Text(l10n.injuryDialogConfirm),
         ),
       ],
     );

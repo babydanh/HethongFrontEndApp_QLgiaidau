@@ -9,12 +9,14 @@ class PodiumView extends StatelessWidget {
   final List<PlayerRanking> rankings;
   final List<EloTier> tiers;
   final String? formatLabel;
+  final ValueChanged<String>? onTapUser;
 
   const PodiumView({
     super.key,
     required this.rankings,
     this.tiers = const [],
     this.formatLabel,
+    this.onTapUser,
   });
 
   @override
@@ -61,7 +63,7 @@ class PodiumView extends StatelessWidget {
               Text(
                 subtitleText,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: colors.textMuted,
                 ),
@@ -83,6 +85,11 @@ class PodiumView extends StatelessWidget {
                   podiumColor: const Color(0xFF94A3B8),
                   avatarBg: const Color(0xFF94A3B8),
                   formatLabel: formatLabel,
+                  onTap: () {
+                    if (p2 != null && onTapUser != null) {
+                      onTapUser!(p2.userId);
+                    }
+                  },
                 ),
               ),
               const SizedBox(width: 8),
@@ -97,6 +104,11 @@ class PodiumView extends StatelessWidget {
                   avatarBg: const Color(0xFFF59E0B),
                   isKing: true,
                   formatLabel: formatLabel,
+                  onTap: () {
+                    if (p1 != null && onTapUser != null) {
+                      onTapUser!(p1.userId);
+                    }
+                  },
                 ),
               ),
               const SizedBox(width: 8),
@@ -110,6 +122,11 @@ class PodiumView extends StatelessWidget {
                   podiumColor: const Color(0xFFF97316),
                   avatarBg: const Color(0xFFF97316),
                   formatLabel: formatLabel,
+                  onTap: () {
+                    if (p3 != null && onTapUser != null) {
+                      onTapUser!(p3.userId);
+                    }
+                  },
                 ),
               ),
             ],
@@ -129,6 +146,7 @@ class _PodiumSlot extends StatelessWidget {
   final Color avatarBg;
   final bool isKing;
   final String? formatLabel;
+  final VoidCallback? onTap;
 
   const _PodiumSlot({
     required this.ranking,
@@ -139,6 +157,7 @@ class _PodiumSlot extends StatelessWidget {
     required this.avatarBg,
     this.isKing = false,
     this.formatLabel,
+    this.onTap,
   });
 
   @override
@@ -147,73 +166,77 @@ class _PodiumSlot extends StatelessWidget {
     final name = ranking?.fullName ?? 'Chưa xếp hạng';
     final eloStr = ranking != null ? '${ranking!.eloPoints} ELO' : '-- ELO';
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (isKing)
-          const Padding(
-            padding: EdgeInsets.only(bottom: 4),
-            child: Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 24),
-          )
-        else
-          const SizedBox(height: 28),
-        _buildPodiumAvatar(colors, name),
-        const SizedBox(height: 8),
-        Text(
-          name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: ranking != null ? FontWeight.w800 : FontWeight.w600,
-            color: ranking != null ? colors.textPrimary : colors.textMuted,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isKing)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 4),
+              child: Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 24),
+            )
+          else
+            const SizedBox(height: 28),
+          _buildPodiumAvatar(colors, name),
+          const SizedBox(height: 8),
+          Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: ranking != null ? FontWeight.w800 : FontWeight.w600,
+              color: ranking != null ? colors.textPrimary : colors.textMuted,
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          eloStr,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: ranking != null ? const Color(0xFF2563EB) : colors.textMuted,
+          const SizedBox(height: 2),
+          Text(
+            eloStr,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: ranking != null ? const Color(0xFF2563EB) : colors.textMuted,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        // Khối bục xếp hạng với số
-        Container(
-          height: podiumHeight,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: podiumColor,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: podiumColor.withValues(alpha: 0.35),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Center(
-            child: Text(
-              rankNumber,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                shadows: [
-                  Shadow(
-                    color: Colors.black26,
-                    offset: Offset(0, 1),
-                    blurRadius: 2,
-                  ),
-                ],
+          const SizedBox(height: 8),
+          // Khối bục xếp hạng với số
+          Container(
+            height: podiumHeight,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: podiumColor,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: podiumColor.withValues(alpha: 0.35),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                rankNumber,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black26,
+                      offset: Offset(0, 1),
+                      blurRadius: 2,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

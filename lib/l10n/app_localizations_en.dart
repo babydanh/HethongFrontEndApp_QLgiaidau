@@ -573,6 +573,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get communityComposerTriggerHint => 'What are you thinking?';
 
   @override
+  String get communityTournamentPreviewDefaultName => 'Club tournament';
+
+  @override
+  String communityTournamentPreviewRound(Object round) {
+    return 'Round $round';
+  }
+
+  @override
+  String communityTournamentPreviewMatch(Object number) {
+    return 'Match $number';
+  }
+
+  @override
+  String get communityTournamentPreviewWaiting => 'Awaiting matchup';
+
+  @override
+  String get communityTournamentPreviewViewBracket => 'View bracket';
+
+  @override
+  String get communityTournamentPreviewViewDetails => 'View tournament details';
+
+  @override
   String get userProfileClubOwnerRole => 'Club owner';
 
   @override
@@ -1697,6 +1719,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get matchChatConnecting => 'Connecting court camera...';
 
   @override
+  String get chatReactionTitle => 'Reactions to this message';
+
+  @override
+  String chatReactionTotal(Object count) {
+    return '$count reactions';
+  }
+
+  @override
+  String get chatReactionMediaPlaceholder => '[Image/Media]';
+
+  @override
   String get teamScoreCardError =>
       'Error: You do not have permission to edit scores.';
 
@@ -2369,6 +2402,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notification_declineError => 'Error declining invite.';
 
   @override
+  String get notification_missingCommunityId =>
+      'This invitation has no community ID.';
+
+  @override
+  String get notification_missingTeamId =>
+      'This football team invitation has no team ID.';
+
+  @override
+  String get notification_missingRefereeInfo =>
+      'This referee invitation is missing required information.';
+
+  @override
+  String get notification_missingParticipantId =>
+      'This partner invitation has no registration ID.';
+
+  @override
+  String get notification_unsupportedInviteType =>
+      'This invitation type has no supported action yet.';
+
+  @override
   String get notification_title => 'Notifications';
 
   @override
@@ -2424,6 +2477,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notification_inviteHandled => 'Invite response recorded';
+
+  @override
+  String get notification_alreadyTeamMember =>
+      'You are already a member of this team.';
+
+  @override
+  String get notification_alreadyClubMember =>
+      'You are already a member of this club.';
+
+  @override
+  String get notification_inviteAlreadyHandled =>
+      'This invitation was already handled.';
 
   @override
   String get payments_close => 'Close';
@@ -4968,6 +5033,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatDetailMediaPollPlaceholder => '[Image / Poll]';
+
+  @override
+  String get chatDetailSendError => 'Could not send the message.';
+
+  @override
+  String get chatDetailUploadError => 'Could not upload the image.';
+
+  @override
+  String get chatDetailRevokeTitle => 'Revoke message?';
+
+  @override
+  String get chatDetailRevokeContent =>
+      'This message will be removed for everyone in the chat room.';
+
+  @override
+  String get chatDetailCancel => 'Cancel';
+
+  @override
+  String get chatDetailRevokeAction => 'Revoke';
+
+  @override
+  String get chatDetailRevoked => 'Message was revoked';
 
   @override
   String get chatDetailSendImage => 'Send image';
@@ -9357,4 +9444,367 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tournamentInfoDescriptionHint =>
       'Additional information about the tournament, venue, schedule...';
+
+  @override
+  String get imageViewerZoomOut => 'Zoom out';
+
+  @override
+  String get imageViewerZoomIn => 'Zoom in';
+
+  @override
+  String doublesRegInviteTeamTitle(Object team) {
+    return 'Invite people to join $team';
+  }
+
+  @override
+  String doublesRegTournamentSubtitle(Object tournament) {
+    return 'Tournament: $tournament';
+  }
+
+  @override
+  String get doublesRegInviteBadge => 'Doubles invitation';
+
+  @override
+  String get doublesRegShareToTeam => 'Share';
+
+  @override
+  String get doublesRegInviteSentTitle => 'Team invitation sent';
+
+  @override
+  String get doublesRegInviteSentDescription =>
+      'We sent an invitation notification to your teammate\'s account. Remind them to open the app or visit the website to confirm participation.';
+
+  @override
+  String doublesRegJoinTeamShareTitle(Object team) {
+    return 'Join team $team';
+  }
+
+  @override
+  String doublesRegPartnerSubtitle(Object tournament, Object partner) {
+    return 'Tournament: $tournament - Teammate: $partner';
+  }
+
+  @override
+  String get doublesRegShareToPartner => 'Share with teammate';
+
+  @override
+  String get doublesRegStatusPendingApproval =>
+      'Team formed, awaiting organizer approval';
+
+  @override
+  String get doublesRegStatusComplete => 'Team formed and approved';
+
+  @override
+  String get doublesRegStatusWaitlisted => 'Team formed, on the waitlist';
+
+  @override
+  String get doublesRegStatusSuccess => 'Team formed successfully';
+
+  @override
+  String doublesRegPaymentStatus(Object status) {
+    return 'Payment status: $status';
+  }
+
+  @override
+  String get doublesRegPaid => 'Paid';
+
+  @override
+  String get doublesRegUnpaid => 'Not paid';
+
+  @override
+  String get seriesNotFound => 'Tournament series not found';
+
+  @override
+  String get seriesLoadError => 'Could not load tournament series information';
+
+  @override
+  String get seriesLegCount => 'Legs';
+
+  @override
+  String get seriesParticipantCount => 'Players';
+
+  @override
+  String get seriesStartDate => 'Start date';
+
+  @override
+  String get seriesEndDate => 'End date';
+
+  @override
+  String get lite_rosterConfirmationDescription =>
+      'Confirm the current roster\nNo bracket is created automatically and this is not required.';
+
+  @override
+  String get lite_rosterConfirmTitle => 'Confirm roster?';
+
+  @override
+  String get lite_rosterConfirmContent =>
+      'New participants will not be able to register. You can still create a separate bracket later.';
+
+  @override
+  String get lite_confirmRosterButton => 'Confirm roster';
+
+  @override
+  String get lite_rosterConfirmAction => 'Confirm';
+
+  @override
+  String get lite_rosterConfirmedSuccess =>
+      'The current roster has been confirmed.';
+
+  @override
+  String get lite_rosterConfirmError => 'Could not confirm the roster.';
+
+  @override
+  String lite_footballRegisteredTeams(Object count) {
+    return 'Registered football teams ($count)';
+  }
+
+  @override
+  String get lite_noRegisteredFootballTeams => 'No football teams registered';
+
+  @override
+  String get doubleElimNoBracket => 'No bracket diagram';
+
+  @override
+  String get doubleElimWinnersTitle => '▲ WINNERS BRACKET';
+
+  @override
+  String get doubleElimWinnersSubtitle =>
+      'Winners advance - Losers drop to the losers bracket';
+
+  @override
+  String get doubleElimLosersTitle => '▼ LOSERS BRACKET';
+
+  @override
+  String get doubleElimLosersSubtitle =>
+      'Lose once - Lose again and you are eliminated';
+
+  @override
+  String get doubleElimGrandFinal => 'GRAND FINAL';
+
+  @override
+  String get tournamentCardUnnamed => '(Unnamed)';
+
+  @override
+  String get tournamentCardDeleteTitle => 'Delete tournament?';
+
+  @override
+  String get tournamentCardDeleteContent => 'This action cannot be undone.';
+
+  @override
+  String get tournamentCardDeleteConfirm => 'Delete';
+
+  @override
+  String get tournamentCardDeleteSuccess => 'Tournament deleted successfully';
+
+  @override
+  String tournamentCardDeleteError(Object error) {
+    return 'Delete error: $error';
+  }
+
+  @override
+  String get tournamentCardDeleteMenu => 'Delete tournament';
+
+  @override
+  String get tournamentCardDeleteUnknownError => 'Unknown error';
+
+  @override
+  String matchEventScoreChange(Object points) {
+    return '$points points';
+  }
+
+  @override
+  String get matchEventYellowCard => 'Yellow card';
+
+  @override
+  String get matchEventRedCard => 'Red card';
+
+  @override
+  String matchEventFoul(Object description) {
+    return 'Foul: $description';
+  }
+
+  @override
+  String get clubRegionProvinceLabel => 'Province / City *';
+
+  @override
+  String get clubRegionWardLabel => 'Ward / Commune / Town (Optional)';
+
+  @override
+  String get clubRegionChoosePlaceholder => '-- Select --';
+
+  @override
+  String clubRegionLegacyValue(Object value) {
+    return '$value (legacy)';
+  }
+
+  @override
+  String get injuryDialogTitle => 'Record Medical Issue/Injury';
+
+  @override
+  String get injuryDialogTeamPrompt =>
+      'Team/player needing medical assistance:';
+
+  @override
+  String get injuryDialogDescriptionLabel => 'Condition description:';
+
+  @override
+  String get injuryDialogDescriptionHint =>
+      'Example: Sprained ankle, muscle strain...';
+
+  @override
+  String get injuryDialogConfirm => 'Confirm';
+
+  @override
+  String get teamsTabSearchHint => 'Search by team or member name...';
+
+  @override
+  String get refereeInviteUnknownSchedule => 'Schedule unavailable';
+
+  @override
+  String get refereeInviteAssignmentFallback => 'Referee assignment';
+
+  @override
+  String get refereeInvitePending => 'Awaiting response';
+
+  @override
+  String get refereeInviteDateLabel => 'Invite date';
+
+  @override
+  String get refereeInviteTournamentStatusLabel => 'Tournament status';
+
+  @override
+  String get refereeInviteAccept => 'Accept assignment';
+
+  @override
+  String get refereeInviteDecline => 'Decline';
+
+  @override
+  String get liveScoreCompleteTitle => 'Confirm match completion';
+
+  @override
+  String get liveScoreCompleteContent =>
+      'Are you sure you want to end this match and finalize the score?';
+
+  @override
+  String get liveScoreCompleteConfirm => 'Confirm';
+
+  @override
+  String get liveScoreCompleteErrorFallback =>
+      'Unable to update the match score. Please try again.';
+
+  @override
+  String get adminEditScoreTitle => 'Admin: Edit result';
+
+  @override
+  String get adminEditScorePrompt => 'Re-enter the score:';
+
+  @override
+  String get adminEditScoreWinnerPrompt => 'Select the winner:';
+
+  @override
+  String get adminEditScoreSave => 'Save result';
+
+  @override
+  String get payosVerifyPaymentNotReceived =>
+      'The payment has not been received yet. Please check again in a few seconds.';
+
+  @override
+  String get payosVerifyPaymentError =>
+      'Unable to verify the payment. Please try again.';
+
+  @override
+  String get payosVerifyTitle => 'Confirm payment';
+
+  @override
+  String get payosVerifyPayOSHeading => 'PayOS payment';
+
+  @override
+  String get payosVerifyInstruction =>
+      'Please complete the bank transfer in the web browser that was just opened.';
+
+  @override
+  String get payosVerifyQrLabel => 'PayOS payment QR code';
+
+  @override
+  String get payosVerifyAmountLabel => 'Amount:';
+
+  @override
+  String get payosVerifyStatusLabel => 'Status:';
+
+  @override
+  String get payosVerifyPendingStatus => 'Waiting for payment...';
+
+  @override
+  String get payosVerifyOpenPaymentPage => 'Open PayOS payment page';
+
+  @override
+  String get payosVerifyPaidButton => 'I have paid';
+
+  @override
+  String get payosVerifyCancelButton => 'Cancel and return home';
+
+  @override
+  String get matchTableRoundFinal => 'Final';
+
+  @override
+  String get matchTableRoundSemifinal => 'Semifinal';
+
+  @override
+  String get matchTableRoundQuarterfinal => 'Quarterfinal';
+
+  @override
+  String matchTableRoundOf(Object size) {
+    return 'Round of 1/$size';
+  }
+
+  @override
+  String matchTableRound(Object round) {
+    return 'Round $round';
+  }
+
+  @override
+  String get matchTableGrandFinal => 'Grand final';
+
+  @override
+  String matchTableLosersRound(Object round) {
+    return 'Losers bracket · Round $round';
+  }
+
+  @override
+  String matchTableGroupMatch(Object group, Object match) {
+    return '$group · Match $match';
+  }
+
+  @override
+  String matchTableRoundMatch(Object round, Object match) {
+    return '$round · Match $match';
+  }
+
+  @override
+  String get communityPoll_missingInviteCode =>
+      'The tournament invite code is missing.';
+
+  @override
+  String get seriesOverviewTab => 'Overview';
+
+  @override
+  String get seriesScheduleTab => 'Schedule';
+
+  @override
+  String get seriesRankingsTab => 'Standings';
+
+  @override
+  String get matchTableBye => 'BYE';
+
+  @override
+  String get matchTableLive => 'LIVE';
+
+  @override
+  String get matchTableCompleted => 'COMPLETED';
+
+  @override
+  String get matchTableUpcoming => 'UPCOMING';
+
+  @override
+  String get matchTableUnassignedCourt => 'Court not assigned';
 }

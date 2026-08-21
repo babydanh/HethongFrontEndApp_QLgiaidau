@@ -87,7 +87,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       if (notif.type == 'CLUB_INVITE' || notif.type == 'COMMUNITY_INVITED') {
         final communityId = notif.communityId;
         if (communityId == null || communityId.isEmpty) {
-          throw StateError('Lời mời không có mã cộng đồng.');
+          throw StateError(l10n.notification_missingCommunityId);
         }
         await ref
             .read(communityRepositoryProvider)
@@ -97,7 +97,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       } else if (notif.isFootballTeamInvite) {
         final teamId = notif.footballTeamId;
         if (teamId == null || teamId.isEmpty) {
-          throw StateError('Lời mời đội bóng không có mã đội.');
+          throw StateError(l10n.notification_missingTeamId);
         }
         await ref
             .read(footballTeamApiProvider)
@@ -110,7 +110,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         final tournamentId = uri?.queryParameters['tournamentId'];
         final refereeId = uri?.queryParameters['refereeId'];
         if (tournamentId == null || refereeId == null) {
-          throw StateError('Lời mời trọng tài không có đủ thông tin.');
+          throw StateError(l10n.notification_missingRefereeInfo);
         }
         await ref
             .read(myTournamentWorkspaceProvider.notifier)
@@ -128,7 +128,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             ? segments[participantIndex + 1]
             : null;
         if (participantId == null || participantId.isEmpty) {
-          throw StateError('Lời mời ghép đôi không có mã đăng ký.');
+          throw StateError(l10n.notification_missingParticipantId);
         }
         await ref
             .read(dioProvider)
@@ -136,7 +136,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
               '/tournaments/participants/$participantId/${accept ? 'accept-partner' : 'reject-partner'}',
             );
       } else {
-        throw StateError('Loại lời mời này chưa có thao tác tương ứng.');
+        throw StateError(l10n.notification_unsupportedInviteType);
       }
       await ref.read(notificationStateProvider.notifier).markAsRead(notif.id);
       if (mounted) {
@@ -183,9 +183,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
               content: Text(
                 accept
                     ? (notif.isFootballTeamInvite
-                          ? 'Bạn đã là thành viên của đội bóng này.'
-                          : 'Bạn đã là thành viên của câu lạc bộ này.')
-                    : 'Lời mời này đã được xử lý trước đó.',
+                          ? l10n.notification_alreadyTeamMember
+                          : l10n.notification_alreadyClubMember)
+                    : l10n.notification_inviteAlreadyHandled,
               ),
               backgroundColor: const Color(0xFF059669),
               behavior: SnackBarBehavior.floating,

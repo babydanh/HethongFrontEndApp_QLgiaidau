@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class ChatReactionDetailSheet extends StatelessWidget {
@@ -18,6 +19,7 @@ class ChatReactionDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final allReactions = message.reactions;
     int totalCount = 0;
@@ -53,7 +55,7 @@ class ChatReactionDetailSheet extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  'Cảm xúc về tin nhắn',
+                  l10n.chatReactionTitle,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -68,7 +70,7 @@ class ChatReactionDetailSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    '$totalCount cảm xúc',
+                    l10n.chatReactionTotal(totalCount),
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -134,7 +136,9 @@ class ChatReactionDetailSheet extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    message.content.isNotEmpty ? message.content : '[Hình ảnh/Phương tiện]',
+                    message.content.isNotEmpty
+                        ? message.content
+                        : l10n.chatReactionMediaPlaceholder,
                     style: TextStyle(fontSize: 12.5, color: colors.textSecondary),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
