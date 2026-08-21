@@ -212,6 +212,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetContext) {
+        final l10n = AppLocalizations.of(sheetContext);
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -222,7 +223,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                   Icons.camera_alt_rounded,
                   color: AppTheme.primary,
                 ),
-                title: const Text('Chụp ảnh mới'),
+                title: Text(l10n?.profileTakePhoto ?? 'Take a new photo'),
                 onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
               ),
               ListTile(
@@ -230,7 +231,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                   Icons.photo_library_rounded,
                   color: AppTheme.primary,
                 ),
-                title: const Text('Chọn từ thư viện'),
+                title: Text(l10n?.profileChooseFromGallery ?? 'Choose from gallery'),
                 onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
               ),
               const SizedBox(height: 12),
@@ -255,7 +256,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Đã cập nhật ảnh đại diện'),
+            content: Text(AppLocalizations.of(context)?.profileAvatarUpdated ?? 'Profile photo updated'),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -281,7 +282,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Kích thước ảnh không được vượt quá 5MB'),
+            content: Text(AppLocalizations.of(context)?.settingsImageSizeLimit ?? 'Image size must not exceed 5 MB'),
             backgroundColor: context.colors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -296,7 +297,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Đã cập nhật ảnh bìa'),
+            content: Text(AppLocalizations.of(context)?.profileCoverUpdated ?? 'Cover photo updated'),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -318,12 +319,13 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       initialDate: initial.isBefore(now) ? initial : DateTime(now.year - 1),
       firstDate: DateTime(1900),
       lastDate: now,
-      helpText: 'Chọn ngày sinh',
+      helpText: AppLocalizations.of(context)?.infoDob ?? 'Date of birth',
     );
     if (picked != null) setState(() => _dob = picked);
   }
 
   Future<void> _showGenderChangeRequestDialog() async {
+    final l10n = AppLocalizations.of(context);
     var requestedGender = _gender.isNotEmpty && _gender != 'Chưa chọn'
         ? _gender
         : 'Nam';
@@ -345,16 +347,14 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 if (!ctx.mounted) return;
                 Navigator.of(ctx).pop();
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Đã gửi yêu cầu. Vui lòng chờ Admin phê duyệt.',
-                    ),
+                  SnackBar(
+                    content: Text(l10n?.settingsRequestSent ?? 'Request sent. Please wait for admin approval.'),
                   ),
                 );
               } catch (e) {
                 if (!ctx.mounted) return;
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text('Gửi yêu cầu thất bại: $e')),
+                  SnackBar(content: Text(l10n?.settingsRequestFailed ?? 'Could not send the request. Please try again.')),
                 );
               } finally {
                 if (ctx.mounted) setState(() => isSubmitting = false);
@@ -363,22 +363,21 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
 
             return AlertDialog(
               backgroundColor: context.colors.bgCard,
-              title: const Text('Yêu cầu thay đổi giới tính'),
+              title: Text(l10n?.settingsGenderChangeTitle ?? 'Request gender change'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Vì bạn đã hoàn thành ít nhất một giải đấu, giới tính đã bị khóa để đảm bảo công bằng. '
-                    'Yêu cầu sẽ được gửi tới Admin để phê duyệt thủ công.',
-                    style: TextStyle(fontSize: 13, height: 1.5),
+                  Text(
+                    l10n?.settingsGenderLockedMessage ?? 'Because you have completed at least one tournament, your gender is locked to ensure fair play. The request will be sent to an admin for manual approval.',
+                    style: const TextStyle(fontSize: 13, height: 1.5),
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     initialValue: requestedGender,
-                    decoration: const InputDecoration(
-                      labelText: 'Giới tính mong muốn',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n?.settingsDesiredGender ?? 'Requested gender',
+                      border: const OutlineInputBorder(),
                     ),
                     items: const [
                       DropdownMenuItem(value: 'Nam', child: Text('Nam')),
@@ -398,7 +397,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                   onPressed: isSubmitting
                       ? null
                       : () => Navigator.of(ctx).pop(),
-                  child: const Text('Hủy bỏ'),
+                  child: Text(l10n?.commonCancel ?? 'Cancel'),
                 ),
                 FilledButton(
                   onPressed: isSubmitting ? null : submit,
@@ -408,7 +407,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Gửi yêu cầu'),
+                      : Text(l10n?.settingsSendRequest ?? 'Send request'),
                 ),
               ],
             );
@@ -517,6 +516,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
     String? fullName,
     bool genderLocked,
   ) {
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       physics: const BouncingScrollPhysics(),
@@ -531,22 +531,22 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
             _buildCoverAndAvatar(colors, avatarUrl, coverUrl, email, fullName),
             const SizedBox(height: 24),
             _card(colors, [
-              _fieldLabel(colors, 'Họ và tên'),
+              _fieldLabel(colors, l10n?.fullNameLabel ?? 'Full name'),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _nameCtrl,
-                hint: 'Nhập họ tên đầy đủ',
+                hint: l10n?.settingsFullNameHint ?? 'Enter your full name',
                 prefixIcon: Icons.person_outline,
                 validator: (v) {
                   final value = v?.trim() ?? '';
-                  if (value.isEmpty) return 'Vui lòng nhập họ tên';
-                  if (value.length < 2) return 'Họ tên phải có ít nhất 2 ký tự';
-                  if (value.length > 100) return 'Họ tên tối đa 100 ký tự';
+                  if (value.isEmpty) return l10n?.settingsFullNameRequired ?? 'Please enter your full name';
+                  if (value.length < 2) return l10n?.settingsFullNameMin ?? 'Name must contain at least 2 characters';
+                  if (value.length > 100) return l10n?.settingsFullNameMax ?? 'Name must not exceed 100 characters';
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              _fieldLabel(colors, 'Email'),
+              _fieldLabel(colors, l10n?.emailLabel ?? 'Email'),
               const SizedBox(height: 6),
               AppTextFormField(
                 initialValue: email ?? '',
@@ -555,7 +555,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 enabled: false,
               ),
               const SizedBox(height: 16),
-              _fieldLabel(colors, 'Số điện thoại'),
+              _fieldLabel(colors, l10n?.infoPhone ?? 'Phone number'),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _phoneCtrl,
@@ -567,35 +567,35 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                   if (value.isEmpty) return null;
                   return RegExp(r'^[0-9]{10,11}$').hasMatch(value)
                       ? null
-                      : 'Số điện thoại không hợp lệ';
+                      : l10n?.settingsPhoneInvalid ?? 'Invalid phone number';
                 },
               ),
               const SizedBox(height: 16),
-              _fieldLabel(colors, 'Ngày sinh'),
+              _fieldLabel(colors, l10n?.infoDob ?? 'Date of birth'),
               const SizedBox(height: 6),
               _dobField(colors),
               const SizedBox(height: 16),
-              _fieldLabel(colors, 'Giới tính'),
+              _fieldLabel(colors, l10n?.infoGender ?? 'Gender'),
               const SizedBox(height: 6),
               _genderField(colors, genderLocked),
               const SizedBox(height: 16),
-              _fieldLabel(colors, 'Khu vực tranh tài'),
+              _fieldLabel(colors, l10n?.settingsCompetitionRegion ?? 'Competition region'),
               const SizedBox(height: 6),
               _provinceField(colors),
               const SizedBox(height: 4),
               Text(
-                'Chọn khu vực để tham gia xếp hạng Tier S',
+                l10n?.settingsCompetitionRegionHint ?? 'Choose a region to join the Tier S ranking',
                 style: TextStyle(fontSize: 11, color: colors.textMuted),
               ),
               const SizedBox(height: 16),
-              _fieldLabel(colors, 'Địa chỉ chi tiết'),
+              _fieldLabel(colors, l10n?.settingsDetailedAddress ?? 'Detailed address'),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _addressCtrl,
-                hint: 'Nhập địa chỉ cụ thể của bạn',
+                hint: l10n?.settingsDetailedAddressHint ?? 'Enter your detailed address',
                 prefixIcon: Icons.location_on_outlined,
                 validator: (v) =>
-                    (v ?? '').length > 255 ? 'Địa chỉ tối đa 255 ký tự' : null,
+                    (v ?? '').length > 255 ? l10n?.settingsAddressMax ?? 'Address must not exceed 255 characters' : null,
               ),
               if (_autoDetectedProvinceName != null &&
                   _provinceCode.isNotEmpty) ...[
@@ -609,7 +609,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Đã tự nhận diện: $_autoDetectedProvinceName',
+                      l10n?.settingsAutoDetected(_autoDetectedProvinceName!) ?? 'Automatically detected: $_autoDetectedProvinceName',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -620,15 +620,15 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 ),
               ],
               const SizedBox(height: 16),
-              _fieldLabel(colors, 'Giới thiệu bản thân'),
+              _fieldLabel(colors, l10n?.settingsBio ?? 'About you'),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _bioCtrl,
-                hint: 'Viết một chút về phong cách chơi của bạn...',
+                hint: l10n?.settingsBioHint ?? 'Write a little about your playing style...',
                 maxLines: 3,
                 prefixIcon: Icons.edit_note_rounded,
                 validator: (v) => (v ?? '').length > 500
-                    ? 'Giới thiệu tối đa 500 ký tự'
+                    ? l10n?.settingsBioMax ?? 'Introduction must not exceed 500 characters'
                     : null,
               ),
               const SizedBox(height: 24),
@@ -716,8 +716,8 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                           const SizedBox(width: 6),
                           Text(
                             _isUploadingCover
-                                ? 'Đang tải...'
-                                : 'Thay đổi ảnh bìa',
+                                ? (AppLocalizations.of(context)?.settingsUploading ?? 'Uploading...')
+                                : (AppLocalizations.of(context)?.settingsChangeCover ?? 'Change cover photo'),
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -783,7 +783,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Chạm để đổi ảnh đại diện',
+                      AppLocalizations.of(context)?.settingsTapToChangeAvatar ?? 'Tap to change profile photo',
                       style: TextStyle(fontSize: 11, color: colors.textMuted),
                     ),
                   ],
@@ -821,7 +821,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
             Expanded(
               child: Text(
                 _dob == null
-                    ? 'Chọn ngày sinh'
+                    ? (AppLocalizations.of(context)?.settingsChooseDateOfBirth ?? 'Choose date of birth')
                     : 'Ngày ${_dob!.day.toString().padLeft(2, '0')}/'
                           '${_dob!.month.toString().padLeft(2, '0')}/${_dob!.year}',
                 style: TextStyle(
@@ -858,7 +858,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               children: [
                 Expanded(
                   child: Text(
-                    'Giới tính đã bị khóa sau khi giải đấu hoàn thành.',
+                    AppLocalizations.of(context)?.settingsGenderLocked ?? 'Gender is locked after a tournament is completed.',
                     style: TextStyle(fontSize: 11, color: colors.textSecondary),
                   ),
                 ),
@@ -869,8 +869,8 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: const Text(
-                    'Gửi yêu cầu đổi',
+                  child: Text(
+                    AppLocalizations.of(context)?.settingsRequestGenderChange ?? 'Request change',
                     style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
                   ),
                 ),
@@ -891,15 +891,15 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         ?.name;
     return _dropdown(
       colors,
-      currentName ?? 'Chưa chọn (Không tranh hạng Tier S)',
+      currentName ?? (AppLocalizations.of(context)?.settingsNoTierSRegion ?? 'Not selected (not ranked in Tier S)'),
       [
-        'Chưa chọn (Không tranh hạng Tier S)',
+        AppLocalizations.of(context)?.settingsNoTierSRegion ?? 'Not selected (not ranked in Tier S)',
         ...items.map((province) => province.name),
       ],
       (v) {
         if (v == null) return;
         setState(() {
-          _provinceCode = v == 'Chưa chọn (Không tranh hạng Tier S)'
+          _provinceCode = v == (AppLocalizations.of(context)?.settingsNoTierSRegion ?? 'Not selected (not ranked in Tier S)')
               ? ''
               : (_provinces
                         .where((province) => province.name == v)

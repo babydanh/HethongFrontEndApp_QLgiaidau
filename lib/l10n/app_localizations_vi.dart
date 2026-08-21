@@ -4296,4 +4296,61 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatScreenSupportInputHint => 'Nhập nội dung cần hỗ trợ...';
+
+  @override
+  String get coreAppTitle => 'Quản Lý Giải Đấu';
+
+  @override
+  String get coreBackToHome => 'Về trang chủ';
+
+  @override
+  String get coreShareTitle => 'Chia sẻ';
+
+  @override
+  String get coreCopyLink => 'Sao chép link';
+
+  @override
+  String get coreLinkCopied => 'Đã sao chép liên kết vào bộ nhớ tạm!';
+
+  @override
+  String get coreShareViaApp => 'Chia sẻ qua App';
+
+  @override
+  String get coreQrCode => 'Mã QR';
+
+  @override
+  String get coreQrCodeShareTitle => 'Mã QR Chia Sẻ';
+
+  @override
+  String get coreUpdateAvailable => 'Có phiên bản mới';
+
+  @override
+  String coreUpdateDescription(Object latestVersion) {
+    return 'Sporto đã có phiên bản mới $latestVersion. Cập nhật để nhận các cải tiến mới nhất.';
+  }
+
+  @override
+  String get coreUpdateLater => 'Để sau';
+
+  @override
+  String get coreUpdateNow => 'Cập nhật ngay';
+
+  @override
+  String get coreRegistrationOpening => 'Đang mở đăng ký';
+
+  @override
+  String coreCountdownDays(Object days) {
+    return 'Còn $days ngày';
+  }
+
+  @override
+  String coreCountdownTime(Object time) {
+    return 'Còn $time';
+  }
+
+  @override
+  String get coreView => 'Xem';
+
+  @override
+  String get coreLive => 'Đang diễn ra';
 }

@@ -8143,6 +8143,108 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Nhập nội dung cần hỗ trợ...'**
   String get chatScreenSupportInputHint;
+
+  /// No description provided for @coreAppTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản Lý Giải Đấu'**
+  String get coreAppTitle;
+
+  /// No description provided for @coreBackToHome.
+  ///
+  /// In vi, this message translates to:
+  /// **'Về trang chủ'**
+  String get coreBackToHome;
+
+  /// No description provided for @coreShareTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ'**
+  String get coreShareTitle;
+
+  /// No description provided for @coreCopyLink.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sao chép link'**
+  String get coreCopyLink;
+
+  /// No description provided for @coreLinkCopied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã sao chép liên kết vào bộ nhớ tạm!'**
+  String get coreLinkCopied;
+
+  /// No description provided for @coreShareViaApp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ qua App'**
+  String get coreShareViaApp;
+
+  /// No description provided for @coreQrCode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã QR'**
+  String get coreQrCode;
+
+  /// No description provided for @coreQrCodeShareTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã QR Chia Sẻ'**
+  String get coreQrCodeShareTitle;
+
+  /// No description provided for @coreUpdateAvailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có phiên bản mới'**
+  String get coreUpdateAvailable;
+
+  /// No description provided for @coreUpdateDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sporto đã có phiên bản mới {latestVersion}. Cập nhật để nhận các cải tiến mới nhất.'**
+  String coreUpdateDescription(Object latestVersion);
+
+  /// No description provided for @coreUpdateLater.
+  ///
+  /// In vi, this message translates to:
+  /// **'Để sau'**
+  String get coreUpdateLater;
+
+  /// No description provided for @coreUpdateNow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật ngay'**
+  String get coreUpdateNow;
+
+  /// No description provided for @coreRegistrationOpening.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở đăng ký'**
+  String get coreRegistrationOpening;
+
+  /// No description provided for @coreCountdownDays.
+  ///
+  /// In vi, this message translates to:
+  /// **'Còn {days} ngày'**
+  String coreCountdownDays(Object days);
+
+  /// No description provided for @coreCountdownTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Còn {time}'**
+  String coreCountdownTime(Object time);
+
+  /// No description provided for @coreView.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem'**
+  String get coreView;
+
+  /// No description provided for @coreLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get coreLive;
 }
 
 class _AppLocalizationsDelegate

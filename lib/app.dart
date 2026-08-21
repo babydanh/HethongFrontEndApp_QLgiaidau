@@ -30,7 +30,7 @@ class TournamentApp extends ConsumerWidget {
     return SocketObserver(
       child: AppUpdateGate(
         child: MaterialApp.router(
-        title: 'Quản Lý Giải Đấu',
+        title: AppLocalizations.of(context)?.coreAppTitle ?? 'Tournament Management',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,

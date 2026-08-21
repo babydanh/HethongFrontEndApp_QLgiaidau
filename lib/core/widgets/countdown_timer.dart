@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Widget đếm ngược tới ngày mở đăng ký.
 ///
@@ -42,9 +43,10 @@ class _CountdownTimerState extends State<CountdownTimer> {
   }
 
   void _update() {
+    final l10n = AppLocalizations.of(context);
     final diff = widget.targetDate.difference(DateTime.now());
     if (diff.isNegative) {
-      _setText('Đang mở đăng ký');
+      _setText(l10n?.coreRegistrationOpening ?? 'Registration is open');
       return;
     }
     final days = diff.inDays;
@@ -53,12 +55,14 @@ class _CountdownTimerState extends State<CountdownTimer> {
     final secs = diff.inSeconds % 60;
 
     if (widget.compact) {
-      _setText('Còn $days ngày');
+      _setText(l10n?.coreCountdownDays(days) ?? '$days days remaining');
     } else {
       if (days > 0) {
-        _setText('Còn $days ngày ${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}');
+        final clock = '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+        _setText(l10n?.coreCountdownTime(days, clock) ?? '$days days $clock remaining');
       } else {
-        _setText('Còn ${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}');
+        final clock = '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+        _setText(l10n?.coreCountdownClock(clock) ?? '$clock remaining');
       }
     }
   }

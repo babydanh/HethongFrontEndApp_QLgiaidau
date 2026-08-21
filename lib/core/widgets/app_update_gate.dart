@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_update_service.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class AppUpdateGate extends ConsumerStatefulWidget {
   final Widget child;
@@ -54,19 +55,20 @@ class _UpdateDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('Có phiên bản mới'),
+      title: Text(l10n?.coreUpdateAvailable ?? 'New version available'),
       content: SingleChildScrollView(
         child: Text(
           info.releaseNotes.trim().isEmpty
-              ? 'Sporto đã có phiên bản mới ${info.latestVersion}. Cập nhật để nhận các cải tiến mới nhất.'
+              ? (l10n?.coreUpdateDescription(info.latestVersion) ?? 'A new Sporto version is available. Update to get the latest improvements.')
               : info.releaseNotes,
         ),
       ),
       actions: [
         if (!info.isRequired)
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Để sau')),
-        FilledButton(onPressed: _openStore, child: const Text('Cập nhật ngay')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n?.coreUpdateLater ?? 'Later')),
+        FilledButton(onPressed: _openStore, child: Text(l10n?.coreUpdateNow ?? 'Update now')),
       ],
     );
   }

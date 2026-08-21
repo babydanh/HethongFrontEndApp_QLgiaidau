@@ -127,18 +127,23 @@ final bracketMatchesWithDivisionProvider =
   List<MatchModel> flatMatches = const [];
 
   try {
-    final results = await Future.wait([
-      tournamentRepo.getBracketMatches(
-        params.tournamentId,
-        divisionId: params.divisionId,
-      ).catchError((_) => <MatchModel>[]),
-      matchRepo.getAllByTournament(
-        params.tournamentId,
-        divisionId: params.divisionId,
-      ).catchError((_) => <MatchModel>[]),
-    ]);
-    bracketMatches = results[0];
-    flatMatches = results[1];
+    // `/bracket` is authoritative for the diagram/table and is the common
+    // path for Lite management. Do not start the expensive paginated matches
+    // request in parallel; use it only as a fallback when no bracket exists.
+    bracketMatches = await tournamentRepo
+        .getBracketMatches(
+          params.tournamentId,
+          divisionId: params.divisionId,
+        )
+        .catchError((_) => <MatchModel>[]);
+    if (bracketMatches.isEmpty) {
+      flatMatches = await matchRepo
+          .getAllByTournament(
+            params.tournamentId,
+            divisionId: params.divisionId,
+          )
+          .catchError((_) => <MatchModel>[]);
+    }
   } catch (_) {}
 
   // /bracket is the authoritative source and matches what the web renders.

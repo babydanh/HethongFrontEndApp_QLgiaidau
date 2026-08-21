@@ -248,7 +248,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         _fetchTournament(tournamentId),
         _fetchParticipants(tournamentId),
         _fetchBracket(tournamentId),
-        _fetchMatches(tournamentId),
+        
       ]).timeout(const Duration(seconds: 15));
       _loadInFlight = false;
     } on TimeoutException {
@@ -407,7 +407,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         _fetchTournament(tournamentId),
         _fetchParticipants(tournamentId),
         _fetchBracket(tournamentId),
-        _fetchMatches(tournamentId),
+        
       ]).timeout(const Duration(seconds: 15));
       _loadInFlight = false;
     } on TimeoutException {

@@ -4298,4 +4298,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatScreenSupportInputHint => 'Enter your support question...';
+
+  @override
+  String get coreAppTitle => 'Tournament Management';
+
+  @override
+  String get coreBackToHome => 'Back to home';
+
+  @override
+  String get coreShareTitle => 'Share';
+
+  @override
+  String get coreCopyLink => 'Copy link';
+
+  @override
+  String get coreLinkCopied => 'Link copied to clipboard!';
+
+  @override
+  String get coreShareViaApp => 'Share via app';
+
+  @override
+  String get coreQrCode => 'QR code';
+
+  @override
+  String get coreQrCodeShareTitle => 'Share QR code';
+
+  @override
+  String get coreUpdateAvailable => 'New version available';
+
+  @override
+  String coreUpdateDescription(Object latestVersion) {
+    return 'A new Sporto version ($latestVersion) is available. Update to get the latest improvements.';
+  }
+
+  @override
+  String get coreUpdateLater => 'Later';
+
+  @override
+  String get coreUpdateNow => 'Update now';
+
+  @override
+  String get coreRegistrationOpening => 'Registration is open';
+
+  @override
+  String coreCountdownDays(Object days) {
+    return '$days days remaining';
+  }
+
+  @override
+  String coreCountdownTime(Object time) {
+    return '$time remaining';
+  }
+
+  @override
+  String get coreView => 'View';
+
+  @override
+  String get coreLive => 'Live';
 }

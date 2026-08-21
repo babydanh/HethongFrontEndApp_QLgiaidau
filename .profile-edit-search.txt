@@ -1,0 +1,1090 @@
+.claude\worktrees\agent-aa1b2843ff819f84c\generate_sample.dart:8:  // Dòng 1: Tiêu đề (Sẽ bị app bỏ qua vì ô A1 chứa chữ "Tên")
+.claude\worktrees\agent-aa1b2843ff819f84c\lib\core\config\app_constants.dart:71:        'Thể thức đấu loại kép. Các đội thua trận đầu sẽ rơi xuống "Nhánh thua" thay vì bị loại ngay. Chỉ bị loại hoàn toàn khi thua trận thứ 2. Đội vô địch Nhánh thắng sẽ gặp đội vô địch Nhánh thua ở trận Chung kết tổng.',
+.claude\worktrees\agent-aa1b2843ff819f84c\lib\core\utils\token_generator.dart:12:  /// VD: "ADM-X7K9-M2P4"
+.claude\worktrees\agent-aa1b2843ff819f84c\lib\main.dart:13:  await dotenv.load(fileName: ".env");
+.claude\worktrees\agent-aae1c5ae5147aefbf\generate_sample.dart:8:  // Dòng 1: Tiêu đề (Sẽ bị app bỏ qua vì ô A1 chứa chữ "Tên")
+.claude\worktrees\agent-aae1c5ae5147aefbf\lib\core\config\app_constants.dart:71:        'Thể thức đấu loại kép. Các đội thua trận đầu sẽ rơi xuống "Nhánh thua" thay vì bị loại ngay. Chỉ bị loại hoàn toàn khi thua trận thứ 2. Đội vô địch Nhánh thắng sẽ gặp đội vô địch Nhánh thua ở trận Chung kết tổng.',
+.claude\worktrees\agent-aae1c5ae5147aefbf\lib\core\utils\token_generator.dart:12:  /// VD: "ADM-X7K9-M2P4"
+.claude\worktrees\agent-aae1c5ae5147aefbf\lib\main.dart:13:  await dotenv.load(fileName: ".env");
+.claude\worktrees\agent-ae247c21d81c6b4d3\generate_sample.dart:8:  // Dòng 1: Tiêu đề (Sẽ bị app bỏ qua vì ô A1 chứa chữ "Tên")
+.claude\worktrees\agent-ae247c21d81c6b4d3\lib\core\config\app_constants.dart:71:        'Thể thức đấu loại kép. Các đội thua trận đầu sẽ rơi xuống "Nhánh thua" thay vì bị loại ngay. Chỉ bị loại hoàn toàn khi thua trận thứ 2. Đội vô địch Nhánh thắng sẽ gặp đội vô địch Nhánh thua ở trận Chung kết tổng.',
+.claude\worktrees\agent-ae247c21d81c6b4d3\lib\core\utils\token_generator.dart:12:  /// VD: "ADM-X7K9-M2P4"
+.claude\worktrees\agent-ae247c21d81c6b4d3\lib\main.dart:13:  await dotenv.load(fileName: ".env");
+generate_sample.dart:8:  // Dòng 1: Tiêu đề (Sẽ bị app bỏ qua vì ô A1 chứa chữ "Tên")
+integration_test\flow_auth_test.dart:308:      // Tap "Khám phá không cần đăng nhập"
+integration_test\flow_bracket_test.dart:276:      // Nút "Bốc thăm tự động"
+integration_test\flow_bracket_test.dart:418:  // Then find "Sơ đồ" tab or button
+integration_test\flow_bracket_test.dart:426:  // Try "Bracket" tab
+integration_test\flow_club_lite_test.dart:245:      // Chuyển đến tab "Giải đấu"
+integration_test\flow_club_lite_test.dart:282:      // Tab "Ảnh"
+integration_test\flow_club_lite_test.dart:304:      // Tab "Xếp hạng"
+integration_test\flow_club_lite_test.dart:320:  // Try via bottom nav "CLB"
+integration_test\flow_club_lite_test.dart:328:  // Try "Câu lạc bộ"
+integration_test\flow_cross_test.dart:71:      // Tab "Bảng xếp hạng"
+integration_test\flow_dashboard_test.dart:60:      // Kiểm tra có section "Organizer Lite" hoặc tournament items
+integration_test\flow_home_test.dart:86:      // Section title "Giải đấu nổi bật"
+integration_test\flow_home_test.dart:127:      // Tab "Giải đấu" hiển thị
+integration_test\flow_home_test.dart:162:      // Nếu có lỗi → "Không thể tải dữ liệu"
+integration_test\flow_intro_test.dart:51:      // Tab "Giới thiệu"
+integration_test\flow_intro_test.dart:73:      // Tab "Danh sách đội"
+integration_test\flow_intro_test.dart:115:      // Nút "Theo dõi"
+integration_test\flow_intro_test.dart:137:      // Nút "Đăng ký tham gia"
+integration_test\flow_intro_test.dart:219:      // Nút "Kết thúc"
+integration_test\flow_intro_test.dart:261:      // Nút "Xuất dữ liệu"
+integration_test\flow_match_test.dart:21:      // Kiểm tra nút "BẮT ĐẦU" cho match đang scheduled
+integration_test\flow_match_test.dart:43:      // Look for "BẮT ĐẦU" button
+integration_test\flow_match_test.dart:94:      // Look for "THỔI CÒI" button
+integration_test\flow_match_test.dart:221:      // Nút "Tính điểm"
+integration_test\flow_match_test.dart:453:  // Try finding "Trận đấu" or "Live" buttons
+integration_test\flow_match_test.dart:468:  // Try "Trực tiếp"
+integration_test\flow_notification_test.dart:130:      // Nút "Đọc tất cả" — xuất hiện khi có unread
+integration_test\flow_payment_test.dart:210:      // Kết quả mong đợi: icon check_circle_rounded + text "Thanh toán thành công!"
+integration_test\flow_profile_test.dart:71:      // Nút "Đổi mật khẩu"
+integration_test\flow_referee_test.dart:52:      // Tap "Nhận nhiệm vụ" or "Từ chối" if exists
+integration_test\flow_register_test.dart:82:  // Look for "Đăng ký" button on intro screen
+integration_test\flow_teams_test.dart:63:      // Tap menu -> "Xóa toàn bộ"
+integration_test\flow_teams_test.dart:121:  // Look for "Quản lý đội" or "Đội" button
+integration_test\flow_upload_test.dart:87:  // Look for "Sửa" text
+lib\core\config\app_constants.dart:122:        'Thể thức đấu loại kép. Các đội thua trận đầu sẽ rơi xuống "Nhánh thua" thay vì bị loại ngay. Chỉ bị loại hoàn toàn khi thua trận thứ 2. Đội vô địch Nhánh thắng sẽ gặp đội vô địch Nhánh thua ở trận Chung kết tổng.',
+lib\core\router\app_router.dart:598:              // Query communityId: mở hồ sơ từ ngữ cảnh CLB → hiện "Danh hiệu CLB".
+lib\core\services\push_notification_service.dart:123:          _log.info('iOS APNs token status: ${apnsToken != null ? "Available" : "Not yet assigned"}');
+lib\core\utils\elo_tier.dart:4:/// vẫn hiển thị D, giống WEB "Low Tier D").
+lib\core\utils\elo_tier.dart:5:/// Ưu tiên `tierName` từ API nếu có (giống WEB: "The API tier wins; numeric
+lib\core\utils\elo_tier.dart:6:/// thresholds remain a fallback for old records").
+lib\core\utils\error_parser.dart:106:          if (lower.contains("cannot modify field 'tournamentconfig'") ||
+lib\core\utils\ranking_query_helpers.dart:3:// Chỉ gửi params có giá trị, omit những param rỗng/null/"all".
+lib\core\utils\token_generator.dart:12:  /// VD: "ADM-X7K9-M2P4"
+lib\core\utils\vietnam_address_parser.dart:120:    // 1. So khớp có tiền tố rõ ràng như "phuong ...", "xa ...", "p. ...", "x. ...", "tt. ..."
+lib\core\widgets\app_responsive.dart:7:///     mọi thiết bị (iPhone SE → iPad Pro 12.9")
+lib\core\widgets\app_responsive.dart:21:///    ≥ 840   → tablet  (iPad Air, iPad Pro 11", 12.9")
+lib\core\widgets\app_share_modal.dart:291:        "https://sporto.asia/sporto_v1_with_text.svg",
+lib\core\widgets\app_share_modal.dart:316:        "https://sporto.asia/sporto_v1_with_text.svg",
+lib\core\widgets\app_share_modal.dart:328:    if (url.startsWith("http://") || url.startsWith("https://")) {
+lib\core\widgets\app_share_modal.dart:331:    if (url.startsWith("/")) {
+lib\core\widgets\app_share_modal.dart:332:      return "https://sporto.asia$url";
+lib\core\widgets\app_share_modal.dart:334:    return "https://sporto.asia/$url";
+lib\core\widgets\countdown_timer.dart:8:/// [compact] Nếu true chỉ hiện "Còn X ngày" (dùng cho danh sách),
+lib\core\widgets\countdown_timer.dart:9:///          false hiện "Còn X ngày HH:MM:SS" (dùng cho chi tiết).
+lib\core\widgets\score_display.dart:157:            'Giao bóng: ${isTeam1Serving ? "Đội 1" : "Đội 2"} · Giao $serveNumber',
+lib\core\widgets\sporto_header.dart:21:    this.rank = "",
+lib\core\widgets\sporto_header.dart:34:          tag: "Sporto_header_bg",
+lib\core\widgets\sporto_header.dart:129:                    notificationsCount > 9 ? "9+" : "$notificationsCount",
+lib\core\widgets\sporto_header.dart:160:              "Đăng nhập / Đăng ký",
+lib\core\widgets\sporto_header.dart:259:                      "$elo ELO",
+lib\core\widgets\sporto_header.dart:269:                      rank.isNotEmpty ? rank : "Xếp hạng Quốc gia",
+lib\core\widgets\sporto_header.dart:284:                  _buildHeaderStatColumn("0", "Trận"),
+lib\core\widgets\sporto_header.dart:286:                  _buildHeaderStatColumn("0", "Thắng"),
+lib\core\widgets\sporto_header.dart:289:                    "${winRate.toStringAsFixed(0)}%",
+lib\core\widgets\sporto_header.dart:290:                    "Rate",
+lib\data\models\app_models.dart:75:    this.note = "",
+lib\data\repositories\api\api_community_repository.dart:185:      // để UI hiện lý do thật thay vì "Thất bại" chung chung.
+lib\data\repositories\api\api_community_repository.dart:330:        "/communities/$communityId/gallery",
+lib\data\repositories\api\api_community_repository.dart:332:          "imageUrl": imageUrl,
+lib\data\repositories\api\api_community_repository.dart:334:            "caption": caption.trim(),
+lib\data\repositories\api\api_community_repository.dart:338:      final data = raw is Map && raw["data"] is Map ? raw["data"] : raw;
+lib\data\repositories\api\api_community_repository.dart:343:      _log.error("Lỗi thêm ảnh gallery CLB", e, stack);
+lib\data\repositories\api\api_match_repository.dart:627:      // trả 409 → điểm bị drop + màn "kẹt"/desync mãi. (fix #33)
+lib\data\repositories\api\api_tournament_repository.dart:81:      'Không tìm thấy bộ môn "${sportSlug.isEmpty ? 'không xác định' : sportSlug}" trên hệ thống',
+lib\data\repositories\api\api_tournament_repository.dart:213:      // tournament into a false "not found" screen.
+lib\data\repositories\api\api_tournament_repository.dart:453:    // "not found". Keep the last confirmed snapshot while polling.
+lib\data\repositories\api\api_tournament_repository.dart:597:          // Không biến lỗi API/401/429/5xx thành trạng thái "không có giải".
+lib\data\repositories\api\api_tournament_repository.dart:743:      // Fallback for "Tất cả" (divisionId == null): Query all divisions & aggregate matches
+lib\data\repositories\api\api_tournament_repository.dart:767:              'Bracket fallback "Tất cả": ${aggregatedMatches.length} matches aggregated for $tournamentId',
+lib\domain\entities\elo_tier.dart:43:  /// Nhãn ngắn gọn để hiển thị trên badge (VD: "S", "A", "B+", "D-").
+lib\domain\entities\tournament_registration.dart:65:/// chuỗi (`"0.00"`) nên cast thẳng `as num?` sẽ ném TypeError và khiến cả
+lib\domain\entities\tournament_registration.dart:66:/// danh sách division bị bỏ qua (app chỉ hiện 1 mục "Đôi").
+lib\features\admin\screens\pending_clubs_screen.dart:206:            Text('Từ chối "${club.name}"?', style: TextStyle(color: colors.textPrimary, fontSize: 15)),
+lib\features\auth\screens\forgot_password_screen.dart:321:                r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$",
+lib\features\auth\screens\login_loading_screen.dart:48:            tag: "Sporto_header_bg",
+lib\features\auth\screens\login_loading_screen.dart:61:                    tag: "Sporto_logo",
+lib\features\auth\screens\login_loading_screen.dart:65:                        "assets/images/sporto_v1_with_text.png",
+lib\features\auth\screens\login_register_screen.dart:88:      context.go("/login-loading", extra: widget.redirectPath);
+lib\features\auth\screens\login_register_screen.dart:139:        context.go("/login-loading", extra: widget.redirectPath);
+lib\features\auth\screens\login_register_screen.dart:201:        context.go("/login-loading", extra: widget.redirectPath);
+lib\features\auth\screens\login_register_screen.dart:286:                        tag: "Sporto_logo",
+lib\features\auth\screens\login_register_screen.dart:288:                          "assets/images/sporto_v1_with_text.png",
+lib\features\auth\screens\login_register_screen.dart:409:                              r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$",
+lib\features\auth\screens\login_register_screen.dart:632:                        onTap: () => context.go("/home"),
+lib\features\auth\screens\splash_screen.dart:97:                      tag: "Sporto_logo",
+lib\features\auth\screens\splash_screen.dart:102:                          "assets/images/sporto_v1_with_text.png",
+lib\features\bracket\screens\bracket_diagram_screen.dart:15:/// Navigated to from the "Xem sơ đồ" button in BracketViewScreen.
+lib\features\chat\widgets\chat_room_settings_sheet.dart:278:              'Lỗi cập nhật: ${e.toString().replaceAll("Exception: ", "")}',
+lib\features\community\screens\club_detail_screen.dart:1339:        : "Pickleball";
+lib\features\community\screens\club_detail_screen.dart:1341:        ? "Pickleball"
+lib\features\community\screens\club_detail_screen.dart:1382:                "${club.memberCount}",
+lib\features\community\screens\club_detail_screen.dart:1396:                club.joinMode == "OPEN"
+lib\features\community\screens\club_detail_screen.dart:1398:                    : club.joinMode == "APPROVAL"
+lib\features\community\screens\club_detail_screen.dart:1776:                                "Tạo giải đấu",
+lib\features\community\screens\club_detail_screen.dart:1811:                                "Quản lý giải",
+lib\features\community\screens\club_detail_screen.dart:2051:                        isQuick ? "Nhanh (Lite)" : l10n.club_advanced,
+lib\features\community\screens\club_management_screen.dart:639:                                    '${t.teamCount}/${t.maxTeams} đội • ${isQuick ? "Giải Nhanh" : "Giải Tiêu chuẩn"}',
+lib\features\community\screens\create_club_screen.dart:160:        // Backend yêu cầu UUID category, không nhận slug như "pickleball".
+lib\features\community\screens\edit_club_screen.dart:825:                  'Bạn có chắc chắn muốn xoá câu lạc bộ "$expected"? Toàn bộ dữ liệu '
+lib\features\community\widgets\club_ranking_widget.dart:264:    // chuyển sang khung "Chưa có dữ liệu" bên dưới).
+lib\features\community\widgets\club_region_selector.dart:11:/// - Ghép địa chỉ: "địa điểm chi tiết, phường, tỉnh".
+lib\features\community\widgets\club_region_selector.dart:182:  /// Ghép địa chỉ giống web: "chi tiết, phường, tỉnh".
+lib\features\community\widgets\club_social_links_editor.dart:5:/// - 5 loại sẵn có: Facebook, Zalo, Website, Instagram, TikTok + "Khác..." (nhãn tự do)
+lib\features\community\widgets\member_tag_chip.dart:102:/// Giải mã màu hex "#RRGGBB" từ tag preset; sai định dạng → null (fallback xám).
+lib\features\community\widgets\member_tag_chip.dart:123:  /// Chấm màu nhỏ phía trước chữ (section "Danh hiệu CLB" ở profile).
+lib\features\dashboard\screens\dashboard_screen.dart:658:            // "Xem thêm" / "Thu gọn" button
+lib\features\explore\widgets\live_match_card.dart:60:                        "LIVE",
+lib\features\explore\widgets\live_match_card.dart:100:                        "-",
+lib\features\explore\widgets\live_match_card.dart:129:                      match.court.isNotEmpty ? match.court : "Chưa xếp sân",
+lib\features\explore\widgets\live_tournament_with_matches_card.dart:152:                                          "assets/images/sporto_v1_with_text.png",
+lib\features\explore\widgets\live_tournament_with_matches_card.dart:160:                                    "assets/images/sporto_v1_with_text.png",
+lib\features\explore\widgets\live_tournament_with_matches_card.dart:762:                          'Giải đấu: ${widget.tournament.name} • ${match.court.isNotEmpty ? match.court : "Đang thi đấu"}',
+lib\features\home\screens\home_screen.dart:287:                        tag: "Sporto_header_bg",
+lib\features\home\screens\home_screen.dart:571:                            key: ValueKey("featured_$_exploreSport"),
+lib\features\home\screens\home_screen.dart:683:          onTap: () => context.push("/notifications"),
+lib\features\home\screens\home_screen.dart:717:                        unread > 99 ? "99+" : "$unread",
+lib\features\home\screens\home_screen.dart:764:          "Chào mừng đến với Tìm và quản lý giải đấu thể thao",
+lib\features\home\screens\home_screen.dart:774:          onTap: () => context.go("/login"),
+lib\features\home\screens\home_screen.dart:788:                  "Đăng nhập để xem ELO & thống kê",
+lib\features\home\screens\home_screen.dart:810:        String fullName = profile.fullName ?? profile.email ?? "Người dùng";
+lib\features\home\screens\home_screen.dart:859:            final subtitleText = "$sportName • $city";
+lib\features\home\screens\home_screen.dart:910:                                "$elo ELO",
+lib\features\home\screens\home_screen.dart:930:                            "Trận",
+lib\features\home\screens\home_screen.dart:931:                            "$totalMatches",
+lib\features\home\screens\home_screen.dart:937:                            "$wins",
+lib\features\home\screens\home_screen.dart:942:                            "Rate",
+lib\features\home\screens\home_screen.dart:943:                            "$winRate%",
+lib\features\home\screens\home_screen.dart:993:          "Sporto",
+lib\features\home\screens\home_screen.dart:1003:          error.contains("ThrottlerException") ||
+lib\features\home\screens\home_screen.dart:1004:                  error.contains("Too Many Requests")
+lib\features\home\screens\home_screen.dart:1005:              ? "Hệ thống đang bận, vui lòng thử lại sau"
+lib\features\home\screens\home_screen.dart:1006:              : "Tìm và tham gia các giải đấu thể thao",
+lib\features\home\screens\home_screen.dart:2247:                      onTap: () => context.push("/intro/${items[i].id}"),
+lib\features\home\screens\home_screen.dart:2298:            "Không tìm thấy giải đấu",
+lib\features\home\screens\home_screen.dart:2307:            "Thử thay đổi bộ lọc hoặc từ khoá",
+lib\features\home\screens\home_screen.dart:2315:  /// Lọc "Nội dung thi đấu" — khớp chuẩn web: ưu tiên lọc theo từng division
+lib\features\home\screens\home_screen.dart:2370:      if (_tournamentSport != "all" && t.sport != _tournamentSport) {
+lib\features\home\screens\home_screen.dart:2373:      if (_tournamentStatus == "registration" &&
+lib\features\home\screens\home_screen.dart:2374:          normalizedStatus != "registration" &&
+lib\features\home\screens\home_screen.dart:2375:          normalizedStatus != "registration_open" &&
+lib\features\home\screens\home_screen.dart:2376:          normalizedStatus != "draft") {
+lib\features\home\screens\home_screen.dart:2379:      if (_tournamentStatus == "upcoming" &&
+lib\features\home\screens\home_screen.dart:2380:          normalizedStatus != "upcoming" &&
+lib\features\home\screens\home_screen.dart:2381:          normalizedStatus != "scheduled" &&
+lib\features\home\screens\home_screen.dart:2382:          normalizedStatus != "pending") {
+lib\features\home\screens\home_screen.dart:2385:      if (_tournamentStatus == "in_progress" &&
+lib\features\home\screens\home_screen.dart:2386:          normalizedStatus != "in_progress" &&
+lib\features\home\screens\home_screen.dart:2387:          normalizedStatus != "ongoing" &&
+lib\features\home\screens\home_screen.dart:2388:          normalizedStatus != "live") {
+lib\features\home\screens\home_screen.dart:2391:      if (_tournamentStatus == "completed" &&
+lib\features\home\screens\home_screen.dart:2392:          normalizedStatus != "completed" &&
+lib\features\home\screens\home_screen.dart:2393:          normalizedStatus != "finished" &&
+lib\features\home\screens\home_screen.dart:2394:          normalizedStatus != "done") {
+lib\features\home\screens\home_screen.dart:2462:                  (key: "all", label: l10n.filterAll),
+lib\features\home\screens\home_screen.dart:2463:                  (key: "registration", label: "Đăng ký"),
+lib\features\home\screens\home_screen.dart:2464:                  (key: "upcoming", label: l10n.matchesFilterScheduled),
+lib\features\home\screens\home_screen.dart:2465:                  (key: "in_progress", label: "Thi đấu"),
+lib\features\home\screens\home_screen.dart:2466:                  (key: "completed", label: l10n.matchesStatusCompleted),
+lib\features\home\screens\home_screen.dart:2485:                    "Không tìm thấy giải đấu phù hợp",
+lib\features\home\screens\home_screen.dart:2502:                  onTap: () => context.push("/intro/${displayList[i].id}"),
+lib\features\home\screens\home_screen.dart:2587:                        "Không tìm thấy câu lạc bộ",
+lib\features\home\screens\home_screen.dart:2596:                        "Thử thay đổi môn thể thao hoặc từ khoá tìm kiếm",
+lib\features\home\screens\home_screen.dart:2737:    final sportName = club.sports.isNotEmpty ? club.sports.first : "";
+lib\features\home\screens\home_screen.dart:2747:        onTap: () => context.push("/club/${club.id}"),
+lib\features\home\screens\home_screen.dart:2879:                              "${club.memberCount > 0 ? club.memberCount : 2} thành viên",
+lib\features\home\widgets\explore_tab.dart:1655:                          'Giải đấu: ${m.tournamentName ?? "Giao hữu"} • ${m.court.isNotEmpty ? m.court : "Đang thi đấu"}',
+lib\features\home\widgets\tournament_card_carousel.dart:53:            ? "${div.maxParticipants}"
+lib\features\home\widgets\tournament_card_carousel.dart:54:            : "-";
+lib\features\home\widgets\tournament_card_carousel.dart:56:        chips.add("$label ($regCount/$maxCount)");
+lib\features\home\widgets\tournament_card_carousel.dart:70:          nameLower.contains("đơn nữ") ||
+lib\features\home\widgets\tournament_card_carousel.dart:71:          descLower.contains("đơn nữ")) {
+lib\features\home\widgets\tournament_card_carousel.dart:72:        chips.add("Đơn Nữ");
+lib\features\home\widgets\tournament_card_carousel.dart:74:          nameLower.contains("đôi nữ") ||
+lib\features\home\widgets\tournament_card_carousel.dart:75:          descLower.contains("đôi nữ")) {
+lib\features\home\widgets\tournament_card_carousel.dart:76:        chips.add("Đôi Nữ");
+lib\features\home\widgets\tournament_card_carousel.dart:80:          nameLower.contains("đôi nam nữ") ||
+lib\features\home\widgets\tournament_card_carousel.dart:81:          descLower.contains("đôi nam nữ") ||
+lib\features\home\widgets\tournament_card_carousel.dart:82:          nameLower.contains("nam nữ")) {
+lib\features\home\widgets\tournament_card_carousel.dart:83:        chips.add("Đôi Nam Nữ");
+lib\features\home\widgets\tournament_card_carousel.dart:86:      else if (nameLower.contains("đơn nam") || descLower.contains("đơn nam")) {
+lib\features\home\widgets\tournament_card_carousel.dart:87:        chips.add("Đơn Nam");
+lib\features\home\widgets\tournament_card_carousel.dart:88:      } else if (nameLower.contains("đôi nam") ||
+lib\features\home\widgets\tournament_card_carousel.dart:89:          descLower.contains("đôi nam")) {
+lib\features\home\widgets\tournament_card_carousel.dart:90:        chips.add("Đôi Nam");
+lib\features\home\widgets\tournament_card_carousel.dart:93:      else if (nameLower.contains("đôi") ||
+lib\features\home\widgets\tournament_card_carousel.dart:94:          descLower.contains("đôi") ||
+lib\features\home\widgets\tournament_card_carousel.dart:95:          t.format == "doubles" ||
+lib\features\home\widgets\tournament_card_carousel.dart:99:              ? "Đôi Nữ"
+lib\features\home\widgets\tournament_card_carousel.dart:100:              : (divGender == 'mixed' ? "Đôi Nam Nữ" : "Đôi Nam"),
+lib\features\home\widgets\tournament_card_carousel.dart:102:      } else if (nameLower.contains("đơn") ||
+lib\features\home\widgets\tournament_card_carousel.dart:103:          descLower.contains("đơn") ||
+lib\features\home\widgets\tournament_card_carousel.dart:104:          t.format == "singles" ||
+lib\features\home\widgets\tournament_card_carousel.dart:106:        chips.add(divGender == 'female' ? "Đơn Nữ" : "Đơn Nam");
+lib\features\home\widgets\tournament_card_carousel.dart:110:      final isDoubles = t.format == "doubles" || t.maxPlayersPerTeam == 2;
+lib\features\home\widgets\tournament_card_carousel.dart:111:      chips.add(isDoubles ? "Đôi Nam" : "Đơn Nam");
+lib\features\home\widgets\tournament_card_carousel.dart:125:    String statusText = "ĐANG MỞ ĐĂNG KÝ";
+lib\features\home\widgets\tournament_card_carousel.dart:128:      statusText = "ĐANG DIỄN RA";
+lib\features\home\widgets\tournament_card_carousel.dart:131:      statusText = "ĐÃ KẾT THÚC";
+lib\features\home\widgets\tournament_card_carousel.dart:136:      statusText = "ĐÃ ĐÓNG ĐĂNG KÝ";
+lib\features\home\widgets\tournament_card_carousel.dart:139:      statusText = "ĐANG MỞ ĐĂNG KÝ";
+lib\features\home\widgets\tournament_card_carousel.dart:147:      return "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}";
+lib\features\home\widgets\tournament_card_carousel.dart:197:                                "assets/images/sporto_v1_with_text.png",
+lib\features\home\widgets\tournament_card_carousel.dart:278:                                : "(Chưa có tên)",
+lib\features\home\widgets\tournament_card_carousel.dart:332:                            "$startDateStr - $endDateStr",
+lib\features\home\widgets\tournament_card_carousel.dart:347:                            "${tournament.maxTeams} Đội",
+lib\features\home\widgets\tournament_card_live.dart:80:                    tournament.name.isNotEmpty ? tournament.name : "(Chưa có tên)",
+lib\features\home\widgets\tournament_card_live.dart:92:                      _buildInfoChip(Icons.group_rounded, "${tournament.maxTeams} đội"),
+lib\features\home\widgets\tournament_card_live.dart:95:                        _buildInfoChip(Icons.person_rounded, "tối đa ${tournament.maxPlayersPerTeam} VĐV"),
+lib\features\home\widgets\tournament_card_live.dart:188:              "LIVE",
+lib\features\home\widgets\tournament_card_v2.dart:21:    final sportIcon = AppConstants.sportIcons[tournament.sport] ?? "🏆";
+lib\features\home\widgets\tournament_card_v2.dart:23:    final bracketName = AppConstants.bracketTypeNames[tournament.bracketType] ?? "";
+lib\features\home\widgets\tournament_card_v2.dart:24:    final formatName = AppConstants.formatNames[tournament.format] ?? "";
+lib\features\home\widgets\tournament_card_v2.dart:77:                          tournament.name.isNotEmpty ? tournament.name : "(Chưa có tên)",
+lib\features\home\widgets\tournament_card_v2.dart:89:                          "$sportName • $formatName • $bracketName",
+lib\features\home\widgets\tournament_card_v2.dart:110:                  _infoChip(context, Icons.group_rounded, "${tournament.maxTeams} đội"),
+lib\features\home\widgets\tournament_card_v2.dart:178:    return "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}";
+lib\features\home\widgets\tournament_card_with_banner.dart:31:    if (url == null || url.isEmpty) return "";
+lib\features\home\widgets\tournament_card_with_banner.dart:32:    if (url.startsWith("http")) return url;
+lib\features\home\widgets\tournament_card_with_banner.dart:33:    String apiBase = "http://localhost:3000/api/v1";
+lib\features\home\widgets\tournament_card_with_banner.dart:35:      apiBase = dotenv.env["API_BASE_URL"] ?? "http://localhost:3000/api/v1";
+lib\features\home\widgets\tournament_card_with_banner.dart:36:      if (Platform.isAndroid && apiBase.contains("localhost")) {
+lib\features\home\widgets\tournament_card_with_banner.dart:37:        apiBase = apiBase.replaceAll("localhost", "10.0.2.2");
+lib\features\home\widgets\tournament_card_with_banner.dart:40:    final host = apiBase.replaceAll("/api/v1", "");
+lib\features\home\widgets\tournament_card_with_banner.dart:41:    return "$host$url";
+lib\features\home\widgets\tournament_card_with_banner.dart:80:            ? "${div.maxParticipants}"
+lib\features\home\widgets\tournament_card_with_banner.dart:81:            : "-";
+lib\features\home\widgets\tournament_card_with_banner.dart:83:        chips.add("$label ($regCount/$maxCount)");
+lib\features\home\widgets\tournament_card_with_banner.dart:97:          nameLower.contains("đơn nữ") ||
+lib\features\home\widgets\tournament_card_with_banner.dart:98:          descLower.contains("đơn nữ")) {
+lib\features\home\widgets\tournament_card_with_banner.dart:99:        chips.add("Đơn Nữ");
+lib\features\home\widgets\tournament_card_with_banner.dart:101:          nameLower.contains("đôi nữ") ||
+lib\features\home\widgets\tournament_card_with_banner.dart:102:          descLower.contains("đôi nữ")) {
+lib\features\home\widgets\tournament_card_with_banner.dart:103:        chips.add("Đôi Nữ");
+lib\features\home\widgets\tournament_card_with_banner.dart:107:          nameLower.contains("đôi nam nữ") ||
+lib\features\home\widgets\tournament_card_with_banner.dart:108:          descLower.contains("đôi nam nữ") ||
+lib\features\home\widgets\tournament_card_with_banner.dart:109:          nameLower.contains("nam nữ")) {
+lib\features\home\widgets\tournament_card_with_banner.dart:110:        chips.add("Đôi Nam Nữ");
+lib\features\home\widgets\tournament_card_with_banner.dart:113:      else if (nameLower.contains("đơn nam") || descLower.contains("đơn nam")) {
+lib\features\home\widgets\tournament_card_with_banner.dart:114:        chips.add("Đơn Nam");
+lib\features\home\widgets\tournament_card_with_banner.dart:115:      } else if (nameLower.contains("đôi nam") ||
+lib\features\home\widgets\tournament_card_with_banner.dart:116:          descLower.contains("đôi nam")) {
+lib\features\home\widgets\tournament_card_with_banner.dart:117:        chips.add("Đôi Nam");
+lib\features\home\widgets\tournament_card_with_banner.dart:120:      else if (nameLower.contains("đôi") ||
+lib\features\home\widgets\tournament_card_with_banner.dart:121:          descLower.contains("đôi") ||
+lib\features\home\widgets\tournament_card_with_banner.dart:122:          t.format == "doubles" ||
+lib\features\home\widgets\tournament_card_with_banner.dart:126:              ? "Đôi Nữ"
+lib\features\home\widgets\tournament_card_with_banner.dart:127:              : (divGender == 'mixed' ? "Đôi Nam Nữ" : "Đôi Nam"),
+lib\features\home\widgets\tournament_card_with_banner.dart:129:      } else if (nameLower.contains("đơn") ||
+lib\features\home\widgets\tournament_card_with_banner.dart:130:          descLower.contains("đơn") ||
+lib\features\home\widgets\tournament_card_with_banner.dart:131:          t.format == "singles" ||
+lib\features\home\widgets\tournament_card_with_banner.dart:133:        chips.add(divGender == 'female' ? "Đơn Nữ" : "Đơn Nam");
+lib\features\home\widgets\tournament_card_with_banner.dart:137:      final isDoubles = t.format == "doubles" || t.maxPlayersPerTeam == 2;
+lib\features\home\widgets\tournament_card_with_banner.dart:138:      chips.add(isDoubles ? "Đôi Nam" : "Đơn Nam");
+lib\features\home\widgets\tournament_card_with_banner.dart:162:            "$startDay - $endDay",
+lib\features\home\widgets\tournament_card_with_banner.dart:193:    return "$emoji $label";
+lib\features\home\widgets\tournament_card_with_banner.dart:264:                                  "assets/images/sporto_v1_with_text.png",
+lib\features\home\widgets\tournament_card_with_banner.dart:285:                                "assets/images/sporto_v1_with_text.png",
+lib\features\home\widgets\tournament_card_with_banner.dart:380:                                        "XẾP HẠNG ELO",
+lib\features\home\widgets\tournament_card_with_banner.dart:442:                                        ? "Miễn phí"
+lib\features\home\widgets\tournament_card_with_banner.dart:443:                                        : "${NumberFormat.decimalPattern().format(widget.tournament.entryFee)} đ",
+lib\features\home\widgets\tournament_card_with_banner.dart:451:                                    "•",
+lib\features\home\widgets\tournament_card_with_banner.dart:502:                                                "single_elimination"
+lib\features\home\widgets\tournament_card_with_banner.dart:503:                                            ? "Loại trực tiếp"
+lib\features\home\widgets\tournament_card_with_banner.dart:504:                                            : "Vòng tròn",
+lib\features\home\widgets\tournament_card_with_banner.dart:551:                                "assets/images/sporto_v1_with_text.png",
+lib\features\home\widgets\tournament_card_with_banner.dart:560:                              "assets/images/sporto_v1_with_text.png",
+lib\features\match\widgets\football_score_panel.dart:57:          for (final event in score.events.reversed.take(8)) Padding(padding: const EdgeInsets.only(top: 6), child: Text("${event.minute}${event.addedMinute > 0 ? '+${event.addedMinute}' : ''}' · ${event.type} · ${event.isTeam1 ? team1Name : team2Name}")),
+lib\features\profile\screens\achievements_tab.dart:56:      // Generic "Đã hoàn thành" is STRICTLY EXCLUDED.
+lib\features\profile\screens\achievements_tab.dart:113:        // ─── Section Title with "Xem tất cả" ───────────────────────
+lib\features\profile\screens\achievements_tab.dart:171:    // Generic "Đã hoàn thành" returns NULL to strictly exclude it.
+lib\features\profile\screens\achievements_tab.dart:520:          "assets/images/sporto_v1_with_text.png",
+lib\features\profile\screens\achievements_tab.dart:525:            "SPORTO",
+lib\features\profile\screens\profile_screen.dart:174:                'Lỗi: ${e.toString().replaceAll("Exception: ", "")}',
+lib\features\profile\screens\profile_screen.dart:204:                'Lỗi: ${e.toString().replaceAll("Exception: ", "")}',
+lib\features\profile\screens\profile_screen.dart:2213:              'Bạn có chắc muốn xóa "${t.name}"?',
+lib\features\profile\screens\user_profile_screen.dart:32:  /// section "Danh hiệu CLB" (tag preset) như popup profile của web.
+lib\features\profile\screens\user_profile_screen.dart:224:  /// "Danh hiệu CLB" — toàn bộ tag của thành viên, chip màu preset + chấm màu
+lib\features\profile\screens\user_profile_screen.dart:225:  /// (khớp popup profile web: UserProfilePopover "Danh hiệu CLB").
+lib\features\rankings\screens\leaderboard_screen.dart:348:    // Trường hợp đang tìm kiếm: hiện danh sách kết quả + nhãn "hạng X / top 100".
+lib\features\rankings\screens\leaderboard_screen.dart:364:                  'Không tìm thấy "$query"',
+lib\features\rankings\widgets\elo_progress_chart.dart:14:///   - [tierName]: Optional current tier name (e.g., "Tier C").
+lib\features\rankings\widgets\user_stats_card.dart:7:/// Card "Bạn" hiển thị vị trí + ELO của người dùng hiện tại.
+lib\features\rankings\widgets\user_stats_card.dart:91:          // Name + Badge "BẠN"
+lib\features\register\screens\doubles_registration_screen.dart:364:    // 'FEMALE' → báo sai "chỉ dành cho Nữ" kể cả khi đúng giới tính.
+lib\features\register\screens\tournament_register_screen.dart:89:      // Truy vấn theo CẢ GIẢI (không lọc `?divisionId`): card "Đã đăng ký" là
+lib\features\register\screens\tournament_register_screen.dart:93:      // → app hiện form thay vì status card → mất nghiệp vụ "duyệt chưa / rút lui".
+lib\features\register\screens\tournament_register_screen.dart:670:        // Nếu lỗi là "đã đăng ký rồi" → re-check và chuyển sang màn hình đăng ký hiện có
+lib\features\register\screens\tournament_register_screen.dart:791:              // mã thì hiện cổng nhập mã; chỉ báo "không tìm thấy" khi đã có
+lib\features\register\screens\tournament_register_screen.dart:996:                // MIỄN PHÍ (entryFee===0). Vậy chỉ coi "đã đóng tiền" khi có phí
+lib\features\tournament\screens\tournament_intro_screen.dart:32:  String _selectedDivision = "";
+lib\features\tournament\screens\tournament_intro_screen.dart:441:    if (url == null || url.isEmpty) return "";
+lib\features\tournament\screens\tournament_intro_screen.dart:442:    if (url.startsWith("http")) return url;
+lib\features\tournament\screens\tournament_intro_screen.dart:443:    return "https://sporto.asia$url";
+lib\features\tournament\widgets\about_tab.dart:680:    if (trimmed.startsWith('{') && trimmed.contains('"blocks"')) {
+lib\features\tournament\widgets\about_tab.dart:774:      '<img[^>]+src=["\']([^"\']+)["\'][^>]*>',
+lib\features\tournament\widgets\about_tab.dart:908:          .replaceAll('&quot;', '"')
+lib\features\tournament\widgets\about_tab.dart:909:          .replaceAll('&#39;', "'")
+lib\features\tournament\widgets\leaderboard_view.dart:173:                    "$rank",
+lib\features\tournament\widgets\leaderboard_view.dart:200:          _statCell((standing.pointDifference > 0 ? "+" : "") + fmt.format(standing.pointDifference), colors),
+lib\features\tournament\widgets\sport_pill.dart:13:    final icon = AppConstants.sportIcons[sportKey] ?? "🏆";
+lib\features\tournament\widgets\sport_pill.dart:26:          if (icon.startsWith("assets/"))
+lib\features\tournament\widgets\sport_pill.dart:32:                  const Text("🏆", style: TextStyle(fontSize: 12)),
+lib\features\tournament\widgets\status_badge.dart:37:            isLive ? "LIVE" : statusName.toUpperCase(),
+lib\features\tournament\widgets\teams_tab.dart:53:        selectedDivision == "all" ||
+lib\features\tournament\widgets\teams_tab.dart:80:        final isFemale = division.contains("Nữ");
+lib\features\tournament\widgets\teams_tab.dart:81:        final isMale = division.contains("Nam");
+lib\features\tournament\widgets\teams_tab.dart:123:                      "${teamsInDiv.length}",
+lib\features\tournament\widgets\tournament_banner.dart:245:      "https://sporto.asia/sporto_v1.svg",
+lib\features\tournament\widgets\tournament_banner.dart:471:                      ? "${selected.name} ($registeredCount/$maxCount)"
+lib\features\tournament\widgets\tournament_banner.dart:472:                      : "$registeredCount / $maxCount ${l10n.teamsUnit}",
+lib\features\tournament\widgets\tournament_banner.dart:609:      "https://sporto.asia/sporto_v1.svg",
+lib\features\tournament\widgets\tournament_banner.dart:617:  if (url.startsWith("http")) return url;
+lib\features\tournament\widgets\tournament_banner.dart:618:  return "https://sporto.asia$url";
+lib\features\tournament\widgets\tournament_banner.dart:626:      ? "${start.day.toString().padLeft(2, '0')}/${start.month.toString().padLeft(2, '0')}/${start.year}"
+lib\features\tournament\widgets\tournament_banner.dart:627:      : "...";
+lib\features\tournament\widgets\tournament_banner.dart:629:      ? "${end.day.toString().padLeft(2, '0')}/${end.month.toString().padLeft(2, '0')}/${end.year}"
+lib\features\tournament\widgets\tournament_banner.dart:630:      : "...";
+lib\features\tournament\widgets\tournament_banner.dart:631:  return "$startStr - $endStr";
+lib\features\tournament\widgets\tournament_banner.dart:677:                      "https://sporto.asia/sporto_v1.svg",
+lib\features\tournament\widgets\tournament_banner.dart:703:                        final imgUrl = images[index].startsWith("http")
+lib\features\tournament\widgets\tournament_banner.dart:705:                            : "https://sporto.asia${images[index]}";
+lib\features\tournament\widgets\tournament_banner.dart:711:                              "https://sporto.asia/sporto_v1.svg",
+lib\features\tournament\widgets\tournament_banner.dart:800:                              widget.tournament.logoUrl!.startsWith("http")
+lib\features\tournament\widgets\tournament_banner.dart:802:                                  : "https://sporto.asia${widget.tournament.logoUrl!}",
+lib\features\tournament\widgets\tournament_banner.dart:806:                                    "https://sporto.asia/sporto_v1_with_text.svg",
+lib\features\tournament\widgets\tournament_banner.dart:815:                              "https://sporto.asia/sporto_v1_with_text.svg",
+lib\features\tournament\widgets\tournament_banner.dart:919:                              "0 / 16 ${l10n.teamsUnit}",
+lib\features\tournament\widgets\tournament_banner.dart:943:        ? "${start.day.toString().padLeft(2, '0')}/${start.month.toString().padLeft(2, '0')}/${start.year}"
+lib\features\tournament\widgets\tournament_banner.dart:944:        : "...";
+lib\features\tournament\widgets\tournament_banner.dart:946:        ? "${end.day.toString().padLeft(2, '0')}/${end.month.toString().padLeft(2, '0')}/${end.year}"
+lib\features\tournament\widgets\tournament_banner.dart:947:        : "...";
+lib\features\tournament\widgets\tournament_banner.dart:948:    return "$startStr - $endStr";
+lib\features\tournament\widgets\tournament_stats_row.dart:79:              "$value",
+lib\features\tournament\widgets\tournament_teams_empty.dart:22:              "Chưa có VĐV đăng ký",
+lib\features\tournament\widgets\tournament_teams_empty.dart:31:              "Hãy kiểm tra lại sau khi giải đấu mở đăng ký",
+lib\features\tournament\widgets\tournament_team_card.dart:287:                                : '${l10n.memberNamesLabel} ${memberNames.join(", ")}',
+lib\features\tournament\widgets\tournament_team_sheet.dart:47:                      "${team.members.length} thành viên",
+lib\features\tournament\widgets\tournament_team_sheet.dart:64:                    "Hạt giống #${team.seed}",
+lib\features\tournament\widgets\tournament_team_sheet.dart:78:            "THÀNH VIÊN",
+lib\features\tournament\widgets\tournament_team_sheet.dart:99:                    "Chưa có thông tin thành viên",
+lib\features\tournament\widgets\tournament_team_sheet.dart:131:                          memberName.isNotEmpty ? memberName[0].toUpperCase() : "?",
+lib\features\tournament\widgets\tournament_team_sheet.dart:163:                                      "Trưởng nhóm",
+lib\features\tournament\widgets\tournament_team_sheet.dart:198:                        ? "Đội đang trong hàng chờ"
+lib\features\tournament\widgets\tournament_team_sheet.dart:200:                            ? "Đội đang chờ đồng đội"
+lib\features\tournament\widgets\tournament_team_sheet.dart:201:                            : "Đội đang duyệt",
+lib\features\tournament\widgets\tournament_team_sheet.dart:251:          "Thông tin VĐV",
+lib\features\tournament\widgets\tournament_team_sheet.dart:267:                name.isNotEmpty ? name[0].toUpperCase() : "?",
+lib\features\tournament\widgets\tournament_team_sheet.dart:293:                  "Trưởng nhóm",
+lib\l10n\app_localizations.dart:8175:    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+lib\main.dart:11:  await dotenv.load(fileName: ".env");
+lib\providers\app_providers.dart:11:  return await matchRepo.getMatches(status: "ONGOING", publicOnly: true);
+lib\providers\auth_provider.dart:100:        "Khôi phục phiên đăng nhập từ JWT token. Role: ${restoredRole.name}",
+lib\providers\auth_provider.dart:105:        tokenCode: "SESSION",
+lib\providers\auth_provider.dart:204:      _log.success("JWT session saved to secure storage");
+lib\providers\auth_provider.dart:206:      _log.error("Failed to save JWT session", e, stack);
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\example\lib\src\file_picker_demo.dart:106:        printInDebug("pickedFiles: $result");
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\example\lib\src\file_picker_demo.dart:118:        printInDebug("pickedFile: $file");
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\example\lib\src\file_picker_demo.dart:140:                  const SnackBar(content: Text("SAF Permission Released!")),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\example\lib\src\file_picker_demo.dart:256:              const SnackBar(content: Text("SAF Permission Released!")),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\example\lib\src\file_picker_demo.dart:296:        'No file bytes loaded yet. Press "Stream picked file" or '
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\example\lib\src\file_picker_demo.dart:297:        '"Read picked file as bytes" first.',
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\file_picker.dart:158:  /// [allowedExtensions] might be provided (e.g. `["pdf", "svg", "jpg"]`).
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\file_picker_method_channel.dart:85:      if (ex.code == "unknown_path") {
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\file_picker_method_channel.dart:178:          .invokeMethod<String>("save", {
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\file_picker_method_channel.dart:179:            "fileName": fileName,
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\file_picker_method_channel.dart:180:            "fileType": type.name,
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\file_picker_method_channel.dart:181:            "initialDirectory": initialDirectory,
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\file_picker_method_channel.dart:182:            "allowedExtensions": allowedExtensions,
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\file_picker_method_channel.dart:183:            "bytes": bytes,
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:21:  final destination = "org.freedesktop.portal.Desktop";
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:30:      path: DBusObjectPath("/org/freedesktop/portal/desktop"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:60:      xdpOption["current_folder"] = directory;
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:63:      "",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:64:      dialogTitle ?? "flutter picker",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:84:          result["uris"]
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:119:      xdpOption["current_folder"] = directory;
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:122:      "",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:123:      dialogTitle ?? "flutter picker",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:143:          result["uris"]
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:178:      xdpOption["current_folder"] = directory;
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:182:      "",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:183:      dialogTitle ?? "flutter picker",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:201:          result["uris"]
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:15:        final audio = ["*.aac", "*.midi", "*.mp3", "*.ogg", "*.wav"];
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:20:        info["Audio"] = audioList;
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:25:          customList.add((0, "*.$filter"));
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:27:        info["Custom"] = customList;
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:29:        final image = ["*.bmp", "*.gif", "*.jpeg", "*.jpg", "*.png", "*.webp"];
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:34:        info["Image"] = imageList;
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:37:          "*.avi",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:38:          "*.flv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:39:          "*.m4v",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:40:          "*.mkv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:41:          "*.mov",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:42:          "*.mp4",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:43:          "*.mpeg",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:44:          "*.webm",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:45:          "*.wmv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:46:          "*.bmp",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:47:          "*.gif",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:48:          "*.jpeg",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:49:          "*.jpg",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:50:          "*.png",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:56:        info["Media"] = mediaList;
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:59:          "*.avi",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:60:          "*.flv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:61:          "*.mkv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:62:          "*.mov",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:63:          "*.mp4",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:64:          "*.m4v",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:65:          "*.mpeg",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:66:          "*.webm",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:67:          "*.wmv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:73:        info["Video"] = videoList;
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:140:        return ["aac", "midi", "mp3", "ogg", "wav"];
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:144:        return ["bmp", "gif", "jpeg", "jpg", "png", "webp"];
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:147:          "avi",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:148:          "flv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:149:          "m4v",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:150:          "mkv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:151:          "mov",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:152:          "mp4",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:153:          "mpeg",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:154:          "webm",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:155:          "wmv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:156:          "bmp",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:157:          "gif",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:158:          "jpeg",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:159:          "jpg",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:160:          "png",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:164:          "avi",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:165:          "flv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:166:          "mkv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:167:          "mov",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:168:          "mp4",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:169:          "m4v",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:170:          "mpeg",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:171:          "webm",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:172:          "wmv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:193:      .replaceAll('"', '\\"')
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\windows\file_picker_windows.dart:255:    if (fileName.contains(RegExp(r'[<>:/\\|?*"]'))) {
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:9:        "releases": [
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:12:            "version": "3.38.5",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:13:            "channel": "stable",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:14:            "release_date": "2025-12-12T10:00:00Z",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:17:            "version": "3.38.4",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:18:            "channel": "stable",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:19:            "release_date": "2025-12-11T10:00:00Z",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:24:            "version": "3.35.7",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:25:            "channel": "stable",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:26:            "release_date": "2025-11-12T10:00:00Z",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:31:            "version": "3.32.8",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:32:            "channel": "stable",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:33:            "release_date": "2025-10-12T10:00:00Z",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:38:            "version": "3.29.3",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:39:            "channel": "stable",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:40:            "release_date": "2025-09-12T10:00:00Z",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:45:            "version": "3.27.4",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:46:            "channel": "stable",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:47:            "release_date": "2025-08-12T10:00:00Z",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:52:            "version": "3.24.2",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:53:            "channel": "stable",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:54:            "release_date": "2025-07-12T10:00:00Z",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:59:            "version": "3.40.0-beta",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:60:            "channel": "beta",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:61:            "release_date": "2025-12-13T10:00:00Z",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:69:        // "3.38.5", // Skipped
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:70:        "3.35.7",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:71:        "3.32.8",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:72:        "stable",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:73:        "beta",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:17:        equals(["aac", "midi", "mp3", "ogg", "wav"]),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:22:        equals(["bmp", "gif", "jpeg", "jpg", "png", "webp"]),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:28:          "avi",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:29:          "flv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:30:          "m4v",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:31:          "mkv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:32:          "mov",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:33:          "mp4",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:34:          "mpeg",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:35:          "webm",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:36:          "wmv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:37:          "bmp",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:38:          "gif",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:39:          "jpeg",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:40:          "jpg",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:41:          "png",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:48:          "avi",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:49:          "flv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:50:          "mkv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:51:          "mov",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:52:          "mp4",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:53:          "m4v",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:54:          "mpeg",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:55:          "webm",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:56:          "wmv",
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:68:          equals(["dart"]),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:73:          equals(["dart", "html"]),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:107:        'Please select a "quoted" file:',
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:110:      expect(escapedTitle, equals('Please select a \\"quoted\\" file:'));
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:111:      'should throw an exception if the file name contains a " (double quote)',
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:114:          () => FilePickerWindows().validateFileName('"output.csv'),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:176:          "C:\\Program Files\\Sublime Text 3\\changelog.txt\x00\x00"
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:185:        equals("C:\\Program Files\\Sublime Text 3\\changelog.txt"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:192:          "C:\\Users\\Jane\x00file1.jpg\x00file2.pdf\x00file3.docx\x00\x00"
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:199:      expect(filePaths[0], equals("C:\\Users\\Jane\\file1.jpg"));
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:200:      expect(filePaths[1], equals("C:\\Users\\Jane\\file2.pdf"));
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:201:      expect(filePaths[2], equals("C:\\Users\\Jane\\file3.docx"));
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:212:          "C:\\Users\\John\\Desktop\\test.txt\x00qrstuvwxyz0123456789.png\x00\x00"
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:222:      expect(filePaths[0], equals("C:\\Users\\John\\Desktop\\test.txt"));
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:19:        filter.info["Audio"],
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:21:          (0, "*.aac"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:22:          (0, "*.midi"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:23:          (0, "*.mp3"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:24:          (0, "*.ogg"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:25:          (0, "*.wav"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:33:        filter.info["Media"],
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:35:          (0, "*.avi"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:36:          (0, "*.flv"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:37:          (0, "*.m4v"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:38:          (0, "*.mkv"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:39:          (0, "*.mov"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:40:          (0, "*.mp4"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:41:          (0, "*.mpeg"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:42:          (0, "*.webm"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:43:          (0, "*.wmv"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:44:          (0, "*.bmp"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:45:          (0, "*.gif"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:46:          (0, "*.jpeg"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:47:          (0, "*.jpg"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:48:          (0, "*.png"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:56:        filter.info["Video"],
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:58:          (0, "*.avi"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:59:          (0, "*.flv"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:60:          (0, "*.mkv"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:61:          (0, "*.mov"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:62:          (0, "*.mp4"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:63:          (0, "*.m4v"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:64:          (0, "*.mpeg"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:65:          (0, "*.webm"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:66:          (0, "*.wmv"),
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:71:      final filter = Filter(FileType.custom, ["txt", "utau"]);
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:73:      expect(filter.info["Custom"], equals([(0, "*.txt"), (0, "*.utau")]));
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\tool\fetch_versions.dart:10:/// to `stdout` in the format `versions=["..."]`.
+linux\flutter\ephemeral\.plugin_symlinks\file_picker\tool\flutter_release.dart:5:  /// The raw version string (e.g., "3.32.8").
+linux\flutter\ephemeral\.plugin_symlinks\file_selector_linux\lib\file_selector_linux.dart:175:      'categories. "extensions" or "mimeTypes" must be non-empty for Linux '
+linux\flutter\ephemeral\.plugin_symlinks\file_selector_linux\lib\src\messages.g.dart:17:    message: 'Unable to establish connection on channel: "$channelName".',
+linux\flutter\ephemeral\.plugin_symlinks\file_selector_linux\lib\src\messages.g.dart:113:  /// Nullable because it does not apply to the "save" action.
+linux\flutter\ephemeral\.plugin_symlinks\file_selector_linux\lib\src\messages.g.dart:118:  /// Nullable because it does not apply to the "open" action.
+linux\flutter\ephemeral\.plugin_symlinks\file_selector_linux\pigeons\messages.dart:52:  /// Nullable because it does not apply to the "save" action.
+linux\flutter\ephemeral\.plugin_symlinks\file_selector_linux\pigeons\messages.dart:57:  /// Nullable because it does not apply to the "open" action.
+linux\flutter\ephemeral\.plugin_symlinks\flutter_local_notifications_linux\lib\src\model\capabilities.dart:29:  /// dashes ("-")
+linux\flutter\ephemeral\.plugin_symlinks\jni\bin\setup.dart:38:  final cmd = "$exec ${args.join(" ")}";
+linux\flutter\ephemeral\.plugin_symlinks\jni\bin\setup.dart:191:    // It's assumed C FFI sources are in "src/" relative to package root.
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:13:  final math = JClass.forName("java/lang/Math");
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:15:      math.staticMethodId("random", "()D").call(math, jdouble.type, []);
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:21:  return JClass.forName("android/os/SystemClock").use(
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:23:        .staticMethodId("uptimeMillis", "()J")
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:38:      .instanceMethodId("finish", "()V")
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:74:    Example("Math.random()", () => randomDouble(), runInitially: false),
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:76:      Example("Minutes of usage since reboot",
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:78:      Example("Back and forth string conversion", () => backAndForth()),
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:79:      Example("Device name", () {
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:80:        final buildClass = JClass.forName("android/os/Build");
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:82:            .staticFieldId("DEVICE", JString.type.signature)
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:87:        "Package name",
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:91:          if (activity == null) return "Activity not available";
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:93:              .instanceMethodId("getPackageName", "()Ljava/lang/String;")
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:100:        "Show toast",
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:101:        () => showToast("Hello from JNI!"),
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:105:        "Quit",
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:169:    var result = "";
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:182:    var resultStyle = const TextStyle(fontFamily: "Monospace");
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:184:      resultStyle = const TextStyle(fontFamily: "Monospace", color: Colors.red);
+linux\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:195:              child: Text(_run ? "Run again" : "Run"),
+linux\flutter\ephemeral\.plugin_symlinks\jni\lib\src\jni.dart:94:  /// JVM option of the form "-Djava.class.path={paths}".
+linux\flutter\ephemeral\.plugin_symlinks\jni\lib\src\jobject.dart:111:      throw CastError('not a subtype of "${type.signature}"');
+linux\flutter\ephemeral\.plugin_symlinks\jni\lib\src\third_party\global_env_extensions.dart:12: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\jni\lib\src\third_party\global_env_extensions.dart:19: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\jni\lib\src\third_party\jni_bindings_generated.dart:9: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\jni\lib\src\third_party\jni_bindings_generated.dart:16: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\jni\lib\src\third_party\jni_bindings_generated.dart:5847:/// "cardinal indices and sizes"
+linux\flutter\ephemeral\.plugin_symlinks\jni\lib\src\util\jset.dart:33:      "Java's Set class has no equivalent of Dart's Set.lookup method.");
+linux\flutter\ephemeral\.plugin_symlinks\jni\test\exception_test.dart:23:      // stderr.write("\n$_\n");
+linux\flutter\ephemeral\.plugin_symlinks\jni\tool\generate_ide_files.dart:18:  stderr.writeln('+ $exec ${args.join(" ")}');
+linux\flutter\ephemeral\.plugin_symlinks\jni\tool\generate_ide_files.dart:34:      help: 'Generator to pass to CMake. (Either "ninja" or "make").',
+linux\flutter\ephemeral\.plugin_symlinks\jni\tool\wrapper_generators\ffigen_util.dart:25: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\jni\tool\wrapper_generators\ffigen_util.dart:32: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\jni\tool\wrapper_generators\generate_c_extensions.dart:36:#include "global_jni_env.h"
+linux\flutter\ephemeral\.plugin_symlinks\jni\tool\wrapper_generators\generate_c_extensions.dart:42:#include "../dartjni.h"
+linux\flutter\ephemeral\.plugin_symlinks\jni\tool\wrapper_generators\generate_c_extensions.dart:348:  logger.info('execute clang-format -i ${paths.join(" ")}');
+linux\flutter\ephemeral\.plugin_symlinks\jni\tool\wrapper_generators\generate_dart_extensions.dart:29:  logger.info('execute dart format ${paths.join(" ")}');
+linux\flutter\ephemeral\.plugin_symlinks\package_info_plus\lib\package_info_plus.dart:65:  ///             assetBase: "https://cdn.domain.com/with/some/path/"
+linux\flutter\ephemeral\.plugin_symlinks\package_info_plus\lib\src\package_info_plus_windows.dart:26:    if (resolvedExecutable.startsWith(r"UNC\")) {
+linux\flutter\ephemeral\.plugin_symlinks\package_info_plus\lib\src\package_info_plus_windows.dart:27:      resolvedExecutable = resolvedExecutable.replaceFirst(r"UNC\", r"\\");
+linux\flutter\ephemeral\.plugin_symlinks\package_info_plus\test\package_info_plus_windows_test.dart:24:    // For example, "Microsoft® Windows® Operating System"
+linux\flutter\ephemeral\.plugin_symlinks\package_info_plus\test\package_info_plus_windows_test.dart:27:    // For example, "10.0.19041.2788"
+linux\flutter\ephemeral\.plugin_symlinks\package_info_plus\test\package_info_plus_windows_test.dart:30:    // For example, "Windows NT BASE API Client DLL" (in Windows 10)
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:61:        'typeof pdfjsLib !== "undefined" && pdfjsLib.GlobalWorkerOptions.workerSrc != "";'
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\callback.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\callback.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\font.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\font.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\manifest.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\manifest.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\interface.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\interface.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel_ffi.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel_ffi.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel_js.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel_js.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\mutex.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\mutex.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\pdfjs.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\pdfjs.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\platform_js.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\platform_js.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\platform_os.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\platform_os.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\actions.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\actions.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\controller.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\controller.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\custom.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\custom.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\page.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\page.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\pdf_preview.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\pdf_preview.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\raster.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\raster.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printer.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printer.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printing.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printing.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printing_info.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printing_info.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\print_job.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\print_job.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\raster.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\raster.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\document_test.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\document_test.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\info_test.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\info_test.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\raster_test.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\raster_test.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+linux\flutter\ephemeral\.plugin_symlinks\shared_preferences_linux\test\legacy_shared_preferences_linux_test.dart:133:    await writeTestFile('{"key1":"one","key2":2}');
+linux\flutter\ephemeral\.plugin_symlinks\shared_preferences_linux\test\legacy_shared_preferences_linux_test.dart:138:    expect(await readTestFile(), '{"key1":"one"}');
+linux\flutter\ephemeral\.plugin_symlinks\shared_preferences_linux\test\legacy_shared_preferences_linux_test.dart:148:    expect(await readTestFile(), '{"key1":"one","key2":2}');
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\example\lib\main.dart:354:          Text("Share result: ${result.status}"),
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\example\lib\main.dart:356:            Text("Shared to: ${result.raw}"),
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\lib\src\messages.g.dart:17:    message: 'Unable to establish connection on channel: "$channelName".',
+linux\flutter\ephemeral\.plugin_symlinks\wakelock_plus\lib\src\web_impl\import_js_library.dart:33:      // without pre-pending "assets/".
+linux\flutter\ephemeral\.plugin_symlinks\wakelock_plus\lib\src\web_impl\import_js_library.dart:99:    // first "unlock" future, then complete the completer for anyone already waiting.
+linux\flutter\ephemeral\.plugin_symlinks\wakelock_plus\lib\wakelock_plus.dart:10:/// In that case, the "hacky" instance override that we use here would be
+linux\flutter\ephemeral\.plugin_symlinks\wakelock_plus\pigeons\messages.dart:24:    kotlinOptions: KotlinOptions(errorClassName: "WakelockPlusFlutterError"),
+test\batch_ab_verification_test.dart:73:      expect(source, contains("'/matches/\$matchId/status'"));
+test\batch_ab_verification_test.dart:88:      expect(source, contains("'p1SetsWon': p1SetsWon"));
+test\batch_ab_verification_test.dart:89:      expect(source, contains("'p2SetsWon': p2SetsWon"));
+test\batch_ab_verification_test.dart:90:      expect(source, contains("'scoreDetails'"));
+test\batch_ab_verification_test.dart:91:      expect(source, contains("'/matches/\$matchId/score'"));
+test\batch_ab_verification_test.dart:103:      expect(source, contains("'DRAFT'"));
+test\batch_ab_verification_test.dart:104:      expect(source, contains("'UPCOMING'"));
+test\batch_ab_verification_test.dart:105:      expect(source, contains("'REGISTRATION_OPEN'"));
+test\batch_ab_verification_test.dart:106:      expect(source, contains("'REGISTRATION_CLOSED'"));
+test\batch_ab_verification_test.dart:107:      expect(source, contains("'ONGOING'"));
+test\batch_ab_verification_test.dart:108:      expect(source, contains("'IN_PROGRESS'"));
+test\batch_ab_verification_test.dart:109:      expect(source, contains("'COMPLETED'"));
+test\batch_ab_verification_test.dart:110:      expect(source, contains("'FINISHED'"));
+test\batch_ab_verification_test.dart:111:      expect(source, contains("'CANCELLED'"));
+test\batch_ab_verification_test.dart:125:      expect(source, contains("'ONGOING'"));
+test\batch_ab_verification_test.dart:126:      expect(source, contains("'IN_PROGRESS'"));
+test\batch_ab_verification_test.dart:127:      expect(source, contains("'LIVE'"));
+test\batch_ab_verification_test.dart:128:      expect(source, contains("'COMPLETED'"));
+test\batch_ab_verification_test.dart:129:      expect(source, contains("'FINISHED'"));
+test\batch_ab_verification_test.dart:130:      expect(source, contains("'DONE'"));
+test\batch_ab_verification_test.dart:131:      expect(source, contains("'ENDED'"));
+test\batch_ab_verification_test.dart:132:      expect(source, contains("'WALKOVER'"));
+test\batch_ab_verification_test.dart:133:      expect(source, contains("'CANCELLED'"));
+test\batch_ab_verification_test.dart:145:      expect(source, contains("'action': action"));
+test\batch_ab_verification_test.dart:146:      expect(source, contains("'reason': reason"));
+test\batch_ab_verification_test.dart:147:      expect(source, contains("'/matches/\$matchId/operation'"));
+test\batch_ab_verification_test.dart:179:      expect(source, contains("j['participant']"));
+test\batch_ab_verification_test.dart:180:      expect(source, contains("participant['id']"));
+test\batch_ab_verification_test.dart:188:      expect(source, contains("'invite'"));
+test\batch_ab_verification_test.dart:190:      expect(source, contains("'/tournaments/\$tournamentId/register'"));
+test\batch_ab_verification_test.dart:218:      expect(source, contains("'purpose': 'REGISTRATION_FEE'"));
+test\core\utils\elo_tier_test.dart:35:    test('tierName "Tier S" thắng ngưỡng số thấp', () {
+test\core\utils\elo_tier_test.dart:39:    test('"High/Low Tier A" → A', () {
+test\core\utils\elo_tier_test.dart:44:    test('"High Tier B" → B, "Low Tier C" → C, "High Tier D" → D', () {
+test\features\community_moderation_parity_test.dart:16:    expect(api, contains("/communities/\$communityId/moderation/posts"));
+test\features\community_moderation_parity_test.dart:17:    expect(api, contains("/communities/\$communityId/posts/\$postId/moderation"));
+test\features\community_moderation_parity_test.dart:18:    expect(api, contains("/communities/\$communityId/posts/\$postId/report"));
+test\features\community_post_profile_navigation_test.dart:17:    expect(screen, contains("onAuthorTap: post.authorId.isEmpty"));
+test\features\community_social_authorization_test.dart:24:    expect(screen, contains("context.go('/club/"));
+test\match\live_score_member_profile_link_test.dart:11:    expect(source, contains("/profile/user/"));
+test\models\app_notification_test.dart:181:    test('returns "Vua xong" for less than 1 minute', () {
+test\models\app_notification_test.dart:189:    test('returns "X phut truoc" for less than 60 minutes', () {
+test\models\app_notification_test.dart:197:    test('returns "X gio truoc" for less than 24 hours', () {
+test\models\app_notification_test.dart:205:    test('returns "X ngay truoc" for less than 7 days', () {
+test\notification_test.dart:58:    test('returns "Vừa xong" for < 1 min', () {
+test\notification_test.dart:64:    test('returns "X phút trước" for < 60 min', () {
+test\notification_test.dart:70:    test('returns "X giờ trước" for < 24h', () {
+test\notification_test.dart:76:    test('returns "X ngày trước" for < 7 days', () {
+test\rankings\ranking_query_test.dart:13:    test('omits categoryId when "all"', () {
+test\registration\division_option_parse_test.dart:7:    // dưới dạng chuỗi ("0.00"), maxParticipants là số. Trước đây ép
+test\registration\doubles_registration_safety_test.dart:13:      expect(source, contains("Clipboard.setData(ClipboardData(text:"));
+test\registration\doubles_registration_safety_test.dart:14:      expect(source, contains("ScaffoldMessenger.of(context).showSnackBar"));
+test\registration\doubles_registration_safety_test.dart:15:      expect(source, contains("'Đã sao chép'"));
+test\registration\doubles_registration_safety_test.dart:26:      expect(source, contains("_pollMaxDuration"));
+test\registration\doubles_registration_safety_test.dart:27:      expect(source, contains("_pollTimer?.cancel()"));
+test\registration\doubles_registration_safety_test.dart:28:      expect(source, contains("hết thời gian chờ"));
+test\registration\doubles_registration_safety_test.dart:39:      expect(source, contains("genderRestriction"));
+test\registration\doubles_registration_safety_test.dart:40:      expect(source, contains("userProfileProvider"));
+test\registration\doubles_registration_safety_test.dart:41:      expect(source, contains("_genderError"));
+test\registration\doubles_registration_safety_test.dart:52:      expect(source, contains("rankingRepositoryProvider"));
+test\registration\doubles_registration_safety_test.dart:53:      expect(source, contains("minElo"));
+test\registration\doubles_registration_safety_test.dart:54:      expect(source, contains("maxElo"));
+test\registration\doubles_registration_safety_test.dart:55:      expect(source, contains("_eloError"));
+test\registration\doubles_registration_safety_test.dart:66:      expect(source, contains("_genderError != null || _eloError != null"));
+test\registration\doubles_registration_safety_test.dart:67:      expect(source, contains("return;"));
+test\registration\join_invite_gates_test.dart:18:      expect(source, isNot(contains("post('/tournaments/join/")));
+test\registration\join_invite_gates_test.dart:21:      expect(source, isNot(contains("_nameCtrl = TextEditingController()")));
+test\registration\join_invite_gates_test.dart:22:      expect(source, isNot(contains("_nameCtrl")));
+test\registration\join_invite_gates_test.dart:25:      expect(source, contains("context.go('/register/"));
+test\registration\join_invite_gates_test.dart:38:      expect(source, contains("data['id']"));
+test\registration\join_invite_gates_test.dart:40:      expect(source, contains("invite="));
+test\registration\join_invite_gates_test.dart:41:      expect(source, contains("widget.inviteCode"));
+test\registration\join_invite_gates_test.dart:53:      expect(source, contains("authProvider"));
+test\registration\join_invite_gates_test.dart:54:      expect(source, contains("isAuthenticated"));
+test\registration\join_invite_gates_test.dart:55:      expect(source, contains("/login"));
+test\registration\tournament_banner_entrypoint_test.dart:15:        contains("context.push('/register/\${widget.tournament.id}')"),
+test\registration\tournament_banner_entrypoint_test.dart:27:    expect(source, contains("context.push('/register/\${tournament.id}')"));
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\example\lib\src\file_picker_demo.dart:106:        printInDebug("pickedFiles: $result");
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\example\lib\src\file_picker_demo.dart:118:        printInDebug("pickedFile: $file");
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\example\lib\src\file_picker_demo.dart:140:                  const SnackBar(content: Text("SAF Permission Released!")),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\example\lib\src\file_picker_demo.dart:256:              const SnackBar(content: Text("SAF Permission Released!")),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\example\lib\src\file_picker_demo.dart:296:        'No file bytes loaded yet. Press "Stream picked file" or '
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\example\lib\src\file_picker_demo.dart:297:        '"Read picked file as bytes" first.',
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\file_picker.dart:158:  /// [allowedExtensions] might be provided (e.g. `["pdf", "svg", "jpg"]`).
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\file_picker_method_channel.dart:85:      if (ex.code == "unknown_path") {
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\file_picker_method_channel.dart:178:          .invokeMethod<String>("save", {
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\file_picker_method_channel.dart:179:            "fileName": fileName,
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\file_picker_method_channel.dart:180:            "fileType": type.name,
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\file_picker_method_channel.dart:181:            "initialDirectory": initialDirectory,
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\file_picker_method_channel.dart:182:            "allowedExtensions": allowedExtensions,
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\file_picker_method_channel.dart:183:            "bytes": bytes,
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:21:  final destination = "org.freedesktop.portal.Desktop";
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:30:      path: DBusObjectPath("/org/freedesktop/portal/desktop"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:60:      xdpOption["current_folder"] = directory;
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:63:      "",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:64:      dialogTitle ?? "flutter picker",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:84:          result["uris"]
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:119:      xdpOption["current_folder"] = directory;
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:122:      "",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:123:      dialogTitle ?? "flutter picker",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:143:          result["uris"]
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:178:      xdpOption["current_folder"] = directory;
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:182:      "",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:183:      dialogTitle ?? "flutter picker",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\file_picker_linux.dart:201:          result["uris"]
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:15:        final audio = ["*.aac", "*.midi", "*.mp3", "*.ogg", "*.wav"];
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:20:        info["Audio"] = audioList;
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:25:          customList.add((0, "*.$filter"));
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:27:        info["Custom"] = customList;
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:29:        final image = ["*.bmp", "*.gif", "*.jpeg", "*.jpg", "*.png", "*.webp"];
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:34:        info["Image"] = imageList;
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:37:          "*.avi",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:38:          "*.flv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:39:          "*.m4v",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:40:          "*.mkv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:41:          "*.mov",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:42:          "*.mp4",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:43:          "*.mpeg",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:44:          "*.webm",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:45:          "*.wmv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:46:          "*.bmp",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:47:          "*.gif",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:48:          "*.jpeg",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:49:          "*.jpg",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:50:          "*.png",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:56:        info["Media"] = mediaList;
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:59:          "*.avi",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:60:          "*.flv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:61:          "*.mkv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:62:          "*.mov",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:63:          "*.mp4",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:64:          "*.m4v",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:65:          "*.mpeg",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:66:          "*.webm",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:67:          "*.wmv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\linux\filters.dart:73:        info["Video"] = videoList;
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:140:        return ["aac", "midi", "mp3", "ogg", "wav"];
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:144:        return ["bmp", "gif", "jpeg", "jpg", "png", "webp"];
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:147:          "avi",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:148:          "flv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:149:          "m4v",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:150:          "mkv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:151:          "mov",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:152:          "mp4",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:153:          "mpeg",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:154:          "webm",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:155:          "wmv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:156:          "bmp",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:157:          "gif",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:158:          "jpeg",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:159:          "jpg",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:160:          "png",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:164:          "avi",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:165:          "flv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:166:          "mkv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:167:          "mov",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:168:          "mp4",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:169:          "m4v",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:170:          "mpeg",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:171:          "webm",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:172:          "wmv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\macos\file_picker_macos.dart:193:      .replaceAll('"', '\\"')
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\lib\src\platform\windows\file_picker_windows.dart:255:    if (fileName.contains(RegExp(r'[<>:/\\|?*"]'))) {
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:9:        "releases": [
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:12:            "version": "3.38.5",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:13:            "channel": "stable",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:14:            "release_date": "2025-12-12T10:00:00Z",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:17:            "version": "3.38.4",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:18:            "channel": "stable",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:19:            "release_date": "2025-12-11T10:00:00Z",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:24:            "version": "3.35.7",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:25:            "channel": "stable",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:26:            "release_date": "2025-11-12T10:00:00Z",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:31:            "version": "3.32.8",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:32:            "channel": "stable",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:33:            "release_date": "2025-10-12T10:00:00Z",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:38:            "version": "3.29.3",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:39:            "channel": "stable",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:40:            "release_date": "2025-09-12T10:00:00Z",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:45:            "version": "3.27.4",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:46:            "channel": "stable",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:47:            "release_date": "2025-08-12T10:00:00Z",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:52:            "version": "3.24.2",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:53:            "channel": "stable",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:54:            "release_date": "2025-07-12T10:00:00Z",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:59:            "version": "3.40.0-beta",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:60:            "channel": "beta",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:61:            "release_date": "2025-12-13T10:00:00Z",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:69:        // "3.38.5", // Skipped
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:70:        "3.35.7",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:71:        "3.32.8",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:72:        "stable",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\fetch_versions_test.dart:73:        "beta",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:17:        equals(["aac", "midi", "mp3", "ogg", "wav"]),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:22:        equals(["bmp", "gif", "jpeg", "jpg", "png", "webp"]),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:28:          "avi",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:29:          "flv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:30:          "m4v",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:31:          "mkv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:32:          "mov",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:33:          "mp4",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:34:          "mpeg",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:35:          "webm",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:36:          "wmv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:37:          "bmp",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:38:          "gif",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:39:          "jpeg",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:40:          "jpg",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:41:          "png",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:48:          "avi",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:49:          "flv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:50:          "mkv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:51:          "mov",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:52:          "mp4",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:53:          "m4v",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:54:          "mpeg",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:55:          "webm",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:56:          "wmv",
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:68:          equals(["dart"]),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:73:          equals(["dart", "html"]),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:107:        'Please select a "quoted" file:',
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_macos_test.dart:110:      expect(escapedTitle, equals('Please select a \\"quoted\\" file:'));
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:111:      'should throw an exception if the file name contains a " (double quote)',
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:114:          () => FilePickerWindows().validateFileName('"output.csv'),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:176:          "C:\\Program Files\\Sublime Text 3\\changelog.txt\x00\x00"
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:185:        equals("C:\\Program Files\\Sublime Text 3\\changelog.txt"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:192:          "C:\\Users\\Jane\x00file1.jpg\x00file2.pdf\x00file3.docx\x00\x00"
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:199:      expect(filePaths[0], equals("C:\\Users\\Jane\\file1.jpg"));
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:200:      expect(filePaths[1], equals("C:\\Users\\Jane\\file2.pdf"));
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:201:      expect(filePaths[2], equals("C:\\Users\\Jane\\file3.docx"));
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:212:          "C:\\Users\\John\\Desktop\\test.txt\x00qrstuvwxyz0123456789.png\x00\x00"
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\file_picker_windows_test.dart:222:      expect(filePaths[0], equals("C:\\Users\\John\\Desktop\\test.txt"));
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:19:        filter.info["Audio"],
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:21:          (0, "*.aac"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:22:          (0, "*.midi"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:23:          (0, "*.mp3"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:24:          (0, "*.ogg"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:25:          (0, "*.wav"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:33:        filter.info["Media"],
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:35:          (0, "*.avi"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:36:          (0, "*.flv"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:37:          (0, "*.m4v"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:38:          (0, "*.mkv"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:39:          (0, "*.mov"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:40:          (0, "*.mp4"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:41:          (0, "*.mpeg"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:42:          (0, "*.webm"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:43:          (0, "*.wmv"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:44:          (0, "*.bmp"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:45:          (0, "*.gif"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:46:          (0, "*.jpeg"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:47:          (0, "*.jpg"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:48:          (0, "*.png"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:56:        filter.info["Video"],
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:58:          (0, "*.avi"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:59:          (0, "*.flv"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:60:          (0, "*.mkv"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:61:          (0, "*.mov"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:62:          (0, "*.mp4"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:63:          (0, "*.m4v"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:64:          (0, "*.mpeg"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:65:          (0, "*.webm"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:66:          (0, "*.wmv"),
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:71:      final filter = Filter(FileType.custom, ["txt", "utau"]);
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\test\linux\xdp_filter_test.dart:73:      expect(filter.info["Custom"], equals([(0, "*.txt"), (0, "*.utau")]));
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\tool\fetch_versions.dart:10:/// to `stdout` in the format `versions=["..."]`.
+windows\flutter\ephemeral\.plugin_symlinks\file_picker\tool\flutter_release.dart:5:  /// The raw version string (e.g., "3.32.8").
+windows\flutter\ephemeral\.plugin_symlinks\file_selector_windows\lib\file_selector_windows.dart:135:        'categories. "extensions" must be non-empty for Windows if '
+windows\flutter\ephemeral\.plugin_symlinks\file_selector_windows\lib\src\messages.g.dart:17:    message: 'Unable to establish connection on channel: "$channelName".',
+windows\flutter\ephemeral\.plugin_symlinks\firebase_core\lib\src\firebase.dart:34:  /// The default app instance can be initialized here simply by passing no "name" as an argument
+windows\flutter\ephemeral\.plugin_symlinks\firebase_core\lib\src\firebase.dart:37:  /// it will automatically create a default (named "[DEFAULT]") app instance on the native platform. However, you will still need to call this method
+windows\flutter\ephemeral\.plugin_symlinks\firebase_core\lib\src\port_mapping.dart:13:      print('Mapping Auth Emulator host "$mappedHost" to "10.0.2.2".');
+windows\flutter\ephemeral\.plugin_symlinks\flutter_secure_storage_windows\test\unit_test.dart:168:        // "read" test.
+windows\flutter\ephemeral\.plugin_symlinks\flutter_secure_storage_windows\test\unit_test.dart:186:              utf8.encode('{"$key":"$value"}'),
+windows\flutter\ephemeral\.plugin_symlinks\jni\bin\setup.dart:38:  final cmd = "$exec ${args.join(" ")}";
+windows\flutter\ephemeral\.plugin_symlinks\jni\bin\setup.dart:191:    // It's assumed C FFI sources are in "src/" relative to package root.
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:13:  final math = JClass.forName("java/lang/Math");
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:15:      math.staticMethodId("random", "()D").call(math, jdouble.type, []);
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:21:  return JClass.forName("android/os/SystemClock").use(
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:23:        .staticMethodId("uptimeMillis", "()J")
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:38:      .instanceMethodId("finish", "()V")
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:74:    Example("Math.random()", () => randomDouble(), runInitially: false),
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:76:      Example("Minutes of usage since reboot",
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:78:      Example("Back and forth string conversion", () => backAndForth()),
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:79:      Example("Device name", () {
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:80:        final buildClass = JClass.forName("android/os/Build");
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:82:            .staticFieldId("DEVICE", JString.type.signature)
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:87:        "Package name",
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:91:          if (activity == null) return "Activity not available";
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:93:              .instanceMethodId("getPackageName", "()Ljava/lang/String;")
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:100:        "Show toast",
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:101:        () => showToast("Hello from JNI!"),
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:105:        "Quit",
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:169:    var result = "";
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:182:    var resultStyle = const TextStyle(fontFamily: "Monospace");
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:184:      resultStyle = const TextStyle(fontFamily: "Monospace", color: Colors.red);
+windows\flutter\ephemeral\.plugin_symlinks\jni\example\lib\main.dart:195:              child: Text(_run ? "Run again" : "Run"),
+windows\flutter\ephemeral\.plugin_symlinks\jni\lib\src\jni.dart:94:  /// JVM option of the form "-Djava.class.path={paths}".
+windows\flutter\ephemeral\.plugin_symlinks\jni\lib\src\jobject.dart:111:      throw CastError('not a subtype of "${type.signature}"');
+windows\flutter\ephemeral\.plugin_symlinks\jni\lib\src\third_party\global_env_extensions.dart:12: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\jni\lib\src\third_party\global_env_extensions.dart:19: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\jni\lib\src\third_party\jni_bindings_generated.dart:9: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\jni\lib\src\third_party\jni_bindings_generated.dart:16: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\jni\lib\src\third_party\jni_bindings_generated.dart:5847:/// "cardinal indices and sizes"
+windows\flutter\ephemeral\.plugin_symlinks\jni\lib\src\util\jset.dart:33:      "Java's Set class has no equivalent of Dart's Set.lookup method.");
+windows\flutter\ephemeral\.plugin_symlinks\jni\test\exception_test.dart:23:      // stderr.write("\n$_\n");
+windows\flutter\ephemeral\.plugin_symlinks\jni\tool\generate_ide_files.dart:18:  stderr.writeln('+ $exec ${args.join(" ")}');
+windows\flutter\ephemeral\.plugin_symlinks\jni\tool\generate_ide_files.dart:34:      help: 'Generator to pass to CMake. (Either "ninja" or "make").',
+windows\flutter\ephemeral\.plugin_symlinks\jni\tool\wrapper_generators\ffigen_util.dart:25: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\jni\tool\wrapper_generators\ffigen_util.dart:32: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\jni\tool\wrapper_generators\generate_c_extensions.dart:36:#include "global_jni_env.h"
+windows\flutter\ephemeral\.plugin_symlinks\jni\tool\wrapper_generators\generate_c_extensions.dart:42:#include "../dartjni.h"
+windows\flutter\ephemeral\.plugin_symlinks\jni\tool\wrapper_generators\generate_c_extensions.dart:348:  logger.info('execute clang-format -i ${paths.join(" ")}');
+windows\flutter\ephemeral\.plugin_symlinks\jni\tool\wrapper_generators\generate_dart_extensions.dart:29:  logger.info('execute dart format ${paths.join(" ")}');
+windows\flutter\ephemeral\.plugin_symlinks\package_info_plus\lib\package_info_plus.dart:65:  ///             assetBase: "https://cdn.domain.com/with/some/path/"
+windows\flutter\ephemeral\.plugin_symlinks\package_info_plus\lib\src\package_info_plus_windows.dart:26:    if (resolvedExecutable.startsWith(r"UNC\")) {
+windows\flutter\ephemeral\.plugin_symlinks\package_info_plus\lib\src\package_info_plus_windows.dart:27:      resolvedExecutable = resolvedExecutable.replaceFirst(r"UNC\", r"\\");
+windows\flutter\ephemeral\.plugin_symlinks\package_info_plus\test\package_info_plus_windows_test.dart:24:    // For example, "Microsoft® Windows® Operating System"
+windows\flutter\ephemeral\.plugin_symlinks\package_info_plus\test\package_info_plus_windows_test.dart:27:    // For example, "10.0.19041.2788"
+windows\flutter\ephemeral\.plugin_symlinks\package_info_plus\test\package_info_plus_windows_test.dart:30:    // For example, "Windows NT BASE API Client DLL" (in Windows 10)
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\lib\src\guid.dart:30:  /// Parses a GUID string, with optional enclosing "{}"s and optional "-"s,
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\lib\src\path_provider_windows_real.dart:238:        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:123:      'ProductName': r'A"/Terrible\|App?*Name',
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:61:        'typeof pdfjsLib !== "undefined" && pdfjsLib.GlobalWorkerOptions.workerSrc != "";'
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\callback.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\callback.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\font.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\font.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\manifest.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\manifest.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\interface.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\interface.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel_ffi.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel_ffi.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel_js.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel_js.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\mutex.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\mutex.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\pdfjs.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\pdfjs.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\platform_js.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\platform_js.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\platform_os.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\platform_os.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\actions.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\actions.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\controller.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\controller.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\custom.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\custom.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\page.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\page.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\pdf_preview.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\pdf_preview.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\raster.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\raster.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printer.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printer.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printing.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printing.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printing_info.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printing_info.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\print_job.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\print_job.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\raster.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\raster.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\document_test.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\document_test.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\info_test.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\info_test.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\raster_test.dart:4: * Licensed under the Apache License, Version 2.0 (the "License");
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\raster_test.dart:11: * distributed under the License is distributed on an "AS IS" BASIS,
+windows\flutter\ephemeral\.plugin_symlinks\shared_preferences_windows\test\legacy_shared_preferences_windows_test.dart:134:    await writeTestFile('{"key1":"one","key2":2}');
+windows\flutter\ephemeral\.plugin_symlinks\shared_preferences_windows\test\legacy_shared_preferences_windows_test.dart:139:    expect(await readTestFile(), '{"key1":"one"}');
+windows\flutter\ephemeral\.plugin_symlinks\shared_preferences_windows\test\legacy_shared_preferences_windows_test.dart:149:    expect(await readTestFile(), '{"key1":"one","key2":2}');
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\example\lib\main.dart:354:          Text("Share result: ${result.status}"),
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\example\lib\main.dart:356:            Text("Shared to: ${result.raw}"),
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\lib\src\messages.g.dart:17:    message: 'Unable to establish connection on channel: "$channelName".',
+windows\flutter\ephemeral\.plugin_symlinks\wakelock_plus\lib\src\web_impl\import_js_library.dart:33:      // without pre-pending "assets/".
+windows\flutter\ephemeral\.plugin_symlinks\wakelock_plus\lib\src\web_impl\import_js_library.dart:99:    // first "unlock" future, then complete the completer for anyone already waiting.
+windows\flutter\ephemeral\.plugin_symlinks\wakelock_plus\lib\wakelock_plus.dart:10:/// In that case, the "hacky" instance override that we use here would be
+windows\flutter\ephemeral\.plugin_symlinks\wakelock_plus\pigeons\messages.dart:24:    kotlinOptions: KotlinOptions(errorClassName: "WakelockPlusFlutterError"),

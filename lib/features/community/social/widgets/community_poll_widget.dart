@@ -24,25 +24,109 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
   @override
   void initState() { super.initState(); _poll = widget.poll; }
 
-  Future<void> _vote(String optionId) async {
-    if (_busy || _poll.isClosed) return;
-    setState(() => _busy = true);
+  bool _isPositiveRegistrationOption(String text) {
+    final value = text.trim().toLowerCase();
+    return value.contains('có tham gia') ||
+        value.contains('đăng ký') ||
+        value.contains('yes') ||
+        value.contains('✅');
+  }
+
+  bool _isDeclineRegistrationOption(String text) {
+    final value = text.trim().toLowerCase();
+    return value.contains('không tham gia') ||
+        value == 'không' ||
+        value.contains('bận') ||
+        value.contains('no') ||
+        value.contains('❌');
+  }
+
+  Future<void> _syncTournamentRegistration({
+    required bool wasPositive,
+    required bool isPositive,
+    required bool isDecline,
+  }) async {
+    final tournamentId = widget.tournamentId;
+    final inviteCode = widget.tournamentInviteCode;
+    if (tournamentId == null || tournamentId.trim().isEmpty) return;
+
+    final shouldJoin = isPositive;
+    final shouldWithdraw = wasPositive && (!isPositive || isDecline);
+    if (!shouldJoin && !shouldWithdraw) return;
+
     try {
-      final updated = await ref.read(communitySocialRepositoryProvider).votePoll(widget.communityId, _poll.id, optionId);
-      if (mounted) setState(() => _poll = updated);
-      final selected = _poll.options.where((option) => option.id == optionId).firstOrNull;
-      final isRegistrationOption = selected?.isVoted == true && (selected?.optionText.contains('Có tham gia') == true || selected?.optionText.contains('Đăng ký') == true || selected?.optionText.contains('✅') == true);
-      if (isRegistrationOption && widget.tournamentId != null && widget.tournamentInviteCode != null) {
-        try {
-          await ref.read(tournamentRepositoryProvider).joinLite(widget.tournamentInviteCode!);
-          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã bình chọn và đăng ký tham gia giải.')));
-        } catch (_) {
-          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã ghi nhận bình chọn. Bạn có thể đã đăng ký giải này trước đó.')));
+      if (shouldJoin) {
+        if (inviteCode == null || inviteCode.trim().isEmpty) {
+          throw const FormatException('Thiếu mã tham gia giải.');
+        }
+        await ref.read(tournamentRepositoryProvider).joinLite(inviteCode);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đã bình chọn và đăng ký tham gia giải.')),
+          );
+        }
+      } else {
+        await ref.read(tournamentRepositoryProvider).withdraw(
+              tournamentId: tournamentId,
+            );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đã ghi nhận lựa chọn và hủy đăng ký giải.')),
+          );
         }
       }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không thể ghi nhận bình chọn.')));
-    } finally { if (mounted) setState(() => _busy = false); }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            shouldJoin
+                ? 'Đã ghi nhận bình chọn nhưng chưa đăng ký được giải.'
+                : 'Đã ghi nhận bình chọn nhưng chưa hủy được đăng ký giải.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _vote(String optionId) async {
+    if (_busy || _poll.isClosed) return;
+    final previousSelected = _poll.options.where((option) => option.isVoted).toList();
+    final wasPositive = previousSelected.any(
+      (option) => _isPositiveRegistrationOption(option.optionText),
+    );
+    setState(() => _busy = true);
+    try {
+      final updated = await ref
+          .read(communitySocialRepositoryProvider)
+          .votePoll(widget.communityId, _poll.id, optionId);
+      if (mounted) setState(() => _poll = updated);
+
+      CommunityPollOption? selected;
+      for (final option in updated.options) {
+        if (option.id == optionId) {
+          selected = option;
+          break;
+        }
+      }
+      if (selected != null) {
+        await _syncTournamentRegistration(
+          wasPositive: wasPositive,
+          isPositive: selected.isVoted &&
+              _isPositiveRegistrationOption(selected.optionText),
+          isDecline: selected.isVoted &&
+              _isDeclineRegistrationOption(selected.optionText),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể ghi nhận bình chọn.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _addOption() async {
@@ -83,11 +167,62 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [Icon(Icons.poll_outlined, color: AppTheme.primary), const SizedBox(width: AppTheme.spacingSM), Expanded(child: Text(_poll.question, style: const TextStyle(fontWeight: FontWeight.w600))), if (_poll.isClosed) Text('Đã đóng', style: TextStyle(color: colors.textMuted, fontSize: 12))]),
         const SizedBox(height: AppTheme.spacingSM),
+        Text(
+          _poll.allowMultipleAnswers
+              ? 'Có thể chọn một hoặc nhiều lựa chọn.'
+              : 'Chỉ được chọn một lựa chọn.',
+          style: TextStyle(color: colors.textMuted, fontSize: 12),
+        ),
+        if (widget.tournamentId != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'Chọn Có để đăng ký; chọn Không để hủy đăng ký.',
+              style: TextStyle(color: colors.textMuted, fontSize: 12),
+            ),
+          ),
+        const SizedBox(height: AppTheme.spacingSM),
         ...sortedOptions.map((option) {
           final ratio = total == 0 ? 0.0 : option.voteCount / total;
           return Padding(padding: const EdgeInsets.only(bottom: 8), child: InkWell(onTap: _busy || _poll.isClosed ? null : () => _vote(option.id), borderRadius: BorderRadius.circular(AppTheme.radiusSmall), child: Stack(children: [
             ClipRRect(borderRadius: BorderRadius.circular(AppTheme.radiusSmall), child: LinearProgressIndicator(value: ratio, minHeight: 42, color: AppTheme.primary.withValues(alpha: .18), backgroundColor: colors.bgCard)),
-            Positioned.fill(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Row(children: [Expanded(child: Text(option.optionText, style: TextStyle(fontWeight: option.isVoted ? FontWeight.w600 : FontWeight.w400))), Text('${option.voteCount}', style: TextStyle(color: colors.textMuted, fontSize: 12)), if (option.isVoted) ...[const SizedBox(width: 4), Icon(Icons.check_circle, size: 16, color: AppTheme.primary)]]))),
+            Positioned.fill(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  children: [
+                    Icon(
+                      option.isVoted
+                          ? (_poll.allowMultipleAnswers
+                              ? Icons.check_box
+                              : Icons.radio_button_checked)
+                          : (_poll.allowMultipleAnswers
+                              ? Icons.check_box_outline_blank
+                              : Icons.radio_button_unchecked),
+                      size: 18,
+                      color: option.isVoted
+                          ? AppTheme.primary
+                          : colors.textMuted,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        option.optionText,
+                        style: TextStyle(
+                          fontWeight: option.isVoted
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${option.voteCount}',
+                      style: TextStyle(color: colors.textMuted, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ])));
         }),
         if (_poll.allowAddOptions && !_poll.isClosed) Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: _busy ? null : _addOption, icon: const Icon(Icons.add, size: 18), label: const Text('Thêm lựa chọn'))),

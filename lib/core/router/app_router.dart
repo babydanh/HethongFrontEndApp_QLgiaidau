@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/features/home/screens/home_screen.dart';
 import 'package:app_quanly_giaidau/features/home/screens/qr_scanner_screen.dart';
@@ -818,13 +819,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
-              'Trang không tồn tại',
+              AppLocalizations.of(context)?.tournamentNotFound ?? 'Page not found',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => context.go('/'),
-              child: const Text('Về trang chủ'),
+              child: Text(AppLocalizations.of(context)?.coreBackToHome ?? 'Back to home'),
             ),
           ],
         ),

@@ -4,29 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
+
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 import 'package:intl/intl.dart';
 
-final _clubTournamentsProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>((
-      ref,
-      clubId,
-    ) async {
-      try {
-        final dio = ref.read(dioClientProvider).dio;
-        final response = await dio.get('/communities/$clubId/tournaments');
-        if (response.statusCode == 200) {
-          return ((response.data['data'] ?? []) as List)
-              .cast<Map<String, dynamic>>();
-        }
-        return [];
-      } catch (_) {
-        return [];
-      }
-    });
+
 
 class ClubTournamentsScreen extends ConsumerWidget {
   final String clubId;
@@ -35,7 +21,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final async = ref.watch(_clubTournamentsProvider(clubId));
+    final async = ref.watch(communityTournamentsProvider(clubId));
     return Scaffold(
       backgroundColor: context.colors.bgDark,
       appBar: AppBar(
@@ -52,8 +38,8 @@ class ClubTournamentsScreen extends ConsumerWidget {
         data: (list) {
           if (list.isEmpty) return _buildEmpty(context, l10n);
           return RefreshIndicator(
-            onRefresh: () async =>
-                ref.refresh(_clubTournamentsProvider(clubId)),
+            onRefresh: () =>
+                ref.refresh(communityTournamentsProvider(clubId).future),
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: list.length,
@@ -99,21 +85,16 @@ class ClubTournamentsScreen extends ConsumerWidget {
     ),
   );
 
-  Widget _buildCard(BuildContext context, Map<String, dynamic> t) {
-    final name = t['name'] ?? '';
-    final status = t['status'] ?? '';
-    final date = t['startDate'] != null
-        ? DateTime.tryParse(t['startDate'])
-        : null;
+  Widget _buildCard(
+    BuildContext context,
+    CommunityTournamentModel t,
+  ) {
+    final name = t.name;
+    final status = t.status;
+    final date = t.startDate != null ? DateTime.tryParse(t.startDate!) : null;
     final dateStr = date != null ? DateFormat('dd/MM/yyyy').format(date) : '';
     final isLive = StatusHelper.isTournamentInProgress(status);
-    // isLite = LOẠI GIẢI lite (nhanh), đọc từ tournamentConfig.
-    // KHÔNG suy từ mode (cách tính điểm LITE) hay inviteCode (mọi giải đều có).
-    final cfg = t['tournamentConfig'];
-    final cfgMap = cfg is Map ? cfg : const <String, dynamic>{};
-    final isLite =
-        cfgMap['isLite'] == true ||
-        (cfgMap['mode'] == 'LITE' && cfgMap['hideAdvancedSettings'] == true);
+    final isLite = t.isLite;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -129,7 +110,7 @@ class ClubTournamentsScreen extends ConsumerWidget {
       ),
       child: InkWell(
         onTap: () => context.push(
-          isLite ? '/lite-manage/${t['id']}' : '/intro/${t['id']}',
+          isLite ? '/lite-manage/${t.id}' : '/intro/${t.id}',
         ),
         borderRadius: BorderRadius.circular(10),
         child: Row(

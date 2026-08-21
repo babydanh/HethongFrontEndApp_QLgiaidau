@@ -11,7 +11,6 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 
 /// Tạo giải đấu Lite trong câu lạc bộ
@@ -161,7 +160,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         result: result,
         onManage: () {
           context.pop();
-          _openWebManagement(result.id);
+          context.push('/lite-manage/${result.id}');
         },
         onClose: () {
           context.pop();
@@ -169,13 +168,6 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         },
       ),
     );
-  }
-
-  Future<void> _openWebManagement(String tournamentId) async {
-    final uri = Uri.parse('${AppConstants.appDomain}/organizer/tournaments/$tournamentId/manage');
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không thể mở trang quản lý trên web.')));
-    }
   }
 
   Future<void> _pickStartDate() async {

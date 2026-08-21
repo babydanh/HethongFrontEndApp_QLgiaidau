@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class AppShareModal {
   static void show({
@@ -15,6 +16,7 @@ class AppShareModal {
     String? badgeText,
   }) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -49,7 +51,7 @@ class AppShareModal {
                 const Icon(Icons.share_rounded, color: AppTheme.primary, size: 22),
                 const SizedBox(width: 8),
                 Text(
-                  'Chia sẻ',
+                  l10n?.coreShareTitle ?? 'Share',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
@@ -148,13 +150,13 @@ class AppShareModal {
                   context: ctx,
                   icon: Icons.copy_rounded,
                   color: const Color(0xFF3B82F6),
-                  label: 'Sao chép link',
+                  label: l10n?.coreCopyLink ?? 'Copy link',
                   onTap: () {
                     Clipboard.setData(ClipboardData(text: webUrl));
                     Navigator.pop(ctx);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Đã sao chép liên kết vào bộ nhớ tạm!'),
+                      SnackBar(
+                        content: Text(l10n?.coreLinkCopied ?? 'Link copied to clipboard!'),
                         backgroundColor: Color(0xFF059669),
                       ),
                     );
@@ -164,12 +166,12 @@ class AppShareModal {
                   context: ctx,
                   icon: Icons.send_rounded,
                   color: const Color(0xFF059669),
-                  label: 'Chia sẻ qua App',
+                  label: l10n?.coreShareViaApp ?? 'Share via app',
                   onTap: () {
                     Navigator.pop(ctx);
                     SharePlus.instance.share(
                       ShareParams(
-                        text: '$title\n$subtitle\n\nXem chi tiết tại: $webUrl',
+                        text: '$title\n$subtitle\n\n${l10n?.coreShareDetailsAt(webUrl) ?? 'View details at: $webUrl'}',
                       ),
                     );
                   },
@@ -178,7 +180,7 @@ class AppShareModal {
                   context: ctx,
                   icon: Icons.qr_code_2_rounded,
                   color: const Color(0xFFF59E0B),
-                  label: 'Mã QR',
+                  label: l10n?.coreQrCode ?? 'QR code',
                   onTap: () {
                     Navigator.pop(ctx);
                     _showQrDialog(context, title, webUrl);
@@ -231,6 +233,7 @@ class AppShareModal {
 
   static void _showQrDialog(BuildContext context, String title, String url) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -240,7 +243,7 @@ class AppShareModal {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Mã QR Chia Sẻ',
+              l10n?.coreQrCodeShareTitle ?? 'Share QR code',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -273,11 +276,11 @@ class AppShareModal {
                 Clipboard.setData(ClipboardData(text: url));
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đã sao chép liên kết!')),
+                    SnackBar(content: Text(l10n?.coreLinkCopied ?? 'Link copied to clipboard!')),
                 );
               },
               icon: const Icon(Icons.copy_rounded, size: 16),
-              label: const Text('Sao chép link'),
+              label: Text(l10n?.coreCopyLink ?? 'Copy link'),
             ),
           ],
         ),

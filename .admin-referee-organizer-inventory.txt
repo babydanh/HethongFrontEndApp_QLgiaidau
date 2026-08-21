@@ -1,0 +1,7 @@
+﻿D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\features\admin\screens\admin_clubs_screen.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\features\admin\screens\change_requests_screen.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\features\admin\screens\disputes_screen.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\features\admin\screens\pending_clubs_screen.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\features\admin\screens\transactions_screen.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\features\admin\screens\verification_screen.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\features\referee\screens\referee_invites_screen.dart
