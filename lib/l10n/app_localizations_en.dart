@@ -448,6 +448,77 @@ class AppLocalizationsEn extends AppLocalizations {
   String get publicProfileUserFallback => 'User';
 
   @override
+  String get userProfileClubOwnerRole => 'Club owner';
+
+  @override
+  String get userProfileClubAdminRole => 'Club administration';
+
+  @override
+  String get userProfileClubMemberRole => 'Club member';
+
+  @override
+  String get userProfileEloStarting => 'Starting ELO';
+
+  @override
+  String get userProfileClubTagsTitle => 'CLUB TITLES';
+
+  @override
+  String get userProfileEditTag => 'Edit tag';
+
+  @override
+  String get userProfileAssignTag => '+ Assign tag';
+
+  @override
+  String get userProfileNoClubTags => 'No club titles yet';
+
+  @override
+  String get userProfileOpeningChat => 'Opening...';
+
+  @override
+  String get userProfileMessage => 'Message';
+
+  @override
+  String get userProfileViewProfile => 'View profile';
+
+  @override
+  String get userProfileLoading => 'Loading profile...';
+
+  @override
+  String get userProfileLoadError => 'Unable to load user profile';
+
+  @override
+  String get userProfileNoTop100 =>
+      'You are not ranked in the Top 100 yet. Join a tournament to get ranked!';
+
+  @override
+  String userProfileOpenChatError(Object error) {
+    return 'Unable to open conversation: $error';
+  }
+
+  @override
+  String userProfileOpenTagError(Object error) {
+    return 'Error opening tag assignment: $error';
+  }
+
+  @override
+  String get userProfileElo => 'ELO';
+
+  @override
+  String get userProfileTotalMatches => 'Matches';
+
+  @override
+  String get userProfileWins => 'Wins';
+
+  @override
+  String get userProfileLosses => 'Losses';
+
+  @override
+  String get userProfileWinRate => 'Win rate';
+
+  @override
+  String get userProfileRankFallback => 'Ranked';
+
+  @override
   String get vietnam => 'Vietnam';
 
   @override
@@ -4058,6 +4129,32 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get leaderboardSearchEmptyHint =>
       'The athlete may be outside the Top 100 or may not have joined a tournament yet.';
+
+  @override
+  String get leaderboardRank5To10 => 'RANKS 5 — 10';
+
+  @override
+  String get leaderboardRank4To10 => 'RANKS 4 — 10';
+
+  @override
+  String get leaderboardTop11To100Title => 'View Ranks 11 – 100';
+
+  @override
+  String get leaderboardTop11To100Subtitle =>
+      'The full list of nationally ranked athletes';
+
+  @override
+  String get leaderboardNationwide => 'NATIONWIDE';
+
+  @override
+  String get leaderboardNoRank4To10 => 'No athletes in ranks 4 – 10 yet';
+
+  @override
+  String get leaderboardNoRank11To100 => 'No athletes in ranks 11 – 100 yet';
+
+  @override
+  String get leaderboardNoTop100 =>
+      'You are not ranked in the Top 100 yet. Join a tournament to get ranked!';
 
   @override
   String get rankingWinRate => 'Win rate';
@@ -8850,4 +8947,83 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lite_recreatedBracket => 'A new bracket was created.';
+
+  @override
+  String get series_scheduleEmpty => 'No schedule yet';
+
+  @override
+  String get series_rankingsEmpty => 'No rankings yet';
+
+  @override
+  String get series_rankingsUpdateHint => 'Rankings will update after each leg';
+
+  @override
+  String get series_ongoing => 'In progress';
+
+  @override
+  String get series_completed => 'Completed';
+
+  @override
+  String get series_upcoming => 'Upcoming';
+
+  @override
+  String series_pointsSummary(Object points) {
+    return '$points pts';
+  }
+
+  @override
+  String series_recordSummary(Object wins, Object losses) {
+    return '${wins}W - ${losses}L';
+  }
+
+  @override
+  String get lite_teamUnnamed => 'Unnamed team';
+
+  @override
+  String lite_memberCountStatus(Object count, Object status) {
+    return '$count members • $status';
+  }
+
+  @override
+  String get lite_rosterConfirmed => 'Roster confirmed';
+
+  @override
+  String get lite_memberUnnamed => 'Name not updated';
+
+  @override
+  String get lite_removeTeamFromTournament => 'Remove team from tournament';
+
+  @override
+  String get lite_statusKicked => 'Removed';
+
+  @override
+  String get lite_statusRegistered => 'Registered';
+
+  @override
+  String get lite_statusComplete => 'Roster complete';
+
+  @override
+  String get lite_statusRegistering => 'Registering';
+
+  @override
+  String get lite_roleMain => 'Starter';
+
+  @override
+  String get lite_roleReserve => 'Reserve';
+
+  @override
+  String get lite_roleMember => 'Member';
+
+  @override
+  String get lite_kickTeamTitle => 'Remove team from tournament?';
+
+  @override
+  String get lite_kickReasonLabel => 'Reason (optional)';
+
+  @override
+  String get lite_kickReasonHint =>
+      'Example: Does not meet participation requirements';
+
+  @override
+  String get lite_kickTeamAction => 'Remove team';
 }

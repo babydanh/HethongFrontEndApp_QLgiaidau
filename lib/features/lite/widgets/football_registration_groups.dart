@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 
 /// Compact team-first registration view for football Lite management.
@@ -40,6 +41,7 @@ class _FootballRegistrationGroupsState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final groups = _groupParticipants();
     return Column(
       children: groups.entries.map((entry) {
@@ -81,7 +83,7 @@ class _FootballRegistrationGroupsState
                           children: [
                             Text(
                               team.teamName.isEmpty
-                                  ? 'Đội chưa đặt tên'
+                                  ? l10n.lite_teamUnnamed
                                   : team.teamName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -92,7 +94,10 @@ class _FootballRegistrationGroupsState
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${members.length} thành viên • ${_statusLabel(entry.value)}',
+                              l10n.lite_memberCountStatus(
+                                members.length,
+                                _statusLabel(entry.value, l10n),
+                              ),
                               style: TextStyle(
                                 color: widget.colors.textMuted,
                                 fontSize: 12,
@@ -123,7 +128,7 @@ class _FootballRegistrationGroupsState
                       const SizedBox(height: 10),
                       if (widget.rosterConfirmed)
                         _StatusChip(
-                          label: 'Đã chốt roster',
+                          label: l10n.lite_rosterConfirmed,
                           color: widget.colors.success,
                         ),
                       const SizedBox(height: 8),
@@ -151,7 +156,7 @@ class _FootballRegistrationGroupsState
                               Expanded(
                                 child: Text(
                                   member.fullName.isEmpty
-                                      ? 'Chưa cập nhật tên'
+                                      ? l10n.lite_memberUnnamed
                                       : member.fullName,
                                   style: const TextStyle(
                                     fontSize: 13,
@@ -160,7 +165,7 @@ class _FootballRegistrationGroupsState
                                 ),
                               ),
                               Text(
-                                _memberRoleLabel(member.role),
+                                _memberRoleLabel(member.role, l10n),
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: widget.colors.textMuted,
@@ -177,7 +182,7 @@ class _FootballRegistrationGroupsState
                           child: OutlinedButton.icon(
                             onPressed: () => _confirmKick(context, team),
                             icon: const Icon(Icons.person_remove_outlined, size: 16),
-                            label: const Text('Loại đội khỏi giải'),
+                            label: Text(l10n.lite_removeTeamFromTournament),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: widget.colors.error,
                               side: BorderSide(
@@ -198,28 +203,28 @@ class _FootballRegistrationGroupsState
     );
   }
 
-  String _statusLabel(List<LiteParticipant> participants) {
+  String _statusLabel(List<LiteParticipant> participants, AppLocalizations l10n) {
     final statuses = participants.map((item) => item.status).toSet();
-    if (statuses.contains('KICKED')) return 'Đã loại';
+    if (statuses.contains('KICKED')) return l10n.lite_statusKicked;
     // Lite is direct participation. Legacy approval statuses are displayed as
     // registered instead of exposing an approval workflow that no longer exists.
     if (statuses.contains('PENDING_APPROVAL') || statuses.contains('PENDING')) {
-      return 'Đã đăng ký';
+      return l10n.lite_statusRegistered;
     }
-    if (statuses.contains('COMPLETE')) return 'Đã đủ đội';
-    return 'Đang đăng ký';
+    if (statuses.contains('COMPLETE')) return l10n.lite_statusComplete;
+    return l10n.lite_statusRegistering;
   }
 
-  String _memberRoleLabel(String role) {
+  String _memberRoleLabel(String role, AppLocalizations l10n) {
     switch (role) {
       case 'MAIN':
       case 'STARTER':
-        return 'Chính';
+        return l10n.lite_roleMain;
       case 'RESERVE':
       case 'SUBSTITUTE':
-        return 'Dự bị';
+        return l10n.lite_roleReserve;
       default:
-        return 'Thành viên';
+        return l10n.lite_roleMember;
     }
   }
 
@@ -227,23 +232,24 @@ class _FootballRegistrationGroupsState
     BuildContext context,
     LiteParticipant participant,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final reasonController = TextEditingController();
     final reason = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Loại đội khỏi giải?'),
+        title: Text(l10n.lite_kickTeamTitle),
         content: TextField(
           controller: reasonController,
           maxLines: 2,
-          decoration: const InputDecoration(
-            labelText: 'Lý do (không bắt buộc)',
-            hintText: 'Ví dụ: Không đủ điều kiện tham gia',
+          decoration: InputDecoration(
+            labelText: l10n.lite_kickReasonLabel,
+            hintText: l10n.lite_kickReasonHint,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Hủy'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(
@@ -253,7 +259,7 @@ class _FootballRegistrationGroupsState
             style: FilledButton.styleFrom(
               backgroundColor: widget.colors.error,
             ),
-            child: const Text('Loại đội'),
+            child: Text(l10n.lite_kickTeamAction),
           ),
         ],
       ),

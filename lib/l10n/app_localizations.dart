@@ -956,6 +956,138 @@ abstract class AppLocalizations {
   /// **'Người dùng'**
   String get publicProfileUserFallback;
 
+  /// No description provided for @userProfileClubOwnerRole.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chủ nhiệm CLB'**
+  String get userProfileClubOwnerRole;
+
+  /// No description provided for @userProfileClubAdminRole.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ban quản trị'**
+  String get userProfileClubAdminRole;
+
+  /// No description provided for @userProfileClubMemberRole.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên CLB'**
+  String get userProfileClubMemberRole;
+
+  /// No description provided for @userProfileEloStarting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm ELO khởi điểm'**
+  String get userProfileEloStarting;
+
+  /// No description provided for @userProfileClubTagsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'DANH HIỆU CLB'**
+  String get userProfileClubTagsTitle;
+
+  /// No description provided for @userProfileEditTag.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa nhãn'**
+  String get userProfileEditTag;
+
+  /// No description provided for @userProfileAssignTag.
+  ///
+  /// In vi, this message translates to:
+  /// **'+ Gán nhãn'**
+  String get userProfileAssignTag;
+
+  /// No description provided for @userProfileNoClubTags.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có danh hiệu trong CLB'**
+  String get userProfileNoClubTags;
+
+  /// No description provided for @userProfileOpeningChat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở...'**
+  String get userProfileOpeningChat;
+
+  /// No description provided for @userProfileMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhắn tin'**
+  String get userProfileMessage;
+
+  /// No description provided for @userProfileViewProfile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem hồ sơ'**
+  String get userProfileViewProfile;
+
+  /// No description provided for @userProfileLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải hồ sơ...'**
+  String get userProfileLoading;
+
+  /// No description provided for @userProfileLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được hồ sơ người dùng'**
+  String get userProfileLoadError;
+
+  /// No description provided for @userProfileNoTop100.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa có hạng trong Top 100. Tham gia giải đấu để được xếp hạng!'**
+  String get userProfileNoTop100;
+
+  /// No description provided for @userProfileOpenChatError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể mở cuộc trò chuyện: {error}'**
+  String userProfileOpenChatError(Object error);
+
+  /// No description provided for @userProfileOpenTagError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi khi mở gán danh hiệu: {error}'**
+  String userProfileOpenTagError(Object error);
+
+  /// No description provided for @userProfileElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO'**
+  String get userProfileElo;
+
+  /// No description provided for @userProfileTotalMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổng trận'**
+  String get userProfileTotalMatches;
+
+  /// No description provided for @userProfileWins.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng'**
+  String get userProfileWins;
+
+  /// No description provided for @userProfileLosses.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thua'**
+  String get userProfileLosses;
+
+  /// No description provided for @userProfileWinRate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉ lệ thắng'**
+  String get userProfileWinRate;
+
+  /// No description provided for @userProfileRankFallback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp hạng'**
+  String get userProfileRankFallback;
+
   /// No description provided for @vietnam.
   ///
   /// In vi, this message translates to:
@@ -7669,6 +7801,54 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Vận động viên có thể nằm ngoài Top 100 hoặc chưa tham gia giải đấu.'**
   String get leaderboardSearchEmptyHint;
+
+  /// No description provided for @leaderboardRank5To10.
+  ///
+  /// In vi, this message translates to:
+  /// **'HẠNG 5 — 10'**
+  String get leaderboardRank5To10;
+
+  /// No description provided for @leaderboardRank4To10.
+  ///
+  /// In vi, this message translates to:
+  /// **'HẠNG 4 — 10'**
+  String get leaderboardRank4To10;
+
+  /// No description provided for @leaderboardTop11To100Title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem Hạng 11 – 100'**
+  String get leaderboardTop11To100Title;
+
+  /// No description provided for @leaderboardTop11To100Subtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng đầy đủ vận động viên trên toàn quốc'**
+  String get leaderboardTop11To100Subtitle;
+
+  /// No description provided for @leaderboardNationwide.
+  ///
+  /// In vi, this message translates to:
+  /// **'TOÀN QUỐC'**
+  String get leaderboardNationwide;
+
+  /// No description provided for @leaderboardNoRank4To10.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có vận động viên ở Hạng 4 – 10'**
+  String get leaderboardNoRank4To10;
+
+  /// No description provided for @leaderboardNoRank11To100.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có vận động viên ở Hạng 11 – 100'**
+  String get leaderboardNoRank11To100;
+
+  /// No description provided for @leaderboardNoTop100.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa có hạng trong Top 100. Tham gia giải đấu để được xếp hạng!'**
+  String get leaderboardNoTop100;
 
   /// No description provided for @rankingWinRate.
   ///
@@ -16309,6 +16489,150 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã tạo lại bracket mới.'**
   String get lite_recreatedBracket;
+
+  /// No description provided for @series_scheduleEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có lịch thi đấu'**
+  String get series_scheduleEmpty;
+
+  /// No description provided for @series_rankingsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có bảng xếp hạng'**
+  String get series_rankingsEmpty;
+
+  /// No description provided for @series_rankingsUpdateHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng xếp hạng sẽ cập nhật sau mỗi chặng'**
+  String get series_rankingsUpdateHint;
+
+  /// No description provided for @series_ongoing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get series_ongoing;
+
+  /// No description provided for @series_completed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã kết thúc'**
+  String get series_completed;
+
+  /// No description provided for @series_upcoming.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp diễn ra'**
+  String get series_upcoming;
+
+  /// No description provided for @series_pointsSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'{points} điểm'**
+  String series_pointsSummary(Object points);
+
+  /// No description provided for @series_recordSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'{wins} thắng - {losses} thua'**
+  String series_recordSummary(Object wins, Object losses);
+
+  /// No description provided for @lite_teamUnnamed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội chưa đặt tên'**
+  String get lite_teamUnnamed;
+
+  /// No description provided for @lite_memberCountStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} thành viên • {status}'**
+  String lite_memberCountStatus(Object count, Object status);
+
+  /// No description provided for @lite_rosterConfirmed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chốt đội hình'**
+  String get lite_rosterConfirmed;
+
+  /// No description provided for @lite_memberUnnamed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa cập nhật tên'**
+  String get lite_memberUnnamed;
+
+  /// No description provided for @lite_removeTeamFromTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại đội khỏi giải'**
+  String get lite_removeTeamFromTournament;
+
+  /// No description provided for @lite_statusKicked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã loại'**
+  String get lite_statusKicked;
+
+  /// No description provided for @lite_statusRegistered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đăng ký'**
+  String get lite_statusRegistered;
+
+  /// No description provided for @lite_statusComplete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đủ đội'**
+  String get lite_statusComplete;
+
+  /// No description provided for @lite_statusRegistering.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang đăng ký'**
+  String get lite_statusRegistering;
+
+  /// No description provided for @lite_roleMain.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chính'**
+  String get lite_roleMain;
+
+  /// No description provided for @lite_roleReserve.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dự bị'**
+  String get lite_roleReserve;
+
+  /// No description provided for @lite_roleMember.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên'**
+  String get lite_roleMember;
+
+  /// No description provided for @lite_kickTeamTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại đội khỏi giải?'**
+  String get lite_kickTeamTitle;
+
+  /// No description provided for @lite_kickReasonLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lý do (không bắt buộc)'**
+  String get lite_kickReasonLabel;
+
+  /// No description provided for @lite_kickReasonHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: Không đủ điều kiện tham gia'**
+  String get lite_kickReasonHint;
+
+  /// No description provided for @lite_kickTeamAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại đội'**
+  String get lite_kickTeamAction;
 }
 
 class _AppLocalizationsDelegate

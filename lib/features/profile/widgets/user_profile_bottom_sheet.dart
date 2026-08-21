@@ -58,28 +58,28 @@ class _UserProfileBottomSheetState
     extends ConsumerState<UserProfileBottomSheet> {
   bool _isOpeningChat = false;
 
-  String _formatSystemRole(String? role) {
-    if (role == null || role.trim().isEmpty) return 'Vận động viên';
+  String _formatSystemRole(AppLocalizations l10n, String? role) {
+    if (role == null || role.trim().isEmpty) return l10n.infoPlayer;
     final r = role.trim().toUpperCase();
     switch (r) {
       case 'ADMIN':
       case 'SUPER_ADMIN':
-        return 'Quản trị viên';
+        return l10n.infoAdmin;
       case 'ORGANIZER':
-        return 'Ban tổ chức';
+        return l10n.infoOrganizer;
       case 'REFEREE':
-        return 'Trọng tài';
+        return l10n.infoReferee;
       case 'LEADER':
       case 'CAPTAIN':
-        return 'Trưởng nhóm';
+        return l10n.infoLeader;
       case 'COACH':
-        return 'Huấn luyện viên';
+        return l10n.infoCoach;
       case 'MEMBER':
       case 'USER':
       case 'PLAYER':
       case 'ATHLETE':
       default:
-        return 'Vận động viên';
+        return l10n.infoPlayer;
     }
   }
 
@@ -121,7 +121,11 @@ class _UserProfileBottomSheetState
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Không thể mở cuộc trò chuyện: $e'),
+          content: Text(
+            AppLocalizations.of(
+              context,
+            )!.userProfileOpenChatError(e.toString()),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -156,7 +160,9 @@ class _UserProfileBottomSheetState
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lỗi khi mở gán danh hiệu: $e'),
+          content: Text(
+            AppLocalizations.of(context)!.userProfileOpenTagError(e.toString()),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -166,7 +172,7 @@ class _UserProfileBottomSheetState
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final profileAsync = ref.watch(userPublicProfileProvider(widget.userId));
 
     // Lấy thông tin thành viên CLB nếu có communityId
@@ -263,8 +269,9 @@ class _UserProfileBottomSheetState
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: profileAsync.when(
-                  loading: () => _buildLoadingContent(colors),
-                  error: (err, _) => _buildErrorContent(colors, err.toString()),
+                  loading: () => _buildLoadingContent(colors, l10n),
+                  error: (err, _) =>
+                      _buildErrorContent(colors, err.toString(), l10n),
                   data: (profile) => _buildProfileContent(
                     context,
                     profile,
@@ -334,7 +341,7 @@ class _UserProfileBottomSheetState
     String? clubRole,
     bool isViewerAdmin,
     AppColorsExtension colors,
-    AppLocalizations? l10n,
+    AppLocalizations l10n,
   ) {
     final featuredRank = profile.ranks
         .where((r) => r.matchesPlayed > 0)
@@ -360,17 +367,17 @@ class _UserProfileBottomSheetState
     String? clubRoleLabel;
     Color clubRoleColor = Colors.blue;
     if (clubRole == 'OWNER') {
-      clubRoleLabel = 'Chủ nhiệm CLB';
+      clubRoleLabel = l10n.userProfileClubOwnerRole;
       clubRoleColor = const Color(0xFFF59E0B);
     } else if (clubRole == 'MODERATOR' || clubRole == 'ADMIN') {
-      clubRoleLabel = 'Ban quản trị';
+      clubRoleLabel = l10n.userProfileClubAdminRole;
       clubRoleColor = const Color(0xFF3B82F6);
     } else if (clubRole == 'MEMBER') {
-      clubRoleLabel = 'Thành viên CLB';
+      clubRoleLabel = l10n.userProfileClubMemberRole;
       clubRoleColor = const Color(0xFF64748B);
     }
 
-    final systemRoleText = _formatSystemRole(null);
+    final systemRoleText = _formatSystemRole(l10n, null);
     final systemRoleColor = _systemRoleColor(null);
 
     return Column(
@@ -386,7 +393,8 @@ class _UserProfileBottomSheetState
                 imageUrl: profile.avatarUrl ?? widget.initialAvatarUrl,
                 name: profile.fullName.isNotEmpty
                     ? profile.fullName
-                    : (widget.initialFullName ?? 'User'),
+                    : (widget.initialFullName ??
+                          l10n.publicProfileUserFallback),
                 elo: featuredRank?.eloPoints ?? 0,
                 tierName: featuredRank?.tierName,
                 matchesPlayed: featuredRank?.matchesPlayed ?? 0,
@@ -467,7 +475,8 @@ class _UserProfileBottomSheetState
                     child: Text(
                       profile.fullName.isNotEmpty
                           ? profile.fullName
-                          : (widget.initialFullName ?? 'Người dùng'),
+                          : (widget.initialFullName ??
+                                l10n.publicProfileUserFallback),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -545,8 +554,8 @@ class _UserProfileBottomSheetState
                       const SizedBox(width: 8),
                       Text(
                         featuredRank != null
-                            ? '${featuredRank.categoryName} (${featuredRank.tierName ?? 'Xếp hạng'})'
-                            : 'Điểm ELO khởi điểm',
+                            ? '${featuredRank.categoryName} (${featuredRank.tierName ?? l10n.userProfileRankFallback})'
+                            : l10n.userProfileEloStarting,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -557,8 +566,8 @@ class _UserProfileBottomSheetState
                   ),
                   Text(
                     featuredRank != null
-                        ? '${featuredRank.eloPoints} ELO'
-                        : '1,000 ELO',
+                        ? '${featuredRank.eloPoints} ${l10n.userProfileElo}'
+                        : '1,000 ${l10n.userProfileElo}',
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w900,
@@ -573,23 +582,27 @@ class _UserProfileBottomSheetState
               // Match Counts
               Row(
                 children: [
-                  _statItem(colors, '$totalMatches', 'Tổng trận'),
+                  _statItem(
+                    colors,
+                    '$totalMatches',
+                    l10n.userProfileTotalMatches,
+                  ),
                   _statItem(
                     colors,
                     '$totalWins',
-                    'Thắng',
+                    l10n.userProfileWins,
                     valueColor: const Color(0xFF10B981),
                   ),
                   _statItem(
                     colors,
                     '$totalLosses',
-                    'Thua',
+                    l10n.userProfileLosses,
                     valueColor: const Color(0xFFEF4444),
                   ),
                   _statItem(
                     colors,
                     '$winRate%',
-                    'Tỉ lệ thắng',
+                    l10n.userProfileWinRate,
                     valueColor: const Color(0xFF3B82F6),
                   ),
                 ],
@@ -623,7 +636,7 @@ class _UserProfileBottomSheetState
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'DANH HIỆU CLB',
+                          l10n.userProfileClubTagsTitle,
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w800,
@@ -677,8 +690,8 @@ class _UserProfileBottomSheetState
                               const SizedBox(width: 4),
                               Text(
                                 memberTags.isNotEmpty
-                                    ? 'Sửa nhãn'
-                                    : '+ Gán nhãn',
+                                    ? l10n.userProfileEditTag
+                                    : l10n.userProfileAssignTag,
                                 style: const TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w800,
@@ -710,7 +723,7 @@ class _UserProfileBottomSheetState
                   )
                 else
                   Text(
-                    'Chưa có danh hiệu trong CLB',
+                    l10n.userProfileNoClubTags,
                     style: TextStyle(
                       fontSize: 11.5,
                       fontStyle: FontStyle.italic,
@@ -742,7 +755,9 @@ class _UserProfileBottomSheetState
                       )
                     : const Icon(Icons.chat_bubble_rounded, size: 16),
                 label: Text(
-                  _isOpeningChat ? 'Đang mở...' : 'Nhắn tin',
+                  _isOpeningChat
+                      ? l10n.userProfileOpeningChat
+                      : l10n.userProfileMessage,
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -771,9 +786,12 @@ class _UserProfileBottomSheetState
                   context.push(uri);
                 },
                 icon: const Icon(Icons.person_rounded, size: 16),
-                label: const Text(
-                  'Xem hồ sơ',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                label: Text(
+                  l10n.userProfileViewProfile,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: colors.textPrimary,
@@ -823,7 +841,10 @@ class _UserProfileBottomSheetState
     );
   }
 
-  Widget _buildLoadingContent(AppColorsExtension colors) {
+  Widget _buildLoadingContent(
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Center(
@@ -832,7 +853,7 @@ class _UserProfileBottomSheetState
             CircularProgressIndicator(color: AppTheme.primary),
             const SizedBox(height: 12),
             Text(
-              'Đang tải hồ sơ...',
+              l10n.userProfileLoading,
               style: TextStyle(fontSize: 12, color: colors.textMuted),
             ),
           ],
@@ -841,7 +862,11 @@ class _UserProfileBottomSheetState
     );
   }
 
-  Widget _buildErrorContent(AppColorsExtension colors, String error) {
+  Widget _buildErrorContent(
+    AppColorsExtension colors,
+    String error,
+    AppLocalizations l10n,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: Column(
@@ -849,7 +874,7 @@ class _UserProfileBottomSheetState
           Icon(Icons.error_outline_rounded, size: 36, color: colors.error),
           const SizedBox(height: 8),
           Text(
-            'Không tải được hồ sơ người dùng',
+            l10n.userProfileLoadError,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,

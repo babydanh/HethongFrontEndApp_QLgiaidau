@@ -147,6 +147,38 @@
   "publicProfileLoadError": "Could not load profile information",
   "publicProfileHomeButton": "Go to home",
   "publicProfileUserFallback": "User",
+  "userProfileClubOwnerRole": "Club owner",
+  "userProfileClubAdminRole": "Club administration",
+  "userProfileClubMemberRole": "Club member",
+  "userProfileEloStarting": "Starting ELO",
+  "userProfileClubTagsTitle": "CLUB TITLES",
+  "userProfileEditTag": "Edit tag",
+  "userProfileAssignTag": "+ Assign tag",
+  "userProfileNoClubTags": "No club titles yet",
+  "userProfileOpeningChat": "Opening...",
+  "userProfileMessage": "Message",
+  "userProfileViewProfile": "View profile",
+  "userProfileLoading": "Loading profile...",
+  "userProfileLoadError": "Unable to load user profile",
+  "userProfileNoTop100": "You are not ranked in the Top 100 yet. Join a tournament to get ranked!",
+  "userProfileOpenChatError": "Unable to open conversation: {error}",
+  "userProfileOpenTagError": "Error opening tag assignment: {error}",
+  "userProfileElo": "ELO",
+  "userProfileTotalMatches": "Matches",
+  "userProfileWins": "Wins",
+  "userProfileLosses": "Losses",
+  "userProfileWinRate": "Win rate",
+  "userProfileRankFallback": "Ranked",
+  "@userProfileOpenChatError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@userProfileOpenTagError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "vietnam": "Vietnam",
   "freePrice": "Free",
   "viewAll": "View All",
@@ -1625,6 +1657,14 @@
       "query": {}
     }
   },
+  "leaderboardRank5To10": "RANKS 5 — 10",
+  "leaderboardRank4To10": "RANKS 4 — 10",
+  "leaderboardTop11To100Title": "View Ranks 11 – 100",
+  "leaderboardTop11To100Subtitle": "The full list of nationally ranked athletes",
+  "leaderboardNationwide": "NATIONWIDE",
+  "leaderboardNoRank4To10": "No athletes in ranks 4 – 10 yet",
+  "leaderboardNoRank11To100": "No athletes in ranks 11 – 100 yet",
+  "leaderboardNoTop100": "You are not ranked in the Top 100 yet. Join a tournament to get ranked!",
   "rankingWinRate": "Win rate",
   "rankingRecentMatches": "Recent matches",
   "rankingNoMatchData": "No match data available",
@@ -3400,6 +3440,47 @@
   "lite_recreateBracketConfirm": "The existing bracket and matches that have not started will be completely replaced. This cannot be undone. Do you want to continue?",
   "lite_recreateBracket": "Recreate",
   "lite_recreatedBracket": "A new bracket was created.",
+  "series_scheduleEmpty": "No schedule yet",
+  "series_rankingsEmpty": "No rankings yet",
+  "series_rankingsUpdateHint": "Rankings will update after each leg",
+  "series_ongoing": "In progress",
+  "series_completed": "Completed",
+  "series_upcoming": "Upcoming",
+  "series_pointsSummary": "{points} pts",
+  "@series_pointsSummary": {
+    "placeholders": {
+      "points": {}
+    }
+  },
+  "series_recordSummary": "{wins}W - {losses}L",
+  "@series_recordSummary": {
+    "placeholders": {
+      "wins": {},
+      "losses": {}
+    }
+  },
+  "lite_teamUnnamed": "Unnamed team",
+  "lite_memberCountStatus": "{count} members • {status}",
+  "@lite_memberCountStatus": {
+    "placeholders": {
+      "count": {},
+      "status": {}
+    }
+  },
+  "lite_rosterConfirmed": "Roster confirmed",
+  "lite_memberUnnamed": "Name not updated",
+  "lite_removeTeamFromTournament": "Remove team from tournament",
+  "lite_statusKicked": "Removed",
+  "lite_statusRegistered": "Registered",
+  "lite_statusComplete": "Roster complete",
+  "lite_statusRegistering": "Registering",
+  "lite_roleMain": "Starter",
+  "lite_roleReserve": "Reserve",
+  "lite_roleMember": "Member",
+  "lite_kickTeamTitle": "Remove team from tournament?",
+  "lite_kickReasonLabel": "Reason (optional)",
+  "lite_kickReasonHint": "Example: Does not meet participation requirements",
+  "lite_kickTeamAction": "Remove team",
   "@register_rosterInstructions": {
     "placeholders": {
       "teamSize": {},

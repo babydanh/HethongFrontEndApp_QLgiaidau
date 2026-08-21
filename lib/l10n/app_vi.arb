@@ -143,6 +143,38 @@
   "publicProfileLoadError": "Không thể tải thông tin",
   "publicProfileHomeButton": "Về trang chủ",
   "publicProfileUserFallback": "Người dùng",
+  "userProfileClubOwnerRole": "Chủ nhiệm CLB",
+  "userProfileClubAdminRole": "Ban quản trị",
+  "userProfileClubMemberRole": "Thành viên CLB",
+  "userProfileEloStarting": "Điểm ELO khởi điểm",
+  "userProfileClubTagsTitle": "DANH HIỆU CLB",
+  "userProfileEditTag": "Sửa nhãn",
+  "userProfileAssignTag": "+ Gán nhãn",
+  "userProfileNoClubTags": "Chưa có danh hiệu trong CLB",
+  "userProfileOpeningChat": "Đang mở...",
+  "userProfileMessage": "Nhắn tin",
+  "userProfileViewProfile": "Xem hồ sơ",
+  "userProfileLoading": "Đang tải hồ sơ...",
+  "userProfileLoadError": "Không tải được hồ sơ người dùng",
+  "userProfileNoTop100": "Bạn chưa có hạng trong Top 100. Tham gia giải đấu để được xếp hạng!",
+  "userProfileOpenChatError": "Không thể mở cuộc trò chuyện: {error}",
+  "userProfileOpenTagError": "Lỗi khi mở gán danh hiệu: {error}",
+  "userProfileElo": "ELO",
+  "userProfileTotalMatches": "Tổng trận",
+  "userProfileWins": "Thắng",
+  "userProfileLosses": "Thua",
+  "userProfileWinRate": "Tỉ lệ thắng",
+  "userProfileRankFallback": "Xếp hạng",
+  "@userProfileOpenChatError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@userProfileOpenTagError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "vietnam": "Việt Nam",
   "freePrice": "Miễn phí",
   "viewAll": "Xem tất cả",
@@ -1626,6 +1658,14 @@
       "query": {}
     }
   },
+  "leaderboardRank5To10": "HẠNG 5 — 10",
+  "leaderboardRank4To10": "HẠNG 4 — 10",
+  "leaderboardTop11To100Title": "Xem Hạng 11 – 100",
+  "leaderboardTop11To100Subtitle": "Bảng đầy đủ vận động viên trên toàn quốc",
+  "leaderboardNationwide": "TOÀN QUỐC",
+  "leaderboardNoRank4To10": "Chưa có vận động viên ở Hạng 4 – 10",
+  "leaderboardNoRank11To100": "Chưa có vận động viên ở Hạng 11 – 100",
+  "leaderboardNoTop100": "Bạn chưa có hạng trong Top 100. Tham gia giải đấu để được xếp hạng!",
   "rankingWinRate": "Tỷ lệ thắng",
   "rankingRecentMatches": "Trận đấu gần đây",
   "rankingNoMatchData": "Chưa có dữ liệu trận đấu",
@@ -3401,6 +3441,47 @@
   "lite_recreateBracketConfirm": "Bracket cũ và lịch trận chưa bắt đầu sẽ bị thay thế hoàn toàn. Không thể hoàn tác. Bạn có chắc muốn tiếp tục?",
   "lite_recreateBracket": "Tạo lại",
   "lite_recreatedBracket": "Đã tạo lại bracket mới.",
+  "series_scheduleEmpty": "Chưa có lịch thi đấu",
+  "series_rankingsEmpty": "Chưa có bảng xếp hạng",
+  "series_rankingsUpdateHint": "Bảng xếp hạng sẽ cập nhật sau mỗi chặng",
+  "series_ongoing": "Đang diễn ra",
+  "series_completed": "Đã kết thúc",
+  "series_upcoming": "Sắp diễn ra",
+  "series_pointsSummary": "{points} điểm",
+  "@series_pointsSummary": {
+    "placeholders": {
+      "points": {}
+    }
+  },
+  "series_recordSummary": "{wins} thắng - {losses} thua",
+  "@series_recordSummary": {
+    "placeholders": {
+      "wins": {},
+      "losses": {}
+    }
+  },
+  "lite_teamUnnamed": "Đội chưa đặt tên",
+  "lite_memberCountStatus": "{count} thành viên • {status}",
+  "@lite_memberCountStatus": {
+    "placeholders": {
+      "count": {},
+      "status": {}
+    }
+  },
+  "lite_rosterConfirmed": "Đã chốt đội hình",
+  "lite_memberUnnamed": "Chưa cập nhật tên",
+  "lite_removeTeamFromTournament": "Loại đội khỏi giải",
+  "lite_statusKicked": "Đã loại",
+  "lite_statusRegistered": "Đã đăng ký",
+  "lite_statusComplete": "Đã đủ đội",
+  "lite_statusRegistering": "Đang đăng ký",
+  "lite_roleMain": "Chính",
+  "lite_roleReserve": "Dự bị",
+  "lite_roleMember": "Thành viên",
+  "lite_kickTeamTitle": "Loại đội khỏi giải?",
+  "lite_kickReasonLabel": "Lý do (không bắt buộc)",
+  "lite_kickReasonHint": "Ví dụ: Không đủ điều kiện tham gia",
+  "lite_kickTeamAction": "Loại đội",
   "@register_rosterInstructions": {
     "placeholders": {
       "teamSize": {},

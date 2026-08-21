@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:intl/intl.dart';
 
@@ -441,6 +442,7 @@ class _ScheduleTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
 
     if (detail.legs.isEmpty) {
@@ -450,7 +452,7 @@ class _ScheduleTab extends StatelessWidget {
           children: [
             Icon(Icons.event_note_rounded, size: 48, color: colors.textMuted.withValues(alpha: 0.4)),
             const SizedBox(height: 12),
-            Text('Chưa có lịch thi đấu', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colors.textSecondary)),
+            Text(l10n.series_scheduleEmpty, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colors.textSecondary)),
           ],
         ),
       );
@@ -460,14 +462,14 @@ class _ScheduleTab extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: detail.legs.length,
-      itemBuilder: (ctx, i) => _buildLegCard(detail.legs[i], colors),
+      itemBuilder: (ctx, i) => _buildLegCard(detail.legs[i], colors, l10n),
     );
   }
 
-  Widget _buildLegCard(SeriesLeg leg, AppColorsExtension colors) {
+  Widget _buildLegCard(SeriesLeg leg, AppColorsExtension colors, AppLocalizations l10n) {
     final isActive = leg.status == 'ONGOING' || leg.status == 'ACTIVE';
     final statusColor = isActive ? colors.error : (leg.status == 'COMPLETED' ? colors.success : colors.info);
-    final statusLabel = isActive ? 'Đang diễn ra' : (leg.status == 'COMPLETED' ? 'Đã kết thúc' : 'Sắp diễn ra');
+    final statusLabel = isActive ? l10n.series_ongoing : (leg.status == 'COMPLETED' ? l10n.series_completed : l10n.series_upcoming);
     final dateStr = leg.startDate != null ? DateFormat('dd/MM/yyyy').format(leg.startDate!) : '';
 
     return Container(
@@ -528,6 +530,7 @@ class _RankingsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
 
     if (detail.rankings.isEmpty) {
@@ -537,9 +540,9 @@ class _RankingsTab extends StatelessWidget {
           children: [
             Icon(Icons.leaderboard_outlined, size: 48, color: colors.textMuted.withValues(alpha: 0.4)),
             const SizedBox(height: 12),
-            Text('Chưa có bảng xếp hạng', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colors.textSecondary)),
+            Text(l10n.series_rankingsEmpty, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colors.textSecondary)),
             const SizedBox(height: 4),
-            Text('Bảng xếp hạng sẽ cập nhật sau mỗi chặng', style: TextStyle(fontSize: 12, color: colors.textMuted)),
+            Text(l10n.series_rankingsUpdateHint, style: TextStyle(fontSize: 12, color: colors.textMuted)),
           ],
         ),
       );
@@ -549,11 +552,11 @@ class _RankingsTab extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: detail.rankings.length,
-      itemBuilder: (ctx, i) => _buildRankingRow(detail.rankings[i], i, colors),
+      itemBuilder: (ctx, i) => _buildRankingRow(detail.rankings[i], i, colors, l10n),
     );
   }
 
-  Widget _buildRankingRow(SeriesRanking rank, int index, AppColorsExtension colors) {
+  Widget _buildRankingRow(SeriesRanking rank, int index, AppColorsExtension colors, AppLocalizations l10n) {
     final medalColors = [const Color(0xFFFFD700), const Color(0xFFC0C0C0), const Color(0xFFCD7F32)];
     final isPodium = index < 3;
 
@@ -592,8 +595,8 @@ class _RankingsTab extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('${rank.points} pts', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.textPrimary)),
-              Text('${rank.totalWins}W - ${rank.totalLosses}L', style: TextStyle(fontSize: 10, color: colors.textMuted)),
+              Text(l10n.series_pointsSummary(rank.points), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.textPrimary)),
+              Text(l10n.series_recordSummary(rank.totalWins, rank.totalLosses), style: TextStyle(fontSize: 10, color: colors.textMuted)),
             ],
           ),
         ],

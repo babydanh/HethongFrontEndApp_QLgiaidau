@@ -193,13 +193,15 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   }
 
   String _formatLabel(AppLocalizations l10n, String matchType, String? gender) {
-    if (matchType == 'SINGLES' && gender == 'MALE') return l10n.clubRankingMale;
-    if (matchType == 'SINGLES' && gender == 'FEMALE')
-      return l10n.clubRankingFemale;
-    if (matchType == 'DOUBLES' && gender == 'MALE') return l10n.clubRankingMale;
-    if (matchType == 'DOUBLES' && gender == 'FEMALE')
-      return l10n.clubRankingFemale;
-    if (matchType == 'MIXED_DOUBLES') return l10n.clubRankingMixedDoubles;
+    if (matchType == 'SINGLES' && gender == 'MALE') return l10n.singlesMale;
+    if (matchType == 'SINGLES' && gender == 'FEMALE') {
+      return l10n.singlesFemale;
+    }
+    if (matchType == 'DOUBLES' && gender == 'MALE') return l10n.doublesMale;
+    if (matchType == 'DOUBLES' && gender == 'FEMALE') {
+      return l10n.doublesFemale;
+    }
+    if (matchType == 'MIXED_DOUBLES') return l10n.doublesMixed;
     return l10n.rankingTitle;
   }
 
@@ -440,7 +442,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
-                      'HẠNG 5 — 10',
+                      l10n.leaderboardRank5To10,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
@@ -482,7 +484,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Text(
-                    'HẠNG 4 — 10',
+                    l10n.leaderboardRank4To10,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
@@ -510,7 +512,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               border: Border.all(color: colors.border.withValues(alpha: 0.7)),
             ),
             child: Text(
-              'Chưa có vận động viên ở Hạng 4 – 10',
+              l10n.leaderboardNoRank4To10,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
@@ -560,7 +562,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Xem Hạng 11 – 100',
+                        l10n.leaderboardTop11To100Title,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
@@ -569,7 +571,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       ),
                       const SizedBox(height: 1),
                       Text(
-                        'Bảng đầy đủ vận động viên trên toàn quốc',
+                        l10n.leaderboardTop11To100Subtitle,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
@@ -592,7 +594,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                     ),
                   ),
                   child: Text(
-                    'TOÀN QUỐC',
+                    l10n.leaderboardNationwide,
                     style: TextStyle(
                       fontSize: 9.5,
                       fontWeight: FontWeight.w900,
@@ -629,7 +631,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 border: Border.all(color: colors.border.withValues(alpha: 0.7)),
               ),
               child: Text(
-                'Chưa có vận động viên ở Hạng 11 – 100',
+                l10n.leaderboardNoRank11To100,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
@@ -651,6 +653,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     AppColorsExtension colors,
     String currentUserId,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final myRank = rankings
         .where((r) => r.userId == currentUserId && r.rank > 0)
         .firstOrNull;
@@ -683,7 +686,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Bạn chưa có hạng trong Top 100. Tham gia giải đấu để được xếp hạng!',
+                  l10n.leaderboardNoTop100,
                   style: TextStyle(fontSize: 12, color: colors.textSecondary),
                 ),
               ),
@@ -728,6 +731,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     required String subtitle,
     required VoidCallback onRetry,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     return Center(
       child: Padding(
@@ -755,7 +759,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            FilledButton(onPressed: onRetry, child: const Text('Thử lại')),
+            FilledButton(onPressed: onRetry, child: Text(l10n.infoRetry)),
           ],
         ),
       ),

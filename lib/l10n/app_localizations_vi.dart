@@ -445,6 +445,77 @@ class AppLocalizationsVi extends AppLocalizations {
   String get publicProfileUserFallback => 'Người dùng';
 
   @override
+  String get userProfileClubOwnerRole => 'Chủ nhiệm CLB';
+
+  @override
+  String get userProfileClubAdminRole => 'Ban quản trị';
+
+  @override
+  String get userProfileClubMemberRole => 'Thành viên CLB';
+
+  @override
+  String get userProfileEloStarting => 'Điểm ELO khởi điểm';
+
+  @override
+  String get userProfileClubTagsTitle => 'DANH HIỆU CLB';
+
+  @override
+  String get userProfileEditTag => 'Sửa nhãn';
+
+  @override
+  String get userProfileAssignTag => '+ Gán nhãn';
+
+  @override
+  String get userProfileNoClubTags => 'Chưa có danh hiệu trong CLB';
+
+  @override
+  String get userProfileOpeningChat => 'Đang mở...';
+
+  @override
+  String get userProfileMessage => 'Nhắn tin';
+
+  @override
+  String get userProfileViewProfile => 'Xem hồ sơ';
+
+  @override
+  String get userProfileLoading => 'Đang tải hồ sơ...';
+
+  @override
+  String get userProfileLoadError => 'Không tải được hồ sơ người dùng';
+
+  @override
+  String get userProfileNoTop100 =>
+      'Bạn chưa có hạng trong Top 100. Tham gia giải đấu để được xếp hạng!';
+
+  @override
+  String userProfileOpenChatError(Object error) {
+    return 'Không thể mở cuộc trò chuyện: $error';
+  }
+
+  @override
+  String userProfileOpenTagError(Object error) {
+    return 'Lỗi khi mở gán danh hiệu: $error';
+  }
+
+  @override
+  String get userProfileElo => 'ELO';
+
+  @override
+  String get userProfileTotalMatches => 'Tổng trận';
+
+  @override
+  String get userProfileWins => 'Thắng';
+
+  @override
+  String get userProfileLosses => 'Thua';
+
+  @override
+  String get userProfileWinRate => 'Tỉ lệ thắng';
+
+  @override
+  String get userProfileRankFallback => 'Xếp hạng';
+
+  @override
   String get vietnam => 'Việt Nam';
 
   @override
@@ -4054,6 +4125,33 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get leaderboardSearchEmptyHint =>
       'Vận động viên có thể nằm ngoài Top 100 hoặc chưa tham gia giải đấu.';
+
+  @override
+  String get leaderboardRank5To10 => 'HẠNG 5 — 10';
+
+  @override
+  String get leaderboardRank4To10 => 'HẠNG 4 — 10';
+
+  @override
+  String get leaderboardTop11To100Title => 'Xem Hạng 11 – 100';
+
+  @override
+  String get leaderboardTop11To100Subtitle =>
+      'Bảng đầy đủ vận động viên trên toàn quốc';
+
+  @override
+  String get leaderboardNationwide => 'TOÀN QUỐC';
+
+  @override
+  String get leaderboardNoRank4To10 => 'Chưa có vận động viên ở Hạng 4 – 10';
+
+  @override
+  String get leaderboardNoRank11To100 =>
+      'Chưa có vận động viên ở Hạng 11 – 100';
+
+  @override
+  String get leaderboardNoTop100 =>
+      'Bạn chưa có hạng trong Top 100. Tham gia giải đấu để được xếp hạng!';
 
   @override
   String get rankingWinRate => 'Tỷ lệ thắng';
@@ -8830,4 +8928,83 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lite_recreatedBracket => 'Đã tạo lại bracket mới.';
+
+  @override
+  String get series_scheduleEmpty => 'Chưa có lịch thi đấu';
+
+  @override
+  String get series_rankingsEmpty => 'Chưa có bảng xếp hạng';
+
+  @override
+  String get series_rankingsUpdateHint =>
+      'Bảng xếp hạng sẽ cập nhật sau mỗi chặng';
+
+  @override
+  String get series_ongoing => 'Đang diễn ra';
+
+  @override
+  String get series_completed => 'Đã kết thúc';
+
+  @override
+  String get series_upcoming => 'Sắp diễn ra';
+
+  @override
+  String series_pointsSummary(Object points) {
+    return '$points điểm';
+  }
+
+  @override
+  String series_recordSummary(Object wins, Object losses) {
+    return '$wins thắng - $losses thua';
+  }
+
+  @override
+  String get lite_teamUnnamed => 'Đội chưa đặt tên';
+
+  @override
+  String lite_memberCountStatus(Object count, Object status) {
+    return '$count thành viên • $status';
+  }
+
+  @override
+  String get lite_rosterConfirmed => 'Đã chốt đội hình';
+
+  @override
+  String get lite_memberUnnamed => 'Chưa cập nhật tên';
+
+  @override
+  String get lite_removeTeamFromTournament => 'Loại đội khỏi giải';
+
+  @override
+  String get lite_statusKicked => 'Đã loại';
+
+  @override
+  String get lite_statusRegistered => 'Đã đăng ký';
+
+  @override
+  String get lite_statusComplete => 'Đã đủ đội';
+
+  @override
+  String get lite_statusRegistering => 'Đang đăng ký';
+
+  @override
+  String get lite_roleMain => 'Chính';
+
+  @override
+  String get lite_roleReserve => 'Dự bị';
+
+  @override
+  String get lite_roleMember => 'Thành viên';
+
+  @override
+  String get lite_kickTeamTitle => 'Loại đội khỏi giải?';
+
+  @override
+  String get lite_kickReasonLabel => 'Lý do (không bắt buộc)';
+
+  @override
+  String get lite_kickReasonHint => 'Ví dụ: Không đủ điều kiện tham gia';
+
+  @override
+  String get lite_kickTeamAction => 'Loại đội';
 }
