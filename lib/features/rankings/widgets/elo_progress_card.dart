@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +36,7 @@ class _EloProgressCardState extends State<EloProgressCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final categoryOptions = <String, String>{
       for (final rank in widget.rankings)
         if (rank.categoryId != null && rank.categoryName != null)
@@ -77,7 +79,7 @@ class _EloProgressCardState extends State<EloProgressCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.userName.isNotEmpty ? widget.userName : 'Người dùng',
+                      widget.userName.isNotEmpty ? widget.userName : l10n.ranking_userFallback,
                       style: TextStyle(
                         color: context.colors.textPrimary,
                         fontSize: 18,
@@ -109,14 +111,14 @@ class _EloProgressCardState extends State<EloProgressCard> {
                     Icons.chevron_right_rounded,
                     color: context.colors.textMuted,
                   ),
-                  tooltip: 'Trang cá nhân',
+                  tooltip: l10n.ranking_profileTooltip,
                 ),
             ],
           ),
           if (categoryOptions.length > 1) ...[
             const SizedBox(height: 10),
             Text(
-              'Môn xếp hạng',
+              l10n.ranking_categoryLabel,
               style: TextStyle(
                 color: context.colors.textMuted,
                 fontSize: 11,
@@ -164,7 +166,7 @@ class _EloProgressCardState extends State<EloProgressCard> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Đội bóng cao nhất: ${widget.footballTeam!.name}',
+                      l10n.ranking_topFootballTeam(widget.footballTeam!.name),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -175,7 +177,7 @@ class _EloProgressCardState extends State<EloProgressCard> {
                     ),
                   ),
                   Text(
-                    '${widget.footballTeam!.eloPoints} ELO',
+                    l10n.ranking_eloValue(widget.footballTeam!.eloPoints),
                     style: const TextStyle(
                       color: AppTheme.primary,
                       fontSize: 12,
@@ -206,7 +208,7 @@ class _EloProgressCardState extends State<EloProgressCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'TIẾN TRÌNH ELO NỔI BẬT',
+                            l10n.ranking_progressTitle,
                             style: TextStyle(
                               color: context.colors.textMuted,
                               fontSize: 10,
@@ -217,7 +219,7 @@ class _EloProgressCardState extends State<EloProgressCard> {
                           const SizedBox(height: 2),
                           Text(
                             activeRank == null
-                                ? 'Môn thi đấu • Tổng quan'
+                                ? l10n.ranking_overviewLabel
                                 : EloHelpers.getRankDisplayName(activeRank),
                             style: TextStyle(
                               color: context.colors.textPrimary,
@@ -307,7 +309,7 @@ class _EloProgressCardState extends State<EloProgressCard> {
                       ),
                     ),
                     Text(
-                      nextThreshold == null ? 'MAX' : '${nextThreshold.minElo}',
+                      nextThreshold == null ? l10n.ranking_maxElo : '${nextThreshold.minElo}',
                       style: TextStyle(
                         color: context.colors.textMuted,
                         fontSize: 10,
@@ -323,13 +325,13 @@ class _EloProgressCardState extends State<EloProgressCard> {
           const SizedBox(height: 14),
           Row(
             children: [
-              _StatChip(label: 'Trận', value: '$matchesPlayed'),
+              _StatChip(label: l10n.ranking_matchesLabel, value: '$matchesPlayed'),
               const SizedBox(width: 8),
-              _StatChip(label: 'Thắng', value: '$matchesWon'),
+              _StatChip(label: l10n.ranking_winsLabel, value: '$matchesWon'),
               const SizedBox(width: 8),
-              _StatChip(label: 'Tỉ lệ', value: '$winRate%'),
+              _StatChip(label: l10n.ranking_winRateLabel, value: '$winRate%'),
               const SizedBox(width: 8),
-              _StatChip(label: 'Peak', value: '$peakElo'),
+              _StatChip(label: l10n.ranking_peakLabel, value: '$peakElo'),
             ],
           ),
         ],
