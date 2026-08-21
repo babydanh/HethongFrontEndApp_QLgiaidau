@@ -460,6 +460,119 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievementsAllTitle => 'All competition achievements';
 
   @override
+  String get communityPostClubOwnerBadge => 'Club owner';
+
+  @override
+  String get communityPostClubAdminBadge => 'Admin';
+
+  @override
+  String get communityPostDeleteTooltip => 'Delete post';
+
+  @override
+  String get communityPostOptionsTooltip => 'Post options';
+
+  @override
+  String get communityPostPendingApproval =>
+      'This post is waiting for admin approval.';
+
+  @override
+  String communityPostCommentCount(Object count) {
+    return '$count comments';
+  }
+
+  @override
+  String get communityPostLike => 'Like';
+
+  @override
+  String get communityPostComment => 'Comment';
+
+  @override
+  String get communityPostReport => 'Report post';
+
+  @override
+  String get communityPostPostedNow => 'Just now';
+
+  @override
+  String communityPostMinutesAgo(Object count) {
+    return '$count minutes ago';
+  }
+
+  @override
+  String communityPostHoursAgo(Object count) {
+    return '$count hours ago';
+  }
+
+  @override
+  String communityPostDaysAgo(Object count) {
+    return '$count days ago';
+  }
+
+  @override
+  String get communityPostClose => 'Close';
+
+  @override
+  String communityComposerImageLimit(Object max) {
+    return 'Each post can include up to $max images.';
+  }
+
+  @override
+  String communityComposerUploadFailedCount(Object count) {
+    return '$count images failed to upload.';
+  }
+
+  @override
+  String get communityComposerPollInvalid =>
+      'A poll needs a question and at least 2 options.';
+
+  @override
+  String get communityComposerContentRequired =>
+      'A post needs text, an image, or a poll.';
+
+  @override
+  String get communityComposerSubmitFailed =>
+      'Could not publish the post. Please try again.';
+
+  @override
+  String get communityComposerPendingStatus => 'Post pending approval';
+
+  @override
+  String get communityComposerPostedStatus => 'Posted to the feed';
+
+  @override
+  String get communityComposerAddToPost => 'Add to your post';
+
+  @override
+  String get communityComposerPhoto => 'Photo';
+
+  @override
+  String get communityComposerPoll => 'Poll';
+
+  @override
+  String get communityComposerMention => 'Mention';
+
+  @override
+  String get communityComposerYou => 'You';
+
+  @override
+  String get communityComposerHint =>
+      'What would you like to share with the members? (Type @ to mention someone)';
+
+  @override
+  String get communityComposerTitle => 'Create post';
+
+  @override
+  String get communityComposerSubmit => 'Post';
+
+  @override
+  String get communityComposerNoMembers => 'No members found';
+
+  @override
+  String get communityComposerAssignFunTag => 'Assign fun tag';
+
+  @override
+  String get communityComposerTriggerHint => 'What are you thinking?';
+
+  @override
   String get userProfileClubOwnerRole => 'Club owner';
 
   @override
@@ -9119,4 +9232,129 @@ class AppLocalizationsEn extends AppLocalizations {
   String registerParticipantCount(Object count) {
     return '$count profiles';
   }
+
+  @override
+  String get phoneVerificationPhoneRequired =>
+      'Please update your phone number before verification';
+
+  @override
+  String phoneVerificationSendFailed(Object error) {
+    return 'Unable to send OTP: $error';
+  }
+
+  @override
+  String get phoneVerificationOtpRequired => 'Please enter the OTP';
+
+  @override
+  String get phoneVerificationSuccess => 'Phone number verified successfully';
+
+  @override
+  String phoneVerificationFailed(Object error) {
+    return 'Verification failed: $error';
+  }
+
+  @override
+  String get phoneVerificationTitle => 'Verify phone number';
+
+  @override
+  String phoneVerificationCodeSent(Object phone) {
+    return 'A 6-digit OTP was sent to $phone. Enter it to complete verification.';
+  }
+
+  @override
+  String get phoneVerificationOtpLabel => 'OTP';
+
+  @override
+  String get phoneVerificationOtpHint => 'Enter the 6-digit code';
+
+  @override
+  String get phoneVerificationCancel => 'Cancel';
+
+  @override
+  String get phoneVerificationConfirm => 'Verify';
+
+  @override
+  String get emailVerificationEmailRequired =>
+      'No email address was found for verification';
+
+  @override
+  String emailVerificationSendFailed(Object error) {
+    return 'Unable to send verification code: $error';
+  }
+
+  @override
+  String get emailVerificationTokenRequired =>
+      'Please enter the verification code';
+
+  @override
+  String get emailVerificationSuccess => 'Email verified successfully';
+
+  @override
+  String emailVerificationFailed(Object error) {
+    return 'Verification failed: $error';
+  }
+
+  @override
+  String get emailVerificationTitle => 'Verify email';
+
+  @override
+  String emailVerificationCodeSent(Object email) {
+    return 'A verification code was sent to $email. Enter it to complete verification.';
+  }
+
+  @override
+  String get emailVerificationTokenLabel => 'Verification code';
+
+  @override
+  String get emailVerificationTokenHint => 'Enter the code from your email';
+
+  @override
+  String get emailVerificationCancel => 'Cancel';
+
+  @override
+  String get emailVerificationConfirm => 'Verify';
+
+  @override
+  String get seriesTitle => 'Tournament series';
+
+  @override
+  String seriesError(Object error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get seriesEmptyTitle => 'No tournament series yet';
+
+  @override
+  String get seriesEmptyDescription => 'Tournament series will appear here';
+
+  @override
+  String get seriesStatusOngoing => 'Ongoing';
+
+  @override
+  String get seriesStatusCompleted => 'Completed';
+
+  @override
+  String get seriesStatusUpcoming => 'Upcoming';
+
+  @override
+  String seriesSummary(Object legs, Object participants) {
+    return '$legs legs • $participants players';
+  }
+
+  @override
+  String get tournamentInfoNameLabel => 'Tournament name *';
+
+  @override
+  String get tournamentInfoNameHint => 'E.g. Summer Badminton Tournament 2025';
+
+  @override
+  String get tournamentInfoNameRequired => 'Please enter the tournament name';
+
+  @override
+  String get tournamentInfoDescriptionLabel => 'Description (optional)';
+
+  @override
+  String get tournamentInfoDescriptionHint =>
+      'Additional information about the tournament, venue, schedule...';
 }

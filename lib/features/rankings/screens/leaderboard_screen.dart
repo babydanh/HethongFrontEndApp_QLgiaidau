@@ -165,6 +165,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                   ),
                 ],
               ),
+            );
             return content;
           },
           loading: () => const Center(child: CircularProgressIndicator()),

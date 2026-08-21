@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
@@ -136,7 +137,7 @@ class AboutTab extends StatelessWidget {
                 _sectionDivider(colors),
                 const SizedBox(height: 16),
 
-                // ── Description Section (Native Editor.js & HTML RichText Render) ──
+                // ── Description Section (EditorJS-compatible rich HTML) ──
                 if (tournament.description.isNotEmpty) ...[
                   _buildSectionHeader(colors, l10n.sectionAboutTournament),
                   const SizedBox(height: 12),
@@ -206,14 +207,7 @@ class AboutTab extends StatelessWidget {
                     accentColor: const Color(0xFFF59E0B),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    tournament.prizeDescription!,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colors.textSecondary,
-                      height: 1.5,
-                    ),
-                  ),
+                  _buildRichDescription(context, tournament.prizeDescription!),
                   const SizedBox(height: 16),
                   _sectionDivider(colors),
                   const SizedBox(height: 16),
@@ -685,7 +679,154 @@ class AboutTab extends StatelessWidget {
   }
 
   // ─── Native Editor.js & RichText Renderer ───
+  // The web persists EditorJS content as HTML. Keep the same HTML contract in Flutter,
+  // while converting older raw EditorJS JSON records before rendering.
   Widget _buildRichDescription(BuildContext context, String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return const SizedBox.shrink();
+
+    var html = trimmed;
+    if (trimmed.startsWith('{') && trimmed.contains('"blocks"')) {
+      try {
+        final decoded = jsonDecode(trimmed);
+        if (decoded is Map<String, dynamic>) {
+          html = _editorJsToHtml(decoded);
+        }
+      } catch (_) {
+        // Keep the original value as a safe fallback for malformed legacy data.
+      }
+    }
+    return _buildWebHtmlContent(context, html);
+  }
+
+  String _editorJsToHtml(Map<String, dynamic> document) {
+    final blocks = document['blocks'];
+    if (blocks is! List) return '';
+
+    return blocks
+        .map<String>((rawBlock) {
+          if (rawBlock is! Map) return '';
+          final type = rawBlock['type']?.toString();
+          final data = rawBlock['data'];
+          if (data is! Map) return '';
+
+          switch (type) {
+            case 'header':
+              final level = int.tryParse('${data['level']}') ?? 2;
+              final safeLevel = level.clamp(1, 4);
+              return '<h$safeLevel>${data['text'] ?? ''}</h$safeLevel>';
+            case 'paragraph':
+              return '<p>${data['text'] ?? ''}</p>';
+            case 'list':
+              final items = data['items'];
+              if (items is! List) return '';
+              final tag = data['style']?.toString() == 'ordered' ? 'ol' : 'ul';
+              final listItems = items.map((item) {
+                if (item is Map) return '<li>${item['content'] ?? ''}</li>';
+                return '<li>$item</li>';
+              }).join();
+              return '<$tag>$listItems</$tag>';
+            case 'image':
+              final file = data['file'];
+              final url = file is Map
+                  ? file['url']?.toString() ?? ''
+                  : data['url']?.toString() ?? '';
+              if (url.isEmpty) return '';
+              final caption = data['caption']?.toString() ?? '';
+              final safeUrl = _escapeHtmlAttribute(url);
+              return '<figure><img src="$safeUrl" alt="${_escapeHtmlAttribute(caption)}" />'
+                  '${caption.isEmpty ? '' : '<figcaption>$caption</figcaption>'}</figure>';
+            default:
+              return '';
+          }
+        })
+        .where((block) => block.isNotEmpty)
+        .join('\n');
+  }
+
+  String _escapeHtmlAttribute(String value) {
+    return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('"', '&quot;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+  }
+
+  Widget _buildWebHtmlContent(BuildContext context, String html) {
+    final colors = context.colors;
+    return HtmlWidget(
+      html,
+      textStyle: TextStyle(
+        color: colors.textSecondary,
+        fontSize: 13,
+        height: 1.6,
+      ),
+      customStylesBuilder: (element) {
+        switch (element.localName) {
+          case 'h1':
+            return {
+              'font-size': '19px',
+              'font-weight': '700',
+              'margin-top': '12px',
+              'margin-bottom': '6px',
+            };
+          case 'h2':
+            return {
+              'font-size': '17px',
+              'font-weight': '700',
+              'margin-top': '12px',
+              'margin-bottom': '6px',
+            };
+          case 'h3':
+            return {
+              'font-size': '15.5px',
+              'font-weight': '700',
+              'margin-top': '12px',
+              'margin-bottom': '6px',
+            };
+          case 'h4':
+            return {
+              'font-size': '14px',
+              'font-weight': '700',
+              'margin-top': '12px',
+              'margin-bottom': '6px',
+            };
+          case 'p':
+            return {'margin': '4px 0', 'line-height': '1.6'};
+          case 'ul':
+          case 'ol':
+            return {
+              'padding-left': '20px',
+              'margin-top': '4px',
+              'margin-bottom': '8px',
+            };
+          case 'li':
+            return {'margin-bottom': '4px', 'line-height': '1.6'};
+          case 'figure':
+            return {'margin': '12px 0'};
+          case 'figcaption':
+            return {
+              'font-size': '12px',
+              'color': '#64748b',
+              'text-align': 'center',
+              'margin-top': '4px',
+            };
+          case 'img':
+            return {'border-radius': '8px', 'margin-top': '8px'};
+        }
+        return null;
+      },
+      customWidgetBuilder: (element) {
+        if (element.localName != 'img') return null;
+        final src = element.attributes['src'];
+        if (src == null || src.isEmpty) return null;
+        return _buildZoomableImage(context, src);
+      },
+    );
+  }
+
+  // ignore: unused_element
+  Widget _buildLegacyRichDescription(BuildContext context, String raw) {
     final colors = context.colors;
     final trimmed = raw.trim();
 

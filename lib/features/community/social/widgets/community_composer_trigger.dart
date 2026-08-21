@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Ô kích hoạt đăng bài chuẩn phong cách Facebook:
@@ -25,10 +26,12 @@ class CommunityComposerTrigger extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cleanAvatarUrl = authorAvatarUrl?.trim();
     final hasAvatar = cleanAvatarUrl != null && cleanAvatarUrl.isNotEmpty;
-    final initial = (authorName.trim().isNotEmpty ? authorName.trim()[0] : 'U').toUpperCase();
+    final initial = (authorName.trim().isNotEmpty ? authorName.trim()[0] : 'U')
+        .toUpperCase();
 
     return Container(
       color: colors.bgCard,
@@ -58,7 +61,8 @@ class CommunityComposerTrigger extends StatelessWidget {
                             width: 40,
                             height: 40,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => _buildFallbackAvatar(initial),
+                            errorBuilder: (context, error, stackTrace) =>
+                                _buildFallbackAvatar(initial),
                           )
                         : _buildFallbackAvatar(initial),
                   ),
@@ -66,16 +70,23 @@ class CommunityComposerTrigger extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF3A3B3C) : const Color(0xFFF0F2F5),
+                      color: isDark
+                          ? const Color(0xFF3A3B3C)
+                          : const Color(0xFFF0F2F5),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Text(
-                      'Bạn đang nghĩ gì?',
+                      l10n.communityComposerTriggerHint,
                       style: TextStyle(
                         fontSize: 14,
-                        color: isDark ? Colors.grey[300] : const Color(0xFF65676B),
+                        color: isDark
+                            ? Colors.grey[300]
+                            : const Color(0xFF65676B),
                       ),
                     ),
                   ),
@@ -91,21 +102,19 @@ class CommunityComposerTrigger extends StatelessWidget {
               Expanded(
                 child: _QuickAction(
                   icon: Icons.photo_library_rounded,
-                  label: 'Ảnh',
+                  label: l10n.communityComposerPhoto,
                   color: const Color(0xFF45BD62), // Xanh lá phong cách Facebook
                   onTap: onOpenWithImage,
                 ),
               ),
-              Container(
-                height: 18,
-                width: 1,
-                color: colors.borderLight,
-              ),
+              Container(height: 18, width: 1, color: colors.borderLight),
               Expanded(
                 child: _QuickAction(
                   icon: Icons.poll_rounded,
-                  label: 'Bình chọn',
-                  color: const Color(0xFFF7B125), // Vàng cam phong cách Facebook
+                  label: l10n.communityComposerPoll,
+                  color: const Color(
+                    0xFFF7B125,
+                  ), // Vàng cam phong cách Facebook
                   onTap: onOpenWithPoll,
                 ),
               ),
@@ -160,7 +169,10 @@ class _QuickAction extends StatelessWidget {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],

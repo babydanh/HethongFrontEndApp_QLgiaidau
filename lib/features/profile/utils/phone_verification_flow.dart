@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -11,11 +12,12 @@ Future<void> startPhoneVerificationFlow(
   WidgetRef ref,
   String phoneNumber,
 ) async {
+  final l10n = AppLocalizations.of(context)!;
   final trimmedPhone = phoneNumber.trim();
   if (trimmedPhone.isEmpty) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Vui lòng cập nhật số điện thoại trước khi xác minh')),
+      SnackBar(content: Text(l10n.phoneVerificationPhoneRequired)),
     );
     return;
   }
@@ -28,7 +30,7 @@ Future<void> startPhoneVerificationFlow(
   } catch (e) {
     if (!context.mounted) return;
     messenger.showSnackBar(
-      SnackBar(content: Text('Không thể gửi mã OTP: $e')),
+      SnackBar(content: Text(l10n.phoneVerificationSendFailed(e.toString()))),
     );
     return;
   }
@@ -48,7 +50,7 @@ Future<void> startPhoneVerificationFlow(
             final code = otpCtrl.text.trim();
             if (code.isEmpty) {
               ScaffoldMessenger.of(ctx).showSnackBar(
-                const SnackBar(content: Text('Vui lòng nhập mã OTP')),
+                SnackBar(content: Text(l10n.phoneVerificationOtpRequired)),
               );
               return;
             }
@@ -62,13 +64,13 @@ Future<void> startPhoneVerificationFlow(
               ref.invalidate(userProfileProvider);
               if (context.mounted) {
                 messenger.showSnackBar(
-                  const SnackBar(content: Text('Đã xác minh số điện thoại thành công')),
+                  SnackBar(content: Text(l10n.phoneVerificationSuccess)),
                 );
               }
             } catch (e) {
               if (!ctx.mounted) return;
               ScaffoldMessenger.of(ctx).showSnackBar(
-                SnackBar(content: Text('Xác minh thất bại: $e')),
+                SnackBar(content: Text(l10n.phoneVerificationFailed(e.toString()))),
               );
             } finally {
               if (ctx.mounted) setState(() => isSubmitting = false);
@@ -77,13 +79,13 @@ Future<void> startPhoneVerificationFlow(
 
           return AlertDialog(
             backgroundColor: context.colors.bgCard,
-            title: const Text('Xác minh số điện thoại'),
+            title: Text(l10n.phoneVerificationTitle),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Mã OTP 6 chữ số đã được gửi tới $trimmedPhone. Nhập mã để hoàn tất xác minh.',
+                  l10n.phoneVerificationCodeSent(trimmedPhone),
                 ),
                 const SizedBox(height: 16),
                 TextField(
@@ -91,9 +93,9 @@ Future<void> startPhoneVerificationFlow(
                   enabled: !isSubmitting,
                   keyboardType: TextInputType.number,
                   maxLength: 6,
-                  decoration: const InputDecoration(
-                    labelText: 'Mã OTP',
-                    hintText: 'Nhập mã 6 chữ số',
+                  decoration: InputDecoration(
+                    labelText: l10n.phoneVerificationOtpLabel,
+                    hintText: l10n.phoneVerificationOtpHint,
                     counterText: '',
                   ),
                 ),
@@ -102,7 +104,7 @@ Future<void> startPhoneVerificationFlow(
             actions: [
               TextButton(
                 onPressed: isSubmitting ? null : () => Navigator.of(ctx).pop(),
-                child: const Text('Hủy'),
+                child: Text(l10n.phoneVerificationCancel),
               ),
               FilledButton(
                 onPressed: isSubmitting ? null : submitOtp,
@@ -112,7 +114,7 @@ Future<void> startPhoneVerificationFlow(
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Xác minh'),
+                    : Text(l10n.phoneVerificationConfirm),
               ),
             ],
           );

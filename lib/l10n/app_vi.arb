@@ -147,6 +147,84 @@
   "achievementsRecentEmpty": "Chưa có thành tích trong 30 ngày gần đây",
   "achievementsSeeAll": "Xem tất cả",
   "achievementsAllTitle": "Tất cả thành tích thi đấu",
+  "communityPostClubOwnerBadge": "Chủ CLB",
+  "communityPostClubAdminBadge": "BQT",
+  "communityPostDeleteTooltip": "Xóa bài viết",
+  "communityPostOptionsTooltip": "Tuỳ chọn bài đăng",
+  "communityPostPendingApproval": "Bài viết đang chờ ban quản trị duyệt.",
+  "communityPostCommentCount": "{count} bình luận",
+  "communityPostLike": "Yêu thích",
+  "communityPostComment": "Bình luận",
+  "communityPostReport": "Báo cáo bài viết",
+  "communityPostPostedNow": "Vừa đăng",
+  "communityPostMinutesAgo": "{count} phút trước",
+  "communityPostHoursAgo": "{count} giờ trước",
+  "communityPostDaysAgo": "{count} ngày trước",
+  "communityPostClose": "Đóng",
+  "communityComposerImageLimit": "Mỗi bài đăng tối đa {max} ảnh.",
+  "communityComposerUploadFailedCount": "{count} ảnh không tải lên được.",
+  "communityComposerPollInvalid": "Bình chọn cần câu hỏi và ít nhất 2 lựa chọn.",
+  "communityComposerContentRequired": "Bài viết cần có nội dung, ảnh hoặc bình chọn.",
+  "communityComposerSubmitFailed": "Đăng bài thất bại. Vui lòng thử lại.",
+  "communityComposerPendingStatus": "Bài viết đang chờ duyệt",
+  "communityComposerPostedStatus": "Đã đăng lên bảng tin",
+  "communityComposerAddToPost": "Thêm vào bài viết",
+  "communityComposerPhoto": "Ảnh",
+  "communityComposerPoll": "Bình chọn",
+  "communityComposerMention": "Gắn thẻ",
+  "communityComposerYou": "Bạn",
+  "communityComposerHint": "Bạn muốn chia sẻ điều gì với các thành viên? (Gõ @ để nhắc tên)",
+  "communityComposerTitle": "Tạo bài viết",
+  "communityComposerSubmit": "Đăng",
+  "communityComposerNoMembers": "Không tìm thấy thành viên",
+  "communityComposerAssignFunTag": "Gán nhãn vui",
+  "communityComposerTriggerHint": "Bạn đang nghĩ gì?",
+  "communityTournamentPreviewDefaultName": "Giải đấu CLB",
+  "communityTournamentPreviewRound": "Vòng {round}",
+  "communityTournamentPreviewMatch": "Trận {number}",
+  "communityTournamentPreviewWaiting": "Chờ xếp",
+  "communityTournamentPreviewViewBracket": "Xem sơ đồ nhánh đấu",
+  "communityTournamentPreviewViewDetails": "Xem thông tin giải đấu",
+  "@communityTournamentPreviewRound": {
+    "placeholders": {
+      "round": {}
+    }
+  },
+  "@communityTournamentPreviewMatch": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "@communityComposerImageLimit": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "@communityComposerUploadFailedCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@communityPostCommentCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@communityPostMinutesAgo": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@communityPostHoursAgo": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@communityPostDaysAgo": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "userProfileClubOwnerRole": "Chủ nhiệm CLB",
   "userProfileClubAdminRole": "Ban quản trị",
   "userProfileClubMemberRole": "Thành viên CLB",
@@ -3530,6 +3608,82 @@
       "count": {}
     }
   },
+  "phoneVerificationPhoneRequired": "Vui lòng cập nhật số điện thoại trước khi xác minh",
+  "phoneVerificationSendFailed": "Không thể gửi mã OTP: {error}",
+  "@phoneVerificationSendFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "phoneVerificationOtpRequired": "Vui lòng nhập mã OTP",
+  "phoneVerificationSuccess": "Đã xác minh số điện thoại thành công",
+  "phoneVerificationFailed": "Xác minh thất bại: {error}",
+  "@phoneVerificationFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "phoneVerificationTitle": "Xác minh số điện thoại",
+  "phoneVerificationCodeSent": "Mã OTP 6 chữ số đã được gửi tới {phone}. Nhập mã để hoàn tất xác minh.",
+  "@phoneVerificationCodeSent": {
+    "placeholders": {
+      "phone": {}
+    }
+  },
+  "phoneVerificationOtpLabel": "Mã OTP",
+  "phoneVerificationOtpHint": "Nhập mã 6 chữ số",
+  "phoneVerificationCancel": "Hủy",
+  "phoneVerificationConfirm": "Xác minh",
+  "emailVerificationEmailRequired": "Không tìm thấy email để xác minh",
+  "emailVerificationSendFailed": "Không thể gửi mã xác minh: {error}",
+  "@emailVerificationSendFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "emailVerificationTokenRequired": "Vui lòng nhập mã xác minh",
+  "emailVerificationSuccess": "Đã xác minh email thành công",
+  "emailVerificationFailed": "Xác minh thất bại: {error}",
+  "@emailVerificationFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "emailVerificationTitle": "Xác minh email",
+  "emailVerificationCodeSent": "Mã xác minh đã được gửi đến {email}. Nhập mã để hoàn tất.",
+  "@emailVerificationCodeSent": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "emailVerificationTokenLabel": "Mã xác minh",
+  "emailVerificationTokenHint": "Nhập mã từ email",
+  "emailVerificationCancel": "Hủy",
+  "emailVerificationConfirm": "Xác minh",
+  "seriesTitle": "Chuỗi giải đấu",
+  "seriesError": "Lỗi: {error}",
+  "@seriesError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "seriesEmptyTitle": "Chưa có chuỗi giải đấu",
+  "seriesEmptyDescription": "Các chuỗi giải đấu sẽ xuất hiện tại đây",
+  "seriesStatusOngoing": "Đang diễn ra",
+  "seriesStatusCompleted": "Đã kết thúc",
+  "seriesStatusUpcoming": "Sắp diễn ra",
+  "seriesSummary": "{legs} chặng • {participants} VĐV",
+  "@seriesSummary": {
+    "placeholders": {
+      "legs": {},
+      "participants": {}
+    }
+  },
+  "tournamentInfoNameLabel": "Tên giải đấu *",
+  "tournamentInfoNameHint": "VD: Giải Cầu lông Mùa hè 2025",
+  "tournamentInfoNameRequired": "Vui lòng nhập tên giải đấu",
+  "tournamentInfoDescriptionLabel": "Mô tả (tùy chọn)",
+  "tournamentInfoDescriptionHint": "Thông tin thêm về giải đấu, địa điểm, thời gian...",
   "@register_rosterInstructions": {
     "placeholders": {
       "teamSize": {},

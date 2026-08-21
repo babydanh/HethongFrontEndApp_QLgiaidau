@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_mention_helpers.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ class ComposerSheetHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         const SizedBox(height: 10),
@@ -41,9 +43,9 @@ class ComposerSheetHeader extends StatelessWidget {
                 icon: const Icon(Icons.close_rounded, size: 22),
                 onPressed: onClose,
               ),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Tạo bài viết',
+                  l10n.communityComposerTitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
@@ -71,8 +73,8 @@ class ComposerSheetHeader extends StatelessWidget {
                           color: Colors.white,
                         ),
                       )
-                    : const Text(
-                        'Đăng',
+                    : Text(
+                        l10n.communityComposerSubmit,
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 13,
@@ -186,6 +188,7 @@ class ComposerMentionSuggestions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     if (isLoading) {
       return const SizedBox(
         height: 48,
@@ -197,7 +200,7 @@ class ComposerMentionSuggestions extends StatelessWidget {
         height: 44,
         child: Center(
           child: Text(
-            'Không tìm thấy thành viên',
+            l10n.communityComposerNoMembers,
             style: TextStyle(color: colors.textMuted, fontSize: 12),
           ),
         ),
@@ -243,6 +246,7 @@ class _SuggestionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return InkWell(
       onTap: () => onSelect(member),
       onLongPress: canManageTags && onTag != null ? () => onTag!(member) : null,
@@ -276,7 +280,7 @@ class _SuggestionRow extends StatelessWidget {
               ),
             if (canManageTags && onTag != null)
               IconButton(
-                tooltip: 'Gán nhãn vui',
+                tooltip: l10n.communityComposerAssignFunTag,
                 icon: const Icon(Icons.sell_outlined, size: 18),
                 onPressed: () => onTag!(member),
               ),

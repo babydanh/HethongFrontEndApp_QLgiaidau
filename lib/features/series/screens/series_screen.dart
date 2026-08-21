@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
@@ -56,7 +57,7 @@ class SeriesScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: context.colors.bgDark,
       appBar: AppBar(
-        title: const Text('Chuỗi giải đấu'),
+        title: Text(AppLocalizations.of(context)!.seriesTitle),
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
@@ -83,28 +84,37 @@ class SeriesScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Lỗi: $e')),
+        error: (e, _) => Center(child: Text(AppLocalizations.of(context)!.seriesError(e.toString()))),
       ),
     );
   }
 
   Widget _buildEmpty(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       Container(width: 80, height: 80, decoration: BoxDecoration(color: context.colors.bgSurface, borderRadius: BorderRadius.circular(20)),
         child: Icon(Icons.emoji_events_outlined, size: 40, color: context.colors.textMuted.withValues(alpha: 0.4))),
       const SizedBox(height: 16),
-      Text('Chưa có chuỗi giải đấu', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
+      Text(l10n.seriesEmptyTitle, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
       const SizedBox(height: 6),
-      Text('Các chuỗi giải đấu sẽ xuất hiện tại đây', style: TextStyle(fontSize: 13, color: context.colors.textMuted)),
+      Text(l10n.seriesEmptyDescription, style: TextStyle(fontSize: 13, color: context.colors.textMuted)),
     ]));
   }
 
   Widget _buildCard(BuildContext context, SeriesItem series) {
+    final l10n = AppLocalizations.of(context)!;
     final isActive = series.status == 'ONGOING' || series.status == 'ACTIVE';
     final statusColor = isActive ? context.colors.error : (series.status == 'COMPLETED' ? context.colors.success : context.colors.info);
-    final statusLabel = isActive ? 'Đang diễn ra' : (series.status == 'COMPLETED' ? 'Đã kết thúc' : 'Sắp diễn ra');
-    final dateStr = series.startDate != null ? DateFormat('dd/MM/yyyy').format(series.startDate!) : '';
-    final fmt = NumberFormat('#,###', 'vi_VN');
+    final statusLabel = isActive
+        ? l10n.seriesStatusOngoing
+        : (series.status == 'COMPLETED'
+            ? l10n.seriesStatusCompleted
+            : l10n.seriesStatusUpcoming);
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final dateStr = series.startDate != null
+        ? DateFormat('dd/MM/yyyy', locale).format(series.startDate!)
+        : '';
+    final fmt = NumberFormat('#,###', locale);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -139,7 +149,7 @@ class SeriesScreen extends ConsumerWidget {
               if (dateStr.isNotEmpty) ...[const SizedBox(width: 8), Text(dateStr, style: TextStyle(fontSize: 11, color: context.colors.textMuted))],
             ]),
             const SizedBox(height: 4),
-            Text('${series.legCount} chặng • ${fmt.format(series.participantCount)} VĐV', style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
+            Text(l10n.seriesSummary(series.legCount, fmt.format(series.participantCount)), style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
           ])),
           Icon(Icons.chevron_right_rounded, color: context.colors.textMuted),
         ]),

@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_composer_parts.dart';
@@ -47,22 +48,21 @@ class CommunityPostComposerSheet extends ConsumerStatefulWidget {
     ValueChanged<CommunityMemberModel>? onAssignMemberTags,
     bool startWithPoll = false,
     bool startWithImage = false,
-  }) =>
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (_) => CommunityPostComposerSheet(
-          communityId: communityId,
-          authorName: authorName,
-          authorAvatarUrl: authorAvatarUrl,
-          canMention: canMention,
-          canManageTags: canManageTags,
-          onAssignMemberTags: onAssignMemberTags,
-          startWithPoll: startWithPoll,
-          startWithImage: startWithImage,
-        ),
-      );
+  }) => showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => CommunityPostComposerSheet(
+      communityId: communityId,
+      authorName: authorName,
+      authorAvatarUrl: authorAvatarUrl,
+      canMention: canMention,
+      canManageTags: canManageTags,
+      onAssignMemberTags: onAssignMemberTags,
+      startWithPoll: startWithPoll,
+      startWithImage: startWithImage,
+    ),
+  );
 
   @override
   ConsumerState<CommunityPostComposerSheet> createState() =>
@@ -121,18 +121,20 @@ class _CommunityPostComposerSheetState
   }
 
   void _warn(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   // ── Ảnh (tối đa 10, upload ngay) ───────────────────────────────────────
   Future<void> _pickImages() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_isUploading || _imageUrls.length >= _maxImages) return;
     final picked = await ImagePicker().pickMultiImage(imageQuality: 85);
     if (picked.isEmpty || !mounted) return;
     final room = _maxImages - _imageUrls.length;
     if (picked.length > room) {
-      _warn('Mỗi bài đăng tối đa $_maxImages ảnh.');
+      _warn(l10n.communityComposerImageLimit(_maxImages));
     }
     setState(() => _isUploading = true);
     var failed = 0;
@@ -148,7 +150,9 @@ class _CommunityPostComposerSheetState
       }
     }
     if (mounted) setState(() => _isUploading = false);
-    if (failed > 0 && mounted) _warn('$failed ảnh không tải lên được.');
+    if (failed > 0 && mounted) {
+      _warn(l10n.communityComposerUploadFailedCount(failed));
+    }
   }
 
   // ── Bình chọn ──────────────────────────────────────────────────────────
@@ -167,23 +171,24 @@ class _CommunityPostComposerSheetState
       allowAddOptions: _allowAddOptions,
       expiresAt: _pollExpiryDays > 0
           ? DateTime.now()
-              .add(Duration(days: _pollExpiryDays))
-              .toIso8601String()
+                .add(Duration(days: _pollExpiryDays))
+                .toIso8601String()
           : null,
     );
   }
 
   // ── Đăng ───────────────────────────────────────────────────────────────
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_isSubmitting || _isUploading) return;
     if (_pollOpen && _buildPollDraft() == null) {
-      _warn('Bình chọn cần câu hỏi và ít nhất 2 lựa chọn.');
+      _warn(l10n.communityComposerPollInvalid);
       return;
     }
     final body = _textCtrl.text.trim();
     final poll = _buildPollDraft();
     if (body.isEmpty && _imageUrls.isEmpty && poll == null) {
-      _warn('Bài viết cần có nội dung, ảnh hoặc bình chọn.');
+      _warn(l10n.communityComposerContentRequired);
       return;
     }
     final mentions =
@@ -201,17 +206,22 @@ class _CommunityPostComposerSheetState
     if (!mounted) return;
     if (!success) {
       setState(() => _isSubmitting = false);
-      _warn('Đăng bài thất bại. Vui lòng thử lại.');
+      _warn(l10n.communityComposerSubmitFailed);
       return;
     }
-    final status =
-        ref.read(communityFeedProvider(widget.communityId)).posts.first.status;
+    final status = ref
+        .read(communityFeedProvider(widget.communityId))
+        .posts
+        .first
+        .status;
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop();
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          status == 'PENDING' ? 'Bài viết đang chờ duyệt' : 'Đã đăng lên bảng tin',
+          status == 'PENDING'
+              ? l10n.communityComposerPendingStatus
+              : l10n.communityComposerPostedStatus,
         ),
       ),
     );
@@ -220,15 +230,20 @@ class _CommunityPostComposerSheetState
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final searchState = _mentionQuery == null
         ? null
-        : ref.watch(communityMemberSearchProvider((
-            communityId: widget.communityId,
-            query: _mentionQuery!,
-          )));
+        : ref.watch(
+            communityMemberSearchProvider((
+              communityId: widget.communityId,
+              query: _mentionQuery!,
+            )),
+          );
 
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: Container(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.88,
@@ -245,8 +260,8 @@ class _CommunityPostComposerSheetState
               onClose: () => Navigator.of(context).pop(),
               onSubmit: _submit,
             ),
-            Flexible(child: _buildBody(colors, searchState)),
-            _buildActionBar(colors),
+            Flexible(child: _buildBody(colors, searchState, l10n)),
+            _buildActionBar(colors, l10n),
           ],
         ),
       ),
@@ -256,6 +271,7 @@ class _CommunityPostComposerSheetState
   Widget _buildBody(
     AppColorsExtension colors,
     AsyncValue<List<CommunityMemberModel>>? searchState,
+    AppLocalizations l10n,
   ) {
     final engine = _mentionEngine;
     return SingleChildScrollView(
@@ -263,7 +279,10 @@ class _CommunityPostComposerSheetState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _AuthorRow(name: widget.authorName, avatarUrl: widget.authorAvatarUrl),
+          _AuthorRow(
+            name: widget.authorName,
+            avatarUrl: widget.authorAvatarUrl,
+          ),
           const SizedBox(height: 12),
           if (engine != null && engine.mentionedMembers.isNotEmpty)
             Padding(
@@ -272,19 +291,21 @@ class _CommunityPostComposerSheetState
                 spacing: 6,
                 runSpacing: 6,
                 children: engine.mentionedMembers
-                    .map((member) => InputChip(
-                          avatar: CircleAvatar(
-                            backgroundImage: member.mentionAvatarProvider,
-                            child: member.mentionAvatarProvider == null
-                                ? Text(member.mentionInitial)
-                                : null,
-                          ),
-                          label: Text('@${member.mentionDisplayName}'),
-                          onDeleted: () {
-                            engine.removeMention(member.userId);
-                            setState(() {});
-                          },
-                        ))
+                    .map(
+                      (member) => InputChip(
+                        avatar: CircleAvatar(
+                          backgroundImage: member.mentionAvatarProvider,
+                          child: member.mentionAvatarProvider == null
+                              ? Text(member.mentionInitial)
+                              : null,
+                        ),
+                        label: Text('@${member.mentionDisplayName}'),
+                        onDeleted: () {
+                          engine.removeMention(member.userId);
+                          setState(() {});
+                        },
+                      ),
+                    )
                     .toList(growable: false),
               ),
             ),
@@ -311,7 +332,7 @@ class _CommunityPostComposerSheetState
               }
             },
             decoration: InputDecoration(
-              hintText: 'Bạn muốn chia sẻ điều gì với các thành viên? (Gõ @ để nhắc tên)',
+              hintText: l10n.communityComposerHint,
               hintStyle: TextStyle(
                 fontSize: 15,
                 color: colors.textMuted,
@@ -350,8 +371,9 @@ class _CommunityPostComposerSheetState
               child: ComposerImagePreviewGrid(
                 urls: _imageUrls,
                 isUploading: _isUploading,
-                onRemove: (url) =>
-                    setState(() => _imageUrls = _imageUrls.where((u) => u != url).toList()),
+                onRemove: (url) => setState(
+                  () => _imageUrls = _imageUrls.where((u) => u != url).toList(),
+                ),
               ),
             ),
           if (_pollOpen)
@@ -363,9 +385,12 @@ class _CommunityPostComposerSheetState
                 allowMultipleAnswers: _allowMultiple,
                 allowAddOptions: _allowAddOptions,
                 expiryDays: _pollExpiryDays,
-                onAllowMultipleChanged: (v) => setState(() => _allowMultiple = v),
-                onAllowAddOptionsChanged: (v) => setState(() => _allowAddOptions = v),
-                onExpiryChanged: (days) => setState(() => _pollExpiryDays = days),
+                onAllowMultipleChanged: (v) =>
+                    setState(() => _allowMultiple = v),
+                onAllowAddOptionsChanged: (v) =>
+                    setState(() => _allowAddOptions = v),
+                onExpiryChanged: (days) =>
+                    setState(() => _pollExpiryDays = days),
                 onAddOption: () =>
                     setState(() => _pollOptions.add(TextEditingController())),
                 onRemoveOption: (index) {
@@ -383,7 +408,8 @@ class _CommunityPostComposerSheetState
     );
   }
 
-  Widget _buildActionBar(AppColorsExtension colors) => Container(
+  Widget _buildActionBar(AppColorsExtension colors, AppLocalizations l10n) =>
+      Container(
         margin: const EdgeInsets.fromLTRB(16, 4, 16, 12),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
@@ -394,7 +420,7 @@ class _CommunityPostComposerSheetState
         child: Row(
           children: [
             Text(
-              'Thêm vào bài viết',
+              l10n.communityComposerAddToPost,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -408,7 +434,7 @@ class _CommunityPostComposerSheetState
                 color: Color(0xFF45BD62),
                 size: 22,
               ),
-              tooltip: 'Ảnh',
+              tooltip: l10n.communityComposerPhoto,
               onPressed: _isUploading ? null : _pickImages,
             ),
             IconButton(
@@ -417,7 +443,7 @@ class _CommunityPostComposerSheetState
                 color: _pollOpen ? AppTheme.primary : const Color(0xFFF7B125),
                 size: 22,
               ),
-              tooltip: 'Bình chọn',
+              tooltip: l10n.communityComposerPoll,
               onPressed: () => setState(() => _pollOpen = !_pollOpen),
             ),
             if (widget.canMention)
@@ -427,7 +453,7 @@ class _CommunityPostComposerSheetState
                   color: Color(0xFF1877F2),
                   size: 22,
                 ),
-                tooltip: 'Gắn thẻ',
+                tooltip: l10n.communityComposerMention,
                 onPressed: _mentionEngine?.insertToken,
               ),
           ],
@@ -444,9 +470,11 @@ class _AuthorRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final cleanAvatarUrl = avatarUrl?.trim();
     final hasAvatar = cleanAvatarUrl != null && cleanAvatarUrl.isNotEmpty;
-    final initial = (name.trim().isNotEmpty ? name.trim()[0] : 'U').toUpperCase();
+    final initial = (name.trim().isNotEmpty ? name.trim()[0] : 'U')
+        .toUpperCase();
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -499,7 +527,7 @@ class _AuthorRow extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                name.isNotEmpty ? name : 'Bạn',
+                name.isNotEmpty ? name : l10n.communityComposerYou,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -526,7 +554,7 @@ class _AuthorRow extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Thành viên CLB',
+                      l10n.userProfileClubMemberRole,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,

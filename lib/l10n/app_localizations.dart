@@ -980,6 +980,198 @@ abstract class AppLocalizations {
   /// **'Tất cả thành tích thi đấu'**
   String get achievementsAllTitle;
 
+  /// No description provided for @communityPostClubOwnerBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chủ CLB'**
+  String get communityPostClubOwnerBadge;
+
+  /// No description provided for @communityPostClubAdminBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'BQT'**
+  String get communityPostClubAdminBadge;
+
+  /// No description provided for @communityPostDeleteTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa bài viết'**
+  String get communityPostDeleteTooltip;
+
+  /// No description provided for @communityPostOptionsTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tuỳ chọn bài đăng'**
+  String get communityPostOptionsTooltip;
+
+  /// No description provided for @communityPostPendingApproval.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài viết đang chờ ban quản trị duyệt.'**
+  String get communityPostPendingApproval;
+
+  /// No description provided for @communityPostCommentCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} bình luận'**
+  String communityPostCommentCount(Object count);
+
+  /// No description provided for @communityPostLike.
+  ///
+  /// In vi, this message translates to:
+  /// **'Yêu thích'**
+  String get communityPostLike;
+
+  /// No description provided for @communityPostComment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bình luận'**
+  String get communityPostComment;
+
+  /// No description provided for @communityPostReport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo bài viết'**
+  String get communityPostReport;
+
+  /// No description provided for @communityPostPostedNow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vừa đăng'**
+  String get communityPostPostedNow;
+
+  /// No description provided for @communityPostMinutesAgo.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} phút trước'**
+  String communityPostMinutesAgo(Object count);
+
+  /// No description provided for @communityPostHoursAgo.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} giờ trước'**
+  String communityPostHoursAgo(Object count);
+
+  /// No description provided for @communityPostDaysAgo.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} ngày trước'**
+  String communityPostDaysAgo(Object count);
+
+  /// No description provided for @communityPostClose.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng'**
+  String get communityPostClose;
+
+  /// No description provided for @communityComposerImageLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi bài đăng tối đa {max} ảnh.'**
+  String communityComposerImageLimit(Object max);
+
+  /// No description provided for @communityComposerUploadFailedCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} ảnh không tải lên được.'**
+  String communityComposerUploadFailedCount(Object count);
+
+  /// No description provided for @communityComposerPollInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bình chọn cần câu hỏi và ít nhất 2 lựa chọn.'**
+  String get communityComposerPollInvalid;
+
+  /// No description provided for @communityComposerContentRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài viết cần có nội dung, ảnh hoặc bình chọn.'**
+  String get communityComposerContentRequired;
+
+  /// No description provided for @communityComposerSubmitFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng bài thất bại. Vui lòng thử lại.'**
+  String get communityComposerSubmitFailed;
+
+  /// No description provided for @communityComposerPendingStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài viết đang chờ duyệt'**
+  String get communityComposerPendingStatus;
+
+  /// No description provided for @communityComposerPostedStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đăng lên bảng tin'**
+  String get communityComposerPostedStatus;
+
+  /// No description provided for @communityComposerAddToPost.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm vào bài viết'**
+  String get communityComposerAddToPost;
+
+  /// No description provided for @communityComposerPhoto.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh'**
+  String get communityComposerPhoto;
+
+  /// No description provided for @communityComposerPoll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bình chọn'**
+  String get communityComposerPoll;
+
+  /// No description provided for @communityComposerMention.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gắn thẻ'**
+  String get communityComposerMention;
+
+  /// No description provided for @communityComposerYou.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn'**
+  String get communityComposerYou;
+
+  /// No description provided for @communityComposerHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn muốn chia sẻ điều gì với các thành viên? (Gõ @ để nhắc tên)'**
+  String get communityComposerHint;
+
+  /// No description provided for @communityComposerTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo bài viết'**
+  String get communityComposerTitle;
+
+  /// No description provided for @communityComposerSubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng'**
+  String get communityComposerSubmit;
+
+  /// No description provided for @communityComposerNoMembers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy thành viên'**
+  String get communityComposerNoMembers;
+
+  /// No description provided for @communityComposerAssignFunTag.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gán nhãn vui'**
+  String get communityComposerAssignFunTag;
+
+  /// No description provided for @communityComposerTriggerHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn đang nghĩ gì?'**
+  String get communityComposerTriggerHint;
+
   /// No description provided for @userProfileClubOwnerRole.
   ///
   /// In vi, this message translates to:
@@ -16801,6 +16993,216 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'{count} hồ sơ'**
   String registerParticipantCount(Object count);
+
+  /// No description provided for @phoneVerificationPhoneRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng cập nhật số điện thoại trước khi xác minh'**
+  String get phoneVerificationPhoneRequired;
+
+  /// No description provided for @phoneVerificationSendFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể gửi mã OTP: {error}'**
+  String phoneVerificationSendFailed(Object error);
+
+  /// No description provided for @phoneVerificationOtpRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập mã OTP'**
+  String get phoneVerificationOtpRequired;
+
+  /// No description provided for @phoneVerificationSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xác minh số điện thoại thành công'**
+  String get phoneVerificationSuccess;
+
+  /// No description provided for @phoneVerificationFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác minh thất bại: {error}'**
+  String phoneVerificationFailed(Object error);
+
+  /// No description provided for @phoneVerificationTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác minh số điện thoại'**
+  String get phoneVerificationTitle;
+
+  /// No description provided for @phoneVerificationCodeSent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã OTP 6 chữ số đã được gửi tới {phone}. Nhập mã để hoàn tất xác minh.'**
+  String phoneVerificationCodeSent(Object phone);
+
+  /// No description provided for @phoneVerificationOtpLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã OTP'**
+  String get phoneVerificationOtpLabel;
+
+  /// No description provided for @phoneVerificationOtpHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập mã 6 chữ số'**
+  String get phoneVerificationOtpHint;
+
+  /// No description provided for @phoneVerificationCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get phoneVerificationCancel;
+
+  /// No description provided for @phoneVerificationConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác minh'**
+  String get phoneVerificationConfirm;
+
+  /// No description provided for @emailVerificationEmailRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy email để xác minh'**
+  String get emailVerificationEmailRequired;
+
+  /// No description provided for @emailVerificationSendFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể gửi mã xác minh: {error}'**
+  String emailVerificationSendFailed(Object error);
+
+  /// No description provided for @emailVerificationTokenRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập mã xác minh'**
+  String get emailVerificationTokenRequired;
+
+  /// No description provided for @emailVerificationSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xác minh email thành công'**
+  String get emailVerificationSuccess;
+
+  /// No description provided for @emailVerificationFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác minh thất bại: {error}'**
+  String emailVerificationFailed(Object error);
+
+  /// No description provided for @emailVerificationTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác minh email'**
+  String get emailVerificationTitle;
+
+  /// No description provided for @emailVerificationCodeSent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã xác minh đã được gửi đến {email}. Nhập mã để hoàn tất.'**
+  String emailVerificationCodeSent(Object email);
+
+  /// No description provided for @emailVerificationTokenLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã xác minh'**
+  String get emailVerificationTokenLabel;
+
+  /// No description provided for @emailVerificationTokenHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập mã từ email'**
+  String get emailVerificationTokenHint;
+
+  /// No description provided for @emailVerificationCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get emailVerificationCancel;
+
+  /// No description provided for @emailVerificationConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác minh'**
+  String get emailVerificationConfirm;
+
+  /// No description provided for @seriesTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuỗi giải đấu'**
+  String get seriesTitle;
+
+  /// No description provided for @seriesError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi: {error}'**
+  String seriesError(Object error);
+
+  /// No description provided for @seriesEmptyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có chuỗi giải đấu'**
+  String get seriesEmptyTitle;
+
+  /// No description provided for @seriesEmptyDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các chuỗi giải đấu sẽ xuất hiện tại đây'**
+  String get seriesEmptyDescription;
+
+  /// No description provided for @seriesStatusOngoing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get seriesStatusOngoing;
+
+  /// No description provided for @seriesStatusCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã kết thúc'**
+  String get seriesStatusCompleted;
+
+  /// No description provided for @seriesStatusUpcoming.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp diễn ra'**
+  String get seriesStatusUpcoming;
+
+  /// No description provided for @seriesSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'{legs} chặng • {participants} VĐV'**
+  String seriesSummary(Object legs, Object participants);
+
+  /// No description provided for @tournamentInfoNameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên giải đấu *'**
+  String get tournamentInfoNameLabel;
+
+  /// No description provided for @tournamentInfoNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'VD: Giải Cầu lông Mùa hè 2025'**
+  String get tournamentInfoNameHint;
+
+  /// No description provided for @tournamentInfoNameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập tên giải đấu'**
+  String get tournamentInfoNameRequired;
+
+  /// No description provided for @tournamentInfoDescriptionLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mô tả (tùy chọn)'**
+  String get tournamentInfoDescriptionLabel;
+
+  /// No description provided for @tournamentInfoDescriptionHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin thêm về giải đấu, địa điểm, thời gian...'**
+  String get tournamentInfoDescriptionHint;
 }
 
 class _AppLocalizationsDelegate

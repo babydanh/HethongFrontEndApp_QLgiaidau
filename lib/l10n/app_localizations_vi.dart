@@ -458,6 +458,119 @@ class AppLocalizationsVi extends AppLocalizations {
   String get achievementsAllTitle => 'Tất cả thành tích thi đấu';
 
   @override
+  String get communityPostClubOwnerBadge => 'Chủ CLB';
+
+  @override
+  String get communityPostClubAdminBadge => 'BQT';
+
+  @override
+  String get communityPostDeleteTooltip => 'Xóa bài viết';
+
+  @override
+  String get communityPostOptionsTooltip => 'Tuỳ chọn bài đăng';
+
+  @override
+  String get communityPostPendingApproval =>
+      'Bài viết đang chờ ban quản trị duyệt.';
+
+  @override
+  String communityPostCommentCount(Object count) {
+    return '$count bình luận';
+  }
+
+  @override
+  String get communityPostLike => 'Yêu thích';
+
+  @override
+  String get communityPostComment => 'Bình luận';
+
+  @override
+  String get communityPostReport => 'Báo cáo bài viết';
+
+  @override
+  String get communityPostPostedNow => 'Vừa đăng';
+
+  @override
+  String communityPostMinutesAgo(Object count) {
+    return '$count phút trước';
+  }
+
+  @override
+  String communityPostHoursAgo(Object count) {
+    return '$count giờ trước';
+  }
+
+  @override
+  String communityPostDaysAgo(Object count) {
+    return '$count ngày trước';
+  }
+
+  @override
+  String get communityPostClose => 'Đóng';
+
+  @override
+  String communityComposerImageLimit(Object max) {
+    return 'Mỗi bài đăng tối đa $max ảnh.';
+  }
+
+  @override
+  String communityComposerUploadFailedCount(Object count) {
+    return '$count ảnh không tải lên được.';
+  }
+
+  @override
+  String get communityComposerPollInvalid =>
+      'Bình chọn cần câu hỏi và ít nhất 2 lựa chọn.';
+
+  @override
+  String get communityComposerContentRequired =>
+      'Bài viết cần có nội dung, ảnh hoặc bình chọn.';
+
+  @override
+  String get communityComposerSubmitFailed =>
+      'Đăng bài thất bại. Vui lòng thử lại.';
+
+  @override
+  String get communityComposerPendingStatus => 'Bài viết đang chờ duyệt';
+
+  @override
+  String get communityComposerPostedStatus => 'Đã đăng lên bảng tin';
+
+  @override
+  String get communityComposerAddToPost => 'Thêm vào bài viết';
+
+  @override
+  String get communityComposerPhoto => 'Ảnh';
+
+  @override
+  String get communityComposerPoll => 'Bình chọn';
+
+  @override
+  String get communityComposerMention => 'Gắn thẻ';
+
+  @override
+  String get communityComposerYou => 'Bạn';
+
+  @override
+  String get communityComposerHint =>
+      'Bạn muốn chia sẻ điều gì với các thành viên? (Gõ @ để nhắc tên)';
+
+  @override
+  String get communityComposerTitle => 'Tạo bài viết';
+
+  @override
+  String get communityComposerSubmit => 'Đăng';
+
+  @override
+  String get communityComposerNoMembers => 'Không tìm thấy thành viên';
+
+  @override
+  String get communityComposerAssignFunTag => 'Gán nhãn vui';
+
+  @override
+  String get communityComposerTriggerHint => 'Bạn đang nghĩ gì?';
+
+  @override
   String get userProfileClubOwnerRole => 'Chủ nhiệm CLB';
 
   @override
@@ -9101,4 +9214,129 @@ class AppLocalizationsVi extends AppLocalizations {
   String registerParticipantCount(Object count) {
     return '$count hồ sơ';
   }
+
+  @override
+  String get phoneVerificationPhoneRequired =>
+      'Vui lòng cập nhật số điện thoại trước khi xác minh';
+
+  @override
+  String phoneVerificationSendFailed(Object error) {
+    return 'Không thể gửi mã OTP: $error';
+  }
+
+  @override
+  String get phoneVerificationOtpRequired => 'Vui lòng nhập mã OTP';
+
+  @override
+  String get phoneVerificationSuccess => 'Đã xác minh số điện thoại thành công';
+
+  @override
+  String phoneVerificationFailed(Object error) {
+    return 'Xác minh thất bại: $error';
+  }
+
+  @override
+  String get phoneVerificationTitle => 'Xác minh số điện thoại';
+
+  @override
+  String phoneVerificationCodeSent(Object phone) {
+    return 'Mã OTP 6 chữ số đã được gửi tới $phone. Nhập mã để hoàn tất xác minh.';
+  }
+
+  @override
+  String get phoneVerificationOtpLabel => 'Mã OTP';
+
+  @override
+  String get phoneVerificationOtpHint => 'Nhập mã 6 chữ số';
+
+  @override
+  String get phoneVerificationCancel => 'Hủy';
+
+  @override
+  String get phoneVerificationConfirm => 'Xác minh';
+
+  @override
+  String get emailVerificationEmailRequired =>
+      'Không tìm thấy email để xác minh';
+
+  @override
+  String emailVerificationSendFailed(Object error) {
+    return 'Không thể gửi mã xác minh: $error';
+  }
+
+  @override
+  String get emailVerificationTokenRequired => 'Vui lòng nhập mã xác minh';
+
+  @override
+  String get emailVerificationSuccess => 'Đã xác minh email thành công';
+
+  @override
+  String emailVerificationFailed(Object error) {
+    return 'Xác minh thất bại: $error';
+  }
+
+  @override
+  String get emailVerificationTitle => 'Xác minh email';
+
+  @override
+  String emailVerificationCodeSent(Object email) {
+    return 'Mã xác minh đã được gửi đến $email. Nhập mã để hoàn tất.';
+  }
+
+  @override
+  String get emailVerificationTokenLabel => 'Mã xác minh';
+
+  @override
+  String get emailVerificationTokenHint => 'Nhập mã từ email';
+
+  @override
+  String get emailVerificationCancel => 'Hủy';
+
+  @override
+  String get emailVerificationConfirm => 'Xác minh';
+
+  @override
+  String get seriesTitle => 'Chuỗi giải đấu';
+
+  @override
+  String seriesError(Object error) {
+    return 'Lỗi: $error';
+  }
+
+  @override
+  String get seriesEmptyTitle => 'Chưa có chuỗi giải đấu';
+
+  @override
+  String get seriesEmptyDescription =>
+      'Các chuỗi giải đấu sẽ xuất hiện tại đây';
+
+  @override
+  String get seriesStatusOngoing => 'Đang diễn ra';
+
+  @override
+  String get seriesStatusCompleted => 'Đã kết thúc';
+
+  @override
+  String get seriesStatusUpcoming => 'Sắp diễn ra';
+
+  @override
+  String seriesSummary(Object legs, Object participants) {
+    return '$legs chặng • $participants VĐV';
+  }
+
+  @override
+  String get tournamentInfoNameLabel => 'Tên giải đấu *';
+
+  @override
+  String get tournamentInfoNameHint => 'VD: Giải Cầu lông Mùa hè 2025';
+
+  @override
+  String get tournamentInfoNameRequired => 'Vui lòng nhập tên giải đấu';
+
+  @override
+  String get tournamentInfoDescriptionLabel => 'Mô tả (tùy chọn)';
+
+  @override
+  String get tournamentInfoDescriptionHint =>
+      'Thông tin thêm về giải đấu, địa điểm, thời gian...';
 }

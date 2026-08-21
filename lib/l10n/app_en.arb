@@ -151,6 +151,84 @@
   "achievementsRecentEmpty": "No achievements in the last 30 days",
   "achievementsSeeAll": "View all",
   "achievementsAllTitle": "All competition achievements",
+  "communityPostClubOwnerBadge": "Club owner",
+  "communityPostClubAdminBadge": "Admin",
+  "communityPostDeleteTooltip": "Delete post",
+  "communityPostOptionsTooltip": "Post options",
+  "communityPostPendingApproval": "This post is waiting for admin approval.",
+  "communityPostCommentCount": "{count} comments",
+  "communityPostLike": "Like",
+  "communityPostComment": "Comment",
+  "communityPostReport": "Report post",
+  "communityPostPostedNow": "Just now",
+  "communityPostMinutesAgo": "{count} minutes ago",
+  "communityPostHoursAgo": "{count} hours ago",
+  "communityPostDaysAgo": "{count} days ago",
+  "communityPostClose": "Close",
+  "communityComposerImageLimit": "Each post can include up to {max} images.",
+  "communityComposerUploadFailedCount": "{count} images failed to upload.",
+  "communityComposerPollInvalid": "A poll needs a question and at least 2 options.",
+  "communityComposerContentRequired": "A post needs text, an image, or a poll.",
+  "communityComposerSubmitFailed": "Could not publish the post. Please try again.",
+  "communityComposerPendingStatus": "Post pending approval",
+  "communityComposerPostedStatus": "Posted to the feed",
+  "communityComposerAddToPost": "Add to your post",
+  "communityComposerPhoto": "Photo",
+  "communityComposerPoll": "Poll",
+  "communityComposerMention": "Mention",
+  "communityComposerYou": "You",
+  "communityComposerHint": "What would you like to share with the members? (Type @ to mention someone)",
+  "communityComposerTitle": "Create post",
+  "communityComposerSubmit": "Post",
+  "communityComposerNoMembers": "No members found",
+  "communityComposerAssignFunTag": "Assign fun tag",
+  "communityComposerTriggerHint": "What are you thinking?",
+  "communityTournamentPreviewDefaultName": "Club tournament",
+  "communityTournamentPreviewRound": "Round {round}",
+  "communityTournamentPreviewMatch": "Match {number}",
+  "communityTournamentPreviewWaiting": "Awaiting matchup",
+  "communityTournamentPreviewViewBracket": "View bracket",
+  "communityTournamentPreviewViewDetails": "View tournament details",
+  "@communityTournamentPreviewRound": {
+    "placeholders": {
+      "round": {}
+    }
+  },
+  "@communityTournamentPreviewMatch": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "@communityComposerImageLimit": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "@communityComposerUploadFailedCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@communityPostCommentCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@communityPostMinutesAgo": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@communityPostHoursAgo": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@communityPostDaysAgo": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "userProfileClubOwnerRole": "Club owner",
   "userProfileClubAdminRole": "Club administration",
   "userProfileClubMemberRole": "Club member",
@@ -3529,6 +3607,82 @@
       "count": {}
     }
   },
+  "phoneVerificationPhoneRequired": "Please update your phone number before verification",
+  "phoneVerificationSendFailed": "Unable to send OTP: {error}",
+  "@phoneVerificationSendFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "phoneVerificationOtpRequired": "Please enter the OTP",
+  "phoneVerificationSuccess": "Phone number verified successfully",
+  "phoneVerificationFailed": "Verification failed: {error}",
+  "@phoneVerificationFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "phoneVerificationTitle": "Verify phone number",
+  "phoneVerificationCodeSent": "A 6-digit OTP was sent to {phone}. Enter it to complete verification.",
+  "@phoneVerificationCodeSent": {
+    "placeholders": {
+      "phone": {}
+    }
+  },
+  "phoneVerificationOtpLabel": "OTP",
+  "phoneVerificationOtpHint": "Enter the 6-digit code",
+  "phoneVerificationCancel": "Cancel",
+  "phoneVerificationConfirm": "Verify",
+  "emailVerificationEmailRequired": "No email address was found for verification",
+  "emailVerificationSendFailed": "Unable to send verification code: {error}",
+  "@emailVerificationSendFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "emailVerificationTokenRequired": "Please enter the verification code",
+  "emailVerificationSuccess": "Email verified successfully",
+  "emailVerificationFailed": "Verification failed: {error}",
+  "@emailVerificationFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "emailVerificationTitle": "Verify email",
+  "emailVerificationCodeSent": "A verification code was sent to {email}. Enter it to complete verification.",
+  "@emailVerificationCodeSent": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "emailVerificationTokenLabel": "Verification code",
+  "emailVerificationTokenHint": "Enter the code from your email",
+  "emailVerificationCancel": "Cancel",
+  "emailVerificationConfirm": "Verify",
+  "seriesTitle": "Tournament series",
+  "seriesError": "Error: {error}",
+  "@seriesError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "seriesEmptyTitle": "No tournament series yet",
+  "seriesEmptyDescription": "Tournament series will appear here",
+  "seriesStatusOngoing": "Ongoing",
+  "seriesStatusCompleted": "Completed",
+  "seriesStatusUpcoming": "Upcoming",
+  "seriesSummary": "{legs} legs • {participants} players",
+  "@seriesSummary": {
+    "placeholders": {
+      "legs": {},
+      "participants": {}
+    }
+  },
+  "tournamentInfoNameLabel": "Tournament name *",
+  "tournamentInfoNameHint": "E.g. Summer Badminton Tournament 2025",
+  "tournamentInfoNameRequired": "Please enter the tournament name",
+  "tournamentInfoDescriptionLabel": "Description (optional)",
+  "tournamentInfoDescriptionHint": "Additional information about the tournament, venue, schedule...",
   "@register_rosterInstructions": {
     "placeholders": {
       "teamSize": {},

@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -9,11 +10,12 @@ Future<void> startEmailVerificationFlow(
   WidgetRef ref,
   String email,
 ) async {
+  final l10n = AppLocalizations.of(context)!;
   final trimmedEmail = email.trim();
   if (trimmedEmail.isEmpty) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Không tìm thấy email để xác minh')),
+      SnackBar(content: Text(l10n.emailVerificationEmailRequired)),
     );
     return;
   }
@@ -26,7 +28,7 @@ Future<void> startEmailVerificationFlow(
   } catch (e) {
     if (!context.mounted) return;
     messenger.showSnackBar(
-      SnackBar(content: Text('Không thể gửi mã xác minh: $e')),
+      SnackBar(content: Text(l10n.emailVerificationSendFailed(e.toString()))),
     );
     return;
   }
@@ -46,7 +48,7 @@ Future<void> startEmailVerificationFlow(
             final token = tokenCtrl.text.trim();
             if (token.isEmpty) {
               ScaffoldMessenger.of(ctx).showSnackBar(
-                const SnackBar(content: Text('Vui lòng nhập mã xác minh')),
+                SnackBar(content: Text(l10n.emailVerificationTokenRequired)),
               );
               return;
             }
@@ -62,13 +64,13 @@ Future<void> startEmailVerificationFlow(
               ref.invalidate(userProfileProvider);
               if (context.mounted) {
                 messenger.showSnackBar(
-                  const SnackBar(content: Text('Đã xác minh email thành công')),
+                  SnackBar(content: Text(l10n.emailVerificationSuccess)),
                 );
               }
             } catch (e) {
               if (!ctx.mounted) return;
               ScaffoldMessenger.of(ctx).showSnackBar(
-                SnackBar(content: Text('Xác minh thất bại: $e')),
+                SnackBar(content: Text(l10n.emailVerificationFailed(e.toString()))),
               );
             } finally {
               if (ctx.mounted) {
@@ -81,21 +83,21 @@ Future<void> startEmailVerificationFlow(
 
           return AlertDialog(
             backgroundColor: context.colors.bgCard,
-            title: const Text('Xác minh email'),
+            title: Text(l10n.emailVerificationTitle),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Mã xác minh đã được gửi đến $trimmedEmail. Nhập mã để hoàn tất.',
+                  l10n.emailVerificationCodeSent(trimmedEmail),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: tokenCtrl,
                   enabled: !isSubmitting,
-                  decoration: const InputDecoration(
-                    labelText: 'Mã xác minh',
-                    hintText: 'Nhập mã từ email',
+                  decoration: InputDecoration(
+                    labelText: l10n.emailVerificationTokenLabel,
+                    hintText: l10n.emailVerificationTokenHint,
                   ),
                 ),
               ],
@@ -103,7 +105,7 @@ Future<void> startEmailVerificationFlow(
             actions: [
               TextButton(
                 onPressed: isSubmitting ? null : () => Navigator.of(ctx).pop(),
-                child: const Text('Hủy'),
+                child: Text(l10n.emailVerificationCancel),
               ),
               FilledButton(
                 onPressed: isSubmitting ? null : submitToken,
@@ -113,7 +115,7 @@ Future<void> startEmailVerificationFlow(
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Xác minh'),
+                    : Text(l10n.emailVerificationConfirm),
               ),
             ],
           );

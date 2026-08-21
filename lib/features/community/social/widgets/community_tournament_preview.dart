@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +19,7 @@ class CommunityTournamentPreview extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final tournamentId = post.tournamentId;
 
     if (tournamentId == null || tournamentId.isEmpty) {
@@ -48,9 +50,9 @@ class CommunityTournamentPreview extends ConsumerWidget {
     final isCompleted = status == 'COMPLETED' || status == 'FINISHED';
     final hasMatches = validMatches.isNotEmpty;
 
-    final tournamentName = tournament?.name ?? post.tournamentName ?? 'Giải đấu CLB';
-    final sportKey = tournament?.sport;
-    final sportText = sportKey != null ? (AppConstants.sportNames[sportKey] ?? sportKey) : null;
+    final tournamentName =
+        tournament?.name ?? post.tournamentName ?? l10n.communityTournamentPreviewDefaultName;
+    final sportText = _sportLabel(tournament?.sport, l10n);
 
     // Pick top 2 matches to preview (prioritizing live or recent matches)
     final previewMatches = validMatches.take(2).toList();
@@ -96,10 +98,10 @@ class CommunityTournamentPreview extends ConsumerWidget {
                               ),
                               child: Text(
                                 isLive
-                                    ? 'ĐANG THI ĐẤU'
+                                    ? l10n.liveLiveBadge
                                     : isCompleted
-                                    ? 'ĐÃ KẾT THÚC'
-                                    : 'GIẢI ĐẤU CLB',
+                                    ? l10n.clubDetailCompleted
+                                    : l10n.clubDetailClubTournamentBadge,
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
@@ -165,7 +167,10 @@ class CommunityTournamentPreview extends ConsumerWidget {
                   final hasPlayed = m.isCompleted || m.isLive || s1 > 0 || s2 > 0;
                   final isT1Winner = m.winnerId == m.team1Id || (hasPlayed && s1 > s2);
                   final isT2Winner = m.winnerId == m.team2Id || (hasPlayed && s2 > s1);
-                  final roundLabel = m.stageName ?? (m.round > 0 ? 'Vòng ${m.round}' : 'Trận ${m.matchNumber}');
+                  final roundLabel = m.stageName ??
+                      (m.round > 0
+                          ? l10n.communityTournamentPreviewRound(m.round)
+                          : l10n.communityTournamentPreviewMatch(m.matchNumber));
 
                   return InkWell(
                     onTap: () => context.push('/live/${m.id}'),
@@ -200,8 +205,8 @@ class CommunityTournamentPreview extends ConsumerWidget {
                                   : colors.border.withValues(alpha: 0.35),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: Text(
-                              m.isLive ? 'LIVE' : roundLabel,
+                              child: Text(
+                                m.isLive ? l10n.liveLiveBadge : roundLabel,
                               style: TextStyle(
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.w700,
@@ -219,7 +224,9 @@ class CommunityTournamentPreview extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  m.team1Name.isNotEmpty ? m.team1Name : 'Chờ xếp',
+                                  m.team1Name.isNotEmpty
+                                      ? m.team1Name
+                                      : l10n.communityTournamentPreviewWaiting,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
@@ -232,7 +239,9 @@ class CommunityTournamentPreview extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  m.team2Name.isNotEmpty ? m.team2Name : 'Chờ xếp',
+                                  m.team2Name.isNotEmpty
+                                      ? m.team2Name
+                                      : l10n.communityTournamentPreviewWaiting,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
@@ -307,7 +316,9 @@ class CommunityTournamentPreview extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    hasMatches ? 'Xem sơ đồ nhánh đấu' : 'Xem thông tin giải đấu',
+                    hasMatches
+                        ? l10n.communityTournamentPreviewViewBracket
+                        : l10n.communityTournamentPreviewViewDetails,
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,

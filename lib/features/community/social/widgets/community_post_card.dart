@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
@@ -40,6 +41,7 @@ class CommunityPostCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       color: colors.bgCard,
@@ -123,8 +125,8 @@ class CommunityPostCard extends ConsumerWidget {
                                     ),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
-                                  child: const Text(
-                                    'Chủ CLB',
+                                  child: Text(
+                                    l10n.communityPostClubOwnerBadge,
                                     style: TextStyle(
                                       color: AppTheme.primaryDark,
                                       fontSize: 9.5,
@@ -144,7 +146,7 @@ class CommunityPostCard extends ConsumerWidget {
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
-                                    'BQT',
+                                    l10n.communityPostClubAdminBadge,
                                     style: TextStyle(
                                       color: colors.info,
                                       fontSize: 9.5,
@@ -168,7 +170,7 @@ class CommunityPostCard extends ConsumerWidget {
                       Row(
                         children: [
                           Text(
-                            _relativeTime(post.createdAt),
+                            _relativeTime(l10n, post.createdAt),
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: colors.textMuted,
@@ -197,7 +199,7 @@ class CommunityPostCard extends ConsumerWidget {
                   ),
                 if (onDelete != null)
                   IconButton(
-                    tooltip: 'Xóa bài viết',
+                    tooltip: l10n.communityPostDeleteTooltip,
                     visualDensity: VisualDensity.compact,
                     onPressed: onDelete,
                     icon: Icon(
@@ -207,7 +209,7 @@ class CommunityPostCard extends ConsumerWidget {
                     ),
                   ),
                 IconButton(
-                  tooltip: 'Tuỳ chọn bài đăng',
+                  tooltip: l10n.communityPostOptionsTooltip,
                   visualDensity: VisualDensity.compact,
                   onPressed: () => _showPostActions(context),
                   icon: Icon(Icons.more_horiz_rounded, color: colors.textMuted),
@@ -250,7 +252,7 @@ class CommunityPostCard extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Bài viết đang chờ ban quản trị duyệt.',
+                        l10n.communityPostPendingApproval,
                         style: TextStyle(
                           color: colors.warning,
                           fontSize: 12.5,
@@ -430,7 +432,7 @@ class CommunityPostCard extends ConsumerWidget {
                     const SizedBox.shrink(),
                   if (post.commentCount > 0)
                     Text(
-                      '${post.commentCount} bình luận',
+                      l10n.communityPostCommentCount(post.commentCount),
                       style: TextStyle(
                         fontSize: 13,
                         color: colors.textMuted,
@@ -471,7 +473,7 @@ class CommunityPostCard extends ConsumerWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Yêu thích',
+                            l10n.communityPostLike,
                             style: TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w600,
@@ -502,7 +504,7 @@ class CommunityPostCard extends ConsumerWidget {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Bình luận',
+                              l10n.communityPostComment,
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w600,
@@ -542,12 +544,13 @@ class CommunityPostCard extends ConsumerWidget {
   }
 
   Future<void> _showPostActions(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (sheetContext) => SafeArea(
         child: ListTile(
           leading: const Icon(Icons.flag_outlined),
-          title: const Text('Báo cáo bài viết'),
+          title: Text(l10n.communityPostReport),
           onTap: () => Navigator.pop(sheetContext, 'report'),
         ),
       ),
@@ -561,6 +564,7 @@ class CommunityPostCard extends ConsumerWidget {
   }
 
   Future<void> _showMediaGallery(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     await showDialog<void>(
       context: context,
       barrierColor: Colors.black87,
@@ -589,7 +593,7 @@ class CommunityPostCard extends ConsumerWidget {
               top: 0,
               right: 0,
               child: IconButton(
-                tooltip: 'Đóng',
+                tooltip: l10n.communityPostClose,
                 onPressed: () => Navigator.pop(dialogContext),
                 icon: const Icon(Icons.close, color: Colors.white),
               ),
@@ -600,13 +604,17 @@ class CommunityPostCard extends ConsumerWidget {
     );
   }
 
-  String _relativeTime(DateTime? value) {
-    if (value == null) return 'Vừa đăng';
+  String _relativeTime(AppLocalizations l10n, DateTime? value) {
+    if (value == null) return l10n.communityPostPostedNow;
     final difference = DateTime.now().difference(value.toLocal());
-    if (difference.inMinutes < 1) return 'Vừa đăng';
-    if (difference.inHours < 1) return '${difference.inMinutes} phút trước';
-    if (difference.inDays < 1) return '${difference.inHours} giờ trước';
-    return '${difference.inDays} ngày trước';
+    if (difference.inMinutes < 1) return l10n.communityPostPostedNow;
+    if (difference.inHours < 1) {
+      return l10n.communityPostMinutesAgo(difference.inMinutes);
+    }
+    if (difference.inDays < 1) {
+      return l10n.communityPostHoursAgo(difference.inHours);
+    }
+    return l10n.communityPostDaysAgo(difference.inDays);
   }
 
   Widget _buildRichText(
