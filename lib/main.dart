@@ -13,5 +13,9 @@ void main() async {
   // Khởi tạo hệ thống Lỗi Toàn Cục (Global Error Handler)
   GlobalErrorHandler.init();
 
+  // Giới hạn cache hình ảnh trong bộ nhớ (tránh OOM khi tải nhiều ảnh avatar)
+  PaintingBinding.instance.imageCache.maximumSize = 100;
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024; // 50MB
+
   runApp(const ProviderScope(child: TournamentApp()));
 }
