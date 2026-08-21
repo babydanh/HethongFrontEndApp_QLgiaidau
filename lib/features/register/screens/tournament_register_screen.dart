@@ -300,9 +300,9 @@ class _TournamentRegisterScreenState
                   helperText: help,
                 ),
                 items: [
-                  const DropdownMenuItem(
+                  DropdownMenuItem(
                     value: '',
-                    child: Text('Chọn một lựa chọn'),
+                    child: Text(l10n.registerSelectOption),
                   ),
                   ...((field['options'] as List? ?? const []).map(
                     (option) => DropdownMenuItem(
@@ -411,13 +411,11 @@ class _TournamentRegisterScreenState
       final elo = response.eloPoints ?? 1000;
       if (minElo != null && elo < minElo) {
         setState(
-          () => _eloError =
-              'ELO của bạn ($elo) thấp hơn yêu cầu tối thiểu (${minElo.toInt()})',
+() => _eloError = l10n.registerEloTooLow(elo, minElo.toInt()),
         );
       } else if (maxElo != null && elo > maxElo) {
         setState(
-          () => _eloError =
-              'ELO của bạn ($elo) cao hơn yêu cầu tối đa (${maxElo.toInt()})',
+() => _eloError = l10n.registerEloTooHigh(elo, maxElo.toInt()),
         );
       }
     } catch (_) {
@@ -467,13 +465,13 @@ class _TournamentRegisterScreenState
     final user = userAsync.asData?.value;
     final missingFields = <String>[];
     if (user?.fullName == null || user!.fullName!.trim().isEmpty) {
-      missingFields.add('Họ tên');
+      missingFields.add(l10n.registerMissingFullName);
     }
     if (user?.phoneNumber == null || user!.phoneNumber!.trim().isEmpty) {
-      missingFields.add('Số điện thoại');
+      missingFields.add(l10n.registerMissingPhone);
     }
     if (user?.gender == null || user!.gender!.trim().isEmpty) {
-      missingFields.add('Giới tính');
+      missingFields.add(l10n.registerMissingGender);
     }
 
     if (missingFields.isNotEmpty) {
@@ -482,21 +480,21 @@ class _TournamentRegisterScreenState
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Hồ sơ chưa đầy đủ'),
+            title: Text(l10n.registerProfileIncompleteTitle),
             content: Text(
-              'Bạn cần bổ sung thông tin [$missingStr] trong Hồ sơ cá nhân trước khi đăng ký giải đấu.',
+              l10n.registerProfileIncompleteFields(missingStr),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Đóng'),
+                child: Text(l10n.registerClose),
               ),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(ctx);
                   context.push('/profile');
                 },
-                child: const Text('Cập nhật ngay'),
+                child: Text(l10n.registerUpdateProfile),
               ),
             ],
           ),
@@ -527,10 +525,8 @@ class _TournamentRegisterScreenState
     if (tournament?.isRanked == true && !_rankingConsent) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Vui lòng đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng.',
-            ),
+SnackBar(
+            content: Text(l10n.registerRankingConsentRequired),
           ),
         );
       }
@@ -741,7 +737,7 @@ class _TournamentRegisterScreenState
     if (d.minElo != null || d.maxElo != null) {
       final min = d.minElo?.toInt().toString() ?? '0';
       final max = d.maxElo?.toInt().toString() ?? '∞';
-      items.add('ELO $min-$max');
+      items.add(l10n.registerEloRange(min, max));
     }
     if (d.entryFee != null && d.entryFee! > 0) {
       items.add(
@@ -751,18 +747,20 @@ class _TournamentRegisterScreenState
       items.add(l10n.registerFree);
     }
     final bracket = switch (d.bracketType?.toUpperCase()) {
-      'SINGLE_ELIMINATION' => 'Loại trực tiếp',
-      'DOUBLE_ELIMINATION' => 'Nhánh thắng/thua',
-      'ROUND_ROBIN' => 'Vòng tròn',
-      'GROUP_STAGE_KNOCKOUT' => 'Vòng bảng + loại trực tiếp',
+      'SINGLE_ELIMINATION' => l10n.registerBracketSingleElimination,
+      'DOUBLE_ELIMINATION' => l10n.registerBracketDoubleElimination,
+      'ROUND_ROBIN' => l10n.registerBracketRoundRobin,
+      'GROUP_STAGE_KNOCKOUT' => l10n.registerBracketGroupStageKnockout,
       _ => null,
     };
     if (bracket != null) items.add(bracket);
     if (d.participantCount != null) {
-      final maxStr = d.maxParticipants != null ? '/${d.maxParticipants}' : '';
-      items.add('${d.participantCount}$maxStr hồ sơ');
+final count = d.maxParticipants != null
+          ? '${d.participantCount}/${d.maxParticipants}'
+          : '${d.participantCount}';
+      items.add(l10n.registerParticipantCount(count));
     } else if (d.maxParticipants != null) {
-      items.add('0/${d.maxParticipants} hồ sơ');
+      items.add(l10n.registerParticipantCount('0/${d.maxParticipants}'));
     }
     return items;
   }

@@ -165,19 +165,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                   ),
                 ],
               ),
-            );
-
-            if (!widget.standalone) return content;
-            return Scaffold(
-              backgroundColor: colors.bgDark,
-              appBar: AppBar(
-                title: Text(l10n.navRankings),
-                backgroundColor: colors.bgDark,
-                foregroundColor: colors.textPrimary,
-                elevation: 0,
-              ),
-              body: content,
-            );
+            return content;
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => _emptyState(

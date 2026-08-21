@@ -956,6 +956,30 @@ abstract class AppLocalizations {
   /// **'Người dùng'**
   String get publicProfileUserFallback;
 
+  /// No description provided for @achievementsRecentTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành tích gần đây (30 ngày)'**
+  String get achievementsRecentTitle;
+
+  /// No description provided for @achievementsRecentEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có thành tích trong 30 ngày gần đây'**
+  String get achievementsRecentEmpty;
+
+  /// No description provided for @achievementsSeeAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem tất cả'**
+  String get achievementsSeeAll;
+
+  /// No description provided for @achievementsAllTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả thành tích thi đấu'**
+  String get achievementsAllTitle;
+
   /// No description provided for @userProfileClubOwnerRole.
   ///
   /// In vi, this message translates to:
@@ -16705,6 +16729,78 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Cao nhất'**
   String get ranking_peakLabel;
+
+  /// No description provided for @registerSelectOption.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn một lựa chọn'**
+  String get registerSelectOption;
+
+  /// No description provided for @registerMissingFullName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Họ tên'**
+  String get registerMissingFullName;
+
+  /// No description provided for @registerMissingPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số điện thoại'**
+  String get registerMissingPhone;
+
+  /// No description provided for @registerMissingGender.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới tính'**
+  String get registerMissingGender;
+
+  /// No description provided for @registerProfileIncompleteFields.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn cần bổ sung thông tin [{fields}] trong Hồ sơ cá nhân trước khi đăng ký giải đấu.'**
+  String registerProfileIncompleteFields(Object fields);
+
+  /// No description provided for @registerClose.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng'**
+  String get registerClose;
+
+  /// No description provided for @registerRankingConsentRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng.'**
+  String get registerRankingConsentRequired;
+
+  /// No description provided for @registerBracketSingleElimination.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại trực tiếp'**
+  String get registerBracketSingleElimination;
+
+  /// No description provided for @registerBracketDoubleElimination.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhánh thắng/thua'**
+  String get registerBracketDoubleElimination;
+
+  /// No description provided for @registerBracketRoundRobin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng tròn'**
+  String get registerBracketRoundRobin;
+
+  /// No description provided for @registerBracketGroupStageKnockout.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng bảng + loại trực tiếp'**
+  String get registerBracketGroupStageKnockout;
+
+  /// No description provided for @registerParticipantCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} hồ sơ'**
+  String registerParticipantCount(Object count);
 }
 
 class _AppLocalizationsDelegate

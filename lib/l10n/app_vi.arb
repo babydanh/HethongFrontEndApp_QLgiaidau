@@ -143,6 +143,10 @@
   "publicProfileLoadError": "Không thể tải thông tin",
   "publicProfileHomeButton": "Về trang chủ",
   "publicProfileUserFallback": "Người dùng",
+  "achievementsRecentTitle": "Thành tích gần đây (30 ngày)",
+  "achievementsRecentEmpty": "Chưa có thành tích trong 30 ngày gần đây",
+  "achievementsSeeAll": "Xem tất cả",
+  "achievementsAllTitle": "Tất cả thành tích thi đấu",
   "userProfileClubOwnerRole": "Chủ nhiệm CLB",
   "userProfileClubAdminRole": "Ban quản trị",
   "userProfileClubMemberRole": "Thành viên CLB",
@@ -3504,6 +3508,28 @@
   "ranking_winsLabel": "Thắng",
   "ranking_winRateLabel": "Tỉ lệ",
   "ranking_peakLabel": "Cao nhất",
+  "registerSelectOption": "Chọn một lựa chọn",
+  "registerMissingFullName": "Họ tên",
+  "registerMissingPhone": "Số điện thoại",
+  "registerMissingGender": "Giới tính",
+  "registerProfileIncompleteFields": "Bạn cần bổ sung thông tin [{fields}] trong Hồ sơ cá nhân trước khi đăng ký giải đấu.",
+  "@registerProfileIncompleteFields": {
+    "placeholders": {
+      "fields": {}
+    }
+  },
+  "registerClose": "Đóng",
+  "registerRankingConsentRequired": "Vui lòng đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng.",
+  "registerBracketSingleElimination": "Loại trực tiếp",
+  "registerBracketDoubleElimination": "Nhánh thắng/thua",
+  "registerBracketRoundRobin": "Vòng tròn",
+  "registerBracketGroupStageKnockout": "Vòng bảng + loại trực tiếp",
+  "registerParticipantCount": "{count} hồ sơ",
+  "@registerParticipantCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "@register_rosterInstructions": {
     "placeholders": {
       "teamSize": {},

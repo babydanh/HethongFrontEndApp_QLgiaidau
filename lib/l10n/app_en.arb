@@ -147,6 +147,10 @@
   "publicProfileLoadError": "Could not load profile information",
   "publicProfileHomeButton": "Go to home",
   "publicProfileUserFallback": "User",
+  "achievementsRecentTitle": "Recent achievements (30 days)",
+  "achievementsRecentEmpty": "No achievements in the last 30 days",
+  "achievementsSeeAll": "View all",
+  "achievementsAllTitle": "All competition achievements",
   "userProfileClubOwnerRole": "Club owner",
   "userProfileClubAdminRole": "Club administration",
   "userProfileClubMemberRole": "Club member",
@@ -3503,6 +3507,28 @@
   "ranking_winsLabel": "Wins",
   "ranking_winRateLabel": "Win rate",
   "ranking_peakLabel": "Peak",
+  "registerSelectOption": "Select an option",
+  "registerMissingFullName": "Full name",
+  "registerMissingPhone": "Phone number",
+  "registerMissingGender": "Gender",
+  "registerProfileIncompleteFields": "Please complete [{fields}] in your profile before registering for the tournament.",
+  "@registerProfileIncompleteFields": {
+    "placeholders": {
+      "fields": {}
+    }
+  },
+  "registerClose": "Close",
+  "registerRankingConsentRequired": "Please agree to display results and ELO on the leaderboard.",
+  "registerBracketSingleElimination": "Single elimination",
+  "registerBracketDoubleElimination": "Winners/losers bracket",
+  "registerBracketRoundRobin": "Round robin",
+  "registerBracketGroupStageKnockout": "Group stage + knockout",
+  "registerParticipantCount": "{count} profiles",
+  "@registerParticipantCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "@register_rosterInstructions": {
     "placeholders": {
       "teamSize": {},

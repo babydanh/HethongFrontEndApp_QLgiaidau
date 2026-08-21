@@ -448,6 +448,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get publicProfileUserFallback => 'User';
 
   @override
+  String get achievementsRecentTitle => 'Recent achievements (30 days)';
+
+  @override
+  String get achievementsRecentEmpty => 'No achievements in the last 30 days';
+
+  @override
+  String get achievementsSeeAll => 'View all';
+
+  @override
+  String get achievementsAllTitle => 'All competition achievements';
+
+  @override
   String get userProfileClubOwnerRole => 'Club owner';
 
   @override
@@ -9066,4 +9078,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ranking_peakLabel => 'Peak';
+
+  @override
+  String get registerSelectOption => 'Select an option';
+
+  @override
+  String get registerMissingFullName => 'Full name';
+
+  @override
+  String get registerMissingPhone => 'Phone number';
+
+  @override
+  String get registerMissingGender => 'Gender';
+
+  @override
+  String registerProfileIncompleteFields(Object fields) {
+    return 'Please complete [$fields] in your profile before registering for the tournament.';
+  }
+
+  @override
+  String get registerClose => 'Close';
+
+  @override
+  String get registerRankingConsentRequired =>
+      'Please agree to display results and ELO on the leaderboard.';
+
+  @override
+  String get registerBracketSingleElimination => 'Single elimination';
+
+  @override
+  String get registerBracketDoubleElimination => 'Winners/losers bracket';
+
+  @override
+  String get registerBracketRoundRobin => 'Round robin';
+
+  @override
+  String get registerBracketGroupStageKnockout => 'Group stage + knockout';
+
+  @override
+  String registerParticipantCount(Object count) {
+    return '$count profiles';
+  }
 }

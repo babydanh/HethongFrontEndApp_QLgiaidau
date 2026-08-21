@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 String _resolveImageUrl(String? url) {
   if (url == null || url.isEmpty) return '';
@@ -21,6 +22,7 @@ class AchievementsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     // Get logged-in user profile ID
     final profileAsync = ref.watch(userProfileProvider);
@@ -65,7 +67,9 @@ class AchievementsTab extends ConsumerWidget {
           sportId: sport.isEmpty ? 'pickleball' : sport,
           icon: _getSportIcon(sport),
           cardColor: _getCardColorForLabel(rankLabel),
-          tournamentName: t.name.isNotEmpty ? t.name : 'Giải đấu',
+          tournamentName: t.name.isNotEmpty
+              ? t.name
+              : l10n.publicProfileTournamentFallback,
           date: dateStr,
           achievementLabel: rankLabel,
           logoUrl: (t.logoUrl != null && t.logoUrl!.isNotEmpty)
@@ -114,7 +118,7 @@ class AchievementsTab extends ConsumerWidget {
         _buildSectionHeader(
           context,
           colors,
-          'Thành tích gần đây (30 ngày)',
+          l10n.achievementsRecentTitle,
           onSeeAllTap: filteredAchievements.isNotEmpty
               ? () => _showAllAchievementsModal(
                   context,
@@ -146,7 +150,7 @@ class AchievementsTab extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Chưa có thành tích trong 30 ngày gần đây',
+                      l10n.achievementsRecentEmpty,
                       style: TextStyle(
                         fontSize: 13,
                         color: colors.textSecondary,
@@ -207,6 +211,7 @@ class AchievementsTab extends ConsumerWidget {
     String title, {
     VoidCallback? onSeeAllTap,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -237,10 +242,10 @@ class AchievementsTab extends ConsumerWidget {
           if (onSeeAllTap != null)
             GestureDetector(
               onTap: onSeeAllTap,
-              child: const Row(
+              child: Row(
                 children: [
                   Text(
-                    'Xem tất cả',
+                    l10n.achievementsSeeAll,
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
@@ -265,6 +270,7 @@ class AchievementsTab extends ConsumerWidget {
     List<_AchievementData> allAchievements,
     AppColorsExtension colors,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -296,7 +302,7 @@ class AchievementsTab extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Tất cả thành tích thi đấu',
+                    l10n.achievementsAllTitle,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w900,

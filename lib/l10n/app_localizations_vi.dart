@@ -445,6 +445,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get publicProfileUserFallback => 'Người dùng';
 
   @override
+  String get achievementsRecentTitle => 'Thành tích gần đây (30 ngày)';
+
+  @override
+  String get achievementsRecentEmpty =>
+      'Chưa có thành tích trong 30 ngày gần đây';
+
+  @override
+  String get achievementsSeeAll => 'Xem tất cả';
+
+  @override
+  String get achievementsAllTitle => 'Tất cả thành tích thi đấu';
+
+  @override
   String get userProfileClubOwnerRole => 'Chủ nhiệm CLB';
 
   @override
@@ -9047,4 +9060,45 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get ranking_peakLabel => 'Cao nhất';
+
+  @override
+  String get registerSelectOption => 'Chọn một lựa chọn';
+
+  @override
+  String get registerMissingFullName => 'Họ tên';
+
+  @override
+  String get registerMissingPhone => 'Số điện thoại';
+
+  @override
+  String get registerMissingGender => 'Giới tính';
+
+  @override
+  String registerProfileIncompleteFields(Object fields) {
+    return 'Bạn cần bổ sung thông tin [$fields] trong Hồ sơ cá nhân trước khi đăng ký giải đấu.';
+  }
+
+  @override
+  String get registerClose => 'Đóng';
+
+  @override
+  String get registerRankingConsentRequired =>
+      'Vui lòng đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng.';
+
+  @override
+  String get registerBracketSingleElimination => 'Loại trực tiếp';
+
+  @override
+  String get registerBracketDoubleElimination => 'Nhánh thắng/thua';
+
+  @override
+  String get registerBracketRoundRobin => 'Vòng tròn';
+
+  @override
+  String get registerBracketGroupStageKnockout => 'Vòng bảng + loại trực tiếp';
+
+  @override
+  String registerParticipantCount(Object count) {
+    return '$count hồ sơ';
+  }
 }
