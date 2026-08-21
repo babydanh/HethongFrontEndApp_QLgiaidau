@@ -27,21 +27,24 @@ class TournamentApp extends ConsumerWidget {
     final themeMode = ref.watch(themeProvider);
     final locale = ref.watch(localeProvider);
 
-    return SocketObserver(
-      child: AppUpdateGate(
-        child: MaterialApp.router(
-        title: AppLocalizations.of(context)?.coreAppTitle ?? 'Tournament Management',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: themeMode,
-        routerConfig: router,
-        scrollBehavior: MyCustomScrollBehavior(),
-        locale: locale,
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        ),
-      ),
+    return MaterialApp.router(
+      title: 'Sporto',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
+      routerConfig: router,
+      scrollBehavior: MyCustomScrollBehavior(),
+      locale: locale,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      builder: (context, child) {
+        return SocketObserver(
+          child: AppUpdateGate(
+            child: child ?? const SizedBox.shrink(),
+          ),
+        );
+      },
     );
   }
 }
