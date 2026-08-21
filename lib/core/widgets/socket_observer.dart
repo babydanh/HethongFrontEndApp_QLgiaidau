@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/di/socket_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
-import 'package:app_quanly_giaidau/core/services/chat_socket_service.dart';
+import 'package:app_quanly_giaidau/core/services/push_notification_service.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/domain/entities/app_notification.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';

@@ -8144,6 +8144,396 @@ abstract class AppLocalizations {
   /// **'Nhập nội dung cần hỗ trợ...'**
   String get chatScreenSupportInputHint;
 
+  /// No description provided for @chatRoomSettingsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tùy chọn & Cài đặt'**
+  String get chatRoomSettingsTitle;
+
+  /// No description provided for @chatRoomAdminSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'QUẢN TRỊ PHÒNG CHAT (CHỦ PHÒNG / ADMIN)'**
+  String get chatRoomAdminSection;
+
+  /// No description provided for @chatRoomNotificationsSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'CÀI ĐẶT THÔNG BÁO'**
+  String get chatRoomNotificationsSection;
+
+  /// No description provided for @chatRoomPinnedSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'TIN NHẮN ĐÃ GHIM'**
+  String get chatRoomPinnedSection;
+
+  /// No description provided for @chatRoomSharedMediaSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'ẢNH & PHƯƠNG TIỆN ĐÃ CHIA SẺ ({count})'**
+  String chatRoomSharedMediaSection(Object count);
+
+  /// No description provided for @chatRoomMembersSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'THÀNH VIÊN TRONG PHÒNG ({count})'**
+  String chatRoomMembersSection(Object count);
+
+  /// No description provided for @chatRoomOtherOptionsSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'TÙY CHỌN KHÁC'**
+  String get chatRoomOtherOptionsSection;
+
+  /// No description provided for @chatRoomClubType.
+  ///
+  /// In vi, this message translates to:
+  /// **'👥 CÂU LẠC BỘ'**
+  String get chatRoomClubType;
+
+  /// No description provided for @chatRoomDirectType.
+  ///
+  /// In vi, this message translates to:
+  /// **'💬 TRỰC TIẾP'**
+  String get chatRoomDirectType;
+
+  /// No description provided for @chatRoomViewClub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem trang CLB'**
+  String get chatRoomViewClub;
+
+  /// No description provided for @chatRoomNotificationsMutedAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tắt thông báo phòng chat'**
+  String get chatRoomNotificationsMutedAction;
+
+  /// No description provided for @chatRoomNotificationsMentionsAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ nhận thông báo khi được nhắc tên (@mention)'**
+  String get chatRoomNotificationsMentionsAction;
+
+  /// No description provided for @chatRoomNotificationsAllAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bật tất cả thông báo'**
+  String get chatRoomNotificationsAllAction;
+
+  /// No description provided for @chatRoomRenameTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi tên phòng chat'**
+  String get chatRoomRenameTitle;
+
+  /// No description provided for @chatRoomRenameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tên phòng chat mới...'**
+  String get chatRoomRenameHint;
+
+  /// No description provided for @chatRoomSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu'**
+  String get chatRoomSave;
+
+  /// No description provided for @chatRoomChangeAvatarTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi ảnh đại diện phòng chat'**
+  String get chatRoomChangeAvatarTitle;
+
+  /// No description provided for @chatRoomChangeAvatarSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải ảnh mới từ thư viện của bạn'**
+  String get chatRoomChangeAvatarSubtitle;
+
+  /// No description provided for @chatRoomAnnouncementOnlyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chế độ chỉ thông báo'**
+  String get chatRoomAnnouncementOnlyTitle;
+
+  /// No description provided for @chatRoomAnnouncementOnlySubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ Ban Quản Trị mới có thể gửi tin nhắn'**
+  String get chatRoomAnnouncementOnlySubtitle;
+
+  /// No description provided for @chatRoomSlowModeTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chế độ làm chậm (Slow mode)'**
+  String get chatRoomSlowModeTitle;
+
+  /// No description provided for @chatRoomSlowModeWait.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên phải chờ {seconds} giây giữa mỗi tin'**
+  String chatRoomSlowModeWait(Object seconds);
+
+  /// No description provided for @chatRoomSlowModeOffSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt làm chậm (nhắn tin bình thường)'**
+  String get chatRoomSlowModeOffSubtitle;
+
+  /// No description provided for @chatRoomSlowModeOff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt'**
+  String get chatRoomSlowModeOff;
+
+  /// No description provided for @chatRoomAllNotificationsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả tin nhắn'**
+  String get chatRoomAllNotificationsTitle;
+
+  /// No description provided for @chatRoomAllNotificationsSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận thông báo cho mọi tin nhắn, ảnh và bình chọn'**
+  String get chatRoomAllNotificationsSubtitle;
+
+  /// No description provided for @chatRoomMentionsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ khi được nhắc tên (@mentions)'**
+  String get chatRoomMentionsTitle;
+
+  /// No description provided for @chatRoomMentionsSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ thông báo khi ai đó nhắc đến bạn (@bạn)'**
+  String get chatRoomMentionsSubtitle;
+
+  /// No description provided for @chatRoomMutedTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt thông báo'**
+  String get chatRoomMutedTitle;
+
+  /// No description provided for @chatRoomMutedSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt toàn bộ thông báo từ phòng chat này'**
+  String get chatRoomMutedSubtitle;
+
+  /// No description provided for @chatRoomReactionsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo khi thả cảm xúc ❤️'**
+  String get chatRoomReactionsTitle;
+
+  /// No description provided for @chatRoomReactionsSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận thông báo khi thành viên bày tỏ cảm xúc'**
+  String get chatRoomReactionsSubtitle;
+
+  /// No description provided for @chatRoomRepliesTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo khi có người trả lời 💬'**
+  String get chatRoomRepliesTitle;
+
+  /// No description provided for @chatRoomRepliesSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận thông báo khi ai đó trả lời tin nhắn của bạn'**
+  String get chatRoomRepliesSubtitle;
+
+  /// No description provided for @chatRoomSoundTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Âm thanh thông báo 🔊'**
+  String get chatRoomSoundTitle;
+
+  /// No description provided for @chatRoomSoundSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát âm thanh khi có tin nhắn mới'**
+  String get chatRoomSoundSubtitle;
+
+  /// No description provided for @chatRoomPinnedFrom.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghim từ: {sender}'**
+  String chatRoomPinnedFrom(Object sender);
+
+  /// No description provided for @chatRoomMediaPlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'[Hình ảnh/Phương tiện]'**
+  String get chatRoomMediaPlaceholder;
+
+  /// No description provided for @chatRoomGoToMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đi đến tin nhắn'**
+  String get chatRoomGoToMessage;
+
+  /// No description provided for @chatRoomSharedMediaEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có hình ảnh nào được chia sẻ trong phòng chat này.'**
+  String get chatRoomSharedMediaEmpty;
+
+  /// No description provided for @chatRoomAllMembersCanChat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả thành viên trong CLB đều có quyền tham gia và nhắn tin.'**
+  String get chatRoomAllMembersCanChat;
+
+  /// No description provided for @chatRoomRoleOwner.
+  ///
+  /// In vi, this message translates to:
+  /// **'CHỦ NHIỆM'**
+  String get chatRoomRoleOwner;
+
+  /// No description provided for @chatRoomRoleAdmin.
+  ///
+  /// In vi, this message translates to:
+  /// **'QUẢN TRỊ'**
+  String get chatRoomRoleAdmin;
+
+  /// No description provided for @chatRoomRoleMember.
+  ///
+  /// In vi, this message translates to:
+  /// **'THÀNH VIÊN'**
+  String get chatRoomRoleMember;
+
+  /// No description provided for @chatRoomClearHistoryTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa lịch sử cuộc trò chuyện?'**
+  String get chatRoomClearHistoryTitle;
+
+  /// No description provided for @chatRoomClearHistoryDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Toàn bộ tin nhắn sẽ bị xóa khỏi chế độ xem của bạn. Các thành viên khác vẫn xem được bình thường.'**
+  String get chatRoomClearHistoryDescription;
+
+  /// No description provided for @chatRoomClearHistoryAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa lịch sử'**
+  String get chatRoomClearHistoryAction;
+
+  /// No description provided for @chatRoomClearHistorySuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa lịch sử cuộc trò chuyện phía bạn.'**
+  String get chatRoomClearHistorySuccess;
+
+  /// No description provided for @chatRoomUploadAvatarError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải ảnh lên.'**
+  String get chatRoomUploadAvatarError;
+
+  /// No description provided for @chatRoomSettingsUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật cài đặt phòng chat.'**
+  String get chatRoomSettingsUpdated;
+
+  /// No description provided for @chatRoomSettingsUpdateError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật cài đặt phòng chat. Vui lòng thử lại.'**
+  String get chatRoomSettingsUpdateError;
+
+  /// No description provided for @chatRoomViewProfile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem trang cá nhân'**
+  String get chatRoomViewProfile;
+
+  /// No description provided for @chatRoomPrivateMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhắn tin riêng'**
+  String get chatRoomPrivateMessage;
+
+  /// No description provided for @chatRoomBlockUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chặn người dùng này'**
+  String get chatRoomBlockUser;
+
+  /// No description provided for @chatRoomBlockedUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chặn {name}'**
+  String chatRoomBlockedUser(Object name);
+
+  /// No description provided for @chatPollValidationError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập câu hỏi và ít nhất 2 phương án.'**
+  String get chatPollValidationError;
+
+  /// No description provided for @chatPollCreateTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo cuộc bình chọn'**
+  String get chatPollCreateTitle;
+
+  /// No description provided for @chatPollQuestionHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt câu hỏi bình chọn...'**
+  String get chatPollQuestionHint;
+
+  /// No description provided for @chatPollOptionsLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các lựa chọn:'**
+  String get chatPollOptionsLabel;
+
+  /// No description provided for @chatPollOptionHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lựa chọn {number}'**
+  String chatPollOptionHint(Object number);
+
+  /// No description provided for @chatPollAddOption.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm lựa chọn'**
+  String get chatPollAddOption;
+
+  /// No description provided for @chatPollAllowMultiple.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép chọn nhiều phương án'**
+  String get chatPollAllowMultiple;
+
+  /// No description provided for @chatPollSubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo bình chọn'**
+  String get chatPollSubmit;
+
+  /// No description provided for @chatImageLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải hình ảnh'**
+  String get chatImageLoadError;
+
+  /// No description provided for @chatImageClose.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng'**
+  String get chatImageClose;
+
   /// No description provided for @coreAppTitle.
   ///
   /// In vi, this message translates to:
@@ -8231,8 +8621,14 @@ abstract class AppLocalizations {
   /// No description provided for @coreCountdownTime.
   ///
   /// In vi, this message translates to:
-  /// **'Còn {time}'**
-  String coreCountdownTime(Object time);
+  /// **'Còn {days} ngày {clock}'**
+  String coreCountdownTime(Object clock, Object days);
+
+  /// No description provided for @coreCountdownClock.
+  ///
+  /// In vi, this message translates to:
+  /// **'Còn {clock}'**
+  String coreCountdownClock(Object clock);
 
   /// No description provided for @coreView.
   ///
@@ -8245,6 +8641,450 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đang diễn ra'**
   String get coreLive;
+
+  /// No description provided for @coreShareDetailsAt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem chi tiết tại: {url}'**
+  String coreShareDetailsAt(Object url);
+
+  /// No description provided for @settingsImageSizeLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kích thước ảnh không được vượt quá 5MB'**
+  String get settingsImageSizeLimit;
+
+  /// No description provided for @settingsGenderChangeTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Yêu cầu thay đổi giới tính'**
+  String get settingsGenderChangeTitle;
+
+  /// No description provided for @settingsGenderLockedMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vì bạn đã hoàn thành ít nhất một giải đấu, giới tính đã bị khóa để đảm bảo công bằng. Yêu cầu sẽ được gửi tới Admin để phê duyệt thủ công.'**
+  String get settingsGenderLockedMessage;
+
+  /// No description provided for @settingsDesiredGender.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới tính mong muốn'**
+  String get settingsDesiredGender;
+
+  /// No description provided for @settingsRequestSent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi yêu cầu. Vui lòng chờ Admin phê duyệt.'**
+  String get settingsRequestSent;
+
+  /// No description provided for @settingsRequestFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi yêu cầu thất bại. Vui lòng thử lại.'**
+  String get settingsRequestFailed;
+
+  /// No description provided for @settingsSendRequest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi yêu cầu'**
+  String get settingsSendRequest;
+
+  /// No description provided for @settingsSaveChanges.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu thay đổi'**
+  String get settingsSaveChanges;
+
+  /// No description provided for @settingsProfileUpdateError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật hồ sơ. Vui lòng thử lại.'**
+  String get settingsProfileUpdateError;
+
+  /// No description provided for @settingsProfileLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải hồ sơ'**
+  String get settingsProfileLoadError;
+
+  /// No description provided for @settingsFullNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập họ tên đầy đủ'**
+  String get settingsFullNameHint;
+
+  /// No description provided for @settingsFullNameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập họ tên'**
+  String get settingsFullNameRequired;
+
+  /// No description provided for @settingsFullNameMin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Họ tên phải có ít nhất 2 ký tự'**
+  String get settingsFullNameMin;
+
+  /// No description provided for @settingsFullNameMax.
+  ///
+  /// In vi, this message translates to:
+  /// **'Họ tên tối đa 100 ký tự'**
+  String get settingsFullNameMax;
+
+  /// No description provided for @settingsPhoneInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số điện thoại không hợp lệ'**
+  String get settingsPhoneInvalid;
+
+  /// No description provided for @settingsCompetitionRegion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khu vực tranh tài'**
+  String get settingsCompetitionRegion;
+
+  /// No description provided for @settingsCompetitionRegionHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn khu vực để tham gia xếp hạng Tier S'**
+  String get settingsCompetitionRegionHint;
+
+  /// No description provided for @settingsDetailedAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ chi tiết'**
+  String get settingsDetailedAddress;
+
+  /// No description provided for @settingsDetailedAddressHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập địa chỉ cụ thể của bạn'**
+  String get settingsDetailedAddressHint;
+
+  /// No description provided for @settingsAddressMax.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ tối đa 255 ký tự'**
+  String get settingsAddressMax;
+
+  /// No description provided for @settingsAutoDetected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tự nhận diện: {province}'**
+  String settingsAutoDetected(Object province);
+
+  /// No description provided for @settingsBio.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới thiệu bản thân'**
+  String get settingsBio;
+
+  /// No description provided for @settingsBioHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Viết một chút về phong cách chơi của bạn...'**
+  String get settingsBioHint;
+
+  /// No description provided for @settingsBioMax.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới thiệu tối đa 500 ký tự'**
+  String get settingsBioMax;
+
+  /// No description provided for @settingsUploading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải...'**
+  String get settingsUploading;
+
+  /// No description provided for @settingsChangeCover.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thay đổi ảnh bìa'**
+  String get settingsChangeCover;
+
+  /// No description provided for @settingsTapToChangeAvatar.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạm để đổi ảnh đại diện'**
+  String get settingsTapToChangeAvatar;
+
+  /// No description provided for @settingsChooseDateOfBirth.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ngày sinh'**
+  String get settingsChooseDateOfBirth;
+
+  /// No description provided for @settingsGenderLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới tính đã bị khóa sau khi giải đấu hoàn thành.'**
+  String get settingsGenderLocked;
+
+  /// No description provided for @settingsRequestGenderChange.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi yêu cầu đổi'**
+  String get settingsRequestGenderChange;
+
+  /// No description provided for @settingsNoTierSRegion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa chọn (Không tranh hạng Tier S)'**
+  String get settingsNoTierSRegion;
+
+  /// No description provided for @commonCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy bỏ'**
+  String get commonCancel;
+
+  /// No description provided for @settingsBankLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải thông tin ngân hàng'**
+  String get settingsBankLoadError;
+
+  /// No description provided for @settingsRefundSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu cấu hình hoàn tiền'**
+  String get settingsRefundSaved;
+
+  /// No description provided for @settingsBankUpdateError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể lưu thông tin ngân hàng. Vui lòng thử lại.'**
+  String get settingsBankUpdateError;
+
+  /// No description provided for @settingsPayoutMethod.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngân hàng / Ví nhận tiền'**
+  String get settingsPayoutMethod;
+
+  /// No description provided for @settingsNoBank.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa chọn ngân hàng/ví'**
+  String get settingsNoBank;
+
+  /// No description provided for @settingsWalletPrefix.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví điện tử {wallet}'**
+  String settingsWalletPrefix(Object wallet);
+
+  /// No description provided for @settingsWalletPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số điện thoại ví'**
+  String get settingsWalletPhone;
+
+  /// No description provided for @settingsAccountNumber.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số tài khoản'**
+  String get settingsAccountNumber;
+
+  /// No description provided for @settingsWalletNumberHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: 0912345678'**
+  String get settingsWalletNumberHint;
+
+  /// No description provided for @settingsBankNumberHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: 0011001234567'**
+  String get settingsBankNumberHint;
+
+  /// No description provided for @settingsAccountHolder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên chủ tài khoản / ví (Viết hoa không dấu)'**
+  String get settingsAccountHolder;
+
+  /// No description provided for @settingsAccountHolderHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: NGUYEN VAN A'**
+  String get settingsAccountHolderHint;
+
+  /// No description provided for @settingsRefundInfo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu hình tài khoản nhận hoàn tiền chính xác để BTC gửi lại lệ phí giải khi bạn rút khỏi giải trước khi giải khởi tranh. Dữ liệu được bảo mật.'**
+  String get settingsRefundInfo;
+
+  /// No description provided for @settingsVerificationStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái xác thực'**
+  String get settingsVerificationStatus;
+
+  /// No description provided for @settingsPhoneNotUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa cập nhật số điện thoại'**
+  String get settingsPhoneNotUpdated;
+
+  /// No description provided for @settingsVerifyEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác minh Email'**
+  String get settingsVerifyEmail;
+
+  /// No description provided for @settingsVerifyEmailSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi mã xác minh tới email đang dùng'**
+  String get settingsVerifyEmailSubtitle;
+
+  /// No description provided for @settingsVerifyPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác minh số điện thoại'**
+  String get settingsVerifyPhone;
+
+  /// No description provided for @settingsVerifyPhoneSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi mã OTP tới số điện thoại đang dùng'**
+  String get settingsVerifyPhoneSubtitle;
+
+  /// No description provided for @settingsStatusLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải trạng thái'**
+  String get settingsStatusLoadError;
+
+  /// No description provided for @settingsPasswordSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu'**
+  String get settingsPasswordSection;
+
+  /// No description provided for @settingsChangePasswordSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật mật khẩu đăng nhập'**
+  String get settingsChangePasswordSubtitle;
+
+  /// No description provided for @settingsStrongPassword.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu mạnh'**
+  String get settingsStrongPassword;
+
+  /// No description provided for @settingsStrongPasswordSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tối thiểu 8 ký tự, nên có chữ hoa và số'**
+  String get settingsStrongPasswordSubtitle;
+
+  /// No description provided for @settingsSessions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phiên đăng nhập'**
+  String get settingsSessions;
+
+  /// No description provided for @settingsCurrentDevice.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị hiện tại'**
+  String get settingsCurrentDevice;
+
+  /// No description provided for @settingsActive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang hoạt động'**
+  String get settingsActive;
+
+  /// No description provided for @settingsOnline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Online'**
+  String get settingsOnline;
+
+  /// No description provided for @settingsCommunitySafety.
+  ///
+  /// In vi, this message translates to:
+  /// **'An toàn cộng đồng'**
+  String get settingsCommunitySafety;
+
+  /// No description provided for @settingsMyReports.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo của tôi'**
+  String get settingsMyReports;
+
+  /// No description provided for @settingsMyReportsSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo dõi trạng thái và kết quả xử lý báo cáo'**
+  String get settingsMyReportsSubtitle;
+
+  /// No description provided for @settingsDangerZone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vùng nguy hiểm'**
+  String get settingsDangerZone;
+
+  /// No description provided for @settingsDeleteAccountTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa tài khoản cá nhân'**
+  String get settingsDeleteAccountTitle;
+
+  /// No description provided for @settingsDeleteAccountDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khi thực hiện xóa tài khoản, tất cả dữ liệu cá nhân, hồ sơ thi đấu và thông tin liên quan sẽ bị ẩn vĩnh viễn. Bạn không thể đăng nhập hoặc tham gia giải đấu nào sau hành động này.'**
+  String get settingsDeleteAccountDescription;
+
+  /// No description provided for @settingsDeleteAccount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa tài khoản'**
+  String get settingsDeleteAccount;
+
+  /// No description provided for @settingsConfirmDeleteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận xóa tài khoản'**
+  String get settingsConfirmDeleteTitle;
+
+  /// No description provided for @settingsDeleteIrreversible.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hành động này KHÔNG THỂ HOÀN TÁC. Tất cả dữ liệu cá nhân, hồ sơ thi đấu sẽ bị ẩn vĩnh viễn. Nhập mật khẩu hiện tại để tiếp tục.'**
+  String get settingsDeleteIrreversible;
+
+  /// No description provided for @settingsConfirmPassword.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu xác nhận'**
+  String get settingsConfirmPassword;
+
+  /// No description provided for @settingsConfirmDelete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận xóa'**
+  String get settingsConfirmDelete;
+
+  /// No description provided for @settingsPasswordRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập mật khẩu xác nhận'**
+  String get settingsPasswordRequired;
+
+  /// No description provided for @settingsDeleteFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa tài khoản thất bại. Vui lòng thử lại.'**
+  String get settingsDeleteFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -132,7 +132,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsClubInvites => 'Club Invites';
 
   @override
-  String get settingsChangePassword => 'Change Password';
+  String get settingsChangePassword => 'Change password';
 
   @override
   String get settingsEloHistory => 'ELO History';
@@ -2242,18 +2242,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginRegister_appleLabel => 'Apple';
 
   @override
-  String get loginRegister_googleSignInButton => 'Đăng nhập bằng Google';
+  String get loginRegister_googleSignInButton => 'Continue with Google';
 
   @override
-  String get loginRegister_appleSignInButton => 'Đăng nhập bằng Apple';
+  String get loginRegister_appleSignInButton => 'Continue with Apple';
 
   @override
   String get loginRegister_googleTokenMissing =>
-      'Không nhận được ID Token từ Google';
+      'Google sign-in did not return a token. Please try again.';
 
   @override
   String get loginRegister_appleTokenMissing =>
-      'Không nhận được ID Token từ Apple';
+      'Apple sign-in did not return a token. Please try again.';
 
   @override
   String get loginRegister_loginNowAction => 'Login now';
@@ -4297,7 +4297,228 @@ class AppLocalizationsEn extends AppLocalizations {
       'Send your question and our support team will assist you as soon as possible.';
 
   @override
-  String get chatScreenSupportInputHint => 'Enter your support question...';
+  String get chatScreenSupportInputHint => 'Enter your support request...';
+
+  @override
+  String get chatRoomSettingsTitle => 'Options & Settings';
+
+  @override
+  String get chatRoomAdminSection => 'CHAT ROOM ADMINISTRATION (OWNER / ADMIN)';
+
+  @override
+  String get chatRoomNotificationsSection => 'NOTIFICATION SETTINGS';
+
+  @override
+  String get chatRoomPinnedSection => 'PINNED MESSAGES';
+
+  @override
+  String chatRoomSharedMediaSection(Object count) {
+    return 'SHARED PHOTOS & MEDIA ($count)';
+  }
+
+  @override
+  String chatRoomMembersSection(Object count) {
+    return 'ROOM MEMBERS ($count)';
+  }
+
+  @override
+  String get chatRoomOtherOptionsSection => 'OTHER OPTIONS';
+
+  @override
+  String get chatRoomClubType => '👥 CLUB';
+
+  @override
+  String get chatRoomDirectType => '💬 DIRECT';
+
+  @override
+  String get chatRoomViewClub => 'View club page';
+
+  @override
+  String get chatRoomNotificationsMutedAction =>
+      'Chat room notifications muted';
+
+  @override
+  String get chatRoomNotificationsMentionsAction =>
+      'Only receive notifications when mentioned (@mention)';
+
+  @override
+  String get chatRoomNotificationsAllAction => 'All notifications enabled';
+
+  @override
+  String get chatRoomRenameTitle => 'Rename chat room';
+
+  @override
+  String get chatRoomRenameHint => 'Enter a new chat room name...';
+
+  @override
+  String get chatRoomSave => 'Save';
+
+  @override
+  String get chatRoomChangeAvatarTitle => 'Change chat room avatar';
+
+  @override
+  String get chatRoomChangeAvatarSubtitle =>
+      'Upload a new image from your gallery';
+
+  @override
+  String get chatRoomAnnouncementOnlyTitle => 'Announcements-only mode';
+
+  @override
+  String get chatRoomAnnouncementOnlySubtitle =>
+      'Only administrators can send messages';
+
+  @override
+  String get chatRoomSlowModeTitle => 'Slow mode';
+
+  @override
+  String chatRoomSlowModeWait(Object seconds) {
+    return 'Members must wait $seconds seconds between messages';
+  }
+
+  @override
+  String get chatRoomSlowModeOffSubtitle => 'Slow mode off (normal messaging)';
+
+  @override
+  String get chatRoomSlowModeOff => 'Off';
+
+  @override
+  String get chatRoomAllNotificationsTitle => 'All messages';
+
+  @override
+  String get chatRoomAllNotificationsSubtitle =>
+      'Notify me about every message, photo, and poll';
+
+  @override
+  String get chatRoomMentionsTitle => 'Only when mentioned (@mentions)';
+
+  @override
+  String get chatRoomMentionsSubtitle =>
+      'Notify me only when someone mentions you (@you)';
+
+  @override
+  String get chatRoomMutedTitle => 'Mute notifications';
+
+  @override
+  String get chatRoomMutedSubtitle =>
+      'Mute all notifications from this chat room';
+
+  @override
+  String get chatRoomReactionsTitle => 'Reaction notifications ❤️';
+
+  @override
+  String get chatRoomReactionsSubtitle => 'Notify me when members react';
+
+  @override
+  String get chatRoomRepliesTitle => 'Reply notifications 💬';
+
+  @override
+  String get chatRoomRepliesSubtitle =>
+      'Notify me when someone replies to your message';
+
+  @override
+  String get chatRoomSoundTitle => 'Notification sounds 🔊';
+
+  @override
+  String get chatRoomSoundSubtitle => 'Play a sound when new messages arrive';
+
+  @override
+  String chatRoomPinnedFrom(Object sender) {
+    return 'Pinned by: $sender';
+  }
+
+  @override
+  String get chatRoomMediaPlaceholder => '[Image/Media]';
+
+  @override
+  String get chatRoomGoToMessage => 'Go to message';
+
+  @override
+  String get chatRoomSharedMediaEmpty =>
+      'No photos have been shared in this chat room.';
+
+  @override
+  String get chatRoomAllMembersCanChat =>
+      'All club members can participate and send messages.';
+
+  @override
+  String get chatRoomRoleOwner => 'OWNER';
+
+  @override
+  String get chatRoomRoleAdmin => 'ADMIN';
+
+  @override
+  String get chatRoomRoleMember => 'MEMBER';
+
+  @override
+  String get chatRoomClearHistoryTitle => 'Clear chat history?';
+
+  @override
+  String get chatRoomClearHistoryDescription =>
+      'All messages will be removed from your view. Other members can still see them normally.';
+
+  @override
+  String get chatRoomClearHistoryAction => 'Clear history';
+
+  @override
+  String get chatRoomClearHistorySuccess =>
+      'Chat history was cleared from your view.';
+
+  @override
+  String get chatRoomUploadAvatarError => 'Unable to upload the image.';
+
+  @override
+  String get chatRoomSettingsUpdated => 'Chat room settings updated.';
+
+  @override
+  String get chatRoomSettingsUpdateError =>
+      'Unable to update chat room settings. Please try again.';
+
+  @override
+  String get chatRoomViewProfile => 'View profile';
+
+  @override
+  String get chatRoomPrivateMessage => 'Send private message';
+
+  @override
+  String get chatRoomBlockUser => 'Block this user';
+
+  @override
+  String chatRoomBlockedUser(Object name) {
+    return 'Blocked $name';
+  }
+
+  @override
+  String get chatPollValidationError =>
+      'Please enter a question and at least 2 options.';
+
+  @override
+  String get chatPollCreateTitle => 'Create a poll';
+
+  @override
+  String get chatPollQuestionHint => 'Ask a poll question...';
+
+  @override
+  String get chatPollOptionsLabel => 'Options:';
+
+  @override
+  String chatPollOptionHint(Object number) {
+    return 'Option $number';
+  }
+
+  @override
+  String get chatPollAddOption => 'Add option';
+
+  @override
+  String get chatPollAllowMultiple => 'Allow multiple selections';
+
+  @override
+  String get chatPollSubmit => 'Create poll';
+
+  @override
+  String get chatImageLoadError => 'Unable to load image';
+
+  @override
+  String get chatImageClose => 'Close';
 
   @override
   String get coreAppTitle => 'Tournament Management';
@@ -4346,8 +4567,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String coreCountdownTime(Object time) {
-    return '$time remaining';
+  String coreCountdownTime(Object clock, Object days) {
+    return '$days days $clock remaining';
+  }
+
+  @override
+  String coreCountdownClock(Object clock) {
+    return '$clock remaining';
   }
 
   @override
@@ -4355,4 +4581,249 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coreLive => 'Live';
+
+  @override
+  String coreShareDetailsAt(Object url) {
+    return 'View details at: $url';
+  }
+
+  @override
+  String get settingsImageSizeLimit => 'Image size must not exceed 5 MB';
+
+  @override
+  String get settingsGenderChangeTitle => 'Request gender change';
+
+  @override
+  String get settingsGenderLockedMessage =>
+      'Because you have completed at least one tournament, your gender is locked to ensure fair play. The request will be sent to an admin for manual approval.';
+
+  @override
+  String get settingsDesiredGender => 'Requested gender';
+
+  @override
+  String get settingsRequestSent =>
+      'Request sent. Please wait for admin approval.';
+
+  @override
+  String get settingsRequestFailed =>
+      'Could not send the request. Please try again.';
+
+  @override
+  String get settingsSendRequest => 'Send request';
+
+  @override
+  String get settingsSaveChanges => 'Changes saved';
+
+  @override
+  String get settingsProfileUpdateError =>
+      'Could not update your profile. Please try again.';
+
+  @override
+  String get settingsProfileLoadError => 'Could not load your profile';
+
+  @override
+  String get settingsFullNameHint => 'Enter your full name';
+
+  @override
+  String get settingsFullNameRequired => 'Please enter your full name';
+
+  @override
+  String get settingsFullNameMin => 'Name must contain at least 2 characters';
+
+  @override
+  String get settingsFullNameMax => 'Name must not exceed 100 characters';
+
+  @override
+  String get settingsPhoneInvalid => 'Invalid phone number';
+
+  @override
+  String get settingsCompetitionRegion => 'Competition region';
+
+  @override
+  String get settingsCompetitionRegionHint =>
+      'Choose a region to join the Tier S ranking';
+
+  @override
+  String get settingsDetailedAddress => 'Detailed address';
+
+  @override
+  String get settingsDetailedAddressHint => 'Enter your detailed address';
+
+  @override
+  String get settingsAddressMax => 'Address must not exceed 255 characters';
+
+  @override
+  String settingsAutoDetected(Object province) {
+    return 'Automatically detected: $province';
+  }
+
+  @override
+  String get settingsBio => 'About you';
+
+  @override
+  String get settingsBioHint => 'Write a little about your playing style...';
+
+  @override
+  String get settingsBioMax => 'Introduction must not exceed 500 characters';
+
+  @override
+  String get settingsUploading => 'Uploading...';
+
+  @override
+  String get settingsChangeCover => 'Change cover photo';
+
+  @override
+  String get settingsTapToChangeAvatar => 'Tap to change profile photo';
+
+  @override
+  String get settingsChooseDateOfBirth => 'Choose date of birth';
+
+  @override
+  String get settingsGenderLocked =>
+      'Gender is locked after a tournament is completed.';
+
+  @override
+  String get settingsRequestGenderChange => 'Request change';
+
+  @override
+  String get settingsNoTierSRegion => 'Not selected (not ranked in Tier S)';
+
+  @override
+  String get commonCancel => 'Cancel';
+
+  @override
+  String get settingsBankLoadError => 'Unable to load bank information';
+
+  @override
+  String get settingsRefundSaved => 'Refund account settings saved';
+
+  @override
+  String get settingsBankUpdateError =>
+      'Could not save bank information. Please try again.';
+
+  @override
+  String get settingsPayoutMethod => 'Bank / payout wallet';
+
+  @override
+  String get settingsNoBank => 'No bank or wallet selected';
+
+  @override
+  String settingsWalletPrefix(Object wallet) {
+    return '$wallet wallet';
+  }
+
+  @override
+  String get settingsWalletPhone => 'Wallet phone number';
+
+  @override
+  String get settingsAccountNumber => 'Account number';
+
+  @override
+  String get settingsWalletNumberHint => 'Example: 0912345678';
+
+  @override
+  String get settingsBankNumberHint => 'Example: 0011001234567';
+
+  @override
+  String get settingsAccountHolder =>
+      'Account / wallet holder (uppercase, no accents)';
+
+  @override
+  String get settingsAccountHolderHint => 'Example: NGUYEN VAN A';
+
+  @override
+  String get settingsRefundInfo =>
+      'Configure an accurate refund account so the tournament organizer can return your entry fee if you withdraw before the tournament starts. Your data is protected.';
+
+  @override
+  String get settingsVerificationStatus => 'Verification status';
+
+  @override
+  String get settingsPhoneNotUpdated => 'Phone number not updated';
+
+  @override
+  String get settingsVerifyEmail => 'Verify email';
+
+  @override
+  String get settingsVerifyEmailSubtitle =>
+      'Send a verification code to your current email';
+
+  @override
+  String get settingsVerifyPhone => 'Verify phone number';
+
+  @override
+  String get settingsVerifyPhoneSubtitle =>
+      'Send an OTP to your current phone number';
+
+  @override
+  String get settingsStatusLoadError => 'Unable to load status';
+
+  @override
+  String get settingsPasswordSection => 'Password';
+
+  @override
+  String get settingsChangePasswordSubtitle => 'Update your sign-in password';
+
+  @override
+  String get settingsStrongPassword => 'Strong password';
+
+  @override
+  String get settingsStrongPasswordSubtitle =>
+      'At least 8 characters; uppercase letters and numbers are recommended';
+
+  @override
+  String get settingsSessions => 'Sign-in sessions';
+
+  @override
+  String get settingsCurrentDevice => 'Current device';
+
+  @override
+  String get settingsActive => 'Active';
+
+  @override
+  String get settingsOnline => 'Online';
+
+  @override
+  String get settingsCommunitySafety => 'Community safety';
+
+  @override
+  String get settingsMyReports => 'My reports';
+
+  @override
+  String get settingsMyReportsSubtitle =>
+      'Track report status and resolution results';
+
+  @override
+  String get settingsDangerZone => 'Danger zone';
+
+  @override
+  String get settingsDeleteAccountTitle => 'Delete personal account';
+
+  @override
+  String get settingsDeleteAccountDescription =>
+      'Deleting your account permanently hides all personal data, tournament history, and related information. You will not be able to sign in or join tournaments after this action.';
+
+  @override
+  String get settingsDeleteAccount => 'Delete account';
+
+  @override
+  String get settingsConfirmDeleteTitle => 'Confirm account deletion';
+
+  @override
+  String get settingsDeleteIrreversible =>
+      'This action CANNOT BE UNDONE. All personal data and tournament history will be permanently hidden. Enter your current password to continue.';
+
+  @override
+  String get settingsConfirmPassword => 'Confirmation password';
+
+  @override
+  String get settingsConfirmDelete => 'Confirm deletion';
+
+  @override
+  String get settingsPasswordRequired =>
+      'Please enter your confirmation password';
+
+  @override
+  String get settingsDeleteFailed =>
+      'Account deletion failed. Please try again.';
 }

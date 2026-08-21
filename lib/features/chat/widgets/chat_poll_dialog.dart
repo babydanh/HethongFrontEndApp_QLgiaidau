@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class ChatPollDialog extends StatefulWidget {
@@ -50,6 +51,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
   }
 
   void _submit() {
+    final l10n = AppLocalizations.of(context);
     final question = _questionController.text.trim();
     final options = _optionControllers
         .map((c) => c.text.trim())
@@ -58,7 +60,11 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
 
     if (question.isEmpty || options.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập câu hỏi và ít nhất 2 phương án.')),
+        SnackBar(
+          content: Text(
+            l10n?.chatPollValidationError ?? 'Please enter a question and at least 2 options.',
+          ),
+        ),
       );
       return;
     }
@@ -72,6 +78,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -116,7 +123,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'Tạo cuộc bình chọn',
+                    l10n?.chatPollCreateTitle ?? 'Create a poll',
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -136,7 +143,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                 controller: _questionController,
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 decoration: InputDecoration(
-                  hintText: 'Đặt câu hỏi bình chọn...',
+                  hintText: l10n?.chatPollQuestionHint ?? 'Ask a poll question...',
                   hintStyle: TextStyle(color: colors.textMuted),
                   filled: true,
                   fillColor: isDark ? const Color(0xFF242526) : const Color(0xFFF0F2F5),
@@ -149,7 +156,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Các lựa chọn:',
+                l10n?.chatPollOptionsLabel ?? 'Options:',
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.textSecondary),
               ),
               const SizedBox(height: 8),
@@ -166,7 +173,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                           controller: controller,
                           style: const TextStyle(fontSize: 14),
                           decoration: InputDecoration(
-                            hintText: 'Lựa chọn ${idx + 1}',
+                            hintText: l10n?.chatPollOptionHint(idx + 1) ?? 'Option ${idx + 1}',
                             hintStyle: TextStyle(color: colors.textMuted),
                             filled: true,
                             fillColor: isDark ? const Color(0xFF242526) : const Color(0xFFF0F2F5),
@@ -191,12 +198,18 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                 TextButton.icon(
                   onPressed: _addOption,
                   icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-                  label: const Text('Thêm lựa chọn', style: TextStyle(fontWeight: FontWeight.w600)),
+                  label: Text(
+                    l10n?.chatPollAddOption ?? 'Add option',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
               const SizedBox(height: 8),
               // Multiple Answers Switch
               SwitchListTile.adaptive(
-                title: const Text('Cho phép chọn nhiều phương án', style: TextStyle(fontSize: 14)),
+                title: Text(
+                  l10n?.chatPollAllowMultiple ?? 'Allow multiple selections',
+                  style: const TextStyle(fontSize: 14),
+                ),
                 value: _allowMultiple,
                 onChanged: (v) => setState(() => _allowMultiple = v),
                 contentPadding: EdgeInsets.zero,
@@ -212,7 +225,10 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: const Text('Tạo bình chọn', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  child: Text(
+                    l10n?.chatPollSubmit ?? 'Create poll',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
                 ),
               ),
             ],

@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 enum ChatNotificationMode { all, mentionsOnly, muted }
 
@@ -144,6 +145,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Future<void> _updateNotifMode(ChatNotificationMode mode) async {
+    final l10n = AppLocalizations.of(context);
     setState(() => _notifMode = mode);
 
     try {
@@ -167,10 +169,10 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           SnackBar(
             content: Text(
               mode == ChatNotificationMode.muted
-                  ? 'Đã tắt thông báo phòng chat'
+                  ? (l10n?.chatRoomNotificationsMutedAction ?? 'Chat room notifications muted')
                   : mode == ChatNotificationMode.mentionsOnly
-                  ? 'Chỉ nhận thông báo khi được nhắc tên (@mention)'
-                  : 'Đã bật tất cả thông báo',
+                  ? (l10n?.chatRoomNotificationsMentionsAction ?? 'Only receive notifications when mentioned (@mention)')
+                  : (l10n?.chatRoomNotificationsAllAction ?? 'All notifications enabled'),
             ),
             behavior: SnackBarBehavior.floating,
             backgroundColor: const Color(0xFF059669),
@@ -183,30 +185,31 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Future<void> _updateRoomNameDialog() async {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController(text: _currentRoomName);
     final newName = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text(
-          'Đổi tên phòng chat',
+        title: Text(
+          l10n?.chatRoomRenameTitle ?? 'Rename chat room',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'Nhập tên phòng chat mới...',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: l10n?.chatRoomRenameHint ?? 'Enter a new chat room name...',
+            border: const OutlineInputBorder(),
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
+            child: Text(l10n?.commonCancel ?? 'Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Lưu'),
+            child: Text(l10n?.chatRoomSave ?? 'Save'),
           ),
         ],
       ),
@@ -220,6 +223,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Future<void> _pickAndUploadAvatar() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final picker = ImagePicker();
       final picked = await picker.pickImage(
@@ -249,7 +253,9 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Không thể tải ảnh lên.')));
+        ).showSnackBar(
+          SnackBar(content: Text(l10n?.chatRoomUploadAvatarError ?? 'Unable to upload the image.')),
+        );
       }
     } finally {
       if (mounted) setState(() => _isUpdatingAdminSettings = false);
@@ -257,14 +263,15 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Future<void> _saveAdminSettings(Map<String, dynamic> payload) async {
+    final l10n = AppLocalizations.of(context);
     setState(() => _isUpdatingAdminSettings = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
       await dio.put('/chat/rooms/${widget.roomId}/settings', data: payload);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã cập nhật cài đặt phòng chat.'),
+          SnackBar(
+            content: Text(l10n?.chatRoomSettingsUpdated ?? 'Chat room settings updated.'),
             backgroundColor: Color(0xFF059669),
             behavior: SnackBarBehavior.floating,
           ),
@@ -275,7 +282,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Lỗi cập nhật: ${e.toString().replaceAll("Exception: ", "")}',
+              l10n?.chatRoomSettingsUpdateError ?? 'Unable to update chat room settings. Please try again.',
             ),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
@@ -287,24 +294,25 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Future<void> _clearChatHistory() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xóa lịch sử cuộc trò chuyện?'),
-        content: const Text(
-          'Toàn bộ tin nhắn sẽ bị xóa khỏi chế độ xem của bạn. Các thành viên khác vẫn xem được bình thường.',
+        title: Text(l10n?.chatRoomClearHistoryTitle ?? 'Clear chat history?'),
+        content: Text(
+          l10n?.chatRoomClearHistoryDescription ?? 'All messages will be removed from your view. Other members can still see them normally.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Hủy'),
+            child: Text(l10n?.commonCancel ?? 'Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('Xóa lịch sử'),
+            child: Text(l10n?.chatRoomClearHistoryAction ?? 'Clear history'),
           ),
         ],
       ),
@@ -317,8 +325,8 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đã xóa lịch sử cuộc trò chuyện phía bạn.'),
+            SnackBar(
+              content: Text(l10n?.chatRoomClearHistorySuccess ?? 'Chat history was cleared from your view.'),
               backgroundColor: Color(0xFF059669),
             ),
           );
@@ -329,6 +337,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   void _showParticipantActions(ChatParticipant participant) {
+    final l10n = AppLocalizations.of(context);
     final currentUserId = ref.read(userProfileProvider).asData?.value.id;
     if (participant.id == currentUserId) return;
 
@@ -358,12 +367,12 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 participant.fullName,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: Text(participant.role ?? 'Thành viên'),
+              subtitle: Text(participant.role ?? (l10n?.chatRoomRoleMember ?? 'MEMBER')),
             ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.person_outline_rounded),
-              title: const Text('Xem trang cá nhân'),
+              title: Text(l10n?.chatRoomViewProfile ?? 'View profile'),
               onTap: () {
                 Navigator.pop(sheetCtx);
                 Navigator.pop(context);
@@ -375,7 +384,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 Icons.chat_bubble_outline_rounded,
                 color: AppTheme.primary,
               ),
-              title: const Text('Nhắn tin riêng'),
+              title: Text(l10n?.chatRoomPrivateMessage ?? 'Send private message'),
               onTap: () async {
                 Navigator.pop(sheetCtx);
                 Navigator.pop(context);
@@ -401,7 +410,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
             ListTile(
               leading: Icon(Icons.block_rounded, color: context.colors.error),
               title: Text(
-                'Chặn người dùng này',
+                l10n?.chatRoomBlockUser ?? 'Block this user',
                 style: TextStyle(color: context.colors.error),
               ),
               onTap: () async {
@@ -412,7 +421,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Đã chặn ${participant.fullName}'),
+                        content: Text(l10n?.chatRoomBlockedUser(participant.fullName) ?? 'Blocked ${participant.fullName}'),
                       ),
                     );
                   }
@@ -438,6 +447,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
@@ -469,7 +479,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 const SizedBox(width: 40),
                 Expanded(
                   child: Text(
-                    'Tùy chọn & Cài đặt',
+                    l10n?.chatRoomSettingsTitle ?? 'Options & Settings',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
@@ -503,7 +513,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 // ── Room Admin Management (For Owner / Admin) ──
                 if (_isRoomAdmin) ...[
                   _buildSectionHeader(
-                    'QUẢN TRỊ PHÒNG CHAT (CHỦ PHÒNG / ADMIN)',
+                    l10n?.chatRoomAdminSection ?? 'CHAT ROOM ADMINISTRATION (OWNER / ADMIN)',
                     Icons.admin_panel_settings_outlined,
                     colors,
                   ),
@@ -514,7 +524,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
                 // ── Notification Settings Section ──
                 _buildSectionHeader(
-                  'CÀI ĐẶT THÔNG BÁO',
+                  l10n?.chatRoomNotificationsSection ?? 'NOTIFICATION SETTINGS',
                   Icons.notifications_active_outlined,
                   colors,
                 ),
@@ -529,7 +539,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                         widget.pinnedMessage!.mediaUrls.isNotEmpty ||
                         widget.pinnedMessage!.poll != null)) ...[
                   _buildSectionHeader(
-                    'TIN NHẮN ĐÃ GHIM',
+                    l10n?.chatRoomPinnedSection ?? 'PINNED MESSAGES',
                     Icons.push_pin_outlined,
                     colors,
                   ),
@@ -540,7 +550,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
                 // ── Shared Media Section ──
                 _buildSectionHeader(
-                  'ẢNH & PHƯƠNG TIỆN ĐÃ CHIA SẺ (${_allSharedMedia.length})',
+                  l10n?.chatRoomSharedMediaSection(_allSharedMedia.length) ?? 'SHARED PHOTOS & MEDIA (${_allSharedMedia.length})',
                   Icons.photo_library_outlined,
                   colors,
                 ),
@@ -550,7 +560,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
                 // ── Members Section ──
                 _buildSectionHeader(
-                  'THÀNH VIÊN TRONG PHÒNG (${_participants.isNotEmpty ? _participants.length : 1})',
+                  l10n?.chatRoomMembersSection(_participants.isNotEmpty ? _participants.length : 1) ?? 'ROOM MEMBERS (${_participants.isNotEmpty ? _participants.length : 1})',
                   Icons.people_alt_outlined,
                   colors,
                 ),
@@ -560,7 +570,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
                 // ── Danger / Clear Actions ──
                 _buildSectionHeader(
-                  'TÙY CHỌN KHÁC',
+                  l10n?.chatRoomOtherOptionsSection ?? 'OTHER OPTIONS',
                   Icons.settings_outlined,
                   colors,
                 ),
@@ -598,6 +608,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildProfileBanner(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context);
     final avatar = _currentRoomAvatar;
     return Container(
       padding: const EdgeInsets.all(16),
@@ -690,7 +701,9 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  widget.roomType == 'CLUB' ? '👥 CÂU LẠC BỘ' : '💬 TRỰC TIẾP',
+                  widget.roomType == 'CLUB'
+                      ? (l10n?.chatRoomClubType ?? '👥 CLUB')
+                      : (l10n?.chatRoomDirectType ?? '💬 DIRECT'),
                   style: const TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
@@ -713,11 +726,11 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                     Navigator.pop(context);
                     context.push('/club/${widget.communityId}');
                   },
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Xem trang CLB',
+                        l10n?.chatRoomViewClub ?? 'View club page',
                         style: TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w700,
@@ -737,6 +750,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildQuickActions(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Expanded(
@@ -745,8 +759,8 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 ? Icons.notifications_off_rounded
                 : Icons.notifications_active_rounded,
             label: _notifMode == ChatNotificationMode.muted
-                ? 'Đã tắt âm'
-                : 'Thông báo',
+                ? (l10n?.chatRoomMutedTitle ?? 'Mute notifications')
+                : (l10n?.chatRoomNotificationsSection ?? 'Notification settings'),
             color: _notifMode == ChatNotificationMode.muted
                 ? colors.error
                 : AppTheme.primary,
@@ -765,7 +779,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           Expanded(
             child: _buildActionButton(
               icon: Icons.groups_rounded,
-              label: 'Trang CLB',
+              label: l10n?.chatRoomViewClub ?? 'View club page',
               color: const Color(0xFF059669),
               onTap: () {
                 Navigator.pop(context);
@@ -814,6 +828,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildAdminManagementCard(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: colors.bgCard,
@@ -836,8 +851,8 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 color: AppTheme.primary,
               ),
             ),
-            title: const Text(
-              'Đổi tên phòng chat',
+            title: Text(
+              l10n?.chatRoomRenameTitle ?? 'Rename chat room',
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
             ),
             subtitle: Text(
@@ -863,12 +878,12 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 color: AppTheme.primary,
               ),
             ),
-            title: const Text(
-              'Đổi ảnh đại diện phòng chat',
+            title: Text(
+              l10n?.chatRoomChangeAvatarTitle ?? 'Change chat room avatar',
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
             ),
             subtitle: Text(
-              'Tải ảnh mới từ thư viện của bạn',
+              l10n?.chatRoomChangeAvatarSubtitle ?? 'Upload a new image from your gallery',
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
             trailing: _isUpdatingAdminSettings
@@ -896,12 +911,12 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 color: Color(0xFFD97706),
               ),
             ),
-            title: const Text(
-              'Chế độ chỉ thông báo',
+            title: Text(
+              l10n?.chatRoomAnnouncementOnlyTitle ?? 'Announcements-only mode',
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
             ),
             subtitle: Text(
-              'Chỉ Ban Quản Trị mới có thể gửi tin nhắn',
+              l10n?.chatRoomAnnouncementOnlySubtitle ?? 'Only administrators can send messages',
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
             value: _isAnnouncementOnly,
@@ -927,25 +942,28 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 color: Color(0xFF6366F1),
               ),
             ),
-            title: const Text(
-              'Chế độ làm chậm (Slow mode)',
+            title: Text(
+              l10n?.chatRoomSlowModeTitle ?? 'Slow mode',
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
             ),
             subtitle: Text(
               _slowModeSeconds > 0
-                  ? 'Thành viên phải chờ $_slowModeSeconds giây giữa mỗi tin'
-                  : 'Tắt làm chậm (nhắn tin bình thường)',
+                  ? (l10n?.chatRoomSlowModeWait(_slowModeSeconds) ?? 'Members must wait $_slowModeSeconds seconds between messages')
+                  : (l10n?.chatRoomSlowModeOffSubtitle ?? 'Slow mode off (normal messaging)'),
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
             trailing: DropdownButton<int>(
               value: _slowModeSeconds,
               underline: const SizedBox(),
-              items: const [
-                DropdownMenuItem(value: 0, child: Text('Tắt')),
-                DropdownMenuItem(value: 5, child: Text('5s')),
-                DropdownMenuItem(value: 15, child: Text('15s')),
-                DropdownMenuItem(value: 30, child: Text('30s')),
-                DropdownMenuItem(value: 60, child: Text('1p')),
+              items: [
+                DropdownMenuItem(
+                  value: 0,
+                  child: Text(l10n?.chatRoomSlowModeOff ?? 'Off'),
+                ),
+                const DropdownMenuItem(value: 5, child: Text('5s')),
+                const DropdownMenuItem(value: 15, child: Text('15s')),
+                const DropdownMenuItem(value: 30, child: Text('30s')),
+                const DropdownMenuItem(value: 60, child: Text('1m')),
               ],
               onChanged: (val) async {
                 if (val != null) {
@@ -961,6 +979,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildNotificationCard(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: colors.bgCard,
@@ -971,8 +990,8 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
         children: [
           // Radio 1: All notifications
           _buildRadioTile(
-            title: 'Tất cả tin nhắn',
-            subtitle: 'Nhận thông báo cho mọi tin nhắn, ảnh và bình chọn',
+            title: l10n?.chatRoomAllNotificationsTitle ?? 'All messages',
+            subtitle: l10n?.chatRoomAllNotificationsSubtitle ?? 'Notify me about every message, photo, and poll',
             icon: Icons.notifications_active_outlined,
             selected: _notifMode == ChatNotificationMode.all,
             onTap: () => _updateNotifMode(ChatNotificationMode.all),
@@ -982,8 +1001,8 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
           // Radio 2: Mentions only
           _buildRadioTile(
-            title: 'Chỉ khi được nhắc tên (@mentions)',
-            subtitle: 'Chỉ thông báo khi ai đó nhắc đến bạn (@bạn)',
+            title: l10n?.chatRoomMentionsTitle ?? 'Only when mentioned (@mentions)',
+            subtitle: l10n?.chatRoomMentionsSubtitle ?? 'Notify me only when someone mentions you (@you)',
             icon: Icons.alternate_email_rounded,
             selected: _notifMode == ChatNotificationMode.mentionsOnly,
             onTap: () => _updateNotifMode(ChatNotificationMode.mentionsOnly),
@@ -993,8 +1012,8 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
           // Radio 3: Muted
           _buildRadioTile(
-            title: 'Tắt thông báo',
-            subtitle: 'Tắt toàn bộ thông báo từ phòng chat này',
+            title: l10n?.chatRoomMutedTitle ?? 'Mute notifications',
+            subtitle: l10n?.chatRoomMutedSubtitle ?? 'Mute all notifications from this chat room',
             icon: Icons.notifications_off_outlined,
             selected: _notifMode == ChatNotificationMode.muted,
             onTap: () => _updateNotifMode(ChatNotificationMode.muted),
@@ -1004,12 +1023,12 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
           // Sub-toggle: Reactions
           SwitchListTile(
-            title: const Text(
-              'Thông báo khi thả cảm xúc ❤️',
+            title: Text(
+              l10n?.chatRoomReactionsTitle ?? 'Reaction notifications ❤️',
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              'Nhận thông báo khi thành viên bày tỏ cảm xúc',
+              l10n?.chatRoomReactionsSubtitle ?? 'Notify me when members react',
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
             value: _notifyReactions,
@@ -1023,12 +1042,12 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
           // Sub-toggle: Replies
           SwitchListTile(
-            title: const Text(
-              'Thông báo khi có người trả lời 💬',
+            title: Text(
+              l10n?.chatRoomRepliesTitle ?? 'Reply notifications 💬',
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              'Nhận thông báo khi ai đó trả lời tin nhắn của bạn',
+              l10n?.chatRoomRepliesSubtitle ?? 'Notify me when someone replies to your message',
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
             value: _notifyReplies,
@@ -1042,12 +1061,12 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
           // Sub-toggle: Sound
           SwitchListTile(
-            title: const Text(
-              'Âm thanh thông báo 🔊',
+            title: Text(
+              l10n?.chatRoomSoundTitle ?? 'Notification sounds 🔊',
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              'Phát âm thanh khi có tin nhắn mới',
+              l10n?.chatRoomSoundSubtitle ?? 'Play a sound when new messages arrive',
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
             value: _soundEnabled,
@@ -1113,6 +1132,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildPinnedCard(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context);
     final pin = widget.pinnedMessage!;
     return Container(
       padding: const EdgeInsets.all(14),
@@ -1141,7 +1161,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Ghim từ: ${pin.senderName}',
+                  l10n?.chatRoomPinnedFrom(pin.senderName) ?? 'Pinned by: ${pin.senderName}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -1152,7 +1172,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 Text(
                   pin.content.isNotEmpty
                       ? pin.content
-                      : '[Hình ảnh/Phương tiện]',
+                      : (l10n?.chatRoomMediaPlaceholder ?? '[Image/Media]'),
                   style: TextStyle(fontSize: 13, color: colors.textPrimary),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -1163,7 +1183,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           if (widget.onJumpToMessage != null)
             IconButton(
               icon: const Icon(Icons.arrow_forward_rounded, size: 20),
-              tooltip: 'Đi đến tin nhắn',
+              tooltip: l10n?.chatRoomGoToMessage ?? 'Go to message',
               onPressed: () {
                 Navigator.pop(context);
                 widget.onJumpToMessage!(pin.id);
@@ -1175,6 +1195,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildMediaGrid(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context);
     final media = _allSharedMedia;
     if (media.isEmpty) {
       return Container(
@@ -1186,7 +1207,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           border: Border.all(color: colors.border),
         ),
         child: Text(
-          'Chưa có hình ảnh nào được chia sẻ trong phòng chat này.',
+          l10n?.chatRoomSharedMediaEmpty ?? 'No photos have been shared in this chat room.',
           style: TextStyle(fontSize: 12.5, color: colors.textMuted),
         ),
       );
@@ -1219,6 +1240,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildMembersList(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context);
     if (_isLoadingMembers) {
       return const Center(
         child: Padding(
@@ -1242,7 +1264,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Tất cả thành viên trong CLB đều có quyền tham gia và nhắn tin.',
+                l10n?.chatRoomAllMembersCanChat ?? 'All club members can participate and send messages.',
                 style: TextStyle(fontSize: 12.5, color: colors.textSecondary),
               ),
             ),
@@ -1288,10 +1310,10 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               ),
             ),
             trailing: isOwner
-                ? _buildRoleBadge('CHỦ NHIỆM', const Color(0xFFEA580C))
+                ? _buildRoleBadge(l10n?.chatRoomRoleOwner ?? 'OWNER', const Color(0xFFEA580C))
                 : isAdmin
-                ? _buildRoleBadge('QUẢN TRỊ', AppTheme.primary)
-                : _buildRoleBadge('THÀNH VIÊN', colors.textMuted),
+                ? _buildRoleBadge(l10n?.chatRoomRoleAdmin ?? 'ADMIN', AppTheme.primary)
+                : _buildRoleBadge(l10n?.chatRoomRoleMember ?? 'MEMBER', colors.textMuted),
           );
         }).toList(),
       ),
@@ -1299,6 +1321,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildDangerCard(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: colors.bgCard,
@@ -1321,7 +1344,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               ),
             ),
             title: Text(
-              'Xóa lịch sử trò chuyện',
+              l10n?.chatRoomClearHistoryAction ?? 'Clear history',
               style: TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w700,
@@ -1329,7 +1352,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               ),
             ),
             subtitle: Text(
-              'Dọn sạch tin nhắn cuộc trò chuyện phía bạn',
+              l10n?.chatRoomClearHistoryDescription ?? 'Remove chat messages from your view',
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
             onTap: _clearChatHistory,

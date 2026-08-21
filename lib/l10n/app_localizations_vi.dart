@@ -4298,6 +4298,226 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatScreenSupportInputHint => 'Nhập nội dung cần hỗ trợ...';
 
   @override
+  String get chatRoomSettingsTitle => 'Tùy chọn & Cài đặt';
+
+  @override
+  String get chatRoomAdminSection => 'QUẢN TRỊ PHÒNG CHAT (CHỦ PHÒNG / ADMIN)';
+
+  @override
+  String get chatRoomNotificationsSection => 'CÀI ĐẶT THÔNG BÁO';
+
+  @override
+  String get chatRoomPinnedSection => 'TIN NHẮN ĐÃ GHIM';
+
+  @override
+  String chatRoomSharedMediaSection(Object count) {
+    return 'ẢNH & PHƯƠNG TIỆN ĐÃ CHIA SẺ ($count)';
+  }
+
+  @override
+  String chatRoomMembersSection(Object count) {
+    return 'THÀNH VIÊN TRONG PHÒNG ($count)';
+  }
+
+  @override
+  String get chatRoomOtherOptionsSection => 'TÙY CHỌN KHÁC';
+
+  @override
+  String get chatRoomClubType => '👥 CÂU LẠC BỘ';
+
+  @override
+  String get chatRoomDirectType => '💬 TRỰC TIẾP';
+
+  @override
+  String get chatRoomViewClub => 'Xem trang CLB';
+
+  @override
+  String get chatRoomNotificationsMutedAction => 'Đã tắt thông báo phòng chat';
+
+  @override
+  String get chatRoomNotificationsMentionsAction =>
+      'Chỉ nhận thông báo khi được nhắc tên (@mention)';
+
+  @override
+  String get chatRoomNotificationsAllAction => 'Đã bật tất cả thông báo';
+
+  @override
+  String get chatRoomRenameTitle => 'Đổi tên phòng chat';
+
+  @override
+  String get chatRoomRenameHint => 'Nhập tên phòng chat mới...';
+
+  @override
+  String get chatRoomSave => 'Lưu';
+
+  @override
+  String get chatRoomChangeAvatarTitle => 'Đổi ảnh đại diện phòng chat';
+
+  @override
+  String get chatRoomChangeAvatarSubtitle => 'Tải ảnh mới từ thư viện của bạn';
+
+  @override
+  String get chatRoomAnnouncementOnlyTitle => 'Chế độ chỉ thông báo';
+
+  @override
+  String get chatRoomAnnouncementOnlySubtitle =>
+      'Chỉ Ban Quản Trị mới có thể gửi tin nhắn';
+
+  @override
+  String get chatRoomSlowModeTitle => 'Chế độ làm chậm (Slow mode)';
+
+  @override
+  String chatRoomSlowModeWait(Object seconds) {
+    return 'Thành viên phải chờ $seconds giây giữa mỗi tin';
+  }
+
+  @override
+  String get chatRoomSlowModeOffSubtitle =>
+      'Tắt làm chậm (nhắn tin bình thường)';
+
+  @override
+  String get chatRoomSlowModeOff => 'Tắt';
+
+  @override
+  String get chatRoomAllNotificationsTitle => 'Tất cả tin nhắn';
+
+  @override
+  String get chatRoomAllNotificationsSubtitle =>
+      'Nhận thông báo cho mọi tin nhắn, ảnh và bình chọn';
+
+  @override
+  String get chatRoomMentionsTitle => 'Chỉ khi được nhắc tên (@mentions)';
+
+  @override
+  String get chatRoomMentionsSubtitle =>
+      'Chỉ thông báo khi ai đó nhắc đến bạn (@bạn)';
+
+  @override
+  String get chatRoomMutedTitle => 'Tắt thông báo';
+
+  @override
+  String get chatRoomMutedSubtitle => 'Tắt toàn bộ thông báo từ phòng chat này';
+
+  @override
+  String get chatRoomReactionsTitle => 'Thông báo khi thả cảm xúc ❤️';
+
+  @override
+  String get chatRoomReactionsSubtitle =>
+      'Nhận thông báo khi thành viên bày tỏ cảm xúc';
+
+  @override
+  String get chatRoomRepliesTitle => 'Thông báo khi có người trả lời 💬';
+
+  @override
+  String get chatRoomRepliesSubtitle =>
+      'Nhận thông báo khi ai đó trả lời tin nhắn của bạn';
+
+  @override
+  String get chatRoomSoundTitle => 'Âm thanh thông báo 🔊';
+
+  @override
+  String get chatRoomSoundSubtitle => 'Phát âm thanh khi có tin nhắn mới';
+
+  @override
+  String chatRoomPinnedFrom(Object sender) {
+    return 'Ghim từ: $sender';
+  }
+
+  @override
+  String get chatRoomMediaPlaceholder => '[Hình ảnh/Phương tiện]';
+
+  @override
+  String get chatRoomGoToMessage => 'Đi đến tin nhắn';
+
+  @override
+  String get chatRoomSharedMediaEmpty =>
+      'Chưa có hình ảnh nào được chia sẻ trong phòng chat này.';
+
+  @override
+  String get chatRoomAllMembersCanChat =>
+      'Tất cả thành viên trong CLB đều có quyền tham gia và nhắn tin.';
+
+  @override
+  String get chatRoomRoleOwner => 'CHỦ NHIỆM';
+
+  @override
+  String get chatRoomRoleAdmin => 'QUẢN TRỊ';
+
+  @override
+  String get chatRoomRoleMember => 'THÀNH VIÊN';
+
+  @override
+  String get chatRoomClearHistoryTitle => 'Xóa lịch sử cuộc trò chuyện?';
+
+  @override
+  String get chatRoomClearHistoryDescription =>
+      'Toàn bộ tin nhắn sẽ bị xóa khỏi chế độ xem của bạn. Các thành viên khác vẫn xem được bình thường.';
+
+  @override
+  String get chatRoomClearHistoryAction => 'Xóa lịch sử';
+
+  @override
+  String get chatRoomClearHistorySuccess =>
+      'Đã xóa lịch sử cuộc trò chuyện phía bạn.';
+
+  @override
+  String get chatRoomUploadAvatarError => 'Không thể tải ảnh lên.';
+
+  @override
+  String get chatRoomSettingsUpdated => 'Đã cập nhật cài đặt phòng chat.';
+
+  @override
+  String get chatRoomSettingsUpdateError =>
+      'Không thể cập nhật cài đặt phòng chat. Vui lòng thử lại.';
+
+  @override
+  String get chatRoomViewProfile => 'Xem trang cá nhân';
+
+  @override
+  String get chatRoomPrivateMessage => 'Nhắn tin riêng';
+
+  @override
+  String get chatRoomBlockUser => 'Chặn người dùng này';
+
+  @override
+  String chatRoomBlockedUser(Object name) {
+    return 'Đã chặn $name';
+  }
+
+  @override
+  String get chatPollValidationError =>
+      'Vui lòng nhập câu hỏi và ít nhất 2 phương án.';
+
+  @override
+  String get chatPollCreateTitle => 'Tạo cuộc bình chọn';
+
+  @override
+  String get chatPollQuestionHint => 'Đặt câu hỏi bình chọn...';
+
+  @override
+  String get chatPollOptionsLabel => 'Các lựa chọn:';
+
+  @override
+  String chatPollOptionHint(Object number) {
+    return 'Lựa chọn $number';
+  }
+
+  @override
+  String get chatPollAddOption => 'Thêm lựa chọn';
+
+  @override
+  String get chatPollAllowMultiple => 'Cho phép chọn nhiều phương án';
+
+  @override
+  String get chatPollSubmit => 'Tạo bình chọn';
+
+  @override
+  String get chatImageLoadError => 'Không thể tải hình ảnh';
+
+  @override
+  String get chatImageClose => 'Đóng';
+
+  @override
   String get coreAppTitle => 'Quản Lý Giải Đấu';
 
   @override
@@ -4344,8 +4564,13 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String coreCountdownTime(Object time) {
-    return 'Còn $time';
+  String coreCountdownTime(Object clock, Object days) {
+    return 'Còn $days ngày $clock';
+  }
+
+  @override
+  String coreCountdownClock(Object clock) {
+    return 'Còn $clock';
   }
 
   @override
@@ -4353,4 +4578,247 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get coreLive => 'Đang diễn ra';
+
+  @override
+  String coreShareDetailsAt(Object url) {
+    return 'Xem chi tiết tại: $url';
+  }
+
+  @override
+  String get settingsImageSizeLimit => 'Kích thước ảnh không được vượt quá 5MB';
+
+  @override
+  String get settingsGenderChangeTitle => 'Yêu cầu thay đổi giới tính';
+
+  @override
+  String get settingsGenderLockedMessage =>
+      'Vì bạn đã hoàn thành ít nhất một giải đấu, giới tính đã bị khóa để đảm bảo công bằng. Yêu cầu sẽ được gửi tới Admin để phê duyệt thủ công.';
+
+  @override
+  String get settingsDesiredGender => 'Giới tính mong muốn';
+
+  @override
+  String get settingsRequestSent =>
+      'Đã gửi yêu cầu. Vui lòng chờ Admin phê duyệt.';
+
+  @override
+  String get settingsRequestFailed => 'Gửi yêu cầu thất bại. Vui lòng thử lại.';
+
+  @override
+  String get settingsSendRequest => 'Gửi yêu cầu';
+
+  @override
+  String get settingsSaveChanges => 'Đã lưu thay đổi';
+
+  @override
+  String get settingsProfileUpdateError =>
+      'Không thể cập nhật hồ sơ. Vui lòng thử lại.';
+
+  @override
+  String get settingsProfileLoadError => 'Không thể tải hồ sơ';
+
+  @override
+  String get settingsFullNameHint => 'Nhập họ tên đầy đủ';
+
+  @override
+  String get settingsFullNameRequired => 'Vui lòng nhập họ tên';
+
+  @override
+  String get settingsFullNameMin => 'Họ tên phải có ít nhất 2 ký tự';
+
+  @override
+  String get settingsFullNameMax => 'Họ tên tối đa 100 ký tự';
+
+  @override
+  String get settingsPhoneInvalid => 'Số điện thoại không hợp lệ';
+
+  @override
+  String get settingsCompetitionRegion => 'Khu vực tranh tài';
+
+  @override
+  String get settingsCompetitionRegionHint =>
+      'Chọn khu vực để tham gia xếp hạng Tier S';
+
+  @override
+  String get settingsDetailedAddress => 'Địa chỉ chi tiết';
+
+  @override
+  String get settingsDetailedAddressHint => 'Nhập địa chỉ cụ thể của bạn';
+
+  @override
+  String get settingsAddressMax => 'Địa chỉ tối đa 255 ký tự';
+
+  @override
+  String settingsAutoDetected(Object province) {
+    return 'Đã tự nhận diện: $province';
+  }
+
+  @override
+  String get settingsBio => 'Giới thiệu bản thân';
+
+  @override
+  String get settingsBioHint => 'Viết một chút về phong cách chơi của bạn...';
+
+  @override
+  String get settingsBioMax => 'Giới thiệu tối đa 500 ký tự';
+
+  @override
+  String get settingsUploading => 'Đang tải...';
+
+  @override
+  String get settingsChangeCover => 'Thay đổi ảnh bìa';
+
+  @override
+  String get settingsTapToChangeAvatar => 'Chạm để đổi ảnh đại diện';
+
+  @override
+  String get settingsChooseDateOfBirth => 'Chọn ngày sinh';
+
+  @override
+  String get settingsGenderLocked =>
+      'Giới tính đã bị khóa sau khi giải đấu hoàn thành.';
+
+  @override
+  String get settingsRequestGenderChange => 'Gửi yêu cầu đổi';
+
+  @override
+  String get settingsNoTierSRegion => 'Chưa chọn (Không tranh hạng Tier S)';
+
+  @override
+  String get commonCancel => 'Hủy bỏ';
+
+  @override
+  String get settingsBankLoadError => 'Không thể tải thông tin ngân hàng';
+
+  @override
+  String get settingsRefundSaved => 'Đã lưu cấu hình hoàn tiền';
+
+  @override
+  String get settingsBankUpdateError =>
+      'Không thể lưu thông tin ngân hàng. Vui lòng thử lại.';
+
+  @override
+  String get settingsPayoutMethod => 'Ngân hàng / Ví nhận tiền';
+
+  @override
+  String get settingsNoBank => 'Chưa chọn ngân hàng/ví';
+
+  @override
+  String settingsWalletPrefix(Object wallet) {
+    return 'Ví điện tử $wallet';
+  }
+
+  @override
+  String get settingsWalletPhone => 'Số điện thoại ví';
+
+  @override
+  String get settingsAccountNumber => 'Số tài khoản';
+
+  @override
+  String get settingsWalletNumberHint => 'Ví dụ: 0912345678';
+
+  @override
+  String get settingsBankNumberHint => 'Ví dụ: 0011001234567';
+
+  @override
+  String get settingsAccountHolder =>
+      'Tên chủ tài khoản / ví (Viết hoa không dấu)';
+
+  @override
+  String get settingsAccountHolderHint => 'Ví dụ: NGUYEN VAN A';
+
+  @override
+  String get settingsRefundInfo =>
+      'Cấu hình tài khoản nhận hoàn tiền chính xác để BTC gửi lại lệ phí giải khi bạn rút khỏi giải trước khi giải khởi tranh. Dữ liệu được bảo mật.';
+
+  @override
+  String get settingsVerificationStatus => 'Trạng thái xác thực';
+
+  @override
+  String get settingsPhoneNotUpdated => 'Chưa cập nhật số điện thoại';
+
+  @override
+  String get settingsVerifyEmail => 'Xác minh Email';
+
+  @override
+  String get settingsVerifyEmailSubtitle =>
+      'Gửi mã xác minh tới email đang dùng';
+
+  @override
+  String get settingsVerifyPhone => 'Xác minh số điện thoại';
+
+  @override
+  String get settingsVerifyPhoneSubtitle =>
+      'Gửi mã OTP tới số điện thoại đang dùng';
+
+  @override
+  String get settingsStatusLoadError => 'Không thể tải trạng thái';
+
+  @override
+  String get settingsPasswordSection => 'Mật khẩu';
+
+  @override
+  String get settingsChangePasswordSubtitle => 'Cập nhật mật khẩu đăng nhập';
+
+  @override
+  String get settingsStrongPassword => 'Mật khẩu mạnh';
+
+  @override
+  String get settingsStrongPasswordSubtitle =>
+      'Tối thiểu 8 ký tự, nên có chữ hoa và số';
+
+  @override
+  String get settingsSessions => 'Phiên đăng nhập';
+
+  @override
+  String get settingsCurrentDevice => 'Thiết bị hiện tại';
+
+  @override
+  String get settingsActive => 'Đang hoạt động';
+
+  @override
+  String get settingsOnline => 'Online';
+
+  @override
+  String get settingsCommunitySafety => 'An toàn cộng đồng';
+
+  @override
+  String get settingsMyReports => 'Báo cáo của tôi';
+
+  @override
+  String get settingsMyReportsSubtitle =>
+      'Theo dõi trạng thái và kết quả xử lý báo cáo';
+
+  @override
+  String get settingsDangerZone => 'Vùng nguy hiểm';
+
+  @override
+  String get settingsDeleteAccountTitle => 'Xóa tài khoản cá nhân';
+
+  @override
+  String get settingsDeleteAccountDescription =>
+      'Khi thực hiện xóa tài khoản, tất cả dữ liệu cá nhân, hồ sơ thi đấu và thông tin liên quan sẽ bị ẩn vĩnh viễn. Bạn không thể đăng nhập hoặc tham gia giải đấu nào sau hành động này.';
+
+  @override
+  String get settingsDeleteAccount => 'Xóa tài khoản';
+
+  @override
+  String get settingsConfirmDeleteTitle => 'Xác nhận xóa tài khoản';
+
+  @override
+  String get settingsDeleteIrreversible =>
+      'Hành động này KHÔNG THỂ HOÀN TÁC. Tất cả dữ liệu cá nhân, hồ sơ thi đấu sẽ bị ẩn vĩnh viễn. Nhập mật khẩu hiện tại để tiếp tục.';
+
+  @override
+  String get settingsConfirmPassword => 'Mật khẩu xác nhận';
+
+  @override
+  String get settingsConfirmDelete => 'Xác nhận xóa';
+
+  @override
+  String get settingsPasswordRequired => 'Vui lòng nhập mật khẩu xác nhận';
+
+  @override
+  String get settingsDeleteFailed =>
+      'Xóa tài khoản thất bại. Vui lòng thử lại.';
 }

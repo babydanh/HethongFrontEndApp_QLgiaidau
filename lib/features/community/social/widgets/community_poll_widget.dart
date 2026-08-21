@@ -50,8 +50,8 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
     final inviteCode = widget.tournamentInviteCode;
     if (tournamentId == null || tournamentId.trim().isEmpty) return;
 
-    final shouldJoin = isPositive;
-    final shouldWithdraw = wasPositive && (!isPositive || isDecline);
+    final shouldJoin = isPositive && !wasPositive;
+    final shouldWithdraw = wasPositive && !isPositive;
     if (!shouldJoin && !shouldWithdraw) return;
 
     try {
@@ -110,12 +110,18 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
         }
       }
       if (selected != null) {
+        final isPositive = updated.options.any(
+          (option) =>
+              option.isVoted && _isPositiveRegistrationOption(option.optionText),
+        );
+        final isDecline = updated.options.any(
+          (option) =>
+              option.isVoted && _isDeclineRegistrationOption(option.optionText),
+        );
         await _syncTournamentRegistration(
           wasPositive: wasPositive,
-          isPositive: selected.isVoted &&
-              _isPositiveRegistrationOption(selected.optionText),
-          isDecline: selected.isVoted &&
-              _isDeclineRegistrationOption(selected.optionText),
+          isPositive: isPositive,
+          isDecline: isDecline,
         );
       }
     } catch (_) {

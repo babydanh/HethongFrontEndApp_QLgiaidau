@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class ChatImageViewer extends StatelessWidget {
@@ -38,6 +39,7 @@ class ChatImageViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Stack(
@@ -58,7 +60,7 @@ class ChatImageViewer extends StatelessWidget {
                     child: CircularProgressIndicator(color: Colors.white),
                   );
                 },
-                errorBuilder: (_, error, stackTrace) => const Center(
+                errorBuilder: (_, error, stackTrace) => Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -69,7 +71,7 @@ class ChatImageViewer extends StatelessWidget {
                       ),
                       SizedBox(height: 8),
                       Text(
-                        'Không thể tải hình ảnh',
+                        l10n?.chatImageLoadError ?? 'Unable to load image',
                         style: TextStyle(color: Colors.white70),
                       ),
                     ],
@@ -109,7 +111,7 @@ class ChatImageViewer extends StatelessWidget {
                       color: Colors.white,
                       size: 22,
                     ),
-                    tooltip: 'Đóng',
+                    tooltip: l10n?.chatImageClose ?? 'Close',
                     onPressed: () => Navigator.pop(context),
                   ),
                   const SizedBox(width: 8),

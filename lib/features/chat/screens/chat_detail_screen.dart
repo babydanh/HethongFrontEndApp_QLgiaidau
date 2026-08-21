@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/chat_socket_service.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_poll_dialog.dart';
@@ -889,25 +890,31 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     );
   }
 
-  String _formatDateSeparator(DateTime dt) {
+  String _formatDateSeparator(
+    DateTime dt,
+    String localeName,
+    AppLocalizations? l10n,
+  ) {
     final now = DateTime.now();
     if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
-      return 'Hôm nay';
+      return l10n?.chatDetailToday ?? 'Today';
     }
     final yesterday = now.subtract(const Duration(days: 1));
     if (dt.year == yesterday.year &&
         dt.month == yesterday.month &&
         dt.day == yesterday.day) {
-      return 'Hôm qua';
+      return l10n?.chatDetailYesterday ?? 'Yesterday';
     }
-    return DateFormat('EEEE, dd/MM/yyyy', 'vi_VN').format(dt);
+    return DateFormat('EEEE, dd/MM/yyyy', localeName).format(dt);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final localeName = Localizations.localeOf(context).toLanguageTag();
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final title = widget.roomName ?? 'Phòng chat';
+    final title = widget.roomName ?? (l10n?.chatDetailRoomFallback ?? 'Chat room');
     final memberDirectory = widget.communityId == null
         ? null
         : ref.watch(communityMemberDirectoryProvider(widget.communityId!)).asData?.value;
@@ -1263,7 +1270,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text(
-                                      _formatDateSeparator(msg.createdAt),
+                                      _formatDateSeparator(msg.createdAt, localeName, l10n),
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,

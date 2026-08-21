@@ -1,0 +1,15 @@
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\api\api_auth_repository.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\api\api_community_repository.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\api\api_community_social_repository.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\api\api_match_repository.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\api\api_notification_repository.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\api\api_payment_repository.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\api\api_ranking_repository.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\api\api_region_repository.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\api\api_report_repository.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\api\api_team_repository.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\api\api_token_repository.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\api\api_tournament_repository.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\api\api_user_repository.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\local\app_session_repository.dart
+D:\Duancanhan\Project_QuanLyGiaiDau\HethongFrontEndApp_QLgiaidau\lib\data\repositories\local\shared_prefs_local_session_repository.dart

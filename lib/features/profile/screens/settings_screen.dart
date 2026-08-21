@@ -1037,6 +1037,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -1056,7 +1057,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Đã lưu cấu hình hoàn tiền'),
+            content: Text(l10n?.settingsRefundSaved ?? 'Refund account settings saved'),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -1067,7 +1068,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(l10n?.settingsBankUpdateError ?? 'Could not save bank information. Please try again.'),
             backgroundColor: context.colors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -1097,16 +1098,20 @@ class _BankTabState extends ConsumerState<_BankTab> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => _buildErrorState(
         colors,
-        'Không thể tải thông tin ngân hàng',
+        AppLocalizations.of(context)?.settingsBankLoadError ?? 'Unable to load bank information',
         () => ref.invalidate(userProfileProvider),
       ),
     );
   }
 
   Widget _buildForm(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context);
+    final noBank = l10n?.settingsNoBank ?? _noBank;
+    String walletPrefix(String wallet) =>
+        l10n?.settingsWalletPrefix(wallet) ?? 'Wallet $wallet';
     final bankOptions = [
-      _noBank,
-      ..._wallets.map((wallet) => 'Ví điện tử $wallet'),
+      noBank,
+      ..._wallets.map(walletPrefix),
       ..._banks,
     ];
     // Giá trị đã lưu ngoài danh sách (nhập tay từ trước) — thêm vào cuối để không mất.
@@ -1115,9 +1120,9 @@ class _BankTabState extends ConsumerState<_BankTab> {
         _wallets.contains(_bankName) ||
         _banks.contains(_bankName);
     final currentLabel = _bankName == _noBank
-        ? _noBank
+        ? noBank
         : _isWallet
-        ? 'Ví điện tử $_bankName'
+        ? walletPrefix(_bankName)
         : _bankName;
     if (!isKnown) bankOptions.add(_bankName);
 
@@ -1132,41 +1137,46 @@ class _BankTabState extends ConsumerState<_BankTab> {
             _infoBanner(colors),
             const SizedBox(height: 20),
             _card(colors, [
-              _fieldLabel(colors, 'Ngân hàng / Ví nhận tiền'),
+              _fieldLabel(colors, l10n?.settingsPayoutMethod ?? 'Bank / payout wallet'),
               const SizedBox(height: 6),
               _dropdown(colors, currentLabel, bankOptions, (v) {
                 if (v == null) return;
                 setState(() {
-                  if (v == _noBank) {
+                  if (v == noBank) {
                     _bankName = _noBank;
-                  } else if (v.startsWith('Ví điện tử ')) {
-                    _bankName = v.substring('Ví điện tử '.length);
-                  } else {
-                    _bankName = v;
+                    return;
                   }
+                  String? selectedWallet;
+                  for (final wallet in _wallets) {
+                    if (walletPrefix(wallet) == v) {
+                      selectedWallet = wallet;
+                      break;
+                    }
+                  }
+                  _bankName = selectedWallet ?? v;
                 });
               }),
               const SizedBox(height: 16),
               _fieldLabel(
                 colors,
-                _isWallet ? 'Số điện thoại ví' : 'Số tài khoản',
+                _isWallet ? (l10n?.settingsWalletPhone ?? 'Wallet phone number') : (l10n?.settingsAccountNumber ?? 'Account number'),
               ),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _accountNumberCtrl,
-                hint: _isWallet ? 'Ví dụ: 0912345678' : 'Ví dụ: 0011001234567',
+                hint: _isWallet ? (l10n?.settingsWalletNumberHint ?? 'Example: 0912345678') : (l10n?.settingsBankNumberHint ?? 'Example: 0011001234567'),
                 keyboardType: TextInputType.number,
                 prefixIcon: Icons.numbers_rounded,
               ),
               const SizedBox(height: 16),
               _fieldLabel(
                 colors,
-                'Tên chủ tài khoản / ví (Viết hoa không dấu)',
+                l10n?.settingsAccountHolder ?? 'Account / wallet holder (uppercase, no accents)',
               ),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _accountNameCtrl,
-                hint: 'Ví dụ: NGUYEN VAN A',
+                hint: l10n?.settingsAccountHolderHint ?? 'Example: NGUYEN VAN A',
                 prefixIcon: Icons.person_rounded,
                 onChanged: (value) {
                   final normalized = _normalizeAccountName(value);
@@ -1190,6 +1200,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
   }
 
   Widget _infoBanner(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1208,8 +1219,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Cấu hình tài khoản nhận hoàn tiền chính xác để BTC gửi lại lệ phí giải '
-              'khi bạn rút khỏi giải trước khi giải khởi tranh. Dữ liệu được bảo mật.',
+              l10n?.settingsRefundInfo ?? 'Configure an accurate refund account so the tournament organizer can return your entry fee if you withdraw before the tournament starts. Your data is protected.',
               style: TextStyle(
                 fontSize: 12,
                 height: 1.5,
@@ -1237,6 +1247,7 @@ class _SecurityTab extends ConsumerWidget {
     var obscure = true;
     var isDeleting = false;
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context);
 
     await showDialog<void>(
       context: context,
@@ -1248,8 +1259,8 @@ class _SecurityTab extends ConsumerWidget {
               final password = passwordCtrl.text;
               if (password.isEmpty) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(
-                    content: Text('Vui lòng nhập mật khẩu xác nhận'),
+                  SnackBar(
+                    content: Text(l10n?.settingsPasswordRequired ?? 'Please enter your confirmation password'),
                   ),
                 );
                 return;
@@ -1265,7 +1276,9 @@ class _SecurityTab extends ConsumerWidget {
               } catch (e) {
                 if (!ctx.mounted) return;
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text('Xóa tài khoản thất bại: $e')),
+                  SnackBar(
+                    content: Text(l10n?.settingsDeleteFailed ?? 'Account deletion failed. Please try again.'),
+                  ),
                 );
               } finally {
                 if (ctx.mounted) setState(() => isDeleting = false);
@@ -1278,17 +1291,16 @@ class _SecurityTab extends ConsumerWidget {
                 children: [
                   Icon(Icons.warning_amber_rounded, color: colors.error),
                   const SizedBox(width: 8),
-                  const Expanded(child: Text('Xác nhận xóa tài khoản')),
+                  Expanded(child: Text(l10n?.settingsConfirmDeleteTitle ?? 'Confirm account deletion')),
                 ],
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Hành động này KHÔNG THỂ HOÀN TÁC. Tất cả dữ liệu cá nhân, hồ sơ thi đấu '
-                    'sẽ bị ẩn vĩnh viễn. Nhập mật khẩu hiện tại để tiếp tục.',
-                    style: TextStyle(fontSize: 13, height: 1.5),
+                  Text(
+                    l10n?.settingsDeleteIrreversible ?? 'This action CANNOT BE UNDONE. All personal data and tournament history will be permanently hidden. Enter your current password to continue.',
+                    style: const TextStyle(fontSize: 13, height: 1.5),
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -1296,7 +1308,7 @@ class _SecurityTab extends ConsumerWidget {
                     enabled: !isDeleting,
                     obscureText: obscure,
                     decoration: InputDecoration(
-                      labelText: 'Mật khẩu xác nhận',
+                      labelText: l10n?.settingsConfirmPassword ?? 'Confirmation password',
                       suffixIcon: IconButton(
                         icon: Icon(
                           obscure
@@ -1312,7 +1324,7 @@ class _SecurityTab extends ConsumerWidget {
               actions: [
                 TextButton(
                   onPressed: isDeleting ? null : () => Navigator.of(ctx).pop(),
-                  child: const Text('Hủy bỏ'),
+                  child: Text(l10n?.commonCancel ?? 'Cancel'),
                 ),
                 FilledButton(
                   onPressed: isDeleting ? null : delete,
@@ -1329,7 +1341,7 @@ class _SecurityTab extends ConsumerWidget {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Xác nhận xóa'),
+                      : Text(l10n?.settingsConfirmDelete ?? 'Confirm deletion'),
                 ),
               ],
             );
@@ -1344,6 +1356,7 @@ class _SecurityTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context);
     final profileAsync = ref.watch(userProfileProvider);
 
     return SingleChildScrollView(
@@ -1353,7 +1366,7 @@ class _SecurityTab extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Trạng thái xác thực
-          _sectionTitle(colors, 'Trạng thái xác thực'),
+          _sectionTitle(colors, l10n?.settingsVerificationStatus ?? 'Verification status'),
           const SizedBox(height: 10),
           _card(colors, [
             ...profileAsync.when(
@@ -1369,18 +1382,18 @@ class _SecurityTab extends ConsumerWidget {
                 _securityRow(
                   colors,
                   icon: Icons.phone_android_rounded,
-                  title: 'Số điện thoại',
+                  title: l10n?.infoPhone ?? 'Phone number',
                   verified: profile.isPhoneVerified == true,
                   fallbackText:
-                      profile.phoneNumber ?? 'Chưa cập nhật số điện thoại',
+                      profile.phoneNumber ?? (l10n?.settingsPhoneNotUpdated ?? 'Phone number not updated'),
                 ),
                 if (profile.isEmailVerified != true) ...[
                   _divider(colors),
                   _actionRow(
                     colors,
                     icon: Icons.mark_email_unread_rounded,
-                    title: 'Xác minh Email',
-                    subtitle: 'Gửi mã xác minh tới email đang dùng',
+                    title: l10n?.settingsVerifyEmail ?? 'Verify email',
+                    subtitle: l10n?.settingsVerifyEmailSubtitle ?? 'Send a verification code to your current email',
                     onTap: () => startEmailVerificationFlow(
                       context,
                       ref,
@@ -1393,8 +1406,8 @@ class _SecurityTab extends ConsumerWidget {
                   _actionRow(
                     colors,
                     icon: Icons.sms_rounded,
-                    title: 'Xác minh số điện thoại',
-                    subtitle: 'Gửi mã OTP tới số điện thoại đang dùng',
+                    title: l10n?.settingsVerifyPhone ?? 'Verify phone number',
+                    subtitle: l10n?.settingsVerifyPhoneSubtitle ?? 'Send an OTP to your current phone number',
                     onTap: () => startPhoneVerificationFlow(
                       context,
                       ref,
@@ -1413,7 +1426,7 @@ class _SecurityTab extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    'Không thể tải trạng thái',
+                    l10n?.settingsStatusLoadError ?? 'Unable to load status',
                     style: TextStyle(color: colors.textSecondary),
                   ),
                 ),
@@ -1423,22 +1436,22 @@ class _SecurityTab extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Đổi mật khẩu
-          _sectionTitle(colors, 'Mật khẩu'),
+          _sectionTitle(colors, l10n?.settingsPasswordSection ?? 'Password'),
           const SizedBox(height: 10),
           _card(colors, [
             _actionRow(
               colors,
               icon: Icons.lock_outline_rounded,
-              title: 'Đổi mật khẩu',
-              subtitle: 'Cập nhật mật khẩu đăng nhập',
+              title: l10n?.settingsChangePassword ?? 'Change password',
+              subtitle: l10n?.settingsChangePasswordSubtitle ?? 'Update your sign-in password',
               onTap: () => context.push('/profile/change-password'),
             ),
             _divider(colors),
             _actionRow(
               colors,
               icon: Icons.security_rounded,
-              title: 'Mật khẩu mạnh',
-              subtitle: 'Tối thiểu 8 ký tự, nên có chữ hoa và số',
+              title: l10n?.settingsStrongPassword ?? 'Strong password',
+              subtitle: l10n?.settingsStrongPasswordSubtitle ?? 'At least 8 characters; uppercase letters and numbers are recommended',
               trailing: Icon(
                 Icons.check_circle_rounded,
                 color: colors.success,
@@ -1449,14 +1462,14 @@ class _SecurityTab extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Phiên đăng nhập
-          _sectionTitle(colors, 'Phiên đăng nhập'),
+          _sectionTitle(colors, l10n?.settingsSessions ?? 'Sign-in sessions'),
           const SizedBox(height: 10),
           _card(colors, [
             _actionRow(
               colors,
               icon: Icons.devices_rounded,
-              title: 'Thiết bị hiện tại',
-              subtitle: 'Đang hoạt động',
+              title: l10n?.settingsCurrentDevice ?? 'Current device',
+              subtitle: l10n?.settingsActive ?? 'Active',
               trailing: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
@@ -1467,7 +1480,7 @@ class _SecurityTab extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  'Online',
+                  l10n?.settingsOnline ?? 'Online',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -1488,21 +1501,21 @@ class _SecurityTab extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Báo cáo của tôi
-          _sectionTitle(colors, 'An toàn cộng đồng'),
+          _sectionTitle(colors, l10n?.settingsCommunitySafety ?? 'Community safety'),
           const SizedBox(height: 10),
           _card(colors, [
             _actionRow(
               colors,
               icon: Icons.flag_outlined,
-              title: 'Báo cáo của tôi',
-              subtitle: 'Theo dõi trạng thái và kết quả xử lý báo cáo',
+              title: l10n?.settingsMyReports ?? 'My reports',
+              subtitle: l10n?.settingsMyReportsSubtitle ?? 'Track report status and resolution results',
               onTap: () => context.push('/profile/reports'),
             ),
           ]),
           const SizedBox(height: 24),
 
           // Vùng nguy hiểm
-          _sectionTitle(colors, 'Vùng nguy hiểm'),
+          _sectionTitle(colors, l10n?.settingsDangerZone ?? 'Danger zone'),
           const SizedBox(height: 10),
           Container(
             width: double.infinity,
@@ -1520,7 +1533,7 @@ class _SecurityTab extends ConsumerWidget {
                     Icon(Icons.shield_outlined, size: 18, color: colors.error),
                     const SizedBox(width: 8),
                     Text(
-                      'Xóa tài khoản cá nhân',
+                      l10n?.settingsDeleteAccountTitle ?? 'Delete personal account',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
@@ -1531,8 +1544,7 @@ class _SecurityTab extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Khi thực hiện xóa tài khoản, tất cả dữ liệu cá nhân, hồ sơ thi đấu và thông tin '
-                  'liên quan sẽ bị ẩn vĩnh viễn. Bạn không thể đăng nhập hoặc tham gia giải đấu nào sau hành động này.',
+                  l10n?.settingsDeleteAccountDescription ?? 'Deleting your account permanently hides all personal data, tournament history, and related information. You will not be able to sign in or join tournaments after this action.',
                   style: TextStyle(
                     fontSize: 12,
                     height: 1.5,
@@ -1545,8 +1557,8 @@ class _SecurityTab extends ConsumerWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => _confirmDeleteAccount(context, ref),
                     icon: const Icon(Icons.delete_forever_rounded, size: 18),
-                    label: const Text(
-                      'Xóa tài khoản',
+                    label: Text(
+                      l10n?.settingsDeleteAccount ?? 'Delete account',
                       style: TextStyle(fontWeight: FontWeight.w800),
                     ),
                     style: ElevatedButton.styleFrom(
