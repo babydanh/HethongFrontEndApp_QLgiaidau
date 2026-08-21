@@ -141,7 +141,7 @@ class FloatingBottomNav extends ConsumerWidget {
         : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0));
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    const double navBarHeight = 66.0;
+    const double navBarHeight = 70.0;
     final screenWidth = MediaQuery.of(context).size.width;
 
     const activeColor = AppTheme.primary;
@@ -166,7 +166,7 @@ class FloatingBottomNav extends ConsumerWidget {
               child: Container(
                 width: screenWidth,
                 height: navBarHeight + bottomPadding,
-                padding: EdgeInsets.only(bottom: bottomPadding + 4),
+                padding: EdgeInsets.only(bottom: bottomPadding + 2),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -254,8 +254,8 @@ class FloatingBottomNav extends ConsumerWidget {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        width: 56,
-        padding: const EdgeInsets.only(top: 8),
+        width: 60,
+        padding: const EdgeInsets.only(top: 6),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -281,15 +281,17 @@ class FloatingBottomNav extends ConsumerWidget {
             const SizedBox(height: 2),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: isSelected ? activeColor : inactiveColor,
-                fontSize: 9,
+                fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
             AnimatedContainer(
               duration: const Duration(milliseconds: 250),
-              margin: const EdgeInsets.only(top: 3),
+              margin: const EdgeInsets.only(top: 2),
               height: 2.5,
               width: isSelected ? 16 : 0,
               decoration: BoxDecoration(

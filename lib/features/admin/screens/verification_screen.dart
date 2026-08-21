@@ -38,7 +38,7 @@ class _AdminVerificationScreenState extends ConsumerState<AdminVerificationScree
           onPressed: () => context.pop(),
         ),
         title: Text(
-          l10n?.adminVerificationTitle ?? 'Verification',
+          l10n!.adminVerificationTitle,
           style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
         ),
         centerTitle: true,
@@ -55,10 +55,10 @@ class _AdminVerificationScreenState extends ConsumerState<AdminVerificationScree
 
   Widget _buildTypeFilter(AppColorsExtension colors, AppLocalizations? l10n) {
     final types = [
-      ('all', l10n?.adminVerificationTypeAll ?? 'All', AppTheme.primary),
-      ('user', l10n?.adminVerificationTypeUser ?? 'User', const Color(0xFF3B82F6)),
-      ('club', l10n?.adminVerificationTypeClub ?? 'Club', const Color(0xFF10B981)),
-      ('tournament', l10n?.adminVerificationTypeTournament ?? 'Tournament', const Color(0xFFF59E0B)),
+      ('all', l10n!.adminVerificationTypeAll, AppTheme.primary),
+      ('user', l10n!.adminVerificationTypeUser, const Color(0xFF3B82F6)),
+      ('club', l10n!.adminVerificationTypeClub, const Color(0xFF10B981)),
+      ('tournament', l10n!.adminVerificationTypeTournament, const Color(0xFFF59E0B)),
     ];
 
     return Container(
@@ -100,10 +100,10 @@ class _AdminVerificationScreenState extends ConsumerState<AdminVerificationScree
 
   Widget _buildStatusFilter(AppColorsExtension colors, AppLocalizations? l10n) {
     final statuses = [
-      ('all', l10n?.adminVerificationStatusAll ?? 'All', AppTheme.primary),
-      ('pending', l10n?.adminVerificationStatusPending ?? 'Pending', const Color(0xFFF59E0B)),
-      ('verified', l10n?.adminVerificationStatusVerified ?? 'Verified', const Color(0xFF10B981)),
-      ('rejected', l10n?.adminVerificationStatusRejected ?? 'Rejected', const Color(0xFFEF4444)),
+      ('all', l10n!.adminVerificationStatusAll, AppTheme.primary),
+      ('pending', l10n!.adminVerificationStatusPending, const Color(0xFFF59E0B)),
+      ('verified', l10n!.adminVerificationStatusVerified, const Color(0xFF10B981)),
+      ('rejected', l10n!.adminVerificationStatusRejected, const Color(0xFFEF4444)),
     ];
 
     return Container(
@@ -164,7 +164,7 @@ class _AdminVerificationScreenState extends ConsumerState<AdminVerificationScree
               children: [
                 Icon(Icons.verified_outlined, size: 64, color: colors.textMuted.withValues(alpha: 0.4)),
                 const SizedBox(height: 16),
-                Text(l10n?.adminVerificationEmpty ?? 'No verification requests', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                Text(l10n!.adminVerificationEmpty, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
               ],
             ),
           );
@@ -184,7 +184,7 @@ class _AdminVerificationScreenState extends ConsumerState<AdminVerificationScree
           children: [
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
-            Text(l10n?.adminVerificationLoadError ?? 'Unable to load data', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+            Text(l10n!.adminVerificationLoadError, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
           ],
         ),
       ),
@@ -201,10 +201,10 @@ class _AdminVerificationScreenState extends ConsumerState<AdminVerificationScree
     final createdAt = request['createdAt']?.toString() ?? '';
 
     final typeLabel = type == 'USER'
-        ? (l10n?.adminVerificationTypeUser ?? 'User')
+        ? (l10n!.adminVerificationTypeUser)
         : type == 'CLUB'
-            ? (l10n?.adminVerificationTypeClub ?? 'Club')
-            : (l10n?.adminVerificationTypeTournament ?? 'Tournament');
+            ? (l10n!.adminVerificationTypeClub)
+            : (l10n!.adminVerificationTypeTournament);
     final typeIcon = type == 'USER'
         ? Icons.person_rounded
         : type == 'CLUB'
@@ -223,10 +223,10 @@ class _AdminVerificationScreenState extends ConsumerState<AdminVerificationScree
             ? const Color(0xFFEF4444)
             : const Color(0xFFF59E0B);
     final statusLabel = status.toUpperCase() == 'VERIFIED'
-        ? (l10n?.adminVerificationStatusVerifiedLabel ?? 'Verified')
+        ? (l10n!.adminVerificationStatusVerifiedLabel)
         : status.toUpperCase() == 'REJECTED'
-            ? (l10n?.adminVerificationStatusRejectedLabel ?? 'Rejected')
-            : (l10n?.adminVerificationStatusPendingLabel ?? 'Pending');
+            ? (l10n!.adminVerificationStatusRejectedLabel)
+            : (l10n!.adminVerificationStatusPendingLabel);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -308,14 +308,14 @@ class _AdminVerificationScreenState extends ConsumerState<AdminVerificationScree
               children: [
                 Expanded(
                   child: _actionBtn(
-                    l10n?.adminVerificationApprove ?? 'Verify', Icons.check_rounded, const Color(0xFF10B981),
+                    l10n!.adminVerificationApprove, Icons.check_rounded, const Color(0xFF10B981),
                     () => _handleAction(request['id'], 'VERIFIED', colors),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: _actionBtn(
-                    l10n?.adminVerificationReject ?? 'Reject', Icons.close_rounded, const Color(0xFFEF4444),
+                    l10n!.adminVerificationReject, Icons.close_rounded, const Color(0xFFEF4444),
                     () => _handleReject(request['id'], colors),
                     outlined: true,
                   ),
@@ -359,7 +359,7 @@ class _AdminVerificationScreenState extends ConsumerState<AdminVerificationScree
       ref.invalidate(_adminVerificationProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n?.adminVerificationVerifiedFeedback ?? 'Verification approved'),
+          content: Text(l10n!.adminVerificationVerifiedFeedback),
           backgroundColor: const Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
         ));
@@ -367,7 +367,7 @@ class _AdminVerificationScreenState extends ConsumerState<AdminVerificationScree
     } catch (e) {
             if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n?.adminVerificationActionError ?? 'Unable to process the verification request. Please try again.'),
+          content: Text(l10n!.adminVerificationActionError),
           backgroundColor: colors.error,
           behavior: SnackBarBehavior.floating,
         ));
@@ -383,14 +383,14 @@ class _AdminVerificationScreenState extends ConsumerState<AdminVerificationScree
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: colors.bgCard,
-        title: Text(l10n?.adminVerificationRejectTitle ?? 'Reject verification'),
+        title: Text(l10n!.adminVerificationRejectTitle),
         content: TextField(
           controller: reasonCtrl,
           maxLines: 3,
           maxLength: 200,
           style: TextStyle(color: colors.textPrimary, fontSize: 13),
           decoration: InputDecoration(
-            hintText: l10n?.adminVerificationRejectReasonHint ?? 'Rejection reason (required)',
+            hintText: l10n!.adminVerificationRejectReasonHint,
             hintStyle: TextStyle(color: colors.textMuted, fontSize: 12),
             filled: true,
             fillColor: colors.bgSurface,
@@ -398,11 +398,11 @@ class _AdminVerificationScreenState extends ConsumerState<AdminVerificationScree
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n?.adminVerificationCancel ?? 'Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n!.adminVerificationCancel)),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(l10n?.adminVerificationReject ?? 'Reject', style: const TextStyle(color: Colors.white)),
+            child: Text(l10n!.adminVerificationReject, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -419,7 +419,7 @@ class _AdminVerificationScreenState extends ConsumerState<AdminVerificationScree
       ref.invalidate(_adminVerificationProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n?.adminVerificationRejectedFeedback ?? 'Verification rejected'),
+          content: Text(l10n!.adminVerificationRejectedFeedback),
           backgroundColor: const Color(0xFFEF4444),
           behavior: SnackBarBehavior.floating,
         ));
@@ -427,7 +427,7 @@ class _AdminVerificationScreenState extends ConsumerState<AdminVerificationScree
     } catch (e) {
             if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n?.adminVerificationRejectError ?? 'Unable to reject the verification. Please try again.'),
+          content: Text(l10n!.adminVerificationRejectError),
           backgroundColor: colors.error,
           behavior: SnackBarBehavior.floating,
         ));

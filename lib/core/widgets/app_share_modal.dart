@@ -51,7 +51,7 @@ class AppShareModal {
                 const Icon(Icons.share_rounded, color: AppTheme.primary, size: 22),
                 const SizedBox(width: 8),
                 Text(
-                  l10n?.coreShareTitle ?? 'Share',
+                  l10n!.coreShareTitle,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
@@ -150,13 +150,13 @@ class AppShareModal {
                   context: ctx,
                   icon: Icons.copy_rounded,
                   color: const Color(0xFF3B82F6),
-                  label: l10n?.coreCopyLink ?? 'Copy link',
+                  label: l10n!.coreCopyLink,
                   onTap: () {
                     Clipboard.setData(ClipboardData(text: webUrl));
                     Navigator.pop(ctx);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(l10n?.coreLinkCopied ?? 'Link copied to clipboard!'),
+                        content: Text(l10n!.coreLinkCopied),
                         backgroundColor: Color(0xFF059669),
                       ),
                     );
@@ -166,7 +166,7 @@ class AppShareModal {
                   context: ctx,
                   icon: Icons.send_rounded,
                   color: const Color(0xFF059669),
-                  label: l10n?.coreShareViaApp ?? 'Share via app',
+                  label: l10n!.coreShareViaApp,
                   onTap: () {
                     Navigator.pop(ctx);
                     SharePlus.instance.share(
@@ -180,7 +180,7 @@ class AppShareModal {
                   context: ctx,
                   icon: Icons.qr_code_2_rounded,
                   color: const Color(0xFFF59E0B),
-                  label: l10n?.coreQrCode ?? 'QR code',
+                  label: l10n!.coreQrCode,
                   onTap: () {
                     Navigator.pop(ctx);
                     _showQrDialog(context, title, webUrl);
@@ -243,7 +243,7 @@ class AppShareModal {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              l10n?.coreQrCodeShareTitle ?? 'Share QR code',
+              l10n!.coreQrCodeShareTitle,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -276,11 +276,11 @@ class AppShareModal {
                 Clipboard.setData(ClipboardData(text: url));
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n?.coreLinkCopied ?? 'Link copied to clipboard!')),
+                    SnackBar(content: Text(l10n!.coreLinkCopied)),
                 );
               },
               icon: const Icon(Icons.copy_rounded, size: 16),
-              label: Text(l10n?.coreCopyLink ?? 'Copy link'),
+              label: Text(l10n!.coreCopyLink),
             ),
           ],
         ),

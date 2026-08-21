@@ -51,7 +51,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: colors.bgDark,
@@ -69,7 +69,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           },
         ),
         title: Text(
-          l10n?.settingsTitle ?? 'Cài đặt',
+          l10n.settingsTitle,
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.w900,
@@ -92,9 +92,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             fontSize: 14,
           ),
           tabs: [
-            Tab(text: l10n?.settingsProfileTab ?? 'Hồ sơ'),
-            Tab(text: l10n?.settingsBankTab ?? 'Ngân hàng'),
-            Tab(text: l10n?.settingsSecurityTab ?? 'Bảo mật'),
+            Tab(text: l10n.settingsProfileTab),
+            Tab(text: l10n.settingsBankTab),
+            Tab(text: l10n.settingsSecurityTab),
           ],
         ),
       ),
@@ -223,7 +223,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                   Icons.camera_alt_rounded,
                   color: AppTheme.primary,
                 ),
-                title: Text(l10n?.profileTakePhoto ?? 'Take a new photo'),
+                title: Text(l10n!.profileTakePhoto),
                 onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
               ),
               ListTile(
@@ -232,7 +232,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                   color: AppTheme.primary,
                 ),
                 title: Text(
-                  l10n?.profileChooseFromGallery ?? 'Choose from gallery',
+                  l10n!.profileChooseFromGallery,
                 ),
                 onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
               ),
@@ -360,8 +360,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 ScaffoldMessenger.of(ctx).showSnackBar(
                   SnackBar(
                     content: Text(
-                      l10n?.settingsRequestSent ??
-                          'Request sent. Please wait for admin approval.',
+                      l10n!.settingsRequestSent,
                     ),
                   ),
                 );
@@ -370,8 +369,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 ScaffoldMessenger.of(ctx).showSnackBar(
                   SnackBar(
                     content: Text(
-                      l10n?.settingsRequestFailed ??
-                          'Could not send the request. Please try again.',
+                      l10n!.settingsRequestFailed,
                     ),
                   ),
                 );
@@ -383,15 +381,14 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
             return AlertDialog(
               backgroundColor: context.colors.bgCard,
               title: Text(
-                l10n?.settingsGenderChangeTitle ?? 'Request gender change',
+                l10n!.settingsGenderChangeTitle,
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n?.settingsGenderLockedMessage ??
-                        'Because you have completed at least one tournament, your gender is locked to ensure fair play. The request will be sent to an admin for manual approval.',
+                    l10n!.settingsGenderLockedMessage,
                     style: const TextStyle(fontSize: 13, height: 1.5),
                   ),
                   const SizedBox(height: 16),
@@ -399,21 +396,21 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                     initialValue: requestedGender,
                     decoration: InputDecoration(
                       labelText:
-                          l10n?.settingsDesiredGender ?? 'Requested gender',
+                          l10n!.settingsDesiredGender,
                       border: const OutlineInputBorder(),
                     ),
                     items: [
                       DropdownMenuItem(
                         value: 'Nam',
-                        child: Text(l10n?.settingsGenderMale ?? 'Male'),
+                        child: Text(l10n!.settingsGenderMale),
                       ),
                       DropdownMenuItem(
                         value: 'Nữ',
-                        child: Text(l10n?.settingsGenderFemale ?? 'Female'),
+                        child: Text(l10n!.settingsGenderFemale),
                       ),
                       DropdownMenuItem(
                         value: 'Khác',
-                        child: Text(l10n?.settingsGenderOther ?? 'Other'),
+                        child: Text(l10n!.settingsGenderOther),
                       ),
                     ],
                     onChanged: (value) {
@@ -429,7 +426,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                   onPressed: isSubmitting
                       ? null
                       : () => Navigator.of(ctx).pop(),
-                  child: Text(l10n?.commonCancel ?? 'Cancel'),
+                  child: Text(l10n!.commonCancel),
                 ),
                 FilledButton(
                   onPressed: isSubmitting ? null : submit,
@@ -439,7 +436,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text(l10n?.settingsSendRequest ?? 'Send request'),
+                      : Text(l10n!.settingsSendRequest),
                 ),
               ],
             );
@@ -479,8 +476,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)?.settingsSaveChanges ??
-                  'Changes saved',
+              AppLocalizations.of(context)!.settingsSaveChanges,
             ),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
@@ -498,7 +494,9 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
   void _showError(Object e) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
+        content: Text(
+          '${AppLocalizations.of(context)!.errorPrefix}: ${e.toString().replaceAll('Exception: ', '')}',
+        ),
         backgroundColor: context.colors.error,
         behavior: SnackBarBehavior.floating,
       ),
@@ -568,28 +566,25 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
             _buildCoverAndAvatar(colors, avatarUrl, coverUrl, email, fullName),
             const SizedBox(height: 24),
             _card(colors, [
-              _fieldLabel(colors, l10n?.fullNameLabel ?? 'Full name'),
+              _fieldLabel(colors, l10n!.fullNameLabel),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _nameCtrl,
-                hint: l10n?.settingsFullNameHint ?? 'Enter your full name',
+                hint: l10n!.settingsFullNameHint,
                 prefixIcon: Icons.person_outline,
                 validator: (v) {
                   final value = v?.trim() ?? '';
                   if (value.isEmpty)
-                    return l10n?.settingsFullNameRequired ??
-                        'Please enter your full name';
+                    return l10n!.settingsFullNameRequired;
                   if (value.length < 2)
-                    return l10n?.settingsFullNameMin ??
-                        'Name must contain at least 2 characters';
+                    return l10n!.settingsFullNameMin;
                   if (value.length > 100)
-                    return l10n?.settingsFullNameMax ??
-                        'Name must not exceed 100 characters';
+                    return l10n!.settingsFullNameMax;
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              _fieldLabel(colors, l10n?.emailLabel ?? 'Email'),
+              _fieldLabel(colors, l10n!.emailLabel),
               const SizedBox(height: 6),
               AppTextFormField(
                 initialValue: email ?? '',
@@ -598,7 +593,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 enabled: false,
               ),
               const SizedBox(height: 16),
-              _fieldLabel(colors, l10n?.infoPhone ?? 'Phone number'),
+              _fieldLabel(colors, l10n!.infoPhone),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _phoneCtrl,
@@ -610,45 +605,42 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                   if (value.isEmpty) return null;
                   return RegExp(r'^[0-9]{10,11}$').hasMatch(value)
                       ? null
-                      : l10n?.settingsPhoneInvalid ?? 'Invalid phone number';
+                      : l10n!.settingsPhoneInvalid;
                 },
               ),
               const SizedBox(height: 16),
-              _fieldLabel(colors, l10n?.infoDob ?? 'Date of birth'),
+              _fieldLabel(colors, l10n!.infoDob),
               const SizedBox(height: 6),
               _dobField(colors),
               const SizedBox(height: 16),
-              _fieldLabel(colors, l10n?.infoGender ?? 'Gender'),
+              _fieldLabel(colors, l10n!.infoGender),
               const SizedBox(height: 6),
               _genderField(colors, genderLocked),
               const SizedBox(height: 16),
               _fieldLabel(
                 colors,
-                l10n?.settingsCompetitionRegion ?? 'Competition region',
+                l10n!.settingsCompetitionRegion,
               ),
               const SizedBox(height: 6),
               _provinceField(colors),
               const SizedBox(height: 4),
               Text(
-                l10n?.settingsCompetitionRegionHint ??
-                    'Choose a region to join the Tier S ranking',
+                l10n!.settingsCompetitionRegionHint,
                 style: TextStyle(fontSize: 11, color: colors.textMuted),
               ),
               const SizedBox(height: 16),
               _fieldLabel(
                 colors,
-                l10n?.settingsDetailedAddress ?? 'Detailed address',
+                l10n!.settingsDetailedAddress,
               ),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _addressCtrl,
                 hint:
-                    l10n?.settingsDetailedAddressHint ??
-                    'Enter your detailed address',
+                    l10n!.settingsDetailedAddressHint,
                 prefixIcon: Icons.location_on_outlined,
                 validator: (v) => (v ?? '').length > 255
-                    ? l10n?.settingsAddressMax ??
-                          'Address must not exceed 255 characters'
+                    ? l10n!.settingsAddressMax
                     : null,
               ),
               if (_autoDetectedProvinceName != null &&
@@ -675,18 +667,16 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 ),
               ],
               const SizedBox(height: 16),
-              _fieldLabel(colors, l10n?.settingsBio ?? 'About you'),
+              _fieldLabel(colors, l10n!.settingsBio),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _bioCtrl,
                 hint:
-                    l10n?.settingsBioHint ??
-                    'Write a little about your playing style...',
+                    l10n!.settingsBioHint,
                 maxLines: 3,
                 prefixIcon: Icons.edit_note_rounded,
                 validator: (v) => (v ?? '').length > 500
-                    ? l10n?.settingsBioMax ??
-                          'Introduction must not exceed 500 characters'
+                    ? l10n!.settingsBioMax
                     : null,
               ),
               const SizedBox(height: 24),
@@ -1149,7 +1139,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l10n?.settingsRefundSaved ?? 'Refund account settings saved',
+              l10n!.settingsRefundSaved,
             ),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
@@ -1162,8 +1152,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l10n?.settingsBankUpdateError ??
-                  'Could not save bank information. Please try again.',
+              l10n!.settingsBankUpdateError,
             ),
             backgroundColor: context.colors.error,
             behavior: SnackBarBehavior.floating,
@@ -1233,7 +1222,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
             _card(colors, [
               _fieldLabel(
                 colors,
-                l10n?.settingsPayoutMethod ?? 'Bank / payout wallet',
+                l10n!.settingsPayoutMethod,
               ),
               const SizedBox(height: 6),
               _dropdown(colors, currentLabel, bankOptions, (v) {
@@ -1257,30 +1246,28 @@ class _BankTabState extends ConsumerState<_BankTab> {
               _fieldLabel(
                 colors,
                 _isWallet
-                    ? (l10n?.settingsWalletPhone ?? 'Wallet phone number')
-                    : (l10n?.settingsAccountNumber ?? 'Account number'),
+                    ? (l10n!.settingsWalletPhone)
+                    : (l10n!.settingsAccountNumber),
               ),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _accountNumberCtrl,
                 hint: _isWallet
-                    ? (l10n?.settingsWalletNumberHint ?? 'Example: 0912345678')
-                    : (l10n?.settingsBankNumberHint ??
-                          'Example: 0011001234567'),
+                    ? (l10n!.settingsWalletNumberHint)
+                    : (l10n!.settingsBankNumberHint),
                 keyboardType: TextInputType.number,
                 prefixIcon: Icons.numbers_rounded,
               ),
               const SizedBox(height: 16),
               _fieldLabel(
                 colors,
-                l10n?.settingsAccountHolder ??
-                    'Account / wallet holder (uppercase, no accents)',
+                l10n!.settingsAccountHolder,
               ),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _accountNameCtrl,
                 hint:
-                    l10n?.settingsAccountHolderHint ?? 'Example: NGUYEN VAN A',
+                    l10n!.settingsAccountHolderHint,
                 prefixIcon: Icons.person_rounded,
                 onChanged: (value) {
                   final normalized = _normalizeAccountName(value);
@@ -1323,8 +1310,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              l10n?.settingsRefundInfo ??
-                  'Configure an accurate refund account so the tournament organizer can return your entry fee if you withdraw before the tournament starts. Your data is protected.',
+              l10n!.settingsRefundInfo,
               style: TextStyle(
                 fontSize: 12,
                 height: 1.5,
@@ -1366,8 +1352,7 @@ class _SecurityTab extends ConsumerWidget {
                 ScaffoldMessenger.of(ctx).showSnackBar(
                   SnackBar(
                     content: Text(
-                      l10n?.settingsPasswordRequired ??
-                          'Please enter your confirmation password',
+                      l10n!.settingsPasswordRequired,
                     ),
                   ),
                 );
@@ -1386,8 +1371,7 @@ class _SecurityTab extends ConsumerWidget {
                 ScaffoldMessenger.of(ctx).showSnackBar(
                   SnackBar(
                     content: Text(
-                      l10n?.settingsDeleteFailed ??
-                          'Account deletion failed. Please try again.',
+                      l10n!.settingsDeleteFailed,
                     ),
                   ),
                 );
@@ -1404,8 +1388,7 @@ class _SecurityTab extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      l10n?.settingsConfirmDeleteTitle ??
-                          'Confirm account deletion',
+                      l10n!.settingsConfirmDeleteTitle,
                     ),
                   ),
                 ],
@@ -1415,8 +1398,7 @@ class _SecurityTab extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n?.settingsDeleteIrreversible ??
-                        'This action CANNOT BE UNDONE. All personal data and tournament history will be permanently hidden. Enter your current password to continue.',
+                    l10n!.settingsDeleteIrreversible,
                     style: const TextStyle(fontSize: 13, height: 1.5),
                   ),
                   const SizedBox(height: 16),
@@ -1426,8 +1408,7 @@ class _SecurityTab extends ConsumerWidget {
                     obscureText: obscure,
                     decoration: InputDecoration(
                       labelText:
-                          l10n?.settingsConfirmPassword ??
-                          'Confirmation password',
+                          l10n!.settingsConfirmPassword,
                       suffixIcon: IconButton(
                         icon: Icon(
                           obscure
@@ -1443,7 +1424,7 @@ class _SecurityTab extends ConsumerWidget {
               actions: [
                 TextButton(
                   onPressed: isDeleting ? null : () => Navigator.of(ctx).pop(),
-                  child: Text(l10n?.commonCancel ?? 'Cancel'),
+                  child: Text(l10n!.commonCancel),
                 ),
                 FilledButton(
                   onPressed: isDeleting ? null : delete,
@@ -1460,7 +1441,7 @@ class _SecurityTab extends ConsumerWidget {
                             color: Colors.white,
                           ),
                         )
-                      : Text(l10n?.settingsConfirmDelete ?? 'Confirm deletion'),
+                      : Text(l10n!.settingsConfirmDelete),
                 ),
               ],
             );
@@ -1487,7 +1468,7 @@ class _SecurityTab extends ConsumerWidget {
           // Trạng thái xác thực
           _sectionTitle(
             colors,
-            l10n?.settingsVerificationStatus ?? 'Verification status',
+            l10n!.settingsVerificationStatus,
           ),
           const SizedBox(height: 10),
           _card(colors, [
@@ -1506,22 +1487,20 @@ class _SecurityTab extends ConsumerWidget {
                   context,
                   colors,
                   icon: Icons.phone_android_rounded,
-                  title: l10n?.infoPhone ?? 'Phone number',
+                  title: l10n!.infoPhone,
                   verified: profile.isPhoneVerified == true,
                   fallbackText:
                       profile.phoneNumber ??
-                      (l10n?.settingsPhoneNotUpdated ??
-                          'Phone number not updated'),
+                      (l10n!.settingsPhoneNotUpdated),
                 ),
                 if (profile.isEmailVerified != true) ...[
                   _divider(colors),
                   _actionRow(
                     colors,
                     icon: Icons.mark_email_unread_rounded,
-                    title: l10n?.settingsVerifyEmail ?? 'Verify email',
+                    title: l10n!.settingsVerifyEmail,
                     subtitle:
-                        l10n?.settingsVerifyEmailSubtitle ??
-                        'Send a verification code to your current email',
+                        l10n!.settingsVerifyEmailSubtitle,
                     onTap: () => startEmailVerificationFlow(
                       context,
                       ref,
@@ -1534,10 +1513,9 @@ class _SecurityTab extends ConsumerWidget {
                   _actionRow(
                     colors,
                     icon: Icons.sms_rounded,
-                    title: l10n?.settingsVerifyPhone ?? 'Verify phone number',
+                    title: l10n!.settingsVerifyPhone,
                     subtitle:
-                        l10n?.settingsVerifyPhoneSubtitle ??
-                        'Send an OTP to your current phone number',
+                        l10n!.settingsVerifyPhoneSubtitle,
                     onTap: () => startPhoneVerificationFlow(
                       context,
                       ref,
@@ -1556,7 +1534,7 @@ class _SecurityTab extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    l10n?.settingsStatusLoadError ?? 'Unable to load status',
+                    l10n!.settingsStatusLoadError,
                     style: TextStyle(color: colors.textSecondary),
                   ),
                 ),
@@ -1566,26 +1544,24 @@ class _SecurityTab extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Đổi mật khẩu
-          _sectionTitle(colors, l10n?.settingsPasswordSection ?? 'Password'),
+          _sectionTitle(colors, l10n!.settingsPasswordSection),
           const SizedBox(height: 10),
           _card(colors, [
             _actionRow(
               colors,
               icon: Icons.lock_outline_rounded,
-              title: l10n?.settingsChangePassword ?? 'Change password',
+              title: l10n!.settingsChangePassword,
               subtitle:
-                  l10n?.settingsChangePasswordSubtitle ??
-                  'Update your sign-in password',
+                  l10n!.settingsChangePasswordSubtitle,
               onTap: () => context.push('/profile/change-password'),
             ),
             _divider(colors),
             _actionRow(
               colors,
               icon: Icons.security_rounded,
-              title: l10n?.settingsStrongPassword ?? 'Strong password',
+              title: l10n!.settingsStrongPassword,
               subtitle:
-                  l10n?.settingsStrongPasswordSubtitle ??
-                  'At least 8 characters; uppercase letters and numbers are recommended',
+                  l10n!.settingsStrongPasswordSubtitle,
               trailing: Icon(
                 Icons.check_circle_rounded,
                 color: colors.success,
@@ -1596,14 +1572,14 @@ class _SecurityTab extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Phiên đăng nhập
-          _sectionTitle(colors, l10n?.settingsSessions ?? 'Sign-in sessions'),
+          _sectionTitle(colors, l10n!.settingsSessions),
           const SizedBox(height: 10),
           _card(colors, [
             _actionRow(
               colors,
               icon: Icons.devices_rounded,
-              title: l10n?.settingsCurrentDevice ?? 'Current device',
-              subtitle: l10n?.settingsActive ?? 'Active',
+              title: l10n!.settingsCurrentDevice,
+              subtitle: l10n!.settingsActive,
               trailing: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
@@ -1614,7 +1590,7 @@ class _SecurityTab extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  l10n?.settingsOnline ?? 'Online',
+                  l10n!.settingsOnline,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -1637,24 +1613,23 @@ class _SecurityTab extends ConsumerWidget {
           // Báo cáo của tôi
           _sectionTitle(
             colors,
-            l10n?.settingsCommunitySafety ?? 'Community safety',
+            l10n!.settingsCommunitySafety,
           ),
           const SizedBox(height: 10),
           _card(colors, [
             _actionRow(
               colors,
               icon: Icons.flag_outlined,
-              title: l10n?.settingsMyReports ?? 'My reports',
+              title: l10n!.settingsMyReports,
               subtitle:
-                  l10n?.settingsMyReportsSubtitle ??
-                  'Track report status and resolution results',
+                  l10n!.settingsMyReportsSubtitle,
               onTap: () => context.push('/profile/reports'),
             ),
           ]),
           const SizedBox(height: 24),
 
           // Vùng nguy hiểm
-          _sectionTitle(colors, l10n?.settingsDangerZone ?? 'Danger zone'),
+          _sectionTitle(colors, l10n!.settingsDangerZone),
           const SizedBox(height: 10),
           Container(
             width: double.infinity,
@@ -1672,8 +1647,7 @@ class _SecurityTab extends ConsumerWidget {
                     Icon(Icons.shield_outlined, size: 18, color: colors.error),
                     const SizedBox(width: 8),
                     Text(
-                      l10n?.settingsDeleteAccountTitle ??
-                          'Delete personal account',
+                      l10n!.settingsDeleteAccountTitle,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
@@ -1684,8 +1658,7 @@ class _SecurityTab extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  l10n?.settingsDeleteAccountDescription ??
-                      'Deleting your account permanently hides all personal data, tournament history, and related information. You will not be able to sign in or join tournaments after this action.',
+                  l10n!.settingsDeleteAccountDescription,
                   style: TextStyle(
                     fontSize: 12,
                     height: 1.5,
@@ -1699,7 +1672,7 @@ class _SecurityTab extends ConsumerWidget {
                     onPressed: () => _confirmDeleteAccount(context, ref),
                     icon: const Icon(Icons.delete_forever_rounded, size: 18),
                     label: Text(
-                      l10n?.settingsDeleteAccount ?? 'Delete account',
+                      l10n!.settingsDeleteAccount,
                       style: TextStyle(fontWeight: FontWeight.w800),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -1898,13 +1871,10 @@ class _ClubNotificationSettingsCardState
           SnackBar(
             content: Text(
               newPref == 'ALL'
-                  ? (l10n?.settingsNotificationsAllUpdated ??
-                        'All notifications enabled')
+                  ? (l10n!.settingsNotificationsAllUpdated)
                   : newPref == 'MENTIONS_ONLY'
-                  ? (l10n?.settingsNotificationsMentionsUpdated ??
-                        'Notifications only when you are @mentioned')
-                  : (l10n?.settingsNotificationsMutedUpdated ??
-                        'Club notifications muted'),
+                  ? (l10n!.settingsNotificationsMentionsUpdated)
+                  : (l10n!.settingsNotificationsMutedUpdated),
             ),
           ),
         );
@@ -1919,8 +1889,7 @@ class _ClubNotificationSettingsCardState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l10n?.settingsNotificationsUpdateFailed ??
-                  'Unable to update notification settings',
+              l10n!.settingsNotificationsUpdateFailed,
             ),
           ),
         );
@@ -1942,7 +1911,7 @@ class _ClubNotificationSettingsCardState
       children: [
         _sectionTitle(
           colors,
-          l10n?.settingsClubNotifications ?? 'Club notifications',
+          l10n!.settingsClubNotifications,
         ),
         const SizedBox(height: 10),
         Container(
@@ -1975,8 +1944,7 @@ class _ClubNotificationSettingsCardState
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        l10n?.settingsNoClubsForNotifications ??
-                            'You have not joined any clubs',
+                        l10n!.settingsNoClubsForNotifications,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -1985,8 +1953,7 @@ class _ClubNotificationSettingsCardState
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        l10n?.settingsClubNotificationsHint ??
-                            'After joining a club, you can customize its notifications here.',
+                        l10n!.settingsClubNotificationsHint,
                         style: TextStyle(
                           fontSize: 11,
                           color: colors.textSecondary,
@@ -2081,14 +2048,11 @@ class _ClubNotificationSettingsCardState
                                     const SizedBox(height: 2),
                                     Text(
                                       club.notificationPreference == 'ALL'
-                                          ? (l10n?.settingsClubNotificationAllSummary ??
-                                                'Receive all messages and notifications')
+                                          ? (l10n!.settingsClubNotificationAllSummary)
                                           : club.notificationPreference ==
                                                 'MENTIONS_ONLY'
-                                          ? (l10n?.settingsClubNotificationMentionsSummary ??
-                                                'Only receive notifications when you are @mentioned')
-                                          : (l10n?.settingsClubNotificationMutedSummary ??
-                                                'Notifications muted'),
+                                          ? (l10n!.settingsClubNotificationMentionsSummary)
+                                          : (l10n!.settingsClubNotificationMutedSummary),
                                       style: TextStyle(
                                         fontSize: 11,
                                         color: colors.textSecondary,
@@ -2116,7 +2080,7 @@ class _ClubNotificationSettingsCardState
                             children: [
                               Expanded(
                                 child: _buildSegmentButton(
-                                  title: l10n?.settingsNotificationAll ?? 'All',
+                                  title: l10n!.settingsNotificationAll,
                                   icon: Icons.notifications_active_outlined,
                                   isSelected:
                                       club.notificationPreference == 'ALL',
@@ -2134,8 +2098,7 @@ class _ClubNotificationSettingsCardState
                               Expanded(
                                 child: _buildSegmentButton(
                                   title:
-                                      l10n?.settingsNotificationMentions ??
-                                      '@mentions only',
+                                      l10n!.settingsNotificationMentions,
                                   icon: Icons.alternate_email_rounded,
                                   isSelected:
                                       club.notificationPreference ==
@@ -2154,7 +2117,7 @@ class _ClubNotificationSettingsCardState
                               Expanded(
                                 child: _buildSegmentButton(
                                   title:
-                                      l10n?.settingsNotificationMuted ?? 'Mute',
+                                      l10n!.settingsNotificationMuted,
                                   icon: Icons.notifications_off_outlined,
                                   isSelected:
                                       club.notificationPreference == 'MUTED',

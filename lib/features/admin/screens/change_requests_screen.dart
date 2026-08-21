@@ -37,7 +37,7 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
           onPressed: () => context.pop(),
         ),
         title: Text(
-          l10n?.adminChangeRequestsTitle ?? 'Change requests',
+          l10n!.adminChangeRequestsTitle,
           style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
         ),
         centerTitle: true,
@@ -53,10 +53,10 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
 
   Widget _buildFilterChips(AppColorsExtension colors, AppLocalizations? l10n) {
     final filters = [
-      ('all', l10n?.adminChangeRequestsFilterAll ?? 'All', AppTheme.primary),
-      ('pending', l10n?.adminChangeRequestsFilterPending ?? 'Pending', const Color(0xFFF59E0B)),
-      ('approved', l10n?.adminChangeRequestsFilterApproved ?? 'Approved', const Color(0xFF10B981)),
-      ('rejected', l10n?.adminChangeRequestsFilterRejected ?? 'Rejected', const Color(0xFFEF4444)),
+      ('all', l10n!.adminChangeRequestsFilterAll, AppTheme.primary),
+      ('pending', l10n!.adminChangeRequestsFilterPending, const Color(0xFFF59E0B)),
+      ('approved', l10n!.adminChangeRequestsFilterApproved, const Color(0xFF10B981)),
+      ('rejected', l10n!.adminChangeRequestsFilterRejected, const Color(0xFFEF4444)),
     ];
 
     return Container(
@@ -113,7 +113,7 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
               children: [
                 Icon(Icons.edit_note_rounded, size: 64, color: colors.textMuted.withValues(alpha: 0.4)),
                 const SizedBox(height: 16),
-                Text(l10n?.adminChangeRequestsEmpty ?? 'No requests', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                Text(l10n!.adminChangeRequestsEmpty, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
               ],
             ),
           );
@@ -133,7 +133,7 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
           children: [
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
-            Text(l10n?.adminChangeRequestsLoadError ?? 'Unable to load data', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+            Text(l10n!.adminChangeRequestsLoadError, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
           ],
         ),
       ),
@@ -143,9 +143,9 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
   Widget _buildRequestCard(BuildContext context, Map<String, dynamic> request, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context);
     final status = request['status']?.toString() ?? 'PENDING';
-    final type = request['type']?.toString() ?? (l10n?.adminChangeRequestsTypeOther ?? 'Other');
+    final type = request['type']?.toString() ?? (l10n!.adminChangeRequestsTypeOther);
     final description = request['description']?.toString() ?? '';
-    final requestedBy = request['requestedBy']?['fullName']?.toString() ?? (l10n?.adminChangeRequestsRequester ?? 'User');
+    final requestedBy = request['requestedBy']?['fullName']?.toString() ?? (l10n!.adminChangeRequestsRequester);
     final createdAt = request['createdAt']?.toString() ?? '';
 
     final statusColor = status == 'APPROVED'
@@ -154,10 +154,10 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
             ? const Color(0xFFEF4444)
             : const Color(0xFFF59E0B);
     final statusLabel = status == 'APPROVED'
-        ? (l10n?.adminChangeRequestsStatusApproved ?? 'Approved')
+        ? (l10n!.adminChangeRequestsStatusApproved)
         : status == 'REJECTED'
-            ? (l10n?.adminChangeRequestsStatusRejected ?? 'Rejected')
-            : (l10n?.adminChangeRequestsStatusPending ?? 'Pending');
+            ? (l10n!.adminChangeRequestsStatusRejected)
+            : (l10n!.adminChangeRequestsStatusPending);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -215,13 +215,13 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
               children: [
                 Expanded(
                   child: _actionBtn(
-                    l10n?.adminChangeRequestsApprove ?? 'Approve', Icons.check_rounded, const Color(0xFF10B981), () => _handleAction(request['id'], 'APPROVED', colors),
+                    l10n!.adminChangeRequestsApprove, Icons.check_rounded, const Color(0xFF10B981), () => _handleAction(request['id'], 'APPROVED', colors),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: _actionBtn(
-                    l10n?.adminChangeRequestsReject ?? 'Reject', Icons.close_rounded, const Color(0xFFEF4444), () => _handleAction(request['id'], 'REJECTED', colors),
+                    l10n!.adminChangeRequestsReject, Icons.close_rounded, const Color(0xFFEF4444), () => _handleAction(request['id'], 'REJECTED', colors),
                     outlined: true,
                   ),
                 ),
@@ -265,8 +265,8 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(status == 'APPROVED'
-              ? (l10n?.adminChangeRequestsApprovedFeedback ?? 'Request approved')
-              : (l10n?.adminChangeRequestsRejectedFeedback ?? 'Request rejected')),
+              ? (l10n!.adminChangeRequestsApprovedFeedback)
+              : (l10n!.adminChangeRequestsRejectedFeedback)),
           backgroundColor: const Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
         ));
@@ -274,7 +274,7 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n?.adminChangeRequestsActionError ?? 'Unable to process the request. Please try again.'),
+          content: Text(l10n!.adminChangeRequestsActionError),
           backgroundColor: colors.error,
           behavior: SnackBarBehavior.floating,
         ));

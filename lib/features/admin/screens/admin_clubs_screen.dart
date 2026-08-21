@@ -47,7 +47,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
 
     return Scaffold(
@@ -60,7 +60,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          l10n?.adminClubsTitle ?? 'Club management',
+          l10n.adminClubsTitle,
           style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
         ),
         centerTitle: true,
@@ -78,7 +78,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
     );
   }
 
-  Widget _buildSearchBar(AppColorsExtension colors, AppLocalizations? l10n) {
+  Widget _buildSearchBar(AppColorsExtension colors, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: TextField(
@@ -86,7 +86,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
         onChanged: (v) => setState(() => _searchQuery = v),
         style: TextStyle(color: colors.textPrimary, fontSize: 14),
         decoration: InputDecoration(
-          hintText: l10n?.adminClubsSearchHint ?? 'Search clubs...',
+          hintText: l10n.adminClubsSearchHint,
           hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
           prefixIcon: Icon(Icons.search_rounded, color: colors.textMuted, size: 20),
           filled: true,
@@ -101,13 +101,13 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
     );
   }
 
-  Widget _buildFilterChips(AppColorsExtension colors, AppLocalizations? l10n) {
+  Widget _buildFilterChips(AppColorsExtension colors, AppLocalizations l10n) {
     final filters = [
-      ('all', l10n?.adminClubsFilterAll ?? 'All', colors.textPrimary),
-      ('ACTIVE', l10n?.adminClubsFilterActive ?? 'Active', const Color(0xFF10B981)),
-      ('PENDING', l10n?.adminClubsFilterPending ?? 'Pending', const Color(0xFFF59E0B)),
-      ('INACTIVE', l10n?.adminClubsFilterInactive ?? 'Disabled', const Color(0xFFEF4444)),
-      ('REJECTED', l10n?.adminClubsFilterRejected ?? 'Rejected', const Color(0xFFEF4444)),
+      ('all', l10n.adminClubsFilterAll, colors.textPrimary),
+      ('ACTIVE', l10n.adminClubsFilterActive, const Color(0xFF10B981)),
+      ('PENDING', l10n.adminClubsFilterPending, const Color(0xFFF59E0B)),
+      ('INACTIVE', l10n.adminClubsFilterInactive, const Color(0xFFEF4444)),
+      ('REJECTED', l10n.adminClubsFilterRejected, const Color(0xFFEF4444)),
     ];
     return SizedBox(
       height: 42,
@@ -143,7 +143,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
     );
   }
 
-  Widget _buildClubList(AppColorsExtension colors, AppLocalizations? l10n) {
+  Widget _buildClubList(AppColorsExtension colors, AppLocalizations l10n) {
     // Dùng pendingCommunitiesProvider cho PENDING, getAll cho phần còn lại
     // Tạm thời dùng FutureProvider tự build
     final clubsAsync = ref.watch(_adminClubsProvider);
@@ -194,14 +194,14 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
           children: [
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
-            Text(l10n?.adminClubsLoadError ?? 'Unable to load the list', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+            Text(l10n.adminClubsLoadError, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatsRow(AppColorsExtension colors, List<Community> clubs, AppLocalizations? l10n) {
+  Widget _buildStatsRow(AppColorsExtension colors, List<Community> clubs, AppLocalizations l10n) {
     final active = clubs.where((c) => c.status == 'ACTIVE').length;
     final pending = clubs.where((c) => c.status == 'PENDING').length;
     final rejected = clubs.where((c) => c.status == 'REJECTED').length;
@@ -352,8 +352,8 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
                   child: _actionBtn(
                     icon: Icons.block_rounded,
                     label: club.status == 'PENDING'
-                        ? (l10n?.adminClubsReject ?? 'Reject')
-                        : (l10n?.adminClubsDisable ?? 'Disable'),
+                        ? (l10n.adminClubsReject)
+                        : (l10n.adminClubsDisable),
                     color: colors.textSecondary,
                     outlined: true,
                     onTap: () => _showRejectDialog(context, club, colors),
@@ -406,8 +406,8 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(status == 'APPROVED'
-              ? (l10n?.adminClubsApprovedFeedback ?? 'Club approved')
-              : (l10n?.adminClubsUpdatedFeedback ?? 'Club updated')),
+              ? (l10n.adminClubsApprovedFeedback)
+              : (l10n.adminClubsUpdatedFeedback)),
           backgroundColor: const Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
         ));
@@ -415,7 +415,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n?.adminClubsActionError ?? 'Unable to update the club. Please try again.'),
+          content: Text(l10n.adminClubsActionError),
           backgroundColor: context.colors.error,
           behavior: SnackBarBehavior.floating,
         ));
@@ -446,7 +446,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
           maxLength: 200,
           style: TextStyle(color: colors.textPrimary, fontSize: 13),
           decoration: InputDecoration(
-            hintText: l10n?.adminClubsReasonHint ?? 'Reason (required)',
+            hintText: l10n.adminClubsReasonHint,
             hintStyle: TextStyle(color: colors.textMuted, fontSize: 12),
             filled: true,
             fillColor: colors.bgSurface,
@@ -473,7 +473,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(l10n?.adminClubsRejectError ?? 'Unable to process the club. Please try again.'),
+                    content: Text(l10n.adminClubsRejectError),
                     backgroundColor: context.colors.error,
                     behavior: SnackBarBehavior.floating,
                   ));
@@ -488,16 +488,16 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
     );
   }
 
-  Widget _buildEmpty(AppColorsExtension colors, String filter, AppLocalizations? l10n) {
+  Widget _buildEmpty(AppColorsExtension colors, String filter, AppLocalizations l10n) {
     String message;
     if (filter == 'all') {
-      message = l10n?.adminClubsEmptyAll ?? 'No clubs yet';
+      message = l10n.adminClubsEmptyAll;
     } else if (filter == 'ACTIVE') {
-      message = l10n?.adminClubsEmptyActive ?? 'No active clubs';
+      message = l10n.adminClubsEmptyActive;
     } else if (filter == 'PENDING') {
-      message = l10n?.adminClubsEmptyPending ?? 'No clubs pending approval';
+      message = l10n.adminClubsEmptyPending;
     } else {
-      message = l10n?.adminClubsEmptyRejected ?? 'No rejected clubs';
+      message = l10n.adminClubsEmptyRejected;
     }
     return Center(
       child: Column(

@@ -39,7 +39,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navExplore => 'Explore';
 
   @override
-  String get navTournaments => 'Tournaments';
+  String get navTournaments => 'Tourneys';
 
   @override
   String get navRankings => 'Rankings';

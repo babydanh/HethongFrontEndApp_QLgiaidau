@@ -57,7 +57,7 @@ class _UpdateDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: Text(l10n?.coreUpdateAvailable ?? 'New version available'),
+      title: Text(l10n!.coreUpdateAvailable),
       content: SingleChildScrollView(
         child: Text(
           info.releaseNotes.trim().isEmpty
@@ -67,8 +67,8 @@ class _UpdateDialog extends StatelessWidget {
       ),
       actions: [
         if (!info.isRequired)
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n?.coreUpdateLater ?? 'Later')),
-        FilledButton(onPressed: _openStore, child: Text(l10n?.coreUpdateNow ?? 'Update now')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n!.coreUpdateLater)),
+        FilledButton(onPressed: _openStore, child: Text(l10n!.coreUpdateNow)),
       ],
     );
   }

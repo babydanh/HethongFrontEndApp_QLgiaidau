@@ -62,7 +62,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            l10n?.chatPollValidationError ?? 'Please enter a question and at least 2 options.',
+            l10n!.chatPollValidationError,
           ),
         ),
       );
@@ -123,7 +123,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    l10n?.chatPollCreateTitle ?? 'Create a poll',
+                    l10n!.chatPollCreateTitle,
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -143,7 +143,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                 controller: _questionController,
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 decoration: InputDecoration(
-                  hintText: l10n?.chatPollQuestionHint ?? 'Ask a poll question...',
+                  hintText: l10n!.chatPollQuestionHint,
                   hintStyle: TextStyle(color: colors.textMuted),
                   filled: true,
                   fillColor: isDark ? const Color(0xFF242526) : const Color(0xFFF0F2F5),
@@ -156,7 +156,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
               ),
               const SizedBox(height: 16),
               Text(
-                l10n?.chatPollOptionsLabel ?? 'Options:',
+                l10n!.chatPollOptionsLabel,
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.textSecondary),
               ),
               const SizedBox(height: 8),
@@ -199,7 +199,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                   onPressed: _addOption,
                   icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
                   label: Text(
-                    l10n?.chatPollAddOption ?? 'Add option',
+                    l10n!.chatPollAddOption,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -207,7 +207,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
               // Multiple Answers Switch
               SwitchListTile.adaptive(
                 title: Text(
-                  l10n?.chatPollAllowMultiple ?? 'Allow multiple selections',
+                  l10n!.chatPollAllowMultiple,
                   style: const TextStyle(fontSize: 14),
                 ),
                 value: _allowMultiple,
@@ -226,7 +226,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   child: Text(
-                    l10n?.chatPollSubmit ?? 'Create poll',
+                    l10n!.chatPollSubmit,
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                   ),
                 ),

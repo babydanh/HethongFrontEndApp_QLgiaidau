@@ -772,7 +772,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     Icons.favorite_outline_rounded,
                     color: Colors.pink,
                   ),
-                  title: Text(l10n?.chatViewReactions ?? 'View reactions'),
+                  title: Text(l10n!.chatViewReactions),
                   onTap: () {
                     Navigator.pop(sheetCtx);
                     ChatReactionDetailSheet.show(context, message);
@@ -780,7 +780,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                 ),
               ListTile(
                 leading: const Icon(Icons.reply_rounded),
-                title: Text(l10n?.chatReplyAction ?? 'Reply'),
+                title: Text(l10n!.chatReplyAction),
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   setState(() => _replyingTo = message);
@@ -790,14 +790,14 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               if (message.content.isNotEmpty && !message.isRevoked)
                 ListTile(
                   leading: const Icon(Icons.copy_rounded),
-                  title: Text(l10n?.chatCopyTextAction ?? 'Copy text'),
+                  title: Text(l10n!.chatCopyTextAction),
                   onTap: () {
                     Navigator.pop(sheetCtx);
                     Clipboard.setData(ClipboardData(text: message.content));
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          l10n?.chatCopiedFeedback ?? 'Copied to clipboard.',
+                          l10n!.chatCopiedFeedback,
                         ),
                       ),
                     );
@@ -811,8 +811,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                 ),
                 title: Text(
                   message.isPinned
-                      ? (l10n?.chatUnpinMessageAction ?? 'Unpin message')
-                      : (l10n?.chatPinMessageAction ?? 'Pin message'),
+                      ? (l10n!.chatUnpinMessageAction)
+                      : (l10n!.chatPinMessageAction),
                 ),
                 onTap: () {
                   Navigator.pop(sheetCtx);
@@ -826,7 +826,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     color: colors.error,
                   ),
                   title: Text(
-                    l10n?.chatRevokeMessageAction ?? 'Revoke message',
+                    l10n!.chatRevokeMessageAction,
                     style: TextStyle(color: colors.error),
                   ),
                   onTap: () {
@@ -904,13 +904,13 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   ) {
     final now = DateTime.now();
     if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
-      return l10n?.chatDetailToday ?? 'Today';
+      return l10n!.chatDetailToday;
     }
     final yesterday = now.subtract(const Duration(days: 1));
     if (dt.year == yesterday.year &&
         dt.month == yesterday.month &&
         dt.day == yesterday.day) {
-      return l10n?.chatDetailYesterday ?? 'Yesterday';
+      return l10n!.chatDetailYesterday;
     }
     return DateFormat('EEEE, dd/MM/yyyy', localeName).format(dt);
   }
@@ -922,7 +922,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final title =
-        widget.roomName ?? (l10n?.chatDetailRoomFallback ?? 'Chat room');
+        widget.roomName ?? (l10n!.chatDetailRoomFallback);
     final memberDirectory = widget.communityId == null
         ? null
         : ref
@@ -1037,8 +1037,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                               _onlineUserIds.length,
                                             ) ??
                                             '${_onlineUserIds.length} people online')
-                                      : (l10n?.chatDetailActive ??
-                                            'Active now'))
+                                      : (l10n!.chatDetailActive))
                                 : (_participants.any(
                                         (p) =>
                                             p.id !=
@@ -1049,9 +1048,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                                     .id &&
                                             _onlineUserIds.contains(p.id),
                                       )
-                                      ? (l10n?.chatDetailActive ?? 'Active now')
-                                      : (l10n?.chatDetailRecentlyActive ??
-                                            'Recently active'))),
+                                      ? (l10n!.chatDetailActive)
+                                      : (l10n!.chatDetailRecentlyActive))),
                       style: TextStyle(
                         fontSize: 11.5,
                         color: _typingUser != null
@@ -1071,14 +1069,13 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.poll_outlined, size: 22),
-            tooltip: l10n?.chatDetailPollTooltip ?? 'Create poll',
+            tooltip: l10n!.chatDetailPollTooltip,
             onPressed: _openCreatePollDialog,
           ),
           IconButton(
             icon: const Icon(Icons.info_outline_rounded, size: 22),
             tooltip:
-                l10n?.chatDetailRoomSettingsTooltip ??
-                'Options & Notifications',
+                l10n!.chatDetailRoomSettingsTooltip,
             onPressed: _openRoomSettings,
           ),
         ],
@@ -1130,7 +1127,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                           Row(
                             children: [
                               Text(
-                                l10n?.chatDetailPinnedLabel ?? 'Pinned message',
+                                l10n!.chatDetailPinnedLabel,
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w800,
@@ -1155,10 +1152,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                             _pinnedMessage!.content.trim().isNotEmpty
                                 ? _pinnedMessage!.content.trim()
                                 : (_pinnedMessage!.mediaUrls.isNotEmpty
-                                      ? (l10n?.chatDetailAttachedImage ??
-                                            '📷 [Attached image]')
-                                      : (l10n?.chatDetailPollPlaceholder ??
-                                            '📊 [Poll]')),
+                                      ? (l10n!.chatDetailAttachedImage)
+                                      : (l10n!.chatDetailPollPlaceholder)),
                             style: TextStyle(
                               fontSize: 12.5,
                               color: isDark
@@ -1179,7 +1174,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       size: 18,
                       color: Color(0xFFD97706),
                     ),
-                    tooltip: l10n?.chatDetailViewMessage ?? 'View message',
+                    tooltip: l10n!.chatDetailViewMessage,
                     onPressed: () => _jumpToMessage(_pinnedMessage!.id),
                   ),
                 ],
@@ -1204,7 +1199,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              l10n?.chatDetailNoMessages ?? 'No messages yet.',
+                              l10n!.chatDetailNoMessages,
                               style: TextStyle(
                                 color: colors.textMuted,
                                 fontSize: 14,
@@ -1212,8 +1207,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              l10n?.chatDetailStartConversation ??
-                                  'Send the first message to start the conversation!',
+                              l10n!.chatDetailStartConversation,
                               style: TextStyle(
                                 color: colors.textMuted.withValues(alpha: 0.7),
                                 fontSize: 12,
@@ -1476,8 +1470,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         ),
                         Text(
                           _replyingTo!.content.isEmpty
-                              ? (l10n?.chatDetailMediaPollPlaceholder ??
-                                    '[Image / Poll]')
+                              ? (l10n!.chatDetailMediaPollPlaceholder)
                               : _replyingTo!.content,
                           style: TextStyle(
                             fontSize: 12,
@@ -1525,7 +1518,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       color: AppTheme.primary,
                       size: 22,
                     ),
-                    tooltip: l10n?.chatDetailSendImage ?? 'Send image',
+                    tooltip: l10n!.chatDetailSendImage,
                     onPressed: () => _pickImage(ImageSource.gallery),
                   ),
                   IconButton(
@@ -1535,7 +1528,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       color: AppTheme.primary,
                       size: 22,
                     ),
-                    tooltip: l10n?.chatDetailTakePhoto ?? 'Take photo',
+                    tooltip: l10n!.chatDetailTakePhoto,
                     onPressed: () => _pickImage(ImageSource.camera),
                   ),
 
@@ -1556,7 +1549,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         style: const TextStyle(fontSize: 14.5),
                         onChanged: (v) => setState(() {}),
                         decoration: InputDecoration(
-                          hintText: l10n?.chatDetailMessageHint ?? 'Message...',
+                          hintText: l10n!.chatDetailMessageHint,
                           hintStyle: TextStyle(
                             color: colors.textMuted,
                             fontSize: 14.5,
@@ -1585,7 +1578,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         color: _isSending ? colors.textMuted : AppTheme.primary,
                         size: 22,
                       ),
-                      tooltip: l10n?.chatDetailSend ?? 'Send',
+                      tooltip: l10n!.chatDetailSend,
                       onPressed: _isSending ? null : () => _sendMessage(),
                     )
                   else
@@ -1596,7 +1589,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         color: AppTheme.primary,
                         size: 22,
                       ),
-                      tooltip: l10n?.chatDetailLike ?? 'Like',
+                      tooltip: l10n!.chatDetailLike,
                       onPressed: _sendThumbsUp,
                     ),
                 ],

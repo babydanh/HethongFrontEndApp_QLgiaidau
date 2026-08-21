@@ -37,7 +37,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          l10n?.adminDisputesTitle ?? 'Disputes',
+          l10n!.adminDisputesTitle,
           style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
         ),
         centerTitle: true,
@@ -53,9 +53,9 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
 
   Widget _buildFilterChips(AppColorsExtension colors, AppLocalizations? l10n) {
     final filters = [
-      ('all', l10n?.adminDisputesFilterAll ?? 'All', AppTheme.primary),
-      ('open', l10n?.adminDisputesFilterOpen ?? 'Open', const Color(0xFFF59E0B)),
-      ('resolved', l10n?.adminDisputesFilterResolved ?? 'Resolved', const Color(0xFF10B981)),
+      ('all', l10n!.adminDisputesFilterAll, AppTheme.primary),
+      ('open', l10n!.adminDisputesFilterOpen, const Color(0xFFF59E0B)),
+      ('resolved', l10n!.adminDisputesFilterResolved, const Color(0xFF10B981)),
     ];
 
     return Container(
@@ -112,7 +112,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
               children: [
                 Icon(Icons.gavel_rounded, size: 64, color: colors.textMuted.withValues(alpha: 0.4)),
                 const SizedBox(height: 16),
-                Text(l10n?.adminDisputesEmpty ?? 'No disputes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                Text(l10n!.adminDisputesEmpty, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
               ],
             ),
           );
@@ -132,7 +132,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
           children: [
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
-            Text(l10n?.adminDisputesLoadError ?? 'Unable to load data', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+            Text(l10n!.adminDisputesLoadError, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
           ],
         ),
       ),
@@ -145,14 +145,14 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
     final reason = dispute['reason']?.toString() ?? '';
     final description = dispute['description']?.toString() ?? '';
     final tournamentName = dispute['tournament']?['name']?.toString() ?? dispute['tournamentName']?.toString() ?? '---';
-    final createdBy = dispute['createdBy']?['fullName']?.toString() ?? (l10n?.adminDisputesUserFallback ?? 'User');
+    final createdBy = dispute['createdBy']?['fullName']?.toString() ?? (l10n!.adminDisputesUserFallback);
     final createdAt = dispute['createdAt']?.toString() ?? '';
 
     final isOpen = status.toUpperCase() == 'OPEN';
     final statusColor = isOpen ? const Color(0xFFF59E0B) : const Color(0xFF10B981);
     final statusLabel = isOpen
-        ? (l10n?.adminDisputesStatusOpen ?? 'Open')
-        : (l10n?.adminDisputesStatusResolved ?? 'Resolved');
+        ? (l10n!.adminDisputesStatusOpen)
+        : (l10n!.adminDisputesStatusResolved);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -180,7 +180,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(reason.isNotEmpty ? reason : (l10n?.adminDisputesReasonFallback ?? 'Dispute'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                    Text(reason.isNotEmpty ? reason : (l10n!.adminDisputesReasonFallback), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
                     const SizedBox(height: 2),
                     Text('$createdBy • $tournamentName', style: TextStyle(fontSize: 11, color: colors.textMuted)),
                   ],
@@ -217,7 +217,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
               children: [
                 Expanded(
                   child: _actionBtn(
-                    l10n?.adminDisputesResolve ?? 'Close dispute', Icons.check_rounded, const Color(0xFF10B981),
+                    l10n!.adminDisputesResolve, Icons.check_rounded, const Color(0xFF10B981),
                     () => _handleResolve(dispute['id'], colors),
                   ),
                 ),
@@ -259,7 +259,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
       ref.invalidate(_adminDisputesProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n?.adminDisputesResolvedFeedback ?? 'Dispute closed'),
+          content: Text(l10n!.adminDisputesResolvedFeedback),
           backgroundColor: Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
         ));
@@ -267,7 +267,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n?.adminDisputesResolveError ?? 'Unable to close the dispute. Please try again.'),
+          content: Text(l10n!.adminDisputesResolveError),
           backgroundColor: colors.error,
           behavior: SnackBarBehavior.floating,
         ));
