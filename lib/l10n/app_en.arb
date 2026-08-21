@@ -3481,6 +3481,28 @@
   "lite_kickReasonLabel": "Reason (optional)",
   "lite_kickReasonHint": "Example: Does not meet participation requirements",
   "lite_kickTeamAction": "Remove team",
+  "ranking_userFallback": "User",
+  "ranking_profileTooltip": "Profile",
+  "ranking_categoryLabel": "Ranking category",
+  "ranking_topFootballTeam": "Top football team: {teamName}",
+  "@ranking_topFootballTeam": {
+    "placeholders": {
+      "teamName": {}
+    }
+  },
+  "ranking_eloValue": "{elo} ELO",
+  "@ranking_eloValue": {
+    "placeholders": {
+      "elo": {}
+    }
+  },
+  "ranking_progressTitle": "FEATURED ELO PROGRESS",
+  "ranking_overviewLabel": "Sport • Overview",
+  "ranking_maxElo": "MAX",
+  "ranking_matchesLabel": "Matches",
+  "ranking_winsLabel": "Wins",
+  "ranking_winRateLabel": "Win rate",
+  "ranking_peakLabel": "Peak",
   "@register_rosterInstructions": {
     "placeholders": {
       "teamSize": {},
