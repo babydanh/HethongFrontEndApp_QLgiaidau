@@ -1376,6 +1376,10 @@ replacingExisting
   ) {
     final l10n = AppLocalizations.of(context)!;
     final selected = state.selectedIds.contains(participant.id);
+    final firstMember =
+        participant.members.isNotEmpty ? participant.members.first : null;
+    final subtitle = participant.members.map((m) => m.fullName).join(', ');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -1400,27 +1404,66 @@ replacingExisting
                 size: 22,
                 color: selected ? AppTheme.primary : colors.textMuted,
               ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: firstMember != null && firstMember.id.isNotEmpty
+                    ? () => context.push('/user/${firstMember.id}')
+                    : null,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    color: colors.warning.withValues(alpha: 0.1),
+                    child:
+                        firstMember != null && firstMember.avatarUrl.isNotEmpty
+                        ? Image.network(
+                            firstMember.avatarUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Icon(
+                              Icons.person_rounded,
+                              size: 20,
+                              color: colors.warning,
+                            ),
+                          )
+                        : Icon(
+                            Icons.person_rounded,
+                            size: 20,
+                            color: colors.warning,
+                          ),
+                  ),
+                ),
+              ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      participant.displayName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                    if (participant.members.isNotEmpty)
+                child: GestureDetector(
+                  onTap: firstMember != null && firstMember.id.isNotEmpty
+                      ? () => context.push('/user/${firstMember.id}')
+                      : null,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        participant.members.map((m) => m.fullName).join(', '),
-                        style: TextStyle(fontSize: 11, color: colors.textMuted),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        participant.displayName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textPrimary,
+                        ),
                       ),
-                  ],
+                      if (subtitle.isNotEmpty &&
+                          subtitle != participant.displayName)
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colors.textMuted,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
+                  ),
                 ),
               ),
               Container(
@@ -1447,6 +1490,10 @@ replacingExisting
 
   Widget _singlesTile(AppColorsExtension colors, LiteParticipant participant) {
     final l10n = AppLocalizations.of(context)!;
+    final firstMember =
+        participant.members.isNotEmpty ? participant.members.first : null;
+    final subtitle = participant.members.map((m) => m.fullName).join(', ');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -1457,36 +1504,57 @@ replacingExisting
       ),
       child: Row(
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: colors.info.withValues(alpha: 0.1),
+          GestureDetector(
+            onTap: firstMember != null && firstMember.id.isNotEmpty
+                ? () => context.push('/user/${firstMember.id}')
+                : null,
+            child: ClipRRect(
               borderRadius: BorderRadius.circular(18),
+              child: Container(
+                width: 36,
+                height: 36,
+                color: colors.info.withValues(alpha: 0.1),
+                child: firstMember != null && firstMember.avatarUrl.isNotEmpty
+                    ? Image.network(
+                        firstMember.avatarUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Icon(
+                          Icons.person_rounded,
+                          size: 20,
+                          color: colors.info,
+                        ),
+                      )
+                    : Icon(Icons.person_rounded, size: 20, color: colors.info),
+              ),
             ),
-            child: Icon(Icons.person_rounded, size: 20, color: colors.info),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  participant.displayName,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                if (participant.members.isNotEmpty)
+            child: GestureDetector(
+              onTap: firstMember != null && firstMember.id.isNotEmpty
+                  ? () => context.push('/user/${firstMember.id}')
+                  : null,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    participant.members.map((m) => m.fullName).join(', '),
-                    style: TextStyle(fontSize: 11, color: colors.textMuted),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    participant.displayName,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
                   ),
-              ],
+                  if (subtitle.isNotEmpty &&
+                      subtitle != participant.displayName)
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 11, color: colors.textMuted),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
             ),
           ),
           Container(
@@ -1515,6 +1583,10 @@ replacingExisting
     LiteParticipant participant,
   ) {
     final l10n = AppLocalizations.of(context)!;
+    final firstMember =
+        participant.members.isNotEmpty ? participant.members.first : null;
+    final subtitle = participant.members.map((m) => m.fullName).join(', ');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -1525,36 +1597,57 @@ replacingExisting
       ),
       child: Row(
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: colors.success.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+          GestureDetector(
+            onTap: firstMember != null && firstMember.id.isNotEmpty
+                ? () => context.push('/user/${firstMember.id}')
+                : null,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: Container(
+                width: 36,
+                height: 36,
+                color: colors.success.withValues(alpha: 0.1),
+                child: firstMember != null && firstMember.avatarUrl.isNotEmpty
+                    ? Image.network(
+                        firstMember.avatarUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Icon(
+                          Icons.group_rounded,
+                          size: 20,
+                          color: colors.success,
+                        ),
+                      )
+                    : Icon(Icons.group_rounded, size: 20, color: colors.success),
+              ),
             ),
-            child: Icon(Icons.group_rounded, size: 20, color: colors.success),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  participant.displayName,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                if (participant.members.isNotEmpty)
+            child: GestureDetector(
+              onTap: firstMember != null && firstMember.id.isNotEmpty
+                  ? () => context.push('/user/${firstMember.id}')
+                  : null,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    participant.members.map((m) => m.fullName).join(', '),
-                    style: TextStyle(fontSize: 11, color: colors.textMuted),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    participant.displayName,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
                   ),
-              ],
+                  if (subtitle.isNotEmpty &&
+                      subtitle != participant.displayName)
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 11, color: colors.textMuted),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
             ),
           ),
           if (participant.members.length >= 2)
