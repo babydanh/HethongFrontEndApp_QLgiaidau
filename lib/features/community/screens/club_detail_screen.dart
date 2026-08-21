@@ -103,8 +103,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
   Future<void> _loadNotificationPref() async {
     try {
-      final prefs = await ref.read(communityRepositoryProvider).getMyNotificationPreferences();
-      final found = prefs.where((p) => p.communityId == widget.clubId).firstOrNull;
+      final prefs = await ref
+          .read(communityRepositoryProvider)
+          .getMyNotificationPreferences();
+      final found = prefs
+          .where((p) => p.communityId == widget.clubId)
+          .firstOrNull;
       if (found != null && mounted) {
         setState(() => _notificationPref = found.notificationPreference);
       }
@@ -112,22 +116,22 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   }
 
   Future<void> _updateNotificationPref(String newPref) async {
+    final l10n = AppLocalizations.of(context)!;
     final oldPref = _notificationPref;
     setState(() => _notificationPref = newPref);
     try {
-      await ref.read(communityRepositoryProvider).updateNotificationPreference(
-        widget.clubId,
-        newPref,
-      );
+      await ref
+          .read(communityRepositoryProvider)
+          .updateNotificationPreference(widget.clubId, newPref);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               newPref == 'ALL'
-                  ? 'Đã bật nhận tất cả thông báo CLB'
+                  ? l10n.clubDetailNotificationsUpdatedAll
                   : newPref == 'MENTIONS_ONLY'
-                      ? 'Chỉ nhận thông báo khi được @nhắc tên'
-                      : 'Đã tắt thông báo CLB (Im lặng)',
+                  ? l10n.clubDetailNotificationsUpdatedMentions
+                  : l10n.clubDetailNotificationsUpdatedMuted,
             ),
           ),
         );
@@ -136,13 +140,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       if (mounted) {
         setState(() => _notificationPref = oldPref);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể cập nhật cài đặt thông báo.')),
+          SnackBar(content: Text(l10n.clubDetailNotificationsUpdateError)),
         );
       }
     }
   }
 
   void _showNotificationPreferenceSheet(BuildContext context, Community club) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     showModalBottomSheet<void>(
       context: context,
@@ -155,18 +160,25 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           builder: (sheetContext, setSheetState) {
             return SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 20,
+                  horizontal: 16,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.notifications_outlined, color: Color(0xFF2563EB), size: 22),
+                        const Icon(
+                          Icons.notifications_outlined,
+                          color: Color(0xFF2563EB),
+                          size: 22,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Thông báo câu lạc bộ',
+                            l10n.clubDetailNotificationsTitle,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
@@ -178,13 +190,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Tùy chỉnh nhận tin nhắn và thông báo từ ${club.name}',
-                      style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                      l10n.clubDetailNotificationsDescription(club.name),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colors.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     _buildNotificationOptionItem(
-                      title: 'Tất cả tin nhắn',
-                      subtitle: 'Nhận thông báo cho mọi tin nhắn mới (Mặc định)',
+                      title: l10n.clubDetailNotificationsAllTitle,
+                      subtitle: l10n.clubDetailNotificationsAllSubtitle,
                       icon: Icons.notifications_active_outlined,
                       iconColor: const Color(0xFF2563EB),
                       value: 'ALL',
@@ -196,8 +211,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     ),
                     const SizedBox(height: 8),
                     _buildNotificationOptionItem(
-                      title: 'Chỉ khi được @tag',
-                      subtitle: 'Chỉ thông báo khi có người nhắc tên bạn hoặc @all',
+                      title: l10n.clubDetailNotificationsMentionsTitle,
+                      subtitle: l10n.clubDetailNotificationsMentionsSubtitle,
                       icon: Icons.alternate_email_rounded,
                       iconColor: const Color(0xFFD97706),
                       value: 'MENTIONS_ONLY',
@@ -209,8 +224,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     ),
                     const SizedBox(height: 8),
                     _buildNotificationOptionItem(
-                      title: 'Tắt thông báo (Im lặng)',
-                      subtitle: 'Không nhận thông báo đẩy từ câu lạc bộ này',
+                      title: l10n.clubDetailNotificationsMutedTitle,
+                      subtitle: l10n.clubDetailNotificationsMutedSubtitle,
                       icon: Icons.notifications_off_outlined,
                       iconColor: const Color(0xFF64748B),
                       value: 'MUTED',
@@ -249,7 +264,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           color: isSelected ? iconColor.withValues(alpha: 0.08) : colors.bgDark,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? iconColor.withValues(alpha: 0.4) : colors.border,
+            color: isSelected
+                ? iconColor.withValues(alpha: 0.4)
+                : colors.border,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -265,7 +282,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     title,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w600,
                       color: colors.textPrimary,
                     ),
                   ),
@@ -299,7 +318,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               final name = Uri.encodeComponent(club.name);
               context.push('/club/${club.id}/chat?name=$name');
             },
-            tooltip: 'Trò chuyện CLB',
+            tooltip: l10n.clubDetailChatTooltip,
             icon: const Icon(
               Icons.forum_outlined,
               color: AppTheme.primary,
@@ -318,12 +337,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               badgeText: l10n.club_badge,
             );
           },
-          tooltip: 'Chia sẻ',
-          icon: Icon(
-            Icons.share_outlined,
-            color: colors.textPrimary,
-            size: 22,
-          ),
+          tooltip: l10n.clubDetailShareTooltip,
+          icon: Icon(Icons.share_outlined, color: colors.textPrimary, size: 22),
         ),
       ],
     );
@@ -487,7 +502,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     size: 20,
                   ),
                 ),
-                tooltip: 'Quản trị CLB',
+                tooltip: l10n.clubDetailManageTooltip,
                 onSelected: (val) {
                   if (val == 'manage') {
                     context.push(
@@ -503,11 +518,18 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     value: 'manage',
                     child: Row(
                       children: [
-                        const Icon(Icons.tune_rounded, size: 18, color: AppTheme.primary),
+                        const Icon(
+                          Icons.tune_rounded,
+                          size: 18,
+                          color: AppTheme.primary,
+                        ),
                         const SizedBox(width: 10),
                         Text(
                           l10n.club_manageShort,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
@@ -516,11 +538,18 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     value: 'edit',
                     child: Row(
                       children: [
-                        Icon(Icons.edit_rounded, size: 18, color: colors.textPrimary),
+                        Icon(
+                          Icons.edit_rounded,
+                          size: 18,
+                          color: colors.textPrimary,
+                        ),
                         const SizedBox(width: 10),
                         Text(
                           l10n.infoEdit,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
@@ -551,7 +580,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         backgroundColor: colors.bgSurface,
                         foregroundColor: colors.textPrimary,
                         side: BorderSide(color: colors.border),
-                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 8,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -562,21 +594,28 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Row(
+                          : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.check_rounded, size: 16, color: Color(0xFF059669)),
+                                Icon(
+                                  Icons.check_rounded,
+                                  size: 16,
+                                  color: Color(0xFF059669),
+                                ),
                                 SizedBox(width: 4),
                                 Text(
-                                  'Đã tham gia',
+                                  l10n.club_joined,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 13,
                                   ),
                                 ),
                                 SizedBox(width: 2),
-                                Icon(Icons.keyboard_arrow_down_rounded, size: 18),
+                                Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  size: 18,
+                                ),
                               ],
                             ),
                     ),
@@ -592,14 +631,18 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                             title: club.name,
                             subtitle:
                                 '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
-                            webUrl: 'https://sporto.asia/communities/${club.id}',
+                            webUrl:
+                                'https://sporto.asia/communities/${club.id}',
                             imageUrl: club.logoUrl ?? club.bannerUrl,
                             badgeText: l10n.club_badge,
                           );
                         },
-                        icon: const Icon(Icons.person_add_alt_1_rounded, size: 16),
-                        label: const Text(
-                          'Mời',
+                        icon: const Icon(
+                          Icons.person_add_alt_1_rounded,
+                          size: 16,
+                        ),
+                        label: Text(
+                          l10n.club_inviteButton,
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 13,
@@ -696,11 +739,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     if (_isJoinLoading) return l10n.club_joinLoading;
     if (_isMember) return l10n.club_joined;
     if (_isPending) return l10n.club_pendingApproval;
-    if (_isInvited) return 'Chấp nhận lời mời';
+    if (_isInvited) return l10n.club_acceptInvite;
     return l10n.club_joinButton;
   }
 
   void _showMemberOptionsSheet(BuildContext context, Community club) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     showModalBottomSheet(
       context: context,
@@ -738,16 +782,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     size: 20,
                   ),
                 ),
-                title: const Text(
-                  'Cài đặt thông báo',
+                title: Text(
+                  l10n.club_notificationSettings,
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
                 subtitle: Text(
                   _notificationPref == 'MUTED'
-                      ? 'Đang tắt thông báo'
+                      ? l10n.club_notificationsMuted
                       : _notificationPref == 'MENTIONS_ONLY'
-                          ? 'Chỉ khi được nhắc tên'
-                          : 'Nhận tất cả thông báo',
+                      ? l10n.club_notificationsMentionsOnly
+                      : l10n.club_notificationsAll,
                   style: TextStyle(fontSize: 12, color: colors.textSecondary),
                 ),
                 onTap: () {
@@ -768,8 +812,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     size: 20,
                   ),
                 ),
-                title: const Text(
-                  'Rời khỏi câu lạc bộ',
+                title: Text(
+                  l10n.club_leaveClub,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -777,7 +821,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   ),
                 ),
                 subtitle: Text(
-                  'Hủy tư cách thành viên của câu lạc bộ này',
+                  l10n.club_leaveClubDescription,
                   style: TextStyle(fontSize: 12, color: colors.textSecondary),
                 ),
                 onTap: () {
@@ -793,23 +837,22 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   }
 
   Future<void> _confirmLeaveCommunity() async {
+    final l10n = AppLocalizations.of(context)!;
     final userId = ref.read(userProfileProvider).asData?.value.id;
     if (userId == null || userId.isEmpty || !_isMember) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Rời câu lạc bộ?'),
-        content: const Text(
-          'Bạn sẽ không còn quyền truy cập các nội dung dành cho thành viên.',
-        ),
+        title: Text(l10n.clubDetailLeaveTitle),
+        content: Text(l10n.clubDetailLeaveDescription),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Hủy'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton.tonal(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Rời CLB'),
+            child: Text(l10n.clubDetailLeaveAction),
           ),
         ],
       ),
@@ -825,14 +868,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         await _fetchMembership();
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Đã rời câu lạc bộ')));
+        ).showSnackBar(SnackBar(content: Text(l10n.clubDetailLeftSuccess)));
       }
     } catch (e, stack) {
       _log.error('Lỗi rời CLB', e, stack);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể rời câu lạc bộ')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.clubDetailLeaveError)));
       }
     } finally {
       if (mounted) setState(() => _isJoinLoading = false);
@@ -842,6 +885,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   Future<Map<String, dynamic>?> _showJoinQuestionsDialog(
     List<String> questions,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final controllers = questions
         .map((_) => TextEditingController())
         .toList(growable: false);
@@ -849,14 +893,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final answers = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Câu hỏi tham gia CLB'),
+        title: Text(l10n.clubDetailJoinQuestionsTitle),
         content: SingleChildScrollView(
           child: Form(
             key: formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Hãy trả lời các câu hỏi để gửi yêu cầu tham gia.'),
+                Text(l10n.clubDetailJoinQuestionsInstruction),
                 const SizedBox(height: 16),
                 ...List.generate(
                   questions.length,
@@ -871,7 +915,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       ),
                       validator: (value) =>
                           value == null || value.trim().isEmpty
-                          ? 'Vui lòng trả lời câu hỏi này'
+                          ? l10n.clubDetailJoinQuestionRequired
                           : null,
                     ),
                   ),
@@ -883,7 +927,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Hủy'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () {
@@ -893,7 +937,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   questions[i]: controllers[i].text.trim(),
               });
             },
-            child: const Text('Gửi yêu cầu'),
+            child: Text(l10n.clubDetailSubmitJoinRequest),
           ),
         ],
       ),
@@ -946,9 +990,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                '${l10n.errorPrefix}: ${e.toString().replaceAll('Exception: ', '')}',
-              ),
+              content: Text(l10n.clubDetailJoinRequestError),
               backgroundColor: Colors.red,
             ),
           );
@@ -968,8 +1010,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         _log.success('Chấp nhận lời mời CLB thành công');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đã tham gia câu lạc bộ thành công!'),
+            SnackBar(
+              content: Text(l10n.clubDetailJoinedSuccess),
               backgroundColor: Color(0xFF059669),
             ),
           );
@@ -1116,22 +1158,33 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                               ...sportTagWidgets,
                               if (_myMembership?.role == 'OWNER') ...[
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                                    color: const Color(
+                                      0xFF6366F1,
+                                    ).withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
-                                      color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                                      color: const Color(
+                                        0xFF6366F1,
+                                      ).withValues(alpha: 0.3),
                                       width: 1,
                                     ),
                                   ),
-                                  child: const Row(
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.shield_rounded, size: 11, color: Color(0xFF6366F1)),
+                                      const Icon(
+                                        Icons.shield_rounded,
+                                        size: 11,
+                                        color: Color(0xFF6366F1),
+                                      ),
                                       SizedBox(width: 3),
                                       Text(
-                                        'CHỦ CLB',
+                                        l10n.club_owner,
                                         style: TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.w800,
@@ -1143,24 +1196,36 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                                   ),
                                 ),
                                 const SizedBox(width: 6),
-                              ] else if (_myMembership?.role == 'ADMIN' || _myMembership?.role == 'MODERATOR') ...[
+                              ] else if (_myMembership?.role == 'ADMIN' ||
+                                  _myMembership?.role == 'MODERATOR') ...[
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                                    color: const Color(
+                                      0xFFF59E0B,
+                                    ).withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
-                                      color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                                      color: const Color(
+                                        0xFFF59E0B,
+                                      ).withValues(alpha: 0.3),
                                       width: 1,
                                     ),
                                   ),
-                                  child: const Row(
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.admin_panel_settings_rounded, size: 11, color: Color(0xFFF59E0B)),
+                                      const Icon(
+                                        Icons.admin_panel_settings_rounded,
+                                        size: 11,
+                                        color: Color(0xFFF59E0B),
+                                      ),
                                       SizedBox(width: 3),
                                       Text(
-                                        'QUẢN TRỊ VIÊN',
+                                        l10n.club_admin,
                                         style: TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.w800,
@@ -1412,7 +1477,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ),
         const SizedBox(height: 24),
         if (club.rules != null && club.rules!.trim().isNotEmpty) ...[
-          _sectionTitle('NỘI QUY CÂU LẠC BỘ', colors),
+          _sectionTitle(l10n.clubDetailRulesTitle, colors),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -1428,7 +1493,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           const SizedBox(height: 24),
         ],
         if (club.socialLinks.isNotEmpty) ...[
-          _sectionTitle('LIÊN HỆ', colors),
+          _sectionTitle(l10n.clubDetailContactTitle, colors),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(16),
@@ -1481,6 +1546,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   }
 
   Future<void> _openSocialLink(String value) async {
+    final l10n = AppLocalizations.of(context)!;
     final raw = value.trim();
     final uri = Uri.tryParse(
       raw.startsWith('http://') || raw.startsWith('https://')
@@ -1490,9 +1556,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     if (uri == null ||
         !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể mở liên kết này.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.clubDetailOpenLinkError)));
       }
     }
   }
@@ -1570,16 +1636,17 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     return true;
   }
 
-  String _tournamentSportLabel(String sport) {
+  String _tournamentSportLabel(String sport, AppLocalizations l10n) {
     final key = sport.trim().toLowerCase();
     return AppConstants.sportNames[key] ??
-        (key.isEmpty ? 'Khác' : key.replaceAll('_', ' '));
+        (key.isEmpty ? l10n.clubDetailOtherSport : key.replaceAll('_', ' '));
   }
 
   Widget _buildTournamentFilters(
     AppColorsExtension colors,
     List<String> sports,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     Widget chips(
       List<(String, String)> options,
       String selected,
@@ -1630,7 +1697,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              'Lọc giải đấu',
+              l10n.clubDetailFilterTitle,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
@@ -1640,21 +1707,21 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           ),
           const SizedBox(height: 8),
           chips(
-            const [
-              ('ALL', 'Tất cả giải'),
-              ('CLUB', 'Nội bộ CLB'),
-              ('PUBLIC', 'Mở rộng'),
+            [
+              ('ALL', l10n.clubDetailAllTournaments),
+              ('CLUB', l10n.clubDetailClubTournaments),
+              ('PUBLIC', l10n.clubDetailOpenTournaments),
             ],
             _tournamentTypeFilter,
             (v) => setState(() => _tournamentTypeFilter = v),
           ),
           const SizedBox(height: 4),
           chips(
-            const [
-              ('ALL', 'Mọi trạng thái'),
-              ('UPCOMING', 'Sắp diễn ra'),
-              ('ONGOING', 'Đang diễn ra'),
-              ('COMPLETED', 'Đã kết thúc'),
+            [
+              ('ALL', l10n.clubDetailAllStatuses),
+              ('UPCOMING', l10n.clubDetailUpcoming),
+              ('ONGOING', l10n.clubDetailOngoing),
+              ('COMPLETED', l10n.clubDetailCompleted),
             ],
             _tournamentStatusFilter,
             (v) => setState(() => _tournamentStatusFilter = v),
@@ -1663,8 +1730,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             const SizedBox(height: 4),
             chips(
               [
-                ('ALL', 'Mọi môn'),
-                ...sports.map((sport) => (sport, _tournamentSportLabel(sport))),
+                ('ALL', l10n.clubDetailAllSports),
+                ...sports.map(
+                  (sport) => (sport, _tournamentSportLabel(sport, l10n)),
+                ),
               ],
               _tournamentSportFilter,
               (v) => setState(() => _tournamentSportFilter = v),
@@ -1763,7 +1832,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                               ),
                             ],
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
@@ -1773,7 +1842,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                               ),
                               SizedBox(width: 6),
                               Text(
-                                "Tạo giải đấu",
+                                l10n.club_createTournament,
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w800,
@@ -1808,7 +1877,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                "Quản lý giải",
+                                l10n.clubDetailManageTournaments,
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
@@ -1840,7 +1909,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Không có giải phù hợp với bộ lọc',
+                      l10n.clubDetailNoFilteredTournaments,
                       style: TextStyle(
                         color: colors.textSecondary,
                         fontWeight: FontWeight.w700,
@@ -1853,7 +1922,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         _tournamentTypeFilter = 'ALL';
                         _tournamentSportFilter = 'ALL';
                       }),
-                      child: const Text('Xóa bộ lọc'),
+                      child: Text(l10n.clubDetailClearFilters),
                     ),
                   ],
                 ),
@@ -1939,19 +2008,26 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     runSpacing: 4,
                     children: [
                       _tournamentBadge(
-                        t.tournamentType == 'CLUB' ? 'Nội bộ CLB' : 'Mở rộng',
+                        t.tournamentType == 'CLUB'
+                            ? l10n.clubDetailClubTournamentBadge
+                            : l10n.clubDetailOpenTournamentBadge,
                         t.tournamentType == 'CLUB'
                             ? const Color(0xFFD97706)
                             : AppTheme.primary,
                       ),
                       _tournamentBadge(
-                        t.isRanked ? 'Xếp hạng ELO' : 'Phong trào',
+                        t.isRanked
+                            ? l10n.clubDetailRankedBadge
+                            : l10n.clubDetailCasualBadge,
                         t.isRanked
                             ? const Color(0xFFB45309)
                             : colors.textSecondary,
                       ),
                       if (t.parentId != null)
-                        _tournamentBadge('Chuỗi giải', const Color(0xFF2563EB)),
+                        _tournamentBadge(
+                          l10n.clubDetailSeriesBadge,
+                          const Color(0xFF2563EB),
+                        ),
                     ],
                   ),
                   const SizedBox(height: 5),
@@ -2048,7 +2124,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       ),
                       const SizedBox(width: 2),
                       Text(
-                        isQuick ? "Nhanh (Lite)" : l10n.club_advanced,
+                        isQuick ? l10n.clubDetailLiteBadge : l10n.club_advanced,
                         style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
@@ -2218,7 +2294,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             InkWell(
               onTap: () async {
                 Navigator.pop(ctx);
-                final uri = Uri.parse('https://sporto.asia/organizer/tournaments/create?communityId=${widget.clubId}');
+                final uri = Uri.parse(
+                  'https://sporto.asia/organizer/tournaments/create?communityId=${widget.clubId}',
+                );
                 await launchUrl(uri, mode: LaunchMode.externalApplication);
               },
               borderRadius: BorderRadius.circular(16),
@@ -2227,18 +2305,53 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 decoration: BoxDecoration(
                   color: const Color(0xFF10B981).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                  ),
                 ),
-                child: Row(children: [
-                  Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.flash_on_rounded, color: Color(0xFF10B981), size: 24)),
-                  const SizedBox(width: 14),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Tạo nhanh trên Web', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.textPrimary)),
-                    const SizedBox(height: 4),
-                    Text('Form nhanh đầy đủ hơn Lite; giải vẫn thuộc CLB.', style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.3)),
-                  ])),
-                  Icon(Icons.open_in_new_rounded, color: colors.textMuted),
-                ]),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.flash_on_rounded,
+                        color: Color(0xFF10B981),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.clubDetailQuickWebTitle,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.clubDetailQuickWebDescription,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.textSecondary,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.open_in_new_rounded, color: colors.textMuted),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -2366,7 +2479,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           ),
           FilledButton.icon(
             onPressed: () async {
-              final uri = Uri.parse('https://sporto.asia/organizer/tournaments/create?communityId=${widget.clubId}&mode=advanced');
+              final uri = Uri.parse(
+                'https://sporto.asia/organizer/tournaments/create?communityId=${widget.clubId}&mode=advanced',
+              );
               await launchUrl(uri, mode: LaunchMode.externalApplication);
               Navigator.pop(ctx);
             },
@@ -2523,38 +2638,38 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         ),
                       ),
                     ),
-                    // P2C.5 — pills tag BQT (màu preset, tint như web) + streak cạnh tên.
-                    if (m.tags.isNotEmpty || !m.streak.isEmpty) ...[
-                      const SizedBox(height: 4),
-                      Builder(
-                        builder: (context) {
-                          final presets = ref
-                              .watch(communityTagPresetsProvider(widget.clubId))
-                              .asData
-                              ?.value;
-                          return Wrap(
-                            spacing: 4,
-                            runSpacing: 4,
-                            children: [
-                              ...m.tags.map(
-                                (tag) => PresetTagChip(
-                                  label: tag,
-                                  color: presets == null
-                                      ? null
-                                      : resolvePresetColor(presets, tag),
-                                  style: PresetTagChipStyle.tint,
-                                ),
+                  // P2C.5 — pills tag BQT (màu preset, tint như web) + streak cạnh tên.
+                  if (m.tags.isNotEmpty || !m.streak.isEmpty) ...[
+                    const SizedBox(height: 4),
+                    Builder(
+                      builder: (context) {
+                        final presets = ref
+                            .watch(communityTagPresetsProvider(widget.clubId))
+                            .asData
+                            ?.value;
+                        return Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          children: [
+                            ...m.tags.map(
+                              (tag) => PresetTagChip(
+                                label: tag,
+                                color: presets == null
+                                    ? null
+                                    : resolvePresetColor(presets, tag),
+                                style: PresetTagChipStyle.tint,
                               ),
-                              if (!m.streak.isEmpty)
-                                StreakChip(
-                                  type: m.streak.type,
-                                  count: m.streak.count,
-                                  label: m.streak.label,
-                                ),
-                            ],
-                          );
-                        },
-                      ),
+                            ),
+                            if (!m.streak.isEmpty)
+                              StreakChip(
+                                type: m.streak.type,
+                                count: m.streak.count,
+                                label: m.streak.label,
+                              ),
+                          ],
+                        );
+                      },
+                    ),
                   ],
                 ],
               ),
@@ -2702,7 +2817,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${l10n.errorPrefix}: $e'),
+            content: Text(l10n.clubDetailMemberActionError),
             backgroundColor: Colors.red,
           ),
         );
@@ -2901,7 +3016,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                               if (mounted)
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('${l10n.errorPrefix}: $e'),
+                                    content: Text(
+                                      l10n.clubDetailMemberActionError,
+                                    ),
                                     backgroundColor: Colors.red,
                                   ),
                                 );
@@ -3076,7 +3193,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 if (mounted)
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('${l10n.errorPrefix}: $e'),
+                      content: Text(l10n.clubDetailMemberActionError),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -3123,7 +3240,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 if (mounted)
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('${l10n.errorPrefix}: $e'),
+                      content: Text(l10n.clubDetailMemberActionError),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -3171,21 +3288,21 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             (
               id: 'sys-logo',
               url: club.logoUrl!,
-              title: 'Logo CLB',
+              title: l10n.clubDetailClubLogo,
               isSystem: true,
             ),
           if (club.bannerUrl != null && club.bannerUrl!.isNotEmpty)
             (
               id: 'sys-banner',
               url: club.bannerUrl!,
-              title: 'Ảnh bìa',
+              title: l10n.clubDetailCoverImage,
               isSystem: true,
             ),
           ...images.map(
             (img) => (
               id: img.id,
               url: img.imageUrl,
-              title: 'Ảnh hoạt động',
+              title: l10n.clubDetailActivityImage,
               isSystem: false,
             ),
           ),
@@ -3222,7 +3339,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.add_photo_alternate_outlined),
-                    label: const Text('Thêm ảnh đầu tiên'),
+                    label: Text(l10n.clubDetailAddFirstImage),
                   ),
                 ],
               ],
@@ -3239,7 +3356,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 children: [
                   Expanded(
                     child: Text(
-                      'Thư viện ảnh (${allItems.length})',
+                      l10n.clubDetailGalleryTitle(allItems.length),
                       style: TextStyle(
                         fontSize: 13,
                         color: colors.textSecondary,
@@ -3249,7 +3366,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   ),
                   if (isAdmin)
                     IconButton(
-                      tooltip: 'Thêm ảnh',
+                      tooltip: l10n.clubDetailAddImage,
                       onPressed: _isAddingGalleryImage
                           ? null
                           : _addGalleryImage,
@@ -3400,6 +3517,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   }
 
   Future<void> _addGalleryImage() async {
+    final l10n = AppLocalizations.of(context)!;
     final picked = await ImagePicker().pickImage(
       source: ImageSource.gallery,
       imageQuality: 88,
@@ -3415,15 +3533,15 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       await repo.addGalleryItem(widget.clubId, imageUrl: imageUrl);
       ref.invalidate(communityGalleryProvider(widget.clubId));
       if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã thêm ảnh vào thư viện')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.clubDetailGalleryAdded)));
     } catch (e, stack) {
       _log.error('Lỗi thêm ảnh gallery', e, stack);
       if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể thêm ảnh vào thư viện')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.clubDetailGalleryAddError)));
     } finally {
       if (mounted) setState(() => _isAddingGalleryImage = false);
     }
@@ -3459,21 +3577,20 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   }
 
   void _confirmDeleteGalleryImage(String imageId) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Xoá hình ảnh',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        title: Text(
+          l10n.clubDetailDeleteImageTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
-        content: const Text(
-          'Bạn có chắc chắn muốn xoá ảnh này khỏi thư viện CLB?',
-        ),
+        content: Text(l10n.clubDetailDeleteImageDescription),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Huỷ'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -3487,18 +3604,18 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 ref.invalidate(communityGalleryProvider(widget.clubId));
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã xoá ảnh khỏi thư viện')),
+                    SnackBar(content: Text(l10n.clubDetailGalleryRemoved)),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Không thể xoá ảnh')),
+                    SnackBar(content: Text(l10n.clubDetailGalleryRemoveError)),
                   );
                 }
               }
             },
-            child: const Text('Xoá'),
+            child: Text(l10n.clubDetailDeleteAction),
           ),
         ],
       ),
@@ -3602,8 +3719,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           const SizedBox(height: 8),
           _settingsTile(
             icon: Icons.forum_outlined,
-            title: 'Sinh hoạt CLB',
-            subtitle: 'Cài đặt bảng tin, bình luận, chat và tag thành viên',
+            title: l10n.clubDetailSocialSettings,
+            subtitle: l10n.clubDetailSocialSettingsSubtitle,
             color: AppTheme.primary,
             onTap: () => CommunitySocialSettingsSheet.show(
               context,
@@ -3669,7 +3786,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         const SizedBox(height: 20),
 
         // Trạng thái & Tóm tắt nhanh (đồng bộ sidebar web)
-        _settingsSectionHeader('Trạng thái nhanh', colors),
+        _settingsSectionHeader(l10n.clubDetailQuickStatus, colors),
         const SizedBox(height: 8),
         _buildQuickStatusCard(club, colors),
         const SizedBox(height: 20),
@@ -3748,11 +3865,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
   /// Tóm tắt nhanh như sidebar web: trạng thái, chế độ hiển thị, phòng chat.
   Widget _buildQuickStatusCard(Community club, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     final visibilityLabel = club.visibility == 'PUBLIC'
-        ? 'Công khai'
+        ? l10n.rank_public
         : club.visibility == 'RESTRICTED'
-            ? 'Hạn chế'
-            : 'Riêng tư';
+        ? l10n.clubDetailRestrictedVisibility
+        : l10n.clubDetailPrivateVisibility;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -3765,28 +3883,31 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           _quickStatusRow(
             colors,
             icon: Icons.bolt_rounded,
-            label: 'Trạng thái',
-            value: 'Đang hoạt động',
+            label: l10n.clubDetailStatus,
+            value: l10n.clubDetailActiveStatus,
             valueColor: colors.success,
           ),
           Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
           _quickStatusRow(
             colors,
             icon: Icons.visibility_outlined,
-            label: 'Chế độ hiển thị',
+            label: l10n.clubDetailVisibility,
             value: visibilityLabel,
           ),
           Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
           FutureBuilder<CommunitySocialSettings>(
-            future: _socialSettingsFuture ??=
-                ref.read(communityRepositoryProvider).getSocialSettings(widget.clubId),
+            future: _socialSettingsFuture ??= ref
+                .read(communityRepositoryProvider)
+                .getSocialSettings(widget.clubId),
             builder: (context, snapshot) {
               final chatEnabled = snapshot.data?.chatEnabled ?? true;
               return _quickStatusRow(
                 colors,
                 icon: Icons.chat_bubble_outline_rounded,
-                label: 'Phòng chat nội bộ',
-                value: chatEnabled ? 'Đang mở' : 'Đang tắt',
+                label: l10n.clubDetailInternalChat,
+                value: chatEnabled
+                    ? l10n.clubDetailChatOpen
+                    : l10n.clubDetailChatClosed,
                 valueColor: chatEnabled ? colors.success : colors.textMuted,
               );
             },
@@ -3978,13 +4099,15 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'Nhập chính xác tên CLB để xác nhận:',
+              l10n.clubDetailDeleteNameHint,
               style: TextStyle(color: colors.textSecondary),
             ),
             const SizedBox(height: 6),
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: 'Tên CLB hiện tại'),
+              decoration: InputDecoration(
+                labelText: l10n.clubDetailCurrentClubName,
+              ),
             ),
           ],
         ),
@@ -4036,7 +4159,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${l10n.errorPrefix}: $e'),
+              content: Text(l10n.clubDetailMemberActionError),
               backgroundColor: colors.error,
               behavior: SnackBarBehavior.floating,
             ),
@@ -4097,7 +4220,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
         labelPadding: const EdgeInsets.symmetric(horizontal: 14),
         isScrollable: true,
         tabs: [
-          const Tab(text: 'Bảng tin'),
+          Tab(text: l10n.clubDetailFeedTab),
           Tab(text: l10n.club_tabAbout),
           Tab(text: l10n.club_tabTournaments),
           Tab(text: l10n.club_tabMembers),

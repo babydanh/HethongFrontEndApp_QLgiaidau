@@ -507,7 +507,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 22),
                 child: Text(
-                  'Phiên bản ${info.version}$build',
+                  l10n.profileVersion(info.version, build),
                   style: TextStyle(fontSize: 11, color: colors.textSecondary),
                 ),
               );
@@ -519,10 +519,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildSportFilterChips(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     final categories =
         ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
     final sports = [
-      {'id': 'all', 'label': 'Tất cả', 'icon': Icons.grid_view_rounded},
+      {'id': 'all', 'label': l10n.infoAll, 'icon': Icons.grid_view_rounded},
       ...categories.map(
         (category) => <String, Object>{
           'id': category.slug,
@@ -890,7 +891,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         children: [
           // 1. Centered Name
           Text(
-            profile.fullName ?? 'Người dùng',
+            profile.fullName ?? l10n.profileUnknownUser,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 22,
@@ -1186,7 +1187,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          isUnranked ? 'TRẠNG THÁI' : 'RANK',
+                          isUnranked
+                              ? l10n.profileRankStatus
+                              : l10n.profileRankLabel,
                           style: TextStyle(
                             color: colors.textMuted,
                             fontSize: 10,
@@ -1207,7 +1210,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         const SizedBox(height: 2),
                         Text(
                           isUnranked
-                              ? 'Chưa có rank'
+                              ? l10n.profileNoRank
                               : '${fmt.format(ranking.eloPoints)} ELO',
                           style: TextStyle(
                             color: isUnranked ? colors.textMuted : tierColor,
@@ -1255,7 +1258,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   style: TextStyle(color: colors.textMuted, fontSize: 13),
                 ),
                 Text(
-                  'Tiến tới $nextLabel (${(eloProgress * 100).toStringAsFixed(1)}%)',
+                  l10n.profileEloProgress(
+                    nextLabel,
+                    (eloProgress * 100).toStringAsFixed(1),
+                  ),
                   style: TextStyle(
                     color: tierColor,
                     fontWeight: FontWeight.w700,
@@ -1277,6 +1283,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required Color color,
   }) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1300,7 +1307,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         const SizedBox(height: 2),
         Text(
-          'trận',
+          l10n.profileMatches,
           style: TextStyle(
             color: colors.textMuted,
             fontSize: 11,
@@ -1325,6 +1332,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── INFO CARD ──────────────────────────────────────────────────────
   Widget _buildInfoCard(BuildContext context, UserProfile profile) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final provincesAsync = ref.watch(provincesProvider);
     final provinces = provincesAsync.value ?? [];
     final province = provinces.firstWhere(
@@ -1341,29 +1349,43 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final items = <_InfoItem>[
       _InfoItem(
         Icons.phone_rounded,
-        'Số điện thoại',
+        l10n.profilePhoneLabel,
         profile.phoneNumber ?? '—',
       ),
-      _InfoItem(Icons.cake_rounded, 'Ngày sinh', profile.dateOfBirth ?? '—'),
-      _InfoItem(Icons.wc_rounded, 'Giới tính', profile.gender ?? '—'),
-      _InfoItem(Icons.location_on_rounded, 'Địa chỉ', profile.address ?? '—'),
-      _InfoItem(Icons.map_rounded, 'Tỉnh/Thành phố', provinceDisplay),
+      _InfoItem(
+        Icons.cake_rounded,
+        l10n.profileDobLabel,
+        profile.dateOfBirth ?? '—',
+      ),
+      _InfoItem(
+        Icons.wc_rounded,
+        l10n.profileGenderLabel,
+        profile.gender ?? '—',
+      ),
+      _InfoItem(
+        Icons.location_on_rounded,
+        l10n.profileAddressLabel,
+        profile.address ?? '—',
+      ),
+      _InfoItem(Icons.map_rounded, l10n.profileProvinceLabel, provinceDisplay),
       _InfoItem(
         Icons.verified_outlined,
-        'Email xác thực',
-        emailVerified ? 'Đã xác thực' : 'Chưa xác thực',
+        l10n.infoEmailVerified,
+        emailVerified ? l10n.infoEmailVerified : l10n.infoEmailUnverified,
       ),
       _InfoItem(
         Icons.phone_android_rounded,
-        'SĐT xác thực',
-        profile.isPhoneVerified == true ? 'Đã xác thực' : 'Chưa xác thực',
+        l10n.profilePhoneVerifiedLabel,
+        profile.isPhoneVerified == true
+            ? l10n.infoEmailVerified
+            : l10n.infoEmailUnverified,
       ),
     ];
     if (profile.bankName != null && profile.bankName!.isNotEmpty) {
       items.add(
         _InfoItem(
           Icons.account_balance_rounded,
-          'Ngân hàng',
+          l10n.profileBankLabel,
           profile.bankName!,
         ),
       );
@@ -1371,7 +1393,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (profile.bankAccountNumber != null &&
         profile.bankAccountNumber!.isNotEmpty) {
       items.add(
-        _InfoItem(Icons.numbers_rounded, 'STK', profile.bankAccountNumber!),
+        _InfoItem(
+          Icons.numbers_rounded,
+          l10n.profileBankAccountLabel,
+          profile.bankAccountNumber!,
+        ),
       );
     }
 
@@ -1416,7 +1442,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Trạng thái email',
+                        l10n.profileEmailStatusLabel,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -1426,8 +1452,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       const SizedBox(height: 4),
                       Text(
                         emailVerified
-                            ? 'Email đã được xác thực và sẵn sàng cho các chức năng bảo mật.'
-                            : 'Email chưa xác thực, nên xác minh để hoàn tất bảo mật tài khoản.',
+                            ? l10n.profileEmailVerifiedDescription
+                            : l10n.profileEmailUnverifiedDescription,
                         style: TextStyle(
                           fontSize: 12,
                           color: colors.textMuted,
@@ -1510,6 +1536,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── MY TOURNAMENTS SECTION ──────────────────────────────────────────
   Widget _buildMyTournamentsSection(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final workspaceAsync = ref.watch(myTournamentWorkspaceProvider);
 
     return workspaceAsync.when(
@@ -1517,25 +1544,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         final roleGroups =
             <({String label, IconData icon, Color color, List<dynamic> items})>[
               (
-                label: 'Chủ giải',
+                label: l10n.profileOwnerTournamentRole,
                 icon: Icons.workspace_premium_rounded,
                 color: const Color(0xFF059669),
                 items: workspace.organizedTournaments,
               ),
               (
-                label: 'Ban tổ chức',
+                label: l10n.profileOrganizerTournamentRole,
                 icon: Icons.groups_rounded,
                 color: AppTheme.primary,
                 items: workspace.coOrganizerTournaments,
               ),
               (
-                label: 'Trọng tài',
+                label: l10n.profileRefereeTournamentRole,
                 icon: Icons.gavel_rounded,
                 color: AppTheme.refereeColor,
                 items: workspace.refereeTournaments,
               ),
               (
-                label: 'Người chơi',
+                label: l10n.profilePlayerTournamentRole,
                 icon: Icons.sports_tennis_rounded,
                 color: context.colors.info,
                 items: workspace.participatingTournaments,
@@ -1562,14 +1589,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Bạn chưa tạo hoặc tham gia giải nào.',
+                    l10n.profileNoManagedTournaments,
                     style: TextStyle(color: colors.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 8),
                   TextButton.icon(
                     onPressed: () => context.go('/dashboard'),
                     icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                    label: const Text('Xem Dashboard'),
+                    label: Text(l10n.profileViewDashboard),
                   ),
                 ],
               ),
@@ -1603,7 +1630,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: TextButton.icon(
                   onPressed: () => context.go('/dashboard'),
                   icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                  label: Text('Xem tất cả (${tournaments.length})'),
+                  label: Text(
+                    l10n.profileViewAllCount(tournaments.length.toString()),
+                  ),
                 ),
               ),
             ],
@@ -1632,7 +1661,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Icon(Icons.cloud_off_rounded, size: 32, color: colors.textMuted),
               const SizedBox(height: 8),
               Text(
-                'Không thể tải dữ liệu',
+                l10n.profileTournamentLoadError,
                 style: TextStyle(color: colors.textSecondary, fontSize: 13),
               ),
             ],
@@ -1645,6 +1674,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ─── MY COMMUNITIES / CLUBS SECTION ─────────────────────────────────────
   Widget _buildMyCommunitiesSection(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final myCommunitiesAsync = ref.watch(myCommunitiesProvider);
 
     return myCommunitiesAsync.when(
@@ -1667,14 +1697,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Bạn chưa tạo hoặc tham gia câu lạc bộ nào.',
+                    l10n.profileNoClubs,
                     style: TextStyle(color: colors.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 12),
                   FilledButton.icon(
                     onPressed: () => context.push('/club/create'),
                     icon: const Icon(Icons.add_rounded, size: 16),
-                    label: const Text('Tạo CLB mới'),
+                    label: Text(l10n.profileCreateClub),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTheme.primary,
                       shape: RoundedRectangleBorder(
@@ -1704,7 +1734,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: TextButton.icon(
                   onPressed: () => context.push('/club/create'),
                   icon: const Icon(Icons.add_rounded, size: 16),
-                  label: const Text('Tạo CLB mới'),
+                  label: Text(l10n.profileCreateClub),
                 ),
               ),
             ],
@@ -1729,7 +1759,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         child: Center(
           child: Text(
-            'Không thể tải danh sách CLB',
+            l10n.profileClubLoadError,
             style: TextStyle(color: colors.textSecondary, fontSize: 13),
           ),
         ),
@@ -1742,6 +1772,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     AppColorsExtension colors,
     BuildContext context,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final currentUserId = ref.watch(userProfileProvider).value?.id;
     final isOwner =
         club.myRole == 'OWNER' ||
@@ -1754,8 +1785,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         !isOwner && (club.myRole == 'ADMIN' || club.myRole == 'MODERATOR');
 
     final roleLabel = isOwner
-        ? 'Chủ sở hữu'
-        : (isAdmin ? 'Quản trị' : 'Đã tham gia');
+        ? l10n.profileOwnerRole
+        : (isAdmin ? l10n.profileAdminRole : l10n.profileMemberRole);
     final roleColor = isOwner
         ? const Color(0xFFF59E0B)
         : (isAdmin ? AppTheme.primary : const Color(0xFF059669));
@@ -1798,8 +1829,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             color: AppTheme.primary.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(4),
           ),
-          child: const Text(
-            'THỂ THAO',
+          child: Text(
+            l10n.profileDefaultSport,
             style: TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.w700,
@@ -1845,7 +1876,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ...sportWidgets,
                         const SizedBox(width: 2),
                         Text(
-                          '$displayMemberCount Thành viên',
+                          '$displayMemberCount ${l10n.profileMembers}',
                           style: TextStyle(
                             fontSize: 11,
                             color: colors.textMuted,
@@ -1923,6 +1954,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Widget _buildFollowedTournamentsSection(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final followedAsync = ref.watch(followedTournamentsProvider);
 
     return followedAsync.when(
@@ -1965,11 +1997,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         final topVisible = visible.take(5).toList();
 
         final filters = [
-          {'id': 'all', 'label': 'Tất cả'},
-          {'id': 'recent_completed', 'label': 'Vừa kết thúc'},
-          {'id': 'in_progress', 'label': 'Đang diễn ra'},
-          {'id': 'registration', 'label': 'Mở đăng ký'},
-          {'id': 'upcoming', 'label': 'Sắp diễn ra'},
+          {'id': 'all', 'label': l10n.infoAll},
+          {'id': 'recent_completed', 'label': l10n.profileRecentCompleted},
+          {'id': 'in_progress', 'label': l10n.profileInProgress},
+          {'id': 'registration', 'label': l10n.profileRegistrationOpen},
+          {'id': 'upcoming', 'label': l10n.profileUpcoming},
         ];
 
         return Container(
@@ -2036,8 +2068,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   padding: const EdgeInsets.all(20),
                   child: Text(
                     tournaments.isEmpty
-                        ? 'Bạn chưa theo dõi giải nào.'
-                        : 'Không có giải đấu phù hợp với bộ lọc.',
+                        ? l10n.profileNoFollowedTournaments
+                        : l10n.profileNoMatchingTournaments,
                     style: TextStyle(color: colors.textMuted, fontSize: 13),
                   ),
                 )
@@ -2053,7 +2085,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: TextButton.icon(
                     onPressed: () => context.go('/dashboard'),
                     icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                    label: Text('Xem tất cả (${visible.length})'),
+                    label: Text(
+                      l10n.profileViewAllCount(visible.length.toString()),
+                    ),
                   ),
                 ),
             ],
@@ -2082,7 +2116,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Icon(Icons.cloud_off_rounded, size: 32, color: colors.textMuted),
               const SizedBox(height: 8),
               Text(
-                'Không thể tải danh sách theo dõi',
+                l10n.profileFollowedLoadError,
                 style: TextStyle(color: colors.textSecondary, fontSize: 13),
               ),
             ],
@@ -2097,6 +2131,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     AppColorsExtension colors,
     BuildContext context,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final statusLabel = StatusHelper.getTournamentStatusLabel(
       tournament.status,
     );
@@ -2106,16 +2141,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         tournament.endDate != null &&
         DateTime.now().difference(tournament.endDate!).inDays <= 14;
     final statusHint = isRecentCompleted
-        ? 'Vừa kết thúc trong 14 ngày gần đây'
+        ? l10n.profileRecentlyCompletedHint
         : isCompleted
-        ? 'Đã kết thúc'
+        ? l10n.profileCompletedHint
         : StatusHelper.isTournamentInProgress(tournament.status)
-        ? 'Đang diễn ra'
+        ? l10n.profileInProgressHint
         : StatusHelper.isTournamentRegistration(tournament.status)
-        ? 'Đang mở đăng ký'
+        ? l10n.profileRegistrationHint
         : StatusHelper.isTournamentUpcoming(tournament.status)
-        ? 'Sắp diễn ra'
-        : 'Đang theo dõi';
+        ? l10n.profileUpcomingHint
+        : l10n.profileFollowingHint;
     return InkWell(
       onTap: () => context.push('/intro/${tournament.id}'),
       child: Padding(
@@ -2131,7 +2166,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Text(
                     tournament.name.isNotEmpty
                         ? tournament.name
-                        : '(Chưa có tên)',
+                        : l10n.profileNoName,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -2193,6 +2228,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required Color roleColor,
     required IconData roleIcon,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     final rawStatus = t.status?.toString() ?? 'draft';
     final statusLabel = StatusHelper.getTournamentStatusLabel(rawStatus);
     final String? logoUrl = t is Tournament
@@ -2208,19 +2244,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           context: context,
           builder: (ctx) => AlertDialog(
             backgroundColor: colors.bgCard,
-            title: const Text('Xóa giải đấu?'),
+            title: Text(l10n.profileDeleteTournamentTitle),
             content: Text(
-              'Bạn có chắc muốn xóa "${t.name}"?',
+              l10n.profileDeleteTournamentContent(t.name?.toString() ?? ''),
               style: TextStyle(color: colors.textSecondary, fontSize: 14),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Hủy'),
+                child: Text(l10n.profileCancel),
               ),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(true),
-                child: Text('Xóa', style: TextStyle(color: colors.error)),
+                child: Text(l10n.delete, style: TextStyle(color: colors.error)),
               ),
             ],
           ),
@@ -2233,7 +2269,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  success ? 'Đã xóa giải đấu' : 'Không thể xóa giải đấu',
+                  success
+                      ? l10n.profileTournamentDeleted
+                      : l10n.profileTournamentDeleteFailed,
                 ),
                 backgroundColor: success ? colors.success : colors.error,
               ),
@@ -2274,8 +2312,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: 2),
                     Text(
                       t.isClubLite
-                          ? 'Giải nhanh (Lite) • Quản lý trên app'
-                          : 'Giải nâng cao • Quản lý đầy đủ',
+                          ? l10n.profileLiteTournamentHint
+                          : l10n.profileAdvancedTournamentHint,
                       style: TextStyle(
                         fontSize: 9,
                         color: t.isClubLite
@@ -2324,18 +2362,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void _showAdvancedManagementUnsupported(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Quản lý giải Nâng Cao'),
-        content: const Text(
-          'App hiện chỉ hỗ trợ quản lý giải nhanh (Lite). '
-          'Giải Nâng Cao vui lòng quản lý trên web.',
-        ),
+        title: Text(l10n.profileAdvancedManagementTitle),
+        content: Text(l10n.profileAdvancedManagementContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Đã hiểu'),
+            child: Text(l10n.profileUnderstood),
           ),
         ],
       ),
@@ -2694,7 +2730,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 16),
             Text(
-              'Không thể tải thông tin',
+              AppLocalizations.of(context)!.profileLoadErrorTitle,
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
@@ -2710,7 +2746,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 20),
             FilledButton(
               onPressed: () => ref.invalidate(userProfileProvider),
-              child: const Text('Thử lại'),
+              child: Text(AppLocalizations.of(context)!.infoRetry),
             ),
           ],
         ),

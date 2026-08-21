@@ -178,38 +178,41 @@ class _TournamentRegisterScreenState
           value.toString().trim().isEmpty ||
           (value is List && value.isEmpty);
       final label = field['label']?.toString() ?? id;
-      if (field['required'] == true && empty) return 'Vui lòng điền “$label”.';
+      if (field['required'] == true && empty) {
+        return l10n.registerCustomFieldRequired(label);
+      }
       if (empty) continue;
       if (field['type'] == 'EMAIL' &&
           !RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(value.toString())) {
-        return '“$label” phải là email hợp lệ.';
+        return l10n.registerCustomFieldEmailInvalid(label);
       }
 
       if (field['type'] == 'NUMBER') {
         final number = num.tryParse(value.toString());
-        if (number == null) return '“$label” phải là số.';
+        if (number == null) return l10n.registerCustomFieldNumberInvalid(label);
         final min = num.tryParse(field['min']?.toString() ?? '');
         final max = num.tryParse(field['max']?.toString() ?? '');
         if (min != null && number < min) {
-          return '“$label” không được nhỏ hơn $min.';
+          return l10n.registerCustomFieldMin(label, min);
         }
         if (max != null && number > max) {
-          return '“$label” không được lớn hơn $max.';
+          return l10n.registerCustomFieldMax(label, max);
         }
       }
       if (field['type'] == 'SELECT' &&
           field['options'] is List &&
           !(field['options'] as List).contains(value)) {
-        return 'Lựa chọn của “$label” không hợp lệ.';
+        return l10n.registerCustomFieldSelectInvalid(label);
       }
       if (field['type'] == 'CHECKBOX' && value != true) {
-        return 'Bạn cần xác nhận “$label”.';
+        return l10n.registerCustomFieldCheckboxRequired(label);
       }
     }
     return null;
   }
 
   Widget _buildCustomFields(Tournament tournament) {
+    final l10n = AppLocalizations.of(context)!;
     final fields = _activeRegistrationFields(tournament);
     if (fields.isEmpty) return const SizedBox.shrink();
 
@@ -258,13 +261,13 @@ class _TournamentRegisterScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Thông tin đăng ký bổ sung',
+          Text(
+            l10n.registerAdditionalInfoTitle,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 4),
           Text(
-            'Ban tổ chức yêu cầu các thông tin dưới đây cho nội dung bạn đã chọn.',
+            l10n.registerAdditionalInfoDescription,
             style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
           ),
           const SizedBox(height: 12),
@@ -861,7 +864,7 @@ class _TournamentRegisterScreenState
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Lỗi: $e')),
+          error: (e, _) => Center(child: Text(l10n.registerLoadError(e))),
         ),
       ),
     );
@@ -871,7 +874,9 @@ class _TournamentRegisterScreenState
     if (_registrationTeamStatus == 'WAITLISTED') {
       return l10n.registerSuccessWaitlisted;
     }
-    if (t?.registrationMode == 'APPROVAL') return 'Gửi yêu cầu thành công!';
+    if (t?.registrationMode == 'APPROVAL') {
+      return l10n.registerApprovalSuccessTitle;
+    }
     return l10n.registerSuccess;
   }
 
@@ -959,7 +964,7 @@ class _TournamentRegisterScreenState
                   );
                 },
                 icon: const Icon(Icons.qr_code_rounded),
-                label: const Text('Xem mã mời & Link ghép đôi'),
+                label: Text(l10n.registerViewInviteCode),
               ),
             ),
           ],
@@ -980,7 +985,9 @@ class _TournamentRegisterScreenState
                 ),
                 icon: const Icon(Icons.payment_rounded),
                 label: Text(
-                  'Thanh toán ${NumberFormat('#,###', 'vi_VN').format(fee.ceil())}đ',
+                  l10n.registerPayNow(
+                    NumberFormat('#,###', 'vi_VN').format(fee.ceil()),
+                  ),
                 ),
               ),
             ),
@@ -1025,15 +1032,17 @@ class _TournamentRegisterScreenState
     bool isPaid,
   ) {
     final rows = <String, String>{
-      'Nội dung': division.name,
-      'Hình thức': _divisionTypeLabel(division),
-      'Trạng thái hồ sơ': switch (status) {
-        'PENDING_APPROVAL' => 'Chờ BTC duyệt',
-        'WAITLISTED' => 'Danh sách chờ',
-        'COMPLETE' => 'Đã được duyệt',
-        _ => status.isEmpty ? 'Đã đăng ký' : status,
+      l10n.registerDetailsContent: division.name,
+      l10n.registerDetailsFormat: _divisionTypeLabel(division),
+      l10n.registerDetailsStatus: switch (status) {
+        'PENDING_APPROVAL' => l10n.registerDetailsPendingApproval,
+        'WAITLISTED' => l10n.registerDetailsWaitlisted,
+        'COMPLETE' => l10n.registerDetailsApproved,
+        _ => status.isEmpty ? l10n.registerDetailsRegistered : status,
       },
-      'Thanh toán': isPaid ? 'Đã thanh toán' : 'Chưa thanh toán',
+      l10n.registerDetailsPayment: isPaid
+          ? l10n.registerDetailsPaid
+          : l10n.registerDetailsUnpaid,
     };
     return Container(
       width: double.infinity,
@@ -1121,7 +1130,12 @@ class _TournamentRegisterScreenState
                 child: Text(
                   _registrationTeamStatus == 'WAITLISTED'
                       ? l10n.registerNoPaymentWaitlisted
-                      : 'Phí tham gia ${NumberFormat('#,###', 'vi_VN').format(_registeredEntryFee!.ceil())}đ chưa thanh toán',
+                      : l10n.registerFeePending2(
+                          NumberFormat(
+                            '#,###',
+                            'vi_VN',
+                          ).format(_registeredEntryFee!.ceil()),
+                        ),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -1905,15 +1919,15 @@ class _TournamentRegisterScreenState
                       onChanged: (value) =>
                           setState(() => _rankingConsent = value ?? false),
                       controlAffinity: ListTileControlAffinity.leading,
-                      title: const Text(
-                        'Đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng',
+                      title: Text(
+                        l10n.registerRankingConsentTitle,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      subtitle: const Text(
-                        'Giải có xếp hạng chỉ ghi nhận ELO sau khi bạn đồng ý.',
+                      subtitle: Text(
+                        l10n.registerRankingConsentDescription,
                         style: TextStyle(fontSize: 12),
                       ),
                     ),
@@ -2021,7 +2035,7 @@ class _TournamentRegisterScreenState
           _buildInfoRow(
             Icons.verified_user_rounded,
             l10n.registerEloScheduleDesc,
-            'Sơ đồ thi đấu công khai, tích lũy điểm ELO tự động sau giải',
+            l10n.registerPublicBracketElo,
             colors,
           ),
           _buildInfoRow(

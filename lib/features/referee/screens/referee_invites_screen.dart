@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +17,7 @@ class RefereeInvitesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final invitesAsync = ref.watch(myRefereeInvitesProvider);
 
@@ -28,8 +30,8 @@ class RefereeInvitesScreen extends ConsumerWidget {
           icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Lời mời trọng tài',
+        title: Text(
+          l10n.refereeInvitesTitle,
           style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
         ),
         centerTitle: true,
@@ -37,16 +39,20 @@ class RefereeInvitesScreen extends ConsumerWidget {
       body: invitesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _InviteErrorView(
-          onRetry: () => ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
+          onRetry: () =>
+              ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
         ),
         data: (invites) {
-          final pendingInvites = invites.where((invite) => invite.isPending).toList();
+          final pendingInvites = invites
+              .where((invite) => invite.isPending)
+              .toList();
           if (pendingInvites.isEmpty) {
             return const _InviteEmptyView();
           }
 
           return RefreshIndicator(
-            onRefresh: () => ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
+            onRefresh: () =>
+                ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
             child: ListView.builder(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -82,8 +88,11 @@ class RefereeInvitesScreen extends ConsumerWidget {
     TournamentRefereeInvite invite,
     String action,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
-      await ref.read(myTournamentWorkspaceProvider.notifier).respondToRefereeInvite(
+      await ref
+          .read(myTournamentWorkspaceProvider.notifier)
+          .respondToRefereeInvite(
             tournamentId: invite.tournamentId,
             refereeId: invite.refereeId,
             action: action,
@@ -93,11 +102,12 @@ class RefereeInvitesScreen extends ConsumerWidget {
         SnackBar(
           content: Text(
             action == 'ACCEPT'
-                ? 'Đã nhận lời mời trọng tài'
-                : 'Đã từ chối lời mời trọng tài',
+                ? l10n.refereeInviteAccepted
+                : l10n.refereeInviteDeclined,
           ),
-          backgroundColor:
-              action == 'ACCEPT' ? const Color(0xFF10B981) : context.colors.warning,
+          backgroundColor: action == 'ACCEPT'
+              ? const Color(0xFF10B981)
+              : context.colors.warning,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -106,7 +116,11 @@ class RefereeInvitesScreen extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Không thể xử lý lời mời: ${e.toString().replaceAll('Exception: ', '')}'),
+          content: Text(
+            l10n.refereeInviteActionError(
+              e.toString().replaceAll('Exception: ', ''),
+            ),
+          ),
           backgroundColor: context.colors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -141,7 +155,9 @@ class _InviteCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        border: Border.all(color: AppTheme.refereeColor.withValues(alpha: 0.18)),
+        border: Border.all(
+          color: AppTheme.refereeColor.withValues(alpha: 0.18),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,7 +201,10 @@ class _InviteCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.refereeColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
@@ -228,7 +247,9 @@ class _InviteCard extends StatelessWidget {
                     backgroundColor: const Color(0xFF10B981),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.radiusMedium,
+                      ),
                     ),
                   ),
                 ),
@@ -247,7 +268,9 @@ class _InviteCard extends StatelessWidget {
                     side: BorderSide(color: colors.border),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.radiusMedium,
+                      ),
                     ),
                   ),
                 ),
@@ -303,6 +326,7 @@ class _InviteEmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     return Center(
       child: Padding(
@@ -325,7 +349,7 @@ class _InviteEmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Không có lời mời nào',
+              l10n.refereeInvitesEmpty,
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
@@ -334,7 +358,7 @@ class _InviteEmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Khi ban tổ chức mời bạn làm trọng tài, lời mời sẽ hiện tại đây.',
+              l10n.refereeInvitesEmptyDescription,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: colors.textMuted),
             ),
@@ -352,6 +376,7 @@ class _InviteErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     return Center(
       child: Padding(
@@ -362,7 +387,7 @@ class _InviteErrorView extends StatelessWidget {
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 16),
             Text(
-              'Không thể tải lời mời trọng tài',
+              l10n.refereeInvitesLoadError,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -370,7 +395,10 @@ class _InviteErrorView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            FilledButton(onPressed: onRetry, child: const Text('Thử lại')),
+            FilledButton(
+              onPressed: onRetry,
+              child: Text(l10n.refereeInvitesRetry),
+            ),
           ],
         ),
       ),

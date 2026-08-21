@@ -70,6 +70,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final categoriesAsync = ref.watch(categoriesProvider);
     final authState = ref.watch(authProvider);
     final isAuth = authState.isAuthenticated;
@@ -86,8 +87,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               return _emptyState(
                 context,
                 icon: Icons.sports_rounded,
-                title: 'Không có môn thể thao',
-                subtitle: 'Chưa có môn thể thao nào được định nghĩa.',
+                title: l10n.leaderboardNoSports,
+                subtitle: l10n.leaderboardNoSportsSubtitle,
                 onRetry: () => ref.refresh(categoriesProvider),
               );
             }
@@ -115,7 +116,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
             final rankingsAsync = ref.watch(rankingsProvider(query));
             final tiersAsync = ref.watch(eloTiersProvider(effectiveCategoryId));
-            final l10n = AppLocalizations.of(context)!;
 
             final content = SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -154,10 +154,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                     error: (e, _) => _emptyState(
                       context,
                       icon: Icons.cloud_off_rounded,
-                      title: 'Không thể tải bảng xếp hạng',
+                      title: l10n.rankingLoadErrorTitle,
                       subtitle: ErrorParser.parse(
                         e,
-                        'Vui lòng kiểm tra kết nối mạng hoặc thử lại sau.',
+                        l10n.rankingLoadErrorSubtitle,
                       ),
                       onRetry: () =>
                           ref.refresh(rankingsProvider(_rankingQuery)),
@@ -183,11 +183,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           error: (e, _) => _emptyState(
             context,
             icon: Icons.warning_amber_rounded,
-            title: 'Lỗi tải danh sách môn thể thao',
-            subtitle: ErrorParser.parse(
-              e,
-              'Vui lòng kiểm tra lại kết nối mạng.',
-            ),
+            title: l10n.homeDataLoadError,
+            subtitle: ErrorParser.parse(e, l10n.rankingLoadErrorSubtitle),
             onRetry: () => ref.refresh(categoriesProvider),
           ),
         ),
@@ -195,22 +192,25 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     );
   }
 
-  String _formatLabel(String matchType, String? gender) {
-    if (matchType == 'SINGLES' && gender == 'MALE') return 'Đơn nam';
-    if (matchType == 'SINGLES' && gender == 'FEMALE') return 'Đơn nữ';
-    if (matchType == 'DOUBLES' && gender == 'MALE') return 'Đôi nam';
-    if (matchType == 'DOUBLES' && gender == 'FEMALE') return 'Đôi nữ';
-    if (matchType == 'MIXED_DOUBLES') return 'Đôi nam nữ';
-    return 'ELO toàn quốc';
+  String _formatLabel(AppLocalizations l10n, String matchType, String? gender) {
+    if (matchType == 'SINGLES' && gender == 'MALE') return l10n.clubRankingMale;
+    if (matchType == 'SINGLES' && gender == 'FEMALE')
+      return l10n.clubRankingFemale;
+    if (matchType == 'DOUBLES' && gender == 'MALE') return l10n.clubRankingMale;
+    if (matchType == 'DOUBLES' && gender == 'FEMALE')
+      return l10n.clubRankingFemale;
+    if (matchType == 'MIXED_DOUBLES') return l10n.clubRankingMixedDoubles;
+    return l10n.rankingTitle;
   }
 
   Widget _buildRankingFilters(AppColorsExtension colors) {
-    const formats = [
-      ('SINGLES', 'MALE', 'Đơn nam'),
-      ('SINGLES', 'FEMALE', 'Đơn nữ'),
-      ('DOUBLES', 'MALE', 'Đôi nam'),
-      ('DOUBLES', 'FEMALE', 'Đôi nữ'),
-      ('MIXED_DOUBLES', 'MIXED', 'Đôi nam nữ'),
+    final l10n = AppLocalizations.of(context)!;
+    final formats = [
+      ('SINGLES', 'MALE', l10n.singlesMale),
+      ('SINGLES', 'FEMALE', l10n.singlesFemale),
+      ('DOUBLES', 'MALE', l10n.doublesMale),
+      ('DOUBLES', 'FEMALE', l10n.doublesFemale),
+      ('MIXED_DOUBLES', 'MIXED', l10n.doublesMixed),
     ];
 
     return SizedBox(
@@ -251,6 +251,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
   // ─── Province filter ───────────────────────────────────────────────────
   Widget _buildProvinceFilter(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -258,7 +259,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           Icon(Icons.location_on_outlined, size: 16, color: colors.textMuted),
           const SizedBox(width: 8),
           Text(
-            'Tỉnh/Thành:',
+            l10n.leaderboardProvinceLabel,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -280,7 +281,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                   value: _selectedProvince,
                   isExpanded: true,
                   hint: Text(
-                    'Tất cả',
+                    l10n.infoAll,
                     style: TextStyle(fontSize: 13, color: colors.textSecondary),
                   ),
                   icon: Icon(
@@ -299,7 +300,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                     DropdownMenuItem<String>(
                       value: null,
                       child: Text(
-                        'Tất cả',
+                        l10n.infoAll,
                         style: TextStyle(color: colors.textSecondary),
                       ),
                     ),
@@ -327,6 +328,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     bool isAuth,
     String? currentUserId,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final tierList = tiers;
     final query = widget.searchQuery.toLowerCase().trim().replaceAll(
       RegExp(r'\s+'),
@@ -361,7 +363,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Không tìm thấy "$query"',
+                  l10n.leaderboardSearchEmpty(query),
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -370,7 +372,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Vận động viên có thể nằm ngoài Top 100 hoặc chưa tham gia giải đấu.',
+                  l10n.leaderboardSearchEmptyHint,
                   style: TextStyle(fontSize: 12, color: colors.textMuted),
                   textAlign: TextAlign.center,
                 ),
@@ -397,7 +399,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       );
     }
 
-    final formatStr = _formatLabel(_selectedMatchType, _selectedGender);
+    final formatStr = _formatLabel(l10n, _selectedMatchType, _selectedGender);
     final top4_10 = rankings.where((r) => r.rank >= 4 && r.rank <= 10).toList();
     final top11_100 = rankings.where((r) => r.rank >= 11).toList();
 

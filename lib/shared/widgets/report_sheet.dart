@@ -6,16 +6,15 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Các lý do báo cáo vi phạm
 class ReportReason {
   final String key;
-  final String label;
   final IconData icon;
 
   const ReportReason({
     required this.key,
-    required this.label,
     required this.icon,
   });
 }
@@ -23,16 +22,14 @@ class ReportReason {
 const _reportReasons = [
   ReportReason(
     key: 'spam',
-    label: 'Spam / Quảng cáo',
     icon: Icons.campaign_rounded,
   ),
   ReportReason(
     key: 'inappropriate',
-    label: 'Nội dung không phù hợp',
     icon: Icons.block_rounded,
   ),
-  ReportReason(key: 'cheating', label: 'Gian lận', icon: Icons.gavel_rounded),
-  ReportReason(key: 'other', label: 'Khác', icon: Icons.more_horiz_rounded),
+  ReportReason(key: 'cheating', icon: Icons.gavel_rounded),
+  ReportReason(key: 'other', icon: Icons.more_horiz_rounded),
 ];
 
 String _categoryForReason(String key) => switch (key) {
@@ -40,6 +37,13 @@ String _categoryForReason(String key) => switch (key) {
   'inappropriate' => 'ABUSIVE_BEHAVIOR',
   'spam' => 'OTHER',
   _ => 'OTHER',
+};
+
+String _reasonLabel(AppLocalizations l10n, String key) => switch (key) {
+  'spam' => l10n.report_reasonSpam,
+  'inappropriate' => l10n.report_reasonInappropriate,
+  'cheating' => l10n.report_reasonCheating,
+  _ => l10n.report_reasonOther,
 };
 
 /// Hiển thị bottom sheet báo cáo vi phạm.
@@ -93,6 +97,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
   bool get _isValid => _selectedReason.isNotEmpty;
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_isValid || _isSubmitting) return;
 
     setState(() => _isSubmitting = true);
@@ -118,8 +123,8 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
       if (mounted) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét.'),
+          SnackBar(
+            content: Text(l10n.report_success),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -129,8 +134,8 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
       if (mounted) {
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không thể gửi báo cáo. Hãy thử lại.'),
+          SnackBar(
+            content: Text(l10n.report_error),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -139,13 +144,14 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
   }
 
   Future<void> _pickEvidence() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_isUploading || _evidenceUrls.length >= 5) return;
     final result = await FilePicker.pickFiles();
     final file = result?.files.single;
     if (file == null) return;
     final bytes = await file.readAsBytes();
     if (file.size > 15 * 1024 * 1024) {
-      _showMessage('Tệp tối đa 15MB.');
+      _showMessage(l10n.report_fileTooLarge);
       return;
     }
     setState(() => _isUploading = true);
@@ -166,7 +172,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
       }
       if (mounted) setState(() => _evidenceUrls.add(url));
     } catch (_) {
-      _showMessage('Tải tệp thất bại. Vui lòng thử lại.');
+      _showMessage(l10n.report_uploadError);
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }
@@ -181,6 +187,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
@@ -228,7 +235,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Báo cáo vi phạm',
+                    l10n.report_title,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -240,20 +247,20 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Vui lòng chọn lý do báo cáo. Thông tin của bạn sẽ được bảo mật.',
+              l10n.report_description,
               style: TextStyle(fontSize: 13, color: colors.textSecondary),
             ),
             const SizedBox(height: 20),
 
             // Reason options
             ..._reportReasons.map(
-              (reason) => _buildReasonOption(reason, colors),
+              (reason) => _buildReasonOption(reason, colors, l10n),
             ),
             const SizedBox(height: 16),
 
             // Additional description
             Text(
-              'Mô tả chi tiết (không bắt buộc)',
+              l10n.report_detailsLabel,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -272,7 +279,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                 style: TextStyle(color: colors.textPrimary, fontSize: 14),
                 maxLines: 3,
                 decoration: InputDecoration(
-                  hintText: 'Nhập lý do chi tiết...',
+                  hintText: l10n.report_detailsHint,
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 14),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(14),
@@ -285,7 +292,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
               children: [
                 Expanded(
                   child: Text(
-                    'Minh chứng (không bắt buộc)',
+                    l10n.report_evidenceLabel,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -304,7 +311,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.upload_file_rounded, size: 18),
-                  label: const Text('Tải tệp'),
+                  label: Text(l10n.report_uploadFile),
                 ),
               ],
             ),
@@ -372,7 +379,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
               ),
             const SizedBox(height: 8),
             Text(
-              '${_evidenceUrls.length}/5 tệp đã tải lên',
+              l10n.report_uploadedCount(_evidenceUrls.length),
               style: TextStyle(fontSize: 12, color: colors.textMuted),
             ),
             const SizedBox(height: 12),
@@ -399,8 +406,8 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text(
-                        'Gửi báo cáo',
+                    : Text(
+                        l10n.report_submit,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -414,7 +421,11 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
     );
   }
 
-  Widget _buildReasonOption(ReportReason reason, AppColorsExtension colors) {
+  Widget _buildReasonOption(
+    ReportReason reason,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
     final isSelected = _selectedReason == reason.key;
     return GestureDetector(
       onTap: () => setState(() => _selectedReason = reason.key),
@@ -442,7 +453,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                reason.label,
+                _reasonLabel(l10n, reason.key),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,

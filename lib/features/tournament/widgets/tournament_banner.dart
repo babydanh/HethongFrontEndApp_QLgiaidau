@@ -4,6 +4,8 @@ import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
+import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
+
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -379,24 +381,12 @@ class _HeaderMeta extends StatelessWidget {
                   _HeaderIconText(
                     icon: Icons.location_on_outlined,
                     text:
-                        ([
-                              tournament.venueName,
-                              tournament.locationAddress,
-                              tournament.city,
-                            ]
-                            .whereType<String>()
-                            .where((value) => value.trim().isNotEmpty)
-                            .join(' • ')
-                            .trim()
-                            .isNotEmpty)
-                        ? [
-                                tournament.venueName,
-                                tournament.locationAddress,
-                                tournament.city,
-                              ]
-                              .whereType<String>()
-                              .where((value) => value.trim().isNotEmpty)
-                              .join(' • ')
+                        TournamentLocationFormatter.tournamentShortLocation(
+                          tournament,
+                        ).isNotEmpty
+                        ? TournamentLocationFormatter.tournamentShortLocation(
+                            tournament,
+                          )
                         : l10n.locationNotUpdated,
                   ),
                 ],
@@ -1017,14 +1007,11 @@ class _TournamentBannerState extends State<TournamentBanner> {
   }
 
   String _locationLabel(Tournament tournament) {
-    final parts =
-        [tournament.venueName, tournament.locationAddress, tournament.city]
-            .whereType<String>()
-            .map((value) => value.trim())
-            .where((value) => value.isNotEmpty)
-            .toList();
-    return parts.isEmpty
+    final location = TournamentLocationFormatter.tournamentShortLocation(
+      tournament,
+    );
+    return location.isEmpty
         ? AppLocalizations.of(context)!.locationNotUpdated
-        : parts.join(' • ');
+        : location;
   }
 }

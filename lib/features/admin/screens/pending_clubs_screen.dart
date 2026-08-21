@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Admin duyệt CLB mới — danh sách PENDING clubs, nút Duyệt/Từ chối.
 class PendingClubsScreen extends ConsumerWidget {
@@ -12,6 +13,7 @@ class PendingClubsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pendingAsync = ref.watch(pendingCommunitiesProvider);
+    final l10n = AppLocalizations.of(context);
     final colors = context.colors;
 
     return Scaffold(
@@ -23,7 +25,10 @@ class PendingClubsScreen extends ConsumerWidget {
           icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Duyệt CLB', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
+        title: Text(
+          l10n?.pendingClubsTitle ?? 'Review clubs',
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+        ),
         centerTitle: true,
       ),
       body: pendingAsync.when(
@@ -35,9 +40,9 @@ class PendingClubsScreen extends ConsumerWidget {
                 children: [
                   Icon(Icons.check_circle_outline_rounded, size: 64, color: colors.textMuted),
                   const SizedBox(height: 16),
-                  Text('Không có CLB nào chờ duyệt', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                  Text(l10n?.pendingClubsEmpty ?? 'No clubs pending review', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
                   const SizedBox(height: 8),
-                  Text('Tất cả CLB đã được xét duyệt', style: TextStyle(fontSize: 13, color: colors.textSecondary)),
+                  Text(l10n?.pendingClubsAllReviewed ?? 'All clubs have been reviewed', style: TextStyle(fontSize: 13, color: colors.textSecondary)),
                 ],
               ),
             );
@@ -57,9 +62,12 @@ class PendingClubsScreen extends ConsumerWidget {
               children: [
                 Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
                 const SizedBox(height: 12),
-                Text('Lỗi tải danh sách', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                Text(l10n?.pendingClubsLoadError ?? 'Unable to load the list', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
                 const SizedBox(height: 16),
-                FilledButton(onPressed: () => ref.invalidate(pendingCommunitiesProvider), child: const Text('Thử lại')),
+                FilledButton(
+                  onPressed: () => ref.invalidate(pendingCommunitiesProvider),
+                  child: Text(l10n?.pendingClubsRetry ?? 'Retry'),
+                ),
               ],
             ),
           ),
@@ -69,6 +77,7 @@ class PendingClubsScreen extends ConsumerWidget {
   }
 
   Widget _buildClubCard(BuildContext context, Community club, AppColorsExtension colors, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -116,12 +125,12 @@ class PendingClubsScreen extends ConsumerWidget {
             children: [
               Icon(Icons.person_outline_rounded, size: 14, color: colors.textMuted),
               const SizedBox(width: 4),
-              Text('${club.memberCount} thành viên', style: TextStyle(fontSize: 11, color: colors.textMuted)),
+              Text(l10n?.pendingClubsMemberCount(club.memberCount) ?? '${club.memberCount} members', style: TextStyle(fontSize: 11, color: colors.textMuted)),
               const SizedBox(width: 16),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(color: const Color(0xFFF59E0B).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
-                child: const Text('Chờ duyệt', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFFF59E0B))),
+                child: Text(l10n?.pendingClubsStatus ?? 'Pending review', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFFF59E0B))),
               ),
             ],
           ),
@@ -136,23 +145,24 @@ class PendingClubsScreen extends ConsumerWidget {
                       ref.invalidate(pendingCommunitiesProvider);
                       invalidateCommunityCollections(ref);
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Đã duyệt CLB'), backgroundColor: Color(0xFF10B981), behavior: SnackBarBehavior.floating,
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(l10n?.pendingClubsApprovedFeedback ?? 'Club approved'), backgroundColor: const Color(0xFF10B981), behavior: SnackBarBehavior.floating,
                         ));
                       }
                     } catch (e) {
-                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red));
+                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n?.pendingClubsApproveError ?? 'Unable to approve the club. Please try again.'), backgroundColor: Colors.red));
                     }
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(12)),
-                    child: const Row(
+                                        child: Row(
+
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.check_rounded, color: Colors.white, size: 18),
                         SizedBox(width: 6),
-                        Text('Duyệt', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)),
+                        Text(l10n?.pendingClubsApprove ?? 'Approve', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)),
                       ],
                     ),
                   ),
@@ -174,7 +184,7 @@ class PendingClubsScreen extends ConsumerWidget {
                       children: [
                         Icon(Icons.close_rounded, color: colors.textSecondary, size: 18),
                         const SizedBox(width: 6),
-                        Text('Từ chối', style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w700, fontSize: 14)),
+                        Text(l10n?.pendingClubsReject ?? 'Reject', style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w700, fontSize: 14)),
                       ],
                     ),
                   ),
@@ -189,6 +199,7 @@ class PendingClubsScreen extends ConsumerWidget {
 
   void _showRejectDialog(BuildContext context, Community club, AppColorsExtension colors, WidgetRef ref) {
     final controller = TextEditingController();
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -197,13 +208,13 @@ class PendingClubsScreen extends ConsumerWidget {
           children: [
             const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
             const SizedBox(width: 8),
-            Text('Từ chối CLB', style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w700, fontSize: 18)),
+            Text(l10n?.pendingClubsRejectTitle ?? 'Reject club', style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w700, fontSize: 18)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Từ chối "${club.name}"?', style: TextStyle(color: colors.textPrimary, fontSize: 15)),
+            Text(l10n?.pendingClubsRejectQuestion(club.name) ?? 'Reject "${club.name}"?', style: TextStyle(color: colors.textPrimary, fontSize: 15)),
             const SizedBox(height: 12),
             TextField(
               controller: controller,
@@ -211,7 +222,7 @@ class PendingClubsScreen extends ConsumerWidget {
               maxLength: 200,
               style: TextStyle(color: colors.textPrimary, fontSize: 13),
               decoration: InputDecoration(
-                hintText: 'Lý do từ chối (bắt buộc)',
+                hintText: l10n?.pendingClubsRejectReasonHint ?? 'Rejection reason (required)',
                 hintStyle: TextStyle(color: colors.textMuted, fontSize: 12),
                 filled: true,
                 fillColor: colors.bgSurface,
@@ -221,7 +232,7 @@ class PendingClubsScreen extends ConsumerWidget {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n?.pendingClubsCancel ?? 'Cancel')),
           ElevatedButton(
             onPressed: () async {
               if (controller.text.trim().isEmpty) return;
@@ -231,16 +242,16 @@ class PendingClubsScreen extends ConsumerWidget {
                 invalidateCommunityCollections(ref);
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Đã từ chối CLB'), backgroundColor: Colors.orange, behavior: SnackBarBehavior.floating,
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(l10n?.pendingClubsRejectedFeedback ?? 'Club rejected'), backgroundColor: Colors.orange, behavior: SnackBarBehavior.floating,
                   ));
                 }
               } catch (e) {
-                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red));
+                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n?.pendingClubsRejectError ?? 'Unable to reject the club. Please try again.'), backgroundColor: Colors.red));
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Xác nhận từ chối', style: TextStyle(color: Colors.white)),
+            child: Text(l10n?.pendingClubsConfirmReject ?? 'Confirm rejection', style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),

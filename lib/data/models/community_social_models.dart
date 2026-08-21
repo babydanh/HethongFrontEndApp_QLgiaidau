@@ -106,6 +106,7 @@ class CommunityPostModel {
   final String? tournamentId;
   final String? tournamentName;
   final String? tournamentInviteCode;
+  final String? tournamentStatus;
   final String type;
   final List<String> mediaUrls;
   final List<String> topicTags;
@@ -127,6 +128,7 @@ class CommunityPostModel {
     this.tournamentId,
     this.tournamentName,
     this.tournamentInviteCode,
+    this.tournamentStatus,
     this.type = 'NORMAL',
     this.mediaUrls = const [],
     this.topicTags = const [],
@@ -167,7 +169,16 @@ class CommunityPostModel {
           '',
       tournamentId: _asString(json['tournamentId'] ?? tournament['id']),
       tournamentName: _asString(json['tournamentName'] ?? tournament['name']),
-      tournamentInviteCode: _asString(json['tournamentInviteCode'] ?? tournament['inviteCode'] ?? tournament['invite_code']),
+      tournamentInviteCode: _asString(
+        json['tournamentInviteCode'] ??
+            tournament['inviteCode'] ??
+            tournament['invite_code'],
+      ),
+      tournamentStatus: _asString(
+        json['tournamentStatus'] ??
+            tournament['status'] ??
+            tournament['tournamentStatus'],
+      ),
       type: _asString(json['type']) ?? 'NORMAL',
       mediaUrls: _asStringList(rawMedia),
       topicTags: _asStringList(rawTopics),
@@ -216,10 +227,21 @@ class CommunityReportModel {
       details: _asString(report['details'] ?? json['details']),
       status: _asString(report['status'] ?? json['status']) ?? 'OPEN',
       createdAt: _asDateTime(report['createdAt'] ?? json['createdAt']),
-      reporterName: _asString(reporter['fullName'] ?? reporter['name'] ?? json['reporterName']) ?? 'Thành viên',
+      reporterName:
+          _asString(
+            reporter['fullName'] ?? reporter['name'] ?? json['reporterName'],
+          ) ??
+          'Thành viên',
       reporterEmail: _asString(reporter['email'] ?? json['reporterEmail']),
-      postText: _asString(post['text'] ?? post['body'] ?? json['postText']) ?? '',
-      postAuthorName: _asString(post['authorName'] ?? _asMap(post['author'])['fullName'] ?? json['postAuthorName']) ?? 'Thành viên',
+      postText:
+          _asString(post['text'] ?? post['body'] ?? json['postText']) ?? '',
+      postAuthorName:
+          _asString(
+            post['authorName'] ??
+                _asMap(post['author'])['fullName'] ??
+                json['postAuthorName'],
+          ) ??
+          'Thành viên',
     );
   }
 }

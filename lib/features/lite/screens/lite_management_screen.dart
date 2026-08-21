@@ -1131,9 +1131,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         reason,
       );
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Đã loại ${participant.teamName} khỏi giải.'),
+          content: Text(l10n.lite_kickParticipantSuccess(participant.teamName)),
           backgroundColor: colors.success,
         ),
       );
@@ -1142,7 +1143,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       final data = error.response?.data;
       final message = data is Map && data['message'] != null
           ? data['message'].toString()
-          : 'Không thể loại đội khỏi giải. Vui lòng thử lại.';
+          : AppLocalizations.of(context)!.lite_kickParticipantError;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), backgroundColor: colors.error),
       );
@@ -1159,11 +1160,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(
-          replacingExisting ? 'Tạo lại bracket?' : l10n.lite_createBracketTitle,
+          replacingExisting ? l10n.lite_recreateBracketTitle : l10n.lite_createBracketTitle,
         ),
         content: Text(
-          replacingExisting
-              ? 'Bracket cũ và lịch trận chưa bắt đầu sẽ bị thay thế hoàn toàn. Không thể hoàn tác. Bạn có chắc muốn tiếp tục?'
+replacingExisting
+              ? l10n.lite_recreateBracketConfirm
               : l10n.lite_createBracketConfirm,
         ),
         actions: [
@@ -1174,7 +1175,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
-              replacingExisting ? 'Tạo lại' : l10n.lite_createBracket,
+              replacingExisting ? l10n.lite_recreateBracket : l10n.lite_createBracket,
             ),
           ),
         ],
@@ -1193,7 +1194,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           SnackBar(
             content: Text(
               replacingExisting
-                  ? 'Đã tạo lại bracket mới.'
+? l10n.lite_recreatedBracket
                   : l10n.lite_bracketCreated,
             ),
           ),
@@ -1282,7 +1283,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                         ? null
                         : () => _createBracket(colors, notifier),
                     icon: const Icon(Icons.refresh_rounded, size: 18),
-                    label: const Text('Tạo lại bracket'),
+                    label: Text(l10n.lite_recreateBracket),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: colors.warning,
                       side: BorderSide(color: colors.warning),

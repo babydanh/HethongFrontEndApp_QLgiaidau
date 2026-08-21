@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentCardCarousel extends StatelessWidget {
   final Tournament tournament;
@@ -14,31 +15,40 @@ class TournamentCardCarousel extends StatelessWidget {
     required this.onTap,
   });
 
-  String _getFormatLabel(String matchType, String? genderRestriction) {
+  String _getFormatLabel(
+    BuildContext context,
+    String matchType,
+    String? genderRestriction,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
     final mt = matchType.toUpperCase();
     final gr = genderRestriction?.toUpperCase() ?? '';
     if (mt == 'SINGLES') {
-      if (gr == 'FEMALE') return 'Đơn Nữ';
-      if (gr == 'MALE') return 'Đơn Nam';
-      return 'Đơn';
+      if (gr == 'FEMALE') return l10n.singlesFemale;
+      if (gr == 'MALE') return l10n.singlesMale;
+      return l10n.tournamentCardSingles;
     }
     if (mt == 'DOUBLES') {
-      if (gr == 'FEMALE') return 'Đôi Nữ';
-      if (gr == 'MALE') return 'Đôi Nam';
-      if (gr == 'MIXED') return 'Đôi Nam Nữ';
-      return 'Đôi';
+      if (gr == 'FEMALE') return l10n.doublesFemale;
+      if (gr == 'MALE') return l10n.doublesMale;
+      if (gr == 'MIXED') return l10n.doublesMixed;
+      return l10n.tournamentCardDoubles;
     }
     if (mt == 'MIXED_DOUBLES' || mt == 'MIXED' || gr == 'MIXED') {
-      return 'Đôi Nam Nữ';
+      return l10n.doublesMixed;
     }
-    return mt == 'DOUBLES' ? 'Đôi' : (mt == 'SINGLES' ? 'Đơn' : 'Đôi Nam Nữ');
+    return mt == 'DOUBLES'
+        ? l10n.tournamentCardDoubles
+        : (mt == 'SINGLES' ? l10n.tournamentCardSingles : l10n.doublesMixed);
   }
 
-  List<String> _getCategoryChips(Tournament t) {
+  List<String> _getCategoryChips(BuildContext context, Tournament t) {
+    final l10n = AppLocalizations.of(context)!;
     final List<String> chips = [];
     if (t.divisions.isNotEmpty) {
       for (var div in t.divisions) {
         final formatLabel = _getFormatLabel(
+          context,
           div.matchType,
           div.genderRestriction,
         );
@@ -69,25 +79,25 @@ class TournamentCardCarousel extends StatelessWidget {
       if (divGender == 'female' ||
           nameLower.contains("đơn nữ") ||
           descLower.contains("đơn nữ")) {
-        chips.add("Đơn Nữ");
+        chips.add(l10n.singlesFemale);
       } else if (divGender == 'female' ||
           nameLower.contains("đôi nữ") ||
           descLower.contains("đôi nữ")) {
-        chips.add("Đôi Nữ");
+        chips.add(l10n.doublesFemale);
       }
       // Check Mixed
       else if (divGender == 'mixed' ||
           nameLower.contains("đôi nam nữ") ||
           descLower.contains("đôi nam nữ") ||
           nameLower.contains("nam nữ")) {
-        chips.add("Đôi Nam Nữ");
+        chips.add(l10n.doublesMixed);
       }
       // Check Male
       else if (nameLower.contains("đơn nam") || descLower.contains("đơn nam")) {
-        chips.add("Đơn Nam");
+        chips.add(l10n.singlesMale);
       } else if (nameLower.contains("đôi nam") ||
           descLower.contains("đôi nam")) {
-        chips.add("Đôi Nam");
+        chips.add(l10n.doublesMale);
       }
       // Generic Singles / Doubles
       else if (nameLower.contains("đôi") ||
@@ -96,19 +106,21 @@ class TournamentCardCarousel extends StatelessWidget {
           t.maxPlayersPerTeam == 2) {
         chips.add(
           divGender == 'female'
-              ? "Đôi Nữ"
-              : (divGender == 'mixed' ? "Đôi Nam Nữ" : "Đôi Nam"),
+              ? l10n.doublesFemale
+              : (divGender == 'mixed' ? l10n.doublesMixed : l10n.doublesMale),
         );
       } else if (nameLower.contains("đơn") ||
           descLower.contains("đơn") ||
           t.format == "singles" ||
           t.maxPlayersPerTeam == 1) {
-        chips.add(divGender == 'female' ? "Đơn Nữ" : "Đơn Nam");
+        chips.add(
+          divGender == 'female' ? l10n.singlesFemale : l10n.singlesMale,
+        );
       }
     }
     if (chips.isEmpty) {
       final isDoubles = t.format == "doubles" || t.maxPlayersPerTeam == 2;
-      chips.add(isDoubles ? "Đôi Nam" : "Đơn Nam");
+      chips.add(isDoubles ? l10n.doublesMale : l10n.singlesMale);
     }
     return chips.toSet().toList();
   }
@@ -116,27 +128,33 @@ class TournamentCardCarousel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final sportLabel =
-        (AppConstants.sportNames[tournament.sport] ?? tournament.sport)
-            .toUpperCase();
+    final l10n = AppLocalizations.of(context)!;
+    final sportLabel = switch (tournament.sport.toLowerCase()) {
+      'badminton' => l10n.createClubTournament_sportBadminton,
+      'tennis' => l10n.createClubTournament_sportTennis,
+      'pickleball' => l10n.createClubTournament_sportPickleball,
+      'table_tennis' => l10n.createClubTournament_sportTableTennis,
+      'football' => l10n.createClubTournament_sportFootball,
+      _ => l10n.homeSportFallback,
+    }.toUpperCase();
     final normalizedStatus = StatusHelper.normalizeTournamentStatus(
       tournament.status,
     );
-    String statusText = "ĐANG MỞ ĐĂNG KÝ";
+    String statusText = l10n.profileRegistrationOpen.toUpperCase();
     Color statusBg = const Color(0xFF2563EB);
     if (StatusHelper.isTournamentInProgress(normalizedStatus)) {
-      statusText = "ĐANG DIỄN RA";
+      statusText = l10n.homeInProgressStatus.toUpperCase();
       statusBg = const Color(0xFF22C55E);
     } else if (StatusHelper.isTournamentCompleted(normalizedStatus)) {
-      statusText = "ĐÃ KẾT THÚC";
+      statusText = l10n.homeCompletedStatus.toUpperCase();
       statusBg = Colors.grey.shade600;
     } else if (StatusHelper.isTournamentRegistrationClosed(normalizedStatus) ||
         tournament.status.toUpperCase() == 'REGISTRATION_CLOSED' ||
         tournament.status.toUpperCase() == 'CLOSED') {
-      statusText = "ĐÃ ĐÓNG ĐĂNG KÝ";
+      statusText = l10n.registrationClosedTag;
       statusBg = const Color(0xFFEF4444);
     } else if (StatusHelper.isTournamentRegistration(normalizedStatus)) {
-      statusText = "ĐANG MỞ ĐĂNG KÝ";
+      statusText = l10n.profileRegistrationOpen.toUpperCase();
       statusBg = const Color(0xFF2563EB);
     }
 
@@ -149,7 +167,7 @@ class TournamentCardCarousel extends StatelessWidget {
 
     final startDateStr = formatDayMonth(start);
     final endDateStr = formatDayMonth(end);
-    final categoryChips = _getCategoryChips(tournament);
+    final categoryChips = _getCategoryChips(context, tournament);
 
     return GestureDetector(
       onTap: onTap,
@@ -275,7 +293,7 @@ class TournamentCardCarousel extends StatelessWidget {
                           Text(
                             tournament.name.isNotEmpty
                                 ? tournament.name
-                                : "(Chưa có tên)",
+                                : l10n.unnamed,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -344,7 +362,7 @@ class TournamentCardCarousel extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            "${tournament.maxTeams} Đội",
+                            "${tournament.maxTeams} ${l10n.teamsUnit}",
                             style: TextStyle(
                               color: colors.textSecondary,
                               fontSize: 11,
@@ -360,9 +378,13 @@ class TournamentCardCarousel extends StatelessWidget {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              AppConstants.bracketTypeNames[tournament
-                                      .bracketType] ??
-                                  tournament.bracketType,
+                              switch (tournament.bracketType.toLowerCase()) {
+                                'single_elimination' => l10n.eliminationSingle,
+                                'double_elimination' => l10n.eliminationDouble,
+                                'round_robin' => l10n.roundRobin,
+                                'group_stage' => l10n.groupStage,
+                                _ => tournament.bracketType,
+                              },
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(

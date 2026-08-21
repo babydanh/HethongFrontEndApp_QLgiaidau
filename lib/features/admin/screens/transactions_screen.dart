@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Admin — Lịch sử giao dịch (Transactions)
 ///
@@ -17,14 +18,17 @@ class AdminTransactionsScreen extends ConsumerStatefulWidget {
   const AdminTransactionsScreen({super.key});
 
   @override
-  ConsumerState<AdminTransactionsScreen> createState() => _AdminTransactionsScreenState();
+  ConsumerState<AdminTransactionsScreen> createState() =>
+      _AdminTransactionsScreenState();
 }
 
-class _AdminTransactionsScreenState extends ConsumerState<AdminTransactionsScreen> {
+class _AdminTransactionsScreenState
+    extends ConsumerState<AdminTransactionsScreen> {
   String _statusFilter = 'all'; // all, completed, pending, failed
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = context.colors;
 
     return Scaffold(
@@ -36,24 +40,39 @@ class _AdminTransactionsScreenState extends ConsumerState<AdminTransactionsScree
           icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Lịch sử giao dịch', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
+        title: Text(
+          l10n?.adminTransactionsTitle ?? 'Transaction history',
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+        ),
         centerTitle: true,
       ),
       body: Column(
         children: [
-          _buildFilterChips(colors),
-          Expanded(child: _buildTransactionList(colors)),
+          _buildFilterChips(colors, l10n),
+          Expanded(child: _buildTransactionList(colors, l10n)),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChips(AppColorsExtension colors) {
+  Widget _buildFilterChips(AppColorsExtension colors, AppLocalizations? l10n) {
     final filters = [
-      ('all', 'Tất cả', AppTheme.primary),
-      ('completed', 'Hoàn thành', const Color(0xFF10B981)),
-      ('pending', 'Chờ xử lý', const Color(0xFFF59E0B)),
-      ('failed', 'Thất bại', const Color(0xFFEF4444)),
+      ('all', l10n?.adminTransactionsFilterAll ?? 'All', AppTheme.primary),
+      (
+        'completed',
+        l10n?.adminTransactionsFilterCompleted ?? 'Completed',
+        const Color(0xFF10B981),
+      ),
+      (
+        'pending',
+        l10n?.adminTransactionsFilterPending ?? 'Pending',
+        const Color(0xFFF59E0B),
+      ),
+      (
+        'failed',
+        l10n?.adminTransactionsFilterFailed ?? 'Failed',
+        const Color(0xFFEF4444),
+      ),
     ];
 
     return Container(
@@ -69,10 +88,14 @@ class _AdminTransactionsScreenState extends ConsumerState<AdminTransactionsScree
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
-                    color: selected ? f.$3.withValues(alpha: 0.12) : colors.bgCard,
+                    color: selected
+                        ? f.$3.withValues(alpha: 0.12)
+                        : colors.bgCard,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: selected ? f.$3.withValues(alpha: 0.4) : colors.border,
+                      color: selected
+                          ? f.$3.withValues(alpha: 0.4)
+                          : colors.border,
                     ),
                   ),
                   child: Text(
@@ -93,7 +116,10 @@ class _AdminTransactionsScreenState extends ConsumerState<AdminTransactionsScree
     );
   }
 
-  Widget _buildTransactionList(AppColorsExtension colors) {
+  Widget _buildTransactionList(
+    AppColorsExtension colors,
+    AppLocalizations? l10n,
+  ) {
     final transactionsAsync = ref.watch(_adminTransactionsProvider);
 
     return transactionsAsync.when(
@@ -109,9 +135,20 @@ class _AdminTransactionsScreenState extends ConsumerState<AdminTransactionsScree
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.receipt_long_rounded, size: 64, color: colors.textMuted.withValues(alpha: 0.4)),
+                Icon(
+                  Icons.receipt_long_rounded,
+                  size: 64,
+                  color: colors.textMuted.withValues(alpha: 0.4),
+                ),
                 const SizedBox(height: 16),
-                Text('Không có giao dịch nào', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                Text(
+                  l10n?.adminTransactionsEmpty ?? 'No transactions',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
               ],
             ),
           );
@@ -121,7 +158,8 @@ class _AdminTransactionsScreenState extends ConsumerState<AdminTransactionsScree
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
           itemCount: filtered.length,
-          itemBuilder: (context, i) => _buildTransactionCard(context, filtered[i], colors),
+          itemBuilder: (context, i) =>
+              _buildTransactionCard(context, filtered[i], colors),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -131,19 +169,41 @@ class _AdminTransactionsScreenState extends ConsumerState<AdminTransactionsScree
           children: [
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
-            Text('Lỗi tải dữ liệu', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+            Text(
+              l10n?.adminTransactionsLoadError ?? 'Unable to load data',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: colors.textPrimary,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTransactionCard(BuildContext context, Map<String, dynamic> transaction, AppColorsExtension colors) {
+  Widget _buildTransactionCard(
+    BuildContext context,
+    Map<String, dynamic> transaction,
+    AppColorsExtension colors,
+  ) {
+    final l10n = AppLocalizations.of(context);
     final status = transaction['status']?.toString() ?? 'PENDING';
-    final amount = double.tryParse(transaction['amount']?.toString() ?? '0') ?? 0;
-    final gateway = transaction['paymentGateway']?.toString() ?? transaction['gateway']?.toString() ?? '---';
-    final tournamentName = transaction['tournament']?['name']?.toString() ?? transaction['tournamentName']?.toString() ?? '---';
-    final userName = transaction['user']?['fullName']?.toString() ?? transaction['userName']?.toString() ?? 'Người dùng';
+    final amount =
+        double.tryParse(transaction['amount']?.toString() ?? '0') ?? 0;
+    final gateway =
+        transaction['paymentGateway']?.toString() ??
+        transaction['gateway']?.toString() ??
+        '---';
+    final tournamentName =
+        transaction['tournament']?['name']?.toString() ??
+        transaction['tournamentName']?.toString() ??
+        '---';
+    final userName =
+        transaction['user']?['fullName']?.toString() ??
+        transaction['userName']?.toString() ??
+        (l10n?.adminTransactionsUserFallback ?? 'User');
     final createdAt = transaction['createdAt']?.toString() ?? '';
     final reference = transaction['transactionReference']?.toString() ?? '';
 
@@ -155,17 +215,17 @@ class _AdminTransactionsScreenState extends ConsumerState<AdminTransactionsScree
     switch (status.toUpperCase()) {
       case 'COMPLETED':
         statusColor = const Color(0xFF10B981);
-        statusLabel = 'Hoàn thành';
+        statusLabel = l10n?.adminTransactionsStatusCompleted ?? 'Completed';
         statusIcon = Icons.check_circle_rounded;
         break;
       case 'PENDING':
         statusColor = const Color(0xFFF59E0B);
-        statusLabel = 'Chờ xử lý';
+        statusLabel = l10n?.adminTransactionsStatusPending ?? 'Pending';
         statusIcon = Icons.access_time_rounded;
         break;
       case 'FAILED':
         statusColor = const Color(0xFFEF4444);
-        statusLabel = 'Thất bại';
+        statusLabel = l10n?.adminTransactionsStatusFailed ?? 'Failed';
         statusIcon = Icons.cancel_rounded;
         break;
       default:
@@ -188,7 +248,8 @@ class _AdminTransactionsScreenState extends ConsumerState<AdminTransactionsScree
           Row(
             children: [
               Container(
-                width: 40, height: 40,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
@@ -200,25 +261,54 @@ class _AdminTransactionsScreenState extends ConsumerState<AdminTransactionsScree
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(tournamentName, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary),
-                        maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(
+                      tournamentName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     const SizedBox(height: 2),
-                    Text('$userName • $gateway', style: TextStyle(fontSize: 11, color: colors.textMuted)),
+                    Text(
+                      '$userName • $gateway',
+                      style: TextStyle(fontSize: 11, color: colors.textMuted),
+                    ),
                   ],
                 ),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('${fmt.format(amount.ceil())}đ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: colors.textPrimary)),
+                  Text(
+                    l10n?.transactionsAmount(fmt.format(amount.ceil())) ??
+                        '${fmt.format(amount.ceil())}đ',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: colors.textPrimary,
+                    ),
+                  ),
                   const SizedBox(height: 2),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Text(statusLabel, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: statusColor)),
+                    child: Text(
+                      statusLabel,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        color: statusColor,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -226,12 +316,18 @@ class _AdminTransactionsScreenState extends ConsumerState<AdminTransactionsScree
           ),
           if (reference.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text('Mã GD: $reference', style: TextStyle(fontSize: 10, color: colors.textMuted)),
+            Text(
+              l10n?.adminTransactionsReference(reference) ??
+                  'Reference: $reference',
+              style: TextStyle(fontSize: 10, color: colors.textMuted),
+            ),
           ],
           if (createdAt.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(_formatTransactionDate(createdAt),
-                style: TextStyle(fontSize: 10, color: colors.textMuted)),
+            Text(
+              _formatTransactionDate(createdAt),
+              style: TextStyle(fontSize: 10, color: colors.textMuted),
+            ),
           ],
         ],
       ),
@@ -244,9 +340,14 @@ String _formatTransactionDate(String value) {
   return parsed == null ? value : DateFormatterUtils.formatDateTime(parsed);
 }
 
-final _adminTransactionsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final _adminTransactionsProvider = FutureProvider<List<Map<String, dynamic>>>((
+  ref,
+) async {
   final dio = ref.read(dioProvider);
-  final response = await dio.get('/admin/transactions', queryParameters: {'limit': 100});
+  final response = await dio.get(
+    '/admin/transactions',
+    queryParameters: {'limit': 100},
+  );
   final data = response.data['data'] as List<dynamic>? ?? [];
   return data.map((e) => Map<String, dynamic>.from(e as Map)).toList();
 });

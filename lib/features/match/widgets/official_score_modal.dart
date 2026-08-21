@@ -32,7 +32,7 @@ void showOfficialScoreModal(
   required MatchModel match,
   VoidCallback? onRecordPenalty,
   Future<void> Function(String teamName, PenaltyOption option, String reason)?
-      onSubmitPenalty,
+  onSubmitPenalty,
   VoidCallback? onForceWin,
 }) {
   Navigator.of(context).push(
@@ -58,7 +58,8 @@ class OfficialScorePage extends StatefulWidget {
     String teamName,
     PenaltyOption option,
     String reason,
-  )? onSubmitPenalty;
+  )?
+  onSubmitPenalty;
   final VoidCallback? onForceWin;
 
   const OfficialScorePage({
@@ -112,7 +113,9 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
     final params = (tournamentId: widget.tournamentId, matchId: widget.matchId);
     final config = resolveSportConfig(widget.match.sportRules, kind);
     final strategy = PenaltyStrategyFactory.getStrategy(_sportKeyForKind(kind));
-    final isLite = widget.match.tournamentConfig?['mode']?.toString().toUpperCase() == 'LITE';
+    final isLite =
+        widget.match.tournamentConfig?['mode']?.toString().toUpperCase() ==
+        'LITE';
     final usePickleballSideOutPanel =
         !isLite &&
         kind == SportRuleKind.pickleball &&
@@ -153,7 +156,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                           size: 20,
                           color: AppTheme.primary,
                         ),
-                        tooltip: 'Cài đặt & Luật giải',
+                        tooltip: l10n.matchMatchInfo,
                         visualDensity: VisualDensity.compact,
                         constraints: const BoxConstraints(),
                         padding: const EdgeInsets.all(6),
@@ -193,19 +196,23 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                           height: 38,
                           child: TabBar(
                             indicatorSize: TabBarIndicatorSize.label,
-                            labelPadding: const EdgeInsets.symmetric(horizontal: 12),
-                            labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-                            unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                            labelPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                            ),
+                            labelStyle: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            unselectedLabelStyle: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                             labelColor: AppTheme.primary,
                             unselectedLabelColor: colors.textMuted,
                             indicatorColor: AppTheme.primary,
-                            tabs: const [
-                              Tab(
-                                text: 'Tính điểm',
-                              ),
-                              Tab(
-                                text: 'Phạm lỗi',
-                              ),
+                            tabs: [
+                              const Tab(text: 'Tính điểm'),
+                              const Tab(text: 'Phạm lỗi'),
                             ],
                           ),
                         ),
@@ -222,6 +229,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                 context,
                                 strategy,
                                 config,
+                                kind,
                                 colors,
                                 l10n,
                               ),
@@ -266,8 +274,8 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                           n.setOverride(true, val),
                                       style: const TextStyle(fontSize: 12),
                                       decoration: InputDecoration(
-                                        hintText:
-                                            'Nhập lý do ngoại lệ bắt buộc...',
+                                        hintText: l10n
+                                            .officialScore_overrideReasonHint,
                                         hintStyle: TextStyle(
                                           fontSize: 11,
                                           color: colors.textMuted,
@@ -283,7 +291,9 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                           alpha: 0.1,
                                         ),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                           borderSide: BorderSide(
                                             color: colors.warning.withValues(
                                               alpha: 0.4,
@@ -324,8 +334,10 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                   if (!state.isLite)
                                     FilterChip(
                                       selected: state.overrideEnabled,
-                                      onSelected: (sel) =>
-                                          n.setOverride(sel, state.overrideReason),
+                                      onSelected: (sel) => n.setOverride(
+                                        sel,
+                                        state.overrideReason,
+                                      ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
                                       ),
@@ -359,12 +371,17 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                           vertical: 0,
                                         ),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                       ),
                                       child: Text(
                                         l10n.matchForceWin,
-                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   if (!state.isMatchComplete &&
@@ -378,39 +395,38 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                               if (message == null) {
                                                 return;
                                               }
-                                              final confirmed =
-                                                  await showDialog<bool>(
-                                                    context: context,
-                                                    builder: (dialogContext) =>
-                                                        AlertDialog(
-                                                          title: Text(
+                                              final confirmed = await showDialog<bool>(
+                                                context: context,
+                                                builder: (dialogContext) =>
+                                                    AlertDialog(
+                                                      title: Text(
+                                                        l10n.matchFinishSet,
+                                                      ),
+                                                      content: Text(message),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                dialogContext,
+                                                                false,
+                                                              ),
+                                                          child: const Text(
+                                                            'Hủy',
+                                                          ),
+                                                        ),
+                                                        FilledButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                dialogContext,
+                                                                true,
+                                                              ),
+                                                          child: Text(
                                                             l10n.matchFinishSet,
                                                           ),
-                                                          content: Text(message),
-                                                          actions: [
-                                                            TextButton(
-                                                              onPressed: () =>
-                                                                  Navigator.pop(
-                                                                    dialogContext,
-                                                                    false,
-                                                                  ),
-                                                              child: const Text(
-                                                                'Hủy',
-                                                              ),
-                                                            ),
-                                                            FilledButton(
-                                                              onPressed: () =>
-                                                                  Navigator.pop(
-                                                                    dialogContext,
-                                                                    true,
-                                                                  ),
-                                                              child: Text(
-                                                                l10n.matchFinishSet,
-                                                              ),
-                                                            ),
-                                                          ],
                                                         ),
-                                                  );
+                                                      ],
+                                                    ),
+                                              );
                                               if (confirmed == true) {
                                                 await n.finishSet();
                                               }
@@ -422,7 +438,9 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                           vertical: 0,
                                         ),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                       ),
                                       child: Text(
@@ -453,22 +471,34 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                                 builder: (dialogContext) => AlertDialog(
                                                   title: Text(
                                                     state.isMatchComplete
-                                                        ? 'Chốt kết quả trận đấu'
-                                                        : 'Xác nhận lưu kết quả',
+                                                        ? l10n.officialScore_completeTitle
+                                                        : l10n.officialScore_saveTitle,
                                                   ),
                                                   content: Text(
                                                     state.isMatchComplete
-                                                        ? 'Kết quả đã đủ điều kiện. Chốt trận để công khai điểm và cập nhật giải đấu?'
-                                                        : 'Lưu kết quả hiện tại theo ngoại lệ của trọng tài? Hành động này sẽ được ghi vào lịch sử trận.',
+                                                        ? l10n.officialScore_completeContent
+                                                        : l10n.officialScore_saveContent,
                                                   ),
                                                   actions: [
                                                     TextButton(
-                                                      onPressed: () => Navigator.pop(dialogContext, false),
-                                                      child: const Text('Hủy'),
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                            dialogContext,
+                                                            false,
+                                                          ),
+                                                      child: Text(
+                                                        l10n.matchCancel,
+                                                      ),
                                                     ),
                                                     FilledButton(
-                                                      onPressed: () => Navigator.pop(dialogContext, true),
-                                                      child: const Text('Xác nhận'),
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                            dialogContext,
+                                                            true,
+                                                          ),
+                                                      child: Text(
+                                                        l10n.matchConfirm,
+                                                      ),
                                                     ),
                                                   ],
                                                 ),
@@ -476,7 +506,9 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                               if (confirmed != true) return;
                                               await n.completeMatch(winnerTeam);
                                               final latest = ref.read(
-                                                scorePanelNotifierProvider(params),
+                                                scorePanelNotifierProvider(
+                                                  params,
+                                                ),
                                               );
                                               if (context.mounted &&
                                                   !latest.isSubmitting &&
@@ -494,12 +526,14 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                           vertical: 0,
                                         ),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                       ),
                                       child: Text(
                                         state.isSubmitting
-                                            ? 'Đang lưu...'
+                                            ? l10n.officialScore_saving
                                             : (state.isMatchComplete
                                                   ? l10n.matchSaveMatch
                                                   : l10n.matchSaveResult),
@@ -539,7 +573,11 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
         children: [
           Expanded(
             child: kind == SportRuleKind.football
-                ? FootballScorePanel(params: params, team1Name: widget.match.team1Name, team2Name: widget.match.team2Name)
+                ? FootballScorePanel(
+                    params: params,
+                    team1Name: widget.match.team1Name,
+                    team2Name: widget.match.team2Name,
+                  )
                 : kind == SportRuleKind.tennis
                 ? TennisScorePanel(params: params, isReadOnly: false)
                 : usePickleballSideOutPanel
@@ -554,7 +592,8 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
           Consumer(
             builder: (context, ref, _) {
               final state = ref.watch(scorePanelNotifierProvider(params));
-              if (state.errorMessage == null || state.errorMessage!.trim().isEmpty) {
+              if (state.errorMessage == null ||
+                  state.errorMessage!.trim().isEmpty) {
                 return const SizedBox.shrink();
               }
               return Padding(
@@ -572,6 +611,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
     BuildContext context,
     IPenaltyStrategy strategy,
     SportConfig config,
+    SportRuleKind kind,
     AppColorsExtension colors,
     AppLocalizations l10n,
   ) {
@@ -599,7 +639,10 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Lỗi được áp dụng theo luật môn và cấu hình giải. BO${config.bestOf} · ${config.pointsPerSet} điểm/set',
+                    l10n.officialScore_penaltyRulesDescription(
+                      config.bestOf,
+                      config.pointsPerSet,
+                    ),
                     style: TextStyle(
                       color: colors.textPrimary,
                       fontSize: 13,
@@ -613,7 +656,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
           ),
           const SizedBox(height: 14),
           Text(
-            'Mức phạt được phép chọn',
+            l10n.officialScore_penaltyOptionsTitle,
             style: TextStyle(
               color: colors.textPrimary,
               fontWeight: FontWeight.w800,
@@ -637,25 +680,39 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                       child: Container(
                         decoration: BoxDecoration(
                           color: colors.bgSurface,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusMedium,
+                          ),
                           border: Border.all(
-                            color: isSelected ? option.color : option.color.withValues(alpha: 0.35),
+                            color: isSelected
+                                ? option.color
+                                : option.color.withValues(alpha: 0.35),
                             width: isSelected ? 1.5 : 1,
                           ),
                         ),
                         child: ListTile(
                           dense: true,
                           visualDensity: VisualDensity.compact,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 2,
+                          ),
                           leading: CircleAvatar(
                             radius: 16,
-                            backgroundColor: option.color.withValues(alpha: 0.12),
-                            child: Icon(option.icon, color: option.color, size: 16),
+                            backgroundColor: option.color.withValues(
+                              alpha: 0.12,
+                            ),
+                            child: Icon(
+                              option.icon,
+                              color: option.color,
+                              size: 16,
+                            ),
                           ),
                           selected: isSelected,
-                          onTap: () => setState(() => _selectedPenalty = option),
+                          onTap: () =>
+                              setState(() => _selectedPenalty = option),
                           title: Text(
-                            option.name,
+                            _penaltyLabel(option, kind, l10n),
                             style: TextStyle(
                               color: colors.textPrimary,
                               fontWeight: FontWeight.w700,
@@ -677,48 +734,64 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
               }
 
               return Column(
-                children: options.map(
-                  (option) => Container(
-                    margin: const EdgeInsets.only(bottom: 6),
-                    decoration: BoxDecoration(
-                      color: colors.bgSurface,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                      border: Border.all(color: option.color.withValues(alpha: 0.35)),
-                    ),
-                    child: ListTile(
-                      dense: true,
-                      visualDensity: VisualDensity.compact,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                      leading: CircleAvatar(
-                        radius: 18,
-                        backgroundColor: option.color.withValues(alpha: 0.12),
-                        child: Icon(option.icon, color: option.color, size: 18),
-                      ),
-                      selected: selectedPenalty.id == option.id,
-                      onTap: () => setState(() => _selectedPenalty = option),
-                      title: Text(
-                        option.name,
-                        style: TextStyle(
-                          color: colors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                children: options
+                    .map(
+                      (option) => Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        decoration: BoxDecoration(
+                          color: colors.bgSurface,
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusMedium,
+                          ),
+                          border: Border.all(
+                            color: option.color.withValues(alpha: 0.35),
+                          ),
+                        ),
+                        child: ListTile(
+                          dense: true,
+                          visualDensity: VisualDensity.compact,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 2,
+                          ),
+                          leading: CircleAvatar(
+                            radius: 18,
+                            backgroundColor: option.color.withValues(
+                              alpha: 0.12,
+                            ),
+                            child: Icon(
+                              option.icon,
+                              color: option.color,
+                              size: 18,
+                            ),
+                          ),
+                          selected: selectedPenalty.id == option.id,
+                          onTap: () =>
+                              setState(() => _selectedPenalty = option),
+                          title: Text(
+                            option.name,
+                            style: TextStyle(
+                              color: colors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
+                          ),
+                          trailing: Icon(
+                            selectedPenalty.id == option.id
+                                ? Icons.check_circle_rounded
+                                : Icons.radio_button_unchecked,
+                            color: option.color,
+                          ),
                         ),
                       ),
-                      trailing: Icon(
-                        selectedPenalty.id == option.id
-                            ? Icons.check_circle_rounded
-                            : Icons.radio_button_unchecked,
-                        color: option.color,
-                      ),
-                    ),
-                  ),
-                ).toList(),
+                    )
+                    .toList(),
               );
             },
           ),
           const SizedBox(height: 8),
           Text(
-            'Đội bị phạt',
+            l10n.officialScore_penalizedTeam,
             style: TextStyle(
               color: colors.textPrimary,
               fontWeight: FontWeight.w800,
@@ -761,73 +834,84 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Text(
-                'Vui lòng chọn đội bị phạt trước khi ghi nhận.',
-                style: TextStyle(color: colors.error, fontSize: 12, fontWeight: FontWeight.w600),
+                l10n.officialScore_penaltySelectionRequired,
+                style: TextStyle(
+                  color: colors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           const SizedBox(height: 12),
           TextField(
             controller: _penaltyReasonController,
             maxLines: 2,
-            decoration: const InputDecoration(
-              labelText: 'Lý do / ghi chú',
-              hintText: 'Nhập lý do nếu cần',
+            decoration: InputDecoration(
+              labelText: l10n.officialScore_penaltyReasonLabel,
+              hintText: l10n.officialScore_penaltyReasonHint,
               alignLabelWithHint: true,
             ),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: () async {
-                    if (_selectedPenaltyTeam == null) {
-                      setState(() => _penaltySelectionError = true);
-                      return;
-                    }
-                    final confirmed = await showDialog<bool>(
-                      context: context,
-                      builder: (dialogContext) => AlertDialog(
-                        title: const Text('Xác nhận ghi phạt'),
-                        content: Text(
-                          '${selectedPenalty.name} cho ${_selectedPenaltyTeam!}. Tiếp tục ghi nhận?',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(dialogContext, false),
-                            child: const Text('Hủy'),
-                          ),
-                          FilledButton(
-                            onPressed: () => Navigator.pop(dialogContext, true),
-                            child: const Text('Xác nhận'),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirmed != true || !context.mounted) return;
-                    final option = selectedPenalty;
-                    final reason = _penaltyReasonController.text.trim();
-                    if (widget.onSubmitPenalty != null) {
-                      await widget.onSubmitPenalty!.call(
-                        _selectedPenaltyTeam!,
-                        option,
-                        reason,
-                      );
-                    } else {
-                      widget.onRecordPenalty?.call();
-                    }
-                    if (context.mounted) {
-                      setState(() {
-                        _selectedPenaltyTeam = null;
-                        _penaltySelectionError = false;
-                        _penaltyReasonController.clear();
-                      });
-                    }
-                  },
+              if (_selectedPenaltyTeam == null) {
+                setState(() => _penaltySelectionError = true);
+                return;
+              }
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: Text(l10n.officialScore_penaltyConfirmTitle),
+                  content: Text(
+                    l10n.officialScore_penaltyConfirmContent(
+                      _penaltyLabel(selectedPenalty, kind, l10n),
+                      _selectedPenaltyTeam!,
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext, false),
+                      child: Text(l10n.matchCancel),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(dialogContext, true),
+                      child: Text(l10n.matchConfirm),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed != true || !context.mounted) return;
+              final option = selectedPenalty;
+              final reason = _penaltyReasonController.text.trim();
+              if (widget.onSubmitPenalty != null) {
+                await widget.onSubmitPenalty!.call(
+                  _selectedPenaltyTeam!,
+                  option,
+                  reason,
+                );
+              } else {
+                widget.onRecordPenalty?.call();
+              }
+              if (context.mounted) {
+                setState(() {
+                  _selectedPenaltyTeam = null;
+                  _penaltySelectionError = false;
+                  _penaltyReasonController.clear();
+                });
+              }
+            },
             icon: const Icon(Icons.gavel_rounded),
             label: Text(l10n.matchRecordPenalty),
           ),
           const SizedBox(height: 6),
           Text(
-            strategy.getRulesDescription(),
-            style: TextStyle(color: colors.textSecondary, fontSize: 12, height: 1.4),
+            _penaltyRulesDescription(kind, l10n),
+            style: TextStyle(
+              color: colors.textSecondary,
+              fontSize: 12,
+              height: 1.4,
+            ),
           ),
         ],
       ),
@@ -850,29 +934,79 @@ String _sportKeyForKind(SportRuleKind kind) {
   }
 }
 
-String _sportLabel(SportRuleKind kind) {
+String _sportLabel(SportRuleKind kind, AppLocalizations l10n) {
   switch (kind) {
     case SportRuleKind.tennis:
-      return 'Tennis';
+      return l10n.createClubTournament_sportTennis;
     case SportRuleKind.pickleball:
-      return 'Pickleball';
+      return l10n.createClubTournament_sportPickleball;
     case SportRuleKind.tableTennis:
-      return 'Bóng bàn';
+      return l10n.createClubTournament_sportTableTennis;
     case SportRuleKind.badminton:
-      return 'Cầu lông';
+      return l10n.createClubTournament_sportBadminton;
     case SportRuleKind.football:
-      return 'Bóng đá';
+      return l10n.createClubTournament_sportFootball;
   }
 }
 
-String _scoringModelLabel(SportScoringModel model) {
+String _scoringModelLabel(SportScoringModel model, AppLocalizations l10n) {
   switch (model) {
     case SportScoringModel.tennisSet:
-      return 'Game/Set';
+      return l10n.officialScore_scoringTennisSet;
     case SportScoringModel.pickleballSideOut:
-      return 'Pickleball side-out';
+      return l10n.officialScore_scoringPickleballSideOut;
     case SportScoringModel.rallyPointSet:
-      return 'Rally point';
+      return l10n.officialScore_scoringRallyPoint;
+  }
+}
+
+String _penaltyLabel(
+  PenaltyOption option,
+  SportRuleKind kind,
+  AppLocalizations l10n,
+) {
+  switch (option.id) {
+    case 'WARNING':
+      return l10n.livePenaltyWarning;
+    case 'SERVICE_FAULT':
+      return kind == SportRuleKind.badminton
+          ? l10n.officialScore_penaltyServiceFaultBadminton
+          : l10n.officialScore_penaltyServiceFault;
+    case 'MISCONDUCT':
+      return l10n.officialScore_penaltyMisconduct;
+    case 'YELLOW_CARD':
+      return l10n.livePenaltyYellowCard;
+    case 'RED_CARD':
+      return l10n.livePenaltyRedCard;
+    case 'CODE_VIOLATION':
+      return l10n.officialScore_penaltyCodeViolation;
+    case 'POINT_PENALTY':
+      return l10n.livePenaltyPoint;
+    case 'GAME_PENALTY':
+      return l10n.livePenaltyGame;
+    case 'TECHNICAL_FAULT':
+      return l10n.officialScore_penaltyTechnicalFault;
+    case 'UNSPORTSMANLIKE':
+      return l10n.officialScore_penaltyUnsportsmanlike;
+    case 'FOUL':
+      return l10n.officialScore_penaltyFoul;
+    default:
+      return option.name;
+  }
+}
+
+String _penaltyRulesDescription(SportRuleKind kind, AppLocalizations l10n) {
+  switch (kind) {
+    case SportRuleKind.tennis:
+      return l10n.officialScore_penaltyRulesTennis;
+    case SportRuleKind.pickleball:
+      return l10n.officialScore_penaltyRulesPickleball;
+    case SportRuleKind.tableTennis:
+      return l10n.officialScore_penaltyRulesTableTennis;
+    case SportRuleKind.badminton:
+      return l10n.officialScore_penaltyRulesBadminton;
+    case SportRuleKind.football:
+      return l10n.officialScore_penaltyRulesDefault;
   }
 }
 
@@ -934,7 +1068,7 @@ void _showMatchInfoDialog(
           Icon(Icons.info_outline_rounded, color: AppTheme.primary, size: 22),
           const SizedBox(width: 8),
           Text(
-            'Thông tin & Cài đặt trận đấu',
+            l10n.officialScore_matchInfoTitle,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w800,
@@ -960,20 +1094,28 @@ void _showMatchInfoDialog(
             spacing: 6,
             runSpacing: 6,
             children: [
-              _RuleChip(label: 'Môn: ${_sportLabel(kind)}'),
-              _RuleChip(label: 'Thể thức: BO${config.bestOf}'),
-              _RuleChip(label: 'Số set thắng: ${config.setsToWin} set'),
               _RuleChip(
-                label:
-                    'Mốc set: ${config.pointsPerSet} ${kind == SportRuleKind.tennis ? 'game/set' : 'điểm/set'}',
+                label: l10n.officialScore_sport(_sportLabel(kind, l10n)),
+              ),
+              _RuleChip(label: l10n.officialScore_format(config.bestOf)),
+              _RuleChip(label: l10n.officialScore_setsToWin(config.setsToWin)),
+              _RuleChip(
+                label: l10n.officialScore_pointsPerSet(
+                  config.pointsPerSet,
+                  kind == SportRuleKind.tennis
+                      ? l10n.officialScore_gameSetUnit
+                      : l10n.officialScore_pointsSetUnit,
+                ),
               ),
               if (config.mustWinByTwo) _RuleChip(label: l10n.matchWinByTwo),
-              _RuleChip(label: _scoringModelLabel(config.scoringModel)),
+              _RuleChip(label: _scoringModelLabel(config.scoringModel, l10n)),
               if (config.maxPoints > config.pointsPerSet)
-                _RuleChip(label: 'Trần điểm: ${config.maxPoints}'),
+                _RuleChip(
+                  label: l10n.officialScore_maxPoints(config.maxPoints),
+                ),
               if (match.court.isNotEmpty)
-                _RuleChip(label: 'Sân: ${match.court}'),
-              _RuleChip(label: 'Vòng: ${match.round}'),
+                _RuleChip(label: l10n.officialScore_court(match.court)),
+              _RuleChip(label: l10n.officialScore_round(match.round)),
             ],
           ),
         ],
@@ -981,7 +1123,7 @@ void _showMatchInfoDialog(
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx),
-          child: const Text('Đóng'),
+          child: Text(l10n.officialScore_close),
         ),
       ],
     ),

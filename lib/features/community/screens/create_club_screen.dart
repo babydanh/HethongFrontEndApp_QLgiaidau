@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
@@ -62,7 +63,8 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
         }
         return;
       }
-      final provinces = ref.read(provincesProvider).asData?.value ?? const <Province>[];
+      final provinces =
+          ref.read(provincesProvider).asData?.value ?? const <Province>[];
       final detectedProv = VietnamAddressParser.detectProvince<Province>(
         rawAddress: text,
         provinces: provinces,
@@ -106,6 +108,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   }
 
   Future<String> _resolveCategoryId() async {
+    final l10n = AppLocalizations.of(context)!;
     final categories = await ref.read(categoriesProvider.future);
     final selected = categories.where((category) {
       final slug = category.slug.trim().toLowerCase();
@@ -114,17 +117,18 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
           name == (AppConstants.sportNames[_selectedSport] ?? '').toLowerCase();
     }).firstOrNull;
     if (selected == null || selected.id.isEmpty) {
-      throw StateError('Không tìm thấy môn thể thao đã chọn. Vui lòng thử lại.');
+      throw StateError(l10n.createClub_primarySportError);
     }
     return selected.id;
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_provinceCode == null || _provinceCode!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn tỉnh/thành phố')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.createClub_provinceRequired)));
       return;
     }
 
@@ -132,7 +136,8 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
     try {
       final dio = ref.read(dioProvider);
 
-      final provinces = ref.read(provincesProvider).asData?.value ?? const <Province>[];
+      final provinces =
+          ref.read(provincesProvider).asData?.value ?? const <Province>[];
       final wards = _provinceCode == null
           ? const <Ward>[]
           : (await ref.read(wardsProvider(_provinceCode!).future));
@@ -174,7 +179,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Tạo câu lạc bộ thành công!'),
+            content: Text(l10n.createClub_success),
             backgroundColor: context.colors.success,
           ),
         );
@@ -186,7 +191,9 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(
+              l10n.createClub_error(e.toString().replaceAll('Exception: ', '')),
+            ),
             backgroundColor: context.colors.error,
           ),
         );
@@ -197,6 +204,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   }
 
   Future<void> _chooseAndUploadImage({required bool banner}) async {
+    final l10n = AppLocalizations.of(context)!;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -210,25 +218,45 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(width: 36, height: 4, decoration: BoxDecoration(color: context.colors.border, borderRadius: BorderRadius.circular(99))),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: context.colors.border,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
               const SizedBox(height: 14),
-              Text(banner ? 'Chọn ảnh bìa' : 'Chọn logo / avatar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
+              Text(
+                banner
+                    ? l10n.createClub_coverImageTitle
+                    : l10n.createClub_logoImageTitle,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: context.colors.textPrimary,
+                ),
+              ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(child: _sourceAction(
-                    context: sheetContext,
-                    icon: Icons.photo_library_outlined,
-                    label: 'Thư viện ảnh',
-                    source: ImageSource.gallery,
-                  )),
+                  Expanded(
+                    child: _sourceAction(
+                      context: sheetContext,
+                      icon: Icons.photo_library_outlined,
+                      label: l10n.createClub_photoLibrary,
+                      source: ImageSource.gallery,
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  Expanded(child: _sourceAction(
-                    context: sheetContext,
-                    icon: Icons.photo_camera_outlined,
-                    label: 'Chụp ảnh',
-                    source: ImageSource.camera,
-                  )),
+                  Expanded(
+                    child: _sourceAction(
+                      context: sheetContext,
+                      icon: Icons.photo_camera_outlined,
+                      label: l10n.createClub_camera,
+                      source: ImageSource.camera,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -260,14 +288,25 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
           children: [
             Icon(icon, color: AppTheme.primary, size: 27),
             const SizedBox(height: 7),
-            Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.textPrimary)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: context.colors.textPrimary,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _pickAndUploadImage({required bool banner, required ImageSource source}) async {
+  Future<void> _pickAndUploadImage({
+    required bool banner,
+    required ImageSource source,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
     final picked = await ImagePicker().pickImage(
       source: source,
       imageQuality: 85,
@@ -282,12 +321,16 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
     try {
       final bytes = await picked.readAsBytes();
       if (bytes.length > (banner ? 10 : 5) * 1024 * 1024) {
-        throw StateError('Ảnh ${banner ? 'bìa' : 'logo'} không được vượt quá ${banner ? 10 : 5}MB');
+        throw StateError(
+          l10n.createClub_imageTooLarge(
+            banner ? l10n.createClub_bannerTitle : l10n.createClub_logoTitle,
+            banner ? 10 : 5,
+          ),
+        );
       }
-      final url = await ref.read(communitySocialRepositoryProvider).uploadImage(
-            bytes,
-            picked.name,
-          );
+      final url = await ref
+          .read(communitySocialRepositoryProvider)
+          .uploadImage(bytes, picked.name);
       if (!mounted) return;
       setState(() {
         if (banner) {
@@ -322,6 +365,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
 
     return Scaffold(
@@ -334,7 +378,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Tạo câu lạc bộ',
+          l10n.createClub_title,
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.w700,
@@ -350,27 +394,27 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _label('Tên câu lạc bộ *', colors),
+              _label(l10n.createClub_nameLabel, colors),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _nameCtrl,
                 validator: (v) => (v == null || v.trim().length < 3)
-                    ? 'Tên phải ít nhất 3 ký tự'
+                    ? l10n.createClub_nameRequired
                     : null,
                 style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'VD: CLB Cầu lông ABC',
+                  hintText: l10n.createClub_nameHint,
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
                 ),
               ),
               const SizedBox(height: 20),
 
-              _label('Môn thể thao', colors),
+              _label(l10n.createClub_sportLabel, colors),
               const SizedBox(height: 6),
               _buildSportSelector(),
               const SizedBox(height: 20),
 
-              _label('Mô tả (không bắt buộc)', colors),
+              _label(l10n.createClub_descriptionLabel, colors),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _descCtrl,
@@ -378,13 +422,13 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                 maxLength: 1000,
                 style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'Giới thiệu về câu lạc bộ...',
+                  hintText: l10n.createClub_descriptionHint,
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
                 ),
               ),
               const SizedBox(height: 20),
 
-              _label('Nội quy (không bắt buộc)', colors),
+              _label(l10n.createClub_rulesLabel, colors),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _rulesCtrl,
@@ -392,19 +436,19 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                 maxLength: 5000,
                 style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: '1. Tôn trọng lẫn nhau\n2. Đúng giờ...',
+                  hintText: l10n.createClub_rulesHint,
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
                 ),
               ),
               const SizedBox(height: 8),
 
-              _label('Khu vực hoạt động', colors),
+              _label(l10n.createClub_locationLabel, colors),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _locationCtrl,
                 style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'VD: 3/9 Thành Thái, Phường Diên Hồng, TP.HCM',
+                  hintText: l10n.createClub_locationHint,
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
                 ),
               ),
@@ -415,7 +459,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                     Icon(Icons.auto_awesome, size: 14, color: AppTheme.primary),
                     const SizedBox(width: 4),
                     Text(
-                      'Đã tự nhận diện: $_autoDetectedInfo',
+                      l10n.createClub_autoDetected(_autoDetectedInfo!),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -432,12 +476,12 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               _buildImagePickers(),
               const SizedBox(height: 20),
 
-              _label('Hiển thị câu lạc bộ', colors),
+              _label(l10n.createClub_visibilityLabel, colors),
               const SizedBox(height: 6),
               _buildVisibilitySelector(),
               const SizedBox(height: 20),
 
-              _label('Hình thức tham gia', colors),
+              _label(l10n.createClub_joinMethodLabel, colors),
               const SizedBox(height: 6),
               _buildJoinModeSelector(),
               if (_joinMode == 'APPROVAL') ...[
@@ -450,7 +494,8 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                 width: double.infinity,
                 height: 50,
                 child: FilledButton.icon(
-                  onPressed: _isLoading || _isUploadingLogo || _isUploadingBanner
+                  onPressed:
+                      _isLoading || _isUploadingLogo || _isUploadingBanner
                       ? null
                       : _submit,
                   icon: _isLoading
@@ -464,7 +509,9 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                         )
                       : const Icon(Icons.add_rounded),
                   label: Text(
-                    _isLoading ? 'Đang tạo...' : 'Tạo câu lạc bộ',
+                    _isLoading
+                        ? l10n.createClub_submitting
+                        : l10n.createClub_submit,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
@@ -496,6 +543,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   }
 
   Widget _buildRegionSelectors() {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final provincesAsync = ref.watch(provincesProvider);
     final wardsAsync = _provinceCode == null
@@ -508,9 +556,16 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
             data: (items) => DropdownButtonFormField<String>(
               initialValue: _provinceCode,
               isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Tỉnh/thành phố *'),
+              decoration: InputDecoration(
+                labelText: l10n.createClub_provinceLabel,
+              ),
               items: items
-                  .map((item) => DropdownMenuItem(value: item.code, child: Text(item.name, overflow: TextOverflow.ellipsis)))
+                  .map(
+                    (item) => DropdownMenuItem(
+                      value: item.code,
+                      child: Text(item.name, overflow: TextOverflow.ellipsis),
+                    ),
+                  )
                   .toList(),
               onChanged: (value) => setState(() {
                 _provinceCode = value;
@@ -518,7 +573,10 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               }),
             ),
             loading: () => const LinearProgressIndicator(),
-            error: (e, s) => Text('Không tải được tỉnh/thành', style: TextStyle(color: colors.error, fontSize: 11)),
+            error: (e, s) => Text(
+              l10n.createClub_provinceLoadError,
+              style: TextStyle(color: colors.error, fontSize: 11),
+            ),
           ),
         ),
         const SizedBox(width: 10),
@@ -527,14 +585,24 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
             data: (items) => DropdownButtonFormField<String>(
               initialValue: _wardCode,
               isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Phường/xã'),
+              decoration: InputDecoration(labelText: l10n.createClub_wardLabel),
               items: items
-                  .map((item) => DropdownMenuItem(value: item.code, child: Text(item.name, overflow: TextOverflow.ellipsis)))
+                  .map(
+                    (item) => DropdownMenuItem(
+                      value: item.code,
+                      child: Text(item.name, overflow: TextOverflow.ellipsis),
+                    ),
+                  )
                   .toList(),
-              onChanged: _provinceCode == null ? null : (value) => setState(() => _wardCode = value),
+              onChanged: _provinceCode == null
+                  ? null
+                  : (value) => setState(() => _wardCode = value),
             ),
             loading: () => const LinearProgressIndicator(),
-            error: (e, s) => Text('Không tải được phường/xã', style: TextStyle(color: colors.error, fontSize: 11)),
+            error: (e, s) => Text(
+              l10n.createClub_wardLoadError,
+              style: TextStyle(color: colors.error, fontSize: 11),
+            ),
           ),
         ),
       ],
@@ -542,22 +610,27 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   }
 
   Widget _buildImagePickers() {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
-        Expanded(child: _imagePickerCard(
-          title: 'Logo / avatar',
-          url: _logoUrl,
-          loading: _isUploadingLogo,
-          circle: true,
-          onTap: () => _chooseAndUploadImage(banner: false),
-        )),
+        Expanded(
+          child: _imagePickerCard(
+            title: l10n.createClub_logoTitle,
+            url: _logoUrl,
+            loading: _isUploadingLogo,
+            circle: true,
+            onTap: () => _chooseAndUploadImage(banner: false),
+          ),
+        ),
         const SizedBox(width: 10),
-        Expanded(child: _imagePickerCard(
-          title: 'Ảnh bìa',
-          url: _bannerUrl,
-          loading: _isUploadingBanner,
-          onTap: () => _chooseAndUploadImage(banner: true),
-        )),
+        Expanded(
+          child: _imagePickerCard(
+            title: l10n.createClub_bannerTitle,
+            url: _bannerUrl,
+            loading: _isUploadingBanner,
+            onTap: () => _chooseAndUploadImage(banner: true),
+          ),
+        ),
       ],
     );
   }
@@ -569,10 +642,18 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
     required VoidCallback onTap,
     bool circle = false,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     return Column(
       children: [
-        Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: colors.textSecondary)),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: colors.textSecondary,
+          ),
+        ),
         const SizedBox(height: 8),
         InkWell(
           onTap: loading ? null : onTap,
@@ -584,18 +665,27 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               shape: circle ? BoxShape.circle : BoxShape.rectangle,
               borderRadius: circle ? null : BorderRadius.circular(12),
               color: colors.bgSurface,
-              border: Border.all(color: url == null ? colors.border : AppTheme.primary),
+              border: Border.all(
+                color: url == null ? colors.border : AppTheme.primary,
+              ),
             ),
             clipBehavior: Clip.antiAlias,
             child: loading
                 ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
                 : url == null
-                    ? Icon(Icons.add_photo_alternate_outlined, color: colors.textMuted, size: 28)
-                    : Image.network(
-                        url.startsWith('http') ? url : 'https://sporto.asia$url',
-                        fit: BoxFit.cover,
-                        errorBuilder: (c, o, s) => Icon(Icons.broken_image_outlined, color: colors.textMuted),
-                      ),
+                ? Icon(
+                    Icons.add_photo_alternate_outlined,
+                    color: colors.textMuted,
+                    size: 28,
+                  )
+                : Image.network(
+                    url.startsWith('http') ? url : 'https://sporto.asia$url',
+                    fit: BoxFit.cover,
+                    errorBuilder: (c, o, s) => Icon(
+                      Icons.broken_image_outlined,
+                      color: colors.textMuted,
+                    ),
+                  ),
           ),
         ),
         if (url != null && !loading)
@@ -607,43 +697,96 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                 _bannerUrl = null;
               }
             }),
-            child: const Text('Gỡ ảnh', style: TextStyle(fontSize: 11)),
+            child: Text(
+              l10n.createClub_removeImage,
+              style: const TextStyle(fontSize: 11),
+            ),
           ),
       ],
     );
   }
 
   Widget _buildJoinQuestions() {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(12), border: Border.all(color: colors.border)),
+      decoration: BoxDecoration(
+        color: colors.bgSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Câu hỏi xin vào (tối đa 5)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+          Text(
+            l10n.createClub_questionsTitle,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 8),
-          ..._joinQuestions.asMap().entries.map((entry) => ListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                title: Text(entry.value, style: TextStyle(fontSize: 12, color: colors.textPrimary)),
-                trailing: IconButton(icon: Icon(Icons.close, size: 16, color: colors.textMuted), onPressed: () => setState(() => _joinQuestions.removeAt(entry.key)),),
-              )),
+          ..._joinQuestions.asMap().entries.map(
+            (entry) => ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                entry.value,
+                style: TextStyle(fontSize: 12, color: colors.textPrimary),
+              ),
+              trailing: IconButton(
+                icon: Icon(Icons.close, size: 16, color: colors.textMuted),
+                onPressed: () =>
+                    setState(() => _joinQuestions.removeAt(entry.key)),
+              ),
+            ),
+          ),
           if (_joinQuestions.length < 5)
-            Row(children: [
-              Expanded(child: TextField(controller: _questionCtrl, maxLength: 255, decoration: const InputDecoration(hintText: 'Ví dụ: Bạn đang chơi ở trình độ nào?'))),
-              IconButton(onPressed: _addJoinQuestion, icon: const Icon(Icons.add_circle_rounded, color: AppTheme.primary)),
-            ]),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _questionCtrl,
+                    maxLength: 255,
+                    decoration: InputDecoration(
+                      hintText: l10n.createClub_questionHint,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: _addJoinQuestion,
+                  icon: const Icon(
+                    Icons.add_circle_rounded,
+                    color: AppTheme.primary,
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
     );
   }
 
   Widget _buildVisibilitySelector() {
+    final l10n = AppLocalizations.of(context)!;
     final options = [
-      ('PUBLIC', 'Công khai', 'Ai cũng có thể tìm thấy CLB'),
-      ('PRIVATE', 'Riêng tư', 'Chỉ thành viên mới xem được nội dung'),
-      ('RESTRICTED', 'Hạn chế', 'Hiện khi tìm kiếm, cần tham gia để xem'),
+      (
+        'PUBLIC',
+        l10n.createClub_visibilityPublic,
+        l10n.createClub_visibilityPublicDescription,
+      ),
+      (
+        'PRIVATE',
+        l10n.createClub_visibilityPrivate,
+        l10n.createClub_visibilityPrivateDescription,
+      ),
+      (
+        'RESTRICTED',
+        l10n.createClub_visibilityRestricted,
+        l10n.createClub_visibilityRestrictedDescription,
+      ),
     ];
     return Column(
       children: options.map((option) {
@@ -656,18 +799,49 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: selected ? AppTheme.primary.withValues(alpha: 0.08) : context.colors.bgSurface,
+                color: selected
+                    ? AppTheme.primary.withValues(alpha: 0.08)
+                    : context.colors.bgSurface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: selected ? AppTheme.primary : context.colors.border),
+                border: Border.all(
+                  color: selected ? AppTheme.primary : context.colors.border,
+                ),
               ),
-              child: Row(children: [
-                Icon(selected ? Icons.radio_button_checked : Icons.radio_button_off, color: selected ? AppTheme.primary : context.colors.textMuted, size: 19),
-                const SizedBox(width: 10),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(option.$2, style: TextStyle(fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
-                  Text(option.$3, style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
-                ])),
-              ]),
+              child: Row(
+                children: [
+                  Icon(
+                    selected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_off,
+                    color: selected
+                        ? AppTheme.primary
+                        : context.colors.textMuted,
+                    size: 19,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          option.$2,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: context.colors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          option.$3,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: context.colors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -676,11 +850,24 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   }
 
   Widget _buildSportSelector() {
+    final l10n = AppLocalizations.of(context)!;
     final sports = [
-      (AppConstants.sportBadminton, 'Cầu lông', '🏸'),
-      (AppConstants.sportPickleball, 'Pickleball', '🏓'),
-      (AppConstants.sportTennis, 'Tennis', '🎾'),
-      (AppConstants.sportTableTennis, 'Bóng bàn', '🏓'),
+      (
+        AppConstants.sportBadminton,
+        l10n.createClubTournament_sportBadminton,
+        '🏸',
+      ),
+      (
+        AppConstants.sportPickleball,
+        l10n.createClubTournament_sportPickleball,
+        '🏓',
+      ),
+      (AppConstants.sportTennis, l10n.createClubTournament_sportTennis, '🎾'),
+      (
+        AppConstants.sportTableTennis,
+        l10n.createClubTournament_sportTableTennis,
+        '🏓',
+      ),
     ];
     return Row(
       children: sports.map((s) {
@@ -727,10 +914,19 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   }
 
   Widget _buildJoinModeSelector() {
+    final l10n = AppLocalizations.of(context)!;
     final modes = [
-      ('OPEN', 'Tự do', 'Bất kỳ ai cũng có thể tham gia'),
-      ('APPROVAL', 'Xét duyệt', 'Cần được phê duyệt khi tham gia'),
-      ('INVITE_ONLY', 'Chỉ mời', 'Chỉ thành viên được mời mới tham gia'),
+      ('OPEN', l10n.createClub_joinOpen, l10n.createClub_joinOpenDescription),
+      (
+        'APPROVAL',
+        l10n.createClub_joinApproval,
+        l10n.createClub_joinApprovalDescription,
+      ),
+      (
+        'INVITE_ONLY',
+        l10n.createClub_joinInviteOnly,
+        l10n.createClub_joinInviteOnlyDescription,
+      ),
     ];
     return Column(
       children: modes.map((m) {

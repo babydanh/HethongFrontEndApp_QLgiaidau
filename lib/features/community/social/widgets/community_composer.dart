@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_mention_helpers.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -115,7 +116,7 @@ class _CommunityComposerState extends State<CommunityComposer> {
     if (_mentions.length >= _mentionLimit &&
         !_mentions.containsKey(member.userId)) {
       widget.onMentionWarning?.call(
-        'Bạn chỉ có thể gắn tối đa $_mentionLimit thành viên.',
+        AppLocalizations.of(context)!.communityComposer_mentionLimit(_mentionLimit),
       );
       return;
     }
@@ -127,7 +128,7 @@ class _CommunityComposerState extends State<CommunityComposer> {
     );
     if (hasDuplicateVisibleName) {
       widget.onMentionWarning?.call(
-        'CLB có hai thành viên cùng tên. Hãy dùng tên khác để tránh nhầm lẫn.',
+        AppLocalizations.of(context)!.communityComposer_duplicateName,
       );
       return;
     }
@@ -151,6 +152,7 @@ class _CommunityComposerState extends State<CommunityComposer> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     return Card(
       margin: EdgeInsets.zero,
@@ -175,8 +177,8 @@ class _CommunityComposerState extends State<CommunityComposer> {
                   _selectMember(widget.mentionCandidates.first);
                 }
               },
-              decoration: const InputDecoration(
-                hintText: 'Chia sẻ điều gì đó với CLB… Gõ @ để nhắc tên',
+              decoration: InputDecoration(
+                hintText: l10n.communityComposer_hint,
                 border: InputBorder.none,
               ),
             ),
@@ -190,12 +192,12 @@ class _CommunityComposerState extends State<CommunityComposer> {
             ),
             const Divider(height: AppTheme.spacingMD),
             Row(children: [
-              TextButton.icon(onPressed: widget.onPickImage, icon: const Icon(Icons.photo_library_outlined, size: 19), label: Text(widget.imageCount > 0 ? 'Ảnh ${widget.imageCount}' : 'Ảnh')),
-              TextButton.icon(onPressed: _startMention, icon: const Icon(Icons.alternate_email_rounded, size: 19), label: const Text('Gắn thẻ')),
+              TextButton.icon(onPressed: widget.onPickImage, icon: const Icon(Icons.photo_library_outlined, size: 19), label: Text(widget.imageCount > 0 ? l10n.communityComposer_images(widget.imageCount) : l10n.communityComposer_image)),
+              TextButton.icon(onPressed: _startMention, icon: const Icon(Icons.alternate_email_rounded, size: 19), label: Text(l10n.communityComposer_tag)),
               const Spacer(),
               FilledButton(
                 onPressed: widget.isSubmitting ? null : widget.onSubmit,
-                child: widget.isSubmitting ? const SizedBox.square(dimension: 17, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Đăng'),
+                child: widget.isSubmitting ? const SizedBox.square(dimension: 17, child: CircularProgressIndicator(strokeWidth: 2)) : Text(l10n.communityComposer_post),
               ),
             ]),
           ],
@@ -212,7 +214,9 @@ class _MentionChips extends StatelessWidget {
   const _MentionChips({required this.members, required this.canManageTags, required this.onTag});
 
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
     padding: const EdgeInsets.only(bottom: AppTheme.spacingSM),
     child: Align(
       alignment: Alignment.centerLeft,
@@ -223,11 +227,12 @@ class _MentionChips extends StatelessWidget {
           avatar: CircleAvatar(backgroundImage: member.mentionAvatarProvider, child: member.mentionAvatarProvider == null ? Text(member.mentionInitial) : null),
           label: Text('@${member.mentionDisplayName}'),
           onPressed: canManageTags ? () => onTag(member) : null,
-          tooltip: canManageTags ? 'Nhấn để gán nhãn thành viên' : null,
+          tooltip: canManageTags ? l10n.communityComposer_tagTooltip : null,
         )).toList(growable: false),
       ),
     ),
   );
+  }
 }
 
 class _MentionSuggestions extends StatelessWidget {
@@ -241,13 +246,14 @@ class _MentionSuggestions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final content = isLoading
         ? const SizedBox(height: 58, child: Center(child: CircularProgressIndicator(strokeWidth: 2)))
         : errorMessage != null
-            ? SizedBox(height: 52, child: Center(child: Text('Chưa thể tìm thành viên', style: TextStyle(color: colors.textMuted))))
+            ? SizedBox(height: 52, child: Center(child: Text(l10n.communityComposer_searchUnavailable, style: TextStyle(color: colors.textMuted))))
             : members.isEmpty
-                ? SizedBox(height: 52, child: Center(child: Text('Không tìm thấy thành viên', style: TextStyle(color: colors.textMuted))))
+                ? SizedBox(height: 52, child: Center(child: Text(l10n.communityComposer_noMembers, style: TextStyle(color: colors.textMuted))))
                 : ListView.separated(
                     shrinkWrap: true,
                     physics: const ClampingScrollPhysics(),
@@ -272,7 +278,9 @@ class _MemberSuggestion extends StatelessWidget {
   const _MemberSuggestion({required this.member, required this.canManageTags, required this.onSelect, required this.onTag});
 
   @override
-  Widget build(BuildContext context) => InkWell(
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return InkWell(
     onTap: () => onSelect(member),
     onLongPress: canManageTags ? () => onTag(member) : null,
     child: Padding(
@@ -284,8 +292,9 @@ class _MemberSuggestion extends StatelessWidget {
           Text(member.mentionDisplayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
           if (member.tags.isNotEmpty) Wrap(spacing: 4, children: member.tags.take(2).map((tag) => MemberTagChip(label: tag, kind: MemberTagChipKind.bqt)).toList(growable: false)),
         ])),
-        if (canManageTags) IconButton(tooltip: 'Gán nhãn vui', onPressed: () => onTag(member), icon: const Icon(Icons.sell_outlined, size: 19)),
+        if (canManageTags) IconButton(tooltip: l10n.communityComposer_assignTagTooltip, onPressed: () => onTag(member), icon: const Icon(Icons.sell_outlined, size: 19)),
       ]),
     ),
   );
+  }
 }

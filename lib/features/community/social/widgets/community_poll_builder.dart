@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Dữ liệu bình chọn sẽ gửi kèm bài đăng (khớp CreatePollDto backend/web).
@@ -63,6 +64,7 @@ class CommunityPollBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacingMD),
@@ -81,7 +83,7 @@ class CommunityPollBuilder extends StatelessWidget {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  'Tạo cuộc thăm dò ý kiến',
+                  l10n.communityPollBuilder_title,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
@@ -94,7 +96,7 @@ class CommunityPollBuilder extends StatelessWidget {
                 style: TextButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                 ),
-                child: const Text('Hủy bình chọn', style: TextStyle(fontSize: 12)),
+                child: Text(l10n.communityPollBuilder_cancel, style: const TextStyle(fontSize: 12)),
               ),
             ],
           ),
@@ -102,9 +104,9 @@ class CommunityPollBuilder extends StatelessWidget {
           TextField(
             controller: questionController,
             maxLength: 300,
-            decoration: const InputDecoration(
-              labelText: 'Câu hỏi bình chọn *',
-              hintText: 'Nhập câu hỏi hoặc chủ đề...',
+            decoration: InputDecoration(
+              labelText: l10n.communityPollBuilder_questionLabel,
+              hintText: l10n.communityPollBuilder_questionHint,
               isDense: true,
               counterText: '',
             ),
@@ -126,7 +128,7 @@ class CommunityPollBuilder extends StatelessWidget {
                           controller: entry.value,
                           maxLength: 150,
                           decoration: InputDecoration(
-                            hintText: 'Lựa chọn ${entry.key + 1}',
+                            hintText: l10n.communityPollBuilder_optionHint(entry.key + 1),
                             isDense: true,
                             counterText: '',
                           ),
@@ -149,13 +151,13 @@ class CommunityPollBuilder extends StatelessWidget {
               child: TextButton.icon(
                 onPressed: onAddOption,
                 icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('Thêm lựa chọn', style: TextStyle(fontSize: 13)),
+                label: Text(l10n.communityPollBuilder_addOption, style: const TextStyle(fontSize: 13)),
               ),
             ),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             dense: true,
-            title: const Text('Cho phép chọn nhiều câu trả lời',
+            title: Text(l10n.communityPollBuilder_allowMultiple,
                 style: TextStyle(fontSize: 13)),
             value: allowMultipleAnswers,
             onChanged: onAllowMultipleChanged,
@@ -163,7 +165,7 @@ class CommunityPollBuilder extends StatelessWidget {
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             dense: true,
-            title: const Text('Cho phép mọi người thêm lựa chọn mới',
+            title: Text(l10n.communityPollBuilder_allowAddOptions,
                 style: TextStyle(fontSize: 13)),
             value: allowAddOptions,
             onChanged: onAllowAddOptionsChanged,
@@ -171,7 +173,7 @@ class CommunityPollBuilder extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text('Thời hạn:',
+                child: Text(l10n.communityPollBuilder_expiry,
                     style: TextStyle(fontSize: 13, color: colors.textSecondary)),
               ),
               DropdownButton<int>(
@@ -181,7 +183,7 @@ class CommunityPollBuilder extends StatelessWidget {
                     .map((days) => DropdownMenuItem(
                           value: days,
                           child: Text(
-                            days == 0 ? 'Không giới hạn' : '$days ngày',
+                            days == 0 ? l10n.communityPollBuilder_noLimit : l10n.communityPollBuilder_days(days),
                             style: const TextStyle(fontSize: 13),
                           ),
                         ))

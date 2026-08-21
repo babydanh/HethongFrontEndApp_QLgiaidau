@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/widgets/countdown_timer.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -163,6 +164,18 @@ class AboutTab extends StatelessWidget {
                       tournament.format.replaceAll('_', ' '),
                   colors: colors,
                 ),
+                if (TournamentLocationFormatter.tournamentShortLocation(
+                  tournament,
+                ).isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    label: l10n.club_location,
+                    value: TournamentLocationFormatter.tournamentShortLocation(
+                      tournament,
+                    ),
+                    colors: colors,
+                  ),
+                ],
                 const SizedBox(height: 12),
                 _buildInfoRow(
                   label: l10n.bracketTypeLabel,

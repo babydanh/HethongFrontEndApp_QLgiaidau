@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Tạo nhanh Public trên app. Không nhận communityId; quản lý chi tiết mở trên web.
@@ -28,6 +29,28 @@ class _CreatePublicQuickTournamentScreenState
   String _visibility = 'PUBLIC';
   static const _registrationMode = 'APPROVAL';
   bool _isSubmitting = false;
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
+
+  Map<String, String> _sportOptions() => {
+    AppConstants.sportFootball: l10n.createClubTournament_sportFootball,
+    AppConstants.sportPickleball: l10n.createClubTournament_sportPickleball,
+    AppConstants.sportBadminton: l10n.createClubTournament_sportBadminton,
+    AppConstants.sportTennis: l10n.createClubTournament_sportTennis,
+    AppConstants.sportTableTennis: l10n.createClubTournament_sportTableTennis,
+  };
+
+  Map<String, String> _formatOptions() => {
+    AppConstants.formatSingles: l10n.quickCreateFormatSingles,
+    AppConstants.formatDoubles: l10n.quickCreateFormatDoubles,
+    AppConstants.formatMixedDoubles: l10n.quickCreateFormatMixedDoubles,
+  };
+
+  Map<String, String> _bracketOptions() => {
+    AppConstants.bracketSingleElimination: l10n.quickCreateBracketSingle,
+    AppConstants.bracketDoubleElimination: l10n.quickCreateBracketDouble,
+    AppConstants.bracketRoundRobin: l10n.quickCreateBracketRoundRobin,
+    AppConstants.bracketGroupStageKnockout: l10n.quickCreateBracketGroup,
+  };
 
   @override
   void dispose() {
@@ -40,11 +63,11 @@ class _CreatePublicQuickTournamentScreenState
     final name = _nameController.text.trim();
     final maxTeams = int.tryParse(_maxTeamsController.text.trim());
     if (name.isEmpty) {
-      _showError('Vui lòng nhập tên giải đấu.');
+      _showError(l10n.quickCreateNameRequired);
       return;
     }
     if (maxTeams == null || maxTeams < 2 || maxTeams > 32) {
-      _showError('Quy mô phải từ 2 đến 32 người/đội.');
+      _showError(l10n.quickCreateMaxTeamsInvalid);
       return;
     }
 
@@ -77,22 +100,20 @@ class _CreatePublicQuickTournamentScreenState
           : <String, dynamic>{};
       final tournamentId = payload['id']?.toString() ?? '';
       if (tournamentId.isEmpty) {
-        throw const FormatException('Không nhận được mã giải đấu.');
+        throw FormatException(l10n.quickCreateMissingId);
       }
       _log.info('Tạo Public Quick thành công: $tournamentId');
       await _openWebManagement(tournamentId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã tạo giải. Đang mở trang quản lý trên web.'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.quickCreateCreated)));
         context.pop();
       }
     } catch (error, stack) {
       _log.error('Không thể tạo Public Quick', error, stack);
       if (mounted) {
-        _showError(ErrorParser.parse(error, 'Không thể tạo giải đấu.'));
+        _showError(ErrorParser.parse(error, l10n.quickCreateSubmitError));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -104,7 +125,7 @@ class _CreatePublicQuickTournamentScreenState
       '${AppConstants.appDomain}/organizer/tournaments/$tournamentId/manage',
     );
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw const FormatException('Không thể mở trang quản lý trên web.');
+      throw FormatException(l10n.quickCreateOpenWebError);
     }
   }
 
@@ -119,12 +140,12 @@ class _CreatePublicQuickTournamentScreenState
     final colors = context.colors;
     return Scaffold(
       backgroundColor: colors.bgDark,
-      appBar: AppBar(title: const Text('Tạo giải nhanh'), centerTitle: true),
+      appBar: AppBar(title: Text(l10n.quickCreateTitle), centerTitle: true),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           Text(
-            'Giải Public',
+            l10n.quickCreateHeading,
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w800,
@@ -133,24 +154,22 @@ class _CreatePublicQuickTournamentScreenState
           ),
           const SizedBox(height: 6),
           Text(
-            'Tạo nhanh trên app, bổ sung cấu hình nâng cao trong trang quản lý web.',
+            l10n.quickCreateDescription,
             style: TextStyle(color: colors.textMuted, height: 1.35),
           ),
           const SizedBox(height: 20),
-          _label('Tên giải đấu *', colors),
+          _label(l10n.quickCreateNameLabel, colors),
           const SizedBox(height: 6),
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(
-              hintText: 'VD: Giải Cầu lông Cuối Tuần',
-            ),
+            decoration: InputDecoration(hintText: l10n.quickCreateNameHint),
           ),
           const SizedBox(height: 18),
-          _label('Môn thể thao *', colors),
+          _label(l10n.quickCreateSportLabel, colors),
           const SizedBox(height: 6),
           DropdownButtonFormField<String>(
             initialValue: _sport,
-            items: AppConstants.sportNames.entries
+            items: _sportOptions().entries
                 .map(
                   (entry) => DropdownMenuItem(
                     value: entry.key,
@@ -165,35 +184,38 @@ class _CreatePublicQuickTournamentScreenState
             children: [
               Expanded(
                 child: _dropdown(
-                  'Nội dung thi đấu',
+                  l10n.quickCreateFormatLabel,
                   _format,
-                  AppConstants.formatNames,
+                  _formatOptions(),
                   (value) => setState(() => _format = value),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _dropdown(
-                  'Thể thức',
+                  l10n.quickCreateBracketLabel,
                   _bracket,
-                  AppConstants.bracketTypeNames,
+                  _bracketOptions(),
                   (value) => setState(() => _bracket = value),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 18),
-          _label('Số đội / người tối đa', colors),
+          _label(l10n.quickCreateMaxTeamsLabel, colors),
           const SizedBox(height: 6),
           TextField(
             controller: _maxTeamsController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(hintText: '16'),
+            decoration: InputDecoration(hintText: l10n.quickCreateMaxTeamsHint),
           ),
           const SizedBox(height: 18),
           _choiceGroup(
-            'Hiển thị giải đấu',
-            {'PUBLIC': 'Công khai', 'PRIVATE': 'Không niêm yết'},
+            l10n.quickCreateVisibilityLabel,
+            {
+              'PUBLIC': l10n.quickCreateVisibilityPublic,
+              'PRIVATE': l10n.quickCreateVisibilityPrivate,
+            },
             _visibility,
             (value) => setState(() => _visibility = value),
           ),
@@ -206,7 +228,7 @@ class _CreatePublicQuickTournamentScreenState
               border: Border.all(color: colors.border),
             ),
             child: Text(
-              'Đăng ký mặc định ở chế độ Xét duyệt. Bạn có thể thay đổi cách nhận đăng ký trong trang quản lý web sau khi tạo.',
+              l10n.quickCreateRegistrationNote,
               style: TextStyle(
                 fontSize: 12,
                 color: colors.textSecondary,
@@ -223,7 +245,7 @@ class _CreatePublicQuickTournamentScreenState
               border: Border.all(color: colors.border),
             ),
             child: Text(
-              'Không có lựa chọn câu lạc bộ trong luồng Public. Muốn tạo trong CLB, hãy vào trang CLB và chọn Lite CLB hoặc Tạo nhanh trên web.',
+              l10n.quickCreateClubNote,
               style: TextStyle(
                 fontSize: 12,
                 color: colors.textSecondary,
@@ -234,7 +256,11 @@ class _CreatePublicQuickTournamentScreenState
           const SizedBox(height: 24),
           FilledButton(
             onPressed: _isSubmitting ? null : _submit,
-            child: Text(_isSubmitting ? 'Đang tạo...' : 'Tạo giải nhanh'),
+            child: Text(
+              _isSubmitting
+                  ? l10n.quickCreateSubmitting
+                  : l10n.quickCreateSubmit,
+            ),
           ),
         ],
       ),

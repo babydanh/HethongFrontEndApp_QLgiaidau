@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Bottom bar: penalty, override, kết thúc set/trận.
 class MatchBottomBar extends ConsumerWidget {
@@ -13,6 +14,7 @@ class MatchBottomBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(scorePanelNotifierProvider(params));
     final notifier = ref.read(scorePanelNotifierProvider(params).notifier);
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
 
     return Container(
@@ -42,7 +44,7 @@ class MatchBottomBar extends ConsumerWidget {
                 maxLength: 200,
                 style: TextStyle(color: colors.textPrimary, fontSize: 12),
                 decoration: InputDecoration(
-                  hintText: 'Lý do override (ghi rõ lý do ngoại lệ)',
+                  hintText: l10n.matchBottom_overrideHint,
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 11),
                   filled: true,
                   fillColor: colors.bgSurface,
@@ -60,7 +62,7 @@ class MatchBottomBar extends ConsumerWidget {
               // Kết thúc trận — Đội 1
               Expanded(
                 child: _actionButton(
-                  label: 'Đội 1 thắng',
+                  label: l10n.matchBottom_team1Wins,
                   icon: Icons.emoji_events_rounded,
                   color: const Color(0xFF2979FF),
                   loading: state.isSubmitting,
@@ -73,7 +75,7 @@ class MatchBottomBar extends ConsumerWidget {
               // Kết thúc trận — Đội 2
               Expanded(
                 child: _actionButton(
-                  label: 'Đội 2 thắng',
+                  label: l10n.matchBottom_team2Wins,
                   icon: Icons.emoji_events_rounded,
                   color: const Color(0xFFEA580C),
                   loading: state.isSubmitting,
@@ -95,7 +97,7 @@ class MatchBottomBar extends ConsumerWidget {
                 color: Colors.orange,
               ),
               label: Text(
-                'Override (chốt tỉ số ngoại lệ)',
+                l10n.matchBottom_overrideAction,
                 style: TextStyle(fontSize: 11, color: Colors.orange[700]),
               ),
             ),
@@ -104,7 +106,7 @@ class MatchBottomBar extends ConsumerWidget {
             TextButton.icon(
               onPressed: () => notifier.setOverride(false, ''),
               icon: const Icon(Icons.close_rounded, size: 14),
-              label: const Text('Huỷ override', style: TextStyle(fontSize: 11)),
+              label: Text(l10n.matchBottom_cancelOverride, style: const TextStyle(fontSize: 11)),
             ),
         ],
       ),

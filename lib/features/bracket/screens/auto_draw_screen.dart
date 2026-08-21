@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/services/draw_service.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class AutoDrawScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -33,6 +34,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
   List<String> _unrevealedTeamIds = [];
 
   void _generatePreview(List<Team> teams, String bracketType, int roundCount, {bool isManual = false}) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _isDrawing = true;
     });
@@ -73,13 +75,14 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
           _isDrawing = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: context.colors.error),
+          SnackBar(content: Text(l10n.autoDraw_error(e.toString())), backgroundColor: context.colors.error),
         );
       }
     }
   }
 
   Future<void> _saveMatches(List<MatchModel> matches) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isDrawing = true);
     try {
       await ref.read(publishTournamentDrawUseCaseProvider).call(
@@ -93,7 +96,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
           _hasSaved = true;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Bốc thăm và lưu thành công!')),
+          SnackBar(content: Text(l10n.autoDraw_saved)),
         );
         context.pop();
       }
@@ -101,13 +104,14 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
       if (mounted) {
         setState(() => _isDrawing = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
+          SnackBar(content: Text(l10n.autoDraw_error(e.toString))),
         );
       }
     }
   }
 
   Future<void> _clearDraw() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isDrawing = true);
     try {
       await ref.read(resetTournamentDrawUseCaseProvider).call(
@@ -123,21 +127,22 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
           _unrevealedTeamIds.clear();
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Làm lại sơ đồ thành công!')),
+          SnackBar(content: Text(l10n.autoDraw_redraw)),
         );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isDrawing = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
+          SnackBar(content: Text(l10n.autoDraw_error(e.toString))),
         );
       }
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+    Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final teamsAsync = ref.watch(teamsProvider(widget.tournamentId));
     final tournamentAsync = ref.watch(tournamentProvider(widget.tournamentId));
     final matchesAsync = ref.watch(matchesProvider(widget.tournamentId));
@@ -149,14 +154,14 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/admin/tournament/${widget.tournamentId}'),
         ),
-        title: const Text('Bốc thăm & Phân bảng'),
+        title: Text(l10n.autoDraw_title),
       ),
       backgroundColor: context.colors.bgDark,
       body: teamsAsync.when(
         data: (teams) {
           return tournamentAsync.when(
             data: (tournament) {
-              if (tournament == null) return const Center(child: Text('Lỗi giải đấu'));
+              if (tournament == null) return Center(child: Text(l10n.autoDraw_tournamentError));
 
               final bracketType = tournament.bracketType;
               final r1Matches = _previewMatches.where((m) {
@@ -192,10 +197,10 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                         color: context.colors.bgCard,
                         child: Column(
                           children: [
-                            Text('Tổng số đội: ${teams.length}',
+                            Text(l10n.autoDraw_teamCount(teams.length),
                                 style: TextStyle(fontSize: 18, color: context.colors.textPrimary)),
                             const SizedBox(height: 8),
-                            Text('Thể thức: $bracketType',
+                            Text(l10n.autoDraw_format(bracketType),
                                 style: TextStyle(fontSize: 14, color: context.colors.textSecondary)),
                             const SizedBox(height: 20),
                             if (hasStartedMatches)
@@ -206,7 +211,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  'Giải đấu đang diễn ra. Chức năng làm lại sơ đồ đã bị khóa.',
+                                  l10n.autoDraw_startedLocked,
                                   style: TextStyle(color: context.colors.error, fontWeight: FontWeight.bold),
                                   textAlign: TextAlign.center,
                                 ),
@@ -215,7 +220,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                               ElevatedButton.icon(
                                 style: ElevatedButton.styleFrom(backgroundColor: context.colors.error),
                                 icon: const Icon(Icons.delete_forever),
-                                label: const Text('Làm lại sơ đồ'),
+                                label: Text(l10n.autoDraw_redraw),
                                 onPressed: _isDrawing ? null : _clearDraw,
                               )
                             else
@@ -224,7 +229,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                                 children: [
                                   ElevatedButton.icon(
                                     icon: const Icon(Icons.casino),
-                                    label: const Text('Bốc thăm tự động'),
+                                    label: Text(l10n.autoDraw_auto),
                                     onPressed: _isDrawing || _hasSaved
                                         ? null
                                         : () => _generatePreview(teams, bracketType, tournament.roundCount, isManual: false),
@@ -233,7 +238,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                                   ElevatedButton.icon(
                                     style: ElevatedButton.styleFrom(backgroundColor: AppTheme.secondary),
                                     icon: const Icon(Icons.pan_tool_alt),
-                                    label: const Text('Bốc thăm từng đội'),
+                                    label: Text(l10n.autoDraw_manual),
                                     onPressed: _isDrawing || _hasSaved
                                         ? null
                                         : () => _generatePreview(teams, bracketType, tournament.roundCount, isManual: true),
@@ -243,7 +248,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                               if (_isManualDrawMode && _previewMatches.isNotEmpty && _unrevealedTeamIds.isNotEmpty) ...[
                                 const SizedBox(height: 20),
                                 Text(
-                                  'Còn ${_unrevealedTeamIds.length} đội chưa bốc',
+                                  l10n.autoDraw_remaining(_unrevealedTeamIds.length),
                                   style: TextStyle(color: context.colors.textSecondary, fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 12),
@@ -253,7 +258,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                                     ElevatedButton.icon(
                                       style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accent),
                                       icon: const Icon(Icons.touch_app),
-                                      label: const Text('Bốc 1 đội'),
+                                      label: Text(l10n.autoDraw_oneTeam),
                                       onPressed: () {
                                         if (_unrevealedTeamIds.isNotEmpty) {
                                           setState(() {
@@ -270,7 +275,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                                           _unrevealedTeamIds.clear();
                                         });
                                       },
-                                      child: Text('Hiện tất cả', style: TextStyle(color: context.colors.textMuted)),
+                                      child: Text(l10n.autoDraw_revealAll, style: TextStyle(color: context.colors.textMuted)),
                                     ),
                                   ],
                                 ),
@@ -323,7 +328,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                                           border: Border.all(color: context.colors.success.withValues(alpha: 0.3)),
                                         ),
                                         child: Text(
-                                          'ĐẶC CÁCH VÀO VÒNG TRONG',
+                                          l10n.autoDraw_bye,
                                           style: TextStyle(
                                             color: context.colors.success,
                                             fontSize: 12,
@@ -348,7 +353,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                                        child: Text('VS', style: TextStyle(color: context.colors.error, fontWeight: FontWeight.bold)),
+                                        child: Text(l10n.autoDraw_vs, style: TextStyle(color: context.colors.error, fontWeight: FontWeight.bold)),
                                       ),
                                       Expanded(
                                         child: Text(
@@ -371,7 +376,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                   else
                     Expanded(
                       child: Center(
-                        child: Text('Nhấn Bốc thăm để xem trước các cặp đấu',
+                        child: Text(l10n.autoDraw_previewHint,
                             style: TextStyle(color: context.colors.textMuted)),
                       ),
                     ),
@@ -384,22 +389,22 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                         onPressed: (_isDrawing || _hasSaved || _unrevealedTeamIds.isNotEmpty)
                                     ? null
                                     : () => _saveMatches(_previewMatches),
-                            child: const Text('Lưu & Bắt đầu giải'),
+                            child: Text(l10n.autoDraw_saveStart),
                       ),
                     ),
                 ],
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Lỗi tải trận đấu: $e')),
+            error: (e, _) => Center(child: Text(l10n.autoDraw_matchLoadError(e.toString))),
           );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Lỗi: $e')),
+            error: (e, _) => Center(child: Text(l10n.autoDraw_error(e.toString))),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Lỗi: $e')),
+        error: (e, _) => Center(child: Text(l10n.autoDraw_error(e.toString))),
       ),
     );
   }

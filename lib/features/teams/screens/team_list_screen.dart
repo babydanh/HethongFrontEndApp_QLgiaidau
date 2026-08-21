@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/providers/team_notifier.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TeamListScreen extends ConsumerWidget {
   final String tournamentId;
@@ -17,6 +18,7 @@ class TeamListScreen extends ConsumerWidget {
   const TeamListScreen({super.key, required this.tournamentId, this.isEmbedded = false});
 
   Future<void> _importExcel(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final result = await FilePicker.pickFiles(
         type: FileType.custom,
@@ -65,7 +67,7 @@ class TeamListScreen extends ConsumerWidget {
       if (teams.isEmpty) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('Không tìm thấy dữ liệu hợp lệ trong file'),
+              content: Text(l10n.teamList_invalidImport),
               backgroundColor: context.colors.warning));
         }
         return;
@@ -75,24 +77,25 @@ class TeamListScreen extends ConsumerWidget {
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('✅ Import thành công ${teams.length} đội!'),
+            content: Text(l10n.teamList_importSuccess(teams.length)),
             backgroundColor: context.colors.success));
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Lỗi import: $e'),
+            content: Text(l10n.teamList_importError(e.toString())),
             backgroundColor: context.colors.error));
       }
     }
   }
 
   Future<void> _deleteAllTeams(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showConfirmDialog(
       context: context,
-      title: 'Xóa toàn bộ?',
-      content: 'Bạn có chắc chắn muốn xóa TOÀN BỘ các đội bóng?\n\nHành động này cũng sẽ xóa toàn bộ sơ đồ/kết quả thi đấu của giải.',
-      confirmText: 'Xóa tất cả',
+      title: l10n.teamList_deleteAllTitle,
+      content: l10n.teamList_deleteAllContent,
+      confirmText: l10n.teamList_deleteAllConfirm,
     );
 
     if (confirm == true) {
@@ -100,13 +103,13 @@ class TeamListScreen extends ConsumerWidget {
         await ref.read(teamServiceProvider(tournamentId)).deleteAllTeams();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: const Text('Đã xóa toàn bộ đội bóng!'),
+              content: Text(l10n.teamList_deleteAllDone),
               backgroundColor: context.colors.success));
         }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('Lỗi: $e'),
+              content: Text(l10n.teamList_error(e.toString())),
               backgroundColor: context.colors.error));
         }
       }
@@ -114,7 +117,8 @@ class TeamListScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+    Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final teamsAsync = ref.watch(teamsProvider(tournamentId));
     final tournamentAsync = ref.watch(tournamentProvider(tournamentId));
     final tournament = tournamentAsync.value;
@@ -130,12 +134,12 @@ class TeamListScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/admin/tournament/$tournamentId'),
         ),
-        title: const Text('Quản lý đội / VĐV'),
+        title: Text(l10n.teamList_title),
         actions: [
           if (!isLocked) ...[
             IconButton(
               icon: const Icon(Icons.upload_file),
-              tooltip: 'Import từ Excel',
+              tooltip: l10n.teamList_importTooltip,
               onPressed: () => _importExcel(context, ref),
             ),
             PopupMenuButton<String>(
@@ -149,7 +153,7 @@ class TeamListScreen extends ConsumerWidget {
               itemBuilder: (context) => [
                 PopupMenuItem(
                   value: 'delete_all',
-                  child: Text('Xóa toàn bộ đội', style: TextStyle(color: context.colors.error)),
+                  child: Text(l10n.teamList_deleteAll, style: TextStyle(color: context.colors.error)),
                 ),
               ],
             ),
@@ -166,7 +170,7 @@ class TeamListScreen extends ConsumerWidget {
                   Icon(Icons.people_outline, size: 64,
                       color: context.colors.textMuted.withValues(alpha: 0.4)),
                   const SizedBox(height: 16),
-                  Text('Chưa có đội nào',
+                  Text(l10n.teamList_empty,
                       style: TextStyle(fontSize: 16, color: context.colors.textSecondary)),
                   const SizedBox(height: 24),
                   if (!isLocked)
@@ -174,12 +178,12 @@ class TeamListScreen extends ConsumerWidget {
                       onPressed: () => context.go(
                           '/admin/tournament/$tournamentId/teams/add'),
                       icon: const Icon(Icons.add),
-                      label: const Text('Thêm đội mới'),
+                      label: Text(l10n.teamList_addNew),
                     ),
                   if (isLocked)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Text('Giải đấu đang diễn ra. Không thể thêm đội.',
+                      child: Text(l10n.teamList_locked,
                         textAlign: TextAlign.center,
                         style: TextStyle(color: context.colors.error, fontSize: 13)),
                     )
@@ -201,14 +205,14 @@ class TeamListScreen extends ConsumerWidget {
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppTheme.primary),
         ),
-        error: (e, _) => Center(child: Text('Lỗi: $e')),
+        error: (e, _) => Center(child: Text(l10n.teamList_error(e.toString))),
       ),
       floatingActionButton: isLocked ? null : FloatingActionButton.extended(
         onPressed: () =>
             context.go('/admin/tournament/$tournamentId/teams/add'),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.person_add, color: Colors.white),
-        label: const Text('Thêm đội',
+        label: Text(l10n.teamList_add,
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
       ),
     );
@@ -231,6 +235,7 @@ class TeamListTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
@@ -294,7 +299,7 @@ class TeamListTile extends ConsumerWidget {
                 color: context.colors.success.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text('✓ Đã duyệt',
+              child: Text(l10n.teamList_approved,
                   style: TextStyle(fontSize: 10, color: context.colors.success, fontWeight: FontWeight.w600)),
             ),
           if (!isLocked) ...[
@@ -311,9 +316,9 @@ class TeamListTile extends ConsumerWidget {
               onPressed: () async {
                 final confirm = await showConfirmDialog(
                   context: context,
-                  title: 'Xóa đội',
-                  content: 'Xóa đội ${team.name}?',
-                  confirmText: 'Xóa',
+                  title: l10n.teamList_deleteTitle,
+                  content: l10n.teamList_deleteContent(team.name),
+                  confirmText: l10n.teamList_deleteConfirm,
                 );
                 if (confirm == true) {
                   try {
@@ -321,7 +326,7 @@ class TeamListTile extends ConsumerWidget {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.toString()), backgroundColor: context.colors.error)
+                        SnackBar(content: Text(l10n.teamList_deleteError(e.toString())), backgroundColor: context.colors.error)
                       );
                     }
                   }

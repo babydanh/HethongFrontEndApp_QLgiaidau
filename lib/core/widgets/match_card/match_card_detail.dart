@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
+import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
+
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:go_router/go_router.dart';
 
@@ -177,7 +179,10 @@ class MatchCardDetail extends StatelessWidget {
                         match.sets
                             .asMap()
                             .entries
-                            .map((e) => 'S${e.key + 1}: ${e.value.score1}-${e.value.score2}')
+                            .map(
+                              (e) =>
+                                  'S${e.key + 1}: ${e.value.score1}-${e.value.score2}',
+                            )
                             .join('  |  '),
                       ),
                     ],
@@ -187,7 +192,9 @@ class MatchCardDetail extends StatelessWidget {
                       height: 42,
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isLive ? context.colors.error : AppTheme.primary,
+                          backgroundColor: isLive
+                              ? context.colors.error
+                              : AppTheme.primary,
                           foregroundColor: Colors.white,
                           elevation: 2,
                           shape: RoundedRectangleBorder(
@@ -203,13 +210,17 @@ class MatchCardDetail extends StatelessWidget {
                         icon: Icon(
                           isLive
                               ? Icons.live_tv_rounded
-                              : (isReferee ? Icons.edit_note_rounded : Icons.sports_score_rounded),
+                              : (isReferee
+                                    ? Icons.edit_note_rounded
+                                    : Icons.sports_score_rounded),
                           size: 18,
                         ),
                         label: Text(
                           isLive
                               ? 'Xem Trực Tiếp (LIVE)'
-                              : (isReferee ? 'Tính Điểm Trận Đấu' : 'Xem Trang Trực Tiếp & Tỷ Số'),
+                              : (isReferee
+                                    ? 'Tính Điểm Trận Đấu'
+                                    : 'Xem Trang Trực Tiếp & Tỷ Số'),
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
@@ -284,14 +295,12 @@ class MatchCardDetail extends StatelessWidget {
   }
 
   String _venueText(MatchModel match) {
-    final court = match.court.trim();
-    final address = match.courtAddress.trim();
-    if (court.isEmpty && address.isEmpty) return 'Chưa xếp sân';
-    if (court.isNotEmpty && address.isNotEmpty) {
-      if (court.contains(address)) return court;
-      return '$court - $address';
-    }
-    return court.isNotEmpty ? court : address;
+    final location = TournamentLocationFormatter.matchFullLocationFromConfig(
+      courtName: match.court,
+      courtAddress: match.courtAddress,
+      tournamentConfig: match.tournamentConfig,
+    );
+    return location.isEmpty ? 'Chưa xếp sân' : location;
   }
 
   Widget _buildTeamRow(

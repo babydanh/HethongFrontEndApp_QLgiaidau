@@ -64,6 +64,7 @@ class _DoublesRegistrationFlowState
   }
 
   String? _validateCustomResponses(Tournament tournament) {
+    final l10n = AppLocalizations.of(context)!;
     for (final field in _activeRegistrationFields(tournament)) {
       final id = field['id']?.toString() ?? '';
       final value = _customResponses[id];
@@ -72,38 +73,41 @@ class _DoublesRegistrationFlowState
           value.toString().trim().isEmpty ||
           (value is List && value.isEmpty);
       final label = field['label']?.toString() ?? id;
-      if (field['required'] == true && empty) return 'Vui lòng điền “$label”.';
+      if (field['required'] == true) {
+        if (empty) return l10n.registerCustomFieldRequired(label);
+      }
       if (empty) continue;
       if (field['type'] == 'EMAIL' &&
           !RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(value.toString())) {
-        return '“$label” phải là email hợp lệ.';
+        return l10n.registerCustomFieldEmailInvalid(label);
       }
 
       if (field['type'] == 'NUMBER') {
         final number = num.tryParse(value.toString());
-        if (number == null) return '“$label” phải là số.';
+        if (number == null) return l10n.registerCustomFieldNumberInvalid(label);
         final min = num.tryParse(field['min']?.toString() ?? '');
         final max = num.tryParse(field['max']?.toString() ?? '');
         if (min != null && number < min) {
-          return '“$label” không được nhỏ hơn $min.';
+          return l10n.registerCustomFieldMin(label, min);
         }
         if (max != null && number > max) {
-          return '“$label” không được lớn hơn $max.';
+          return l10n.registerCustomFieldMax(label, max);
         }
       }
       if (field['type'] == 'SELECT' &&
           field['options'] is List &&
           !(field['options'] as List).contains(value)) {
-        return 'Lựa chọn của “$label” không hợp lệ.';
+        return l10n.registerCustomFieldSelectInvalid(label);
       }
       if (field['type'] == 'CHECKBOX' && value != true) {
-        return 'Bạn cần xác nhận “$label”.';
+        return l10n.registerCustomFieldCheckboxRequired(label);
       }
     }
     return null;
   }
 
   Widget _buildCustomFields(Tournament tournament) {
+    final l10n = AppLocalizations.of(context)!;
     final fields = _activeRegistrationFields(tournament);
     if (fields.isEmpty) return const SizedBox.shrink();
 
@@ -153,13 +157,13 @@ class _DoublesRegistrationFlowState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Thông tin đăng ký bổ sung',
+          Text(
+            l10n.registerAdditionalInfoTitle,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 4),
           Text(
-            'Ban tổ chức yêu cầu các thông tin dưới đây cho nội dung bạn đã chọn.',
+            l10n.registerAdditionalInfoDescription,
             style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
           ),
           const SizedBox(height: 12),
@@ -532,8 +536,9 @@ class _DoublesRegistrationFlowState
                 _selectedPartner?.email ??
                 (_inviteLater ? null : _partnerSearchCtrl.text.trim()),
             rankingConsent: tournament?.isRanked == true,
-            customResponses:
-                _customResponses.isNotEmpty ? _customResponses : null,
+            customResponses: _customResponses.isNotEmpty
+                ? _customResponses
+                : null,
           );
       if (!mounted) return;
       _participantId = result.participantId;
@@ -1539,6 +1544,7 @@ class _DoublesRegistrationFlowState
   }
 
   Widget _buildSuccess(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: colors.bgDark,
       body: Center(
@@ -1561,14 +1567,14 @@ class _DoublesRegistrationFlowState
                 ),
               ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
               const SizedBox(height: 24),
-              const Text(
-                'Đăng ký thành công!',
+              Text(
+                l10n.doublesRegSuccess,
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () => context.go('/intro/${widget.tournamentId}'),
-                child: const Text('Xem chi tiết'),
+                child: Text(l10n.doublesRegViewDetail),
               ),
               const SizedBox(height: 12),
               TextButton.icon(

@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Tạo giải đấu Lite trong câu lạc bộ
 /// Gọi POST /tournaments/lite — đơn giản, không cần categoryId UUID
@@ -73,6 +74,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -122,7 +124,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
     } catch (e, stack) {
       _log.error('Lỗi tạo giải đấu trong CLB', e, stack);
       if (mounted) {
-        String msg = 'Đã có lỗi xảy ra khi tạo giải đấu.';
+        String msg = l10n.createClubTournament_submitError;
         if (e is DioException) {
           final resData = e.response?.data;
           if (resData is Map<String, dynamic>) {
@@ -133,7 +135,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
               msg = serverMsg.join(', ');
             }
           } else if (e.response?.statusCode == 403) {
-            msg = 'Bạn không có quyền tạo giải trong CLB này hoặc tài khoản chưa xác thực email.';
+            msg = l10n.createClubTournament_forbiddenError;
           }
         } else {
           msg = e.toString().replaceAll('Exception: ', '');
@@ -171,6 +173,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   }
 
   Future<void> _pickStartDate() async {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final firstAvailableDate = DateTime(now.year, now.month, now.day);
     final pickedDate = await showDatePicker(
@@ -178,9 +181,9 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
       initialDate: _startDate ?? now.add(const Duration(days: 1)),
       firstDate: firstAvailableDate,
       lastDate: DateTime(now.year + 3, 12, 31),
-      helpText: 'Chọn ngày bắt đầu giải',
-      cancelText: 'Hủy',
-      confirmText: 'Tiếp tục',
+      helpText: l10n.createClubTournament_pickStartDate,
+      cancelText: l10n.commonCancel,
+      confirmText: l10n.createClubTournament_continue,
     );
     if (pickedDate == null || !mounted) return;
 
@@ -191,9 +194,9 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
     final pickedTime = await showTimePicker(
       context: context,
       initialTime: initialTime,
-      helpText: 'Chọn giờ bắt đầu giải',
-      cancelText: 'Mặc định (08:00)',
-      confirmText: 'Xong',
+      helpText: l10n.createClubTournament_pickStartTime,
+      cancelText: l10n.createClubTournament_defaultTime,
+      confirmText: l10n.createClubTournament_done,
     );
 
     if (!mounted) return;
@@ -210,12 +213,13 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   }
 
   Future<void> _pickRecurringTime() async {
+    final l10n = AppLocalizations.of(context)!;
     final picked = await showTimePicker(
       context: context,
       initialTime: _recurringTime,
-      helpText: 'Chọn giờ tự động tạo giải',
-      cancelText: 'Hủy',
-      confirmText: 'Chọn giờ',
+      helpText: l10n.createClubTournament_pickRecurringTime,
+      cancelText: l10n.commonCancel,
+      confirmText: l10n.createClubTournament_pickTime,
     );
     if (picked != null && mounted) setState(() => _recurringTime = picked);
   }
@@ -227,6 +231,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final club = widget.clubId.isEmpty ? null : ref.watch(communityDetailProvider(widget.clubId)).value;
     final clubSport = club?.sports.isNotEmpty == true ? _mapClubSport(club!.sports.first) : null;
@@ -241,7 +246,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Tạo giải đấu trong CLB',
+          l10n.createClubTournament_title,
           style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w800, fontSize: 17),
         ),
         centerTitle: true,
@@ -254,59 +259,59 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ─── Tên giải đấu ───
-              _label('Tên giải đấu *', colors),
+              _label(l10n.createClubTournament_nameLabel, colors),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _nameCtrl,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Vui lòng nhập tên giải đấu' : null,
+                validator: (v) => (v == null || v.trim().isEmpty) ? l10n.createClubTournament_nameRequired : null,
                 style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'VD: Giải Cầu lông Mở rộng 2026',
+                  hintText: l10n.createClubTournament_nameHint,
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
                 ),
               ),
               const SizedBox(height: 20),
 
               // ─── Môn thể thao ───
-              _label('Môn thể thao', colors),
+              _label(l10n.createClubTournament_sportLabel, colors),
               const SizedBox(height: 6),
               _buildSportSelector(lockedSport: clubSport),
               const SizedBox(height: 20),
 
               // ─── Nội dung thi đấu ───
-              _label('Nội dung thi đấu', colors),
+              _label(l10n.createClubTournament_formatLabel, colors),
               const SizedBox(height: 6),
               _buildFormatSelector(),
               const SizedBox(height: 20),
 
               // ─── Thể thức ───
-              _label('Thể thức thi đấu', colors),
+              _label(l10n.createClubTournament_bracketLabel, colors),
               const SizedBox(height: 6),
               _buildBracketSelector(),
               const SizedBox(height: 20),
 
               // ─── Ngày bắt đầu ───
-              _label('Ngày bắt đầu (tuỳ chọn)', colors),
+              _label(l10n.createClubTournament_startDateLabel, colors),
               const SizedBox(height: 6),
               InkWell(
                 onTap: _pickStartDate,
                 borderRadius: BorderRadius.circular(12),
                 child: InputDecorator(
                   decoration: InputDecoration(
-                    hintText: 'Chọn ngày bắt đầu giải',
+                    hintText: l10n.createClubTournament_startDateHint,
                     hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
                     prefixIcon: const Icon(Icons.calendar_today_rounded, size: 18),
                     suffixIcon: _startDate == null
                         ? null
                         : IconButton(
-                            tooltip: 'Xóa ngày',
+                            tooltip: l10n.createClubTournament_clearDate,
                             icon: const Icon(Icons.close_rounded, size: 18),
                             onPressed: () => setState(() => _startDate = null),
                           ),
                   ),
                   child: Text(
                     _startDate == null
-                        ? 'Chưa chọn'
+                        ? l10n.createClubTournament_notSelected
                         : DateFormat('HH:mm - dd/MM/yyyy').format(_startDate!),
                     style: TextStyle(
                       color: _startDate == null ? colors.textMuted : colors.textPrimary,
@@ -317,7 +322,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
               ),
               const SizedBox(height: 6),
               Text(
-                'Có thể bổ sung hoặc thay đổi lịch trong trang quản lý sau khi tạo.',
+                l10n.createClubTournament_startDateNote,
                 style: TextStyle(color: colors.textMuted, fontSize: 11, height: 1.3),
               ),
               const SizedBox(height: 20),
@@ -338,9 +343,9 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Tự động tạo giải định kỳ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                              Text(l10n.createClubTournament_recurringTitle, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
                               const SizedBox(height: 3),
-                              Text('Cron sẽ tự tạo giải mới và báo cho thành viên CLB.', style: TextStyle(fontSize: 11, color: colors.textMuted, height: 1.3)),
+                              Text(l10n.createClubTournament_recurringDescription, style: TextStyle(fontSize: 11, color: colors.textMuted, height: 1.3)),
                             ],
                           ),
                         ),
@@ -351,12 +356,12 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
                         initialValue: _recurringFrequency,
-                        decoration: const InputDecoration(labelText: 'Tần suất'),
-                        items: const [
-                          DropdownMenuItem(value: 'DAILY', child: Text('Mỗi ngày')),
-                          DropdownMenuItem(value: 'WEEKLY', child: Text('Mỗi tuần')),
-                          DropdownMenuItem(value: 'BIWEEKLY', child: Text('Mỗi 2 tuần')),
-                          DropdownMenuItem(value: 'MONTHLY', child: Text('Mỗi tháng')),
+                        decoration: InputDecoration(labelText: l10n.createClubTournament_frequency),
+                        items: [
+                          DropdownMenuItem(value: 'DAILY', child: Text(l10n.createClubTournament_daily)),
+                          DropdownMenuItem(value: 'WEEKLY', child: Text(l10n.createClubTournament_weekly)),
+                          DropdownMenuItem(value: 'BIWEEKLY', child: Text(l10n.createClubTournament_biweekly)),
+                          DropdownMenuItem(value: 'MONTHLY', child: Text(l10n.createClubTournament_monthly)),
                         ],
                         onChanged: (value) => setState(() => _recurringFrequency = value ?? _recurringFrequency),
                       ),
@@ -364,15 +369,15 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                         const SizedBox(height: 10),
                         DropdownButtonFormField<int>(
                           initialValue: _recurringDayOfWeek,
-                          decoration: const InputDecoration(labelText: 'Ngày trong tuần'),
-                          items: const [
-                            DropdownMenuItem(value: 1, child: Text('Thứ 2')),
-                            DropdownMenuItem(value: 2, child: Text('Thứ 3')),
-                            DropdownMenuItem(value: 3, child: Text('Thứ 4')),
-                            DropdownMenuItem(value: 4, child: Text('Thứ 5')),
-                            DropdownMenuItem(value: 5, child: Text('Thứ 6')),
-                            DropdownMenuItem(value: 6, child: Text('Thứ 7')),
-                            DropdownMenuItem(value: 0, child: Text('Chủ nhật')),
+                          decoration: InputDecoration(labelText: l10n.createClubTournament_weekday),
+                          items: [
+                            DropdownMenuItem(value: 1, child: Text(l10n.createClubTournament_monday)),
+                            DropdownMenuItem(value: 2, child: Text(l10n.createClubTournament_tuesday)),
+                            DropdownMenuItem(value: 3, child: Text(l10n.createClubTournament_wednesday)),
+                            DropdownMenuItem(value: 4, child: Text(l10n.createClubTournament_thursday)),
+                            DropdownMenuItem(value: 5, child: Text(l10n.createClubTournament_friday)),
+                            DropdownMenuItem(value: 6, child: Text(l10n.createClubTournament_saturday)),
+                            DropdownMenuItem(value: 0, child: Text(l10n.createClubTournament_sunday)),
                           ],
                           onChanged: (value) => setState(() => _recurringDayOfWeek = value ?? _recurringDayOfWeek),
                         ),
@@ -382,7 +387,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                         onTap: _pickRecurringTime,
                         borderRadius: BorderRadius.circular(12),
                         child: InputDecorator(
-                          decoration: const InputDecoration(labelText: 'Giờ tự động tạo'),
+                          decoration: InputDecoration(labelText: l10n.createClubTournament_autoCreateTime),
                           child: Row(children: [
                             const Icon(Icons.schedule_rounded, size: 18),
                             const SizedBox(width: 8),
@@ -393,8 +398,8 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                       const SizedBox(height: 10),
                       DropdownButtonFormField<int>(
                         initialValue: _recurringAdvanceDays,
-                        decoration: const InputDecoration(labelText: 'Tạo trước ngày thi đấu'),
-                        items: List.generate(8, (days) => DropdownMenuItem(value: days, child: Text(days == 0 ? 'Ngay ngày thi đấu' : 'Trước $days ngày'))),
+                        decoration: InputDecoration(labelText: l10n.createClubTournament_advanceDays),
+                        items: List.generate(8, (days) => DropdownMenuItem(value: days, child: Text(days == 0 ? l10n.createClubTournament_sameDay : l10n.createClubTournament_beforeDays(days)))),
                         onChanged: (value) => setState(() => _recurringAdvanceDays = value ?? _recurringAdvanceDays),
                       ),
                     ],
@@ -404,33 +409,33 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
               const SizedBox(height: 20),
 
               // ─── Số đội tối đa ───
-              _label('Số đội tối đa', colors),
+              _label(l10n.createClubTournament_maxTeams, colors),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _maxTeamsCtrl,
                 keyboardType: TextInputType.number,
                 validator: (v) {
                   final n = int.tryParse(v ?? '');
-                  if (n == null || n < 2 || n > 128) return 'Từ 2-128 đội';
+                  if (n == null || n < 2 || n > 128) return l10n.createClubTournament_maxTeamsInvalid;
                   return null;
                 },
                 style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: '16',
+                  hintText: l10n.createClubTournament_maxTeamsHint,
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
                 ),
               ),
               const SizedBox(height: 20),
 
               // ─── Mô tả ───
-              _label('Mô tả (không bắt buộc)', colors),
+              _label(l10n.createClubTournament_descriptionLabel, colors),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _descCtrl,
                 maxLines: 3,
                 style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'Thông tin thêm về giải đấu...',
+                  hintText: l10n.createClubTournament_descriptionHint,
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
                 ),
               ),
@@ -455,7 +460,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _isRanked ? 'Xếp hạng ELO' : 'Phong trào',
+                            _isRanked ? l10n.createClubTournament_ranked : l10n.createClubTournament_unranked,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
@@ -464,8 +469,8 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                           ),
                           Text(
                             _isRanked
-                                ? 'Kết quả ảnh hưởng đến điểm ELO'
-                                : 'Giải giao hữu, không tính xếp hạng',
+                                ? l10n.createClubTournament_rankedDescription
+                                : l10n.createClubTournament_unrankedDescription,
                             style: TextStyle(fontSize: 11, color: context.colors.textMuted),
                           ),
                         ],
@@ -491,7 +496,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                       ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.add_rounded),
                   label: Text(
-                    _isLoading ? 'Đang tạo...' : 'Tạo giải đấu',
+                    _isLoading ? l10n.createClubTournament_creating : l10n.createClubTournament_create,
                     style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                   ),
                   style: FilledButton.styleFrom(
@@ -511,12 +516,13 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   }
 
   Widget _buildSportSelector({String? lockedSport}) {
+    final l10n = AppLocalizations.of(context)!;
     final sports = [
-      (AppConstants.sportBadminton, 'Cầu lông', '🏸'),
-      (AppConstants.sportTennis, 'Tennis', '🎾'),
-      (AppConstants.sportPickleball, 'Pickleball', '🥒'),
-      (AppConstants.sportTableTennis, 'Bóng bàn', '🏓'),
-      (AppConstants.sportFootball, 'Bóng đá', '⚽'),
+      (AppConstants.sportBadminton, l10n.createClubTournament_sportBadminton, '🏸'),
+      (AppConstants.sportTennis, l10n.createClubTournament_sportTennis, '🎾'),
+      (AppConstants.sportPickleball, l10n.createClubTournament_sportPickleball, '🥒'),
+      (AppConstants.sportTableTennis, l10n.createClubTournament_sportTableTennis, '🏓'),
+      (AppConstants.sportFootball, l10n.createClubTournament_sportFootball, '⚽'),
     ];
     return Row(
       children: sports.where((s) => lockedSport == null || lockedSport == s.$1).map((s) {
@@ -549,9 +555,10 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   }
 
   Widget _buildFormatSelector() {
+    final l10n = AppLocalizations.of(context)!;
     final formats = [
-      (AppConstants.formatSingles, 'Đánh đơn'),
-      (AppConstants.formatDoubles, 'Đánh đôi'),
+      (AppConstants.formatSingles, l10n.createClubTournament_formatSingles),
+      (AppConstants.formatDoubles, l10n.createClubTournament_formatDoubles),
     ];
     return Row(
       children: formats.map((f) {
@@ -580,11 +587,12 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   }
 
   Widget _buildBracketSelector() {
+    final l10n = AppLocalizations.of(context)!;
     final brackets = [
-      (AppConstants.bracketSingleElimination, 'Loại trực tiếp', 'Loại ngay khi thua'),
-      (AppConstants.bracketDoubleElimination, 'Loại kép', 'Có nhánh thắng/thua'),
-      (AppConstants.bracketRoundRobin, 'Vòng tròn', 'Tất cả gặp nhau'),
-      (AppConstants.bracketGroupStageKnockout, 'Vòng bảng + Loại trực tiếp', 'Chia bảng, chọn đội đi tiếp'),
+      (AppConstants.bracketSingleElimination, l10n.createClubTournament_bracketSingleElimination, l10n.createClubTournament_bracketSingleEliminationDescription),
+      (AppConstants.bracketDoubleElimination, l10n.createClubTournament_bracketDoubleElimination, l10n.createClubTournament_bracketDoubleEliminationDescription),
+      (AppConstants.bracketRoundRobin, l10n.createClubTournament_bracketRoundRobin, l10n.createClubTournament_bracketRoundRobinDescription),
+      (AppConstants.bracketGroupStageKnockout, l10n.createClubTournament_bracketGroupStageKnockout, l10n.createClubTournament_bracketGroupStageKnockoutDescription),
     ];
     return Column(
       children: brackets.map((b) {
@@ -642,6 +650,7 @@ class _LiteSuccessSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final link = result.joinUrl ?? '/lite/tournaments/join/${result.inviteCode ?? result.id}';
 
@@ -685,7 +694,7 @@ class _LiteSuccessSheet extends StatelessWidget {
 
               // ─── Title ───
               Text(
-                'Tạo giải thành công!',
+                l10n.createClubTournament_successTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -749,14 +758,14 @@ class _LiteSuccessSheet extends StatelessWidget {
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: link));
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Đã sao chép link mời!'),
+                          SnackBar(
+                            content: Text(l10n.createClubTournament_linkCopied),
                             duration: Duration(seconds: 2),
                           ),
                         );
                       },
                       icon: const Icon(Icons.copy_rounded, size: 18),
-                      label: const Text('Sao chép link', style: TextStyle(fontSize: 13)),
+                      label: Text(l10n.createClubTournament_copyLink, style: const TextStyle(fontSize: 13)),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -770,11 +779,11 @@ class _LiteSuccessSheet extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () {
                         SharePlus.instance.share(
-                          ShareParams(text: 'Tham gia giải ${result.name}: $link'),
+                          ShareParams(text: l10n.createClubTournament_shareText(result.name, link)),
                         );
                       },
                       icon: const Icon(Icons.share_rounded, size: 18),
-                      label: const Text('Chia sẻ', style: TextStyle(fontSize: 13)),
+                      label: Text(l10n.createClubTournament_share, style: const TextStyle(fontSize: 13)),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -794,8 +803,8 @@ class _LiteSuccessSheet extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: onManage,
                   icon: const Icon(Icons.speed_rounded, size: 20),
-                  label: const Text(
-                    'Vào quản lý nhanh',
+                  label: Text(
+                    l10n.createClubTournament_manageQuickly,
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                   ),
                   style: FilledButton.styleFrom(
@@ -813,7 +822,7 @@ class _LiteSuccessSheet extends StatelessWidget {
                 child: TextButton(
                   onPressed: onClose,
                   child: Text(
-                    'Đóng',
+                    l10n.createClubTournament_close,
                     style: TextStyle(color: colors.textMuted, fontSize: 14),
                   ),
                 ),

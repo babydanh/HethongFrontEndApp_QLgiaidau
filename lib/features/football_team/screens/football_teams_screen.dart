@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class FootballTeamsScreen extends ConsumerStatefulWidget {
   final String? initialTeamId;
@@ -50,7 +51,12 @@ class _FootballTeamsScreenState extends ConsumerState<FootballTeamsScreen> {
     finally { if (mounted) setState(() => _loading = false); }
   }
 
-  void _showError(Object error) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorParser.parse(error, 'Có lỗi xảy ra'))));
+  void _showError(Object error) {
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(ErrorParser.parse(error, l10n.footballTeams_genericError))),
+    );
+  }
 
   Future<void> _create() async {
     final name = _newName.text.trim();
@@ -79,8 +85,9 @@ class _FootballTeamsScreenState extends ConsumerState<FootballTeamsScreen> {
   }
 
   Future<void> _invite(String userId) async {
+    final l10n = AppLocalizations.of(context)!;
     if (_selected == null) return;
-    try { await ref.read(footballTeamApiProvider).inviteFootballTeamMember(_selected!.id, userId); if (mounted) { setState(() => _candidates = _candidates.where((row) => row['id']?.toString() != userId).toList()); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã gửi lời mời.'))); } }
+    try { await ref.read(footballTeamApiProvider).inviteFootballTeamMember(_selected!.id, userId); if (mounted) { setState(() => _candidates = _candidates.where((row) => row['id']?.toString() != userId).toList()); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.footballTeams_inviteSent))); } }
     catch (error) { if (mounted) _showError(error); }
   }
 
@@ -120,9 +127,10 @@ class _FootballTeamsScreenState extends ConsumerState<FootballTeamsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final selected = _selected;
     return Scaffold(
-      appBar: AppBar(title: const Text('Đội bóng của tôi')),
+      appBar: AppBar(title: Text(l10n.footballTeams_title)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -130,14 +138,14 @@ class _FootballTeamsScreenState extends ConsumerState<FootballTeamsScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  Text('Đội đang hoạt động ${_teams.length}/3', style: const TextStyle(fontWeight: FontWeight.w800)),
+                  Text(l10n.footballTeams_activeCount(_teams.length), style: const TextStyle(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 8),
                   ..._teams.map(
                     (team) => Card(
                       child: ListTile(
                         leading: CircleAvatar(child: Text(team.name.substring(0, team.name.length > 1 ? 2 : 1).toUpperCase())),
                         title: Text(team.name),
-                        subtitle: Text('ELO ${team.eloPoints} · ${team.activeMembers.length} thành viên'),
+                        subtitle: Text(l10n.footballTeams_eloMembers(team.eloPoints, team.activeMembers.length)),
                         selected: selected?.id == team.id,
                         onTap: () => setState(() {
                           _selected = team;
@@ -152,9 +160,9 @@ class _FootballTeamsScreenState extends ConsumerState<FootballTeamsScreen> {
                       padding: const EdgeInsets.all(12),
                       child: Row(
                         children: [
-                          Expanded(child: TextField(controller: _newName, decoration: const InputDecoration(labelText: 'Tên đội mới'))),
+                          Expanded(child: TextField(controller: _newName, decoration: InputDecoration(labelText: l10n.footballTeams_newTeamName))),
                           const SizedBox(width: 8),
-                          FilledButton(onPressed: _saving ? null : _create, child: const Text('Tạo')),
+                          FilledButton(onPressed: _saving ? null : _create, child: Text(l10n.footballTeams_create)),
                         ],
                       ),
                     ),
@@ -178,30 +186,30 @@ class _FootballTeamsScreenState extends ConsumerState<FootballTeamsScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                const Text('Thông tin đội', style: TextStyle(fontWeight: FontWeight.w800)),
+                                Text(l10n.footballTeams_teamInfo, style: const TextStyle(fontWeight: FontWeight.w800)),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                Expanded(child: TextField(controller: _name, decoration: const InputDecoration(labelText: 'Tên đội'))),
+                                Expanded(child: TextField(controller: _name, decoration: InputDecoration(labelText: l10n.footballTeams_teamName))),
                                 const SizedBox(width: 8),
-                                OutlinedButton(onPressed: _saveName, child: const Text('Lưu')),
+                                OutlinedButton(onPressed: _saveName, child: Text(l10n.footballTeams_save)),
                               ],
                             ),
                             const SizedBox(height: 16),
-                            const Text('Mời thành viên', style: TextStyle(fontWeight: FontWeight.w800)),
+                            Text(l10n.footballTeams_inviteMembers, style: const TextStyle(fontWeight: FontWeight.w800)),
                             Row(
                               children: [
-                                Expanded(child: TextField(controller: _search, decoration: const InputDecoration(hintText: 'Tên hoặc email'))),
+                                Expanded(child: TextField(controller: _search, decoration: InputDecoration(hintText: l10n.footballTeams_nameOrEmail))),
                                 IconButton(onPressed: _searchMembers, icon: const Icon(Icons.search)),
                               ],
                             ),
                             ..._candidates.map(
                               (candidate) => ListTile(
                                 dense: true,
-                                title: Text(candidate['fullName']?.toString() ?? candidate['id']?.toString() ?? 'Tài khoản'),
-                                trailing: TextButton(onPressed: () => _invite(candidate['id'].toString()), child: const Text('Mời')),
+                                title: Text(candidate['fullName']?.toString() ?? candidate['id']?.toString() ?? l10n.footballTeams_accountFallback),
+                                trailing: TextButton(onPressed: () => _invite(candidate['id'].toString()), child: Text(l10n.footballTeams_invite)),
                               ),
                             ),
                             const Divider(),
@@ -210,17 +218,17 @@ class _FootballTeamsScreenState extends ConsumerState<FootballTeamsScreen> {
                               return ListTile(
                                 dense: true,
                                 title: Text(member.userId),
-                                subtitle: isActive ? null : const Text('Đang mời - chờ xác nhận', style: TextStyle(fontStyle: FontStyle.italic)),
+                                subtitle: isActive ? null : Text(l10n.footballTeams_pendingInvite, style: const TextStyle(fontStyle: FontStyle.italic)),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     if (isActive)
                                       DropdownButton<String>(
                                         value: const {'CAPTAIN', 'MANAGER', 'PLAYER'}.contains(member.role) ? member.role : 'PLAYER',
-                                        items: const [
-                                          DropdownMenuItem(value: 'CAPTAIN', child: Text('Đội trưởng')),
-                                          DropdownMenuItem(value: 'MANAGER', child: Text('Quản lý')),
-                                          DropdownMenuItem(value: 'PLAYER', child: Text('Thành viên')),
+                                        items: [
+                                          DropdownMenuItem(value: 'CAPTAIN', child: Text(l10n.footballTeams_captain)),
+                                          DropdownMenuItem(value: 'MANAGER', child: Text(l10n.footballTeams_manager)),
+                                          DropdownMenuItem(value: 'PLAYER', child: Text(l10n.footballTeams_player)),
                                         ],
                                         onChanged: (value) {
                                           if (value != null && value != member.role) _changeRole(member.userId, value);
@@ -241,7 +249,7 @@ class _FootballTeamsScreenState extends ConsumerState<FootballTeamsScreen> {
                                     if (!isActive)
                                       IconButton(
                                         onPressed: () => _cancelInvite(member.userId),
-                                        tooltip: 'Hủy lời mời',
+                                        tooltip: l10n.footballTeams_cancelInvite,
                                         icon: const Icon(Icons.close, size: 20),
                                       ),
                                   ],

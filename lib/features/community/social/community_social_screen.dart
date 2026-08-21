@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -110,10 +111,11 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
               ? isJoined
               : settings.memberTaggingPolicy == 'ADMINS' &&
                     canManageMemberTags);
+    final l10n = AppLocalizations.of(context)!;
     final profile = ref.read(userProfileProvider).asData?.value;
     final authorName = (profile?.fullName?.isNotEmpty == true
         ? profile!.fullName!
-        : 'Bạn').trim();
+        : l10n.communitySocial_defaultUser).trim();
     final authorAvatarUrl = profile?.avatarUrl?.trim();
 
     CommunityPostComposerSheet.show(
@@ -129,22 +131,21 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
     );
   }
 
-  Future<void> _confirmDeletePost(String postId) async {
+    Future<void> _confirmDeletePost(String postId) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Xóa bài viết?'),
-        content: const Text(
-          'Bài viết sẽ bị xóa khỏi bảng tin. Bạn có chắc chắn không?',
-        ),
+        title: Text(l10n.communitySocial_deletePostTitle),
+        content: Text(l10n.communitySocial_deletePostContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Hủy'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Xóa'),
+            child: Text(l10n.communitySocial_delete),
           ),
         ],
       ),
@@ -158,20 +159,21 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
           .read(communityFeedProvider(widget.communityId).notifier)
           .loadInitial();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Đã xóa bài viết.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.communitySocial_postDeleted)),
+        );
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể xóa bài viết.')),
+          SnackBar(content: Text(l10n.communitySocial_postDeleteError)),
         );
       }
     }
   }
 
-  Future<void> _openMemberTagEditor(CommunityMemberModel member) async {
+    Future<void> _openMemberTagEditor(CommunityMemberModel member) async {
+    final l10n = AppLocalizations.of(context)!;
     final repo = ref.read(communityRepositoryProvider);
     final presets = await repo.getTagPresets(widget.communityId);
     if (!mounted) return;
@@ -179,7 +181,7 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
       context,
       memberName: member.userFullName?.trim().isNotEmpty == true
           ? member.userFullName!.trim()
-          : (member.userEmail?.split('@').first ?? 'Thành viên'),
+          : (member.userEmail?.split('@').first ?? l10n.communitySocial_defaultMember),
       currentTags: member.tags,
       presets: presets,
       onSave: (tags) async {
@@ -195,7 +197,8 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+    Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(communityFeedProvider(widget.communityId));
     final membership = ref
         .watch(myCommunityMembershipProvider(widget.communityId))
@@ -205,7 +208,7 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
     final currentAvatarUrl = profile?.avatarUrl?.trim();
     final currentAuthorName = (profile?.fullName?.isNotEmpty == true
         ? profile!.fullName!
-        : 'Bạn').trim();
+        : l10n.communitySocial_defaultUser).trim();
     final socialSettings =
         ref.watch(communitySocialSettingsProvider(widget.communityId)).value ??
         const CommunitySocialSettings(
@@ -270,10 +273,10 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                   color: colors.bgCard,
                   padding: const EdgeInsets.all(14),
                   margin: const EdgeInsets.only(bottom: 8),
-                  child: _SocialNotice(
+child: _SocialNotice(
                     message: socialSettings.postingPolicy == 'OFF'
-                        ? 'CLB đang tắt đăng bài.'
-                        : 'Hãy tham gia CLB để đăng bài.',
+                        ? l10n.communitySocial_postingDisabled
+                        : l10n.communitySocial_joinToPost,
                   ),
                 ),
               if (state.errorMessage != null)
@@ -353,7 +356,7 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
         actions: [
           if (socialSettings.chatEnabled)
             IconButton(
-              tooltip: 'Mở trò chuyện CLB',
+              tooltip: l10n.communitySocial_openChat,
               onPressed: () => context.push(
                 '/club/${widget.communityId}/chat?name=${Uri.encodeComponent(widget.communityName)}',
               ),
@@ -364,7 +367,7 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
       body: feedBody,
       floatingActionButton: socialSettings.chatEnabled
           ? FloatingActionButton.small(
-              tooltip: 'Mở trò chuyện CLB',
+              tooltip: l10n.communitySocial_openChat,
               onPressed: () => context.push(
                 '/club/${widget.communityId}/chat?name=${Uri.encodeComponent(widget.communityName)}',
               ),
@@ -380,7 +383,9 @@ class _CompactHighlights extends StatelessWidget {
   const _CompactHighlights({required this.communityName});
 
   @override
-  Widget build(BuildContext context) => SizedBox(
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return SizedBox(
     height: 76,
     child: ListView(
       scrollDirection: Axis.horizontal,
@@ -390,19 +395,20 @@ class _CompactHighlights extends StatelessWidget {
           icon: Icons.groups_rounded,
           color: AppTheme.primary,
         ),
-        const _Highlight(
-          label: 'Trận gần đây',
+        _Highlight(
+          label: l10n.communitySocial_recentMatches,
           icon: Icons.sports_tennis_rounded,
           color: Color(0xFF8B5CF6),
         ),
-        const _Highlight(
-          label: 'Bảng ELO',
+        _Highlight(
+          label: l10n.communitySocial_eloBoard,
           icon: Icons.leaderboard_rounded,
           color: Color(0xFFF59E0B),
         ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
 
 class _Highlight extends StatelessWidget {
@@ -453,12 +459,13 @@ class _FeedLoading extends StatelessWidget {
 class _FeedEmpty extends StatelessWidget {
   const _FeedEmpty();
   @override
-  Widget build(BuildContext context) => const Padding(
-    padding: EdgeInsets.symmetric(vertical: AppTheme.spacingXL),
-    child: Center(
-      child: Text('Chưa có bài đăng nào. Hãy chia sẻ điều đầu tiên!'),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacingXL),
+      child: Center(child: Text(l10n.communitySocial_emptyFeed)),
+    );
+  }
 }
 
 class _FeedError extends StatelessWidget {
@@ -470,7 +477,10 @@ class _FeedError extends StatelessWidget {
     child: ListTile(
       leading: const Icon(Icons.cloud_off_rounded),
       title: Text(message),
-      trailing: TextButton(onPressed: onRetry, child: const Text('Thử lại')),
+      trailing: TextButton(
+        onPressed: onRetry,
+        child: Text(AppLocalizations.of(context)!.communitySocial_retry),
+      ),
     ),
   );
 }

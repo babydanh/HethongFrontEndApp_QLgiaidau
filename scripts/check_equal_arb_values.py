@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+
+sys.stdout.reconfigure(encoding="utf-8")
 
 root = Path(__file__).resolve().parents[1] / "lib" / "l10n"
 vi = json.loads((root / "app_vi.arb").read_text(encoding="utf-8"))

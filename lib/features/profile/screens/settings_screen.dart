@@ -231,7 +231,9 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                   Icons.photo_library_rounded,
                   color: AppTheme.primary,
                 ),
-                title: Text(l10n?.profileChooseFromGallery ?? 'Choose from gallery'),
+                title: Text(
+                  l10n?.profileChooseFromGallery ?? 'Choose from gallery',
+                ),
                 onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
               ),
               const SizedBox(height: 12),
@@ -256,7 +258,10 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)?.profileAvatarUpdated ?? 'Profile photo updated'),
+            content: Text(
+              AppLocalizations.of(context)?.profileAvatarUpdated ??
+                  'Profile photo updated',
+            ),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -282,7 +287,10 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)?.settingsImageSizeLimit ?? 'Image size must not exceed 5 MB'),
+            content: Text(
+              AppLocalizations.of(context)?.settingsImageSizeLimit ??
+                  'Image size must not exceed 5 MB',
+            ),
             backgroundColor: context.colors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -297,7 +305,10 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)?.profileCoverUpdated ?? 'Cover photo updated'),
+            content: Text(
+              AppLocalizations.of(context)?.profileCoverUpdated ??
+                  'Cover photo updated',
+            ),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -348,13 +359,21 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 Navigator.of(ctx).pop();
                 ScaffoldMessenger.of(ctx).showSnackBar(
                   SnackBar(
-                    content: Text(l10n?.settingsRequestSent ?? 'Request sent. Please wait for admin approval.'),
+                    content: Text(
+                      l10n?.settingsRequestSent ??
+                          'Request sent. Please wait for admin approval.',
+                    ),
                   ),
                 );
               } catch (e) {
                 if (!ctx.mounted) return;
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text(l10n?.settingsRequestFailed ?? 'Could not send the request. Please try again.')),
+                  SnackBar(
+                    content: Text(
+                      l10n?.settingsRequestFailed ??
+                          'Could not send the request. Please try again.',
+                    ),
+                  ),
                 );
               } finally {
                 if (ctx.mounted) setState(() => isSubmitting = false);
@@ -363,26 +382,39 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
 
             return AlertDialog(
               backgroundColor: context.colors.bgCard,
-              title: Text(l10n?.settingsGenderChangeTitle ?? 'Request gender change'),
+              title: Text(
+                l10n?.settingsGenderChangeTitle ?? 'Request gender change',
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n?.settingsGenderLockedMessage ?? 'Because you have completed at least one tournament, your gender is locked to ensure fair play. The request will be sent to an admin for manual approval.',
+                    l10n?.settingsGenderLockedMessage ??
+                        'Because you have completed at least one tournament, your gender is locked to ensure fair play. The request will be sent to an admin for manual approval.',
                     style: const TextStyle(fontSize: 13, height: 1.5),
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     initialValue: requestedGender,
                     decoration: InputDecoration(
-                      labelText: l10n?.settingsDesiredGender ?? 'Requested gender',
+                      labelText:
+                          l10n?.settingsDesiredGender ?? 'Requested gender',
                       border: const OutlineInputBorder(),
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 'Nam', child: Text('Nam')),
-                      DropdownMenuItem(value: 'Nữ', child: Text('Nữ')),
-                      DropdownMenuItem(value: 'Khác', child: Text('Khác')),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'Nam',
+                        child: Text(l10n?.settingsGenderMale ?? 'Male'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Nữ',
+                        child: Text(l10n?.settingsGenderFemale ?? 'Female'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Khác',
+                        child: Text(l10n?.settingsGenderOther ?? 'Other'),
+                      ),
                     ],
                     onChanged: (value) {
                       if (value != null) {
@@ -446,7 +478,10 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Đã lưu thay đổi'),
+            content: Text(
+              AppLocalizations.of(context)?.settingsSaveChanges ??
+                  'Changes saved',
+            ),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -501,8 +536,10 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => _buildErrorState(
+        context,
         colors,
-        'Không thể tải hồ sơ',
+        AppLocalizations.of(context)?.settingsProfileLoadError ??
+            'Unable to load profile',
         () => ref.invalidate(userProfileProvider),
       ),
     );
@@ -539,9 +576,15 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 prefixIcon: Icons.person_outline,
                 validator: (v) {
                   final value = v?.trim() ?? '';
-                  if (value.isEmpty) return l10n?.settingsFullNameRequired ?? 'Please enter your full name';
-                  if (value.length < 2) return l10n?.settingsFullNameMin ?? 'Name must contain at least 2 characters';
-                  if (value.length > 100) return l10n?.settingsFullNameMax ?? 'Name must not exceed 100 characters';
+                  if (value.isEmpty)
+                    return l10n?.settingsFullNameRequired ??
+                        'Please enter your full name';
+                  if (value.length < 2)
+                    return l10n?.settingsFullNameMin ??
+                        'Name must contain at least 2 characters';
+                  if (value.length > 100)
+                    return l10n?.settingsFullNameMax ??
+                        'Name must not exceed 100 characters';
                   return null;
                 },
               ),
@@ -579,23 +622,34 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               const SizedBox(height: 6),
               _genderField(colors, genderLocked),
               const SizedBox(height: 16),
-              _fieldLabel(colors, l10n?.settingsCompetitionRegion ?? 'Competition region'),
+              _fieldLabel(
+                colors,
+                l10n?.settingsCompetitionRegion ?? 'Competition region',
+              ),
               const SizedBox(height: 6),
               _provinceField(colors),
               const SizedBox(height: 4),
               Text(
-                l10n?.settingsCompetitionRegionHint ?? 'Choose a region to join the Tier S ranking',
+                l10n?.settingsCompetitionRegionHint ??
+                    'Choose a region to join the Tier S ranking',
                 style: TextStyle(fontSize: 11, color: colors.textMuted),
               ),
               const SizedBox(height: 16),
-              _fieldLabel(colors, l10n?.settingsDetailedAddress ?? 'Detailed address'),
+              _fieldLabel(
+                colors,
+                l10n?.settingsDetailedAddress ?? 'Detailed address',
+              ),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _addressCtrl,
-                hint: l10n?.settingsDetailedAddressHint ?? 'Enter your detailed address',
+                hint:
+                    l10n?.settingsDetailedAddressHint ??
+                    'Enter your detailed address',
                 prefixIcon: Icons.location_on_outlined,
-                validator: (v) =>
-                    (v ?? '').length > 255 ? l10n?.settingsAddressMax ?? 'Address must not exceed 255 characters' : null,
+                validator: (v) => (v ?? '').length > 255
+                    ? l10n?.settingsAddressMax ??
+                          'Address must not exceed 255 characters'
+                    : null,
               ),
               if (_autoDetectedProvinceName != null &&
                   _provinceCode.isNotEmpty) ...[
@@ -609,7 +663,8 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      l10n?.settingsAutoDetected(_autoDetectedProvinceName!) ?? 'Automatically detected: $_autoDetectedProvinceName',
+                      l10n?.settingsAutoDetected(_autoDetectedProvinceName!) ??
+                          'Automatically detected: $_autoDetectedProvinceName',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -624,11 +679,14 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _bioCtrl,
-                hint: l10n?.settingsBioHint ?? 'Write a little about your playing style...',
+                hint:
+                    l10n?.settingsBioHint ??
+                    'Write a little about your playing style...',
                 maxLines: 3,
                 prefixIcon: Icons.edit_note_rounded,
                 validator: (v) => (v ?? '').length > 500
-                    ? l10n?.settingsBioMax ?? 'Introduction must not exceed 500 characters'
+                    ? l10n?.settingsBioMax ??
+                          'Introduction must not exceed 500 characters'
                     : null,
               ),
               const SizedBox(height: 24),
@@ -716,8 +774,14 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                           const SizedBox(width: 6),
                           Text(
                             _isUploadingCover
-                                ? (AppLocalizations.of(context)?.settingsUploading ?? 'Uploading...')
-                                : (AppLocalizations.of(context)?.settingsChangeCover ?? 'Change cover photo'),
+                                ? (AppLocalizations.of(
+                                        context,
+                                      )?.settingsUploading ??
+                                      'Uploading...')
+                                : (AppLocalizations.of(
+                                        context,
+                                      )?.settingsChangeCover ??
+                                      'Change cover photo'),
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -783,7 +847,8 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      AppLocalizations.of(context)?.settingsTapToChangeAvatar ?? 'Tap to change profile photo',
+                      AppLocalizations.of(context)?.settingsTapToChangeAvatar ??
+                          'Tap to change profile photo',
                       style: TextStyle(fontSize: 11, color: colors.textMuted),
                     ),
                   ],
@@ -803,6 +868,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
   }
 
   Widget _dobField(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context);
     return InkWell(
       onTap: _pickDob,
       borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -821,9 +887,16 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
             Expanded(
               child: Text(
                 _dob == null
-                    ? (AppLocalizations.of(context)?.settingsChooseDateOfBirth ?? 'Choose date of birth')
-                    : 'Ngày ${_dob!.day.toString().padLeft(2, '0')}/'
-                          '${_dob!.month.toString().padLeft(2, '0')}/${_dob!.year}',
+                    ? (AppLocalizations.of(
+                            context,
+                          )?.settingsChooseDateOfBirth ??
+                          'Choose date of birth')
+                    : (l10n?.settingsDobDisplay(
+                            _dob!.day.toString().padLeft(2, '0'),
+                            _dob!.month.toString().padLeft(2, '0'),
+                            _dob!.year.toString(),
+                          ) ??
+                          '${_dob!.day.toString().padLeft(2, '0')}/${_dob!.month.toString().padLeft(2, '0')}/${_dob!.year}'),
                 style: TextStyle(
                   fontSize: 14,
                   color: _dob == null ? colors.textMuted : colors.textPrimary,
@@ -850,6 +923,16 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
           _gender,
           _genders,
           locked ? null : (v) => setState(() => _gender = v ?? 'Chưa chọn'),
+          displayLabels: {
+            'Chưa chọn':
+                AppLocalizations.of(context)?.settingsGenderNotSelected ??
+                'Not selected',
+            'Nam': AppLocalizations.of(context)?.settingsGenderMale ?? 'Male',
+            'Nữ':
+                AppLocalizations.of(context)?.settingsGenderFemale ?? 'Female',
+            'Khác':
+                AppLocalizations.of(context)?.settingsGenderOther ?? 'Other',
+          },
         ),
         if (locked)
           Padding(
@@ -858,7 +941,8 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               children: [
                 Expanded(
                   child: Text(
-                    AppLocalizations.of(context)?.settingsGenderLocked ?? 'Gender is locked after a tournament is completed.',
+                    AppLocalizations.of(context)?.settingsGenderLocked ??
+                        'Gender is locked after a tournament is completed.',
                     style: TextStyle(fontSize: 11, color: colors.textSecondary),
                   ),
                 ),
@@ -870,7 +954,8 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: Text(
-                    AppLocalizations.of(context)?.settingsRequestGenderChange ?? 'Request change',
+                    AppLocalizations.of(context)?.settingsRequestGenderChange ??
+                        'Request change',
                     style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
                   ),
                 ),
@@ -891,15 +976,21 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         ?.name;
     return _dropdown(
       colors,
-      currentName ?? (AppLocalizations.of(context)?.settingsNoTierSRegion ?? 'Not selected (not ranked in Tier S)'),
+      currentName ??
+          (AppLocalizations.of(context)?.settingsNoTierSRegion ??
+              'Not selected (not ranked in Tier S)'),
       [
-        AppLocalizations.of(context)?.settingsNoTierSRegion ?? 'Not selected (not ranked in Tier S)',
+        AppLocalizations.of(context)?.settingsNoTierSRegion ??
+            'Not selected (not ranked in Tier S)',
         ...items.map((province) => province.name),
       ],
       (v) {
         if (v == null) return;
         setState(() {
-          _provinceCode = v == (AppLocalizations.of(context)?.settingsNoTierSRegion ?? 'Not selected (not ranked in Tier S)')
+          _provinceCode =
+              v ==
+                  (AppLocalizations.of(context)?.settingsNoTierSRegion ??
+                      'Not selected (not ranked in Tier S)')
               ? ''
               : (_provinces
                         .where((province) => province.name == v)
@@ -1057,7 +1148,9 @@ class _BankTabState extends ConsumerState<_BankTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n?.settingsRefundSaved ?? 'Refund account settings saved'),
+            content: Text(
+              l10n?.settingsRefundSaved ?? 'Refund account settings saved',
+            ),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -1068,7 +1161,10 @@ class _BankTabState extends ConsumerState<_BankTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n?.settingsBankUpdateError ?? 'Could not save bank information. Please try again.'),
+            content: Text(
+              l10n?.settingsBankUpdateError ??
+                  'Could not save bank information. Please try again.',
+            ),
             backgroundColor: context.colors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -1097,8 +1193,10 @@ class _BankTabState extends ConsumerState<_BankTab> {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => _buildErrorState(
+        context,
         colors,
-        AppLocalizations.of(context)?.settingsBankLoadError ?? 'Unable to load bank information',
+        AppLocalizations.of(context)?.settingsBankLoadError ??
+            'Unable to load bank information',
         () => ref.invalidate(userProfileProvider),
       ),
     );
@@ -1109,11 +1207,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
     final noBank = l10n?.settingsNoBank ?? _noBank;
     String walletPrefix(String wallet) =>
         l10n?.settingsWalletPrefix(wallet) ?? 'Wallet $wallet';
-    final bankOptions = [
-      noBank,
-      ..._wallets.map(walletPrefix),
-      ..._banks,
-    ];
+    final bankOptions = [noBank, ..._wallets.map(walletPrefix), ..._banks];
     // Giá trị đã lưu ngoài danh sách (nhập tay từ trước) — thêm vào cuối để không mất.
     final isKnown =
         _bankName == _noBank ||
@@ -1137,7 +1231,10 @@ class _BankTabState extends ConsumerState<_BankTab> {
             _infoBanner(colors),
             const SizedBox(height: 20),
             _card(colors, [
-              _fieldLabel(colors, l10n?.settingsPayoutMethod ?? 'Bank / payout wallet'),
+              _fieldLabel(
+                colors,
+                l10n?.settingsPayoutMethod ?? 'Bank / payout wallet',
+              ),
               const SizedBox(height: 6),
               _dropdown(colors, currentLabel, bankOptions, (v) {
                 if (v == null) return;
@@ -1159,24 +1256,31 @@ class _BankTabState extends ConsumerState<_BankTab> {
               const SizedBox(height: 16),
               _fieldLabel(
                 colors,
-                _isWallet ? (l10n?.settingsWalletPhone ?? 'Wallet phone number') : (l10n?.settingsAccountNumber ?? 'Account number'),
+                _isWallet
+                    ? (l10n?.settingsWalletPhone ?? 'Wallet phone number')
+                    : (l10n?.settingsAccountNumber ?? 'Account number'),
               ),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _accountNumberCtrl,
-                hint: _isWallet ? (l10n?.settingsWalletNumberHint ?? 'Example: 0912345678') : (l10n?.settingsBankNumberHint ?? 'Example: 0011001234567'),
+                hint: _isWallet
+                    ? (l10n?.settingsWalletNumberHint ?? 'Example: 0912345678')
+                    : (l10n?.settingsBankNumberHint ??
+                          'Example: 0011001234567'),
                 keyboardType: TextInputType.number,
                 prefixIcon: Icons.numbers_rounded,
               ),
               const SizedBox(height: 16),
               _fieldLabel(
                 colors,
-                l10n?.settingsAccountHolder ?? 'Account / wallet holder (uppercase, no accents)',
+                l10n?.settingsAccountHolder ??
+                    'Account / wallet holder (uppercase, no accents)',
               ),
               const SizedBox(height: 6),
               AppTextFormField(
                 controller: _accountNameCtrl,
-                hint: l10n?.settingsAccountHolderHint ?? 'Example: NGUYEN VAN A',
+                hint:
+                    l10n?.settingsAccountHolderHint ?? 'Example: NGUYEN VAN A',
                 prefixIcon: Icons.person_rounded,
                 onChanged: (value) {
                   final normalized = _normalizeAccountName(value);
@@ -1219,7 +1323,8 @@ class _BankTabState extends ConsumerState<_BankTab> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              l10n?.settingsRefundInfo ?? 'Configure an accurate refund account so the tournament organizer can return your entry fee if you withdraw before the tournament starts. Your data is protected.',
+              l10n?.settingsRefundInfo ??
+                  'Configure an accurate refund account so the tournament organizer can return your entry fee if you withdraw before the tournament starts. Your data is protected.',
               style: TextStyle(
                 fontSize: 12,
                 height: 1.5,
@@ -1260,7 +1365,10 @@ class _SecurityTab extends ConsumerWidget {
               if (password.isEmpty) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
                   SnackBar(
-                    content: Text(l10n?.settingsPasswordRequired ?? 'Please enter your confirmation password'),
+                    content: Text(
+                      l10n?.settingsPasswordRequired ??
+                          'Please enter your confirmation password',
+                    ),
                   ),
                 );
                 return;
@@ -1277,7 +1385,10 @@ class _SecurityTab extends ConsumerWidget {
                 if (!ctx.mounted) return;
                 ScaffoldMessenger.of(ctx).showSnackBar(
                   SnackBar(
-                    content: Text(l10n?.settingsDeleteFailed ?? 'Account deletion failed. Please try again.'),
+                    content: Text(
+                      l10n?.settingsDeleteFailed ??
+                          'Account deletion failed. Please try again.',
+                    ),
                   ),
                 );
               } finally {
@@ -1291,7 +1402,12 @@ class _SecurityTab extends ConsumerWidget {
                 children: [
                   Icon(Icons.warning_amber_rounded, color: colors.error),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(l10n?.settingsConfirmDeleteTitle ?? 'Confirm account deletion')),
+                  Expanded(
+                    child: Text(
+                      l10n?.settingsConfirmDeleteTitle ??
+                          'Confirm account deletion',
+                    ),
+                  ),
                 ],
               ),
               content: Column(
@@ -1299,7 +1415,8 @@ class _SecurityTab extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n?.settingsDeleteIrreversible ?? 'This action CANNOT BE UNDONE. All personal data and tournament history will be permanently hidden. Enter your current password to continue.',
+                    l10n?.settingsDeleteIrreversible ??
+                        'This action CANNOT BE UNDONE. All personal data and tournament history will be permanently hidden. Enter your current password to continue.',
                     style: const TextStyle(fontSize: 13, height: 1.5),
                   ),
                   const SizedBox(height: 16),
@@ -1308,7 +1425,9 @@ class _SecurityTab extends ConsumerWidget {
                     enabled: !isDeleting,
                     obscureText: obscure,
                     decoration: InputDecoration(
-                      labelText: l10n?.settingsConfirmPassword ?? 'Confirmation password',
+                      labelText:
+                          l10n?.settingsConfirmPassword ??
+                          'Confirmation password',
                       suffixIcon: IconButton(
                         icon: Icon(
                           obscure
@@ -1366,12 +1485,16 @@ class _SecurityTab extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Trạng thái xác thực
-          _sectionTitle(colors, l10n?.settingsVerificationStatus ?? 'Verification status'),
+          _sectionTitle(
+            colors,
+            l10n?.settingsVerificationStatus ?? 'Verification status',
+          ),
           const SizedBox(height: 10),
           _card(colors, [
             ...profileAsync.when(
               data: (profile) => [
                 _securityRow(
+                  context,
                   colors,
                   icon: Icons.email_outlined,
                   title: 'Email',
@@ -1380,12 +1503,15 @@ class _SecurityTab extends ConsumerWidget {
                 ),
                 _divider(colors),
                 _securityRow(
+                  context,
                   colors,
                   icon: Icons.phone_android_rounded,
                   title: l10n?.infoPhone ?? 'Phone number',
                   verified: profile.isPhoneVerified == true,
                   fallbackText:
-                      profile.phoneNumber ?? (l10n?.settingsPhoneNotUpdated ?? 'Phone number not updated'),
+                      profile.phoneNumber ??
+                      (l10n?.settingsPhoneNotUpdated ??
+                          'Phone number not updated'),
                 ),
                 if (profile.isEmailVerified != true) ...[
                   _divider(colors),
@@ -1393,7 +1519,9 @@ class _SecurityTab extends ConsumerWidget {
                     colors,
                     icon: Icons.mark_email_unread_rounded,
                     title: l10n?.settingsVerifyEmail ?? 'Verify email',
-                    subtitle: l10n?.settingsVerifyEmailSubtitle ?? 'Send a verification code to your current email',
+                    subtitle:
+                        l10n?.settingsVerifyEmailSubtitle ??
+                        'Send a verification code to your current email',
                     onTap: () => startEmailVerificationFlow(
                       context,
                       ref,
@@ -1407,7 +1535,9 @@ class _SecurityTab extends ConsumerWidget {
                     colors,
                     icon: Icons.sms_rounded,
                     title: l10n?.settingsVerifyPhone ?? 'Verify phone number',
-                    subtitle: l10n?.settingsVerifyPhoneSubtitle ?? 'Send an OTP to your current phone number',
+                    subtitle:
+                        l10n?.settingsVerifyPhoneSubtitle ??
+                        'Send an OTP to your current phone number',
                     onTap: () => startPhoneVerificationFlow(
                       context,
                       ref,
@@ -1443,7 +1573,9 @@ class _SecurityTab extends ConsumerWidget {
               colors,
               icon: Icons.lock_outline_rounded,
               title: l10n?.settingsChangePassword ?? 'Change password',
-              subtitle: l10n?.settingsChangePasswordSubtitle ?? 'Update your sign-in password',
+              subtitle:
+                  l10n?.settingsChangePasswordSubtitle ??
+                  'Update your sign-in password',
               onTap: () => context.push('/profile/change-password'),
             ),
             _divider(colors),
@@ -1451,7 +1583,9 @@ class _SecurityTab extends ConsumerWidget {
               colors,
               icon: Icons.security_rounded,
               title: l10n?.settingsStrongPassword ?? 'Strong password',
-              subtitle: l10n?.settingsStrongPasswordSubtitle ?? 'At least 8 characters; uppercase letters and numbers are recommended',
+              subtitle:
+                  l10n?.settingsStrongPasswordSubtitle ??
+                  'At least 8 characters; uppercase letters and numbers are recommended',
               trailing: Icon(
                 Icons.check_circle_rounded,
                 color: colors.success,
@@ -1501,14 +1635,19 @@ class _SecurityTab extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Báo cáo của tôi
-          _sectionTitle(colors, l10n?.settingsCommunitySafety ?? 'Community safety'),
+          _sectionTitle(
+            colors,
+            l10n?.settingsCommunitySafety ?? 'Community safety',
+          ),
           const SizedBox(height: 10),
           _card(colors, [
             _actionRow(
               colors,
               icon: Icons.flag_outlined,
               title: l10n?.settingsMyReports ?? 'My reports',
-              subtitle: l10n?.settingsMyReportsSubtitle ?? 'Track report status and resolution results',
+              subtitle:
+                  l10n?.settingsMyReportsSubtitle ??
+                  'Track report status and resolution results',
               onTap: () => context.push('/profile/reports'),
             ),
           ]),
@@ -1533,7 +1672,8 @@ class _SecurityTab extends ConsumerWidget {
                     Icon(Icons.shield_outlined, size: 18, color: colors.error),
                     const SizedBox(width: 8),
                     Text(
-                      l10n?.settingsDeleteAccountTitle ?? 'Delete personal account',
+                      l10n?.settingsDeleteAccountTitle ??
+                          'Delete personal account',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
@@ -1544,7 +1684,8 @@ class _SecurityTab extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  l10n?.settingsDeleteAccountDescription ?? 'Deleting your account permanently hides all personal data, tournament history, and related information. You will not be able to sign in or join tournaments after this action.',
+                  l10n?.settingsDeleteAccountDescription ??
+                      'Deleting your account permanently hides all personal data, tournament history, and related information. You will not be able to sign in or join tournaments after this action.',
                   style: TextStyle(
                     fontSize: 12,
                     height: 1.5,
@@ -1734,6 +1875,7 @@ class _ClubNotificationSettingsCardState
   }
 
   Future<void> _updatePref(String communityId, String newPref) async {
+    final l10n = AppLocalizations.of(context);
     final currentList = _prefs ?? [];
     final idx = currentList.indexWhere((c) => c.communityId == communityId);
     if (idx == -1) return;
@@ -1756,10 +1898,13 @@ class _ClubNotificationSettingsCardState
           SnackBar(
             content: Text(
               newPref == 'ALL'
-                  ? 'Đã bật nhận tất cả thông báo'
+                  ? (l10n?.settingsNotificationsAllUpdated ??
+                        'All notifications enabled')
                   : newPref == 'MENTIONS_ONLY'
-                  ? 'Chỉ nhận thông báo khi được @nhắc tên'
-                  : 'Đã tắt thông báo CLB (Im lặng)',
+                  ? (l10n?.settingsNotificationsMentionsUpdated ??
+                        'Notifications only when you are @mentioned')
+                  : (l10n?.settingsNotificationsMutedUpdated ??
+                        'Club notifications muted'),
             ),
           ),
         );
@@ -1772,7 +1917,12 @@ class _ClubNotificationSettingsCardState
           );
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể cập nhật cài đặt thông báo')),
+          SnackBar(
+            content: Text(
+              l10n?.settingsNotificationsUpdateFailed ??
+                  'Unable to update notification settings',
+            ),
+          ),
         );
       }
     } finally {
@@ -1785,11 +1935,15 @@ class _ClubNotificationSettingsCardState
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionTitle(colors, 'Thông báo Câu lạc bộ'),
+        _sectionTitle(
+          colors,
+          l10n?.settingsClubNotifications ?? 'Club notifications',
+        ),
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
@@ -1821,7 +1975,8 @@ class _ClubNotificationSettingsCardState
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Bạn chưa tham gia câu lạc bộ nào',
+                        l10n?.settingsNoClubsForNotifications ??
+                            'You have not joined any clubs',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -1830,7 +1985,8 @@ class _ClubNotificationSettingsCardState
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Khi gia nhập CLB, bạn có thể tùy chỉnh nhận thông báo tại đây.',
+                        l10n?.settingsClubNotificationsHint ??
+                            'After joining a club, you can customize its notifications here.',
                         style: TextStyle(
                           fontSize: 11,
                           color: colors.textSecondary,
@@ -1925,11 +2081,14 @@ class _ClubNotificationSettingsCardState
                                     const SizedBox(height: 2),
                                     Text(
                                       club.notificationPreference == 'ALL'
-                                          ? 'Nhận tất cả tin nhắn & thông báo'
+                                          ? (l10n?.settingsClubNotificationAllSummary ??
+                                                'Receive all messages and notifications')
                                           : club.notificationPreference ==
                                                 'MENTIONS_ONLY'
-                                          ? 'Chỉ nhận thông báo khi được @nhắc tên'
-                                          : 'Đã tắt thông báo (Im lặng)',
+                                          ? (l10n?.settingsClubNotificationMentionsSummary ??
+                                                'Only receive notifications when you are @mentioned')
+                                          : (l10n?.settingsClubNotificationMutedSummary ??
+                                                'Notifications muted'),
                                       style: TextStyle(
                                         fontSize: 11,
                                         color: colors.textSecondary,
@@ -1957,7 +2116,7 @@ class _ClubNotificationSettingsCardState
                             children: [
                               Expanded(
                                 child: _buildSegmentButton(
-                                  title: 'Tất cả',
+                                  title: l10n?.settingsNotificationAll ?? 'All',
                                   icon: Icons.notifications_active_outlined,
                                   isSelected:
                                       club.notificationPreference == 'ALL',
@@ -1974,7 +2133,9 @@ class _ClubNotificationSettingsCardState
                               const SizedBox(width: 6),
                               Expanded(
                                 child: _buildSegmentButton(
-                                  title: 'Chỉ @tag',
+                                  title:
+                                      l10n?.settingsNotificationMentions ??
+                                      '@mentions only',
                                   icon: Icons.alternate_email_rounded,
                                   isSelected:
                                       club.notificationPreference ==
@@ -1992,7 +2153,8 @@ class _ClubNotificationSettingsCardState
                               const SizedBox(width: 6),
                               Expanded(
                                 child: _buildSegmentButton(
-                                  title: 'Tắt',
+                                  title:
+                                      l10n?.settingsNotificationMuted ?? 'Mute',
                                   icon: Icons.notifications_off_outlined,
                                   isSelected:
                                       club.notificationPreference == 'MUTED',
@@ -2121,8 +2283,9 @@ Widget _dropdown(
   AppColorsExtension colors,
   String value,
   List<String> items,
-  ValueChanged<String?>? onChange,
-) {
+  ValueChanged<String?>? onChange, {
+  Map<String, String>? displayLabels,
+}) {
   // Giá trị hiện tại nằm ngoài danh sách (dữ liệu cũ) — thêm để DropdownButton không crash.
   var effectiveItems = items;
   if (!items.contains(value)) effectiveItems = [...items, value];
@@ -2142,7 +2305,12 @@ Widget _dropdown(
         style: TextStyle(fontSize: 14, color: colors.textPrimary),
         dropdownColor: colors.bgCard,
         items: effectiveItems
-            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+            .map(
+              (e) => DropdownMenuItem(
+                value: e,
+                child: Text(displayLabels?[e] ?? e),
+              ),
+            )
             .toList(),
         onChanged: onChange,
       ),
@@ -2186,8 +2354,9 @@ Widget _saveButton(
                 strokeWidth: 2.5,
               ),
             )
-          : const Text(
-              'Lưu thay đổi',
+          : Text(
+              AppLocalizations.of(context)?.settingsSaveButton ??
+                  'Save changes',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -2199,6 +2368,7 @@ Widget _saveButton(
 }
 
 Widget _securityRow(
+  BuildContext context,
   AppColorsExtension colors, {
   required IconData icon,
   required String title,
@@ -2233,7 +2403,12 @@ Widget _securityRow(
               ),
               const SizedBox(height: 2),
               Text(
-                fallbackText ?? (verified ? 'Đã xác thực' : 'Chưa xác thực'),
+                fallbackText ??
+                    (verified
+                        ? (AppLocalizations.of(context)?.infoEmailVerified ??
+                              'Verified')
+                        : (AppLocalizations.of(context)?.infoEmailUnverified ??
+                              'Unverified')),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -2265,7 +2440,11 @@ Widget _securityRow(
               ),
               const SizedBox(width: 4),
               Text(
-                verified ? 'Đã xác thực' : 'Chưa xác thực',
+                verified
+                    ? (AppLocalizations.of(context)?.infoEmailVerified ??
+                          'Verified')
+                    : (AppLocalizations.of(context)?.infoEmailUnverified ??
+                          'Unverified'),
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
@@ -2340,6 +2519,7 @@ Widget _actionRow(
 }
 
 Widget _buildErrorState(
+  BuildContext context,
   AppColorsExtension colors,
   String message,
   VoidCallback onRetry,
@@ -2361,7 +2541,10 @@ Widget _buildErrorState(
             ),
           ),
           const SizedBox(height: 16),
-          FilledButton(onPressed: onRetry, child: const Text('Thử lại')),
+          FilledButton(
+            onPressed: onRetry,
+            child: Text(AppLocalizations.of(context)?.infoRetry ?? 'Retry'),
+          ),
         ],
       ),
     ),

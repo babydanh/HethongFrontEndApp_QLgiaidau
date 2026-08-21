@@ -1,4 +1,7 @@
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
+
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_poll_widget.dart';
@@ -260,22 +263,48 @@ class CommunityPostCard extends ConsumerWidget {
               ),
             ),
 
-          // ── Tournament Preview ──
-          if (post.tournamentId != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: CommunityTournamentPreview(post: post),
-            ),
+          // ── Tournament Announcement State ──
+          // Match the web behavior: while registration is open, show the
+          // tournament preview and poll; after registration closes, show the
+          // tournament/bracket preview instead of keeping a stale poll visible.
+          if (post.tournamentId != null) ...[
+            Builder(
+              builder: (context) {
+                final rawStatus = post.tournamentStatus?.trim();
+                final normalizedStatus = rawStatus == null || rawStatus.isEmpty
+                    ? null
+                    : StatusHelper.normalizeTournamentStatus(rawStatus);
+                final showRegistrationPoll =
+                    normalizedStatus == null ||
+                    normalizedStatus == AppConstants.statusUpcoming ||
+                    normalizedStatus == AppConstants.statusRegistration;
 
-          // ── Poll Widget ──
-          if (post.poll != null)
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                      child: CommunityTournamentPreview(post: post),
+                    ),
+                    if (showRegistrationPoll && post.poll != null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                        child: CommunityPollWidget(
+                          communityId: communityId,
+                          poll: post.poll!,
+                          tournamentId: post.tournamentId,
+                          tournamentInviteCode: post.tournamentInviteCode,
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ] else if (post.poll != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: CommunityPollWidget(
                 communityId: communityId,
                 poll: post.poll!,
-                tournamentId: post.tournamentId,
-                tournamentInviteCode: post.tournamentInviteCode,
               ),
             ),
 

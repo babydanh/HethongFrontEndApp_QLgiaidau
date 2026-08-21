@@ -16,6 +16,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/filter_chips.dart'
     show RoundFilterPill;
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 
 class BracketViewScreen extends ConsumerStatefulWidget {
@@ -86,6 +87,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final matchesAsync = ref.watch(
       bracketMatchesWithDivisionProvider((
         tournamentId: widget.tournamentId,
@@ -118,7 +120,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Chưa có trận đấu nào',
+                    l10n.bracketView_noMatches,
                     style: TextStyle(
                       fontSize: 16,
                       color: context.colors.textSecondary,
@@ -126,7 +128,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Hãy bốc thăm để tạo sơ đồ thi đấu',
+                    l10n.bracketView_drawHint,
                     style: TextStyle(
                       fontSize: 13,
                       color: context.colors.textMuted,
@@ -169,10 +171,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                       fontSize: 13,
                       fontWeight: FontWeight.normal,
                     ),
-                    tabs: const [
-                      Tab(height: 30, text: 'Bảng chéo'),
-                      Tab(height: 30, text: 'Bảng xếp hạng'),
-                      Tab(height: 30, text: 'Lịch thi đấu'),
+                    tabs: [
+                      Tab(height: 30, text: l10n.bracketView_crossTable),
+                      Tab(height: 30, text: l10n.bracketView_standings),
+                      Tab(height: 30, text: l10n.bracketView_schedule),
                     ],
                   ),
                 ),
@@ -282,8 +284,8 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
           padding: const EdgeInsets.all(24),
           child: Text(
             e.toString().contains('429')
-                ? 'Hệ thống đang giới hạn yêu cầu. Vui lòng thử lại sau ít giây.'
-                : 'Không thể tải dữ liệu bảng thi đấu.',
+                ? l10n.bracketView_rateLimited
+                : l10n.bracketView_loadError,
             textAlign: TextAlign.center,
             style: TextStyle(color: context.colors.textSecondary),
           ),
@@ -343,6 +345,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
   }
 
   Widget _buildResultAwards(AsyncValue<Map<String, dynamic>> resultAsync) {
+    final l10n = AppLocalizations.of(context)!;
     final snapshot = resultAsync.value;
     if (snapshot == null || snapshot['finalized'] != true) {
       return const SizedBox.shrink();
@@ -362,7 +365,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
       return (
         rank: (award['rank'] as num?)?.toInt() ?? 0,
         shared: award['shared'] == true,
-        name: (participantMap['teamName'] ?? 'Chưa xác định').toString(),
+        name:
+            (participantMap['teamName'] ?? l10n.bracketView_unknownParticipant)
+                .toString(),
       );
     }).toList();
 
@@ -379,7 +384,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Kết quả chính thức',
+            l10n.bracketView_officialResults,
             style: TextStyle(
               color: context.colors.textPrimary,
               fontSize: 15,
@@ -392,8 +397,8 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             runSpacing: 8,
             children: awards.map((award) {
               final label = award.shared
-                  ? 'Hạng ${award.rank} đồng hạng'
-                  : 'Hạng ${award.rank}';
+                  ? l10n.bracketView_sharedRank(award.rank)
+                  : l10n.bracketView_rank(award.rank);
               return Container(
                 constraints: const BoxConstraints(minWidth: 130),
                 padding: const EdgeInsets.symmetric(
@@ -441,6 +446,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
     bool isReadOnly,
     bool isReferee,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final totalRounds = _computeTotalRounds(matches, bracketType);
 
@@ -602,13 +608,13 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                       Text(
                         isGroupStageKnockout ||
                                 bracketType == 'group_stage_knockout'
-                            ? 'Sơ đồ Vòng Knockout (Playoffs)'
+                            ? l10n.bracketView_knockoutStage
                             : isDoubleElimination ||
                                   bracketType == 'double_elimination'
-                            ? 'Sơ đồ Đấu loại kép'
+                            ? l10n.bracketView_doubleEliminationMap
                             : isRoundRobin || bracketType == 'round_robin'
-                            ? 'Sơ đồ Vòng tròn tính điểm'
-                            : 'Sơ đồ Loại trực tiếp',
+                            ? l10n.bracketView_roundRobinMap
+                            : l10n.bracketView_knockoutTitle,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -618,13 +624,13 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                       Text(
                         isGroupStageKnockout ||
                                 bracketType == 'group_stage_knockout'
-                            ? 'Xem nhánh đấu loại trực tiếp các đội vượt qua vòng bảng'
+                            ? l10n.bracketView_knockoutDescription
                             : isDoubleElimination ||
                                   bracketType == 'double_elimination'
-                            ? 'Xem phân nhánh thắng & nhánh thua (Double Elimination)'
+                            ? l10n.bracketView_doubleEliminationDescription
                             : isRoundRobin || bracketType == 'round_robin'
-                            ? 'Xem sơ đồ thi đấu các lượt trận vòng tròn'
-                            : 'Xem phân nhánh đấu loại trực tiếp (Single Elimination)',
+                            ? l10n.bracketView_roundRobinDescription
+                            : l10n.bracketView_singleEliminationDescription,
                         style: TextStyle(fontSize: 10, color: colors.textMuted),
                       ),
                     ],
@@ -660,13 +666,13 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                   label: Text(
                     isGroupStageKnockout ||
                             bracketType == 'group_stage_knockout'
-                        ? 'Sơ đồ Knockout'
+                        ? l10n.bracketView_knockoutMap
                         : isDoubleElimination ||
                               bracketType == 'double_elimination'
-                        ? 'Sơ đồ loại kép'
+                        ? l10n.bracketView_doubleEliminationMap
                         : isRoundRobin || bracketType == 'round_robin'
-                        ? 'Sơ đồ Vòng tròn'
-                        : 'Sơ đồ Knockout',
+                        ? l10n.bracketView_roundRobinMap
+                        : l10n.bracketView_knockoutMap,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
@@ -691,7 +697,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                 setState(() => _searchQuery = val.trim().toLowerCase()),
             style: TextStyle(fontSize: 13, color: colors.textPrimary),
             decoration: InputDecoration(
-              hintText: 'Tìm kiếm theo tên người chơi hoặc tên đội...',
+              hintText: l10n.bracketView_searchHint,
               hintStyle: TextStyle(fontSize: 12, color: colors.textMuted),
               prefixIcon: Icon(
                 Icons.search_rounded,
@@ -710,11 +716,11 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
 
         // ── ROW 1: TRẠNG THÁI (Toggle Filter) ──
         _buildFilterRow(
-          title: 'TRẠNG THÁI:',
+          title: l10n.bracketView_statusTitle,
           children: [
             RoundFilterPill(
               isSelected: _matchFilter == 'live',
-              label: 'Trực tiếp',
+              label: l10n.bracketView_live,
               count: liveCount,
               onTap: () => setState(
                 () => _matchFilter = _matchFilter == 'live' ? '' : 'live',
@@ -722,7 +728,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             ),
             RoundFilterPill(
               isSelected: _matchFilter == 'scheduled',
-              label: 'Chưa đấu',
+              label: l10n.bracketView_scheduled,
               count: scheduledCount,
               onTap: () => setState(
                 () => _matchFilter = _matchFilter == 'scheduled'
@@ -732,7 +738,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             ),
             RoundFilterPill(
               isSelected: _matchFilter == 'completed',
-              label: 'Đã xong',
+              label: l10n.bracketView_completed,
               count: completedCount,
               onTap: () => setState(
                 () => _matchFilter = _matchFilter == 'completed'
@@ -746,11 +752,11 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
         // ── ROW 2: NHÁNH THI ĐẤU (Double Elimination: Nhánh thắng / Nhánh thua Toggle) ──
         if (isDoubleElimination)
           _buildFilterRow(
-            title: 'NHÁNH THI ĐẤU:',
+            title: l10n.bracketView_branchTitle,
             children: [
               RoundFilterPill(
                 isSelected: _selectedBranch == 'winners',
-                label: 'Nhánh thắng',
+                label: l10n.bracketView_winners,
                 onTap: () => setState(() {
                   _selectedBranch = _selectedBranch == 'winners'
                       ? ''
@@ -760,7 +766,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
               ),
               RoundFilterPill(
                 isSelected: _selectedBranch == 'losers',
-                label: 'Nhánh thua',
+                label: l10n.bracketView_losers,
                 onTap: () => setState(() {
                   _selectedBranch = _selectedBranch == 'losers' ? '' : 'losers';
                   _selectedRound = 0;
@@ -771,11 +777,11 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
 
         if (isGroupStageKnockout)
           _buildFilterRow(
-            title: 'GIAI ĐOẠN:',
+            title: l10n.bracketView_stageTitle,
             children: [
               RoundFilterPill(
                 isSelected: _selectedBranch == 'group_stage',
-                label: 'Vòng bảng',
+                label: l10n.bracketView_groupStage,
                 onTap: () => setState(() {
                   _selectedBranch = _selectedBranch == 'group_stage'
                       ? ''
@@ -785,7 +791,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
               ),
               RoundFilterPill(
                 isSelected: _selectedBranch == 'knockout',
-                label: 'Vòng Knockout',
+                label: l10n.bracketView_knockoutStage,
                 onTap: () => setState(() {
                   _selectedBranch = _selectedBranch == 'knockout'
                       ? ''
@@ -813,7 +819,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
             }
 
             return _buildFilterRow(
-              title: 'BẢNG ĐẤU:',
+              title: l10n.bracketView_groupTitle,
               children: cleanGroups
                   .map(
                     (group) => RoundFilterPill(
@@ -833,14 +839,14 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
         // ── ROW 4: VÒNG ĐẤU (Toggle Filter) ──
         if (availableRounds.length > 1)
           _buildFilterRow(
-            title: 'VÒNG ĐẤU:',
+            title: l10n.bracketView_roundTitle,
             children: availableRounds.map((r) {
               final isGroupStageRound =
                   isGroupStageKnockout && _selectedBranch != 'knockout';
               // When showing knockout rounds in a group_stage_knockout,
               // totalRounds must only count knockout rounds — not group stage rounds.
               final label = isRoundRobin || isGroupStageRound
-                  ? 'Vòng $r'
+                  ? l10n.bracketView_round(r)
                   : MatchRoundLabel.knockoutRoundName(r, effectiveTotalRounds);
               final count = groupScopedMatches
                   .where((m) => m.round == r)
@@ -873,7 +879,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Không tìm thấy trận đấu phù hợp',
+                  l10n.bracketView_noMatchingMatches,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,

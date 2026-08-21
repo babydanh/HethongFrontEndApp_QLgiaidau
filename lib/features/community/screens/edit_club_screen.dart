@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/club_region_select
 import 'package:app_quanly_giaidau/features/community/widgets/club_social_links_editor.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_visibility_selector.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Màn hình chỉnh sửa thông tin câu lạc bộ — đồng bộ web (SettingsTab.tsx).
 ///
@@ -75,6 +76,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
   }
 
   Future<String> _resolveCategoryId() async {
+    final l10n = AppLocalizations.of(context)!;
     final categories = await ref.read(categoriesProvider.future);
     final selected = categories.where((category) {
       final slug = category.slug.trim().toLowerCase();
@@ -83,12 +85,13 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           name == _selectedSport.toLowerCase();
     }).firstOrNull;
     if (selected == null || selected.id.isEmpty) {
-      throw StateError('Câu lạc bộ phải có đúng 1 môn thể thao chính.');
+      throw StateError(l10n.editClub_primarySportError);
     }
     return selected.id;
   }
 
-  Future<void> _pickAndUploadImage({required bool isLogo}) async {
+    Future<void> _pickAndUploadImage({required bool isLogo}) async {
+    final l10n = AppLocalizations.of(context)!;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       backgroundColor: context.colors.bgCard,
@@ -105,7 +108,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                 Icons.camera_alt_rounded,
                 color: AppTheme.primary,
               ),
-              title: const Text('Chụp ảnh mới'),
+              title: Text(l10n.editClub_captureNew),
               onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
             ),
             ListTile(
@@ -113,7 +116,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                 Icons.photo_library_rounded,
                 color: AppTheme.primary,
               ),
-              title: const Text('Chọn từ thư viện'),
+              title: Text(l10n.editClub_chooseLibrary),
               onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
             ),
             const SizedBox(height: 12),
@@ -144,8 +147,8 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           SnackBar(
             content: Text(
               isLogo
-                  ? 'Đã cập nhật ảnh đại diện (PNG, JPG tỉ lệ 1:1)'
-                  : 'Đã cập nhật ảnh bìa (khuyên dùng 1200x400 px)',
+                  ? l10n.editClub_logoUpdated
+                  : l10n.editClub_bannerUpdated,
             ),
           ),
         );
@@ -154,7 +157,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
       _log.error('Lỗi cập nhật ảnh CLB', e, stack);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể cập nhật ảnh CLB')),
+          SnackBar(content: Text(l10n.editClub_imageUpdateError)),
         );
       }
     } finally {
@@ -163,18 +166,17 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_selectedSport.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Câu lạc bộ phải có đúng 1 môn thể thao chính.'),
-        ),
+        SnackBar(content: Text(l10n.editClub_primarySportError)),
       );
       return;
     }
     if (_region.provinceCode.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn tỉnh/thành phố.')),
+        SnackBar(content: Text(l10n.editClub_provinceRequired)),
       );
       return;
     }
@@ -208,7 +210,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Cập nhật cài đặt câu lạc bộ thành công!'),
+            content: Text(l10n.editClub_saved),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -225,7 +227,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(l10n.editClub_saveError(e.toString().replaceAll('Exception: ', ''))),
             backgroundColor: context.colors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -238,6 +240,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final clubAsync = ref.watch(communityDetailProvider(widget.clubId));
 
@@ -257,7 +260,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           },
         ),
         title: Text(
-          'Chỉnh sửa CLB',
+          l10n.editClub_title,
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.w800,
@@ -274,8 +277,8 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text(
-                    'Lưu',
+                : Text(
+                    l10n.editClub_save,
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                   ),
           ),
@@ -296,6 +299,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
   }
 
   Widget _buildForm(AppColorsExtension colors, Community? club) {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       physics: const BouncingScrollPhysics(),
@@ -307,8 +311,8 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
             // ── Card 1: Nhận diện thương hiệu (Logo & Ảnh bìa) ──
             _sectionCard(
               colors: colors,
-              title: 'HÌNH ẢNH & NHẬN DIỆN',
-              subtitle: 'Logo và ảnh bìa đại diện cho câu lạc bộ trên hệ thống',
+              title: l10n.editClub_imagesSection,
+              subtitle: l10n.editClub_imagesSubtitle,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -316,8 +320,8 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                     flex: 1,
                     child: _imagePickerCard(
                       colors: colors,
-                      title: 'Logo CLB',
-                      hint: 'Tỉ lệ 1:1',
+                      title: l10n.editClub_logoTitle,
+                      hint: l10n.editClub_logoHint,
                       imageUrl: club?.logoUrl,
                       isCircle: true,
                       onTap: () => _pickAndUploadImage(isLogo: true),
@@ -328,8 +332,8 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                     flex: 2,
                     child: _imagePickerCard(
                       colors: colors,
-                      title: 'Ảnh bìa',
-                      hint: 'Tỉ lệ 3:1 (1200×400)',
+                      title: l10n.editClub_bannerTitle,
+                      hint: l10n.editClub_bannerHint,
                       imageUrl: club?.bannerUrl,
                       isCircle: false,
                       onTap: () => _pickAndUploadImage(isLogo: false),
@@ -343,41 +347,41 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
             // ── Card 2: Thông tin cơ bản ──
             _sectionCard(
               colors: colors,
-              title: 'THÔNG TIN CƠ BẢN',
-              subtitle: 'Tên, môn thể thao chính và giới thiệu câu lạc bộ',
+              title: l10n.editClub_basicSection,
+              subtitle: l10n.editClub_basicSubtitle,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _fieldLabel('Tên câu lạc bộ', isRequired: true, colors: colors),
+                  _fieldLabel(l10n.editClub_clubName, isRequired: true, colors: colors),
                   const SizedBox(height: 6),
                   AppTextFormField(
                     controller: _nameCtrl,
-                    hint: 'VD: CLB Pickleball Trang Hưng',
+                    hint: l10n.editClub_clubNameHint,
                     prefixIcon: Icons.badge_outlined,
                     validator: (v) {
                       final value = v?.trim() ?? '';
-                      if (value.isEmpty) return 'Vui lòng nhập tên câu lạc bộ.';
-                      if (value.length > 255) return 'Tên tối đa 255 ký tự.';
+                      if (value.isEmpty) return l10n.editClub_clubNameRequired;
+                      if (value.length > 255) return l10n.editClub_clubNameMax;
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
 
-                  _fieldLabel('Môn thể thao chính', isRequired: true, colors: colors),
+                  _fieldLabel(l10n.editClub_primarySport, isRequired: true, colors: colors),
                   const SizedBox(height: 2),
                   Text(
-                    'Mỗi CLB gắn liền với một bộ môn thi đấu chính.',
+                    l10n.editClub_primarySportDescription,
                     style: TextStyle(fontSize: 11, color: colors.textSecondary),
                   ),
                   const SizedBox(height: 8),
                   _buildSportSelector(),
                   const SizedBox(height: 16),
 
-                  _fieldLabel('Giới thiệu & Mô tả', colors: colors),
+                  _fieldLabel(l10n.editClub_descriptionLabel, colors: colors),
                   const SizedBox(height: 6),
                   AppTextFormField(
                     controller: _descCtrl,
-                    hint: 'Mục đích hoạt động, thời gian sinh hoạt, tiêu chí...',
+                    hint: l10n.editClub_descriptionHint,
                     maxLines: 3,
                     prefixIcon: Icons.description_outlined,
                   ),
@@ -389,12 +393,12 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
             // ── Card 3: Địa điểm hoạt động ──
             _sectionCard(
               colors: colors,
-              title: 'ĐỊA ĐIỂM & KHU VỰC HOẠT ĐỘNG',
-              subtitle: 'Khu vực hành chính và địa chỉ sân sinh hoạt',
+              title: l10n.editClub_locationSection,
+              subtitle: l10n.editClub_locationSubtitle,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _fieldLabel('Khu vực hành chính', isRequired: true, colors: colors),
+                  _fieldLabel(l10n.editClub_administrativeArea, isRequired: true, colors: colors),
                   const SizedBox(height: 6),
                   ClubRegionSelector(
                     initialProvinceCode: club?.provinceCode ?? '',
@@ -403,11 +407,11 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  _fieldLabel('Địa chỉ sân chi tiết', colors: colors),
+                  _fieldLabel(l10n.editClub_detailedAddress, colors: colors),
                   const SizedBox(height: 6),
                   AppTextFormField(
                     controller: _locationCtrl,
-                    hint: 'Số nhà, tên đường, cụm sân thi đấu...',
+                    hint: l10n.editClub_detailedAddressHint,
                     prefixIcon: Icons.location_on_outlined,
                   ),
                 ],
@@ -418,12 +422,12 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
             // ── Card 4: Quyền riêng tư & Cách thức tham gia ──
             _sectionCard(
               colors: colors,
-              title: 'QUYỀN RIÊNG TƯ & THÀNH VIÊN',
-              subtitle: 'Quy chế xét duyệt, giới hạn số lượng và nội quy',
+              title: l10n.editClub_privacySection,
+              subtitle: l10n.editClub_privacySubtitle,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _fieldLabel('Chế độ hiển thị', isRequired: true, colors: colors),
+                  _fieldLabel(l10n.editClub_visibility, isRequired: true, colors: colors),
                   const SizedBox(height: 6),
                   ClubVisibilitySelector(
                     value: _visibility,
@@ -431,26 +435,26 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  _fieldLabel('Cách thức tiếp nhận thành viên', isRequired: true, colors: colors),
+                  _fieldLabel(l10n.editClub_memberJoinMethod, isRequired: true, colors: colors),
                   const SizedBox(height: 6),
                   _buildJoinModeSelector(),
                   const SizedBox(height: 16),
 
-                  _fieldLabel('Giới hạn số lượng thành viên', colors: colors),
+                  _fieldLabel(l10n.editClub_memberLimit, colors: colors),
                   const SizedBox(height: 6),
                   AppTextFormField(
                     controller: _maxMembersCtrl,
-                    hint: 'Để trống nếu không giới hạn số lượng',
+                    hint: l10n.editClub_memberLimitHint,
                     keyboardType: TextInputType.number,
                     prefixIcon: Icons.group_outlined,
                   ),
                   const SizedBox(height: 16),
 
-                  _fieldLabel('Nội quy câu lạc bộ', colors: colors),
+                  _fieldLabel(l10n.editClub_rules, colors: colors),
                   const SizedBox(height: 6),
                   AppTextFormField(
                     controller: _rulesCtrl,
-                    hint: 'Quy định ứng xử, đóng quỹ định kỳ, kỷ luật...',
+                    hint: l10n.editClub_rulesHint,
                     maxLines: 3,
                     prefixIcon: Icons.gavel_rounded,
                   ),
@@ -463,8 +467,8 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
             if (_joinMode == 'APPROVAL') ...[
               _sectionCard(
                 colors: colors,
-                title: 'CÂU HỎI XÉT DUYỆT ĐƠN',
-                subtitle: 'Người xin gia nhập phải trả lời câu hỏi này để BQT duyệt',
+                title: l10n.editClub_approvalSection,
+                subtitle: l10n.editClub_approvalSubtitle,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -473,7 +477,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                         Expanded(
                           child: AppTextFormField(
                             controller: _joinQuestionCtrl,
-                            hint: 'Nhập câu hỏi (VD: Trình độ ELO/DUPR?)...',
+                            hint: l10n.editClub_questionHint,
                             prefixIcon: Icons.help_outline_rounded,
                           ),
                         ),
@@ -495,7 +499,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                             backgroundColor: AppTheme.primary,
                             padding: const EdgeInsets.all(12),
                           ),
-                          tooltip: 'Thêm câu hỏi',
+                          tooltip: l10n.editClub_addQuestion,
                         ),
                       ],
                     ),
@@ -552,8 +556,8 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
             // ── Card 6: Mạng xã hội ──
             _sectionCard(
               colors: colors,
-              title: 'MẠNG XÃ HỘI & KÊNH LIÊN HỆ',
-              subtitle: 'Liên kết Facebook, Zalo, Tiktok... của câu lạc bộ',
+              title: l10n.editClub_socialSection,
+              subtitle: l10n.editClub_socialSubtitle,
               child: ClubSocialLinksEditor(
                 initialLinks: _socialLinks,
                 onChanged: (links) => _socialLinks = links,
@@ -578,7 +582,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                       )
                     : const Icon(Icons.check_circle_outline_rounded, size: 20),
                 label: Text(
-                  _isLoading ? 'Đang lưu...' : 'Lưu toàn bộ thay đổi',
+                  _isLoading ? l10n.editClub_saving : l10n.editClub_saveAll,
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 15,
@@ -679,6 +683,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     required bool isCircle,
     required VoidCallback onTap,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -738,8 +743,8 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                 color: AppTheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Text(
-                'Thay đổi',
+              child: Text(
+                l10n.editClub_changeImage,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -754,6 +759,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
   }
 
   Widget _buildDangerZone(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -770,7 +776,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
               Icon(Icons.warning_amber_rounded, size: 18, color: colors.error),
               const SizedBox(width: 6),
               Text(
-                'VÙNG NGUY HIỂM',
+                l10n.editClub_dangerTitle,
                 style: TextStyle(
                   color: colors.error,
                   fontWeight: FontWeight.w800,
@@ -782,7 +788,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Hành động này sẽ xoá vĩnh viễn Câu lạc bộ cùng toàn bộ bài viết, bảng xếp hạng và lịch sử giải đấu.',
+            l10n.editClub_dangerDescription,
             style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.4),
           ),
           const SizedBox(height: 12),
@@ -790,7 +796,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
             onPressed: _isLoading ? null : _confirmDeleteClub,
             icon: Icon(Icons.delete_forever_rounded, size: 18, color: colors.error),
             label: Text(
-              'Xoá vĩnh viễn câu lạc bộ',
+              l10n.editClub_deleteClub,
               style: TextStyle(color: colors.error, fontWeight: FontWeight.w700, fontSize: 13),
             ),
             style: OutlinedButton.styleFrom(
@@ -807,6 +813,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
   }
 
   Future<void> _confirmDeleteClub() async {
+    final l10n = AppLocalizations.of(context)!;
     final club = ref.read(communityDetailProvider(widget.clubId)).asData?.value;
     final expected = club?.name.trim() ?? _nameCtrl.text.trim();
     final controller = TextEditingController();
@@ -816,23 +823,22 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
         context: context,
         builder: (dialogContext) => StatefulBuilder(
           builder: (ctx, setDialogState) => AlertDialog(
-            title: const Text('Xoá vĩnh viễn câu lạc bộ'),
+            title: Text(l10n.editClub_deleteTitle),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Bạn có chắc chắn muốn xoá câu lạc bộ "$expected"? Toàn bộ dữ liệu '
-                  'thành viên, bài viết và hoạt động sẽ bị xoá vĩnh viễn và không thể khôi phục.',
+                  l10n.editClub_deleteDescription(expected),
                 ),
                 const SizedBox(height: 12),
-                Text('Nhập tên câu lạc bộ $expected để xác nhận:'),
+                Text(l10n.editClub_confirmName(expected)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: controller,
                   onChanged: (value) => setDialogState(() => typedName = value),
-                  decoration: const InputDecoration(
-                    labelText: 'Tên câu lạc bộ',
+                  decoration: InputDecoration(
+                    labelText: l10n.editClub_clubNameLabel,
                   ),
                 ),
               ],
@@ -840,7 +846,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('Huỷ'),
+                child: Text(l10n.commonCancel),
               ),
               FilledButton(
                 onPressed: typedName.trim() == expected
@@ -850,7 +856,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                   backgroundColor: context.colors.error,
                   foregroundColor: Colors.white,
                 ),
-                child: const Text('Xoá vĩnh viễn'),
+                child: Text(l10n.editClub_deleteForever),
               ),
             ],
           ),
@@ -864,7 +870,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
       invalidateCommunityCollections(ref);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã xoá câu lạc bộ thành công.')),
+          SnackBar(content: Text(l10n.editClub_deleted)),
         );
         context.go('/home');
       }
@@ -874,7 +880,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Lỗi khi thực hiện xoá câu lạc bộ: ${e.toString().replaceAll('Exception: ', '')}',
+              l10n.editClub_deleteError(e.toString().replaceAll('Exception: ', '')),
             ),
           ),
         );
@@ -886,11 +892,12 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
   }
 
   Widget _buildSportSelector() {
+    final l10n = AppLocalizations.of(context)!;
     final categories =
         ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
     if (categories.isEmpty) {
       return Text(
-        'Đang tải danh sách môn thể thao...',
+        l10n.editClub_loadingSports,
         style: TextStyle(color: context.colors.textMuted),
       );
     }
@@ -914,17 +921,18 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
   }
 
   Widget _buildJoinModeSelector() {
+    final l10n = AppLocalizations.of(context)!;
     final modes = [
-      ('OPEN', 'Mở tự do', 'Thành viên nhấn tham gia là vào nhóm ngay.'),
+      ('OPEN', l10n.editClub_joinOpen, l10n.editClub_joinOpenDescription),
       (
         'APPROVAL',
-        'Cần phê duyệt đơn',
-        'Phải trả lời câu hỏi và chờ BQT chấp thuận.',
+        l10n.editClub_joinApproval,
+        l10n.editClub_joinApprovalDescription,
       ),
       (
         'INVITE_ONLY',
-        'Chỉ nhận lời mời',
-        'Chỉ thành viên được mời mới có thể tham gia.',
+        l10n.editClub_joinInviteOnly,
+        l10n.editClub_joinInviteOnlyDescription,
       ),
     ];
     return Column(
@@ -992,6 +1000,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
   }
 
   Widget _buildError(AppColorsExtension colors, VoidCallback onRetry) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -1001,7 +1010,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
             Text(
-              'Không thể tải thông tin CLB',
+              l10n.editClub_loadError,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -1009,7 +1018,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            FilledButton(onPressed: onRetry, child: const Text('Thử lại')),
+            FilledButton(onPressed: onRetry, child: Text(l10n.editClub_retry)),
           ],
         ),
       ),

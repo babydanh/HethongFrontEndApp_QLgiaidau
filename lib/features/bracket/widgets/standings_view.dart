@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Standalone standings view for round-robin / group-stage tournaments.
 /// Extracted from BracketViewScreen._buildStandingsView.
@@ -21,7 +22,8 @@ class StandingsView extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+    Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final standingsAsync = ref.watch(standingsWithDivisionProvider((
       tournamentId: tournamentId,
       divisionId: divisionId,
@@ -61,7 +63,7 @@ class StandingsView extends ConsumerWidget {
     return standingsAsync.when(
       data: (standings) {
         if (standings.isEmpty) {
-          return const Center(child: Text('Chưa có dữ liệu bảng xếp hạng'));
+          return Center(child: Text(l10n.standings_empty));
         }
 
         // Nhóm standings theo Group
@@ -82,7 +84,7 @@ class StandingsView extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Bảng Xếp Hạng Vòng Tròn (${groupsList.length} Bảng)',
+                      l10n.standings_title(groupsList.length),
                       style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: context.colors.textPrimary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -144,7 +146,7 @@ class StandingsView extends ConsumerWidget {
                               ),
                               const Spacer(),
                               Text(
-                                '${gStandings.length} Đội',
+                                l10n.standings_groupTeams(gStandings.length),
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -167,26 +169,26 @@ class StandingsView extends ConsumerWidget {
                               fontSize: 12,
                             ),
                             columns: isFootball
-                                ? const [
-                                    DataColumn(label: Text('Hạng')),
-                                    DataColumn(label: Text('Đội')),
-                                    DataColumn(label: Text('MP')),
-                                    DataColumn(label: Text('W')),
-                                    DataColumn(label: Text('D')),
-                                    DataColumn(label: Text('L')),
-                                    DataColumn(label: Text('GF')),
-                                    DataColumn(label: Text('GA')),
-                                    DataColumn(label: Text('GD')),
-                                    DataColumn(label: Text('Pts')),
+                                ? [
+                                    DataColumn(label: Text(l10n.standings_rank)),
+                                    DataColumn(label: Text(l10n.standings_team)),
+                                    DataColumn(label: Text(l10n.standings_playedShort)),
+                                    DataColumn(label: Text(l10n.standings_wonShort)),
+                                    DataColumn(label: Text(l10n.standings_drawnShort)),
+                                    DataColumn(label: Text(l10n.standings_lostShort)),
+                                    DataColumn(label: Text(l10n.standings_pointsForShort)),
+                                    DataColumn(label: Text(l10n.standings_pointsAgainstShort)),
+                                    DataColumn(label: Text(l10n.standings_differenceShort)),
+                                    DataColumn(label: Text(l10n.standings_pointsShort)),
                                   ]
-                                : const [
-                                    DataColumn(label: Text('Hạng')),
-                                    DataColumn(label: Text('Đội VĐV')),
-                                    DataColumn(label: Text('Trận')),
-                                    DataColumn(label: Text('T')),
-                                    DataColumn(label: Text('B')),
-                                    DataColumn(label: Text('Điểm')),
-                                    DataColumn(label: Text('Hiệu số')),
+                                : [
+                                    DataColumn(label: Text(l10n.standings_rank)),
+                                    DataColumn(label: Text(l10n.standings_teamAthletes)),
+                                    DataColumn(label: Text(l10n.standings_matches)),
+                                    DataColumn(label: Text(l10n.standings_winsShort)),
+                                    DataColumn(label: Text(l10n.standings_lossesShort)),
+                                    DataColumn(label: Text(l10n.standings_points)),
+                                    DataColumn(label: Text(l10n.standings_difference)),
                                   ],
                             rows: List.generate(gStandings.length, (index) {
                               final st = gStandings[index];
@@ -276,7 +278,7 @@ class StandingsView extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Lỗi: $e')),
+      error: (e, _) => Center(child: Text(l10n.standings_error(e.toString))),
     );
   }
 }

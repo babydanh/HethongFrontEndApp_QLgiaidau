@@ -18,10 +18,15 @@ class ClubManagementScreen extends ConsumerStatefulWidget {
   final String clubId;
   final bool isOwner;
 
-  const ClubManagementScreen({super.key, required this.clubId, required this.isOwner});
+  const ClubManagementScreen({
+    super.key,
+    required this.clubId,
+    required this.isOwner,
+  });
 
   @override
-  ConsumerState<ClubManagementScreen> createState() => _ClubManagementScreenState();
+  ConsumerState<ClubManagementScreen> createState() =>
+      _ClubManagementScreenState();
 }
 
 class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
@@ -61,7 +66,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       final results = await Future.wait<Object>([
         repo.getMembers(widget.clubId, limit: 200),
         repo.getJoinRequests(widget.clubId),
-        ref.read(communitySocialRepositoryProvider).getPendingPosts(widget.clubId),
+        ref
+            .read(communitySocialRepositoryProvider)
+            .getPendingPosts(widget.clubId),
         ref.read(communitySocialRepositoryProvider).getReports(widget.clubId),
       ]);
       final all = results[0] as List<CommunityMemberModel>;
@@ -74,8 +81,12 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
         _joinRequests = requests.where((r) => r.status == 'PENDING').toList();
         _pendingPosts = pendingPosts;
         _reports = reports;
-        _invitedMembers = all.where((m) => m.status.toUpperCase() == 'INVITED').toList();
-        _bannedMembers = all.where((m) => m.status.toUpperCase() == 'BANNED').toList();
+        _invitedMembers = all
+            .where((m) => m.status.toUpperCase() == 'INVITED')
+            .toList();
+        _bannedMembers = all
+            .where((m) => m.status.toUpperCase() == 'BANNED')
+            .toList();
         _isLoading = false;
       });
     } catch (e, stack) {
@@ -87,7 +98,8 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   Set<String> get _occupiedUserIds =>
       _allMembers.map((m) => m.userId).where((id) => id.isNotEmpty).toSet();
 
-  int get _activeCount => _allMembers.where((m) => m.status == 'JOINED' || m.status.isEmpty).length;
+  int get _activeCount =>
+      _allMembers.where((m) => m.status == 'JOINED' || m.status.isEmpty).length;
 
   @override
   Widget build(BuildContext context) {
@@ -99,14 +111,24 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary), onPressed: () => context.pop()),
-        title: Text(l10n.club_managementTitle, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(
+          l10n.club_managementTitle,
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+        ),
         centerTitle: true,
         actions: _isLoading
             ? []
             : [
                 IconButton(
-                  icon: Icon(Icons.refresh_rounded, color: colors.textSecondary, size: 20),
+                  icon: Icon(
+                    Icons.refresh_rounded,
+                    color: colors.textSecondary,
+                    size: 20,
+                  ),
                   onPressed: _loadData,
                 ),
               ],
@@ -152,10 +174,17 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader('Bài viết chờ duyệt (${_pendingPosts.length})', const Color(0xFFF59E0B), colors),
+          _sectionHeader(
+            _l10n.club_pendingPostsSection(_pendingPosts.length),
+            const Color(0xFFF59E0B),
+            colors,
+          ),
           const SizedBox(height: 10),
           if (!hasPosts)
-            Text('Không có bài viết chờ duyệt.', style: TextStyle(color: colors.textMuted, fontSize: 12))
+            Text(
+              _l10n.club_noPendingPosts,
+              style: TextStyle(color: colors.textMuted, fontSize: 12),
+            )
           else
             ..._pendingPosts.map((post) => _buildPendingPostCard(post, colors)),
         ],
@@ -163,7 +192,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
     );
   }
 
-  Widget _buildPendingPostCard(CommunityPostModel post, AppColorsExtension colors) {
+  Widget _buildPendingPostCard(
+    CommunityPostModel post,
+    AppColorsExtension colors,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -175,17 +207,42 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(post.authorName, style: TextStyle(fontWeight: FontWeight.w700, color: colors.textPrimary)),
+          Text(
+            post.authorName,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
           if (post.text.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(post.text, maxLines: 4, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.textSecondary, fontSize: 12)),
+            Text(
+              post.text,
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: colors.textSecondary, fontSize: 12),
+            ),
           ],
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(child: OutlinedButton(onPressed: _isModeratingPost ? null : () => _moderatePost(post, 'REJECTED'), child: const Text('Từ chối'))),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _isModeratingPost
+                      ? null
+                      : () => _moderatePost(post, 'REJECTED'),
+                  child: Text(_l10n.club_rejectPost),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: FilledButton(onPressed: _isModeratingPost ? null : () => _moderatePost(post, 'PUBLISHED'), child: const Text('Duyệt'))),
+              Expanded(
+                child: FilledButton(
+                  onPressed: _isModeratingPost
+                      ? null
+                      : () => _moderatePost(post, 'PUBLISHED'),
+                  child: Text(_l10n.club_approvePost),
+                ),
+              ),
             ],
           ),
         ],
@@ -196,13 +253,26 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   Future<void> _moderatePost(CommunityPostModel post, String status) async {
     setState(() => _isModeratingPost = true);
     try {
-      await ref.read(communitySocialRepositoryProvider).moderatePost(widget.clubId, post.id, status: status);
+      await ref
+          .read(communitySocialRepositoryProvider)
+          .moderatePost(widget.clubId, post.id, status: status);
       if (mounted) {
         setState(() => _pendingPosts.removeWhere((item) => item.id == post.id));
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(status == 'PUBLISHED' ? 'Đã duyệt bài viết.' : 'Đã từ chối bài viết.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              status == 'PUBLISHED'
+                  ? _l10n.club_postApproved
+                  : _l10n.club_postRejected,
+            ),
+          ),
+        );
       }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không thể xử lý bài viết.')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_l10n.club_postModerationError)));
     } finally {
       if (mounted) setState(() => _isModeratingPost = false);
     }
@@ -211,62 +281,130 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   Widget _buildReportsSection(AppColorsExtension colors) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: colors.bgCard, borderRadius: BorderRadius.circular(20), border: Border.all(color: colors.border)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _sectionHeader('Báo cáo bài viết (${_reports.length})', const Color(0xFFEF4444), colors),
-        const SizedBox(height: 10),
-        if (_reports.isEmpty)
-          Text('Không có báo cáo đang chờ xử lý.', style: TextStyle(color: colors.textMuted, fontSize: 12))
-        else
-          ..._reports.map((report) => _buildReportCard(report, colors)),
-      ]),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader(
+            _l10n.club_reportsSection(_reports.length),
+            const Color(0xFFEF4444),
+            colors,
+          ),
+          const SizedBox(height: 10),
+          if (_reports.isEmpty)
+            Text(
+              _l10n.club_noPendingReports,
+              style: TextStyle(color: colors.textMuted, fontSize: 12),
+            )
+          else
+            ..._reports.map((report) => _buildReportCard(report, colors)),
+        ],
+      ),
     );
   }
 
-  Widget _buildReportCard(CommunityReportModel report, AppColorsExtension colors) {
-    final reason = const {
-      'SPAM': 'Spam / quảng cáo',
-      'HARASSMENT': 'Quấy rối / xúc phạm',
-      'HATE': 'Thù ghét / phân biệt',
-      'SEXUAL': 'Nội dung phản cảm',
-      'VIOLENCE': 'Bạo lực / đe doạ',
-      'OTHER': 'Lý do khác',
-    }[report.reason] ?? report.reason;
+  Widget _buildReportCard(
+    CommunityReportModel report,
+    AppColorsExtension colors,
+  ) {
+    final reason =
+        {
+          'SPAM': _l10n.club_reportReasonSpam,
+          'HARASSMENT': _l10n.club_reportReasonHarassment,
+          'HATE': _l10n.club_reportReasonHate,
+          'SEXUAL': _l10n.club_reportReasonSexual,
+          'VIOLENCE': _l10n.club_reportReasonViolence,
+          'OTHER': _l10n.club_reportReasonOther,
+        }[report.reason] ??
+        report.reason;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(10), border: Border.all(color: colors.borderLight)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(reason, style: TextStyle(fontWeight: FontWeight.w700, color: colors.textPrimary)),
-        const SizedBox(height: 3),
-        Text('Báo cáo bởi ${report.reporterName}${report.reporterEmail == null ? '' : ' · ${report.reporterEmail}'}', style: TextStyle(color: colors.textMuted, fontSize: 11)),
-        if (report.details != null) ...[
+      decoration: BoxDecoration(
+        color: colors.bgSurface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: colors.borderLight),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            reason,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            '${_l10n.club_reportedBy(report.reporterName)}${report.reporterEmail == null ? '' : ' · ${report.reporterEmail}'}',
+            style: TextStyle(color: colors.textMuted, fontSize: 11),
+          ),
+          if (report.details != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              report.details!,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: colors.textSecondary, fontSize: 12),
+            ),
+          ],
           const SizedBox(height: 6),
-          Text(report.details!, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.textSecondary, fontSize: 12)),
+          Text(
+            _l10n.club_postBy(report.postAuthorName, report.postText),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: colors.textSecondary, fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _updateReport(report, 'DISMISSED'),
+                  child: Text(_l10n.club_dismissReport),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => _updateReport(report, 'RESOLVED'),
+                  child: Text(_l10n.club_resolveReport),
+                ),
+              ),
+            ],
+          ),
         ],
-        const SizedBox(height: 6),
-        Text('Bài của ${report.postAuthorName}: ${report.postText}', maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.textSecondary, fontSize: 12)),
-        const SizedBox(height: 8),
-        Row(children: [
-          Expanded(child: OutlinedButton(onPressed: () => _updateReport(report, 'DISMISSED'), child: const Text('Bỏ qua'))),
-          const SizedBox(width: 8),
-          Expanded(child: FilledButton(onPressed: () => _updateReport(report, 'RESOLVED'), child: const Text('Đã xử lý'))),
-        ]),
-      ]),
+      ),
     );
   }
 
   Future<void> _updateReport(CommunityReportModel report, String status) async {
     try {
-      await ref.read(communitySocialRepositoryProvider).updateReportStatus(widget.clubId, report.id, status: status);
+      await ref
+          .read(communitySocialRepositoryProvider)
+          .updateReportStatus(widget.clubId, report.id, status: status);
       if (!mounted) return;
       setState(() => _reports.removeWhere((item) => item.id == report.id));
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(status == 'RESOLVED' ? 'Đã ghi nhận xử lý báo cáo.' : 'Đã bỏ qua báo cáo.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            status == 'RESOLVED'
+                ? _l10n.club_reportResolved
+                : _l10n.club_reportDismissed,
+          ),
+        ),
+      );
     } catch (e, stack) {
       _log.error('Lỗi cập nhật báo cáo', e, stack);
       if (mounted) {
-        final message = e.toString().replaceAll('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Không thể cập nhật báo cáo: $message')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_l10n.club_reportUpdateError)));
       }
     }
   }
@@ -275,31 +413,64 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   Widget _buildStatsRow(AppColorsExtension colors) {
     final stats = [
       (_l10n.club_activeMembers, '$_activeCount', colors.textPrimary),
-      (_l10n.club_pendingRequests, '${_joinRequests.length}', const Color(0xFFF59E0B)),
-      (_l10n.club_invited, '${_invitedMembers.length}', const Color(0xFF6366F1)),
+      (
+        _l10n.club_pendingRequests,
+        '${_joinRequests.length}',
+        const Color(0xFFF59E0B),
+      ),
+      (
+        _l10n.club_invited,
+        '${_invitedMembers.length}',
+        const Color(0xFF6366F1),
+      ),
       (_l10n.club_banned, '${_bannedMembers.length}', const Color(0xFFEF4444)),
     ];
     return Row(
-      children: stats.map((s) => Expanded(
-        child: Container(
-          margin: EdgeInsets.only(right: s != stats.last ? 8 : 0),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: colors.bgCard, borderRadius: BorderRadius.circular(14), border: Border.all(color: colors.border)),
-          child: Column(
-            children: [
-              Text(s.$2, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: s.$3)),
-              const SizedBox(height: 2),
-              Text(s.$1, style: TextStyle(fontSize: 9, color: colors.textMuted, fontWeight: FontWeight.w600)),
-            ],
-          ),
-        ),
-      )).toList(),
+      children: stats
+          .map(
+            (s) => Expanded(
+              child: Container(
+                margin: EdgeInsets.only(right: s != stats.last ? 8 : 0),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colors.bgCard,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: colors.border),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      s.$2,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: s.$3,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      s.$1,
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: colors.textMuted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 
   // ─── Tournament Management ────────────────────────────────────
   Widget _buildTournamentsManagementSection(AppColorsExtension colors) {
-    final tourneysAsync = ref.watch(communityTournamentsProvider(widget.clubId));
+    final l10n = AppLocalizations.of(context)!;
+    final tourneysAsync = ref.watch(
+      communityTournamentsProvider(widget.clubId),
+    );
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -311,11 +482,19 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader('Quản lý giải đấu CLB', const Color(0xFF3B82F6), colors),
+          _sectionHeader(
+            l10n.club_tournamentManagement,
+            const Color(0xFF3B82F6),
+            colors,
+          ),
           const SizedBox(height: 8),
           Text(
-            'Tạo mới và điều hành các giải đấu của Câu lạc bộ.',
-            style: TextStyle(fontSize: 11.5, color: colors.textSecondary, height: 1.4),
+            l10n.club_tournamentManagementDescription,
+            style: TextStyle(
+              fontSize: 11.5,
+              color: colors.textSecondary,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 14),
 
@@ -332,7 +511,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
                     decoration: BoxDecoration(
                       color: colors.bgCard,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -350,7 +531,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Chọn loại giải đấu',
+                          l10n.club_selectTournamentType,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
@@ -359,8 +540,11 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Chọn hình thức tổ chức phù hợp với quy mô giải của CLB',
-                          style: TextStyle(fontSize: 12, color: colors.textMuted),
+                          l10n.club_chooseTournamentTypeDescription,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textMuted,
+                          ),
                         ),
                         const SizedBox(height: 20),
 
@@ -368,16 +552,22 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                         InkWell(
                           onTap: () {
                             Navigator.pop(ctx);
-                            context.push('/club/${widget.clubId}/create-tournament');
+                            context.push(
+                              '/club/${widget.clubId}/create-tournament',
+                            );
                           },
                           borderRadius: BorderRadius.circular(16),
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
+                              color: const Color(
+                                0xFFF59E0B,
+                              ).withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                                color: const Color(
+                                  0xFFF59E0B,
+                                ).withValues(alpha: 0.3),
                               ),
                             ),
                             child: Row(
@@ -386,7 +576,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   width: 44,
                                   height: 44,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                                    color: const Color(
+                                      0xFFF59E0B,
+                                    ).withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(
@@ -398,12 +590,13 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                 const SizedBox(width: 14),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
                                           Text(
-                                            'Giải đấu Nhanh (Lite)',
+                                            l10n.club_liteTournament,
                                             style: TextStyle(
                                               fontSize: 15,
                                               fontWeight: FontWeight.bold,
@@ -412,13 +605,17 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                           ),
                                           const SizedBox(width: 8),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: const Color(0xFFF59E0B),
-                                              borderRadius: BorderRadius.circular(6),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
                                             ),
-                                            child: const Text(
-                                              'TẠO TRÊN APP',
+                                            child: Text(
+                                              l10n.club_liteCreatedOnApp,
                                               style: TextStyle(
                                                 fontSize: 9,
                                                 fontWeight: FontWeight.w900,
@@ -430,13 +627,20 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        'Tạo trực tiếp trên điện thoại trong 30 giây, tự động chia bảng và theo dõi tỷ số.',
-                                        style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.3),
+                                        l10n.club_liteTournamentDescription,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: colors.textSecondary,
+                                          height: 1.3,
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: colors.textMuted,
+                                ),
                               ],
                             ),
                           ),
@@ -451,22 +655,37 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                               context: context,
                               builder: (dCtx) => AlertDialog(
                                 backgroundColor: colors.bgCard,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
                                 title: Row(
                                   children: [
-                                    const Icon(Icons.workspace_premium_rounded, color: Color(0xFF3B82F6)),
+                                    const Icon(
+                                      Icons.workspace_premium_rounded,
+                                      color: Color(0xFF3B82F6),
+                                    ),
                                     const SizedBox(width: 8),
-                                    Text('Giải Tiêu chuẩn', style: TextStyle(fontSize: 16, color: colors.textPrimary)),
+                                    Text(
+                                      l10n.club_standardTournamentTitle,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: colors.textPrimary,
+                                      ),
+                                    ),
                                   ],
                                 ),
                                 content: Text(
-                                  'Giải đấu tiêu chuẩn đầy đủ tính năng (chia vạch hạt giống, quản lý tài chính, phân lịch trọng tài) được tối ưu quản lý trên Website.\n\nVui lòng truy cập https://sporto.asia trên trình duyệt để tạo giải!',
-                                  style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.5),
+                                  _l10n.dashboard_manageAdvancedContent,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: colors.textSecondary,
+                                    height: 1.5,
+                                  ),
                                 ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(dCtx),
-                                    child: const Text('Đóng'),
+                                    child: Text(_l10n.dashboard_gotIt),
                                   ),
                                 ],
                               ),
@@ -476,10 +695,14 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
+                              color: const Color(
+                                0xFF3B82F6,
+                              ).withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                                color: const Color(
+                                  0xFF3B82F6,
+                                ).withValues(alpha: 0.3),
                               ),
                             ),
                             child: Row(
@@ -488,7 +711,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   width: 44,
                                   height: 44,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                                    color: const Color(
+                                      0xFF3B82F6,
+                                    ).withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(
@@ -500,12 +725,13 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                 const SizedBox(width: 14),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
                                           Text(
-                                            'Giải Tiêu chuẩn (Nâng cao)',
+                                            l10n.club_standardTournamentTitleAdvanced,
                                             style: TextStyle(
                                               fontSize: 15,
                                               fontWeight: FontWeight.bold,
@@ -514,13 +740,17 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                           ),
                                           const SizedBox(width: 8),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: const Color(0xFF3B82F6),
-                                              borderRadius: BorderRadius.circular(6),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
                                             ),
-                                            child: const Text(
-                                              'TẠO TRÊN WEB',
+                                            child: Text(
+                                              l10n.club_standardCreatedOnWeb,
                                               style: TextStyle(
                                                 fontSize: 9,
                                                 fontWeight: FontWeight.w900,
@@ -532,13 +762,20 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        'Giải đấu quy mô lớn với đầy đủ tính năng sơ đồ thi đấu, tài chính & trọng tài.',
-                                        style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.3),
+                                        l10n.club_standardTournamentDescription,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: colors.textSecondary,
+                                          height: 1.3,
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: colors.textMuted,
+                                ),
                               ],
                             ),
                           ),
@@ -549,11 +786,16 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                 );
               },
               icon: const Icon(Icons.add_rounded, size: 18),
-              label: const Text('Tạo giải đấu mới', style: TextStyle(fontWeight: FontWeight.bold)),
+              label: Text(
+                l10n.club_createNewTournament,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.primary,
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
@@ -561,8 +803,13 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
 
           // Danh sách các giải đấu của CLB cần quản lý
           Text(
-            'CÁC GIẢI ĐẤU ĐANG ĐIỀU HÀNH',
-            style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: colors.textMuted, letterSpacing: 0.8),
+            l10n.club_managedTournamentsHeading,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.bold,
+              color: colors.textMuted,
+              letterSpacing: 0.8,
+            ),
           ),
           const SizedBox(height: 10),
 
@@ -578,7 +825,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                     border: Border.all(color: colors.borderLight),
                   ),
                   child: Text(
-                    'CLB chưa có giải đấu nào. Bấm nút phía trên để tạo giải!',
+                    l10n.club_noManagedTournaments,
                     style: TextStyle(fontSize: 12, color: colors.textSecondary),
                     textAlign: TextAlign.center,
                   ),
@@ -589,7 +836,8 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: tourneys.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 10),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final t = tourneys[index];
                   final isQuick = t.isLite;
@@ -610,12 +858,20 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: (isQuick ? const Color(0xFFF59E0B) : AppTheme.primary).withValues(alpha: 0.12),
+                                color:
+                                    (isQuick
+                                            ? const Color(0xFFF59E0B)
+                                            : AppTheme.primary)
+                                        .withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
-                                isQuick ? Icons.bolt_rounded : Icons.emoji_events_rounded,
-                                color: isQuick ? const Color(0xFFF59E0B) : AppTheme.primary,
+                                isQuick
+                                    ? Icons.bolt_rounded
+                                    : Icons.emoji_events_rounded,
+                                color: isQuick
+                                    ? const Color(0xFFF59E0B)
+                                    : AppTheme.primary,
                                 size: 18,
                               ),
                             ),
@@ -636,8 +892,11 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '${t.teamCount}/${t.maxTeams} đội • ${isQuick ? "Giải Nhanh" : "Giải Tiêu chuẩn"}',
-                                    style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                                    '${t.teamCount}/${t.maxTeams} đội • ${isQuick ? l10n.club_liteTournamentShort : l10n.club_standardTournamentShort}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: colors.textSecondary,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -650,11 +909,21 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                             Expanded(
                               child: OutlinedButton.icon(
                                 onPressed: () => context.push('/intro/${t.id}'),
-                                icon: const Icon(Icons.remove_red_eye_outlined, size: 14),
-                                label: const Text('Xem trang giải', style: TextStyle(fontSize: 11.5)),
+                                icon: const Icon(
+                                  Icons.remove_red_eye_outlined,
+                                  size: 14,
+                                ),
+                                label: Text(
+                                  l10n.club_viewTournament,
+                                  style: const TextStyle(fontSize: 11.5),
+                                ),
                                 style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 8),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                               ),
                             ),
@@ -668,11 +937,16 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                     showDialog<void>(
                                       context: context,
                                       builder: (dialogContext) => AlertDialog(
-                                        title: Text(_l10n.dashboard_manageAdvancedTitle),
-                                        content: Text(_l10n.dashboard_manageAdvancedContent),
+                                        title: Text(
+                                          _l10n.dashboard_manageAdvancedTitle,
+                                        ),
+                                        content: Text(
+                                          _l10n.dashboard_manageAdvancedContent,
+                                        ),
                                         actions: [
                                           TextButton(
-                                            onPressed: () => Navigator.pop(dialogContext),
+                                            onPressed: () =>
+                                                Navigator.pop(dialogContext),
                                             child: Text(_l10n.dashboard_gotIt),
                                           ),
                                         ],
@@ -680,12 +954,31 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                     );
                                   }
                                 },
-                                icon: Icon(isQuick ? Icons.bolt_rounded : Icons.settings_rounded, size: 14),
-                                label: Text(isQuick ? 'Quản lý Lite' : 'Quản lý giải', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                                icon: Icon(
+                                  isQuick
+                                      ? Icons.bolt_rounded
+                                      : Icons.settings_rounded,
+                                  size: 14,
+                                ),
+                                label: Text(
+                                  isQuick
+                                      ? l10n.club_liteManage
+                                      : l10n.club_manageTournament,
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: isQuick ? const Color(0xFFF59E0B) : AppTheme.primary,
-                                  padding: const EdgeInsets.symmetric(vertical: 8),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  backgroundColor: isQuick
+                                      ? const Color(0xFFF59E0B)
+                                      : AppTheme.primary,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                               ),
                             ),
@@ -697,8 +990,16 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                 },
               );
             },
-            loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())),
-            error: (e, st) => Text('Không thể tải danh sách giải: $e', style: const TextStyle(color: Colors.red, fontSize: 11)),
+            loading: () => const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: CircularProgressIndicator(),
+              ),
+            ),
+            error: (e, st) => Text(
+              l10n.club_loadTournamentsError,
+              style: const TextStyle(color: Colors.red, fontSize: 11),
+            ),
           ),
         ],
       ),
@@ -713,14 +1014,21 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader(l10n.club_joinRequestSection(_joinRequests.length), const Color(0xFFF59E0B), colors),
+        _sectionHeader(
+          l10n.club_joinRequestSection(_joinRequests.length),
+          const Color(0xFFF59E0B),
+          colors,
+        ),
         const SizedBox(height: 8),
         ..._joinRequests.map((req) => _buildRequestCard(req, colors)),
       ],
     );
   }
 
-  Widget _buildRequestCard(CommunityMemberModel req, AppColorsExtension colors) {
+  Widget _buildRequestCard(
+    CommunityMemberModel req,
+    AppColorsExtension colors,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -728,37 +1036,93 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFF59E0B).withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.2)),
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
+        ),
       ),
       child: Row(
         children: [
-          CircleAvatar(radius: 20, backgroundColor: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-            child: Text((req.userFullName?.isNotEmpty == true ? req.userFullName![0] : '?').toUpperCase(),
-                style: const TextStyle(color: Color(0xFFF59E0B), fontWeight: FontWeight.w800, fontSize: 14))),
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+            child: Text(
+              (req.userFullName?.isNotEmpty == true
+                      ? req.userFullName![0]
+                      : '?')
+                  .toUpperCase(),
+              style: const TextStyle(
+                color: Color(0xFFF59E0B),
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+              ),
+            ),
+          ),
           const SizedBox(width: 12),
-          Expanded(child: Text(req.userFullName ?? l10n.dashboard_user, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: colors.textPrimary))),
-          _actionBtn(l10n.club_approve, const Color(0xFF10B981), () => _review(req, 'APPROVE', colors)),
+          Expanded(
+            child: Text(
+              req.userFullName ?? l10n.dashboard_user,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: colors.textPrimary,
+              ),
+            ),
+          ),
+          _actionBtn(
+            l10n.club_approve,
+            const Color(0xFF10B981),
+            () => _review(req, 'APPROVE', colors),
+          ),
           const SizedBox(width: 6),
-          _actionBtn(l10n.club_reject, colors.textSecondary, () => _review(req, 'REJECT', colors), outlined: true),
+          _actionBtn(
+            l10n.club_reject,
+            colors.textSecondary,
+            () => _review(req, 'REJECT', colors),
+            outlined: true,
+          ),
         ],
       ),
     );
   }
 
-  Future<void> _review(CommunityMemberModel req, String action, AppColorsExtension colors) async {
+  Future<void> _review(
+    CommunityMemberModel req,
+    String action,
+    AppColorsExtension colors,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      await ref.read(communityRepositoryProvider).reviewJoinRequest(widget.clubId, req.id.isNotEmpty ? req.id : req.userId, action);
+      await ref
+          .read(communityRepositoryProvider)
+          .reviewJoinRequest(
+            widget.clubId,
+            req.id.isNotEmpty ? req.id : req.userId,
+            action,
+          );
       _loadData();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(action == 'APPROVE' ? l10n.club_approvedAlert : l10n.club_rejectedAlert),
-          backgroundColor: action == 'APPROVE' ? const Color(0xFF10B981) : Colors.orange,
-          behavior: SnackBarBehavior.floating,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              action == 'APPROVE'
+                  ? l10n.club_approvedAlert
+                  : l10n.club_rejectedAlert,
+            ),
+            backgroundColor: action == 'APPROVE'
+                ? const Color(0xFF10B981)
+                : Colors.orange,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.errorPrefix}: $e'), backgroundColor: Colors.red));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.club_managementActionError),
+            backgroundColor: Colors.red,
+          ),
+        );
     }
   }
 
@@ -767,7 +1131,11 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
     final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: colors.bgCard, borderRadius: BorderRadius.circular(20), border: Border.all(color: colors.border)),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.border),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -776,21 +1144,39 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
           // Role info
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(10), border: Border.all(color: colors.borderLight)),
+            decoration: BoxDecoration(
+              color: colors.bgSurface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: colors.borderLight),
+            ),
             child: Text(
               widget.isOwner
                   ? l10n.club_ownerInviteInfo
                   : l10n.club_adminInviteInfo,
-              style: TextStyle(fontSize: 11, color: colors.textSecondary, height: 1.4),
+              style: TextStyle(
+                fontSize: 11,
+                color: colors.textSecondary,
+                height: 1.4,
+              ),
             ),
           ),
           const SizedBox(height: 12),
           // Role selector (only for owner)
           if (widget.isOwner) ...[
-            Text(l10n.club_roleLabel, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: colors.textSecondary)),
+            Text(
+              l10n.club_roleLabel,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: colors.textSecondary,
+              ),
+            ),
             const SizedBox(height: 6),
             Container(
-              decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: Row(
                 children: [
                   _roleChip(l10n.club_memberChip, 'MEMBER', colors),
@@ -809,13 +1195,27 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             decoration: InputDecoration(
               hintText: l10n.club_searchHint,
               hintStyle: TextStyle(color: colors.textMuted, fontSize: 12),
-              prefixIcon: Icon(Icons.search_rounded, color: colors.textMuted, size: 20),
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                color: colors.textMuted,
+                size: 20,
+              ),
               suffixIcon: _isSearching
-                  ? const SizedBox(width: 20, height: 20, child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 2)))
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: Padding(
+                        padding: EdgeInsets.all(12),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
                   : null,
               filled: true,
               fillColor: colors.bgSurface,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
             ),
           ),
           // Search results
@@ -825,33 +1225,77 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: _searchResults.length,
-                separatorBuilder: (context, index) => Divider(height: 1, color: colors.borderLight),
+                separatorBuilder: (context, index) =>
+                    Divider(height: 1, color: colors.borderLight),
                 itemBuilder: (_, i) {
                   final u = _searchResults[i];
                   return ListTile(
                     dense: true,
-                    leading: CircleAvatar(radius: 16,
+                    leading: CircleAvatar(
+                      radius: 16,
                       backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                      child: Text(u.fullName.isNotEmpty ? u.fullName[0].toUpperCase() : '?',
-                          style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w800, fontSize: 12))),
-                    title: Text(u.fullName, style: TextStyle(color: colors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
-                    subtitle: u.email != null ? Text(u.email!, style: TextStyle(color: colors.textMuted, fontSize: 11)) : null,
+                      child: Text(
+                        u.fullName.isNotEmpty
+                            ? u.fullName[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    title: Text(
+                      u.fullName,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: u.email != null
+                        ? Text(
+                            u.email!,
+                            style: TextStyle(
+                              color: colors.textMuted,
+                              fontSize: 11,
+                            ),
+                          )
+                        : null,
                     trailing: GestureDetector(
                       onTap: () => _inviteUser(u, colors),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                        child: Text(l10n.club_inviteButton, style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w800, fontSize: 11)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          l10n.club_inviteButton,
+                          style: const TextStyle(
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 11,
+                          ),
+                        ),
                       ),
                     ),
                   );
                 },
               ),
             ),
-          if (_searchCtrl.text.trim().length >= 2 && _searchResults.isEmpty && !_isSearching)
+          if (_searchCtrl.text.trim().length >= 2 &&
+              _searchResults.isEmpty &&
+              !_isSearching)
             Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: Text(l10n.club_noUsersOrInClub, style: TextStyle(color: colors.textMuted, fontSize: 11)),
+              child: Text(
+                l10n.club_noUsersOrInClub,
+                style: TextStyle(color: colors.textMuted, fontSize: 11),
+              ),
             ),
         ],
       ),
@@ -871,10 +1315,16 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Center(
-            child: Text(label, style: TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w700,
-              color: selected ? colors.textPrimary : (enabled ? colors.textSecondary : colors.textMuted),
-            )),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: selected
+                    ? colors.textPrimary
+                    : (enabled ? colors.textSecondary : colors.textMuted),
+              ),
+            ),
           ),
         ),
       ),
@@ -883,15 +1333,23 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
 
   Future<void> _searchUsers(String query) async {
     if (query.trim().length < 2) {
-      setState(() { _searchResults = []; _isSearching = false; });
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
       return;
     }
     setState(() => _isSearching = true);
     try {
       final dio = ref.read(dioProvider);
-      final response = await dio.get('/users/search', queryParameters: {'q': query.trim()});
+      final response = await dio.get(
+        '/users/search',
+        queryParameters: {'q': query.trim()},
+      );
       final raw = response.data;
-      final data = raw is Map ? (raw['data'] as List<dynamic>? ?? []) : (raw as List<dynamic>? ?? []);
+      final data = raw is Map
+          ? (raw['data'] as List<dynamic>? ?? [])
+          : (raw as List<dynamic>? ?? []);
       final occupied = _occupiedUserIds;
       setState(() {
         _searchResults = data
@@ -905,20 +1363,35 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
     }
   }
 
-  Future<void> _inviteUser(UserSearchResult user, AppColorsExtension colors) async {
+  Future<void> _inviteUser(
+    UserSearchResult user,
+    AppColorsExtension colors,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      await ref.read(communityRepositoryProvider).inviteMember(widget.clubId, user.id, role: _inviteRole);
+      await ref
+          .read(communityRepositoryProvider)
+          .inviteMember(widget.clubId, user.id, role: _inviteRole);
       _searchCtrl.clear();
       setState(() => _searchResults = []);
       _loadData();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n.club_inviteSent), backgroundColor: const Color(0xFF10B981), behavior: SnackBarBehavior.floating,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.club_inviteSent),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.errorPrefix}: $e'), backgroundColor: Colors.red));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.club_managementActionError),
+            backgroundColor: Colors.red,
+          ),
+        );
     }
   }
 
@@ -929,7 +1402,11 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader(l10n.club_invitedSection(_invitedMembers.length), const Color(0xFF6366F1), colors),
+        _sectionHeader(
+          l10n.club_invitedSection(_invitedMembers.length),
+          const Color(0xFF6366F1),
+          colors,
+        ),
         const SizedBox(height: 8),
         ..._invitedMembers.map((m) => _buildInvitedCard(m, colors)),
       ],
@@ -941,36 +1418,79 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(color: colors.bgCard, borderRadius: BorderRadius.circular(14), border: Border.all(color: colors.border)),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.border),
+      ),
       child: Row(
         children: [
-          CircleAvatar(radius: 18, backgroundColor: const Color(0xFF6366F1).withValues(alpha: 0.1),
-            child: Text((m.userFullName?.isNotEmpty == true ? m.userFullName![0] : '?').toUpperCase(),
-                style: const TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.w800, fontSize: 12))),
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: const Color(0xFF6366F1).withValues(alpha: 0.1),
+            child: Text(
+              (m.userFullName?.isNotEmpty == true ? m.userFullName![0] : '?')
+                  .toUpperCase(),
+              style: const TextStyle(
+                color: Color(0xFF6366F1),
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+              ),
+            ),
+          ),
           const SizedBox(width: 12),
-          Expanded(child: Text(m.userFullName ?? l10n.dashboard_user, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: colors.textPrimary))),
+          Expanded(
+            child: Text(
+              m.userFullName ?? l10n.dashboard_user,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: colors.textPrimary,
+              ),
+            ),
+          ),
           GestureDetector(
             onTap: () async {
               try {
-                await ref.read(communityRepositoryProvider).removeMember(widget.clubId, m.userId);
+                await ref
+                    .read(communityRepositoryProvider)
+                    .removeMember(widget.clubId, m.userId);
                 _loadData();
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(l10n.club_revokeInvite),
-                    backgroundColor: Colors.orange,
-                    behavior: SnackBarBehavior.floating,
-                  ));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.club_revokeInvite),
+                      backgroundColor: Colors.orange,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.errorPrefix}: $e'), backgroundColor: Colors.red));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.club_managementActionError),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
                 }
               }
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(8), border: Border.all(color: colors.border)),
-              child: Text(l10n.club_cancelInvite, style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w700, fontSize: 11)),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: colors.border),
+              ),
+              child: Text(
+                l10n.club_cancelInvite,
+                style: TextStyle(
+                  color: colors.textSecondary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                ),
+              ),
             ),
           ),
         ],
@@ -985,7 +1505,11 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader(l10n.club_bannedSection(_bannedMembers.length), const Color(0xFFEF4444), colors),
+        _sectionHeader(
+          l10n.club_bannedSection(_bannedMembers.length),
+          const Color(0xFFEF4444),
+          colors,
+        ),
         const SizedBox(height: 8),
         ..._bannedMembers.map((m) => _buildBannedCard(m, colors)),
       ],
@@ -1000,37 +1524,77 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFEF4444).withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.15)),
+        border: Border.all(
+          color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+        ),
       ),
       child: Row(
         children: [
-          CircleAvatar(radius: 18, backgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.1),
-            child: Text((m.userFullName?.isNotEmpty == true ? m.userFullName![0] : '?').toUpperCase(),
-                style: const TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.w800, fontSize: 12))),
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.1),
+            child: Text(
+              (m.userFullName?.isNotEmpty == true ? m.userFullName![0] : '?')
+                  .toUpperCase(),
+              style: const TextStyle(
+                color: Color(0xFFEF4444),
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+              ),
+            ),
+          ),
           const SizedBox(width: 12),
-          Expanded(child: Text(m.userFullName ?? l10n.dashboard_user, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: colors.textPrimary))),
+          Expanded(
+            child: Text(
+              m.userFullName ?? l10n.dashboard_user,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: colors.textPrimary,
+              ),
+            ),
+          ),
           GestureDetector(
             onTap: () async {
               try {
-                await ref.read(communityRepositoryProvider).unbanMember(widget.clubId, m.userId);
+                await ref
+                    .read(communityRepositoryProvider)
+                    .unbanMember(widget.clubId, m.userId);
                 _loadData();
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(l10n.club_unbanned),
-                    backgroundColor: const Color(0xFF10B981),
-                    behavior: SnackBarBehavior.floating,
-                  ));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.club_unbanned),
+                      backgroundColor: const Color(0xFF10B981),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.errorPrefix}: $e'), backgroundColor: Colors.red));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.club_managementActionError),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
                 }
               }
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(8)),
-              child: Text(l10n.club_unban, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11)),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                l10n.club_unban,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11,
+                ),
+              ),
             ),
           ),
         ],
@@ -1042,14 +1606,33 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   Widget _sectionHeader(String title, Color accent, AppColorsExtension colors) {
     return Row(
       children: [
-        Container(width: 3, height: 16, decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(2))),
+        Container(
+          width: 3,
+          height: 16,
+          decoration: BoxDecoration(
+            color: accent,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
         const SizedBox(width: 8),
-        Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: colors.textSecondary)),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: colors.textSecondary,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _actionBtn(String label, Color color, VoidCallback onTap, {bool outlined = false}) {
+  Widget _actionBtn(
+    String label,
+    Color color,
+    VoidCallback onTap, {
+    bool outlined = false,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1057,12 +1640,18 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
         decoration: BoxDecoration(
           color: outlined ? Colors.transparent : color,
           borderRadius: BorderRadius.circular(8),
-          border: outlined ? Border.all(color: color.withValues(alpha: 0.3)) : null,
+          border: outlined
+              ? Border.all(color: color.withValues(alpha: 0.3))
+              : null,
         ),
-        child: Text(label, style: TextStyle(
-          color: outlined ? color : Colors.white,
-          fontWeight: FontWeight.w800, fontSize: 11,
-        )),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: outlined ? color : Colors.white,
+            fontWeight: FontWeight.w800,
+            fontSize: 11,
+          ),
+        ),
       ),
     );
   }

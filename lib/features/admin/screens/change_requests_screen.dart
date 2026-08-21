@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Admin — Danh sách yêu cầu thay đổi (Change Requests)
 ///
@@ -23,6 +24,7 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = context.colors;
 
     return Scaffold(
@@ -34,24 +36,27 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
           icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Yêu cầu thay đổi', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
+        title: Text(
+          l10n?.adminChangeRequestsTitle ?? 'Change requests',
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+        ),
         centerTitle: true,
       ),
       body: Column(
         children: [
-          _buildFilterChips(colors),
-          Expanded(child: _buildRequestList(colors)),
+          _buildFilterChips(colors, l10n),
+          Expanded(child: _buildRequestList(colors, l10n)),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChips(AppColorsExtension colors) {
+  Widget _buildFilterChips(AppColorsExtension colors, AppLocalizations? l10n) {
     final filters = [
-      ('all', 'Tất cả', AppTheme.primary),
-      ('pending', 'Chờ xử lý', const Color(0xFFF59E0B)),
-      ('approved', 'Đã duyệt', const Color(0xFF10B981)),
-      ('rejected', 'Từ chối', const Color(0xFFEF4444)),
+      ('all', l10n?.adminChangeRequestsFilterAll ?? 'All', AppTheme.primary),
+      ('pending', l10n?.adminChangeRequestsFilterPending ?? 'Pending', const Color(0xFFF59E0B)),
+      ('approved', l10n?.adminChangeRequestsFilterApproved ?? 'Approved', const Color(0xFF10B981)),
+      ('rejected', l10n?.adminChangeRequestsFilterRejected ?? 'Rejected', const Color(0xFFEF4444)),
     ];
 
     return Container(
@@ -91,7 +96,7 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
     );
   }
 
-  Widget _buildRequestList(AppColorsExtension colors) {
+  Widget _buildRequestList(AppColorsExtension colors, AppLocalizations? l10n) {
     final requestsAsync = ref.watch(_adminChangeRequestsProvider);
 
     return requestsAsync.when(
@@ -108,7 +113,7 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
               children: [
                 Icon(Icons.edit_note_rounded, size: 64, color: colors.textMuted.withValues(alpha: 0.4)),
                 const SizedBox(height: 16),
-                Text('Không có yêu cầu nào', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                Text(l10n?.adminChangeRequestsEmpty ?? 'No requests', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
               ],
             ),
           );
@@ -128,7 +133,7 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
           children: [
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
-            Text('Lỗi tải dữ liệu', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+            Text(l10n?.adminChangeRequestsLoadError ?? 'Unable to load data', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
           ],
         ),
       ),
@@ -136,10 +141,11 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
   }
 
   Widget _buildRequestCard(BuildContext context, Map<String, dynamic> request, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context);
     final status = request['status']?.toString() ?? 'PENDING';
-    final type = request['type']?.toString() ?? 'Khác';
+    final type = request['type']?.toString() ?? (l10n?.adminChangeRequestsTypeOther ?? 'Other');
     final description = request['description']?.toString() ?? '';
-    final requestedBy = request['requestedBy']?['fullName']?.toString() ?? 'Người dùng';
+    final requestedBy = request['requestedBy']?['fullName']?.toString() ?? (l10n?.adminChangeRequestsRequester ?? 'User');
     final createdAt = request['createdAt']?.toString() ?? '';
 
     final statusColor = status == 'APPROVED'
@@ -148,10 +154,10 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
             ? const Color(0xFFEF4444)
             : const Color(0xFFF59E0B);
     final statusLabel = status == 'APPROVED'
-        ? 'Đã duyệt'
+        ? (l10n?.adminChangeRequestsStatusApproved ?? 'Approved')
         : status == 'REJECTED'
-            ? 'Từ chối'
-            : 'Chờ xử lý';
+            ? (l10n?.adminChangeRequestsStatusRejected ?? 'Rejected')
+            : (l10n?.adminChangeRequestsStatusPending ?? 'Pending');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -209,13 +215,13 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
               children: [
                 Expanded(
                   child: _actionBtn(
-                    'Duyệt', Icons.check_rounded, const Color(0xFF10B981), () => _handleAction(request['id'], 'APPROVED', colors),
+                    l10n?.adminChangeRequestsApprove ?? 'Approve', Icons.check_rounded, const Color(0xFF10B981), () => _handleAction(request['id'], 'APPROVED', colors),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: _actionBtn(
-                    'Từ chối', Icons.close_rounded, const Color(0xFFEF4444), () => _handleAction(request['id'], 'REJECTED', colors),
+                    l10n?.adminChangeRequestsReject ?? 'Reject', Icons.close_rounded, const Color(0xFFEF4444), () => _handleAction(request['id'], 'REJECTED', colors),
                     outlined: true,
                   ),
                 ),
@@ -251,13 +257,16 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
 
   Future<void> _handleAction(String? id, String status, AppColorsExtension colors) async {
     if (id == null) return;
+    final l10n = AppLocalizations.of(context);
     try {
       final dio = ref.read(dioProvider);
       await dio.patch('/admin/change-requests/$id', data: {'status': status});
       ref.invalidate(_adminChangeRequestsProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(status == 'APPROVED' ? 'Đã duyệt yêu cầu' : 'Đã từ chối yêu cầu'),
+          content: Text(status == 'APPROVED'
+              ? (l10n?.adminChangeRequestsApprovedFeedback ?? 'Request approved')
+              : (l10n?.adminChangeRequestsRejectedFeedback ?? 'Request rejected')),
           backgroundColor: const Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
         ));
@@ -265,7 +274,7 @@ class _AdminChangeRequestsScreenState extends ConsumerState<AdminChangeRequestsS
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Lỗi: $e'),
+          content: Text(l10n?.adminChangeRequestsActionError ?? 'Unable to process the request. Please try again.'),
           backgroundColor: colors.error,
           behavior: SnackBarBehavior.floating,
         ));

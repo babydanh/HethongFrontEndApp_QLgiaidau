@@ -6326,6 +6326,240 @@ abstract class AppLocalizations {
   /// **'Hủy lời mời'**
   String get club_cancelInvite;
 
+  /// No description provided for @club_pendingPostsSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài viết chờ duyệt ({count})'**
+  String club_pendingPostsSection(Object count);
+
+  /// No description provided for @club_noPendingPosts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có bài viết chờ duyệt.'**
+  String get club_noPendingPosts;
+
+  /// No description provided for @club_rejectPost.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get club_rejectPost;
+
+  /// No description provided for @club_approvePost.
+  ///
+  /// In vi, this message translates to:
+  /// **'Duyệt'**
+  String get club_approvePost;
+
+  /// No description provided for @club_postApproved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã duyệt bài viết.'**
+  String get club_postApproved;
+
+  /// No description provided for @club_postRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã từ chối bài viết.'**
+  String get club_postRejected;
+
+  /// No description provided for @club_postModerationError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể xử lý bài viết.'**
+  String get club_postModerationError;
+
+  /// No description provided for @club_reportsSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo bài viết ({count})'**
+  String club_reportsSection(Object count);
+
+  /// No description provided for @club_noPendingReports.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có báo cáo đang chờ xử lý.'**
+  String get club_noPendingReports;
+
+  /// No description provided for @club_reportReasonSpam.
+  ///
+  /// In vi, this message translates to:
+  /// **'Spam / quảng cáo'**
+  String get club_reportReasonSpam;
+
+  /// No description provided for @club_reportReasonHarassment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quấy rối / xúc phạm'**
+  String get club_reportReasonHarassment;
+
+  /// No description provided for @club_reportReasonHate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thù ghét / phân biệt'**
+  String get club_reportReasonHate;
+
+  /// No description provided for @club_reportReasonSexual.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung phản cảm'**
+  String get club_reportReasonSexual;
+
+  /// No description provided for @club_reportReasonViolence.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạo lực / đe dọa'**
+  String get club_reportReasonViolence;
+
+  /// No description provided for @club_reportReasonOther.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lý do khác'**
+  String get club_reportReasonOther;
+
+  /// No description provided for @club_reportedBy.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo bởi {name}'**
+  String club_reportedBy(Object name);
+
+  /// No description provided for @club_postBy.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài của {name}: {text}'**
+  String club_postBy(Object name, Object text);
+
+  /// No description provided for @club_dismissReport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ qua'**
+  String get club_dismissReport;
+
+  /// No description provided for @club_resolveReport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xử lý'**
+  String get club_resolveReport;
+
+  /// No description provided for @club_reportResolved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã ghi nhận xử lý báo cáo.'**
+  String get club_reportResolved;
+
+  /// No description provided for @club_reportDismissed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bỏ qua báo cáo.'**
+  String get club_reportDismissed;
+
+  /// No description provided for @club_reportUpdateError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật báo cáo. Vui lòng thử lại.'**
+  String get club_reportUpdateError;
+
+  /// No description provided for @club_managementActionError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể hoàn tất thao tác. Vui lòng thử lại.'**
+  String get club_managementActionError;
+
+  /// No description provided for @club_tournamentManagement.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý giải đấu CLB'**
+  String get club_tournamentManagement;
+
+  /// No description provided for @club_tournamentManagementDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo mới và điều hành các giải đấu của Câu lạc bộ.'**
+  String get club_tournamentManagementDescription;
+
+  /// No description provided for @club_chooseTournamentTypeDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn hình thức tổ chức phù hợp với quy mô giải của CLB'**
+  String get club_chooseTournamentTypeDescription;
+
+  /// No description provided for @club_liteCreatedOnApp.
+  ///
+  /// In vi, this message translates to:
+  /// **'TẠO TRÊN APP'**
+  String get club_liteCreatedOnApp;
+
+  /// No description provided for @club_liteTournamentDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo trực tiếp trên điện thoại trong 30 giây, tự động chia bảng và theo dõi tỷ số.'**
+  String get club_liteTournamentDescription;
+
+  /// No description provided for @club_standardTournamentTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải Tiêu chuẩn'**
+  String get club_standardTournamentTitle;
+
+  /// No description provided for @club_standardTournamentTitleAdvanced.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải Tiêu chuẩn (Nâng cao)'**
+  String get club_standardTournamentTitleAdvanced;
+
+  /// No description provided for @club_standardCreatedOnWeb.
+  ///
+  /// In vi, this message translates to:
+  /// **'TẠO TRÊN WEB'**
+  String get club_standardCreatedOnWeb;
+
+  /// No description provided for @club_standardTournamentDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu quy mô lớn với đầy đủ tính năng sơ đồ thi đấu, tài chính & trọng tài.'**
+  String get club_standardTournamentDescription;
+
+  /// No description provided for @club_noManagedTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'CLB chưa có giải đấu nào. Bấm nút phía trên để tạo giải!'**
+  String get club_noManagedTournaments;
+
+  /// No description provided for @club_managedTournamentsHeading.
+  ///
+  /// In vi, this message translates to:
+  /// **'CÁC GIẢI ĐẤU ĐANG ĐIỀU HÀNH'**
+  String get club_managedTournamentsHeading;
+
+  /// No description provided for @club_liteTournamentShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải Nhanh'**
+  String get club_liteTournamentShort;
+
+  /// No description provided for @club_standardTournamentShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải Tiêu chuẩn'**
+  String get club_standardTournamentShort;
+
+  /// No description provided for @club_viewTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem trang giải'**
+  String get club_viewTournament;
+
+  /// No description provided for @club_manageTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý giải'**
+  String get club_manageTournament;
+
+  /// No description provided for @club_loadTournamentsError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải danh sách giải. Vui lòng thử lại.'**
+  String get club_loadTournamentsError;
+
   /// No description provided for @club_aboutSection.
   ///
   /// In vi, this message translates to:
@@ -7172,6 +7406,30 @@ abstract class AppLocalizations {
   /// **'Tìm giải đấu phù hợp với bạn'**
   String get exploreHeaderSubtitle;
 
+  /// No description provided for @exploreNationalRanking.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp hạng Quốc gia'**
+  String get exploreNationalRanking;
+
+  /// No description provided for @exploreWinsStat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng'**
+  String get exploreWinsStat;
+
+  /// No description provided for @exploreEloToGold.
+  ///
+  /// In vi, this message translates to:
+  /// **'Còn 50 ELO nữa lên Hạng Vàng'**
+  String get exploreEloToGold;
+
+  /// No description provided for @exploreHighForm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phong độ cao'**
+  String get exploreHighForm;
+
   /// No description provided for @exploreSearchHint.
   ///
   /// In vi, this message translates to:
@@ -7381,6 +7639,36 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thua'**
   String get rankingLosses;
+
+  /// No description provided for @leaderboardNoSports.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có môn thể thao'**
+  String get leaderboardNoSports;
+
+  /// No description provided for @leaderboardNoSportsSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có môn thể thao nào được định nghĩa.'**
+  String get leaderboardNoSportsSubtitle;
+
+  /// No description provided for @leaderboardProvinceLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉnh/Thành:'**
+  String get leaderboardProvinceLabel;
+
+  /// No description provided for @leaderboardSearchEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy \"{query}\"'**
+  String leaderboardSearchEmpty(Object query);
+
+  /// No description provided for @leaderboardSearchEmptyHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vận động viên có thể nằm ngoài Top 100 hoặc chưa tham gia giải đấu.'**
+  String get leaderboardSearchEmptyHint;
 
   /// No description provided for @rankingWinRate.
   ///
@@ -8534,6 +8822,1296 @@ abstract class AppLocalizations {
   /// **'Đóng'**
   String get chatImageClose;
 
+  /// No description provided for @chatDetailRoomFallback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phòng chat'**
+  String get chatDetailRoomFallback;
+
+  /// No description provided for @chatDetailToday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm nay'**
+  String get chatDetailToday;
+
+  /// No description provided for @chatDetailYesterday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm qua'**
+  String get chatDetailYesterday;
+
+  /// No description provided for @chatDetailPollTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo bình chọn'**
+  String get chatDetailPollTooltip;
+
+  /// No description provided for @chatDetailRoomSettingsTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tùy chọn & Thông báo'**
+  String get chatDetailRoomSettingsTooltip;
+
+  /// No description provided for @chatDetailPinnedLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tin nhắn đã ghim'**
+  String get chatDetailPinnedLabel;
+
+  /// No description provided for @chatDetailAttachedImage.
+  ///
+  /// In vi, this message translates to:
+  /// **'📷 [Hình ảnh đính kèm]'**
+  String get chatDetailAttachedImage;
+
+  /// No description provided for @chatDetailPollPlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'📊 [Bình chọn]'**
+  String get chatDetailPollPlaceholder;
+
+  /// No description provided for @chatDetailViewMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem tin nhắn'**
+  String get chatDetailViewMessage;
+
+  /// No description provided for @chatDetailNoMessages.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có tin nhắn nào.'**
+  String get chatDetailNoMessages;
+
+  /// No description provided for @chatDetailStartConversation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy gửi tin nhắn đầu tiên để bắt đầu trò chuyện!'**
+  String get chatDetailStartConversation;
+
+  /// No description provided for @chatDetailSeenBy.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xem bởi {name}'**
+  String chatDetailSeenBy(Object name);
+
+  /// No description provided for @chatDetailTyping.
+  ///
+  /// In vi, this message translates to:
+  /// **'{name} đang soạn tin...'**
+  String chatDetailTyping(Object name);
+
+  /// No description provided for @chatDetailOnlineCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} người đang online'**
+  String chatDetailOnlineCount(Object count);
+
+  /// No description provided for @chatDetailActive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang hoạt động'**
+  String get chatDetailActive;
+
+  /// No description provided for @chatDetailRecentlyActive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động gần đây'**
+  String get chatDetailRecentlyActive;
+
+  /// No description provided for @chatDetailReplyTo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trả lời {name}'**
+  String chatDetailReplyTo(Object name);
+
+  /// No description provided for @chatDetailMediaPollPlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'[Hình ảnh / Bình chọn]'**
+  String get chatDetailMediaPollPlaceholder;
+
+  /// No description provided for @chatDetailSendImage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi ảnh'**
+  String get chatDetailSendImage;
+
+  /// No description provided for @chatDetailTakePhoto.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chụp ảnh'**
+  String get chatDetailTakePhoto;
+
+  /// No description provided for @chatDetailMessageHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhắn tin...'**
+  String get chatDetailMessageHint;
+
+  /// No description provided for @chatDetailSend.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi'**
+  String get chatDetailSend;
+
+  /// No description provided for @chatDetailLike.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thích'**
+  String get chatDetailLike;
+
+  /// No description provided for @adminClubsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý CLB'**
+  String get adminClubsTitle;
+
+  /// No description provided for @adminClubsSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm CLB...'**
+  String get adminClubsSearchHint;
+
+  /// No description provided for @adminClubsFilterAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get adminClubsFilterAll;
+
+  /// No description provided for @adminClubsFilterActive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động'**
+  String get adminClubsFilterActive;
+
+  /// No description provided for @adminClubsFilterPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get adminClubsFilterPending;
+
+  /// No description provided for @adminClubsFilterInactive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã khóa'**
+  String get adminClubsFilterInactive;
+
+  /// No description provided for @adminClubsFilterRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get adminClubsFilterRejected;
+
+  /// No description provided for @adminClubsLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi tải danh sách'**
+  String get adminClubsLoadError;
+
+  /// No description provided for @adminClubsStatTotal.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổng'**
+  String get adminClubsStatTotal;
+
+  /// No description provided for @adminClubsStatActive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động'**
+  String get adminClubsStatActive;
+
+  /// No description provided for @adminClubsStatPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ'**
+  String get adminClubsStatPending;
+
+  /// No description provided for @adminClubsStatRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get adminClubsStatRejected;
+
+  /// No description provided for @adminClubsMembers.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} thành viên'**
+  String adminClubsMembers(Object count);
+
+  /// No description provided for @adminClubsStatusActive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động'**
+  String get adminClubsStatusActive;
+
+  /// No description provided for @adminClubsStatusPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get adminClubsStatusPending;
+
+  /// No description provided for @adminClubsStatusRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get adminClubsStatusRejected;
+
+  /// No description provided for @adminClubsView.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem'**
+  String get adminClubsView;
+
+  /// No description provided for @adminClubsApprove.
+  ///
+  /// In vi, this message translates to:
+  /// **'Duyệt'**
+  String get adminClubsApprove;
+
+  /// No description provided for @adminClubsReject.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get adminClubsReject;
+
+  /// No description provided for @adminClubsDisable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vô hiệu'**
+  String get adminClubsDisable;
+
+  /// No description provided for @adminClubsApprovedFeedback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã duyệt CLB'**
+  String get adminClubsApprovedFeedback;
+
+  /// No description provided for @adminClubsUpdatedFeedback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật CLB'**
+  String get adminClubsUpdatedFeedback;
+
+  /// No description provided for @adminClubsActionError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật CLB. Vui lòng thử lại.'**
+  String get adminClubsActionError;
+
+  /// No description provided for @adminClubsRejectTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối CLB'**
+  String get adminClubsRejectTitle;
+
+  /// No description provided for @adminClubsDisableTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vô hiệu hoá CLB'**
+  String get adminClubsDisableTitle;
+
+  /// No description provided for @adminClubsReasonHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lý do (bắt buộc)'**
+  String get adminClubsReasonHint;
+
+  /// No description provided for @adminClubsCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get adminClubsCancel;
+
+  /// No description provided for @adminClubsConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận'**
+  String get adminClubsConfirm;
+
+  /// No description provided for @adminClubsRejectError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể xử lý CLB. Vui lòng thử lại.'**
+  String get adminClubsRejectError;
+
+  /// No description provided for @adminClubsEmptyAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có câu lạc bộ nào'**
+  String get adminClubsEmptyAll;
+
+  /// No description provided for @adminClubsEmptyActive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có CLB đang hoạt động'**
+  String get adminClubsEmptyActive;
+
+  /// No description provided for @adminClubsEmptyPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có CLB chờ duyệt'**
+  String get adminClubsEmptyPending;
+
+  /// No description provided for @adminClubsEmptyRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có CLB bị từ chối'**
+  String get adminClubsEmptyRejected;
+
+  /// No description provided for @adminChangeRequestsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Yêu cầu thay đổi'**
+  String get adminChangeRequestsTitle;
+
+  /// No description provided for @adminChangeRequestsFilterAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get adminChangeRequestsFilterAll;
+
+  /// No description provided for @adminChangeRequestsFilterPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ xử lý'**
+  String get adminChangeRequestsFilterPending;
+
+  /// No description provided for @adminChangeRequestsFilterApproved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã duyệt'**
+  String get adminChangeRequestsFilterApproved;
+
+  /// No description provided for @adminChangeRequestsFilterRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get adminChangeRequestsFilterRejected;
+
+  /// No description provided for @adminChangeRequestsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có yêu cầu nào'**
+  String get adminChangeRequestsEmpty;
+
+  /// No description provided for @adminChangeRequestsLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi tải dữ liệu'**
+  String get adminChangeRequestsLoadError;
+
+  /// No description provided for @adminChangeRequestsTypeOther.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khác'**
+  String get adminChangeRequestsTypeOther;
+
+  /// No description provided for @adminChangeRequestsRequester.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người dùng'**
+  String get adminChangeRequestsRequester;
+
+  /// No description provided for @adminChangeRequestsStatusApproved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã duyệt'**
+  String get adminChangeRequestsStatusApproved;
+
+  /// No description provided for @adminChangeRequestsStatusRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get adminChangeRequestsStatusRejected;
+
+  /// No description provided for @adminChangeRequestsStatusPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ xử lý'**
+  String get adminChangeRequestsStatusPending;
+
+  /// No description provided for @adminChangeRequestsApprove.
+  ///
+  /// In vi, this message translates to:
+  /// **'Duyệt'**
+  String get adminChangeRequestsApprove;
+
+  /// No description provided for @adminChangeRequestsReject.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get adminChangeRequestsReject;
+
+  /// No description provided for @adminChangeRequestsApprovedFeedback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã duyệt yêu cầu'**
+  String get adminChangeRequestsApprovedFeedback;
+
+  /// No description provided for @adminChangeRequestsRejectedFeedback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã từ chối yêu cầu'**
+  String get adminChangeRequestsRejectedFeedback;
+
+  /// No description provided for @adminChangeRequestsActionError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể xử lý yêu cầu. Vui lòng thử lại.'**
+  String get adminChangeRequestsActionError;
+
+  /// No description provided for @adminDisputesTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khiếu nại'**
+  String get adminDisputesTitle;
+
+  /// No description provided for @adminDisputesFilterAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get adminDisputesFilterAll;
+
+  /// No description provided for @adminDisputesFilterOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở'**
+  String get adminDisputesFilterOpen;
+
+  /// No description provided for @adminDisputesFilterResolved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã giải quyết'**
+  String get adminDisputesFilterResolved;
+
+  /// No description provided for @adminDisputesEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có khiếu nại nào'**
+  String get adminDisputesEmpty;
+
+  /// No description provided for @adminDisputesLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi tải dữ liệu'**
+  String get adminDisputesLoadError;
+
+  /// No description provided for @adminDisputesReasonFallback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khiếu nại'**
+  String get adminDisputesReasonFallback;
+
+  /// No description provided for @adminDisputesUserFallback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người dùng'**
+  String get adminDisputesUserFallback;
+
+  /// No description provided for @adminDisputesStatusOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở'**
+  String get adminDisputesStatusOpen;
+
+  /// No description provided for @adminDisputesStatusResolved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã giải quyết'**
+  String get adminDisputesStatusResolved;
+
+  /// No description provided for @adminDisputesCreatedAt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày tạo: {date}'**
+  String adminDisputesCreatedAt(Object date);
+
+  /// No description provided for @adminDisputesResolve.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng khiếu nại'**
+  String get adminDisputesResolve;
+
+  /// No description provided for @adminDisputesResolvedFeedback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đóng khiếu nại'**
+  String get adminDisputesResolvedFeedback;
+
+  /// No description provided for @adminDisputesResolveError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể đóng khiếu nại. Vui lòng thử lại.'**
+  String get adminDisputesResolveError;
+
+  /// No description provided for @pendingClubsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Duyệt CLB'**
+  String get pendingClubsTitle;
+
+  /// No description provided for @pendingClubsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có CLB nào chờ duyệt'**
+  String get pendingClubsEmpty;
+
+  /// No description provided for @pendingClubsAllReviewed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả CLB đã được xét duyệt'**
+  String get pendingClubsAllReviewed;
+
+  /// No description provided for @pendingClubsLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi tải danh sách'**
+  String get pendingClubsLoadError;
+
+  /// No description provided for @pendingClubsRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get pendingClubsRetry;
+
+  /// No description provided for @pendingClubsMemberCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} thành viên'**
+  String pendingClubsMemberCount(Object count);
+
+  /// No description provided for @pendingClubsStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get pendingClubsStatus;
+
+  /// No description provided for @pendingClubsApprove.
+  ///
+  /// In vi, this message translates to:
+  /// **'Duyệt'**
+  String get pendingClubsApprove;
+
+  /// No description provided for @pendingClubsReject.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get pendingClubsReject;
+
+  /// No description provided for @pendingClubsApprovedFeedback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã duyệt CLB'**
+  String get pendingClubsApprovedFeedback;
+
+  /// No description provided for @pendingClubsApproveError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể duyệt CLB. Vui lòng thử lại.'**
+  String get pendingClubsApproveError;
+
+  /// No description provided for @pendingClubsRejectTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối CLB'**
+  String get pendingClubsRejectTitle;
+
+  /// No description provided for @pendingClubsRejectQuestion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối \"{name}\"?'**
+  String pendingClubsRejectQuestion(Object name);
+
+  /// No description provided for @pendingClubsRejectReasonHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lý do từ chối (bắt buộc)'**
+  String get pendingClubsRejectReasonHint;
+
+  /// No description provided for @pendingClubsCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get pendingClubsCancel;
+
+  /// No description provided for @pendingClubsRejectedFeedback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã từ chối CLB'**
+  String get pendingClubsRejectedFeedback;
+
+  /// No description provided for @pendingClubsRejectError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể từ chối CLB. Vui lòng thử lại.'**
+  String get pendingClubsRejectError;
+
+  /// No description provided for @pendingClubsConfirmReject.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận từ chối'**
+  String get pendingClubsConfirmReject;
+
+  /// No description provided for @adminTransactionsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sử giao dịch'**
+  String get adminTransactionsTitle;
+
+  /// No description provided for @adminTransactionsFilterAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get adminTransactionsFilterAll;
+
+  /// No description provided for @adminTransactionsFilterCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành'**
+  String get adminTransactionsFilterCompleted;
+
+  /// No description provided for @adminTransactionsFilterPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ xử lý'**
+  String get adminTransactionsFilterPending;
+
+  /// No description provided for @adminTransactionsFilterFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thất bại'**
+  String get adminTransactionsFilterFailed;
+
+  /// No description provided for @adminTransactionsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có giao dịch nào'**
+  String get adminTransactionsEmpty;
+
+  /// No description provided for @adminTransactionsLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi tải dữ liệu'**
+  String get adminTransactionsLoadError;
+
+  /// No description provided for @adminTransactionsUserFallback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người dùng'**
+  String get adminTransactionsUserFallback;
+
+  /// No description provided for @adminTransactionsStatusCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành'**
+  String get adminTransactionsStatusCompleted;
+
+  /// No description provided for @adminTransactionsStatusPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ xử lý'**
+  String get adminTransactionsStatusPending;
+
+  /// No description provided for @adminTransactionsStatusFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thất bại'**
+  String get adminTransactionsStatusFailed;
+
+  /// No description provided for @adminTransactionsReference.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã GD: {reference}'**
+  String adminTransactionsReference(Object reference);
+
+  /// No description provided for @adminVerificationTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác thực'**
+  String get adminVerificationTitle;
+
+  /// No description provided for @adminVerificationTypeAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get adminVerificationTypeAll;
+
+  /// No description provided for @adminVerificationTypeUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người dùng'**
+  String get adminVerificationTypeUser;
+
+  /// No description provided for @adminVerificationTypeClub.
+  ///
+  /// In vi, this message translates to:
+  /// **'CLB'**
+  String get adminVerificationTypeClub;
+
+  /// No description provided for @adminVerificationTypeTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu'**
+  String get adminVerificationTypeTournament;
+
+  /// No description provided for @adminVerificationStatusAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get adminVerificationStatusAll;
+
+  /// No description provided for @adminVerificationStatusPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get adminVerificationStatusPending;
+
+  /// No description provided for @adminVerificationStatusVerified.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xác thực'**
+  String get adminVerificationStatusVerified;
+
+  /// No description provided for @adminVerificationStatusRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get adminVerificationStatusRejected;
+
+  /// No description provided for @adminVerificationEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có yêu cầu xác thực'**
+  String get adminVerificationEmpty;
+
+  /// No description provided for @adminVerificationLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi tải dữ liệu'**
+  String get adminVerificationLoadError;
+
+  /// No description provided for @adminVerificationStatusVerifiedLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xác thực'**
+  String get adminVerificationStatusVerifiedLabel;
+
+  /// No description provided for @adminVerificationStatusRejectedLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get adminVerificationStatusRejectedLabel;
+
+  /// No description provided for @adminVerificationStatusPendingLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get adminVerificationStatusPendingLabel;
+
+  /// No description provided for @adminVerificationApprove.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác thực'**
+  String get adminVerificationApprove;
+
+  /// No description provided for @adminVerificationReject.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get adminVerificationReject;
+
+  /// No description provided for @adminVerificationVerifiedFeedback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xác thực'**
+  String get adminVerificationVerifiedFeedback;
+
+  /// No description provided for @adminVerificationActionError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể xử lý yêu cầu xác thực. Vui lòng thử lại.'**
+  String get adminVerificationActionError;
+
+  /// No description provided for @adminVerificationRejectTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối xác thực'**
+  String get adminVerificationRejectTitle;
+
+  /// No description provided for @adminVerificationRejectReasonHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lý do từ chối (bắt buộc)'**
+  String get adminVerificationRejectReasonHint;
+
+  /// No description provided for @adminVerificationCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get adminVerificationCancel;
+
+  /// No description provided for @adminVerificationRejectedFeedback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã từ chối xác thực'**
+  String get adminVerificationRejectedFeedback;
+
+  /// No description provided for @adminVerificationRejectError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể từ chối xác thực. Vui lòng thử lại.'**
+  String get adminVerificationRejectError;
+
+  /// No description provided for @chatViewReactions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem người bày tỏ cảm xúc'**
+  String get chatViewReactions;
+
+  /// No description provided for @chatReplyAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trả lời'**
+  String get chatReplyAction;
+
+  /// No description provided for @chatCopyTextAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sao chép văn bản'**
+  String get chatCopyTextAction;
+
+  /// No description provided for @chatCopiedFeedback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã sao chép vào bộ nhớ tạm.'**
+  String get chatCopiedFeedback;
+
+  /// No description provided for @chatUnpinMessageAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ ghim tin nhắn'**
+  String get chatUnpinMessageAction;
+
+  /// No description provided for @chatPinMessageAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghim tin nhắn'**
+  String get chatPinMessageAction;
+
+  /// No description provided for @chatRevokeMessageAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu hồi tin nhắn'**
+  String get chatRevokeMessageAction;
+
+  /// No description provided for @clubDetailChatTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trò chuyện CLB'**
+  String get clubDetailChatTooltip;
+
+  /// No description provided for @clubDetailShareTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ'**
+  String get clubDetailShareTooltip;
+
+  /// No description provided for @clubDetailNotificationsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo câu lạc bộ'**
+  String get clubDetailNotificationsTitle;
+
+  /// No description provided for @clubDetailNotificationsDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tùy chỉnh nhận tin nhắn và thông báo từ {clubName}'**
+  String clubDetailNotificationsDescription(Object clubName);
+
+  /// No description provided for @clubDetailNotificationsAllTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả tin nhắn'**
+  String get clubDetailNotificationsAllTitle;
+
+  /// No description provided for @clubDetailNotificationsAllSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận thông báo cho mọi tin nhắn mới (Mặc định)'**
+  String get clubDetailNotificationsAllSubtitle;
+
+  /// No description provided for @clubDetailNotificationsMentionsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ khi được @tag'**
+  String get clubDetailNotificationsMentionsTitle;
+
+  /// No description provided for @clubDetailNotificationsMentionsSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ thông báo khi có người nhắc tên bạn hoặc @all'**
+  String get clubDetailNotificationsMentionsSubtitle;
+
+  /// No description provided for @clubDetailNotificationsMutedTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt thông báo (Im lặng)'**
+  String get clubDetailNotificationsMutedTitle;
+
+  /// No description provided for @clubDetailNotificationsMutedSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không nhận thông báo đẩy từ câu lạc bộ này'**
+  String get clubDetailNotificationsMutedSubtitle;
+
+  /// No description provided for @clubDetailNotificationsUpdatedAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bật nhận tất cả thông báo CLB'**
+  String get clubDetailNotificationsUpdatedAll;
+
+  /// No description provided for @clubDetailNotificationsUpdatedMentions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ nhận thông báo khi được @nhắc tên'**
+  String get clubDetailNotificationsUpdatedMentions;
+
+  /// No description provided for @clubDetailNotificationsUpdatedMuted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tắt thông báo CLB (Im lặng)'**
+  String get clubDetailNotificationsUpdatedMuted;
+
+  /// No description provided for @clubDetailNotificationsUpdateError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật cài đặt thông báo.'**
+  String get clubDetailNotificationsUpdateError;
+
+  /// No description provided for @clubDetailManageTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản trị CLB'**
+  String get clubDetailManageTooltip;
+
+  /// No description provided for @clubDetailLeaveTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rời câu lạc bộ?'**
+  String get clubDetailLeaveTitle;
+
+  /// No description provided for @clubDetailLeaveDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn sẽ không còn quyền truy cập các nội dung dành cho thành viên.'**
+  String get clubDetailLeaveDescription;
+
+  /// No description provided for @clubDetailLeaveAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rời CLB'**
+  String get clubDetailLeaveAction;
+
+  /// No description provided for @clubDetailLeftSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã rời câu lạc bộ'**
+  String get clubDetailLeftSuccess;
+
+  /// No description provided for @clubDetailLeaveError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể rời câu lạc bộ'**
+  String get clubDetailLeaveError;
+
+  /// No description provided for @clubDetailJoinQuestionsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu hỏi tham gia CLB'**
+  String get clubDetailJoinQuestionsTitle;
+
+  /// No description provided for @clubDetailJoinQuestionsInstruction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy trả lời các câu hỏi để gửi yêu cầu tham gia.'**
+  String get clubDetailJoinQuestionsInstruction;
+
+  /// No description provided for @clubDetailJoinQuestionRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng trả lời câu hỏi này'**
+  String get clubDetailJoinQuestionRequired;
+
+  /// No description provided for @clubDetailSubmitJoinRequest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi yêu cầu'**
+  String get clubDetailSubmitJoinRequest;
+
+  /// No description provided for @clubDetailJoinRequestError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể gửi yêu cầu tham gia CLB. Vui lòng thử lại.'**
+  String get clubDetailJoinRequestError;
+
+  /// No description provided for @clubDetailJoinedSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tham gia câu lạc bộ thành công!'**
+  String get clubDetailJoinedSuccess;
+
+  /// No description provided for @clubDetailOpenLinkError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể mở liên kết này.'**
+  String get clubDetailOpenLinkError;
+
+  /// No description provided for @clubDetailNoFilteredTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có giải phù hợp với bộ lọc'**
+  String get clubDetailNoFilteredTournaments;
+
+  /// No description provided for @clubDetailClearFilters.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa bộ lọc'**
+  String get clubDetailClearFilters;
+
+  /// No description provided for @clubDetailQuickWebTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo nhanh trên Web'**
+  String get clubDetailQuickWebTitle;
+
+  /// No description provided for @clubDetailQuickWebDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Form nhanh đầy đủ hơn Lite; giải vẫn thuộc CLB.'**
+  String get clubDetailQuickWebDescription;
+
+  /// No description provided for @clubDetailMemberActionError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật thành viên. Vui lòng thử lại.'**
+  String get clubDetailMemberActionError;
+
+  /// No description provided for @clubDetailGalleryTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thư viện ảnh ({count})'**
+  String clubDetailGalleryTitle(Object count);
+
+  /// No description provided for @clubDetailClubLogo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Logo CLB'**
+  String get clubDetailClubLogo;
+
+  /// No description provided for @clubDetailCoverImage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh bìa'**
+  String get clubDetailCoverImage;
+
+  /// No description provided for @clubDetailActivityImage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh hoạt động'**
+  String get clubDetailActivityImage;
+
+  /// No description provided for @clubDetailAddFirstImage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm ảnh đầu tiên'**
+  String get clubDetailAddFirstImage;
+
+  /// No description provided for @clubDetailAddImage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm ảnh'**
+  String get clubDetailAddImage;
+
+  /// No description provided for @clubDetailGalleryAdded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm ảnh vào thư viện'**
+  String get clubDetailGalleryAdded;
+
+  /// No description provided for @clubDetailGalleryAddError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể thêm ảnh vào thư viện'**
+  String get clubDetailGalleryAddError;
+
+  /// No description provided for @clubDetailDeleteImageTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá hình ảnh'**
+  String get clubDetailDeleteImageTitle;
+
+  /// No description provided for @clubDetailDeleteImageDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc chắn muốn xoá ảnh này khỏi thư viện CLB?'**
+  String get clubDetailDeleteImageDescription;
+
+  /// No description provided for @clubDetailGalleryRemoved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xoá ảnh khỏi thư viện'**
+  String get clubDetailGalleryRemoved;
+
+  /// No description provided for @clubDetailGalleryRemoveError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể xoá ảnh'**
+  String get clubDetailGalleryRemoveError;
+
+  /// No description provided for @clubDetailDeleteAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá'**
+  String get clubDetailDeleteAction;
+
+  /// No description provided for @communitySocialSettingsLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải cài đặt sinh hoạt CLB.'**
+  String get communitySocialSettingsLoadError;
+
+  /// No description provided for @communitySocialSettingsSaveSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu cài đặt sinh hoạt CLB'**
+  String get communitySocialSettingsSaveSuccess;
+
+  /// No description provided for @communitySocialSettingsSaveError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu cài đặt thất bại. Vui lòng thử lại.'**
+  String get communitySocialSettingsSaveError;
+
+  /// No description provided for @communitySocialSettingsCreateTagError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tạo tag.'**
+  String get communitySocialSettingsCreateTagError;
+
+  /// No description provided for @communitySocialSettingsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sinh hoạt CLB'**
+  String get communitySocialSettingsTitle;
+
+  /// No description provided for @communitySocialSettingsDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điều khiển bảng tin, bình luận, chat và tag thành viên.'**
+  String get communitySocialSettingsDescription;
+
+  /// No description provided for @communitySocialSettingsPostingPolicy.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quyền đăng bài'**
+  String get communitySocialSettingsPostingPolicy;
+
+  /// No description provided for @communitySocialSettingsTaggingPolicy.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quyền gắn thẻ'**
+  String get communitySocialSettingsTaggingPolicy;
+
+  /// No description provided for @communitySocialSettingsMembers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên'**
+  String get communitySocialSettingsMembers;
+
+  /// No description provided for @communitySocialSettingsAdmins.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ban quản trị'**
+  String get communitySocialSettingsAdmins;
+
+  /// No description provided for @communitySocialSettingsPostingOff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt đăng bài'**
+  String get communitySocialSettingsPostingOff;
+
+  /// No description provided for @communitySocialSettingsTaggingOff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt gắn thẻ'**
+  String get communitySocialSettingsTaggingOff;
+
+  /// No description provided for @communitySocialSettingsApproval.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài thành viên phải duyệt'**
+  String get communitySocialSettingsApproval;
+
+  /// No description provided for @communitySocialSettingsComments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép bình luận'**
+  String get communitySocialSettingsComments;
+
+  /// No description provided for @communitySocialSettingsChat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở chat CLB'**
+  String get communitySocialSettingsChat;
+
+  /// No description provided for @communitySocialSettingsPublicFeed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho khách xem bảng tin'**
+  String get communitySocialSettingsPublicFeed;
+
+  /// No description provided for @communitySocialSettingsSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu cài đặt'**
+  String get communitySocialSettingsSave;
+
+  /// No description provided for @communitySocialSettingsSaving.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang lưu...'**
+  String get communitySocialSettingsSaving;
+
+  /// No description provided for @communitySocialSettingsTagPresetsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tag vui của CLB'**
+  String get communitySocialSettingsTagPresetsTitle;
+
+  /// No description provided for @communitySocialSettingsTagPresetsDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo nhãn màu để gán nhanh cho thành viên.'**
+  String get communitySocialSettingsTagPresetsDescription;
+
+  /// No description provided for @communitySocialSettingsTagNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: MVP tuần'**
+  String get communitySocialSettingsTagNameHint;
+
+  /// No description provided for @communitySocialSettingsColorTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn màu tag'**
+  String get communitySocialSettingsColorTitle;
+
+  /// No description provided for @communitySocialSettingsClose.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng'**
+  String get communitySocialSettingsClose;
+
   /// No description provided for @coreAppTitle.
   ///
   /// In vi, this message translates to:
@@ -9085,6 +10663,5652 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Xóa tài khoản thất bại. Vui lòng thử lại.'**
   String get settingsDeleteFailed;
+
+  /// No description provided for @settingsGenderNotSelected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa chọn'**
+  String get settingsGenderNotSelected;
+
+  /// No description provided for @settingsGenderMale.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nam'**
+  String get settingsGenderMale;
+
+  /// No description provided for @settingsGenderFemale.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nữ'**
+  String get settingsGenderFemale;
+
+  /// No description provided for @settingsGenderOther.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khác'**
+  String get settingsGenderOther;
+
+  /// No description provided for @settingsDobDisplay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày {day}/{month}/{year}'**
+  String settingsDobDisplay(Object day, Object month, Object year);
+
+  /// No description provided for @settingsClubNotifications.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo Câu lạc bộ'**
+  String get settingsClubNotifications;
+
+  /// No description provided for @settingsNoClubsForNotifications.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa tham gia câu lạc bộ nào'**
+  String get settingsNoClubsForNotifications;
+
+  /// No description provided for @settingsClubNotificationsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khi gia nhập CLB, bạn có thể tùy chỉnh nhận thông báo tại đây.'**
+  String get settingsClubNotificationsHint;
+
+  /// No description provided for @settingsNotificationsAllUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bật nhận tất cả thông báo'**
+  String get settingsNotificationsAllUpdated;
+
+  /// No description provided for @settingsNotificationsMentionsUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ nhận thông báo khi được @nhắc tên'**
+  String get settingsNotificationsMentionsUpdated;
+
+  /// No description provided for @settingsNotificationsMutedUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tắt thông báo CLB (Im lặng)'**
+  String get settingsNotificationsMutedUpdated;
+
+  /// No description provided for @settingsNotificationsUpdateFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật cài đặt thông báo'**
+  String get settingsNotificationsUpdateFailed;
+
+  /// No description provided for @settingsClubNotificationAllSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận tất cả tin nhắn & thông báo'**
+  String get settingsClubNotificationAllSummary;
+
+  /// No description provided for @settingsClubNotificationMentionsSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ nhận thông báo khi được @nhắc tên'**
+  String get settingsClubNotificationMentionsSummary;
+
+  /// No description provided for @settingsClubNotificationMutedSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tắt thông báo (Im lặng)'**
+  String get settingsClubNotificationMutedSummary;
+
+  /// No description provided for @settingsNotificationAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get settingsNotificationAll;
+
+  /// No description provided for @settingsNotificationMentions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ @tag'**
+  String get settingsNotificationMentions;
+
+  /// No description provided for @settingsNotificationMuted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt'**
+  String get settingsNotificationMuted;
+
+  /// No description provided for @settingsSaveButton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu thay đổi'**
+  String get settingsSaveButton;
+
+  /// No description provided for @profileVersion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phiên bản {version}{build}'**
+  String profileVersion(Object build, Object version);
+
+  /// No description provided for @profileNotRanked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xếp hạng'**
+  String get profileNotRanked;
+
+  /// No description provided for @profileRankStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'TRẠNG THÁI'**
+  String get profileRankStatus;
+
+  /// No description provided for @profileRankLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'RANK'**
+  String get profileRankLabel;
+
+  /// No description provided for @profileNoRank.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có rank'**
+  String get profileNoRank;
+
+  /// No description provided for @profileEloProgress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiến tới {nextLabel} ({percent}%)'**
+  String profileEloProgress(Object nextLabel, Object percent);
+
+  /// No description provided for @profileMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'trận'**
+  String get profileMatches;
+
+  /// No description provided for @profilePhoneLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số điện thoại'**
+  String get profilePhoneLabel;
+
+  /// No description provided for @profileDobLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày sinh'**
+  String get profileDobLabel;
+
+  /// No description provided for @profileGenderLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới tính'**
+  String get profileGenderLabel;
+
+  /// No description provided for @profileAddressLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ'**
+  String get profileAddressLabel;
+
+  /// No description provided for @profileProvinceLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉnh/Thành phố'**
+  String get profileProvinceLabel;
+
+  /// No description provided for @profileEmailStatusLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái email'**
+  String get profileEmailStatusLabel;
+
+  /// No description provided for @profileEmailVerifiedDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email đã được xác thực và sẵn sàng cho các chức năng bảo mật.'**
+  String get profileEmailVerifiedDescription;
+
+  /// No description provided for @profileEmailUnverifiedDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email chưa xác thực, nên xác minh để hoàn tất bảo mật tài khoản.'**
+  String get profileEmailUnverifiedDescription;
+
+  /// No description provided for @profilePhoneVerifiedLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'SĐT xác thực'**
+  String get profilePhoneVerifiedLabel;
+
+  /// No description provided for @profileBankLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngân hàng'**
+  String get profileBankLabel;
+
+  /// No description provided for @profileBankAccountLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'STK'**
+  String get profileBankAccountLabel;
+
+  /// No description provided for @profileOwnerTournamentRole.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chủ giải'**
+  String get profileOwnerTournamentRole;
+
+  /// No description provided for @profileOrganizerTournamentRole.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ban tổ chức'**
+  String get profileOrganizerTournamentRole;
+
+  /// No description provided for @profileRefereeTournamentRole.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trọng tài'**
+  String get profileRefereeTournamentRole;
+
+  /// No description provided for @profilePlayerTournamentRole.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người chơi'**
+  String get profilePlayerTournamentRole;
+
+  /// No description provided for @profileNoManagedTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa tạo hoặc tham gia giải nào.'**
+  String get profileNoManagedTournaments;
+
+  /// No description provided for @profileViewDashboard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem Dashboard'**
+  String get profileViewDashboard;
+
+  /// No description provided for @profileViewAllCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem tất cả ({count})'**
+  String profileViewAllCount(Object count);
+
+  /// No description provided for @profileTournamentLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải dữ liệu'**
+  String get profileTournamentLoadError;
+
+  /// No description provided for @profileNoClubs.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa tạo hoặc tham gia câu lạc bộ nào.'**
+  String get profileNoClubs;
+
+  /// No description provided for @profileCreateClub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo CLB mới'**
+  String get profileCreateClub;
+
+  /// No description provided for @profileClubLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải danh sách CLB'**
+  String get profileClubLoadError;
+
+  /// No description provided for @profileOwnerRole.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chủ sở hữu'**
+  String get profileOwnerRole;
+
+  /// No description provided for @profileAdminRole.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản trị'**
+  String get profileAdminRole;
+
+  /// No description provided for @profileMemberRole.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tham gia'**
+  String get profileMemberRole;
+
+  /// No description provided for @profileDefaultSport.
+  ///
+  /// In vi, this message translates to:
+  /// **'THỂ THAO'**
+  String get profileDefaultSport;
+
+  /// No description provided for @profileMembers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên'**
+  String get profileMembers;
+
+  /// No description provided for @profileRecentCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vừa kết thúc'**
+  String get profileRecentCompleted;
+
+  /// No description provided for @profileInProgress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get profileInProgress;
+
+  /// No description provided for @profileRegistrationOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở đăng ký'**
+  String get profileRegistrationOpen;
+
+  /// No description provided for @profileUpcoming.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp diễn ra'**
+  String get profileUpcoming;
+
+  /// No description provided for @profileNoFollowedTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa theo dõi giải nào.'**
+  String get profileNoFollowedTournaments;
+
+  /// No description provided for @profileNoMatchingTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có giải đấu phù hợp với bộ lọc.'**
+  String get profileNoMatchingTournaments;
+
+  /// No description provided for @profileFollowedLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải danh sách theo dõi'**
+  String get profileFollowedLoadError;
+
+  /// No description provided for @profileRecentlyCompletedHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vừa kết thúc trong 14 ngày gần đây'**
+  String get profileRecentlyCompletedHint;
+
+  /// No description provided for @profileCompletedHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã kết thúc'**
+  String get profileCompletedHint;
+
+  /// No description provided for @profileInProgressHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get profileInProgressHint;
+
+  /// No description provided for @profileRegistrationHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở đăng ký'**
+  String get profileRegistrationHint;
+
+  /// No description provided for @profileUpcomingHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp diễn ra'**
+  String get profileUpcomingHint;
+
+  /// No description provided for @profileFollowingHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang theo dõi'**
+  String get profileFollowingHint;
+
+  /// No description provided for @profileNoName.
+  ///
+  /// In vi, this message translates to:
+  /// **'(Chưa có tên)'**
+  String get profileNoName;
+
+  /// No description provided for @profileLiteTournamentHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải nhanh (Lite) • Quản lý trên app'**
+  String get profileLiteTournamentHint;
+
+  /// No description provided for @profileAdvancedTournamentHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải nâng cao • Quản lý đầy đủ'**
+  String get profileAdvancedTournamentHint;
+
+  /// No description provided for @profileDeleteTournamentTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa giải đấu?'**
+  String get profileDeleteTournamentTitle;
+
+  /// No description provided for @profileDeleteTournamentContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn xóa \"{name}\"?'**
+  String profileDeleteTournamentContent(Object name);
+
+  /// No description provided for @profileCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get profileCancel;
+
+  /// No description provided for @profileTournamentDeleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa giải đấu'**
+  String get profileTournamentDeleted;
+
+  /// No description provided for @profileTournamentDeleteFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể xóa giải đấu'**
+  String get profileTournamentDeleteFailed;
+
+  /// No description provided for @profileAdvancedManagementTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý giải Nâng Cao'**
+  String get profileAdvancedManagementTitle;
+
+  /// No description provided for @profileAdvancedManagementContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'App hiện chỉ hỗ trợ quản lý giải nhanh (Lite). Giải Nâng Cao vui lòng quản lý trên web.'**
+  String get profileAdvancedManagementContent;
+
+  /// No description provided for @profileUnderstood.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hiểu'**
+  String get profileUnderstood;
+
+  /// No description provided for @profileLoadErrorTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải thông tin'**
+  String get profileLoadErrorTitle;
+
+  /// No description provided for @profileUnknownUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người dùng'**
+  String get profileUnknownUser;
+
+  /// No description provided for @liveCheerFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thể gửi cổ vũ. Vui lòng thử lại.'**
+  String get liveCheerFailed;
+
+  /// No description provided for @liveCommentFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể gửi bình luận. Vui lòng thử lại!'**
+  String get liveCommentFailed;
+
+  /// No description provided for @livePenaltyRecorded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã ghi nhận {option}.'**
+  String livePenaltyRecorded(Object option);
+
+  /// No description provided for @livePenaltyRecordedFor.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã ghi nhận {option} cho {team}.'**
+  String livePenaltyRecordedFor(Object option, Object team);
+
+  /// No description provided for @liveFoulSelectTeam.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội nào bị phạt?'**
+  String get liveFoulSelectTeam;
+
+  /// No description provided for @liveForceWinTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xử thắng nhanh'**
+  String get liveForceWinTitle;
+
+  /// No description provided for @liveForceWinContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận xử thắng cho một đội (đối thủ bỏ cuộc hoặc phạm quy)?'**
+  String get liveForceWinContent;
+
+  /// No description provided for @liveCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get liveCancel;
+
+  /// No description provided for @liveConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận'**
+  String get liveConfirm;
+
+  /// No description provided for @liveMatchTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trực tiếp'**
+  String get liveMatchTitle;
+
+  /// No description provided for @liveMatchDetailsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chi Tiết Trận Đấu'**
+  String get liveMatchDetailsTitle;
+
+  /// No description provided for @liveRefereeDeskTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bàn Trọng Tài'**
+  String get liveRefereeDeskTitle;
+
+  /// No description provided for @liveMatchNotFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy trận đấu'**
+  String get liveMatchNotFound;
+
+  /// No description provided for @liveMatchLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải dữ liệu trận đấu.'**
+  String get liveMatchLoadError;
+
+  /// No description provided for @liveBack.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quay lại'**
+  String get liveBack;
+
+  /// No description provided for @liveMatchInfo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin trận đấu'**
+  String get liveMatchInfo;
+
+  /// No description provided for @liveAppliedRules.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luật giải đang áp dụng'**
+  String get liveAppliedRules;
+
+  /// No description provided for @liveAppliedRulesDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các thông số được lấy từ cấu hình của ban tổ chức. App chỉ mở bảng chấm điểm theo luật này.'**
+  String get liveAppliedRulesDescription;
+
+  /// No description provided for @liveSportLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn'**
+  String get liveSportLabel;
+
+  /// No description provided for @liveFormatLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Format'**
+  String get liveFormatLabel;
+
+  /// No description provided for @liveWinLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng'**
+  String get liveWinLabel;
+
+  /// No description provided for @liveSetTargetLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mốc set'**
+  String get liveSetTargetLabel;
+
+  /// No description provided for @liveRuleLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luật'**
+  String get liveRuleLabel;
+
+  /// No description provided for @liveScoringLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Scoring'**
+  String get liveScoringLabel;
+
+  /// No description provided for @liveTiebreakLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiebreak'**
+  String get liveTiebreakLabel;
+
+  /// No description provided for @livePointsValue.
+  ///
+  /// In vi, this message translates to:
+  /// **'{value} điểm'**
+  String livePointsValue(Object value);
+
+  /// No description provided for @liveGamesValue.
+  ///
+  /// In vi, this message translates to:
+  /// **'{value} game'**
+  String liveGamesValue(Object value);
+
+  /// No description provided for @liveSetValue.
+  ///
+  /// In vi, this message translates to:
+  /// **'{value} set'**
+  String liveSetValue(Object value);
+
+  /// No description provided for @liveDifferenceTwo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cách biệt 2'**
+  String get liveDifferenceTwo;
+
+  /// No description provided for @liveNoDifferenceTwo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không cách biệt 2'**
+  String get liveNoDifferenceTwo;
+
+  /// No description provided for @liveMatchConfiguration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu hình Trận đấu'**
+  String get liveMatchConfiguration;
+
+  /// No description provided for @liveTournamentConfiguration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu hình giải đang áp dụng'**
+  String get liveTournamentConfiguration;
+
+  /// No description provided for @liveTournamentConfigurationDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Màn setup đang lấy mặc định từ cấu hình giải đấu. Bạn có thể chỉnh ở cấp trận nếu cần.'**
+  String get liveTournamentConfigurationDescription;
+
+  /// No description provided for @liveDefaultConfigurationDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải chưa có sportRules chi tiết, hệ thống đang dùng cấu hình mặc định theo môn.'**
+  String get liveDefaultConfigurationDescription;
+
+  /// No description provided for @liveScoreTargetTennis.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số game để chạm mốc set (mặc định {value})'**
+  String liveScoreTargetTennis(Object value);
+
+  /// No description provided for @liveScoreTargetSideOut.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mốc điểm game side-out (mặc định {value})'**
+  String liveScoreTargetSideOut(Object value);
+
+  /// No description provided for @liveScoreTargetSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mốc điểm mỗi set (mặc định {value})'**
+  String liveScoreTargetSet(Object value);
+
+  /// No description provided for @liveTimeLimitLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới hạn thời gian (phút, tuỳ chọn)'**
+  String get liveTimeLimitLabel;
+
+  /// No description provided for @liveTimeLimitHelper.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nếu để trống, trận sẽ không giới hạn thời gian ở cấp trận.'**
+  String get liveTimeLimitHelper;
+
+  /// No description provided for @liveWinByTwoSetting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng luật cách biệt 2 {unit}'**
+  String liveWinByTwoSetting(Object unit);
+
+  /// No description provided for @liveStartMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'BẮT ĐẦU TRẬN ĐẤU'**
+  String get liveStartMatch;
+
+  /// No description provided for @liveStartShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'BẮT ĐẦU'**
+  String get liveStartShort;
+
+  /// No description provided for @liveOpenScoreboard.
+  ///
+  /// In vi, this message translates to:
+  /// **'MỞ BẢNG CHẤM ĐIỂM'**
+  String get liveOpenScoreboard;
+
+  /// No description provided for @liveOpenScoreboardShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'MỞ BẢNG'**
+  String get liveOpenScoreboardShort;
+
+  /// No description provided for @liveRefereeNotStarted.
+  ///
+  /// In vi, this message translates to:
+  /// **'BÀN TRỌNG TÀI - CHƯA BẮT ĐẦU'**
+  String get liveRefereeNotStarted;
+
+  /// No description provided for @liveRefereeInProgress.
+  ///
+  /// In vi, this message translates to:
+  /// **'BÀN TRỌNG TÀI - ĐANG THI ĐẤU'**
+  String get liveRefereeInProgress;
+
+  /// No description provided for @liveStartAndScoreHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bấm nút để bắt đầu & chấm điểm'**
+  String get liveStartAndScoreHint;
+
+  /// No description provided for @liveOpenScoreboardHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở bàn chấm điểm để ghi nhận tỉ số'**
+  String get liveOpenScoreboardHint;
+
+  /// No description provided for @liveStartMatchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bấm nút để bắt đầu trận đấu'**
+  String get liveStartMatchHint;
+
+  /// No description provided for @liveScoreAndPenaltyHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở bàn chấm điểm & thẻ phạt'**
+  String get liveScoreAndPenaltyHint;
+
+  /// No description provided for @liveMaxScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tối đa: {value}'**
+  String liveMaxScore(Object value);
+
+  /// No description provided for @liveEndMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'KẾT THÚC'**
+  String get liveEndMatch;
+
+  /// No description provided for @liveWhistle.
+  ///
+  /// In vi, this message translates to:
+  /// **'THỔI CÒI'**
+  String get liveWhistle;
+
+  /// No description provided for @liveConfirmEndTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận kết thúc trận đấu'**
+  String get liveConfirmEndTitle;
+
+  /// No description provided for @liveConfirmEndContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc chắn muốn kết thúc trận đấu này và chốt kết quả tỉ số?'**
+  String get liveConfirmEndContent;
+
+  /// No description provided for @liveUpdateScoreFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật điểm trận đấu. Vui lòng thử lại.'**
+  String get liveUpdateScoreFailed;
+
+  /// No description provided for @liveLiveBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'LIVE'**
+  String get liveLiveBadge;
+
+  /// No description provided for @liveScheduledStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'SẮP ĐẤU'**
+  String get liveScheduledStatus;
+
+  /// No description provided for @liveCameraLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'CAM 1 (SÂN CHÍNH)'**
+  String get liveCameraLabel;
+
+  /// No description provided for @liveViewerCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} đang xem'**
+  String liveViewerCount(Object count);
+
+  /// No description provided for @liveScoreTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉ số & Diễn biến'**
+  String get liveScoreTab;
+
+  /// No description provided for @liveDiscussionTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phòng thảo luận'**
+  String get liveDiscussionTab;
+
+  /// No description provided for @liveSinglesElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO Đơn'**
+  String get liveSinglesElo;
+
+  /// No description provided for @liveDoublesElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO Đôi'**
+  String get liveDoublesElo;
+
+  /// No description provided for @liveNoElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có'**
+  String get liveNoElo;
+
+  /// No description provided for @liveAthleteOne.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV 1'**
+  String get liveAthleteOne;
+
+  /// No description provided for @liveAthleteTwo.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV 2'**
+  String get liveAthleteTwo;
+
+  /// No description provided for @livePenaltyLogTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phạt và thẻ'**
+  String get livePenaltyLogTitle;
+
+  /// No description provided for @livePenaltyCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} ghi nhận'**
+  String livePenaltyCount(Object count);
+
+  /// No description provided for @liveMatchFallback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đấu'**
+  String get liveMatchFallback;
+
+  /// No description provided for @liveSetWins.
+  ///
+  /// In vi, this message translates to:
+  /// **'SET THẮNG: {value}'**
+  String liveSetWins(Object value);
+
+  /// No description provided for @liveSetScoresTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'TỈ SỐ CÁC SET'**
+  String get liveSetScoresTitle;
+
+  /// No description provided for @liveMatchDetails.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin trận đấu chi tiết'**
+  String get liveMatchDetails;
+
+  /// No description provided for @liveTournamentLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu'**
+  String get liveTournamentLabel;
+
+  /// No description provided for @liveDefaultTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải Vô Địch Mùa Hè'**
+  String get liveDefaultTournament;
+
+  /// No description provided for @liveRefereeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trọng tài chính'**
+  String get liveRefereeLabel;
+
+  /// No description provided for @liveUnknownValue.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xác định'**
+  String get liveUnknownValue;
+
+  /// No description provided for @liveScheduledTimeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời gian xếp lịch'**
+  String get liveScheduledTimeLabel;
+
+  /// No description provided for @liveNotScheduled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xếp lịch'**
+  String get liveNotScheduled;
+
+  /// No description provided for @liveSummaryTennis.
+  ///
+  /// In vi, this message translates to:
+  /// **'BO{bestOf} • {value} game/set'**
+  String liveSummaryTennis(Object bestOf, Object value);
+
+  /// No description provided for @liveSummarySideOut.
+  ///
+  /// In vi, this message translates to:
+  /// **'BO{bestOf} • side-out • chạm {value}'**
+  String liveSummarySideOut(Object bestOf, Object value);
+
+  /// No description provided for @liveSummaryRally.
+  ///
+  /// In vi, this message translates to:
+  /// **'BO{bestOf} • {value} điểm/set'**
+  String liveSummaryRally(Object bestOf, Object value);
+
+  /// No description provided for @liveModelGame.
+  ///
+  /// In vi, this message translates to:
+  /// **'Game'**
+  String get liveModelGame;
+
+  /// No description provided for @liveModelSideOut.
+  ///
+  /// In vi, this message translates to:
+  /// **'Side-out'**
+  String get liveModelSideOut;
+
+  /// No description provided for @liveModelRally.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rally'**
+  String get liveModelRally;
+
+  /// No description provided for @liveCurrentSetFinished.
+  ///
+  /// In vi, this message translates to:
+  /// **'KẾT THÚC'**
+  String get liveCurrentSetFinished;
+
+  /// No description provided for @liveCurrentSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Set {value}'**
+  String liveCurrentSet(Object value);
+
+  /// No description provided for @liveCurrentRound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiệp {value}'**
+  String liveCurrentRound(Object value);
+
+  /// No description provided for @liveEmptyDiscussion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có thảo luận'**
+  String get liveEmptyDiscussion;
+
+  /// No description provided for @liveEmptyDiscussionHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy là người đầu tiên chia sẻ cảm nghĩ!'**
+  String get liveEmptyDiscussionHint;
+
+  /// No description provided for @liveViewerPlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người xem'**
+  String get liveViewerPlaceholder;
+
+  /// No description provided for @liveCommentHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập bình luận...'**
+  String get liveCommentHint;
+
+  /// No description provided for @liveLoginToComment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng nhập để bình luận'**
+  String get liveLoginToComment;
+
+  /// No description provided for @liveLogin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng nhập'**
+  String get liveLogin;
+
+  /// No description provided for @liveCourtDefault.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sân trung tâm'**
+  String get liveCourtDefault;
+
+  /// No description provided for @liveDoublesEloValue.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO đôi: {value}'**
+  String liveDoublesEloValue(Object value);
+
+  /// No description provided for @livePenaltyYellowCard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thẻ vàng'**
+  String get livePenaltyYellowCard;
+
+  /// No description provided for @livePenaltyRedCard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thẻ đỏ'**
+  String get livePenaltyRedCard;
+
+  /// No description provided for @livePenaltyPoint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phạt điểm'**
+  String get livePenaltyPoint;
+
+  /// No description provided for @livePenaltyGame.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phạt game'**
+  String get livePenaltyGame;
+
+  /// No description provided for @livePenaltyServiceFault.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi giao bóng'**
+  String get livePenaltyServiceFault;
+
+  /// No description provided for @livePenaltyMisconduct.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hành vi không đúng mực'**
+  String get livePenaltyMisconduct;
+
+  /// No description provided for @livePenaltyWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhắc nhở'**
+  String get livePenaltyWarning;
+
+  /// No description provided for @clubDetailRulesTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'NỘI QUY CÂU LẠC BỘ'**
+  String get clubDetailRulesTitle;
+
+  /// No description provided for @clubDetailContactTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'LIÊN HỆ'**
+  String get clubDetailContactTitle;
+
+  /// No description provided for @clubDetailOtherSport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khác'**
+  String get clubDetailOtherSport;
+
+  /// No description provided for @clubDetailFilterTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lọc giải đấu'**
+  String get clubDetailFilterTitle;
+
+  /// No description provided for @clubDetailAllTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả giải'**
+  String get clubDetailAllTournaments;
+
+  /// No description provided for @clubDetailClubTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội bộ CLB'**
+  String get clubDetailClubTournaments;
+
+  /// No description provided for @clubDetailOpenTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở rộng'**
+  String get clubDetailOpenTournaments;
+
+  /// No description provided for @clubDetailAllStatuses.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mọi trạng thái'**
+  String get clubDetailAllStatuses;
+
+  /// No description provided for @clubDetailUpcoming.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp diễn ra'**
+  String get clubDetailUpcoming;
+
+  /// No description provided for @clubDetailOngoing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get clubDetailOngoing;
+
+  /// No description provided for @clubDetailCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã kết thúc'**
+  String get clubDetailCompleted;
+
+  /// No description provided for @clubDetailAllSports.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mọi môn'**
+  String get clubDetailAllSports;
+
+  /// No description provided for @clubDetailManageTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý giải'**
+  String get clubDetailManageTournaments;
+
+  /// No description provided for @clubDetailClubTournamentBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội bộ CLB'**
+  String get clubDetailClubTournamentBadge;
+
+  /// No description provided for @clubDetailOpenTournamentBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở rộng'**
+  String get clubDetailOpenTournamentBadge;
+
+  /// No description provided for @clubDetailRankedBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp hạng ELO'**
+  String get clubDetailRankedBadge;
+
+  /// No description provided for @clubDetailCasualBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phong trào'**
+  String get clubDetailCasualBadge;
+
+  /// No description provided for @clubDetailSeriesBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuỗi giải'**
+  String get clubDetailSeriesBadge;
+
+  /// No description provided for @clubDetailLiteBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhanh (Lite)'**
+  String get clubDetailLiteBadge;
+
+  /// No description provided for @clubDetailSocialSettings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sinh hoạt CLB'**
+  String get clubDetailSocialSettings;
+
+  /// No description provided for @clubDetailSocialSettingsSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt bảng tin, bình luận, chat và tag thành viên'**
+  String get clubDetailSocialSettingsSubtitle;
+
+  /// No description provided for @clubDetailQuickStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái nhanh'**
+  String get clubDetailQuickStatus;
+
+  /// No description provided for @clubDetailStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái'**
+  String get clubDetailStatus;
+
+  /// No description provided for @clubDetailActiveStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang hoạt động'**
+  String get clubDetailActiveStatus;
+
+  /// No description provided for @clubDetailVisibility.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chế độ hiển thị'**
+  String get clubDetailVisibility;
+
+  /// No description provided for @clubDetailRestrictedVisibility.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạn chế'**
+  String get clubDetailRestrictedVisibility;
+
+  /// No description provided for @clubDetailPrivateVisibility.
+  ///
+  /// In vi, this message translates to:
+  /// **'Riêng tư'**
+  String get clubDetailPrivateVisibility;
+
+  /// No description provided for @clubDetailInternalChat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phòng chat nội bộ'**
+  String get clubDetailInternalChat;
+
+  /// No description provided for @clubDetailChatOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở'**
+  String get clubDetailChatOpen;
+
+  /// No description provided for @clubDetailChatClosed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tắt'**
+  String get clubDetailChatClosed;
+
+  /// No description provided for @clubDetailDeleteNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập chính xác tên CLB để xác nhận:'**
+  String get clubDetailDeleteNameHint;
+
+  /// No description provided for @clubDetailCurrentClubName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên CLB hiện tại'**
+  String get clubDetailCurrentClubName;
+
+  /// No description provided for @clubDetailFeedTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng tin'**
+  String get clubDetailFeedTab;
+
+  /// No description provided for @homeClubTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu lạc bộ'**
+  String get homeClubTab;
+
+  /// No description provided for @homeRankingsTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng xếp hạng'**
+  String get homeRankingsTab;
+
+  /// No description provided for @homeWelcomeTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chào mừng đến với Tìm và quản lý giải đấu thể thao'**
+  String get homeWelcomeTitle;
+
+  /// No description provided for @homeLoginForStats.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng nhập để xem ELO & thống kê'**
+  String get homeLoginForStats;
+
+  /// No description provided for @homeDefaultUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người dùng'**
+  String get homeDefaultUser;
+
+  /// No description provided for @homeEloStartHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh 1 trận xếp hạng để bắt đầu tiến trình ELO'**
+  String get homeEloStartHint;
+
+  /// No description provided for @homeBusyMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hệ thống đang bận, vui lòng thử lại sau'**
+  String get homeBusyMessage;
+
+  /// No description provided for @homeFindTournamentsSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm và tham gia các giải đấu thể thao'**
+  String get homeFindTournamentsSubtitle;
+
+  /// No description provided for @homeSearchMatchesHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm trận đấu, đội hoặc người chơi...'**
+  String get homeSearchMatchesHint;
+
+  /// No description provided for @homeSearchTournamentsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm giải đấu...'**
+  String get homeSearchTournamentsHint;
+
+  /// No description provided for @homeSearchClubsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm câu lạc bộ...'**
+  String get homeSearchClubsHint;
+
+  /// No description provided for @homeSearchAthletesHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm vận động viên...'**
+  String get homeSearchAthletesHint;
+
+  /// No description provided for @homeSearchGenericHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm...'**
+  String get homeSearchGenericHint;
+
+  /// No description provided for @homeCompletedMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đấu vừa kết thúc'**
+  String get homeCompletedMatches;
+
+  /// No description provided for @homeNoCompletedMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận đấu vừa kết thúc'**
+  String get homeNoCompletedMatches;
+
+  /// No description provided for @homeExploreFilterTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bộ lọc Khám phá'**
+  String get homeExploreFilterTitle;
+
+  /// No description provided for @homeLiveStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trực tiếp'**
+  String get homeLiveStatus;
+
+  /// No description provided for @homeCompletedStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã kết thúc'**
+  String get homeCompletedStatus;
+
+  /// No description provided for @homeRankingFilter.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp hạng'**
+  String get homeRankingFilter;
+
+  /// No description provided for @homeRankedYes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có tính ELO'**
+  String get homeRankedYes;
+
+  /// No description provided for @homeRankedNo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tính ELO'**
+  String get homeRankedNo;
+
+  /// No description provided for @homeTournamentFilterTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bộ lọc Giải đấu'**
+  String get homeTournamentFilterTitle;
+
+  /// No description provided for @homeCompetitionContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung thi đấu'**
+  String get homeCompetitionContent;
+
+  /// No description provided for @homeInProgressStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thi đấu'**
+  String get homeInProgressStatus;
+
+  /// No description provided for @homeFormatDoubleElimination.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng/thua'**
+  String get homeFormatDoubleElimination;
+
+  /// No description provided for @homeFormatGroupStagePlayoff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng bảng + playoff'**
+  String get homeFormatGroupStagePlayoff;
+
+  /// No description provided for @homeLocationProvince.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉnh/Thành'**
+  String get homeLocationProvince;
+
+  /// No description provided for @homeLocationWard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phường/Xã'**
+  String get homeLocationWard;
+
+  /// No description provided for @homeSelectProvinceFirst.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn Tỉnh/Thành trước'**
+  String get homeSelectProvinceFirst;
+
+  /// No description provided for @homeFromDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ ngày'**
+  String get homeFromDate;
+
+  /// No description provided for @homeToDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đến ngày'**
+  String get homeToDate;
+
+  /// No description provided for @homeClubFilterTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bộ lọc Câu lạc bộ'**
+  String get homeClubFilterTitle;
+
+  /// No description provided for @homeRankingFilterTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bộ lọc Xếp hạng ELO'**
+  String get homeRankingFilterTitle;
+
+  /// No description provided for @homeNoTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy giải đấu'**
+  String get homeNoTournaments;
+
+  /// No description provided for @homeNoTournamentsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử thay đổi bộ lọc hoặc từ khoá'**
+  String get homeNoTournamentsHint;
+
+  /// No description provided for @homeNoMatchingTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy giải đấu phù hợp'**
+  String get homeNoMatchingTournaments;
+
+  /// No description provided for @homeNoClubs.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy câu lạc bộ'**
+  String get homeNoClubs;
+
+  /// No description provided for @homeNoClubsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử thay đổi môn thể thao hoặc từ khoá tìm kiếm'**
+  String get homeNoClubsHint;
+
+  /// No description provided for @homeLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải...'**
+  String get homeLoading;
+
+  /// No description provided for @homeClubsLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải danh sách CLB'**
+  String get homeClubsLoadError;
+
+  /// No description provided for @homeInviteOnly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ mời'**
+  String get homeInviteOnly;
+
+  /// No description provided for @homeApproval.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xét duyệt'**
+  String get homeApproval;
+
+  /// No description provided for @homeOpenJoin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự do'**
+  String get homeOpenJoin;
+
+  /// No description provided for @homeMembersCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} thành viên'**
+  String homeMembersCount(Object count);
+
+  /// No description provided for @homeMatchesStat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận'**
+  String get homeMatchesStat;
+
+  /// No description provided for @homeWinRateStat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỷ lệ thắng'**
+  String get homeWinRateStat;
+
+  /// No description provided for @homeSportFallback.
+  ///
+  /// In vi, this message translates to:
+  /// **'THỂ THAO'**
+  String get homeSportFallback;
+
+  /// No description provided for @homeDataLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải dữ liệu'**
+  String get homeDataLoadError;
+
+  /// No description provided for @tournamentCardSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn'**
+  String get tournamentCardSingles;
+
+  /// No description provided for @tournamentCardDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi'**
+  String get tournamentCardDoubles;
+
+  /// No description provided for @tournamentCardContentCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'+{count} nội dung'**
+  String tournamentCardContentCount(Object count);
+
+  /// No description provided for @tournamentCardMonthLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thg {month}'**
+  String tournamentCardMonthLabel(Object month);
+
+  /// No description provided for @tournamentCardEloUnranked.
+  ///
+  /// In vi, this message translates to:
+  /// **'KHÔNG TÍNH ELO'**
+  String get tournamentCardEloUnranked;
+
+  /// No description provided for @tournamentCardEloRanked.
+  ///
+  /// In vi, this message translates to:
+  /// **'XẾP HẠNG ELO'**
+  String get tournamentCardEloRanked;
+
+  /// No description provided for @homeMatchesLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải dữ liệu trận đấu...'**
+  String get homeMatchesLoading;
+
+  /// No description provided for @homeMatchesLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được dữ liệu trận đấu. Vui lòng thử lại.'**
+  String get homeMatchesLoadError;
+
+  /// No description provided for @register_teamTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký đội bóng'**
+  String get register_teamTitle;
+
+  /// No description provided for @register_invitedBannerTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn được chọn vào đội hình giải này'**
+  String get register_invitedBannerTitle;
+
+  /// No description provided for @register_invitedBannerDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy xác nhận trước khi Ban tổ chức khóa roster.'**
+  String get register_invitedBannerDescription;
+
+  /// No description provided for @register_confirmRoster.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận'**
+  String get register_confirmRoster;
+
+  /// No description provided for @register_declineRoster.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get register_declineRoster;
+
+  /// No description provided for @register_chooseExistingTeam.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn đội đã tạo'**
+  String get register_chooseExistingTeam;
+
+  /// No description provided for @register_noMatchingTeams.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có đội bóng phù hợp với môn này.'**
+  String get register_noMatchingTeams;
+
+  /// No description provided for @register_teamMember.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên'**
+  String get register_teamMember;
+
+  /// No description provided for @register_canRegister.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có quyền đăng ký'**
+  String get register_canRegister;
+
+  /// No description provided for @register_rosterTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội hình đăng ký'**
+  String get register_rosterTitle;
+
+  /// No description provided for @register_rosterInstructions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn tối đa {teamSize} cầu thủ chính và tối đa {maxReserve} dự bị. Có thể bổ sung sau khi lưu nháp.'**
+  String register_rosterInstructions(Object teamSize, Object maxReserve);
+
+  /// No description provided for @register_mainPlayer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cầu thủ chính'**
+  String get register_mainPlayer;
+
+  /// No description provided for @register_reservePlayer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cầu thủ dự bị'**
+  String get register_reservePlayer;
+
+  /// No description provided for @register_removeSelection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ chọn'**
+  String get register_removeSelection;
+
+  /// No description provided for @register_quickCreateTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo đội nhanh'**
+  String get register_quickCreateTitle;
+
+  /// No description provided for @register_teamNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên đội'**
+  String get register_teamNameHint;
+
+  /// No description provided for @register_createTeam.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo'**
+  String get register_createTeam;
+
+  /// No description provided for @register_rosterLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Roster đã khóa, chỉ có thể xem đội hình.'**
+  String get register_rosterLocked;
+
+  /// No description provided for @register_updateRoster.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật roster'**
+  String get register_updateRoster;
+
+  /// No description provided for @register_saveDraft.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu đăng ký nháp'**
+  String get register_saveDraft;
+
+  /// No description provided for @register_selectedTeam.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký đội đã chọn'**
+  String get register_selectedTeam;
+
+  /// No description provided for @register_teamCreated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo đội. Hãy mời đủ thành viên trong trang đội.'**
+  String get register_teamCreated;
+
+  /// No description provided for @register_rosterDraftSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu roster nháp.'**
+  String get register_rosterDraftSaved;
+
+  /// No description provided for @register_rosterUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật roster đội.'**
+  String get register_rosterUpdated;
+
+  /// No description provided for @register_draftRegistrationSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu đăng ký nháp. Hãy bổ sung đủ đội hình trước khi BTC khóa roster.'**
+  String get register_draftRegistrationSaved;
+
+  /// No description provided for @register_teamRegistered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký đội thành công.'**
+  String get register_teamRegistered;
+
+  /// No description provided for @register_updateRosterError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật đội hình. Vui lòng thử lại.'**
+  String get register_updateRosterError;
+
+  /// No description provided for @register_createTeamError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tạo đội. Vui lòng thử lại.'**
+  String get register_createTeamError;
+
+  /// No description provided for @register_registrationError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể đăng ký đội. Vui lòng thử lại.'**
+  String get register_registrationError;
+
+  /// No description provided for @createClubTournament_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo giải đấu trong CLB'**
+  String get createClubTournament_title;
+
+  /// No description provided for @createClubTournament_nameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên giải đấu *'**
+  String get createClubTournament_nameLabel;
+
+  /// No description provided for @createClubTournament_nameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập tên giải đấu'**
+  String get createClubTournament_nameRequired;
+
+  /// No description provided for @createClubTournament_nameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'VD: Giải Cầu lông Mở rộng 2026'**
+  String get createClubTournament_nameHint;
+
+  /// No description provided for @createClubTournament_sportLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn thể thao'**
+  String get createClubTournament_sportLabel;
+
+  /// No description provided for @createClubTournament_formatLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung thi đấu'**
+  String get createClubTournament_formatLabel;
+
+  /// No description provided for @createClubTournament_bracketLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thể thức thi đấu'**
+  String get createClubTournament_bracketLabel;
+
+  /// No description provided for @createClubTournament_startDateLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày bắt đầu (tuỳ chọn)'**
+  String get createClubTournament_startDateLabel;
+
+  /// No description provided for @createClubTournament_startDateHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ngày bắt đầu giải'**
+  String get createClubTournament_startDateHint;
+
+  /// No description provided for @createClubTournament_clearDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa ngày'**
+  String get createClubTournament_clearDate;
+
+  /// No description provided for @createClubTournament_notSelected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa chọn'**
+  String get createClubTournament_notSelected;
+
+  /// No description provided for @createClubTournament_startDateNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có thể bổ sung hoặc thay đổi lịch trong trang quản lý sau khi tạo.'**
+  String get createClubTournament_startDateNote;
+
+  /// No description provided for @createClubTournament_pickStartDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ngày bắt đầu giải'**
+  String get createClubTournament_pickStartDate;
+
+  /// No description provided for @createClubTournament_continue.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiếp tục'**
+  String get createClubTournament_continue;
+
+  /// No description provided for @createClubTournament_defaultTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mặc định (08:00)'**
+  String get createClubTournament_defaultTime;
+
+  /// No description provided for @createClubTournament_done.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xong'**
+  String get createClubTournament_done;
+
+  /// No description provided for @createClubTournament_pickStartTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn giờ bắt đầu giải'**
+  String get createClubTournament_pickStartTime;
+
+  /// No description provided for @createClubTournament_recurringTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự động tạo giải định kỳ'**
+  String get createClubTournament_recurringTitle;
+
+  /// No description provided for @createClubTournament_recurringDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cron sẽ tự tạo giải mới và báo cho thành viên CLB.'**
+  String get createClubTournament_recurringDescription;
+
+  /// No description provided for @createClubTournament_frequency.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tần suất'**
+  String get createClubTournament_frequency;
+
+  /// No description provided for @createClubTournament_daily.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi ngày'**
+  String get createClubTournament_daily;
+
+  /// No description provided for @createClubTournament_weekly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi tuần'**
+  String get createClubTournament_weekly;
+
+  /// No description provided for @createClubTournament_biweekly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi 2 tuần'**
+  String get createClubTournament_biweekly;
+
+  /// No description provided for @createClubTournament_monthly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi tháng'**
+  String get createClubTournament_monthly;
+
+  /// No description provided for @createClubTournament_weekday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày trong tuần'**
+  String get createClubTournament_weekday;
+
+  /// No description provided for @createClubTournament_monday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ 2'**
+  String get createClubTournament_monday;
+
+  /// No description provided for @createClubTournament_tuesday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ 3'**
+  String get createClubTournament_tuesday;
+
+  /// No description provided for @createClubTournament_wednesday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ 4'**
+  String get createClubTournament_wednesday;
+
+  /// No description provided for @createClubTournament_thursday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ 5'**
+  String get createClubTournament_thursday;
+
+  /// No description provided for @createClubTournament_friday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ 6'**
+  String get createClubTournament_friday;
+
+  /// No description provided for @createClubTournament_saturday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ 7'**
+  String get createClubTournament_saturday;
+
+  /// No description provided for @createClubTournament_sunday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chủ nhật'**
+  String get createClubTournament_sunday;
+
+  /// No description provided for @createClubTournament_autoCreateTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giờ tự động tạo'**
+  String get createClubTournament_autoCreateTime;
+
+  /// No description provided for @createClubTournament_pickRecurringTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn giờ tự động tạo giải'**
+  String get createClubTournament_pickRecurringTime;
+
+  /// No description provided for @createClubTournament_pickTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn giờ'**
+  String get createClubTournament_pickTime;
+
+  /// No description provided for @createClubTournament_advanceDays.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo trước ngày thi đấu'**
+  String get createClubTournament_advanceDays;
+
+  /// No description provided for @createClubTournament_sameDay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngay ngày thi đấu'**
+  String get createClubTournament_sameDay;
+
+  /// No description provided for @createClubTournament_beforeDays.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trước {days} ngày'**
+  String createClubTournament_beforeDays(Object days);
+
+  /// No description provided for @createClubTournament_maxTeams.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số đội tối đa'**
+  String get createClubTournament_maxTeams;
+
+  /// No description provided for @createClubTournament_maxTeamsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'16'**
+  String get createClubTournament_maxTeamsHint;
+
+  /// No description provided for @createClubTournament_maxTeamsInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ 2-128 đội'**
+  String get createClubTournament_maxTeamsInvalid;
+
+  /// No description provided for @createClubTournament_descriptionLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mô tả (không bắt buộc)'**
+  String get createClubTournament_descriptionLabel;
+
+  /// No description provided for @createClubTournament_descriptionHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin thêm về giải đấu...'**
+  String get createClubTournament_descriptionHint;
+
+  /// No description provided for @createClubTournament_ranked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp hạng ELO'**
+  String get createClubTournament_ranked;
+
+  /// No description provided for @createClubTournament_unranked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phong trào'**
+  String get createClubTournament_unranked;
+
+  /// No description provided for @createClubTournament_rankedDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết quả ảnh hưởng đến điểm ELO'**
+  String get createClubTournament_rankedDescription;
+
+  /// No description provided for @createClubTournament_unrankedDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải giao hữu, không tính xếp hạng'**
+  String get createClubTournament_unrankedDescription;
+
+  /// No description provided for @createClubTournament_creating.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tạo...'**
+  String get createClubTournament_creating;
+
+  /// No description provided for @createClubTournament_create.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo giải đấu'**
+  String get createClubTournament_create;
+
+  /// No description provided for @createClubTournament_submitError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã có lỗi xảy ra khi tạo giải đấu.'**
+  String get createClubTournament_submitError;
+
+  /// No description provided for @createClubTournament_forbiddenError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn không có quyền tạo giải trong CLB này hoặc tài khoản chưa xác thực email.'**
+  String get createClubTournament_forbiddenError;
+
+  /// No description provided for @createClubTournament_sportBadminton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cầu lông'**
+  String get createClubTournament_sportBadminton;
+
+  /// No description provided for @createClubTournament_sportTennis.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tennis'**
+  String get createClubTournament_sportTennis;
+
+  /// No description provided for @createClubTournament_sportPickleball.
+  ///
+  /// In vi, this message translates to:
+  /// **'Pickleball'**
+  String get createClubTournament_sportPickleball;
+
+  /// No description provided for @createClubTournament_sportTableTennis.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bóng bàn'**
+  String get createClubTournament_sportTableTennis;
+
+  /// No description provided for @createClubTournament_sportFootball.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bóng đá'**
+  String get createClubTournament_sportFootball;
+
+  /// No description provided for @quickCreateTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo giải nhanh'**
+  String get quickCreateTitle;
+
+  /// No description provided for @quickCreateHeading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải Public'**
+  String get quickCreateHeading;
+
+  /// No description provided for @quickCreateDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo nhanh trên app, bổ sung cấu hình nâng cao trong trang quản lý web.'**
+  String get quickCreateDescription;
+
+  /// No description provided for @quickCreateNameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên giải đấu *'**
+  String get quickCreateNameLabel;
+
+  /// No description provided for @quickCreateNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'VD: Giải Cầu lông Cuối Tuần'**
+  String get quickCreateNameHint;
+
+  /// No description provided for @quickCreateSportLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn thể thao *'**
+  String get quickCreateSportLabel;
+
+  /// No description provided for @quickCreateFormatLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung thi đấu'**
+  String get quickCreateFormatLabel;
+
+  /// No description provided for @quickCreateBracketLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thể thức'**
+  String get quickCreateBracketLabel;
+
+  /// No description provided for @quickCreateMaxTeamsLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số đội / người tối đa'**
+  String get quickCreateMaxTeamsLabel;
+
+  /// No description provided for @quickCreateMaxTeamsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'16'**
+  String get quickCreateMaxTeamsHint;
+
+  /// No description provided for @quickCreateVisibilityLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiển thị giải đấu'**
+  String get quickCreateVisibilityLabel;
+
+  /// No description provided for @quickCreateVisibilityPublic.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công khai'**
+  String get quickCreateVisibilityPublic;
+
+  /// No description provided for @quickCreateVisibilityPrivate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không niêm yết'**
+  String get quickCreateVisibilityPrivate;
+
+  /// No description provided for @quickCreateRegistrationNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký mặc định ở chế độ Xét duyệt. Bạn có thể thay đổi cách nhận đăng ký trong trang quản lý web sau khi tạo.'**
+  String get quickCreateRegistrationNote;
+
+  /// No description provided for @quickCreateClubNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có lựa chọn câu lạc bộ trong luồng Public. Muốn tạo trong CLB, hãy vào trang CLB và chọn Lite CLB hoặc Tạo nhanh trên web.'**
+  String get quickCreateClubNote;
+
+  /// No description provided for @quickCreateSubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo giải nhanh'**
+  String get quickCreateSubmit;
+
+  /// No description provided for @quickCreateSubmitting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tạo...'**
+  String get quickCreateSubmitting;
+
+  /// No description provided for @quickCreateCreated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo giải. Đang mở trang quản lý trên web.'**
+  String get quickCreateCreated;
+
+  /// No description provided for @quickCreateNameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập tên giải đấu.'**
+  String get quickCreateNameRequired;
+
+  /// No description provided for @quickCreateMaxTeamsInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quy mô phải từ 2 đến 32 người/đội.'**
+  String get quickCreateMaxTeamsInvalid;
+
+  /// No description provided for @quickCreateMissingId.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không nhận được mã giải đấu.'**
+  String get quickCreateMissingId;
+
+  /// No description provided for @quickCreateSubmitError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tạo giải đấu.'**
+  String get quickCreateSubmitError;
+
+  /// No description provided for @quickCreateOpenWebError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể mở trang quản lý trên web.'**
+  String get quickCreateOpenWebError;
+
+  /// No description provided for @quickCreateFormatSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh đơn'**
+  String get quickCreateFormatSingles;
+
+  /// No description provided for @quickCreateFormatDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh đôi'**
+  String get quickCreateFormatDoubles;
+
+  /// No description provided for @quickCreateFormatMixedDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi nam nữ'**
+  String get quickCreateFormatMixedDoubles;
+
+  /// No description provided for @quickCreateBracketSingle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đấu loại trực tiếp'**
+  String get quickCreateBracketSingle;
+
+  /// No description provided for @quickCreateBracketDouble.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đấu loại kép'**
+  String get quickCreateBracketDouble;
+
+  /// No description provided for @quickCreateBracketRoundRobin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng tròn'**
+  String get quickCreateBracketRoundRobin;
+
+  /// No description provided for @quickCreateBracketGroup.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng bảng + Loại trực tiếp'**
+  String get quickCreateBracketGroup;
+
+  /// No description provided for @tournamentSettingsCategoryLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng mục / Nội dung'**
+  String get tournamentSettingsCategoryLabel;
+
+  /// No description provided for @tournamentSettingsDetails.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chi tiết'**
+  String get tournamentSettingsDetails;
+
+  /// No description provided for @tournamentSettingsTeamsRoundRobinTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số lượng đội dự kiến (3 - 16 đội)'**
+  String get tournamentSettingsTeamsRoundRobinTitle;
+
+  /// No description provided for @tournamentSettingsTeamsStandardTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số lượng đội dự kiến (2 - 32 đội)'**
+  String get tournamentSettingsTeamsStandardTitle;
+
+  /// No description provided for @tournamentSettingsTeamsRoundRobinHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'VD: 5, 8, 10...'**
+  String get tournamentSettingsTeamsRoundRobinHint;
+
+  /// No description provided for @tournamentSettingsTeamsStandardHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gợi ý sơ đồ chuẩn nhất: 4, 8, 16, 32'**
+  String get tournamentSettingsTeamsStandardHint;
+
+  /// No description provided for @tournamentSettingsInvalidNumber.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập số hợp lệ'**
+  String get tournamentSettingsInvalidNumber;
+
+  /// No description provided for @tournamentSettingsRoundRobinMin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đấu vòng tròn cần ít nhất 3 đội'**
+  String get tournamentSettingsRoundRobinMin;
+
+  /// No description provided for @tournamentSettingsRoundRobinMax.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đấu vòng tròn tối đa hỗ trợ 16 đội'**
+  String get tournamentSettingsRoundRobinMax;
+
+  /// No description provided for @tournamentSettingsTeamsMin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần ít nhất 2 đội'**
+  String get tournamentSettingsTeamsMin;
+
+  /// No description provided for @tournamentSettingsTeamsMax.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tối đa chỉ hỗ trợ 32 đội'**
+  String get tournamentSettingsTeamsMax;
+
+  /// No description provided for @tournamentSettingsRoundCountTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số vòng đấu (Số vòng bạn muốn diễn ra)'**
+  String get tournamentSettingsRoundCountTitle;
+
+  /// No description provided for @tournamentSettingsRoundCountHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'VD: Nhập đúng số vòng mà bạn muốn tổ chức'**
+  String get tournamentSettingsRoundCountHint;
+
+  /// No description provided for @tournamentSettingsRoundCountPositive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số vòng phải lớn hơn 0'**
+  String get tournamentSettingsRoundCountPositive;
+
+  /// No description provided for @tournamentSettingsRoundCountMax.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tối đa 38 vòng để tránh quá tải'**
+  String get tournamentSettingsRoundCountMax;
+
+  /// No description provided for @tournamentSettingsLoadingSports.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải danh sách môn thi đấu...'**
+  String get tournamentSettingsLoadingSports;
+
+  /// No description provided for @tournamentCategoryMenSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn nam'**
+  String get tournamentCategoryMenSingles;
+
+  /// No description provided for @tournamentCategoryWomenSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn nữ'**
+  String get tournamentCategoryWomenSingles;
+
+  /// No description provided for @tournamentCategoryMenDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi nam'**
+  String get tournamentCategoryMenDoubles;
+
+  /// No description provided for @tournamentCategoryWomenDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi nữ'**
+  String get tournamentCategoryWomenDoubles;
+
+  /// No description provided for @tournamentCategoryMixedDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi nam nữ'**
+  String get tournamentCategoryMixedDoubles;
+
+  /// No description provided for @createClubTournament_formatSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh đơn'**
+  String get createClubTournament_formatSingles;
+
+  /// No description provided for @createClubTournament_formatDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh đôi'**
+  String get createClubTournament_formatDoubles;
+
+  /// No description provided for @createClubTournament_bracketSingleElimination.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại trực tiếp'**
+  String get createClubTournament_bracketSingleElimination;
+
+  /// No description provided for @createClubTournament_bracketSingleEliminationDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại ngay khi thua'**
+  String get createClubTournament_bracketSingleEliminationDescription;
+
+  /// No description provided for @createClubTournament_bracketDoubleElimination.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại kép'**
+  String get createClubTournament_bracketDoubleElimination;
+
+  /// No description provided for @createClubTournament_bracketDoubleEliminationDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có nhánh thắng/thua'**
+  String get createClubTournament_bracketDoubleEliminationDescription;
+
+  /// No description provided for @createClubTournament_bracketRoundRobin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng tròn'**
+  String get createClubTournament_bracketRoundRobin;
+
+  /// No description provided for @createClubTournament_bracketRoundRobinDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả gặp nhau'**
+  String get createClubTournament_bracketRoundRobinDescription;
+
+  /// No description provided for @createClubTournament_bracketGroupStageKnockout.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng bảng + Loại trực tiếp'**
+  String get createClubTournament_bracketGroupStageKnockout;
+
+  /// No description provided for @createClubTournament_bracketGroupStageKnockoutDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia bảng, chọn đội đi tiếp'**
+  String get createClubTournament_bracketGroupStageKnockoutDescription;
+
+  /// No description provided for @createClubTournament_successTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo giải thành công!'**
+  String get createClubTournament_successTitle;
+
+  /// No description provided for @createClubTournament_copyLink.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sao chép link'**
+  String get createClubTournament_copyLink;
+
+  /// No description provided for @createClubTournament_linkCopied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã sao chép link mời!'**
+  String get createClubTournament_linkCopied;
+
+  /// No description provided for @createClubTournament_share.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ'**
+  String get createClubTournament_share;
+
+  /// No description provided for @createClubTournament_shareText.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tham gia giải {name}: {link}'**
+  String createClubTournament_shareText(Object name, Object link);
+
+  /// No description provided for @createClubTournament_manageQuickly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vào quản lý nhanh'**
+  String get createClubTournament_manageQuickly;
+
+  /// No description provided for @createClubTournament_close.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng'**
+  String get createClubTournament_close;
+
+  /// No description provided for @editClub_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉnh sửa CLB'**
+  String get editClub_title;
+
+  /// No description provided for @editClub_save.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu'**
+  String get editClub_save;
+
+  /// No description provided for @editClub_saving.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang lưu...'**
+  String get editClub_saving;
+
+  /// No description provided for @editClub_imagesSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'HÌNH ẢNH & NHẬN DIỆN'**
+  String get editClub_imagesSection;
+
+  /// No description provided for @editClub_imagesSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Logo và ảnh bìa đại diện cho câu lạc bộ trên hệ thống'**
+  String get editClub_imagesSubtitle;
+
+  /// No description provided for @editClub_logoTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Logo CLB'**
+  String get editClub_logoTitle;
+
+  /// No description provided for @editClub_logoHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉ lệ 1:1'**
+  String get editClub_logoHint;
+
+  /// No description provided for @editClub_bannerTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh bìa'**
+  String get editClub_bannerTitle;
+
+  /// No description provided for @editClub_bannerHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉ lệ 3:1 (1200×400)'**
+  String get editClub_bannerHint;
+
+  /// No description provided for @editClub_captureNew.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chụp ảnh mới'**
+  String get editClub_captureNew;
+
+  /// No description provided for @editClub_chooseLibrary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn từ thư viện'**
+  String get editClub_chooseLibrary;
+
+  /// No description provided for @editClub_changeImage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thay đổi'**
+  String get editClub_changeImage;
+
+  /// No description provided for @editClub_logoUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật ảnh đại diện (PNG, JPG tỉ lệ 1:1)'**
+  String get editClub_logoUpdated;
+
+  /// No description provided for @editClub_bannerUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật ảnh bìa (khuyên dùng 1200x400 px)'**
+  String get editClub_bannerUpdated;
+
+  /// No description provided for @editClub_imageUpdateError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật ảnh CLB'**
+  String get editClub_imageUpdateError;
+
+  /// No description provided for @editClub_primarySportError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu lạc bộ phải có đúng 1 môn thể thao chính.'**
+  String get editClub_primarySportError;
+
+  /// No description provided for @editClub_provinceRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn tỉnh/thành phố.'**
+  String get editClub_provinceRequired;
+
+  /// No description provided for @editClub_saved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật cài đặt câu lạc bộ thành công!'**
+  String get editClub_saved;
+
+  /// No description provided for @editClub_saveError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi: {error}'**
+  String editClub_saveError(Object error);
+
+  /// No description provided for @editClub_basicSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'THÔNG TIN CƠ BẢN'**
+  String get editClub_basicSection;
+
+  /// No description provided for @editClub_basicSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên, môn thể thao chính và giới thiệu câu lạc bộ'**
+  String get editClub_basicSubtitle;
+
+  /// No description provided for @editClub_clubName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên câu lạc bộ'**
+  String get editClub_clubName;
+
+  /// No description provided for @editClub_clubNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'VD: CLB Pickleball Trang Hưng'**
+  String get editClub_clubNameHint;
+
+  /// No description provided for @editClub_clubNameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập tên câu lạc bộ.'**
+  String get editClub_clubNameRequired;
+
+  /// No description provided for @editClub_clubNameMax.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên tối đa 255 ký tự.'**
+  String get editClub_clubNameMax;
+
+  /// No description provided for @editClub_primarySport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn thể thao chính'**
+  String get editClub_primarySport;
+
+  /// No description provided for @editClub_primarySportDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi CLB gắn liền với một bộ môn thi đấu chính.'**
+  String get editClub_primarySportDescription;
+
+  /// No description provided for @editClub_descriptionLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới thiệu & Mô tả'**
+  String get editClub_descriptionLabel;
+
+  /// No description provided for @editClub_descriptionHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mục đích hoạt động, thời gian sinh hoạt, tiêu chí...'**
+  String get editClub_descriptionHint;
+
+  /// No description provided for @editClub_locationSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'ĐỊA ĐIỂM & KHU VỰC HOẠT ĐỘNG'**
+  String get editClub_locationSection;
+
+  /// No description provided for @editClub_locationSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khu vực hành chính và địa chỉ sân sinh hoạt'**
+  String get editClub_locationSubtitle;
+
+  /// No description provided for @editClub_administrativeArea.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khu vực hành chính'**
+  String get editClub_administrativeArea;
+
+  /// No description provided for @editClub_detailedAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ sân chi tiết'**
+  String get editClub_detailedAddress;
+
+  /// No description provided for @editClub_detailedAddressHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số nhà, tên đường, cụm sân thi đấu...'**
+  String get editClub_detailedAddressHint;
+
+  /// No description provided for @editClub_privacySection.
+  ///
+  /// In vi, this message translates to:
+  /// **'QUYỀN RIÊNG TƯ & THÀNH VIÊN'**
+  String get editClub_privacySection;
+
+  /// No description provided for @editClub_privacySubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quy chế xét duyệt, giới hạn số lượng và nội quy'**
+  String get editClub_privacySubtitle;
+
+  /// No description provided for @editClub_visibility.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chế độ hiển thị'**
+  String get editClub_visibility;
+
+  /// No description provided for @editClub_memberJoinMethod.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cách thức tiếp nhận thành viên'**
+  String get editClub_memberJoinMethod;
+
+  /// No description provided for @editClub_memberLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới hạn số lượng thành viên'**
+  String get editClub_memberLimit;
+
+  /// No description provided for @editClub_memberLimitHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Để trống nếu không giới hạn số lượng'**
+  String get editClub_memberLimitHint;
+
+  /// No description provided for @editClub_rules.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội quy câu lạc bộ'**
+  String get editClub_rules;
+
+  /// No description provided for @editClub_rulesHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quy định ứng xử, đóng quỹ định kỳ, kỷ luật...'**
+  String get editClub_rulesHint;
+
+  /// No description provided for @editClub_approvalSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'CÂU HỎI XÉT DUYỆT ĐƠN'**
+  String get editClub_approvalSection;
+
+  /// No description provided for @editClub_approvalSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người xin gia nhập phải trả lời câu hỏi này để BQT duyệt'**
+  String get editClub_approvalSubtitle;
+
+  /// No description provided for @editClub_questionHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập câu hỏi (VD: Trình độ ELO/DUPR?)...'**
+  String get editClub_questionHint;
+
+  /// No description provided for @editClub_addQuestion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm câu hỏi'**
+  String get editClub_addQuestion;
+
+  /// No description provided for @editClub_socialSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'MẠNG XÃ HỘI & KÊNH LIÊN HỆ'**
+  String get editClub_socialSection;
+
+  /// No description provided for @editClub_socialSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Liên kết Facebook, Zalo, Tiktok... của câu lạc bộ'**
+  String get editClub_socialSubtitle;
+
+  /// No description provided for @editClub_saveAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu toàn bộ thay đổi'**
+  String get editClub_saveAll;
+
+  /// No description provided for @editClub_dangerTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'VÙNG NGUY HIỂM'**
+  String get editClub_dangerTitle;
+
+  /// No description provided for @editClub_dangerDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hành động này sẽ xoá vĩnh viễn Câu lạc bộ cùng toàn bộ bài viết, bảng xếp hạng và lịch sử giải đấu.'**
+  String get editClub_dangerDescription;
+
+  /// No description provided for @editClub_deleteClub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá vĩnh viễn câu lạc bộ'**
+  String get editClub_deleteClub;
+
+  /// No description provided for @editClub_deleteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá vĩnh viễn câu lạc bộ'**
+  String get editClub_deleteTitle;
+
+  /// No description provided for @editClub_deleteDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc chắn muốn xoá câu lạc bộ \"{name}\"? Toàn bộ dữ liệu thành viên, bài viết và hoạt động sẽ bị xoá vĩnh viễn và không thể khôi phục.'**
+  String editClub_deleteDescription(Object name);
+
+  /// No description provided for @editClub_confirmName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tên câu lạc bộ {name} để xác nhận:'**
+  String editClub_confirmName(Object name);
+
+  /// No description provided for @editClub_clubNameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên câu lạc bộ'**
+  String get editClub_clubNameLabel;
+
+  /// No description provided for @editClub_deleteForever.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá vĩnh viễn'**
+  String get editClub_deleteForever;
+
+  /// No description provided for @editClub_deleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xoá câu lạc bộ thành công.'**
+  String get editClub_deleted;
+
+  /// No description provided for @editClub_deleteError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi khi thực hiện xoá câu lạc bộ: {error}'**
+  String editClub_deleteError(Object error);
+
+  /// No description provided for @editClub_loadingSports.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải danh sách môn thể thao...'**
+  String get editClub_loadingSports;
+
+  /// No description provided for @editClub_joinOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở tự do'**
+  String get editClub_joinOpen;
+
+  /// No description provided for @editClub_joinOpenDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên nhấn tham gia là vào nhóm ngay.'**
+  String get editClub_joinOpenDescription;
+
+  /// No description provided for @editClub_joinApproval.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần phê duyệt đơn'**
+  String get editClub_joinApproval;
+
+  /// No description provided for @editClub_joinApprovalDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phải trả lời câu hỏi và chờ BQT chấp thuận.'**
+  String get editClub_joinApprovalDescription;
+
+  /// No description provided for @editClub_joinInviteOnly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ nhận lời mời'**
+  String get editClub_joinInviteOnly;
+
+  /// No description provided for @editClub_joinInviteOnlyDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ thành viên được mời mới có thể tham gia.'**
+  String get editClub_joinInviteOnlyDescription;
+
+  /// No description provided for @editClub_loadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải thông tin CLB'**
+  String get editClub_loadError;
+
+  /// No description provided for @editClub_retry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get editClub_retry;
+
+  /// No description provided for @footballTeams_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội bóng của tôi'**
+  String get footballTeams_title;
+
+  /// No description provided for @footballTeams_activeCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội đang hoạt động {count}/3'**
+  String footballTeams_activeCount(Object count);
+
+  /// No description provided for @footballTeams_eloMembers.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO {elo} · {memberCount} thành viên'**
+  String footballTeams_eloMembers(Object elo, Object memberCount);
+
+  /// No description provided for @footballTeams_newTeamName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên đội mới'**
+  String get footballTeams_newTeamName;
+
+  /// No description provided for @footballTeams_create.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo'**
+  String get footballTeams_create;
+
+  /// No description provided for @footballTeams_teamInfo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin đội'**
+  String get footballTeams_teamInfo;
+
+  /// No description provided for @footballTeams_teamName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên đội'**
+  String get footballTeams_teamName;
+
+  /// No description provided for @footballTeams_save.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu'**
+  String get footballTeams_save;
+
+  /// No description provided for @footballTeams_inviteMembers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mời thành viên'**
+  String get footballTeams_inviteMembers;
+
+  /// No description provided for @footballTeams_nameOrEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên hoặc email'**
+  String get footballTeams_nameOrEmail;
+
+  /// No description provided for @footballTeams_accountFallback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài khoản'**
+  String get footballTeams_accountFallback;
+
+  /// No description provided for @footballTeams_invite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mời'**
+  String get footballTeams_invite;
+
+  /// No description provided for @footballTeams_inviteSent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi lời mời.'**
+  String get footballTeams_inviteSent;
+
+  /// No description provided for @footballTeams_pendingInvite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mời - chờ xác nhận'**
+  String get footballTeams_pendingInvite;
+
+  /// No description provided for @footballTeams_captain.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội trưởng'**
+  String get footballTeams_captain;
+
+  /// No description provided for @footballTeams_manager.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý'**
+  String get footballTeams_manager;
+
+  /// No description provided for @footballTeams_player.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên'**
+  String get footballTeams_player;
+
+  /// No description provided for @footballTeams_cancelInvite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy lời mời'**
+  String get footballTeams_cancelInvite;
+
+  /// No description provided for @footballTeams_genericError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có lỗi xảy ra'**
+  String get footballTeams_genericError;
+
+  /// No description provided for @club_acceptInvite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chấp nhận lời mời'**
+  String get club_acceptInvite;
+
+  /// No description provided for @club_notificationSettings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt thông báo'**
+  String get club_notificationSettings;
+
+  /// No description provided for @club_notificationsMuted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tắt thông báo'**
+  String get club_notificationsMuted;
+
+  /// No description provided for @club_notificationsMentionsOnly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ khi được nhắc tên'**
+  String get club_notificationsMentionsOnly;
+
+  /// No description provided for @club_notificationsAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận tất cả thông báo'**
+  String get club_notificationsAll;
+
+  /// No description provided for @club_leaveClub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rời khỏi câu lạc bộ'**
+  String get club_leaveClub;
+
+  /// No description provided for @club_leaveClubDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy tư cách thành viên của câu lạc bộ này'**
+  String get club_leaveClubDescription;
+
+  /// No description provided for @clubChat_notificationAllEnabled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bật nhận tất cả thông báo CLB'**
+  String get clubChat_notificationAllEnabled;
+
+  /// No description provided for @clubChat_notificationMentionsOnly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ nhận thông báo khi được @nhắc tên'**
+  String get clubChat_notificationMentionsOnly;
+
+  /// No description provided for @clubChat_notificationMuted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tắt thông báo CLB (Im lặng)'**
+  String get clubChat_notificationMuted;
+
+  /// No description provided for @clubChat_notificationUpdateError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật cài đặt thông báo.'**
+  String get clubChat_notificationUpdateError;
+
+  /// No description provided for @clubChat_notificationTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo câu lạc bộ'**
+  String get clubChat_notificationTitle;
+
+  /// No description provided for @clubChat_notificationDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tùy chỉnh nhận tin nhắn và thông báo từ {name}'**
+  String clubChat_notificationDescription(Object name);
+
+  /// No description provided for @clubChat_allMessages.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả tin nhắn'**
+  String get clubChat_allMessages;
+
+  /// No description provided for @clubChat_allMessagesDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận thông báo cho mọi tin nhắn mới (Mặc định)'**
+  String get clubChat_allMessagesDescription;
+
+  /// No description provided for @clubChat_mentionsOnly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ khi được @tag'**
+  String get clubChat_mentionsOnly;
+
+  /// No description provided for @clubChat_mentionsOnlyDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ thông báo khi có người nhắc tên bạn hoặc @all'**
+  String get clubChat_mentionsOnlyDescription;
+
+  /// No description provided for @clubChat_muted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt thông báo (Im lặng)'**
+  String get clubChat_muted;
+
+  /// No description provided for @clubChat_mutedDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không nhận thông báo đẩy từ câu lạc bộ này'**
+  String get clubChat_mutedDescription;
+
+  /// No description provided for @clubChat_clearTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa đoạn chat?'**
+  String get clubChat_clearTitle;
+
+  /// No description provided for @clubChat_clearDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sử tin nhắn cũ sẽ được xóa khỏi tài khoản của bạn và không thể khôi phục. Các thành viên khác trong CLB không bị ảnh hưởng.'**
+  String get clubChat_clearDescription;
+
+  /// No description provided for @clubChat_clearAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa đoạn chat'**
+  String get clubChat_clearAction;
+
+  /// No description provided for @clubChat_cleared.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa toàn bộ lịch sử đoạn chat.'**
+  String get clubChat_cleared;
+
+  /// No description provided for @clubChat_clearError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể xóa lịch sử đoạn chat lúc này.'**
+  String get clubChat_clearError;
+
+  /// No description provided for @clubChat_openError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thể mở trò chuyện. Thử lại sau.'**
+  String get clubChat_openError;
+
+  /// No description provided for @clubChat_connectionError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mất kết nối. Kéo xuống để thử lại.'**
+  String get clubChat_connectionError;
+
+  /// No description provided for @clubChat_uploadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải ảnh lên.'**
+  String get clubChat_uploadError;
+
+  /// No description provided for @clubChat_revokeError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể thu hồi tin nhắn.'**
+  String get clubChat_revokeError;
+
+  /// No description provided for @clubChat_pinned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã ghim tin nhắn.'**
+  String get clubChat_pinned;
+
+  /// No description provided for @clubChat_pinError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể ghim tin nhắn.'**
+  String get clubChat_pinError;
+
+  /// No description provided for @clubChat_owner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chủ CLB'**
+  String get clubChat_owner;
+
+  /// No description provided for @clubChat_moderator.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản trị'**
+  String get clubChat_moderator;
+
+  /// No description provided for @clubChat_reply.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trả lời'**
+  String get clubChat_reply;
+
+  /// No description provided for @clubChat_copy.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sao chép'**
+  String get clubChat_copy;
+
+  /// No description provided for @clubChat_pin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghim tin nhắn'**
+  String get clubChat_pin;
+
+  /// No description provided for @clubChat_revoke.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu hồi'**
+  String get clubChat_revoke;
+
+  /// No description provided for @clubChat_roomPinnedNotice.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phòng chat có tin nhắn vừa được ghim.'**
+  String get clubChat_roomPinnedNotice;
+
+  /// No description provided for @clubChat_reactionError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể thả cảm xúc lúc này.'**
+  String get clubChat_reactionError;
+
+  /// No description provided for @clubChat_menuNotification.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo CLB'**
+  String get clubChat_menuNotification;
+
+  /// No description provided for @clubChat_menuClear.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa đoạn chat'**
+  String get clubChat_menuClear;
+
+  /// No description provided for @clubChat_typing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang nhập…'**
+  String get clubChat_typing;
+
+  /// No description provided for @clubChat_empty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có tin nhắn nào.'**
+  String get clubChat_empty;
+
+  /// No description provided for @clubChat_revoked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tin nhắn đã thu hồi'**
+  String get clubChat_revoked;
+
+  /// No description provided for @clubChat_heartTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thả tim'**
+  String get clubChat_heartTooltip;
+
+  /// No description provided for @clubChat_replyTo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trả lời {name}'**
+  String clubChat_replyTo(Object name);
+
+  /// No description provided for @clubChat_composerHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhắn trong CLB'**
+  String get clubChat_composerHint;
+
+  /// No description provided for @clubChat_sendError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi tin nhắn thất bại.'**
+  String get clubChat_sendError;
+
+  /// No description provided for @standings_empty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có dữ liệu bảng xếp hạng'**
+  String get standings_empty;
+
+  /// No description provided for @standings_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng Xếp Hạng Vòng Tròn ({groupCount} Bảng)'**
+  String standings_title(Object groupCount);
+
+  /// No description provided for @standings_groupTeams.
+  ///
+  /// In vi, this message translates to:
+  /// **'{teamCount} Đội'**
+  String standings_groupTeams(Object teamCount);
+
+  /// No description provided for @standings_rank.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng'**
+  String get standings_rank;
+
+  /// No description provided for @standings_team.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội'**
+  String get standings_team;
+
+  /// No description provided for @standings_teamAthletes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội VĐV'**
+  String get standings_teamAthletes;
+
+  /// No description provided for @standings_matches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận'**
+  String get standings_matches;
+
+  /// No description provided for @standings_playedShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'MP'**
+  String get standings_playedShort;
+
+  /// No description provided for @standings_wonShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'W'**
+  String get standings_wonShort;
+
+  /// No description provided for @standings_drawnShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'D'**
+  String get standings_drawnShort;
+
+  /// No description provided for @standings_lostShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'L'**
+  String get standings_lostShort;
+
+  /// No description provided for @standings_pointsForShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'GF'**
+  String get standings_pointsForShort;
+
+  /// No description provided for @standings_pointsAgainstShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'GA'**
+  String get standings_pointsAgainstShort;
+
+  /// No description provided for @standings_differenceShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'GD'**
+  String get standings_differenceShort;
+
+  /// No description provided for @standings_pointsShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Pts'**
+  String get standings_pointsShort;
+
+  /// No description provided for @standings_winsShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'T'**
+  String get standings_winsShort;
+
+  /// No description provided for @standings_lossesShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'B'**
+  String get standings_lossesShort;
+
+  /// No description provided for @standings_points.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm'**
+  String get standings_points;
+
+  /// No description provided for @standings_difference.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiệu số'**
+  String get standings_difference;
+
+  /// No description provided for @standings_error.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi: {error}'**
+  String standings_error(Object error);
+
+  /// No description provided for @createClub_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo câu lạc bộ'**
+  String get createClub_title;
+
+  /// No description provided for @createClub_nameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên câu lạc bộ *'**
+  String get createClub_nameLabel;
+
+  /// No description provided for @createClub_nameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên phải ít nhất 3 ký tự'**
+  String get createClub_nameRequired;
+
+  /// No description provided for @createClub_nameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'VD: CLB Cầu lông ABC'**
+  String get createClub_nameHint;
+
+  /// No description provided for @createClub_sportLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn thể thao'**
+  String get createClub_sportLabel;
+
+  /// No description provided for @createClub_descriptionLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mô tả (không bắt buộc)'**
+  String get createClub_descriptionLabel;
+
+  /// No description provided for @createClub_descriptionHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới thiệu về câu lạc bộ...'**
+  String get createClub_descriptionHint;
+
+  /// No description provided for @createClub_rulesLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội quy (không bắt buộc)'**
+  String get createClub_rulesLabel;
+
+  /// No description provided for @createClub_rulesHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'1. Tôn trọng lẫn nhau\\n2. Đúng giờ...'**
+  String get createClub_rulesHint;
+
+  /// No description provided for @createClub_locationLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khu vực hoạt động'**
+  String get createClub_locationLabel;
+
+  /// No description provided for @createClub_locationHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'VD: 3/9 Thành Thái, Phường Diên Hồng, TP.HCM'**
+  String get createClub_locationHint;
+
+  /// No description provided for @createClub_autoDetected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tự nhận diện: {location}'**
+  String createClub_autoDetected(Object location);
+
+  /// No description provided for @createClub_visibilityLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiển thị câu lạc bộ'**
+  String get createClub_visibilityLabel;
+
+  /// No description provided for @createClub_joinMethodLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hình thức tham gia'**
+  String get createClub_joinMethodLabel;
+
+  /// No description provided for @createClub_submitting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tạo...'**
+  String get createClub_submitting;
+
+  /// No description provided for @createClub_submit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo câu lạc bộ'**
+  String get createClub_submit;
+
+  /// No description provided for @createClub_success.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo câu lạc bộ thành công!'**
+  String get createClub_success;
+
+  /// No description provided for @createClub_error.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi: {error}'**
+  String createClub_error(Object error);
+
+  /// No description provided for @createClub_primarySportError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy môn thể thao đã chọn. Vui lòng thử lại.'**
+  String get createClub_primarySportError;
+
+  /// No description provided for @createClub_provinceRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn tỉnh/thành phố'**
+  String get createClub_provinceRequired;
+
+  /// No description provided for @createClub_provinceLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉnh/thành phố *'**
+  String get createClub_provinceLabel;
+
+  /// No description provided for @createClub_wardLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phường/xã'**
+  String get createClub_wardLabel;
+
+  /// No description provided for @createClub_provinceLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được tỉnh/thành'**
+  String get createClub_provinceLoadError;
+
+  /// No description provided for @createClub_wardLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được phường/xã'**
+  String get createClub_wardLoadError;
+
+  /// No description provided for @createClub_coverImageTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ảnh bìa'**
+  String get createClub_coverImageTitle;
+
+  /// No description provided for @createClub_logoImageTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn logo / avatar'**
+  String get createClub_logoImageTitle;
+
+  /// No description provided for @createClub_photoLibrary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thư viện ảnh'**
+  String get createClub_photoLibrary;
+
+  /// No description provided for @createClub_camera.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chụp ảnh'**
+  String get createClub_camera;
+
+  /// No description provided for @createClub_logoTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Logo / avatar'**
+  String get createClub_logoTitle;
+
+  /// No description provided for @createClub_bannerTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh bìa'**
+  String get createClub_bannerTitle;
+
+  /// No description provided for @createClub_removeImage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ ảnh'**
+  String get createClub_removeImage;
+
+  /// No description provided for @createClub_imageTooLarge.
+  ///
+  /// In vi, this message translates to:
+  /// **'{type} không được vượt quá {maxMb}MB'**
+  String createClub_imageTooLarge(Object type, Object maxMb);
+
+  /// No description provided for @createClub_questionsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu hỏi xin vào (tối đa 5)'**
+  String get createClub_questionsTitle;
+
+  /// No description provided for @createClub_questionHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: Bạn đang chơi ở trình độ nào?'**
+  String get createClub_questionHint;
+
+  /// No description provided for @createClub_visibilityPublic.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công khai'**
+  String get createClub_visibilityPublic;
+
+  /// No description provided for @createClub_visibilityPublicDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ai cũng có thể tìm thấy CLB'**
+  String get createClub_visibilityPublicDescription;
+
+  /// No description provided for @createClub_visibilityPrivate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Riêng tư'**
+  String get createClub_visibilityPrivate;
+
+  /// No description provided for @createClub_visibilityPrivateDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ thành viên mới xem được nội dung'**
+  String get createClub_visibilityPrivateDescription;
+
+  /// No description provided for @createClub_visibilityRestricted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạn chế'**
+  String get createClub_visibilityRestricted;
+
+  /// No description provided for @createClub_visibilityRestrictedDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện khi tìm kiếm, cần tham gia để xem'**
+  String get createClub_visibilityRestrictedDescription;
+
+  /// No description provided for @createClub_joinOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự do'**
+  String get createClub_joinOpen;
+
+  /// No description provided for @createClub_joinOpenDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bất kỳ ai cũng có thể tham gia'**
+  String get createClub_joinOpenDescription;
+
+  /// No description provided for @createClub_joinApproval.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xét duyệt'**
+  String get createClub_joinApproval;
+
+  /// No description provided for @createClub_joinApprovalDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần được phê duyệt khi tham gia'**
+  String get createClub_joinApprovalDescription;
+
+  /// No description provided for @createClub_joinInviteOnly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ mời'**
+  String get createClub_joinInviteOnly;
+
+  /// No description provided for @createClub_joinInviteOnlyDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ thành viên được mời mới tham gia'**
+  String get createClub_joinInviteOnlyDescription;
+
+  /// No description provided for @registerRankingConsentTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng'**
+  String get registerRankingConsentTitle;
+
+  /// No description provided for @registerRankingConsentDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải có xếp hạng chỉ ghi nhận ELO sau khi bạn đồng ý.'**
+  String get registerRankingConsentDescription;
+
+  /// No description provided for @registerPublicBracketElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sơ đồ thi đấu công khai, tích lũy điểm ELO tự động sau giải'**
+  String get registerPublicBracketElo;
+
+  /// No description provided for @registerAdditionalInfoTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin đăng ký bổ sung'**
+  String get registerAdditionalInfoTitle;
+
+  /// No description provided for @registerAdditionalInfoDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ban tổ chức yêu cầu các thông tin dưới đây cho nội dung bạn đã chọn.'**
+  String get registerAdditionalInfoDescription;
+
+  /// No description provided for @registerDetailsContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung'**
+  String get registerDetailsContent;
+
+  /// No description provided for @registerDetailsFormat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hình thức'**
+  String get registerDetailsFormat;
+
+  /// No description provided for @registerDetailsStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái hồ sơ'**
+  String get registerDetailsStatus;
+
+  /// No description provided for @registerDetailsPendingApproval.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ BTC duyệt'**
+  String get registerDetailsPendingApproval;
+
+  /// No description provided for @registerDetailsWaitlisted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh sách chờ'**
+  String get registerDetailsWaitlisted;
+
+  /// No description provided for @registerDetailsApproved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã được duyệt'**
+  String get registerDetailsApproved;
+
+  /// No description provided for @registerDetailsRegistered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đăng ký'**
+  String get registerDetailsRegistered;
+
+  /// No description provided for @registerDetailsPayment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thanh toán'**
+  String get registerDetailsPayment;
+
+  /// No description provided for @registerDetailsPaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thanh toán'**
+  String get registerDetailsPaid;
+
+  /// No description provided for @registerDetailsUnpaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thanh toán'**
+  String get registerDetailsUnpaid;
+
+  /// No description provided for @registerViewInviteCode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem mã mời & Link ghép đôi'**
+  String get registerViewInviteCode;
+
+  /// No description provided for @registerPayNow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thanh toán {amount}đ'**
+  String registerPayNow(Object amount);
+
+  /// No description provided for @registerFeePending2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phí tham gia {amount}đ chưa thanh toán'**
+  String registerFeePending2(Object amount);
+
+  /// No description provided for @registerApprovalSuccessTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi yêu cầu thành công!'**
+  String get registerApprovalSuccessTitle;
+
+  /// No description provided for @registerLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi: {error}'**
+  String registerLoadError(Object error);
+
+  /// No description provided for @registerCustomFieldRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng điền “{label}”.'**
+  String registerCustomFieldRequired(Object label);
+
+  /// No description provided for @registerCustomFieldEmailInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'“{label}” phải là email hợp lệ.'**
+  String registerCustomFieldEmailInvalid(Object label);
+
+  /// No description provided for @registerCustomFieldNumberInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'“{label}” phải là số.'**
+  String registerCustomFieldNumberInvalid(Object label);
+
+  /// No description provided for @registerCustomFieldMin.
+  ///
+  /// In vi, this message translates to:
+  /// **'“{label}” không được nhỏ hơn {min}.'**
+  String registerCustomFieldMin(Object label, Object min);
+
+  /// No description provided for @registerCustomFieldMax.
+  ///
+  /// In vi, this message translates to:
+  /// **'“{label}” không được lớn hơn {max}.'**
+  String registerCustomFieldMax(Object label, Object max);
+
+  /// No description provided for @registerCustomFieldSelectInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lựa chọn của “{label}” không hợp lệ.'**
+  String registerCustomFieldSelectInvalid(Object label);
+
+  /// No description provided for @registerCustomFieldCheckboxRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn cần xác nhận “{label}”.'**
+  String registerCustomFieldCheckboxRequired(Object label);
+
+  /// No description provided for @autoDraw_saved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bốc thăm và lưu thành công!'**
+  String get autoDraw_saved;
+
+  /// No description provided for @autoDraw_error.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi: {error}'**
+  String autoDraw_error(Object error);
+
+  /// No description provided for @autoDraw_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bốc thăm & Phân bảng'**
+  String get autoDraw_title;
+
+  /// No description provided for @autoDraw_tournamentError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi giải đấu'**
+  String get autoDraw_tournamentError;
+
+  /// No description provided for @autoDraw_teamCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổng số đội: {count}'**
+  String autoDraw_teamCount(Object count);
+
+  /// No description provided for @autoDraw_format.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thể thức: {format}'**
+  String autoDraw_format(Object format);
+
+  /// No description provided for @autoDraw_startedLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu đang diễn ra. Chức năng làm lại sơ đồ đã bị khóa.'**
+  String get autoDraw_startedLocked;
+
+  /// No description provided for @autoDraw_redraw.
+  ///
+  /// In vi, this message translates to:
+  /// **'Làm lại sơ đồ'**
+  String get autoDraw_redraw;
+
+  /// No description provided for @autoDraw_auto.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bốc thăm tự động'**
+  String get autoDraw_auto;
+
+  /// No description provided for @autoDraw_manual.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bốc thăm từng đội'**
+  String get autoDraw_manual;
+
+  /// No description provided for @autoDraw_remaining.
+  ///
+  /// In vi, this message translates to:
+  /// **'Còn {count} đội chưa bốc'**
+  String autoDraw_remaining(Object count);
+
+  /// No description provided for @autoDraw_oneTeam.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bốc 1 đội'**
+  String get autoDraw_oneTeam;
+
+  /// No description provided for @autoDraw_revealAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện tất cả'**
+  String get autoDraw_revealAll;
+
+  /// No description provided for @autoDraw_bye.
+  ///
+  /// In vi, this message translates to:
+  /// **'ĐẶC CÁCH VÀO VÒNG TRONG'**
+  String get autoDraw_bye;
+
+  /// No description provided for @autoDraw_vs.
+  ///
+  /// In vi, this message translates to:
+  /// **'VS'**
+  String get autoDraw_vs;
+
+  /// No description provided for @autoDraw_previewHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhấn Bốc thăm để xem trước các cặp đấu'**
+  String get autoDraw_previewHint;
+
+  /// No description provided for @autoDraw_saveStart.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu & Bắt đầu giải'**
+  String get autoDraw_saveStart;
+
+  /// No description provided for @autoDraw_matchLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi tải trận đấu: {error}'**
+  String autoDraw_matchLoadError(Object error);
+
+  /// No description provided for @teamList_invalidImport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy dữ liệu hợp lệ trong file'**
+  String get teamList_invalidImport;
+
+  /// No description provided for @teamList_importSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Import thành công {count} đội!'**
+  String teamList_importSuccess(Object count);
+
+  /// No description provided for @teamList_importError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi import: {error}'**
+  String teamList_importError(Object error);
+
+  /// No description provided for @teamList_deleteAllTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa toàn bộ?'**
+  String get teamList_deleteAllTitle;
+
+  /// No description provided for @teamList_deleteAllContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc chắn muốn xóa TOÀN BỘ các đội bóng?\n\nHành động này cũng sẽ xóa toàn bộ sơ đồ/kết quả thi đấu của giải.'**
+  String get teamList_deleteAllContent;
+
+  /// No description provided for @teamList_deleteAllConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa tất cả'**
+  String get teamList_deleteAllConfirm;
+
+  /// No description provided for @teamList_deleteAllDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa toàn bộ đội bóng!'**
+  String get teamList_deleteAllDone;
+
+  /// No description provided for @teamList_error.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi: {error}'**
+  String teamList_error(Object error);
+
+  /// No description provided for @teamList_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý đội / VĐV'**
+  String get teamList_title;
+
+  /// No description provided for @teamList_importTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Import từ Excel'**
+  String get teamList_importTooltip;
+
+  /// No description provided for @teamList_deleteAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa toàn bộ đội'**
+  String get teamList_deleteAll;
+
+  /// No description provided for @teamList_empty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có đội nào'**
+  String get teamList_empty;
+
+  /// No description provided for @teamList_addNew.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm đội mới'**
+  String get teamList_addNew;
+
+  /// No description provided for @teamList_locked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu đang diễn ra. Không thể thêm đội.'**
+  String get teamList_locked;
+
+  /// No description provided for @teamList_add.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm đội'**
+  String get teamList_add;
+
+  /// No description provided for @teamList_approved.
+  ///
+  /// In vi, this message translates to:
+  /// **'✓ Đã duyệt'**
+  String get teamList_approved;
+
+  /// No description provided for @teamList_deleteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa đội'**
+  String get teamList_deleteTitle;
+
+  /// No description provided for @teamList_deleteContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa đội {name}?'**
+  String teamList_deleteContent(Object name);
+
+  /// No description provided for @teamList_deleteConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa'**
+  String get teamList_deleteConfirm;
+
+  /// No description provided for @teamList_deleteError.
+  ///
+  /// In vi, this message translates to:
+  /// **'{error}'**
+  String teamList_deleteError(Object error);
+
+  /// No description provided for @transactionsAmount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{amount} đ'**
+  String transactionsAmount(Object amount);
+
+  /// No description provided for @refereeInvitesTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lời mời trọng tài'**
+  String get refereeInvitesTitle;
+
+  /// No description provided for @refereeInviteAccepted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã nhận lời mời trọng tài'**
+  String get refereeInviteAccepted;
+
+  /// No description provided for @refereeInviteDeclined.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã từ chối lời mời trọng tài'**
+  String get refereeInviteDeclined;
+
+  /// No description provided for @refereeInviteActionError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể xử lý lời mời: {error}'**
+  String refereeInviteActionError(Object error);
+
+  /// No description provided for @refereeInvitesEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có lời mời nào'**
+  String get refereeInvitesEmpty;
+
+  /// No description provided for @refereeInvitesEmptyDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khi ban tổ chức mời bạn làm trọng tài, lời mời sẽ hiện tại đây.'**
+  String get refereeInvitesEmptyDescription;
+
+  /// No description provided for @refereeInvitesLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải lời mời trọng tài'**
+  String get refereeInvitesLoadError;
+
+  /// No description provided for @refereeInvitesRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get refereeInvitesRetry;
+
+  /// No description provided for @officialScore_overrideReasonHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập lý do ngoại lệ bắt buộc...'**
+  String get officialScore_overrideReasonHint;
+
+  /// No description provided for @officialScore_completeTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chốt kết quả trận đấu'**
+  String get officialScore_completeTitle;
+
+  /// No description provided for @officialScore_saveTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận lưu kết quả'**
+  String get officialScore_saveTitle;
+
+  /// No description provided for @officialScore_completeContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết quả đã đủ điều kiện. Chốt trận để công khai điểm và cập nhật giải đấu?'**
+  String get officialScore_completeContent;
+
+  /// No description provided for @officialScore_saveContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu kết quả hiện tại theo ngoại lệ của trọng tài? Hành động này sẽ được ghi vào lịch sử trận.'**
+  String get officialScore_saveContent;
+
+  /// No description provided for @officialScore_saving.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang lưu...'**
+  String get officialScore_saving;
+
+  /// No description provided for @officialScore_penaltySelectionRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn đội bị phạt trước khi ghi nhận.'**
+  String get officialScore_penaltySelectionRequired;
+
+  /// No description provided for @officialScore_penaltyReasonLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lý do / ghi chú'**
+  String get officialScore_penaltyReasonLabel;
+
+  /// No description provided for @officialScore_penaltyReasonHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập lý do nếu cần'**
+  String get officialScore_penaltyReasonHint;
+
+  /// No description provided for @officialScore_penaltyConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận ghi phạt'**
+  String get officialScore_penaltyConfirmTitle;
+
+  /// No description provided for @officialScore_penaltyConfirmContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'{penalty} cho {team}. Tiếp tục ghi nhận?'**
+  String officialScore_penaltyConfirmContent(Object penalty, Object team);
+
+  /// No description provided for @officialScore_matchInfoTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin & Cài đặt trận đấu'**
+  String get officialScore_matchInfoTitle;
+
+  /// No description provided for @officialScore_sport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn: {sport}'**
+  String officialScore_sport(Object sport);
+
+  /// No description provided for @officialScore_format.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thể thức: BO{bestOf}'**
+  String officialScore_format(Object bestOf);
+
+  /// No description provided for @officialScore_setsToWin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số set thắng: {count} set'**
+  String officialScore_setsToWin(Object count);
+
+  /// No description provided for @officialScore_pointsPerSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mốc set: {points} {unit}'**
+  String officialScore_pointsPerSet(Object points, Object unit);
+
+  /// No description provided for @officialScore_maxPoints.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trần điểm: {points}'**
+  String officialScore_maxPoints(Object points);
+
+  /// No description provided for @officialScore_court.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sân: {court}'**
+  String officialScore_court(Object court);
+
+  /// No description provided for @officialScore_round.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng: {round}'**
+  String officialScore_round(Object round);
+
+  /// No description provided for @officialScore_penaltyRulesDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi được áp dụng theo luật môn và cấu hình giải. BO{bestOf} · {points} điểm/set'**
+  String officialScore_penaltyRulesDescription(Object bestOf, Object points);
+
+  /// No description provided for @officialScore_penaltyOptionsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mức phạt được phép chọn'**
+  String get officialScore_penaltyOptionsTitle;
+
+  /// No description provided for @officialScore_penalizedTeam.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội bị phạt'**
+  String get officialScore_penalizedTeam;
+
+  /// No description provided for @officialScore_scoringTennisSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Game/Set'**
+  String get officialScore_scoringTennisSet;
+
+  /// No description provided for @officialScore_scoringPickleballSideOut.
+  ///
+  /// In vi, this message translates to:
+  /// **'Pickleball side-out'**
+  String get officialScore_scoringPickleballSideOut;
+
+  /// No description provided for @officialScore_scoringRallyPoint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rally point'**
+  String get officialScore_scoringRallyPoint;
+
+  /// No description provided for @officialScore_gameSetUnit.
+  ///
+  /// In vi, this message translates to:
+  /// **'game/set'**
+  String get officialScore_gameSetUnit;
+
+  /// No description provided for @officialScore_pointsSetUnit.
+  ///
+  /// In vi, this message translates to:
+  /// **'điểm/set'**
+  String get officialScore_pointsSetUnit;
+
+  /// No description provided for @officialScore_penaltyRulesTennis.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tennis không dùng thẻ màu riêng; có cảnh báo, vi phạm tác phong, phạt điểm và phạt game.'**
+  String get officialScore_penaltyRulesTennis;
+
+  /// No description provided for @officialScore_penaltyRulesPickleball.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi kỹ thuật được ghi nhận riêng; không tự động cộng điểm khi chưa có quyết định xử điểm.'**
+  String get officialScore_penaltyRulesPickleball;
+
+  /// No description provided for @officialScore_penaltyRulesTableTennis.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cảnh báo, lỗi kỹ thuật và thẻ được ghi nhận theo preset bóng bàn của hệ thống.'**
+  String get officialScore_penaltyRulesTableTennis;
+
+  /// No description provided for @officialScore_penaltyRulesBadminton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cảnh báo, lỗi kỹ thuật và thẻ được ghi nhận theo quyết định của trọng tài/BTC.'**
+  String get officialScore_penaltyRulesBadminton;
+
+  /// No description provided for @officialScore_penaltyRulesDefault.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng theo quy định cụ thể của giải đấu và ban tổ chức.'**
+  String get officialScore_penaltyRulesDefault;
+
+  /// No description provided for @officialScore_penaltyServiceFaultBadminton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi giao cầu'**
+  String get officialScore_penaltyServiceFaultBadminton;
+
+  /// No description provided for @officialScore_penaltyServiceFault.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi giao bóng'**
+  String get officialScore_penaltyServiceFault;
+
+  /// No description provided for @officialScore_penaltyMisconduct.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hành vi không đúng mực'**
+  String get officialScore_penaltyMisconduct;
+
+  /// No description provided for @officialScore_penaltyCodeViolation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vi phạm tác phong'**
+  String get officialScore_penaltyCodeViolation;
+
+  /// No description provided for @officialScore_penaltyTechnicalFault.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi kỹ thuật'**
+  String get officialScore_penaltyTechnicalFault;
+
+  /// No description provided for @officialScore_penaltyUnsportsmanlike.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thi đấu thiếu fair-play'**
+  String get officialScore_penaltyUnsportsmanlike;
+
+  /// No description provided for @officialScore_penaltyFoul.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi / Truất quyền'**
+  String get officialScore_penaltyFoul;
+
+  /// No description provided for @officialScore_close.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng'**
+  String get officialScore_close;
+
+  /// No description provided for @bracketView_searchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm theo tên người chơi hoặc tên đội...'**
+  String get bracketView_searchHint;
+
+  /// No description provided for @bracketView_statusTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'TRẠNG THÁI:'**
+  String get bracketView_statusTitle;
+
+  /// No description provided for @bracketView_live.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trực tiếp'**
+  String get bracketView_live;
+
+  /// No description provided for @bracketView_scheduled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa đấu'**
+  String get bracketView_scheduled;
+
+  /// No description provided for @bracketView_completed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xong'**
+  String get bracketView_completed;
+
+  /// No description provided for @bracketView_branchTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'NHÁNH THI ĐẤU:'**
+  String get bracketView_branchTitle;
+
+  /// No description provided for @bracketView_winners.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhánh thắng'**
+  String get bracketView_winners;
+
+  /// No description provided for @bracketView_losers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhánh thua'**
+  String get bracketView_losers;
+
+  /// No description provided for @bracketView_stageTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'GIAI ĐOẠN:'**
+  String get bracketView_stageTitle;
+
+  /// No description provided for @bracketView_groupStage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng bảng'**
+  String get bracketView_groupStage;
+
+  /// No description provided for @bracketView_knockoutStage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng Knockout'**
+  String get bracketView_knockoutStage;
+
+  /// No description provided for @bracketView_groupTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'BẢNG ĐẤU:'**
+  String get bracketView_groupTitle;
+
+  /// No description provided for @bracketView_roundTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'VÒNG ĐẤU:'**
+  String get bracketView_roundTitle;
+
+  /// No description provided for @bracketView_round.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng {round}'**
+  String bracketView_round(Object round);
+
+  /// No description provided for @bracketView_knockoutMap.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sơ đồ Knockout'**
+  String get bracketView_knockoutMap;
+
+  /// No description provided for @bracketView_doubleEliminationMap.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sơ đồ loại kép'**
+  String get bracketView_doubleEliminationMap;
+
+  /// No description provided for @bracketView_roundRobinMap.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sơ đồ Vòng tròn'**
+  String get bracketView_roundRobinMap;
+
+  /// No description provided for @bracketView_noMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận đấu nào'**
+  String get bracketView_noMatches;
+
+  /// No description provided for @bracketView_noMatchingMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy trận đấu phù hợp'**
+  String get bracketView_noMatchingMatches;
+
+  /// No description provided for @bracketView_drawHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy bốc thăm để tạo sơ đồ thi đấu'**
+  String get bracketView_drawHint;
+
+  /// No description provided for @bracketView_crossTable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng chéo'**
+  String get bracketView_crossTable;
+
+  /// No description provided for @bracketView_standings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng xếp hạng'**
+  String get bracketView_standings;
+
+  /// No description provided for @bracketView_schedule.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch thi đấu'**
+  String get bracketView_schedule;
+
+  /// No description provided for @bracketView_rateLimited.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hệ thống đang giới hạn yêu cầu. Vui lòng thử lại sau ít giây.'**
+  String get bracketView_rateLimited;
+
+  /// No description provided for @bracketView_loadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải dữ liệu bảng thi đấu.'**
+  String get bracketView_loadError;
+
+  /// No description provided for @bracketView_unknownParticipant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xác định'**
+  String get bracketView_unknownParticipant;
+
+  /// No description provided for @bracketView_officialResults.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết quả chính thức'**
+  String get bracketView_officialResults;
+
+  /// No description provided for @bracketView_sharedRank.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng {rank} đồng hạng'**
+  String bracketView_sharedRank(Object rank);
+
+  /// No description provided for @bracketView_rank.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng {rank}'**
+  String bracketView_rank(Object rank);
+
+  /// No description provided for @bracketView_knockoutTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sơ đồ Loại trực tiếp'**
+  String get bracketView_knockoutTitle;
+
+  /// No description provided for @bracketView_knockoutDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem nhánh đấu loại trực tiếp các đội vượt qua vòng bảng'**
+  String get bracketView_knockoutDescription;
+
+  /// No description provided for @bracketView_doubleEliminationDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem phân nhánh thắng và nhánh thua (Double Elimination)'**
+  String get bracketView_doubleEliminationDescription;
+
+  /// No description provided for @bracketView_roundRobinDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem sơ đồ thi đấu các lượt trận vòng tròn'**
+  String get bracketView_roundRobinDescription;
+
+  /// No description provided for @bracketView_singleEliminationDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem phân nhánh đấu loại trực tiếp (Single Elimination)'**
+  String get bracketView_singleEliminationDescription;
+
+  /// No description provided for @communitySocial_deletePostTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa bài viết?'**
+  String get communitySocial_deletePostTitle;
+
+  /// No description provided for @communitySocial_deletePostContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài viết sẽ bị xóa khỏi bảng tin. Bạn có chắc chắn không?'**
+  String get communitySocial_deletePostContent;
+
+  /// No description provided for @communitySocial_delete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa'**
+  String get communitySocial_delete;
+
+  /// No description provided for @communitySocial_postDeleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa bài viết.'**
+  String get communitySocial_postDeleted;
+
+  /// No description provided for @communitySocial_postDeleteError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể xóa bài viết.'**
+  String get communitySocial_postDeleteError;
+
+  /// No description provided for @communitySocial_defaultUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn'**
+  String get communitySocial_defaultUser;
+
+  /// No description provided for @communitySocial_defaultMember.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên'**
+  String get communitySocial_defaultMember;
+
+  /// No description provided for @communitySocial_postingDisabled.
+  ///
+  /// In vi, this message translates to:
+  /// **'CLB đang tắt đăng bài.'**
+  String get communitySocial_postingDisabled;
+
+  /// No description provided for @communitySocial_joinToPost.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy tham gia CLB để đăng bài.'**
+  String get communitySocial_joinToPost;
+
+  /// No description provided for @communitySocial_openChat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở trò chuyện CLB'**
+  String get communitySocial_openChat;
+
+  /// No description provided for @communitySocial_recentMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận gần đây'**
+  String get communitySocial_recentMatches;
+
+  /// No description provided for @communitySocial_eloBoard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng ELO'**
+  String get communitySocial_eloBoard;
+
+  /// No description provided for @communitySocial_emptyFeed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có bài đăng nào. Hãy chia sẻ điều đầu tiên!'**
+  String get communitySocial_emptyFeed;
+
+  /// No description provided for @communitySocial_retry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get communitySocial_retry;
+
+  /// No description provided for @withdraw_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rút lui'**
+  String get withdraw_title;
+
+  /// No description provided for @withdraw_refundProfileDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiền hoàn sẽ được chuyển vào tài khoản ngân hàng trong hồ sơ của bạn.'**
+  String get withdraw_refundProfileDescription;
+
+  /// No description provided for @withdraw_refundInputDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn đã đóng phí. Vui lòng nhập thông tin ngân hàng để nhận hoàn tiền (sẽ được lưu vào hồ sơ).'**
+  String get withdraw_refundInputDescription;
+
+  /// No description provided for @withdraw_freeDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn rút lui khỏi giải đấu này?'**
+  String get withdraw_freeDescription;
+
+  /// No description provided for @withdraw_bankNameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên ngân hàng'**
+  String get withdraw_bankNameLabel;
+
+  /// No description provided for @withdraw_bankNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'VD: Vietcombank, Techcombank'**
+  String get withdraw_bankNameHint;
+
+  /// No description provided for @withdraw_bankNameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tên ngân hàng'**
+  String get withdraw_bankNameRequired;
+
+  /// No description provided for @withdraw_accountNumberLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số tài khoản'**
+  String get withdraw_accountNumberLabel;
+
+  /// No description provided for @withdraw_accountNumberHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập số tài khoản'**
+  String get withdraw_accountNumberHint;
+
+  /// No description provided for @withdraw_accountNumberInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số tài khoản không hợp lệ'**
+  String get withdraw_accountNumberInvalid;
+
+  /// No description provided for @withdraw_accountNameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chủ tài khoản'**
+  String get withdraw_accountNameLabel;
+
+  /// No description provided for @withdraw_accountNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'VIẾT HOA KHÔNG DẤU'**
+  String get withdraw_accountNameHint;
+
+  /// No description provided for @withdraw_accountNameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tên chủ tài khoản'**
+  String get withdraw_accountNameRequired;
+
+  /// No description provided for @withdraw_irreversibleWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hành động này không thể hoàn tác.'**
+  String get withdraw_irreversibleWarning;
+
+  /// No description provided for @withdraw_processing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang xử lý...'**
+  String get withdraw_processing;
+
+  /// No description provided for @withdraw_confirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận rút lui'**
+  String get withdraw_confirm;
+
+  /// No description provided for @withdraw_refundSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã rút lui. Tiền hoàn sẽ được xử lý trong 3–5 ngày.'**
+  String get withdraw_refundSuccess;
+
+  /// No description provided for @withdraw_success.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã rút lui khỏi giải đấu'**
+  String get withdraw_success;
+
+  /// No description provided for @withdraw_error.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể rút lui khỏi giải đấu. Vui lòng thử lại.'**
+  String get withdraw_error;
+
+  /// No description provided for @withdraw_bankInfoTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngân hàng hoàn tiền'**
+  String get withdraw_bankInfoTitle;
+
+  /// No description provided for @withdraw_change.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi'**
+  String get withdraw_change;
+
+  /// No description provided for @withdraw_bankLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngân hàng'**
+  String get withdraw_bankLabel;
+
+  /// No description provided for @withdraw_accountNumberShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số TK'**
+  String get withdraw_accountNumberShort;
+
+  /// No description provided for @withdraw_accountNameShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chủ TK'**
+  String get withdraw_accountNameShort;
+
+  /// No description provided for @communityPoll_registrationJoined.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bình chọn và đăng ký tham gia giải.'**
+  String get communityPoll_registrationJoined;
+
+  /// No description provided for @communityPoll_registrationWithdrawn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã ghi nhận lựa chọn và hủy đăng ký giải.'**
+  String get communityPoll_registrationWithdrawn;
+
+  /// No description provided for @communityPoll_registrationJoinPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã ghi nhận bình chọn nhưng chưa đăng ký được giải.'**
+  String get communityPoll_registrationJoinPending;
+
+  /// No description provided for @communityPoll_registrationWithdrawPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã ghi nhận bình chọn nhưng chưa hủy được đăng ký giải.'**
+  String get communityPoll_registrationWithdrawPending;
+
+  /// No description provided for @communityPoll_voteError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể ghi nhận bình chọn.'**
+  String get communityPoll_voteError;
+
+  /// No description provided for @communityPoll_addOptionTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm lựa chọn'**
+  String get communityPoll_addOptionTitle;
+
+  /// No description provided for @communityPoll_optionHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập lựa chọn'**
+  String get communityPoll_optionHint;
+
+  /// No description provided for @communityPoll_add.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm'**
+  String get communityPoll_add;
+
+  /// No description provided for @communityPoll_addOptionError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể thêm lựa chọn.'**
+  String get communityPoll_addOptionError;
+
+  /// No description provided for @communityPoll_closed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đóng'**
+  String get communityPoll_closed;
+
+  /// No description provided for @communityPoll_multipleHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có thể chọn một hoặc nhiều lựa chọn.'**
+  String get communityPoll_multipleHint;
+
+  /// No description provided for @communityPoll_singleHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ được chọn một lựa chọn.'**
+  String get communityPoll_singleHint;
+
+  /// No description provided for @communityPoll_tournamentHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn Có để đăng ký; chọn Không để hủy đăng ký.'**
+  String get communityPoll_tournamentHint;
+
+  /// No description provided for @communityPoll_addOption.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm lựa chọn'**
+  String get communityPoll_addOption;
+
+  /// No description provided for @communityPoll_voteCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} lượt bình chọn'**
+  String communityPoll_voteCount(Object count);
+
+  /// No description provided for @teamAdd_createTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm đội / VĐV'**
+  String get teamAdd_createTitle;
+
+  /// No description provided for @teamAdd_editTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa thông tin đội'**
+  String get teamAdd_editTitle;
+
+  /// No description provided for @teamAdd_nameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên đội / VĐV *'**
+  String get teamAdd_nameLabel;
+
+  /// No description provided for @teamAdd_nameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'VD: Đội Sấm sét'**
+  String get teamAdd_nameHint;
+
+  /// No description provided for @teamAdd_nameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập tên'**
+  String get teamAdd_nameRequired;
+
+  /// No description provided for @teamAdd_members.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên'**
+  String get teamAdd_members;
+
+  /// No description provided for @teamAdd_add.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm'**
+  String get teamAdd_add;
+
+  /// No description provided for @teamAdd_memberHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên thành viên {index}'**
+  String teamAdd_memberHint(Object index);
+
+  /// No description provided for @teamAdd_contactEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email liên hệ (tùy chọn)'**
+  String get teamAdd_contactEmail;
+
+  /// No description provided for @teamAdd_save.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu đội'**
+  String get teamAdd_save;
+
+  /// No description provided for @teamAdd_created.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm đội thành công!'**
+  String get teamAdd_created;
+
+  /// No description provided for @teamAdd_updated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật đội thành công!'**
+  String get teamAdd_updated;
+
+  /// No description provided for @teamAdd_error.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể lưu thông tin đội. Vui lòng thử lại.'**
+  String get teamAdd_error;
+
+  /// No description provided for @matchBottom_overrideHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lý do override (ghi rõ lý do ngoại lệ)'**
+  String get matchBottom_overrideHint;
+
+  /// No description provided for @matchBottom_team1Wins.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội 1 thắng'**
+  String get matchBottom_team1Wins;
+
+  /// No description provided for @matchBottom_team2Wins.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội 2 thắng'**
+  String get matchBottom_team2Wins;
+
+  /// No description provided for @matchBottom_overrideAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Override (chốt tỉ số ngoại lệ)'**
+  String get matchBottom_overrideAction;
+
+  /// No description provided for @matchBottom_cancelOverride.
+  ///
+  /// In vi, this message translates to:
+  /// **'Huỷ override'**
+  String get matchBottom_cancelOverride;
+
+  /// No description provided for @report_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo vi phạm'**
+  String get report_title;
+
+  /// No description provided for @report_description.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn lý do báo cáo. Thông tin của bạn sẽ được bảo mật.'**
+  String get report_description;
+
+  /// No description provided for @report_reasonSpam.
+  ///
+  /// In vi, this message translates to:
+  /// **'Spam / Quảng cáo'**
+  String get report_reasonSpam;
+
+  /// No description provided for @report_reasonInappropriate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung không phù hợp'**
+  String get report_reasonInappropriate;
+
+  /// No description provided for @report_reasonCheating.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gian lận'**
+  String get report_reasonCheating;
+
+  /// No description provided for @report_reasonOther.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khác'**
+  String get report_reasonOther;
+
+  /// No description provided for @report_detailsLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mô tả chi tiết (không bắt buộc)'**
+  String get report_detailsLabel;
+
+  /// No description provided for @report_detailsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập lý do chi tiết...'**
+  String get report_detailsHint;
+
+  /// No description provided for @report_evidenceLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Minh chứng (không bắt buộc)'**
+  String get report_evidenceLabel;
+
+  /// No description provided for @report_uploadFile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải tệp'**
+  String get report_uploadFile;
+
+  /// No description provided for @report_uploadedCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count}/5 tệp đã tải lên'**
+  String report_uploadedCount(Object count);
+
+  /// No description provided for @report_submit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi báo cáo'**
+  String get report_submit;
+
+  /// No description provided for @report_success.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét.'**
+  String get report_success;
+
+  /// No description provided for @report_error.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể gửi báo cáo. Hãy thử lại.'**
+  String get report_error;
+
+  /// No description provided for @report_fileTooLarge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tệp tối đa 15MB.'**
+  String get report_fileTooLarge;
+
+  /// No description provided for @report_uploadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải tệp thất bại. Vui lòng thử lại.'**
+  String get report_uploadError;
+
+  /// No description provided for @communityComment_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bình luận'**
+  String get communityComment_title;
+
+  /// No description provided for @communityComment_close.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng'**
+  String get communityComment_close;
+
+  /// No description provided for @communityComment_empty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có bình luận nào.'**
+  String get communityComment_empty;
+
+  /// No description provided for @communityComment_emptyHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy là người đầu tiên chia sẻ ý kiến!'**
+  String get communityComment_emptyHint;
+
+  /// No description provided for @communityComment_loading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải...'**
+  String get communityComment_loading;
+
+  /// No description provided for @communityComment_loadMore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem thêm bình luận cũ hơn'**
+  String get communityComment_loadMore;
+
+  /// No description provided for @communityComment_deleteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa bình luận?'**
+  String get communityComment_deleteTitle;
+
+  /// No description provided for @communityComment_deleteDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bình luận này và các câu trả lời sẽ bị xóa.'**
+  String get communityComment_deleteDescription;
+
+  /// No description provided for @communityComment_delete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa'**
+  String get communityComment_delete;
+
+  /// No description provided for @communityComment_write.
+  ///
+  /// In vi, this message translates to:
+  /// **'Viết bình luận…'**
+  String get communityComment_write;
+
+  /// No description provided for @communityComment_replyHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Viết câu trả lời cho {author}…'**
+  String communityComment_replyHint(Object author);
+
+  /// No description provided for @communityComment_send.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi'**
+  String get communityComment_send;
+
+  /// No description provided for @communityComment_member.
+  ///
+  /// In vi, this message translates to:
+  /// **'thành viên'**
+  String get communityComment_member;
+
+  /// No description provided for @communityComment_replyingTo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang trả lời {author}'**
+  String communityComment_replyingTo(Object author);
+
+  /// No description provided for @communityComment_like.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thích'**
+  String get communityComment_like;
+
+  /// No description provided for @communityComment_reply.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trả lời'**
+  String get communityComment_reply;
+
+  /// No description provided for @communityComment_owner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chủ CLB'**
+  String get communityComment_owner;
+
+  /// No description provided for @communityComment_admin.
+  ///
+  /// In vi, this message translates to:
+  /// **'BQT'**
+  String get communityComment_admin;
+
+  /// No description provided for @communityComment_justNow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vừa xong'**
+  String get communityComment_justNow;
+
+  /// No description provided for @communityComment_minutes.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} phút'**
+  String communityComment_minutes(Object count);
+
+  /// No description provided for @communityComment_hours.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} giờ'**
+  String communityComment_hours(Object count);
+
+  /// No description provided for @communityComment_days.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} ngày'**
+  String communityComment_days(Object count);
+
+  /// No description provided for @communityComment_loadMoreError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải thêm bình luận.'**
+  String get communityComment_loadMoreError;
+
+  /// No description provided for @communityComment_submitError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể gửi bình luận.'**
+  String get communityComment_submitError;
+
+  /// No description provided for @communityComment_deleteError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể xóa bình luận.'**
+  String get communityComment_deleteError;
+
+  /// No description provided for @communityComposer_mentionLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chỉ có thể gắn tối đa {count} thành viên.'**
+  String communityComposer_mentionLimit(Object count);
+
+  /// No description provided for @communityComposer_duplicateName.
+  ///
+  /// In vi, this message translates to:
+  /// **'CLB có hai thành viên cùng tên. Hãy dùng tên khác để tránh nhầm lẫn.'**
+  String get communityComposer_duplicateName;
+
+  /// No description provided for @communityComposer_hint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ điều gì đó với CLB… Gõ @ để nhắc tên'**
+  String get communityComposer_hint;
+
+  /// No description provided for @communityComposer_image.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh'**
+  String get communityComposer_image;
+
+  /// No description provided for @communityComposer_images.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh {count}'**
+  String communityComposer_images(Object count);
+
+  /// No description provided for @communityComposer_tag.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gắn thẻ'**
+  String get communityComposer_tag;
+
+  /// No description provided for @communityComposer_post.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng'**
+  String get communityComposer_post;
+
+  /// No description provided for @communityComposer_tagTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhấn để gán nhãn thành viên'**
+  String get communityComposer_tagTooltip;
+
+  /// No description provided for @communityComposer_searchUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thể tìm thành viên'**
+  String get communityComposer_searchUnavailable;
+
+  /// No description provided for @communityComposer_noMembers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy thành viên'**
+  String get communityComposer_noMembers;
+
+  /// No description provided for @communityComposer_assignTagTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gán nhãn vui'**
+  String get communityComposer_assignTagTooltip;
+
+  /// No description provided for @communityPollBuilder_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo cuộc thăm dò ý kiến'**
+  String get communityPollBuilder_title;
+
+  /// No description provided for @communityPollBuilder_cancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy bình chọn'**
+  String get communityPollBuilder_cancel;
+
+  /// No description provided for @communityPollBuilder_questionLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu hỏi bình chọn *'**
+  String get communityPollBuilder_questionLabel;
+
+  /// No description provided for @communityPollBuilder_questionHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập câu hỏi hoặc chủ đề...'**
+  String get communityPollBuilder_questionHint;
+
+  /// No description provided for @communityPollBuilder_optionHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lựa chọn {number}'**
+  String communityPollBuilder_optionHint(Object number);
+
+  /// No description provided for @communityPollBuilder_addOption.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm lựa chọn'**
+  String get communityPollBuilder_addOption;
+
+  /// No description provided for @communityPollBuilder_allowMultiple.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép chọn nhiều câu trả lời'**
+  String get communityPollBuilder_allowMultiple;
+
+  /// No description provided for @communityPollBuilder_allowAddOptions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép mọi người thêm lựa chọn mới'**
+  String get communityPollBuilder_allowAddOptions;
+
+  /// No description provided for @communityPollBuilder_expiry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời hạn:'**
+  String get communityPollBuilder_expiry;
+
+  /// No description provided for @communityPollBuilder_noLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không giới hạn'**
+  String get communityPollBuilder_noLimit;
+
+  /// No description provided for @communityPollBuilder_days.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} ngày'**
+  String communityPollBuilder_days(Object count);
+
+  /// No description provided for @clubSocialLinks_valueRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập giá trị liên kết.'**
+  String get clubSocialLinks_valueRequired;
+
+  /// No description provided for @clubSocialLinks_labelRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập nhãn liên kết.'**
+  String get clubSocialLinks_labelRequired;
+
+  /// No description provided for @clubSocialLinks_added.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm liên hệ mới!'**
+  String get clubSocialLinks_added;
+
+  /// No description provided for @clubSocialLinks_removed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa liên hệ!'**
+  String get clubSocialLinks_removed;
+
+  /// No description provided for @clubSocialLinks_other.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khác...'**
+  String get clubSocialLinks_other;
+
+  /// No description provided for @clubSocialLinks_customLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên kênh (Telegram, Viber...)'**
+  String get clubSocialLinks_customLabel;
+
+  /// No description provided for @clubSocialLinks_valueHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đường dẫn liên kết hoặc số điện thoại...'**
+  String get clubSocialLinks_valueHint;
+
+  /// No description provided for @clubSocialLinks_add.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm liên kết'**
+  String get clubSocialLinks_add;
+
+  /// No description provided for @footballScore_status.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái'**
+  String get footballScore_status;
+
+  /// No description provided for @footballScore_events.
+  ///
+  /// In vi, this message translates to:
+  /// **'Diễn biến'**
+  String get footballScore_events;
+
+  /// No description provided for @footballScore_team1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội 1'**
+  String get footballScore_team1;
+
+  /// No description provided for @footballScore_team2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội 2'**
+  String get footballScore_team2;
+
+  /// No description provided for @footballScore_yellowCard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thẻ vàng'**
+  String get footballScore_yellowCard;
+
+  /// No description provided for @footballScore_redCard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thẻ đỏ'**
+  String get footballScore_redCard;
+
+  /// No description provided for @footballScore_foul.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phạm lỗi'**
+  String get footballScore_foul;
+
+  /// No description provided for @footballScore_substitution.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thay người'**
+  String get footballScore_substitution;
+
+  /// No description provided for @footballScore_firstHalf.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiệp 1'**
+  String get footballScore_firstHalf;
+
+  /// No description provided for @footballScore_halftime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải lao'**
+  String get footballScore_halftime;
+
+  /// No description provided for @footballScore_secondHalf.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiệp 2'**
+  String get footballScore_secondHalf;
+
+  /// No description provided for @footballScore_stoppageTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bù giờ'**
+  String get footballScore_stoppageTime;
+
+  /// No description provided for @footballScore_fullTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hết giờ'**
+  String get footballScore_fullTime;
+
+  /// No description provided for @footballScore_extraTimeFirstHalf.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiệp phụ 1'**
+  String get footballScore_extraTimeFirstHalf;
+
+  /// No description provided for @footballScore_extraTimeBreak.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nghỉ hiệp phụ'**
+  String get footballScore_extraTimeBreak;
+
+  /// No description provided for @footballScore_extraTimeSecondHalf.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiệp phụ 2'**
+  String get footballScore_extraTimeSecondHalf;
+
+  /// No description provided for @footballScore_penaltyShootout.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luân lưu'**
+  String get footballScore_penaltyShootout;
+
+  /// No description provided for @footballScore_completed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành'**
+  String get footballScore_completed;
+
+  /// No description provided for @footballScore_penaltyLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luân lưu'**
+  String get footballScore_penaltyLabel;
+
+  /// No description provided for @footballScore_minute.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phút'**
+  String get footballScore_minute;
+
+  /// No description provided for @footballScore_addedMinute.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bù giờ +'**
+  String get footballScore_addedMinute;
+
+  /// No description provided for @lite_kickParticipantSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã loại {teamName} khỏi giải.'**
+  String lite_kickParticipantSuccess(Object teamName);
+
+  /// No description provided for @lite_kickParticipantError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể loại đội khỏi giải. Vui lòng thử lại.'**
+  String get lite_kickParticipantError;
+
+  /// No description provided for @lite_recreateBracketTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo lại bracket?'**
+  String get lite_recreateBracketTitle;
+
+  /// No description provided for @lite_recreateBracketConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bracket cũ và lịch trận chưa bắt đầu sẽ bị thay thế hoàn toàn. Không thể hoàn tác. Bạn có chắc muốn tiếp tục?'**
+  String get lite_recreateBracketConfirm;
+
+  /// No description provided for @lite_recreateBracket.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo lại'**
+  String get lite_recreateBracket;
+
+  /// No description provided for @lite_recreatedBracket.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo lại bracket mới.'**
+  String get lite_recreatedBracket;
 }
 
 class _AppLocalizationsDelegate

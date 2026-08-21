@@ -3,10 +3,11 @@ import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io' show Platform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentCardWithBanner extends ConsumerStatefulWidget {
   final Tournament tournament;
@@ -41,31 +42,40 @@ class _TournamentCardWithBannerState
     return "$host$url";
   }
 
-  String _getFormatLabel(String matchType, String? genderRestriction) {
+  String _getFormatLabel(
+    BuildContext context,
+    String matchType,
+    String? genderRestriction,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
     final mt = matchType.toUpperCase();
     final gr = genderRestriction?.toUpperCase() ?? '';
     if (mt == 'SINGLES') {
-      if (gr == 'FEMALE') return 'Đơn Nữ';
-      if (gr == 'MALE') return 'Đơn Nam';
-      return 'Đơn';
+      if (gr == 'FEMALE') return l10n.singlesFemale;
+      if (gr == 'MALE') return l10n.singlesMale;
+      return l10n.tournamentCardSingles;
     }
     if (mt == 'DOUBLES') {
-      if (gr == 'FEMALE') return 'Đôi Nữ';
-      if (gr == 'MALE') return 'Đôi Nam';
-      if (gr == 'MIXED') return 'Đôi Nam Nữ';
-      return 'Đôi';
+      if (gr == 'FEMALE') return l10n.doublesFemale;
+      if (gr == 'MALE') return l10n.doublesMale;
+      if (gr == 'MIXED') return l10n.doublesMixed;
+      return l10n.tournamentCardDoubles;
     }
     if (mt == 'MIXED_DOUBLES' || mt == 'MIXED' || gr == 'MIXED') {
-      return 'Đôi Nam Nữ';
+      return l10n.doublesMixed;
     }
-    return mt == 'DOUBLES' ? 'Đôi' : (mt == 'SINGLES' ? 'Đơn' : 'Đôi Nam Nữ');
+    return mt == 'DOUBLES'
+        ? l10n.tournamentCardDoubles
+        : (mt == 'SINGLES' ? l10n.tournamentCardSingles : l10n.doublesMixed);
   }
 
-  List<String> _getCategoryChips(Tournament t) {
+  List<String> _getCategoryChips(BuildContext context, Tournament t) {
+    final l10n = AppLocalizations.of(context)!;
     final List<String> chips = [];
     if (t.divisions.isNotEmpty) {
       for (var div in t.divisions) {
         final formatLabel = _getFormatLabel(
+          context,
           div.matchType,
           div.genderRestriction,
         );
@@ -96,25 +106,25 @@ class _TournamentCardWithBannerState
       if (divGender == 'female' ||
           nameLower.contains("đơn nữ") ||
           descLower.contains("đơn nữ")) {
-        chips.add("Đơn Nữ");
+        chips.add(l10n.singlesFemale);
       } else if (divGender == 'female' ||
           nameLower.contains("đôi nữ") ||
           descLower.contains("đôi nữ")) {
-        chips.add("Đôi Nữ");
+        chips.add(l10n.doublesFemale);
       }
       // Check Mixed
       else if (divGender == 'mixed' ||
           nameLower.contains("đôi nam nữ") ||
           descLower.contains("đôi nam nữ") ||
           nameLower.contains("nam nữ")) {
-        chips.add("Đôi Nam Nữ");
+        chips.add(l10n.doublesMixed);
       }
       // Check Male
       else if (nameLower.contains("đơn nam") || descLower.contains("đơn nam")) {
-        chips.add("Đơn Nam");
+        chips.add(l10n.singlesMale);
       } else if (nameLower.contains("đôi nam") ||
           descLower.contains("đôi nam")) {
-        chips.add("Đôi Nam");
+        chips.add(l10n.doublesMale);
       }
       // Generic Singles / Doubles
       else if (nameLower.contains("đôi") ||
@@ -123,19 +133,21 @@ class _TournamentCardWithBannerState
           t.maxPlayersPerTeam == 2) {
         chips.add(
           divGender == 'female'
-              ? "Đôi Nữ"
-              : (divGender == 'mixed' ? "Đôi Nam Nữ" : "Đôi Nam"),
+              ? l10n.doublesFemale
+              : (divGender == 'mixed' ? l10n.doublesMixed : l10n.doublesMale),
         );
       } else if (nameLower.contains("đơn") ||
           descLower.contains("đơn") ||
           t.format == "singles" ||
           t.maxPlayersPerTeam == 1) {
-        chips.add(divGender == 'female' ? "Đơn Nữ" : "Đơn Nam");
+        chips.add(
+          divGender == 'female' ? l10n.singlesFemale : l10n.singlesMale,
+        );
       }
     }
     if (chips.isEmpty) {
       final isDoubles = t.format == "doubles" || t.maxPlayersPerTeam == 2;
-      chips.add(isDoubles ? "Đôi Nam" : "Đơn Nam");
+      chips.add(isDoubles ? l10n.doublesMale : l10n.singlesMale);
     }
     return chips.toSet().toList();
   }
@@ -148,9 +160,10 @@ class _TournamentCardWithBannerState
     final startMonth = start.month.toString().padLeft(2, '0');
     final endMonth = end.month.toString().padLeft(2, '0');
     final isSameMonth = startMonth == endMonth;
+    final l10n = AppLocalizations.of(context)!;
     final monthText = isSameMonth
-        ? 'Thg $startMonth'
-        : 'Thg $startMonth - Thg $endMonth';
+        ? l10n.tournamentCardMonthLabel(startMonth)
+        : '${l10n.tournamentCardMonthLabel(startMonth)} - ${l10n.tournamentCardMonthLabel(endMonth)}';
 
     return Container(
       constraints: const BoxConstraints(minWidth: 70),
@@ -183,14 +196,24 @@ class _TournamentCardWithBannerState
     );
   }
 
-  String _getSportEmojiAndLabel(String sport) {
-    final label = (AppConstants.sportNames[sport] ?? sport).toUpperCase();
-    String emoji = '🏆';
-    if (sport.toLowerCase() == 'badminton') emoji = '🏸';
-    if (sport.toLowerCase() == 'tennis') emoji = '🎾';
-    if (sport.toLowerCase() == 'pickleball') emoji = '🏓';
-    if (sport.toLowerCase() == 'table_tennis') emoji = '🏓';
-    return "$emoji $label";
+  String _getSportEmojiAndLabel(BuildContext context, String sport) {
+    final l10n = AppLocalizations.of(context)!;
+    final sportKey = sport.toLowerCase();
+    final label = switch (sportKey) {
+      'badminton' => l10n.createClubTournament_sportBadminton,
+      'tennis' => l10n.createClubTournament_sportTennis,
+      'pickleball' => l10n.createClubTournament_sportPickleball,
+      'table_tennis' => l10n.createClubTournament_sportTableTennis,
+      'football' => l10n.createClubTournament_sportFootball,
+      _ => l10n.homeSportFallback,
+    };
+    final emoji = switch (sportKey) {
+      'badminton' => '🏸',
+      'tennis' => '🎾',
+      'pickleball' || 'table_tennis' => '🏓',
+      _ => '🏆',
+    };
+    return '$emoji ${label.toUpperCase()}';
   }
 
   @override
@@ -198,11 +221,15 @@ class _TournamentCardWithBannerState
     final colors = context.colors;
     final resolvedBannerUrl = _resolveImageUrl(widget.tournament.bannerUrl);
     final hasBanner = resolvedBannerUrl.isNotEmpty;
-    final categoryChips = _getCategoryChips(widget.tournament);
+    final l10n = AppLocalizations.of(context)!;
+    final categoryChips = _getCategoryChips(context, widget.tournament);
 
     // Gom gọn khi giải đấu có nhiều hình thức/nội dung thi đấu
     final displayChips = categoryChips.length > 2
-        ? [...categoryChips.take(1), '+${categoryChips.length - 1} nội dung']
+        ? [
+            ...categoryChips.take(1),
+            l10n.tournamentCardContentCount(categoryChips.length - 1),
+          ]
         : categoryChips;
 
     final resolvedLogoUrl = _resolveImageUrl(
@@ -327,6 +354,7 @@ class _TournamentCardWithBannerState
                                 children: [
                                   Text(
                                     _getSportEmojiAndLabel(
+                                      context,
                                       widget.tournament.sport,
                                     ),
                                     style: TextStyle(
@@ -352,7 +380,7 @@ class _TournamentCardWithBannerState
                                         ),
                                       ),
                                       child: Text(
-                                        'KHÔNG TÍNH ELO',
+                                        l10n.tournamentCardEloUnranked,
                                         style: TextStyle(
                                           fontSize: 8.5,
                                           fontWeight: FontWeight.w800,
@@ -376,8 +404,8 @@ class _TournamentCardWithBannerState
                                           width: 0.5,
                                         ),
                                       ),
-                                      child: const Text(
-                                        "XẾP HẠNG ELO",
+                                      child: Text(
+                                        l10n.tournamentCardEloRanked,
                                         style: TextStyle(
                                           fontSize: 8.5,
                                           fontWeight: FontWeight.w800,
@@ -439,7 +467,7 @@ class _TournamentCardWithBannerState
                                   Text(
                                     widget.tournament.entryFee == null ||
                                             widget.tournament.entryFee == 0
-                                        ? "Miễn phí"
+                                        ? l10n.freePrice
                                         : "${NumberFormat.decimalPattern().format(widget.tournament.entryFee)} đ",
                                     style: const TextStyle(
                                       fontSize: 11.5,
@@ -500,8 +528,8 @@ class _TournamentCardWithBannerState
                                       child: Text(
                                         widget.tournament.format ==
                                                 "single_elimination"
-                                            ? "Loại trực tiếp"
-                                            : "Vòng tròn",
+                                            ? l10n.eliminationSingle
+                                            : l10n.roundRobin,
                                         style: TextStyle(
                                           fontSize: 9.5,
                                           fontWeight: FontWeight.bold,

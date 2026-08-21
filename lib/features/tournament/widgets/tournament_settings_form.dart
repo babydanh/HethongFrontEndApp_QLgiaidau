@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/widgets/form_section.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentSettingsForm extends ConsumerWidget {
   final String selectedSport;
@@ -45,28 +46,29 @@ class TournamentSettingsForm extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         FormSection(
-          title: 'Môn thi đấu',
+          title: l10n.createClubTournament_sportLabel,
           child: _buildSportSelector(context, ref),
         ).slideInFromBottom(delay: 50.ms),
 
         FormSection(
-          title: 'Nội dung thi đấu',
+          title: l10n.createClubTournament_formatLabel,
           child: _buildFormatSelector(context),
         ).slideInFromBottom(delay: 100.ms),
 
         FormSection(
-          title: 'Hạng mục / Nội dung',
+          title: l10n.tournamentSettingsCategoryLabel,
           child: _buildCategorySelector(context),
         ).slideInFromBottom(delay: 150.ms),
 
         FormSection(
-          title: 'Thể thức thi đấu',
+          title: l10n.createClubTournament_bracketLabel,
           titleAction: GestureDetector(
             onTap: onShowBracketInfo,
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
@@ -76,7 +78,7 @@ class TournamentSettingsForm extends ConsumerWidget {
                 ),
                 SizedBox(width: 4),
                 Text(
-                  'Chi tiết',
+                  l10n.tournamentSettingsDetails,
                   style: TextStyle(
                     fontSize: 12,
                     color: AppTheme.primaryLight,
@@ -91,8 +93,8 @@ class TournamentSettingsForm extends ConsumerWidget {
 
         FormSection(
           title: selectedBracket == AppConstants.bracketRoundRobin
-              ? 'Số lượng đội dự kiến (3 - 16 đội)'
-              : 'Số lượng đội dự kiến (2 - 32 đội)',
+              ? l10n.tournamentSettingsTeamsRoundRobinTitle
+              : l10n.tournamentSettingsTeamsStandardTitle,
           child: TextFormField(
             controller: maxTeamsController,
             focusNode: maxTeamsFocusNode,
@@ -100,8 +102,8 @@ class TournamentSettingsForm extends ConsumerWidget {
             style: TextStyle(color: context.colors.textPrimary),
             decoration: InputDecoration(
               hintText: selectedBracket == AppConstants.bracketRoundRobin
-                  ? 'VD: 5, 8, 10...'
-                  : 'Gợi ý sơ đồ chuẩn nhất: 4, 8, 16, 32',
+                  ? l10n.tournamentSettingsTeamsRoundRobinHint
+                  : l10n.tournamentSettingsTeamsStandardHint,
               prefixIcon: const Icon(
                 Icons.groups,
                 color: AppTheme.secondaryLight,
@@ -110,16 +112,16 @@ class TournamentSettingsForm extends ConsumerWidget {
             validator: (value) {
               if (value == null || value.trim().isEmpty) return null;
               final v = int.tryParse(value.trim());
-              if (v == null) return 'Vui lòng nhập số hợp lệ';
+              if (v == null) return l10n.tournamentSettingsInvalidNumber;
 
               final isRoundRobin =
                   selectedBracket == AppConstants.bracketRoundRobin;
               if (isRoundRobin) {
-                if (v < 3) return 'Đấu vòng tròn cần ít nhất 3 đội';
-                if (v > 16) return 'Đấu vòng tròn tối đa hỗ trợ 16 đội';
+                if (v < 3) return l10n.tournamentSettingsRoundRobinMin;
+                if (v > 16) return l10n.tournamentSettingsRoundRobinMax;
               } else {
-                if (v < 2) return 'Cần ít nhất 2 đội';
-                if (v > 32) return 'Tối đa chỉ hỗ trợ 32 đội';
+                if (v < 2) return l10n.tournamentSettingsTeamsMin;
+                if (v > 32) return l10n.tournamentSettingsTeamsMax;
               }
               return null;
             },
@@ -128,22 +130,25 @@ class TournamentSettingsForm extends ConsumerWidget {
 
         if (selectedBracket == AppConstants.bracketRoundRobin)
           FormSection(
-            title: 'Số vòng đấu (Số vòng bạn muốn diễn ra)',
+            title: l10n.tournamentSettingsRoundCountTitle,
             child: TextFormField(
               controller: roundCountController,
               focusNode: roundCountFocusNode,
               keyboardType: TextInputType.number,
               style: TextStyle(color: context.colors.textPrimary),
-              decoration: const InputDecoration(
-                hintText: 'VD: Nhập đúng số vòng mà bạn muốn tổ chức',
-                prefixIcon: Icon(Icons.repeat, color: AppTheme.secondaryLight),
+              decoration: InputDecoration(
+                hintText: l10n.tournamentSettingsRoundCountHint,
+                prefixIcon: const Icon(
+                  Icons.repeat,
+                  color: AppTheme.secondaryLight,
+                ),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) return null;
                 final v = int.tryParse(value.trim());
-                if (v == null) return 'Vui lòng nhập số hợp lệ';
-                if (v < 1) return 'Số vòng phải lớn hơn 0';
-                if (v > 38) return 'Tối đa 38 vòng để tránh quá tải';
+                if (v == null) return l10n.tournamentSettingsInvalidNumber;
+                if (v < 1) return l10n.tournamentSettingsRoundCountPositive;
+                if (v > 38) return l10n.tournamentSettingsRoundCountMax;
                 return null;
               },
             ),
@@ -156,7 +161,9 @@ class TournamentSettingsForm extends ConsumerWidget {
     final categories =
         ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
     if (categories.isEmpty) {
-      return const Text('Đang tải danh sách môn thi đấu...');
+      return Text(
+        AppLocalizations.of(context)!.tournamentSettingsLoadingSports,
+      );
     }
     return Wrap(
       spacing: 10,
@@ -234,12 +241,15 @@ class TournamentSettingsForm extends ConsumerWidget {
   }
 
   Widget _buildFormatSelector(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final formats = [AppConstants.formatSingles, AppConstants.formatDoubles];
 
     return Row(
       children: formats.map((formatKey) {
         final isSelected = selectedFormat == formatKey;
-        final name = AppConstants.formatNames[formatKey] ?? formatKey;
+        final name = formatKey == AppConstants.formatSingles
+            ? l10n.createClubTournament_formatSingles
+            : l10n.createClubTournament_formatDoubles;
         final icon = formatKey == AppConstants.formatSingles
             ? Icons.person
             : Icons.people;
@@ -334,6 +344,14 @@ class TournamentSettingsForm extends ConsumerWidget {
   }
 
   Widget _buildCategorySelector(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final categoryNames = {
+      AppConstants.categoryMenSingles: l10n.tournamentCategoryMenSingles,
+      AppConstants.categoryWomenSingles: l10n.tournamentCategoryWomenSingles,
+      AppConstants.categoryMenDoubles: l10n.tournamentCategoryMenDoubles,
+      AppConstants.categoryWomenDoubles: l10n.tournamentCategoryWomenDoubles,
+      AppConstants.categoryMixedDoubles: l10n.tournamentCategoryMixedDoubles,
+    };
     final validCategories = selectedFormat == AppConstants.formatSingles
         ? [AppConstants.categoryMenSingles, AppConstants.categoryWomenSingles]
         : [
@@ -347,7 +365,7 @@ class TournamentSettingsForm extends ConsumerWidget {
       runSpacing: 8,
       children: validCategories.map((categoryKey) {
         final isSelected = selectedCategory == categoryKey;
-        final name = AppConstants.categoryNames[categoryKey] ?? categoryKey;
+        final name = categoryNames[categoryKey] ?? categoryKey;
         return GestureDetector(
           onTap: () => onCategoryChanged(categoryKey),
           child:
@@ -406,10 +424,32 @@ class TournamentSettingsForm extends ConsumerWidget {
   }
 
   Widget _buildBracketSelector(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final bracketNames = {
+      AppConstants.bracketSingleElimination:
+          l10n.createClubTournament_bracketSingleElimination,
+      AppConstants.bracketDoubleElimination:
+          l10n.createClubTournament_bracketDoubleElimination,
+      AppConstants.bracketRoundRobin:
+          l10n.createClubTournament_bracketRoundRobin,
+      AppConstants.bracketGroupStageKnockout:
+          l10n.createClubTournament_bracketGroupStageKnockout,
+    };
+    final bracketDescriptions = {
+      AppConstants.bracketSingleElimination:
+          l10n.createClubTournament_bracketSingleEliminationDescription,
+      AppConstants.bracketDoubleElimination:
+          l10n.createClubTournament_bracketDoubleEliminationDescription,
+      AppConstants.bracketRoundRobin:
+          l10n.createClubTournament_bracketRoundRobinDescription,
+      AppConstants.bracketGroupStageKnockout:
+          l10n.createClubTournament_bracketGroupStageKnockoutDescription,
+    };
     return Column(
       children: AppConstants.bracketTypeNames.entries.map((entry) {
         final isSelected = selectedBracket == entry.key;
-        final desc = AppConstants.bracketTypeDescriptions[entry.key] ?? '';
+        final name = bracketNames[entry.key] ?? entry.value;
+        final desc = bracketDescriptions[entry.key] ?? '';
         return GestureDetector(
           onTap: () {
             onBracketChanged(entry.key);
@@ -475,7 +515,7 @@ class TournamentSettingsForm extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                entry.value,
+                                name,
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: isSelected

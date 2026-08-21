@@ -37,6 +37,7 @@ class Tournament {
   final String? venueName;
   final String? city;
   final String? locationAddress;
+  final Map<String, dynamic>? locationConfig;
   final String? prizeDescription;
   final Map<String, dynamic>? contactInfo;
   final List<TournamentDivision> divisions;
@@ -86,6 +87,7 @@ class Tournament {
     this.venueName,
     this.city,
     this.locationAddress,
+    this.locationConfig,
     this.prizeDescription,
     this.contactInfo,
     this.divisions = const [],
@@ -286,6 +288,11 @@ class Tournament {
                     json['location_address'])
                 ?.toString()
           : (json['locationAddress'] ?? json['location_address'])?.toString(),
+      locationConfig: config['location'] is Map
+          ? Map<String, dynamic>.from(config['location'] as Map)
+          : json['location'] is Map
+          ? Map<String, dynamic>.from(json['location'] as Map)
+          : null,
       prizeDescription: json['prizeDescription'] ?? json['prize_description'],
       contactInfo: parsedContactInfo,
       divisions: parsedDivisions,
@@ -335,6 +342,7 @@ class Tournament {
         if (maxReserve != null) 'maxReserve': maxReserve,
         if (registrationMode != null) 'registrationMode': registrationMode,
         'hideFeaturedCardText': hideFeaturedCardText,
+        if (locationConfig != null) 'location': locationConfig,
         // isLite = LOẠI GIẢI lite. KHÔNG ghi 'mode':'LITE' (đó là scoring mode).
         if (isLite) 'isLite': true,
       },
@@ -363,6 +371,7 @@ class Tournament {
       if (registrationEndDate != null)
         'registrationEndDate': registrationEndDate?.toIso8601String(),
       if (locationAddress != null) 'locationAddress': locationAddress,
+      if (city != null) 'city': city,
       if (prizeDescription != null) 'prizeDescription': prizeDescription,
       if (contactInfo != null) 'contactInfo': contactInfo,
       'divisions': divisions.map((e) => e.toJson()).toList(),
@@ -406,6 +415,7 @@ class Tournament {
     String? venueName,
     String? city,
     String? locationAddress,
+    Map<String, dynamic>? locationConfig,
     String? prizeDescription,
     Map<String, dynamic>? contactInfo,
     List<TournamentDivision>? divisions,
@@ -456,6 +466,7 @@ class Tournament {
       venueName: venueName ?? this.venueName,
       city: city ?? this.city,
       locationAddress: locationAddress ?? this.locationAddress,
+      locationConfig: locationConfig ?? this.locationConfig,
       prizeDescription: prizeDescription ?? this.prizeDescription,
       contactInfo: contactInfo ?? this.contactInfo,
       divisions: divisions ?? this.divisions,

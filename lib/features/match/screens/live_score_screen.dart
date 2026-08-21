@@ -4,6 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
+
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
@@ -129,7 +133,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chưa thể gửi cổ vũ. Vui lòng thử lại.')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.liveCheerFailed)),
       );
     }
   }
@@ -229,8 +233,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Không thể gửi bình luận. Vui lòng thử lại!'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.liveCommentFailed),
         ),
       );
     } finally {
@@ -258,6 +262,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   void _showFoulSheet(bool isTeam1, MatchModel match) {
     final tournamentAsync = ref.read(tournamentProvider(widget.tournamentId));
     final sport = match.sportKey ?? tournamentAsync.value?.sport ?? 'other';
+    final l10n = AppLocalizations.of(context)!;
 
     showDialog(
       context: context,
@@ -278,7 +283,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Đã ghi nhận ${option.name}.'),
+                content: Text(l10n.livePenaltyRecorded(option.name)),
                 backgroundColor: context.colors.success,
                 behavior: SnackBarBehavior.floating,
               ),
@@ -298,6 +303,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final tournamentAsync = ref.read(tournamentProvider(widget.tournamentId));
     final sport = match.sportKey ?? tournamentAsync.value?.sport ?? 'other';
     final isTeam1 = teamName == match.team1Name;
+    final l10n = AppLocalizations.of(context)!;
     await ref
         .read(
           matchControllerProvider((
@@ -309,7 +315,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Đã ghi nhận ${option.name} cho $teamName.'),
+        content: Text(l10n.livePenaltyRecordedFor(option.name, teamName)),
         backgroundColor: context.colors.success,
         behavior: SnackBarBehavior.floating,
       ),
@@ -317,6 +323,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   void _showFoulSelectionDialog(MatchModel match) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -330,7 +337,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             ),
             const SizedBox(width: 8),
             Text(
-              'Đội nào bị phạt?',
+              l10n.liveFoulSelectTeam,
               style: TextStyle(color: context.colors.textPrimary),
             ),
           ],
@@ -380,6 +387,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   void _showForceWinDialog(MatchModel match) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -389,13 +397,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             const Icon(Icons.gavel_rounded, color: Colors.red, size: 24),
             const SizedBox(width: 8),
             Text(
-              'Xử thắng nhanh',
+              l10n.liveForceWinTitle,
               style: TextStyle(color: context.colors.error),
             ),
           ],
         ),
         content: Text(
-          'Xác nhận xử thắng cho một đội (đối thủ bỏ cuộc hoặc phạm quy)?',
+          l10n.liveForceWinContent,
           style: TextStyle(color: context.colors.textSecondary),
         ),
         actions: [
@@ -459,6 +467,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final matchAsync = ref.watch(
       singleMatchProvider((
         tournamentId: widget.tournamentId,
@@ -509,9 +518,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             Text(
               widget.isViewer
                   ? (matchAsync.value?.isLive == true
-                        ? 'Trực tiếp'
-                        : 'Chi Tiết Trận Đấu')
-                  : 'Bàn Trọng Tài',
+                        ? l10n.liveMatchTitle
+                        : l10n.liveMatchDetailsTitle)
+                  : l10n.liveRefereeDeskTitle,
               style: TextStyle(
                 fontSize: isLandscape ? 16 : 18,
                 fontWeight: FontWeight.w700,
@@ -546,7 +555,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Không tìm thấy trận đấu',
+                        l10n.liveMatchNotFound,
                         style: TextStyle(color: context.colors.textSecondary),
                       ),
                     ],
@@ -587,13 +596,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      ErrorParser.parse(e, 'Không thể tải dữ liệu trận đấu.'),
+                      ErrorParser.parse(e, l10n.liveMatchLoadError),
                       style: const TextStyle(color: Colors.red),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () => context.pop(),
-                      child: const Text('Quay lại'),
+                      child: Text(l10n.liveBack),
                     ),
                   ],
                 ),
@@ -639,6 +648,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     SportRuleKind kind,
     SportConfig config,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -719,7 +729,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       runSpacing: 8,
                       children: [
                         _buildSetupChip(
-                          'Môn',
+                          l10n.liveSportLabel,
                           AppConstants.sportNames[match.sportKey
                                   ?.toLowerCase()] ??
                               AppConstants.sportNames[ref
@@ -731,19 +741,25 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                                   .toLowerCase()] ??
                               _setupSportLabel(kind),
                         ),
-                        _buildSetupChip('Format', 'BO${config.bestOf}'),
-                        _buildSetupChip('Thắng', '${config.setsToWin} set'),
                         _buildSetupChip(
-                          'Mốc set',
-                          kind == SportRuleKind.tennis
-                              ? '${config.pointsPerSet} game'
-                              : '${config.pointsPerSet} điểm',
+                          l10n.liveFormatLabel,
+                          'BO${config.bestOf}',
                         ),
                         _buildSetupChip(
-                          'Luật',
+                          l10n.liveWinLabel,
+                          l10n.liveSetValue(config.setsToWin),
+                        ),
+                        _buildSetupChip(
+                          l10n.liveSetTargetLabel,
+                          kind == SportRuleKind.tennis
+                              ? l10n.liveGamesValue(config.pointsPerSet)
+                              : l10n.livePointsValue(config.pointsPerSet),
+                        ),
+                        _buildSetupChip(
+                          l10n.liveRuleLabel,
                           config.mustWinByTwo
-                              ? 'Cách biệt 2'
-                              : 'Không cách biệt 2',
+                              ? l10n.liveDifferenceTwo
+                              : l10n.liveNoDifferenceTwo,
                         ),
                       ],
                     ),
@@ -778,8 +794,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     );
                   },
                   icon: const Icon(Icons.play_arrow_rounded, size: 22),
-                  label: const Text(
-                    'BẮT ĐẦU TRẬN ĐẤU',
+                  label: Text(
+                    l10n.liveStartMatch,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -803,6 +819,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   Widget _buildSetupState(MatchModel match) {
+    final l10n = AppLocalizations.of(context)!;
     final kind = SportRuleKind.fromString(match.sportKey);
     final config = resolveSportConfig(match.sportRules, kind);
     _ensureSetupControlsSeeded(match, config);
@@ -850,7 +867,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                'Cấu hình Trận đấu',
+                l10n.liveMatchConfiguration,
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
@@ -889,7 +906,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Cấu hình giải đang áp dụng',
+                      l10n.liveTournamentConfiguration,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -899,8 +916,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     const SizedBox(height: 6),
                     Text(
                       match.sportRules != null && match.sportRules!.isNotEmpty
-                          ? 'Màn setup đang lấy mặc định từ cấu hình giải đấu. Bạn có thể chỉnh ở cấp trận nếu cần.'
-                          : 'Giải chưa có sportRules chi tiết, hệ thống đang dùng cấu hình mặc định theo môn.',
+                          ? l10n.liveTournamentConfigurationDescription
+                          : l10n.liveDefaultConfigurationDescription,
                       style: TextStyle(
                         fontSize: 12,
                         color: context.colors.textSecondary,
@@ -912,24 +929,36 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _buildSetupChip('Môn', _setupSportLabel(kind)),
-                        _buildSetupChip('Format', 'BO${config.bestOf}'),
-                        _buildSetupChip('Thắng', '${config.setsToWin} set'),
                         _buildSetupChip(
-                          'Mốc set',
+                          l10n.liveSportLabel,
+                          _setupSportLabel(kind),
+                        ),
+                        _buildSetupChip(
+                          l10n.liveFormatLabel,
+                          'BO${config.bestOf}',
+                        ),
+                        _buildSetupChip(
+                          l10n.liveWinLabel,
+                          l10n.liveSetValue(config.setsToWin),
+                        ),
+                        _buildSetupChip(
+                          l10n.liveSetTargetLabel,
                           kind == SportRuleKind.tennis
-                              ? '${config.pointsPerSet} game'
-                              : '${config.pointsPerSet} điểm',
+                              ? l10n.liveGamesValue(config.pointsPerSet)
+                              : l10n.livePointsValue(config.pointsPerSet),
                         ),
                         if (config.mustWinByTwo)
-                          _buildSetupChip('Luật', 'Cách biệt 2'),
+                          _buildSetupChip(
+                            l10n.liveRuleLabel,
+                            l10n.liveDifferenceTwo,
+                          ),
                         if (config.scoringModel ==
                             SportScoringModel.pickleballSideOut)
-                          _buildSetupChip('Scoring', 'Side-out'),
+                          _buildSetupChip(l10n.liveScoringLabel, 'Side-out'),
                         if (kind == SportRuleKind.tennis)
                           _buildSetupChip(
-                            'Tiebreak',
-                            '${config.tiebreakPoints ?? 7} điểm',
+                            l10n.liveTiebreakLabel,
+                            l10n.livePointsValue(config.tiebreakPoints ?? 7),
                           ),
                       ],
                     ),
@@ -949,8 +978,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ),
                 decoration: InputDecoration(
                   labelText: scoreLabel,
-                  helperText:
-                      'Giá trị mặc định đang lấy từ setting của giải. Đây là tuỳ chỉnh ở cấp trận.',
+                  helperText: l10n.liveTournamentConfigurationDescription,
                   prefixIcon: Icon(
                     Icons.track_changes_rounded,
                     color: context.colors.textMuted,
@@ -977,9 +1005,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   color: context.colors.textPrimary,
                 ),
                 decoration: InputDecoration(
-                  labelText: 'Giới hạn thời gian (phút, tuỳ chọn)',
-                  helperText:
-                      'Nếu để trống, trận sẽ không giới hạn thời gian ở cấp trận.',
+                  labelText: l10n.liveTimeLimitLabel,
+                  helperText: l10n.liveTimeLimitHelper,
                   prefixIcon: Icon(
                     Icons.timer_outlined,
                     color: context.colors.textMuted,
@@ -1018,7 +1045,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Áp dụng luật cách biệt 2 ${kind == SportRuleKind.tennis ? 'game/điểm' : 'điểm'}',
+                        l10n.liveWinByTwoSetting(
+                          kind == SportRuleKind.tennis
+                              ? 'game/points'
+                              : 'points',
+                        ),
                         style: TextStyle(
                           color: context.colors.textPrimary,
                           fontSize: 14,
@@ -1065,8 +1096,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     );
                   },
                   icon: const Icon(Icons.play_arrow_rounded),
-                  label: const Text(
-                    'BẮT ĐẦU TRẬN ĐẤU',
+                  label: Text(
+                    l10n.liveStartMatch,
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -1157,6 +1188,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   //  LIVE STATE — Đang thi đấu / Viewer
   // ═══════════════════════════════════════════════════════════
   Widget _buildLiveState(MatchModel match, {required bool canOpenScoring}) {
+    final l10n = AppLocalizations.of(context)!;
     if (widget.isViewer || canOpenScoring) {
       return _buildViewerState(match, canOpenScoring: canOpenScoring);
     }
@@ -1291,8 +1323,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       ),
                     ),
                     icon: const Icon(Icons.sports_kabaddi_rounded, size: 20),
-                    label: const Text(
-                      'THỔI CÒI',
+                    label: Text(
+                      l10n.liveWhistle,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -1314,8 +1346,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     ),
                   ),
                   icon: const Icon(Icons.check_circle_outline, size: 20),
-                  label: const Text(
-                    'KẾT THÚC',
+                  label: Text(
+                    l10n.liveEndMatch,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -1467,6 +1499,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   //  VIEWER STATE — Người xem
   // ═══════════════════════════════════════════════════════════
   Widget _buildViewerState(MatchModel match, {required bool canOpenScoring}) {
+    final l10n = AppLocalizations.of(context)!;
     final params = (tournamentId: widget.tournamentId, matchId: widget.matchId);
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
@@ -1529,8 +1562,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               children: [
                                 Text(
                                   match.isScheduled
-                                      ? 'BÀN TRỌNG TÀI - CHƯA BẮT ĐẦU'
-                                      : 'BÀN TRỌNG TÀI - ĐANG THI ĐẤU',
+                                      ? l10n.liveRefereeNotStarted
+                                      : l10n.liveRefereeInProgress,
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
@@ -1541,8 +1574,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                                 const SizedBox(height: 2),
                                 Text(
                                   match.isScheduled
-                                      ? 'Bấm nút để bắt đầu & chấm điểm'
-                                      : 'Mở bàn chấm điểm để ghi nhận tỉ số',
+                                      ? l10n.liveStartAndScoreHint
+                                      : l10n.liveOpenScoreboardHint,
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: context.colors.textSecondary,
@@ -1574,8 +1607,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             await controller.startMatch();
                           },
                           icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                          label: const Text(
-                            'BẮT ĐẦU TRẬN ĐẤU',
+                          label: Text(
+                            l10n.liveStartMatch,
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 12,
@@ -1613,8 +1646,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             );
                           },
                           icon: const Icon(Icons.scoreboard_rounded, size: 18),
-                          label: const Text(
-                            'MỞ BẢNG CHẤM ĐIỂM',
+                          label: Text(
+                            l10n.liveOpenScoreboard,
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 12,
@@ -1651,8 +1684,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         children: [
                           Text(
                             match.isScheduled
-                                ? 'BÀN TRỌNG TÀI - CHƯA BẮT ĐẦU'
-                                : 'BÀN TRỌNG TÀI - ĐANG THI ĐẤU',
+                                ? l10n.liveRefereeNotStarted
+                                : l10n.liveRefereeInProgress,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -1663,8 +1696,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           const SizedBox(height: 2),
                           Text(
                             match.isScheduled
-                                ? 'Bấm nút để bắt đầu trận đấu'
-                                : 'Mở bàn chấm điểm & thẻ phạt',
+                                ? l10n.liveStartMatchHint
+                                : l10n.liveScoreAndPenaltyHint,
                             style: TextStyle(
                               fontSize: 11,
                               color: context.colors.textSecondary,
@@ -1697,8 +1730,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           await controller.startMatch();
                         },
                         icon: const Icon(Icons.play_arrow_rounded, size: 16),
-                        label: const Text(
-                          'BẮT ĐẦU',
+                        label: Text(
+                          l10n.liveStartShort,
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 11,
@@ -1734,8 +1767,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           );
                         },
                         icon: const Icon(Icons.scoreboard_rounded, size: 16),
-                        label: const Text(
-                          'MỞ BẢNG',
+                        label: Text(
+                          l10n.liveOpenScoreboardShort,
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 11,
@@ -1833,8 +1866,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           ],
                           Text(
                             match.isLive
-                                ? 'LIVE'
-                                : (match.isCompleted ? 'KẾT THÚC' : 'SẮP ĐẤU'),
+                                ? l10n.liveLiveBadge
+                                : (match.isCompleted
+                                      ? l10n.liveCurrentSetFinished
+                                      : l10n.liveScheduledStatus),
                             style: TextStyle(
                               fontSize: 8.5,
                               fontWeight: FontWeight.w700,
@@ -1906,7 +1941,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           ),
                           const SizedBox(width: 3),
                           Text(
-                            'CAM 1 (SÂN CHÍNH)',
+                            l10n.liveCameraLabel,
                             style: TextStyle(
                               fontSize: 8,
                               fontWeight: FontWeight.bold,
@@ -2051,7 +2086,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          '$liveViewers đang xem',
+                          l10n.liveViewerCount(liveViewers),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -2091,9 +2126,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               fontWeight: FontWeight.w700,
               fontSize: 12,
             ),
-            tabs: const [
-              Tab(text: 'Tỉ số & Diễn biến'),
-              Tab(text: 'Phòng thảo luận'),
+            tabs: [
+              Tab(text: l10n.liveScoreTab),
+              Tab(text: l10n.liveDiscussionTab),
             ],
           ),
         ),
@@ -2118,10 +2153,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   String _memberEloLabel(MatchMemberInfo member, bool isDoubles) {
+    final l10n = AppLocalizations.of(context)!;
     final name = member.fullName.trim();
     final elo = member.eloPoints;
-    final typeLabel = isDoubles ? 'ELO Đôi' : 'ELO Đơn';
-    final eloStr = elo != null ? '$elo' : 'Chưa có';
+    final typeLabel = isDoubles ? l10n.liveDoublesElo : l10n.liveSinglesElo;
+    final eloStr = elo != null ? '$elo' : l10n.liveNoElo;
     if (name.isEmpty) return '$typeLabel: $eloStr';
     return '$typeLabel:\n$eloStr';
   }
@@ -2131,9 +2167,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     List<String> displayList,
     int? teamEloPoints,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final bool isDoubles = displayList.length >= 2 || memberInfos.length >= 2;
     if (isDoubles) {
-      return 'ELO Đôi:\n${teamEloPoints ?? 'Chưa có'}';
+      return '${l10n.liveDoublesElo}:\n${teamEloPoints ?? l10n.liveNoElo}';
     }
     final realMembers = memberInfos
         .where((member) => member.fullName.trim().isNotEmpty)
@@ -2141,11 +2178,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     if (realMembers.isNotEmpty) {
       return realMembers.map((m) => _memberEloLabel(m, isDoubles)).join('\n');
     }
-    final label = isDoubles ? 'ELO Đôi' : 'ELO Đơn';
+    final label = isDoubles ? l10n.liveDoublesElo : l10n.liveSinglesElo;
     if (displayList.length == 1) {
-      return '$label:\nChưa có';
+      return '$label:\n${l10n.liveNoElo}';
     }
-    return displayList.map((n) => '$n\n$label: Chưa có').join('\n');
+    return displayList.map((n) => '$n\n$label: ${l10n.liveNoElo}').join('\n');
   }
 
   Widget _teamMemberSummaryWidget(
@@ -2154,10 +2191,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     int? teamEloPoints,
     TextStyle style,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final bool isDoubles = displayList.length >= 2 || memberInfos.length >= 2;
     if (isDoubles) {
       return Text(
-        'ELO đôi: ${teamEloPoints ?? 'Chưa có'}',
+        l10n.liveDoublesEloValue(teamEloPoints ?? l10n.liveNoElo),
         style: style.copyWith(fontWeight: FontWeight.w700),
         textAlign: TextAlign.center,
       );
@@ -2200,6 +2238,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     List<String> displayList,
     Color color,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final bool isDoubles =
         displayList.length >= 2 ||
         teamName.contains('&') ||
@@ -2207,8 +2246,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         teamName.toLowerCase().contains('đôi');
 
     if (isDoubles) {
-      final name1 = displayList.isNotEmpty ? displayList[0].trim() : 'VĐV 1';
-      final name2 = displayList.length > 1 ? displayList[1].trim() : 'VĐV 2';
+      final name1 = displayList.isNotEmpty
+          ? displayList[0].trim()
+          : l10n.liveAthleteOne;
+      final name2 = displayList.length > 1
+          ? displayList[1].trim()
+          : l10n.liveAthleteTwo;
       final initial1 = name1.isNotEmpty ? name1[0].toUpperCase() : '1';
       final initial2 = name2.isNotEmpty ? name2[0].toUpperCase() : '2';
 
@@ -2298,23 +2341,24 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   String _penaltyLabel(Penalty penalty) {
+    final l10n = AppLocalizations.of(context)!;
     switch (penalty.type.toUpperCase()) {
       case 'YELLOW_CARD':
       case 'YELLOW':
-        return 'Thẻ vàng';
+        return l10n.livePenaltyYellowCard;
       case 'RED_CARD':
       case 'RED':
-        return 'Thẻ đỏ';
+        return l10n.livePenaltyRedCard;
       case 'POINT_PENALTY':
-        return 'Phạt điểm';
+        return l10n.livePenaltyPoint;
       case 'GAME_PENALTY':
-        return 'Phạt game';
+        return l10n.livePenaltyGame;
       case 'SERVICE_FAULT':
-        return 'Lỗi giao bóng';
+        return l10n.livePenaltyServiceFault;
       case 'MISCONDUCT':
-        return 'Hành vi không đúng mực';
+        return l10n.livePenaltyMisconduct;
       case 'WARNING':
-        return 'Nhắc nhở';
+        return l10n.livePenaltyWarning;
       default:
         return penalty.type;
     }
@@ -2324,11 +2368,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     if (match.penalties.isEmpty) return const SizedBox.shrink();
 
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final penalties = match.penalties.take(6).toList();
     String teamLabel(Penalty penalty) {
       if (penalty.teamId == '1') return match.team1Name;
       if (penalty.teamId == '2') return match.team2Name;
-      return 'Trận đấu';
+      return l10n.liveMatchFallback;
     }
 
     Color penaltyColor(Penalty penalty) {
@@ -2356,7 +2401,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               Icon(Icons.gavel_rounded, size: 18, color: colors.textSecondary),
               const SizedBox(width: 8),
               Text(
-                'Phạt và thẻ',
+                l10n.livePenaltyLogTitle,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
@@ -2365,7 +2410,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
               const Spacer(),
               Text(
-                '${match.penalties.length} ghi nhận',
+                l10n.livePenaltyCount(match.penalties.length),
                 style: TextStyle(fontSize: 11, color: colors.textMuted),
               ),
             ],
@@ -2421,6 +2466,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     ScorePanelState notifierState,
   ) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final int team1SetWins = notifierState.team1SetWins;
     final int team2SetWins = notifierState.team2SetWins;
     final kind = SportRuleKind.fromString(match.sportKey);
@@ -2428,6 +2474,14 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final maxSets = config.bestOf;
     final scoreSummary = _viewerScoreSummary(match, config);
     final modelLabel = _viewerModelLabel(config);
+    final tournament = ref.watch(tournamentProvider(widget.tournamentId)).value;
+    final fullLocation = tournament != null
+        ? TournamentLocationFormatter.matchFullLocation(
+            tournament: tournament,
+            courtName: match.court,
+          )
+        : TournamentLocationFormatter.matchCourtLabel(match.court);
+
     final currentSetLabel = _viewerCurrentSetLabel(
       match,
       notifierState,
@@ -2484,12 +2538,18 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   color: AppTheme.primary,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  match.court.isNotEmpty ? match.court : 'Sân trung tâm',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: colors.textSecondary,
+                Expanded(
+                  child: Text(
+                    fullLocation.isNotEmpty
+                        ? fullLocation
+                        : l10n.liveCourtDefault,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: colors.textSecondary,
+                    ),
                   ),
                 ),
                 const Spacer(),
@@ -2527,15 +2587,24 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               runSpacing: 8,
               alignment: WrapAlignment.center,
               children: [
-                _buildViewerConfigChip('Môn', _setupSportLabel(kind)),
-                _buildViewerConfigChip('Scoring', modelLabel),
-                _buildViewerConfigChip('Thắng', '${config.setsToWin} set'),
+                _buildViewerConfigChip(
+                  l10n.liveSportLabel,
+                  _setupSportLabel(kind),
+                ),
+                _buildViewerConfigChip(l10n.liveScoringLabel, modelLabel),
+                _buildViewerConfigChip(
+                  l10n.liveWinLabel,
+                  l10n.liveSetValue(config.setsToWin),
+                ),
                 if (config.mustWinByTwo)
-                  _buildViewerConfigChip('Luật', 'Cách biệt 2'),
+                  _buildViewerConfigChip(
+                    l10n.liveRuleLabel,
+                    l10n.liveDifferenceTwo,
+                  ),
                 if (kind == SportRuleKind.tennis)
                   _buildViewerConfigChip(
-                    'Tiebreak',
-                    '${config.tiebreakPoints ?? 7} điểm',
+                    l10n.liveTiebreakLabel,
+                    l10n.livePointsValue(config.tiebreakPoints ?? 7),
                   ),
               ],
             ),
@@ -2613,7 +2682,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               ),
                             ),
                             child: Text(
-                              'SET THẮNG: $team1SetWins',
+                              l10n.liveSetWins(team1SetWins),
                               style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -2749,7 +2818,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               ),
                             ),
                             child: Text(
-                              'SET THẮNG: $team2SetWins',
+                              l10n.liveSetWins(team2SetWins),
                               style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -2769,7 +2838,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
 
           // TỈ SỐ CÁC SET Section
           Text(
-            'TỈ SỐ CÁC SET',
+            l10n.liveSetScoresTitle,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -2851,7 +2920,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             child: ExpansionTile(
               shape: const Border(),
               title: Text(
-                'Thông tin trận đấu chi tiết',
+                l10n.liveMatchDetails,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
@@ -2869,24 +2938,24 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   child: Column(
                     children: [
                       _buildInfoRow(
-                        'Giải đấu',
-                        match.tournamentName ?? 'Giải Vô Địch Mùa Hè',
+                        l10n.liveTournamentLabel,
+                        match.tournamentName ?? l10n.liveDefaultTournament,
                       ),
                       const Divider(height: 16),
                       _buildInfoRow(
-                        'Trọng tài chính',
+                        l10n.liveRefereeLabel,
                         match.refereeName?.trim().isNotEmpty == true
                             ? match.refereeName!
-                            : 'Chưa xác định',
+                            : l10n.liveUnknownValue,
                       ),
                       const Divider(height: 16),
                       _buildInfoRow(
-                        'Thời gian xếp lịch',
+                        l10n.liveScheduledTimeLabel,
                         match.scheduledTime != null
                             ? DateFormat(
                                 'HH:mm - dd/MM/yyyy',
                               ).format(match.scheduledTime!.toLocal())
-                            : 'Chưa xếp lịch',
+                            : l10n.liveNotScheduled,
                       ),
                     ],
                   ),
@@ -2920,27 +2989,29 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   String _viewerScoreSummary(MatchModel match, SportConfig config) {
+    final l10n = AppLocalizations.of(context)!;
     final matchCap = match.maxScore;
     if (config.kind == SportRuleKind.tennis) {
       final setGames = matchCap ?? config.pointsPerSet;
-      return 'BO${config.bestOf} • $setGames game/set';
+      return l10n.liveSummaryTennis(config.bestOf, setGames);
     }
     if (config.scoringModel == SportScoringModel.pickleballSideOut) {
       final target = matchCap ?? config.pointsPerSet;
-      return 'BO${config.bestOf} • side-out • chạm $target';
+      return l10n.liveSummarySideOut(config.bestOf, target);
     }
     final target = matchCap ?? config.pointsPerSet;
-    return 'BO${config.bestOf} • $target điểm/set';
+    return l10n.liveSummaryRally(config.bestOf, target);
   }
 
   String _viewerModelLabel(SportConfig config) {
+    final l10n = AppLocalizations.of(context)!;
     switch (config.scoringModel) {
       case SportScoringModel.tennisSet:
-        return 'Game';
+        return l10n.liveModelGame;
       case SportScoringModel.pickleballSideOut:
-        return 'Side-out';
+        return l10n.liveModelSideOut;
       case SportScoringModel.rallyPointSet:
-        return 'Rally';
+        return l10n.liveModelRally;
     }
   }
 
@@ -2949,14 +3020,15 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     ScorePanelState state,
     SportConfig config,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     if (match.isCompleted) {
-      return 'KẾT THÚC';
+      return l10n.liveCurrentSetFinished;
     }
     final currentSet = state.finishedSets.length + 1;
     if (config.scoringModel == SportScoringModel.tennisSet) {
-      return 'Set $currentSet';
+      return l10n.liveCurrentSet(currentSet);
     }
-    return 'Hiệp $currentSet';
+    return l10n.liveCurrentRound(currentSet);
   }
 
   Widget _buildViewerConfigChip(String label, String value) {
@@ -2989,6 +3061,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   // ═══════════════════════════════════════════════════════════
   Widget _buildChatTab(MatchModel match) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final isAuth = ref.watch(authProvider).status == AuthStatus.authenticated;
 
     final List<Map<String, dynamic>> mergedList = [];
@@ -3060,7 +3133,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Chưa có thảo luận',
+                          l10n.liveEmptyDiscussion,
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
@@ -3069,7 +3142,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Hãy là người đầu tiên chia sẻ cảm nghĩ!',
+                          l10n.liveEmptyDiscussionHint,
                           style: TextStyle(
                             color: colors.textMuted,
                             fontSize: 12,
@@ -3172,7 +3245,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       final user = item['user'] as Map?;
                       final avatarUrl = user?['avatarUrl']?.toString() ?? '';
                       final userName =
-                          user?['fullName']?.toString() ?? 'Người xem';
+                          user?['fullName']?.toString() ??
+                          l10n.liveViewerPlaceholder;
                       final commentText = item['commentText']?.toString() ?? '';
 
                       return Padding(
@@ -3268,8 +3342,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     style: TextStyle(color: colors.textPrimary, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: isAuth
-                          ? 'Nhập bình luận...'
-                          : 'Đăng nhập để bình luận',
+                          ? l10n.liveCommentHint
+                          : l10n.liveLoginToComment,
                       hintStyle: TextStyle(
                         color: colors.textMuted,
                         fontSize: 14,
@@ -3290,8 +3364,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 if (!isAuth)
                   TextButton(
                     onPressed: () => context.go('/login'),
-                    child: const Text(
-                      'Đăng nhập',
+                    child: Text(
+                      l10n.liveLogin,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: AppTheme.primary,

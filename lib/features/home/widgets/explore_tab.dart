@@ -100,9 +100,6 @@ class _WaveHeaderPainter extends CustomPainter {
 Color _statusColor(BuildContext context, String status) =>
     StatusHelper.getTournamentStatusColor(status, context);
 
-String _statusLabel(String status) =>
-    StatusHelper.getTournamentStatusLabel(status);
-
 IconData _sportIcon(String sport) {
   switch (sport) {
     case 'tennis':
@@ -197,6 +194,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return FadeTransition(
       opacity: _fadeAnim,
       child: CustomScrollView(
@@ -217,9 +215,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
               child: _buildSectionHeader(
                 icon: Icons.emoji_events_rounded,
                 iconColor: const Color(0xFFF59E0B),
-                title:
-                    AppLocalizations.of(context)?.exploreFeaturedTitle ??
-                    'Giải đấu nổi bật',
+                title: l10n.exploreFeaturedTitle,
                 onMore: widget.onViewAllTournaments,
               ),
             ),
@@ -233,9 +229,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
             child: _buildSectionHeader(
               icon: Icons.sensors_rounded,
               iconColor: const Color(0xFFEF4444),
-              title:
-                  AppLocalizations.of(context)?.exploreLiveTitle ??
-                  'Trận đấu đang diễn ra',
+              title: l10n.exploreLiveTitle,
               badge: 'LIVE',
             ),
           ),
@@ -245,8 +239,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Center(
                   child: Text(
-                    AppLocalizations.of(context)?.exploreLiveEmpty ??
-                        'Chưa có trận đấu nào đang diễn ra',
+                    l10n.exploreLiveEmpty,
                     style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
                   ),
                 ),
@@ -268,9 +261,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
             child: _buildSectionHeader(
               icon: Icons.check_circle_outline_rounded,
               iconColor: const Color(0xFF2563EB),
-              title:
-                  AppLocalizations.of(context)?.exploreRecentResultsTitle ??
-                  'Kết quả trận đấu vừa qua',
+              title: l10n.exploreRecentResultsTitle,
             ),
           ),
           SliverToBoxAdapter(
@@ -282,9 +273,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
             child: _buildSectionHeader(
               icon: Icons.calendar_today_rounded,
               iconColor: const Color(0xFF16A34A),
-              title:
-                  AppLocalizations.of(context)?.exploreUpcomingTitle ??
-                  'Lịch thi đấu sắp diễn ra',
+              title: l10n.exploreUpcomingTitle,
             ),
           ),
           SliverList(
@@ -315,6 +304,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
   // Wave Header
   // ─────────────────────────────────────
   Widget _buildWaveHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final auth = ref.watch(authProvider);
     final isAuth = auth.isAuthenticated;
 
@@ -430,8 +420,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
 
                   // Hero text
                   Text(
-                    AppLocalizations.of(context)?.exploreHeaderTitle ??
-                        'Khám phá',
+                    l10n.exploreHeaderTitle,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 26,
@@ -441,8 +430,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                     ),
                   ),
                   Text(
-                    AppLocalizations.of(context)?.exploreHeaderSubtitle ??
-                        'Tìm giải đấu phù hợp với bạn',
+                    l10n.exploreHeaderSubtitle,
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: 13,
@@ -467,6 +455,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
   // 3D Glassmorphism Athlete ELO Card (khi đã login)
   // ─────────────────────────────────────
   Widget _buildCompactStatsRow() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -503,7 +492,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                 ),
               ),
               const SizedBox(width: 8),
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -516,7 +505,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                     ),
                   ),
                   Text(
-                    'Xếp hạng Quốc gia',
+                    l10n.exploreNationalRanking,
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: 10,
@@ -526,11 +515,15 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                 ],
               ),
               const Spacer(),
-              _buildMiniStat('0', 'Trận'),
+              _buildMiniStat('0', l10n.homeMatchesStat),
               const SizedBox(width: 10),
-              _buildMiniStat('0', 'Thắng'),
+              _buildMiniStat('0', l10n.exploreWinsStat),
               const SizedBox(width: 10),
-              _buildMiniStat('0%', 'Rate', color: const Color(0xFF4ADE80)),
+              _buildMiniStat(
+                '0%',
+                l10n.homeWinRateStat,
+                color: const Color(0xFF4ADE80),
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -558,8 +551,8 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                 size: 12,
               ),
               const SizedBox(width: 4),
-              const Text(
-                'Còn 50 ELO nữa lên Hạng Vàng',
+              Text(
+                l10n.exploreEloToGold,
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: 10.5,
@@ -573,12 +566,12 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                   color: Colors.orange.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Text('🔥', style: TextStyle(fontSize: 10)),
                     SizedBox(width: 2),
                     Text(
-                      'Phong độ cao',
+                      l10n.exploreHighForm,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 9.5,
@@ -623,6 +616,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
   // Search Bar
   // ─────────────────────────────────────
   Widget _buildSearch(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Container(
@@ -646,9 +640,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
             color: Color(0xFF0F172A),
           ),
           decoration: InputDecoration(
-            hintText:
-                AppLocalizations.of(context)?.exploreSearchHint ??
-                'Tìm giải đấu, môn thể thao...',
+            hintText: l10n.exploreSearchHint,
             hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
             prefixIcon: const Icon(
               Icons.search_rounded,
@@ -680,14 +672,11 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
   // Sport Filter Chips
   // ─────────────────────────────────────
   Widget _buildSportFilter(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final categories =
         ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
     final sports = [
-      (
-        key: 'all',
-        label: AppLocalizations.of(context)?.infoAll ?? 'Tất cả',
-        icon: Icons.grid_view_rounded,
-      ),
+      (key: 'all', label: l10n.infoAll, icon: Icons.grid_view_rounded),
       ...categories.map(
         (category) => (
           key: category.slug,
@@ -775,6 +764,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
     String? badge,
     VoidCallback? onMore,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 22, 16, 10),
       child: Row(
@@ -826,8 +816,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
               child: Row(
                 children: [
                   Text(
-                    AppLocalizations.of(context)?.exploreViewAll ??
-                        'Xem tất cả',
+                    l10n.exploreViewAll,
                     style: TextStyle(
                       color: AppTheme.primary,
                       fontSize: 13,
@@ -869,6 +858,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
   // Empty State
   // ─────────────────────────────────────
   Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -888,8 +878,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
           ),
           const SizedBox(height: 16),
           Text(
-            AppLocalizations.of(context)?.exploreEmptyTitle ??
-                'Không tìm thấy giải đấu',
+            l10n.exploreEmptyTitle,
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -898,8 +887,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
           ),
           const SizedBox(height: 6),
           Text(
-            AppLocalizations.of(context)?.exploreEmptyHint ??
-                'Thử thay đổi bộ lọc hoặc từ khoá tìm kiếm',
+            l10n.exploreEmptyHint,
             style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
           ),
         ],
@@ -918,12 +906,23 @@ class _TournamentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final statusColor = _statusColor(context, tournament.status);
-    final sportLabel =
-        AppConstants.sportNames[tournament.sport] ?? tournament.sport;
-    final bracketLabel =
-        AppConstants.bracketTypeNames[tournament.bracketType] ??
-        tournament.bracketType;
+    final sportLabel = switch (tournament.sport.toLowerCase()) {
+      'badminton' => l10n.createClubTournament_sportBadminton,
+      'tennis' => l10n.createClubTournament_sportTennis,
+      'pickleball' => l10n.createClubTournament_sportPickleball,
+      'table_tennis' => l10n.createClubTournament_sportTableTennis,
+      'football' => l10n.createClubTournament_sportFootball,
+      _ => l10n.homeSportFallback,
+    };
+    final bracketLabel = switch (tournament.bracketType.toLowerCase()) {
+      'single_elimination' => l10n.eliminationSingle,
+      'double_elimination' => l10n.eliminationDouble,
+      'round_robin' => l10n.roundRobin,
+      'group_stage' => l10n.groupStage,
+      _ => tournament.bracketType,
+    };
 
     return GestureDetector(
       onTap: () => context.push('/intro/${tournament.id}'),
@@ -1023,7 +1022,23 @@ class _TournamentCard extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            _statusLabel(tournament.status),
+                            switch (StatusHelper.normalizeTournamentStatus(
+                              tournament.status,
+                            )) {
+                              AppConstants.statusRegistration =>
+                                l10n.profileRegistrationOpen,
+                              AppConstants.statusRegistrationClosed =>
+                                l10n.registrationClosed,
+                              AppConstants.statusInProgress =>
+                                l10n.homeInProgressStatus,
+                              AppConstants.statusCompleted =>
+                                l10n.homeCompletedStatus,
+                              AppConstants.statusUpcoming =>
+                                l10n.profileUpcoming,
+                              _ => StatusHelper.normalizeTournamentStatus(
+                                tournament.status,
+                              ),
+                            },
                             style: TextStyle(
                               color: statusColor,
                               fontSize: 9.5,
@@ -1060,7 +1075,7 @@ class _TournamentCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${tournament.maxTeams} đội',
+                          '${tournament.maxTeams} ${l10n.teamsUnit}',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 11,

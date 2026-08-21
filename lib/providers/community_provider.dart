@@ -17,14 +17,15 @@ final communityRepositoryProvider = Provider<ICommunityRepository>((ref) {
 typedef CommunityQuery = ({String? search, String? provinceCode});
 
 /// Provider danh sách CLB có filter + search
-final communitiesProvider = FutureProvider.family<List<Community>, CommunityQuery>((ref, query) async {
-  final repo = ref.watch(communityRepositoryProvider);
-  return repo.getCommunities(
-    search: query.search,
-    provinceCode: query.provinceCode,
-    limit: 50,
-  );
-});
+final communitiesProvider =
+    FutureProvider.family<List<Community>, CommunityQuery>((ref, query) async {
+      final repo = ref.watch(communityRepositoryProvider);
+      return repo.getCommunities(
+        search: query.search,
+        provinceCode: query.provinceCode,
+        limit: 50,
+      );
+    });
 
 /// Provider CLB của tôi
 final myCommunitiesProvider = FutureProvider<List<Community>>((ref) async {
@@ -42,40 +43,56 @@ void invalidateCommunityCollections(dynamic ref) {
 }
 
 /// Provider chi tiết 1 CLB
-final communityDetailProvider = FutureProvider.family<Community?, String>((ref, id) async {
+final communityDetailProvider = FutureProvider.family<Community?, String>((
+  ref,
+  id,
+) async {
   final repo = ref.watch(communityRepositoryProvider);
   return repo.getCommunityById(id);
 });
 
 /// Provider danh sách thành viên CLB
-final communityMembersProvider = FutureProvider.family<List<CommunityMemberModel>, String>((ref, communityId) async {
-  final repo = ref.watch(communityRepositoryProvider);
-  return repo.getMembers(communityId);
-});
+final communityMembersProvider =
+    FutureProvider.family<List<CommunityMemberModel>, String>((
+      ref,
+      communityId,
+    ) async {
+      final repo = ref.watch(communityRepositoryProvider);
+      return repo.getMembers(communityId);
+    });
 
 /// Tag preset của CLB (tên + màu) — nguồn màu hiển thị tag thành viên
 /// mọi nơi có tên + avatar (bài viết, chat, danh sách, profile) như web.
 final communityTagPresetsProvider =
-    FutureProvider.family<List<CommunityTagPreset>, String>((ref, communityId) async {
-  return ref.watch(communityRepositoryProvider).getTagPresets(communityId);
-});
+    FutureProvider.family<List<CommunityTagPreset>, String>((
+      ref,
+      communityId,
+    ) async {
+      return ref.watch(communityRepositoryProvider).getTagPresets(communityId);
+    });
 
 /// Map userId → member để tra nhanh tag/role theo tác giả bài viết, tin nhắn.
 /// (Web cũng resolve client-side bằng getMembers limit 100 + match theo id.)
 final communityMemberDirectoryProvider =
-    FutureProvider.family<Map<String, CommunityMemberModel>, String>((ref, communityId) async {
-  final members = await ref.watch(communityMembersProvider(communityId).future);
-  return {
-    for (final member in members) member.userId: member,
-  };
-});
+    FutureProvider.family<Map<String, CommunityMemberModel>, String>((
+      ref,
+      communityId,
+    ) async {
+      final members = await ref.watch(
+        communityMembersProvider(communityId).future,
+      );
+      return {for (final member in members) member.userId: member};
+    });
 
 /// Bounded, server-side member lookup for @mentions.  It deliberately never
 /// downloads an entire large club just to populate a composer popup.
 typedef CommunityMemberSearch = ({String communityId, String query});
 
 final communityMemberSearchProvider =
-    FutureProvider.family<List<CommunityMemberModel>, CommunityMemberSearch>((ref, request) async {
+    FutureProvider.family<List<CommunityMemberModel>, CommunityMemberSearch>((
+      ref,
+      request,
+    ) async {
       final repo = ref.watch(communityRepositoryProvider);
       return repo.getMembers(
         request.communityId,
@@ -88,7 +105,10 @@ final communityMemberSearchProvider =
 /// Membership of the signed-in user.  Social UI uses this small endpoint for
 /// capability checks instead of scanning the member directory.
 final myCommunityMembershipProvider =
-    FutureProvider.family<CommunityMemberModel?, String>((ref, communityId) async {
+    FutureProvider.family<CommunityMemberModel?, String>((
+      ref,
+      communityId,
+    ) async {
       final repo = ref.watch(communityRepositoryProvider);
       final membership = await repo.getMyMembership(communityId);
       if (membership == null) return null;
@@ -103,22 +123,31 @@ final myCommunityMembershipProvider =
     });
 
 /// Provider danh sách giải đấu trong CLB
-final communityTournamentsProvider = FutureProvider.family<List<CommunityTournamentModel>, String>((ref, communityId) async {
-  final repo = ref.watch(communityRepositoryProvider);
-  return repo.getTournaments(communityId);
-});
+final communityTournamentsProvider = FutureProvider.autoDispose
+    .family<List<CommunityTournamentModel>, String>((ref, communityId) async {
+      final repo = ref.watch(communityRepositoryProvider);
+      return repo.getTournaments(communityId);
+    });
 
 /// Provider gallery ảnh CLB
-final communityGalleryProvider = FutureProvider.family<List<GalleryImageModel>, String>((ref, communityId) async {
-  final repo = ref.watch(communityRepositoryProvider);
-  return repo.getGallery(communityId);
-});
+final communityGalleryProvider =
+    FutureProvider.family<List<GalleryImageModel>, String>((
+      ref,
+      communityId,
+    ) async {
+      final repo = ref.watch(communityRepositoryProvider);
+      return repo.getGallery(communityId);
+    });
 
 /// Provider danh sách yêu cầu tham gia CLB (OWNER/ADMIN thấy).
-final joinRequestsProvider = FutureProvider.family<List<CommunityMemberModel>, String>((ref, communityId) async {
-  final repo = ref.watch(communityRepositoryProvider);
-  return repo.getJoinRequests(communityId);
-});
+final joinRequestsProvider =
+    FutureProvider.family<List<CommunityMemberModel>, String>((
+      ref,
+      communityId,
+    ) async {
+      final repo = ref.watch(communityRepositoryProvider);
+      return repo.getJoinRequests(communityId);
+    });
 
 /// Provider danh sách CLB chờ duyệt (Admin).
 final pendingCommunitiesProvider = FutureProvider<List<Community>>((ref) async {
@@ -127,7 +156,9 @@ final pendingCommunitiesProvider = FutureProvider<List<Community>>((ref) async {
 });
 
 /// Provider danh sách lời mời CLB của tôi
-final myCommunityInvitesProvider = FutureProvider<List<CommunityInviteModel>>((ref) async {
+final myCommunityInvitesProvider = FutureProvider<List<CommunityInviteModel>>((
+  ref,
+) async {
   final repo = ref.watch(communityRepositoryProvider);
   return repo.getMyInvites();
 });
@@ -150,6 +181,12 @@ final isFavoritedProvider = FutureProvider.family<bool, String>((
   return repo.isFavorited(communityId);
 });
 
-final communitySocialSettingsProvider = FutureProvider.family<CommunitySocialSettings, String>((ref, communityId) async {
-  return ref.watch(communityRepositoryProvider).getSocialSettings(communityId);
-});
+final communitySocialSettingsProvider =
+    FutureProvider.family<CommunitySocialSettings, String>((
+      ref,
+      communityId,
+    ) async {
+      return ref
+          .watch(communityRepositoryProvider)
+          .getSocialSettings(communityId);
+    });

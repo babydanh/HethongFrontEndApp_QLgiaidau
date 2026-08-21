@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class FootballTeamRegisterScreen extends ConsumerStatefulWidget {
   const FootballTeamRegisterScreen({super.key, required this.tournamentId, this.divisionId, this.categoryId, this.inviteCode, this.participantId, this.teamSize = 7, this.maxReserve = 0});
@@ -62,6 +63,7 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
   }
 
   Future<void> _respondToRoster(String action) async {
+    final l10n = AppLocalizations.of(context)!;
     if (widget.participantId == null || _rosterAction) return;
     setState(() => _rosterAction = true);
     try {
@@ -76,13 +78,14 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
       );
       if (mounted) setState(() => _rosterStatus = status);
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorParser.parse(error, 'Không thể cập nhật đội hình'))));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorParser.parse(error, l10n.register_updateRosterError))));
     } finally {
       if (mounted) setState(() => _rosterAction = false);
     }
   }
 
   Future<void> _create() async {
+    final l10n = AppLocalizations.of(context)!;
     final name = _name.text.trim();
     if (name.isEmpty || widget.categoryId == null) return;
     setState(() => _saving = true);
@@ -92,8 +95,8 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
       setState(() { _teams = [team, ..._teams]; _selected = team.id; _name.clear(); });
       await _loadMembers(team.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã tạo đội. Hãy mời đủ thành viên trong trang đội.')));
-    } catch (error) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorParser.parse(error, 'Không thể tạo đội')))); }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.register_teamCreated)));
+    } catch (error) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorParser.parse(error, l10n.register_createTeamError)))); }
     finally { if (mounted) setState(() => _saving = false); }
   }
 
@@ -136,6 +139,7 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
   }
 
   Future<void> _register() async {
+    final l10n = AppLocalizations.of(context)!;
     final id = _selected;
     final team = _teams.where((item) => item.id == id).firstOrNull;
     if (team == null) return;
@@ -151,7 +155,7 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
         if (!mounted) return;
         setState(() => _rosterStatus = status);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_selectedMemberIds.length < widget.teamSize ? 'Đã lưu roster nháp.' : 'Đã cập nhật roster đội.')),
+          SnackBar(content: Text(_selectedMemberIds.length < widget.teamSize ? l10n.register_rosterDraftSaved : l10n.register_rosterUpdated)),
         );
         return;
       }
@@ -173,42 +177,44 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
           SnackBar(
             content: Text(
               _selectedMemberIds.length < widget.teamSize
-                  ? 'Đã lưu đăng ký nháp. Hãy bổ sung đủ đội hình trước khi BTC khóa roster.'
-                  : 'Đăng ký đội thành công.',
+                  ? l10n.register_draftRegistrationSaved
+                  : l10n.register_teamRegistered,
             ),
           ),
         );
         context.pop();
       }
-    } catch (error) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorParser.parse(error, 'Không thể đăng ký đội')))); }
+    } catch (error) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorParser.parse(error, l10n.register_registrationError)))); }
     finally { if (mounted) setState(() => _saving = false); }
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Đăng ký đội bóng')),
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+    appBar: AppBar(title: Text(l10n.register_teamTitle)),
     body: ListView(padding: const EdgeInsets.all(16), children: [
       if (_rosterStatus?.currentMember?.confirmationStatus == 'PENDING') Card(
         color: Colors.amber.shade50,
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Bạn được chọn vào đội hình giải này', style: TextStyle(fontWeight: FontWeight.w800)),
+            Text(l10n.register_invitedBannerTitle, style: const TextStyle(fontWeight: FontWeight.w800)),
             const SizedBox(height: 4),
-            const Text('Hãy xác nhận trước khi Ban tổ chức khóa roster.', style: TextStyle(fontSize: 12)),
+            Text(l10n.register_invitedBannerDescription, style: const TextStyle(fontSize: 12)),
             const SizedBox(height: 10),
             Row(children: [
-              FilledButton.icon(onPressed: _rosterAction ? null : () => _respondToRoster('CONFIRM'), icon: const Icon(Icons.check, size: 16), label: const Text('Xác nhận')),
+              FilledButton.icon(onPressed: _rosterAction ? null : () => _respondToRoster('CONFIRM'), icon: const Icon(Icons.check, size: 16), label: Text(l10n.register_confirmRoster)),
               const SizedBox(width: 8),
-              OutlinedButton.icon(onPressed: _rosterAction ? null : () => _respondToRoster('DECLINE'), icon: const Icon(Icons.close, size: 16), label: const Text('Từ chối')),
+              OutlinedButton.icon(onPressed: _rosterAction ? null : () => _respondToRoster('DECLINE'), icon: const Icon(Icons.close, size: 16), label: Text(l10n.register_declineRoster)),
             ]),
           ]),
         ),
       ),
-      const Text('Chọn đội đã tạo', style: TextStyle(fontWeight: FontWeight.w700)),
+      Text(l10n.register_chooseExistingTeam, style: const TextStyle(fontWeight: FontWeight.w700)),
       const SizedBox(height: 8),
       if (_loading) const Center(child: CircularProgressIndicator()) else if (_teams.isEmpty)
-        const Card(child: Padding(padding: EdgeInsets.all(16), child: Text('Chưa có đội bóng phù hợp với môn này.')))
+        Card(child: Padding(padding: const EdgeInsets.all(16), child: Text(l10n.register_noMatchingTeams)))
       else RadioGroup<String>(
         groupValue: _selected,
         onChanged: (value) {
@@ -221,35 +227,37 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
           children: _teams.map((team) => RadioListTile<String>(
             value: team.id,
             title: Text(team.name),
-            subtitle: Text(team.role == 'PLAYER' ? 'Thành viên' : 'Có quyền đăng ký'),
+            subtitle: Text(team.role == 'PLAYER' ? l10n.register_teamMember : l10n.register_canRegister),
           )).toList(),
         ),
       ),
       if (_members.isNotEmpty) ...[
         const SizedBox(height: 12),
-        const Text('Đội hình đăng ký', style: TextStyle(fontWeight: FontWeight.w700)),
+        Text(l10n.register_rosterTitle, style: const TextStyle(fontWeight: FontWeight.w700)),
         const SizedBox(height: 4),
-        Text('Chọn tối đa ${widget.teamSize} cầu thủ chính và tối đa ${widget.maxReserve} dự bị. Có thể bổ sung sau khi lưu nháp.', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+        Text(l10n.register_rosterInstructions(widget.teamSize, widget.maxReserve), style: const TextStyle(fontSize: 12, color: Colors.black54)),
         ..._members.map((member) => CheckboxListTile(
           dense: true,
           value: _selectedMemberIds.contains(member.userId) || _selectedReserveIds.contains(member.userId),
           onChanged: _rosterStatus?.entryStatus == 'LOCKED' ? null : (_) => _showRosterRolePicker(member),
           title: Text(member.userId, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(_selectedMemberIds.contains(member.userId) ? 'Chính • ${member.role}' : _selectedReserveIds.contains(member.userId) ? 'Dự bị • ${member.role}' : member.role),
+          subtitle: Text(_selectedMemberIds.contains(member.userId) ? '${l10n.register_mainPlayer} • ${member.role}' : _selectedReserveIds.contains(member.userId) ? '${l10n.register_reservePlayer} • ${member.role}' : member.role),
         )),
       ],
       const SizedBox(height: 16),
-      const Text('Tạo đội nhanh', style: TextStyle(fontWeight: FontWeight.w700)),
+      Text(l10n.register_quickCreateTitle, style: const TextStyle(fontWeight: FontWeight.w700)),
       const SizedBox(height: 8),
-      Row(children: [Expanded(child: TextField(controller: _name, decoration: const InputDecoration(hintText: 'Tên đội'))), const SizedBox(width: 8), FilledButton(onPressed: _saving ? null : _create, child: const Text('Tạo'))]),
+      Row(children: [Expanded(child: TextField(controller: _name, decoration: InputDecoration(hintText: l10n.register_teamNameHint))), const SizedBox(width: 8), FilledButton(onPressed: _saving ? null : _create, child: Text(l10n.register_createTeam))]),
       const SizedBox(height: 20),
       if (_rosterStatus?.entryStatus == 'LOCKED')
-        const Card(child: Padding(padding: EdgeInsets.all(12), child: Text('Roster đã khóa, chỉ có thể xem đội hình.'))),
-      FilledButton.icon(onPressed: _saving || _loading || _rosterStatus?.entryStatus == 'LOCKED' || _selected == null || _selectedMemberIds.isEmpty || _selectedReserveIds.length > widget.maxReserve ? null : _register, icon: const Icon(Icons.check), label: Text(widget.participantId != null ? 'Cập nhật roster' : _selectedMemberIds.length < widget.teamSize ? 'Lưu đăng ký nháp' : 'Đăng ký đội đã chọn')),
+        Card(child: Padding(padding: const EdgeInsets.all(12), child: Text(l10n.register_rosterLocked))),
+      FilledButton.icon(onPressed: _saving || _loading || _rosterStatus?.entryStatus == 'LOCKED' || _selected == null || _selectedMemberIds.isEmpty || _selectedReserveIds.length > widget.maxReserve ? null : _register, icon: const Icon(Icons.check), label: Text(widget.participantId != null ? l10n.register_updateRoster : _selectedMemberIds.length < widget.teamSize ? l10n.register_saveDraft : l10n.register_selectedTeam)),
     ]),
-  );
+    );
+  }
 
   Future<void> _showRosterRolePicker(FootballTeamMemberSummary member) async {
+    final l10n = AppLocalizations.of(context)!;
     final current = _selectedMemberIds.contains(member.userId)
         ? 'MAIN'
         : _selectedReserveIds.contains(member.userId)
@@ -259,9 +267,9 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
       context: context,
       builder: (sheetContext) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          ListTile(leading: const Icon(Icons.sports_soccer), title: const Text('Cầu thủ chính'), enabled: current != 'MAIN' && _selectedMemberIds.length >= widget.teamSize ? false : true, onTap: () => Navigator.pop(sheetContext, 'MAIN')),
-          ListTile(leading: const Icon(Icons.event_seat), title: const Text('Cầu thủ dự bị'), enabled: current != 'RESERVE' && _selectedReserveIds.length >= widget.maxReserve ? false : true, onTap: () => Navigator.pop(sheetContext, 'RESERVE')),
-          ListTile(leading: const Icon(Icons.remove_circle_outline), title: const Text('Bỏ chọn'), onTap: () => Navigator.pop(sheetContext, 'NONE')),
+          ListTile(leading: const Icon(Icons.sports_soccer), title: Text(l10n.register_mainPlayer), enabled: current != 'MAIN' && _selectedMemberIds.length >= widget.teamSize ? false : true, onTap: () => Navigator.pop(sheetContext, 'MAIN')),
+          ListTile(leading: const Icon(Icons.event_seat), title: Text(l10n.register_reservePlayer), enabled: current != 'RESERVE' && _selectedReserveIds.length >= widget.maxReserve ? false : true, onTap: () => Navigator.pop(sheetContext, 'RESERVE')),
+          ListTile(leading: const Icon(Icons.remove_circle_outline), title: Text(l10n.register_removeSelection), onTap: () => Navigator.pop(sheetContext, 'NONE')),
         ]),
       ),
     );

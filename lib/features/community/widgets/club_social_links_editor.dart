@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Editor danh sách liên hệ của CLB, đồng bộ web (SettingsTab.tsx):
@@ -49,10 +50,11 @@ class _ClubSocialLinksEditorState extends State<ClubSocialLinksEditor> {
   void _notify() => widget.onChanged(Map.unmodifiable(_links));
 
   void _addLink() {
+    final l10n = AppLocalizations.of(context)!;
     final value = _newValueCtrl.text.trim();
     if (value.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập giá trị liên kết.')),
+        SnackBar(content: Text(l10n.clubSocialLinks_valueRequired)),
       );
       return;
     }
@@ -61,7 +63,7 @@ class _ClubSocialLinksEditorState extends State<ClubSocialLinksEditor> {
       final label = _customLabelCtrl.text.trim();
       if (label.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vui lòng nhập nhãn liên kết.')),
+          SnackBar(content: Text(l10n.clubSocialLinks_labelRequired)),
         );
         return;
       }
@@ -76,20 +78,22 @@ class _ClubSocialLinksEditorState extends State<ClubSocialLinksEditor> {
     _newValueCtrl.clear();
     _notify();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã thêm liên hệ mới!')),
+      SnackBar(content: Text(l10n.clubSocialLinks_added)),
     );
   }
 
   void _removeLink(String key) {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _links = {..._links}..remove(key));
     _notify();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã xóa liên hệ!')),
+      SnackBar(content: Text(l10n.clubSocialLinks_removed)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,7 +157,7 @@ class _ClubSocialLinksEditorState extends State<ClubSocialLinksEditor> {
                   ..._presetTypes.entries.map(
                     (type) => DropdownMenuItem(value: type.key, child: Text(type.value)),
                   ),
-                  const DropdownMenuItem(value: _customKey, child: Text('Khác...')),
+                  DropdownMenuItem(value: _customKey, child: Text(l10n.clubSocialLinks_other)),
                 ],
                 onChanged: (value) {
                   if (value != null) setState(() => _newType = value);
@@ -166,8 +170,8 @@ class _ClubSocialLinksEditorState extends State<ClubSocialLinksEditor> {
           const SizedBox(height: 8),
           TextField(
             controller: _customLabelCtrl,
-            decoration: const InputDecoration(
-              labelText: 'Tên kênh (Telegram, Viber...)',
+            decoration: InputDecoration(
+              labelText: l10n.clubSocialLinks_customLabel,
               isDense: true,
             ),
           ),
@@ -178,8 +182,8 @@ class _ClubSocialLinksEditorState extends State<ClubSocialLinksEditor> {
             Expanded(
               child: TextField(
                 controller: _newValueCtrl,
-                decoration: const InputDecoration(
-                  hintText: 'Đường dẫn liên kết hoặc số điện thoại...',
+                decoration: InputDecoration(
+                  hintText: l10n.clubSocialLinks_valueHint,
                   isDense: true,
                 ),
               ),
@@ -187,7 +191,7 @@ class _ClubSocialLinksEditorState extends State<ClubSocialLinksEditor> {
             const SizedBox(width: 8),
             OutlinedButton(
               onPressed: _addLink,
-              child: const Text('Thêm liên kết'),
+              child: Text(l10n.clubSocialLinks_add),
             ),
           ],
         ),

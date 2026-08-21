@@ -3334,7 +3334,141 @@ class AppLocalizationsEn extends AppLocalizations {
   String get club_revokeInvite => 'Invite revoked';
 
   @override
-  String get club_cancelInvite => 'Cancel Invite';
+  String get club_cancelInvite => 'Cancel invitation';
+
+  @override
+  String club_pendingPostsSection(Object count) {
+    return 'Posts awaiting review ($count)';
+  }
+
+  @override
+  String get club_noPendingPosts => 'No posts are awaiting review.';
+
+  @override
+  String get club_rejectPost => 'Reject';
+
+  @override
+  String get club_approvePost => 'Approve';
+
+  @override
+  String get club_postApproved => 'Post approved.';
+
+  @override
+  String get club_postRejected => 'Post rejected.';
+
+  @override
+  String get club_postModerationError => 'Unable to process the post.';
+
+  @override
+  String club_reportsSection(Object count) {
+    return 'Post reports ($count)';
+  }
+
+  @override
+  String get club_noPendingReports => 'No reports are awaiting review.';
+
+  @override
+  String get club_reportReasonSpam => 'Spam / advertising';
+
+  @override
+  String get club_reportReasonHarassment => 'Harassment / insults';
+
+  @override
+  String get club_reportReasonHate => 'Hate / discrimination';
+
+  @override
+  String get club_reportReasonSexual => 'Inappropriate content';
+
+  @override
+  String get club_reportReasonViolence => 'Violence / threats';
+
+  @override
+  String get club_reportReasonOther => 'Other reason';
+
+  @override
+  String club_reportedBy(Object name) {
+    return 'Reported by $name';
+  }
+
+  @override
+  String club_postBy(Object name, Object text) {
+    return 'Post by $name: $text';
+  }
+
+  @override
+  String get club_dismissReport => 'Dismiss';
+
+  @override
+  String get club_resolveReport => 'Resolved';
+
+  @override
+  String get club_reportResolved => 'Report marked as resolved.';
+
+  @override
+  String get club_reportDismissed => 'Report dismissed.';
+
+  @override
+  String get club_reportUpdateError =>
+      'Unable to update the report. Please try again.';
+
+  @override
+  String get club_managementActionError =>
+      'Unable to complete this action. Please try again.';
+
+  @override
+  String get club_tournamentManagement => 'Club tournament management';
+
+  @override
+  String get club_tournamentManagementDescription =>
+      'Create and manage the club\'s tournaments.';
+
+  @override
+  String get club_chooseTournamentTypeDescription =>
+      'Choose the format that fits your club tournament.';
+
+  @override
+  String get club_liteCreatedOnApp => 'CREATE IN APP';
+
+  @override
+  String get club_liteTournamentDescription =>
+      'Create on your phone in 30 seconds, automatically build groups, and track scores.';
+
+  @override
+  String get club_standardTournamentTitle => 'Standard tournament';
+
+  @override
+  String get club_standardTournamentTitleAdvanced =>
+      'Standard tournament (Advanced)';
+
+  @override
+  String get club_standardCreatedOnWeb => 'CREATE ON WEB';
+
+  @override
+  String get club_standardTournamentDescription =>
+      'A large-scale tournament with full bracket, finance, and referee features.';
+
+  @override
+  String get club_noManagedTournaments =>
+      'This club has no tournaments yet. Tap the button above to create one!';
+
+  @override
+  String get club_managedTournamentsHeading => 'TOURNAMENTS UNDER MANAGEMENT';
+
+  @override
+  String get club_liteTournamentShort => 'Quick tournament';
+
+  @override
+  String get club_standardTournamentShort => 'Standard tournament';
+
+  @override
+  String get club_viewTournament => 'View tournament';
+
+  @override
+  String get club_manageTournament => 'Manage tournament';
+
+  @override
+  String get club_loadTournamentsError =>
+      'Unable to load tournaments. Please try again.';
 
   @override
   String get club_aboutSection => 'About';
@@ -3782,6 +3916,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exploreHeaderSubtitle => 'Find the right tournament for you';
 
   @override
+  String get exploreNationalRanking => 'National ranking';
+
+  @override
+  String get exploreWinsStat => 'Wins';
+
+  @override
+  String get exploreEloToGold => '50 ELO to Gold';
+
+  @override
+  String get exploreHighForm => 'High form';
+
+  @override
   String get exploreSearchHint => 'Search tournaments, sports...';
 
   @override
@@ -3894,6 +4040,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rankingLosses => 'Losses';
+
+  @override
+  String get leaderboardNoSports => 'No sports available';
+
+  @override
+  String get leaderboardNoSportsSubtitle => 'No sports have been defined yet.';
+
+  @override
+  String get leaderboardProvinceLabel => 'Province/City:';
+
+  @override
+  String leaderboardSearchEmpty(Object query) {
+    return 'No results for \"$query\"';
+  }
+
+  @override
+  String get leaderboardSearchEmptyHint =>
+      'The athlete may be outside the Top 100 or may not have joined a tournament yet.';
 
   @override
   String get rankingWinRate => 'Win rate';
@@ -4521,6 +4685,704 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatImageClose => 'Close';
 
   @override
+  String get chatDetailRoomFallback => 'Chat room';
+
+  @override
+  String get chatDetailToday => 'Today';
+
+  @override
+  String get chatDetailYesterday => 'Yesterday';
+
+  @override
+  String get chatDetailPollTooltip => 'Create poll';
+
+  @override
+  String get chatDetailRoomSettingsTooltip => 'Options & Notifications';
+
+  @override
+  String get chatDetailPinnedLabel => 'Pinned message';
+
+  @override
+  String get chatDetailAttachedImage => '📷 [Attached image]';
+
+  @override
+  String get chatDetailPollPlaceholder => '📊 [Poll]';
+
+  @override
+  String get chatDetailViewMessage => 'View message';
+
+  @override
+  String get chatDetailNoMessages => 'No messages yet.';
+
+  @override
+  String get chatDetailStartConversation =>
+      'Send the first message to start the conversation!';
+
+  @override
+  String chatDetailSeenBy(Object name) {
+    return 'Seen by $name';
+  }
+
+  @override
+  String chatDetailTyping(Object name) {
+    return '$name is typing...';
+  }
+
+  @override
+  String chatDetailOnlineCount(Object count) {
+    return '$count people online';
+  }
+
+  @override
+  String get chatDetailActive => 'Active now';
+
+  @override
+  String get chatDetailRecentlyActive => 'Recently active';
+
+  @override
+  String chatDetailReplyTo(Object name) {
+    return 'Reply to $name';
+  }
+
+  @override
+  String get chatDetailMediaPollPlaceholder => '[Image / Poll]';
+
+  @override
+  String get chatDetailSendImage => 'Send image';
+
+  @override
+  String get chatDetailTakePhoto => 'Take photo';
+
+  @override
+  String get chatDetailMessageHint => 'Message...';
+
+  @override
+  String get chatDetailSend => 'Send';
+
+  @override
+  String get chatDetailLike => 'Like';
+
+  @override
+  String get adminClubsTitle => 'Club management';
+
+  @override
+  String get adminClubsSearchHint => 'Search clubs...';
+
+  @override
+  String get adminClubsFilterAll => 'All';
+
+  @override
+  String get adminClubsFilterActive => 'Active';
+
+  @override
+  String get adminClubsFilterPending => 'Pending';
+
+  @override
+  String get adminClubsFilterInactive => 'Disabled';
+
+  @override
+  String get adminClubsFilterRejected => 'Rejected';
+
+  @override
+  String get adminClubsLoadError => 'Unable to load the list';
+
+  @override
+  String get adminClubsStatTotal => 'Total';
+
+  @override
+  String get adminClubsStatActive => 'Active';
+
+  @override
+  String get adminClubsStatPending => 'Pending';
+
+  @override
+  String get adminClubsStatRejected => 'Rejected';
+
+  @override
+  String adminClubsMembers(Object count) {
+    return '$count members';
+  }
+
+  @override
+  String get adminClubsStatusActive => 'Active';
+
+  @override
+  String get adminClubsStatusPending => 'Pending';
+
+  @override
+  String get adminClubsStatusRejected => 'Rejected';
+
+  @override
+  String get adminClubsView => 'View';
+
+  @override
+  String get adminClubsApprove => 'Approve';
+
+  @override
+  String get adminClubsReject => 'Reject';
+
+  @override
+  String get adminClubsDisable => 'Disable';
+
+  @override
+  String get adminClubsApprovedFeedback => 'Club approved';
+
+  @override
+  String get adminClubsUpdatedFeedback => 'Club updated';
+
+  @override
+  String get adminClubsActionError =>
+      'Unable to update the club. Please try again.';
+
+  @override
+  String get adminClubsRejectTitle => 'Reject club';
+
+  @override
+  String get adminClubsDisableTitle => 'Disable club';
+
+  @override
+  String get adminClubsReasonHint => 'Reason (required)';
+
+  @override
+  String get adminClubsCancel => 'Cancel';
+
+  @override
+  String get adminClubsConfirm => 'Confirm';
+
+  @override
+  String get adminClubsRejectError =>
+      'Unable to process the club. Please try again.';
+
+  @override
+  String get adminClubsEmptyAll => 'No clubs yet';
+
+  @override
+  String get adminClubsEmptyActive => 'No active clubs';
+
+  @override
+  String get adminClubsEmptyPending => 'No clubs pending approval';
+
+  @override
+  String get adminClubsEmptyRejected => 'No rejected clubs';
+
+  @override
+  String get adminChangeRequestsTitle => 'Change requests';
+
+  @override
+  String get adminChangeRequestsFilterAll => 'All';
+
+  @override
+  String get adminChangeRequestsFilterPending => 'Pending';
+
+  @override
+  String get adminChangeRequestsFilterApproved => 'Approved';
+
+  @override
+  String get adminChangeRequestsFilterRejected => 'Rejected';
+
+  @override
+  String get adminChangeRequestsEmpty => 'No requests';
+
+  @override
+  String get adminChangeRequestsLoadError => 'Unable to load data';
+
+  @override
+  String get adminChangeRequestsTypeOther => 'Other';
+
+  @override
+  String get adminChangeRequestsRequester => 'User';
+
+  @override
+  String get adminChangeRequestsStatusApproved => 'Approved';
+
+  @override
+  String get adminChangeRequestsStatusRejected => 'Rejected';
+
+  @override
+  String get adminChangeRequestsStatusPending => 'Pending';
+
+  @override
+  String get adminChangeRequestsApprove => 'Approve';
+
+  @override
+  String get adminChangeRequestsReject => 'Reject';
+
+  @override
+  String get adminChangeRequestsApprovedFeedback => 'Request approved';
+
+  @override
+  String get adminChangeRequestsRejectedFeedback => 'Request rejected';
+
+  @override
+  String get adminChangeRequestsActionError =>
+      'Unable to process the request. Please try again.';
+
+  @override
+  String get adminDisputesTitle => 'Disputes';
+
+  @override
+  String get adminDisputesFilterAll => 'All';
+
+  @override
+  String get adminDisputesFilterOpen => 'Open';
+
+  @override
+  String get adminDisputesFilterResolved => 'Resolved';
+
+  @override
+  String get adminDisputesEmpty => 'No disputes';
+
+  @override
+  String get adminDisputesLoadError => 'Unable to load data';
+
+  @override
+  String get adminDisputesReasonFallback => 'Dispute';
+
+  @override
+  String get adminDisputesUserFallback => 'User';
+
+  @override
+  String get adminDisputesStatusOpen => 'Open';
+
+  @override
+  String get adminDisputesStatusResolved => 'Resolved';
+
+  @override
+  String adminDisputesCreatedAt(Object date) {
+    return 'Created: $date';
+  }
+
+  @override
+  String get adminDisputesResolve => 'Close dispute';
+
+  @override
+  String get adminDisputesResolvedFeedback => 'Dispute closed';
+
+  @override
+  String get adminDisputesResolveError =>
+      'Unable to close the dispute. Please try again.';
+
+  @override
+  String get pendingClubsTitle => 'Review clubs';
+
+  @override
+  String get pendingClubsEmpty => 'No clubs pending review';
+
+  @override
+  String get pendingClubsAllReviewed => 'All clubs have been reviewed';
+
+  @override
+  String get pendingClubsLoadError => 'Unable to load the list';
+
+  @override
+  String get pendingClubsRetry => 'Retry';
+
+  @override
+  String pendingClubsMemberCount(Object count) {
+    return '$count members';
+  }
+
+  @override
+  String get pendingClubsStatus => 'Pending review';
+
+  @override
+  String get pendingClubsApprove => 'Approve';
+
+  @override
+  String get pendingClubsReject => 'Reject';
+
+  @override
+  String get pendingClubsApprovedFeedback => 'Club approved';
+
+  @override
+  String get pendingClubsApproveError =>
+      'Unable to approve the club. Please try again.';
+
+  @override
+  String get pendingClubsRejectTitle => 'Reject club';
+
+  @override
+  String pendingClubsRejectQuestion(Object name) {
+    return 'Reject \"$name\"?';
+  }
+
+  @override
+  String get pendingClubsRejectReasonHint => 'Rejection reason (required)';
+
+  @override
+  String get pendingClubsCancel => 'Cancel';
+
+  @override
+  String get pendingClubsRejectedFeedback => 'Club rejected';
+
+  @override
+  String get pendingClubsRejectError =>
+      'Unable to reject the club. Please try again.';
+
+  @override
+  String get pendingClubsConfirmReject => 'Confirm rejection';
+
+  @override
+  String get adminTransactionsTitle => 'Transaction history';
+
+  @override
+  String get adminTransactionsFilterAll => 'All';
+
+  @override
+  String get adminTransactionsFilterCompleted => 'Completed';
+
+  @override
+  String get adminTransactionsFilterPending => 'Pending';
+
+  @override
+  String get adminTransactionsFilterFailed => 'Failed';
+
+  @override
+  String get adminTransactionsEmpty => 'No transactions';
+
+  @override
+  String get adminTransactionsLoadError => 'Unable to load data';
+
+  @override
+  String get adminTransactionsUserFallback => 'User';
+
+  @override
+  String get adminTransactionsStatusCompleted => 'Completed';
+
+  @override
+  String get adminTransactionsStatusPending => 'Pending';
+
+  @override
+  String get adminTransactionsStatusFailed => 'Failed';
+
+  @override
+  String adminTransactionsReference(Object reference) {
+    return 'Reference: $reference';
+  }
+
+  @override
+  String get adminVerificationTitle => 'Verification';
+
+  @override
+  String get adminVerificationTypeAll => 'All';
+
+  @override
+  String get adminVerificationTypeUser => 'User';
+
+  @override
+  String get adminVerificationTypeClub => 'Club';
+
+  @override
+  String get adminVerificationTypeTournament => 'Tournament';
+
+  @override
+  String get adminVerificationStatusAll => 'All';
+
+  @override
+  String get adminVerificationStatusPending => 'Pending';
+
+  @override
+  String get adminVerificationStatusVerified => 'Verified';
+
+  @override
+  String get adminVerificationStatusRejected => 'Rejected';
+
+  @override
+  String get adminVerificationEmpty => 'No verification requests';
+
+  @override
+  String get adminVerificationLoadError => 'Unable to load data';
+
+  @override
+  String get adminVerificationStatusVerifiedLabel => 'Verified';
+
+  @override
+  String get adminVerificationStatusRejectedLabel => 'Rejected';
+
+  @override
+  String get adminVerificationStatusPendingLabel => 'Pending';
+
+  @override
+  String get adminVerificationApprove => 'Verify';
+
+  @override
+  String get adminVerificationReject => 'Reject';
+
+  @override
+  String get adminVerificationVerifiedFeedback => 'Verification approved';
+
+  @override
+  String get adminVerificationActionError =>
+      'Unable to process the verification request. Please try again.';
+
+  @override
+  String get adminVerificationRejectTitle => 'Reject verification';
+
+  @override
+  String get adminVerificationRejectReasonHint => 'Rejection reason (required)';
+
+  @override
+  String get adminVerificationCancel => 'Cancel';
+
+  @override
+  String get adminVerificationRejectedFeedback => 'Verification rejected';
+
+  @override
+  String get adminVerificationRejectError =>
+      'Unable to reject the verification. Please try again.';
+
+  @override
+  String get chatViewReactions => 'View reactions';
+
+  @override
+  String get chatReplyAction => 'Reply';
+
+  @override
+  String get chatCopyTextAction => 'Copy text';
+
+  @override
+  String get chatCopiedFeedback => 'Copied to clipboard.';
+
+  @override
+  String get chatUnpinMessageAction => 'Unpin message';
+
+  @override
+  String get chatPinMessageAction => 'Pin message';
+
+  @override
+  String get chatRevokeMessageAction => 'Revoke message';
+
+  @override
+  String get clubDetailChatTooltip => 'Club chat';
+
+  @override
+  String get clubDetailShareTooltip => 'Share';
+
+  @override
+  String get clubDetailNotificationsTitle => 'Club notifications';
+
+  @override
+  String clubDetailNotificationsDescription(Object clubName) {
+    return 'Customize messages and notifications from $clubName';
+  }
+
+  @override
+  String get clubDetailNotificationsAllTitle => 'All messages';
+
+  @override
+  String get clubDetailNotificationsAllSubtitle =>
+      'Receive notifications for every new message (Default)';
+
+  @override
+  String get clubDetailNotificationsMentionsTitle => 'Mentions only';
+
+  @override
+  String get clubDetailNotificationsMentionsSubtitle =>
+      'Notify only when someone mentions you or @all';
+
+  @override
+  String get clubDetailNotificationsMutedTitle => 'Mute notifications';
+
+  @override
+  String get clubDetailNotificationsMutedSubtitle =>
+      'Do not receive push notifications from this club';
+
+  @override
+  String get clubDetailNotificationsUpdatedAll =>
+      'All club notifications are enabled';
+
+  @override
+  String get clubDetailNotificationsUpdatedMentions =>
+      'You will only receive notifications when mentioned';
+
+  @override
+  String get clubDetailNotificationsUpdatedMuted =>
+      'Club notifications are muted';
+
+  @override
+  String get clubDetailNotificationsUpdateError =>
+      'Unable to update notification settings.';
+
+  @override
+  String get clubDetailManageTooltip => 'Manage club';
+
+  @override
+  String get clubDetailLeaveTitle => 'Leave club?';
+
+  @override
+  String get clubDetailLeaveDescription =>
+      'You will no longer have access to member-only content.';
+
+  @override
+  String get clubDetailLeaveAction => 'Leave club';
+
+  @override
+  String get clubDetailLeftSuccess => 'You have left the club';
+
+  @override
+  String get clubDetailLeaveError => 'Unable to leave the club';
+
+  @override
+  String get clubDetailJoinQuestionsTitle => 'Club membership questions';
+
+  @override
+  String get clubDetailJoinQuestionsInstruction =>
+      'Answer the questions below to submit your request to join.';
+
+  @override
+  String get clubDetailJoinQuestionRequired => 'Please answer this question';
+
+  @override
+  String get clubDetailSubmitJoinRequest => 'Submit request';
+
+  @override
+  String get clubDetailJoinRequestError =>
+      'Unable to submit the club membership request. Please try again.';
+
+  @override
+  String get clubDetailJoinedSuccess => 'You joined the club successfully!';
+
+  @override
+  String get clubDetailOpenLinkError => 'Unable to open this link.';
+
+  @override
+  String get clubDetailNoFilteredTournaments =>
+      'No tournaments match the selected filters';
+
+  @override
+  String get clubDetailClearFilters => 'Clear filters';
+
+  @override
+  String get clubDetailQuickWebTitle => 'Create quickly on Web';
+
+  @override
+  String get clubDetailQuickWebDescription =>
+      'The full form is more complete than Lite; the tournament will still belong to this club.';
+
+  @override
+  String get clubDetailMemberActionError =>
+      'Unable to update the member. Please try again.';
+
+  @override
+  String clubDetailGalleryTitle(Object count) {
+    return 'Photo gallery ($count)';
+  }
+
+  @override
+  String get clubDetailClubLogo => 'Club logo';
+
+  @override
+  String get clubDetailCoverImage => 'Cover image';
+
+  @override
+  String get clubDetailActivityImage => 'Activity photo';
+
+  @override
+  String get clubDetailAddFirstImage => 'Add the first photo';
+
+  @override
+  String get clubDetailAddImage => 'Add photo';
+
+  @override
+  String get clubDetailGalleryAdded => 'Photo added to the gallery';
+
+  @override
+  String get clubDetailGalleryAddError =>
+      'Unable to add the photo to the gallery';
+
+  @override
+  String get clubDetailDeleteImageTitle => 'Delete photo';
+
+  @override
+  String get clubDetailDeleteImageDescription =>
+      'Are you sure you want to delete this photo from the club gallery?';
+
+  @override
+  String get clubDetailGalleryRemoved => 'Photo removed from the gallery';
+
+  @override
+  String get clubDetailGalleryRemoveError => 'Unable to delete the photo';
+
+  @override
+  String get clubDetailDeleteAction => 'Delete';
+
+  @override
+  String get communitySocialSettingsLoadError =>
+      'Unable to load club activity settings.';
+
+  @override
+  String get communitySocialSettingsSaveSuccess =>
+      'Club activity settings saved';
+
+  @override
+  String get communitySocialSettingsSaveError =>
+      'Unable to save settings. Please try again.';
+
+  @override
+  String get communitySocialSettingsCreateTagError =>
+      'Unable to create the tag.';
+
+  @override
+  String get communitySocialSettingsTitle => 'Club activity';
+
+  @override
+  String get communitySocialSettingsDescription =>
+      'Control the feed, comments, chat, and member tags.';
+
+  @override
+  String get communitySocialSettingsPostingPolicy => 'Posting permission';
+
+  @override
+  String get communitySocialSettingsTaggingPolicy => 'Tagging permission';
+
+  @override
+  String get communitySocialSettingsMembers => 'Members';
+
+  @override
+  String get communitySocialSettingsAdmins => 'Admins';
+
+  @override
+  String get communitySocialSettingsPostingOff => 'Disable posting';
+
+  @override
+  String get communitySocialSettingsTaggingOff => 'Disable tagging';
+
+  @override
+  String get communitySocialSettingsApproval => 'Approve member posts';
+
+  @override
+  String get communitySocialSettingsComments => 'Allow comments';
+
+  @override
+  String get communitySocialSettingsChat => 'Enable club chat';
+
+  @override
+  String get communitySocialSettingsPublicFeed =>
+      'Allow guests to view the feed';
+
+  @override
+  String get communitySocialSettingsSave => 'Save settings';
+
+  @override
+  String get communitySocialSettingsSaving => 'Saving...';
+
+  @override
+  String get communitySocialSettingsTagPresetsTitle => 'Club tag presets';
+
+  @override
+  String get communitySocialSettingsTagPresetsDescription =>
+      'Create colored labels for quickly tagging members.';
+
+  @override
+  String get communitySocialSettingsTagNameHint => 'Example: Weekly MVP';
+
+  @override
+  String get communitySocialSettingsColorTitle => 'Choose tag color';
+
+  @override
+  String get communitySocialSettingsClose => 'Close';
+
+  @override
   String get coreAppTitle => 'Tournament Management';
 
   @override
@@ -4826,4 +5688,3166 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsDeleteFailed =>
       'Account deletion failed. Please try again.';
+
+  @override
+  String get settingsGenderNotSelected => 'Not selected';
+
+  @override
+  String get settingsGenderMale => 'Male';
+
+  @override
+  String get settingsGenderFemale => 'Female';
+
+  @override
+  String get settingsGenderOther => 'Other';
+
+  @override
+  String settingsDobDisplay(Object day, Object month, Object year) {
+    return '$day/$month/$year';
+  }
+
+  @override
+  String get settingsClubNotifications => 'Club notifications';
+
+  @override
+  String get settingsNoClubsForNotifications => 'You have not joined any clubs';
+
+  @override
+  String get settingsClubNotificationsHint =>
+      'After joining a club, you can customize its notifications here.';
+
+  @override
+  String get settingsNotificationsAllUpdated => 'All notifications enabled';
+
+  @override
+  String get settingsNotificationsMentionsUpdated =>
+      'Notifications only when you are @mentioned';
+
+  @override
+  String get settingsNotificationsMutedUpdated => 'Club notifications muted';
+
+  @override
+  String get settingsNotificationsUpdateFailed =>
+      'Unable to update notification settings';
+
+  @override
+  String get settingsClubNotificationAllSummary =>
+      'Receive all messages and notifications';
+
+  @override
+  String get settingsClubNotificationMentionsSummary =>
+      'Only receive notifications when you are @mentioned';
+
+  @override
+  String get settingsClubNotificationMutedSummary => 'Notifications muted';
+
+  @override
+  String get settingsNotificationAll => 'All';
+
+  @override
+  String get settingsNotificationMentions => '@mentions only';
+
+  @override
+  String get settingsNotificationMuted => 'Mute';
+
+  @override
+  String get settingsSaveButton => 'Save changes';
+
+  @override
+  String profileVersion(Object build, Object version) {
+    return 'Version $version$build';
+  }
+
+  @override
+  String get profileNotRanked => 'Unranked';
+
+  @override
+  String get profileRankStatus => 'STATUS';
+
+  @override
+  String get profileRankLabel => 'RANK';
+
+  @override
+  String get profileNoRank => 'No rank yet';
+
+  @override
+  String profileEloProgress(Object nextLabel, Object percent) {
+    return 'Progress to $nextLabel ($percent%)';
+  }
+
+  @override
+  String get profileMatches => 'matches';
+
+  @override
+  String get profilePhoneLabel => 'Phone number';
+
+  @override
+  String get profileDobLabel => 'Date of birth';
+
+  @override
+  String get profileGenderLabel => 'Gender';
+
+  @override
+  String get profileAddressLabel => 'Address';
+
+  @override
+  String get profileProvinceLabel => 'Province/City';
+
+  @override
+  String get profileEmailStatusLabel => 'Email status';
+
+  @override
+  String get profileEmailVerifiedDescription =>
+      'Your email is verified and ready for security features.';
+
+  @override
+  String get profileEmailUnverifiedDescription =>
+      'Your email is not verified. Verify it to complete account security.';
+
+  @override
+  String get profilePhoneVerifiedLabel => 'Verified phone';
+
+  @override
+  String get profileBankLabel => 'Bank';
+
+  @override
+  String get profileBankAccountLabel => 'Account number';
+
+  @override
+  String get profileOwnerTournamentRole => 'Owner';
+
+  @override
+  String get profileOrganizerTournamentRole => 'Organizer';
+
+  @override
+  String get profileRefereeTournamentRole => 'Referee';
+
+  @override
+  String get profilePlayerTournamentRole => 'Player';
+
+  @override
+  String get profileNoManagedTournaments =>
+      'You have not created or joined any tournaments.';
+
+  @override
+  String get profileViewDashboard => 'View dashboard';
+
+  @override
+  String profileViewAllCount(Object count) {
+    return 'View all ($count)';
+  }
+
+  @override
+  String get profileTournamentLoadError => 'Unable to load tournament data';
+
+  @override
+  String get profileNoClubs => 'You have not created or joined any clubs.';
+
+  @override
+  String get profileCreateClub => 'Create a club';
+
+  @override
+  String get profileClubLoadError => 'Unable to load clubs';
+
+  @override
+  String get profileOwnerRole => 'Owner';
+
+  @override
+  String get profileAdminRole => 'Admin';
+
+  @override
+  String get profileMemberRole => 'Joined';
+
+  @override
+  String get profileDefaultSport => 'SPORT';
+
+  @override
+  String get profileMembers => 'members';
+
+  @override
+  String get profileRecentCompleted => 'Recently completed';
+
+  @override
+  String get profileInProgress => 'In progress';
+
+  @override
+  String get profileRegistrationOpen => 'Registration open';
+
+  @override
+  String get profileUpcoming => 'Upcoming';
+
+  @override
+  String get profileNoFollowedTournaments =>
+      'You are not following any tournaments.';
+
+  @override
+  String get profileNoMatchingTournaments =>
+      'No tournaments match this filter.';
+
+  @override
+  String get profileFollowedLoadError => 'Unable to load followed tournaments';
+
+  @override
+  String get profileRecentlyCompletedHint =>
+      'Completed within the last 14 days';
+
+  @override
+  String get profileCompletedHint => 'Completed';
+
+  @override
+  String get profileInProgressHint => 'In progress';
+
+  @override
+  String get profileRegistrationHint => 'Registration open';
+
+  @override
+  String get profileUpcomingHint => 'Upcoming';
+
+  @override
+  String get profileFollowingHint => 'Following';
+
+  @override
+  String get profileNoName => '(No name)';
+
+  @override
+  String get profileLiteTournamentHint =>
+      'Quick tournament (Lite) • Manage in the app';
+
+  @override
+  String get profileAdvancedTournamentHint =>
+      'Advanced tournament • Full management';
+
+  @override
+  String get profileDeleteTournamentTitle => 'Delete tournament?';
+
+  @override
+  String profileDeleteTournamentContent(Object name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
+  String get profileCancel => 'Cancel';
+
+  @override
+  String get profileTournamentDeleted => 'Tournament deleted';
+
+  @override
+  String get profileTournamentDeleteFailed => 'Unable to delete tournament';
+
+  @override
+  String get profileAdvancedManagementTitle => 'Advanced tournament management';
+
+  @override
+  String get profileAdvancedManagementContent =>
+      'The app currently supports quick tournaments (Lite) only. Please manage Advanced tournaments on the web.';
+
+  @override
+  String get profileUnderstood => 'Got it';
+
+  @override
+  String get profileLoadErrorTitle => 'Unable to load information';
+
+  @override
+  String get profileUnknownUser => 'User';
+
+  @override
+  String get liveCheerFailed => 'Unable to send cheer. Please try again.';
+
+  @override
+  String get liveCommentFailed => 'Unable to send comment. Please try again!';
+
+  @override
+  String livePenaltyRecorded(Object option) {
+    return 'Recorded $option.';
+  }
+
+  @override
+  String livePenaltyRecordedFor(Object option, Object team) {
+    return 'Recorded $option for $team.';
+  }
+
+  @override
+  String get liveFoulSelectTeam => 'Which team was penalized?';
+
+  @override
+  String get liveForceWinTitle => 'Award win';
+
+  @override
+  String get liveForceWinContent =>
+      'Confirm awarding the win to one team (the opponent forfeited or committed a violation)?';
+
+  @override
+  String get liveCancel => 'Cancel';
+
+  @override
+  String get liveConfirm => 'Confirm';
+
+  @override
+  String get liveMatchTitle => 'Live';
+
+  @override
+  String get liveMatchDetailsTitle => 'Match Details';
+
+  @override
+  String get liveRefereeDeskTitle => 'Referee Desk';
+
+  @override
+  String get liveMatchNotFound => 'Match not found';
+
+  @override
+  String get liveMatchLoadError => 'Unable to load match data.';
+
+  @override
+  String get liveBack => 'Back';
+
+  @override
+  String get liveMatchInfo => 'Match information';
+
+  @override
+  String get liveAppliedRules => 'Applied tournament rules';
+
+  @override
+  String get liveAppliedRulesDescription =>
+      'These settings come from the organizer\'s configuration. The app opens the scoring board according to these rules.';
+
+  @override
+  String get liveSportLabel => 'Sport';
+
+  @override
+  String get liveFormatLabel => 'Format';
+
+  @override
+  String get liveWinLabel => 'Wins';
+
+  @override
+  String get liveSetTargetLabel => 'Set target';
+
+  @override
+  String get liveRuleLabel => 'Rule';
+
+  @override
+  String get liveScoringLabel => 'Scoring';
+
+  @override
+  String get liveTiebreakLabel => 'Tiebreak';
+
+  @override
+  String livePointsValue(Object value) {
+    return '$value points';
+  }
+
+  @override
+  String liveGamesValue(Object value) {
+    return '$value games';
+  }
+
+  @override
+  String liveSetValue(Object value) {
+    return '$value sets';
+  }
+
+  @override
+  String get liveDifferenceTwo => 'Win by 2';
+
+  @override
+  String get liveNoDifferenceTwo => 'No win by 2';
+
+  @override
+  String get liveMatchConfiguration => 'Match Configuration';
+
+  @override
+  String get liveTournamentConfiguration => 'Applied tournament configuration';
+
+  @override
+  String get liveTournamentConfigurationDescription =>
+      'Setup values are taken from the tournament configuration. You can adjust them at match level if needed.';
+
+  @override
+  String get liveDefaultConfigurationDescription =>
+      'The tournament has no detailed sportRules, so the system is using the sport default configuration.';
+
+  @override
+  String liveScoreTargetTennis(Object value) {
+    return 'Games needed to reach the set target (default $value)';
+  }
+
+  @override
+  String liveScoreTargetSideOut(Object value) {
+    return 'Side-out game point target (default $value)';
+  }
+
+  @override
+  String liveScoreTargetSet(Object value) {
+    return 'Points per set target (default $value)';
+  }
+
+  @override
+  String get liveTimeLimitLabel => 'Time limit (minutes, optional)';
+
+  @override
+  String get liveTimeLimitHelper =>
+      'If left blank, the match will have no match-level time limit.';
+
+  @override
+  String liveWinByTwoSetting(Object unit) {
+    return 'Apply win-by-2 rule for $unit';
+  }
+
+  @override
+  String get liveStartMatch => 'START MATCH';
+
+  @override
+  String get liveStartShort => 'START';
+
+  @override
+  String get liveOpenScoreboard => 'OPEN SCORING BOARD';
+
+  @override
+  String get liveOpenScoreboardShort => 'OPEN BOARD';
+
+  @override
+  String get liveRefereeNotStarted => 'REFEREE DESK - NOT STARTED';
+
+  @override
+  String get liveRefereeInProgress => 'REFEREE DESK - IN PROGRESS';
+
+  @override
+  String get liveStartAndScoreHint => 'Press the button to start and score';
+
+  @override
+  String get liveOpenScoreboardHint =>
+      'Open the scoring board to record the score';
+
+  @override
+  String get liveStartMatchHint => 'Press the button to start the match';
+
+  @override
+  String get liveScoreAndPenaltyHint => 'Open the scoring board and penalties';
+
+  @override
+  String liveMaxScore(Object value) {
+    return 'Max: $value';
+  }
+
+  @override
+  String get liveEndMatch => 'END';
+
+  @override
+  String get liveWhistle => 'WHISTLE';
+
+  @override
+  String get liveConfirmEndTitle => 'Confirm end of match';
+
+  @override
+  String get liveConfirmEndContent =>
+      'Are you sure you want to end this match and finalize the score?';
+
+  @override
+  String get liveUpdateScoreFailed =>
+      'Unable to update the match score. Please try again.';
+
+  @override
+  String get liveLiveBadge => 'LIVE';
+
+  @override
+  String get liveScheduledStatus => 'UPCOMING';
+
+  @override
+  String get liveCameraLabel => 'CAM 1 (CENTER COURT)';
+
+  @override
+  String liveViewerCount(Object count) {
+    return '$count watching';
+  }
+
+  @override
+  String get liveScoreTab => 'Score & Timeline';
+
+  @override
+  String get liveDiscussionTab => 'Discussion';
+
+  @override
+  String get liveSinglesElo => 'Singles ELO';
+
+  @override
+  String get liveDoublesElo => 'Doubles ELO';
+
+  @override
+  String get liveNoElo => 'Not available';
+
+  @override
+  String get liveAthleteOne => 'Player 1';
+
+  @override
+  String get liveAthleteTwo => 'Player 2';
+
+  @override
+  String get livePenaltyLogTitle => 'Penalties & Cards';
+
+  @override
+  String livePenaltyCount(Object count) {
+    return '$count recorded';
+  }
+
+  @override
+  String get liveMatchFallback => 'Match';
+
+  @override
+  String liveSetWins(Object value) {
+    return 'SETS WON: $value';
+  }
+
+  @override
+  String get liveSetScoresTitle => 'SET SCORES';
+
+  @override
+  String get liveMatchDetails => 'Match details';
+
+  @override
+  String get liveTournamentLabel => 'Tournament';
+
+  @override
+  String get liveDefaultTournament => 'Summer Championship';
+
+  @override
+  String get liveRefereeLabel => 'Head referee';
+
+  @override
+  String get liveUnknownValue => 'Not specified';
+
+  @override
+  String get liveScheduledTimeLabel => 'Scheduled time';
+
+  @override
+  String get liveNotScheduled => 'Not scheduled';
+
+  @override
+  String liveSummaryTennis(Object bestOf, Object value) {
+    return 'BO$bestOf • $value games/set';
+  }
+
+  @override
+  String liveSummarySideOut(Object bestOf, Object value) {
+    return 'BO$bestOf • side-out • target $value';
+  }
+
+  @override
+  String liveSummaryRally(Object bestOf, Object value) {
+    return 'BO$bestOf • $value points/set';
+  }
+
+  @override
+  String get liveModelGame => 'Game';
+
+  @override
+  String get liveModelSideOut => 'Side-out';
+
+  @override
+  String get liveModelRally => 'Rally';
+
+  @override
+  String get liveCurrentSetFinished => 'COMPLETED';
+
+  @override
+  String liveCurrentSet(Object value) {
+    return 'Set $value';
+  }
+
+  @override
+  String liveCurrentRound(Object value) {
+    return 'Round $value';
+  }
+
+  @override
+  String get liveEmptyDiscussion => 'No discussion yet';
+
+  @override
+  String get liveEmptyDiscussionHint => 'Be the first to share your thoughts!';
+
+  @override
+  String get liveViewerPlaceholder => 'Viewer';
+
+  @override
+  String get liveCommentHint => 'Write a comment...';
+
+  @override
+  String get liveLoginToComment => 'Log in to comment';
+
+  @override
+  String get liveLogin => 'Log in';
+
+  @override
+  String get liveCourtDefault => 'Center court';
+
+  @override
+  String liveDoublesEloValue(Object value) {
+    return 'Doubles ELO: $value';
+  }
+
+  @override
+  String get livePenaltyYellowCard => 'Yellow card';
+
+  @override
+  String get livePenaltyRedCard => 'Red card';
+
+  @override
+  String get livePenaltyPoint => 'Point penalty';
+
+  @override
+  String get livePenaltyGame => 'Game penalty';
+
+  @override
+  String get livePenaltyServiceFault => 'Service fault';
+
+  @override
+  String get livePenaltyMisconduct => 'Misconduct';
+
+  @override
+  String get livePenaltyWarning => 'Warning';
+
+  @override
+  String get clubDetailRulesTitle => 'CLUB RULES';
+
+  @override
+  String get clubDetailContactTitle => 'CONTACT';
+
+  @override
+  String get clubDetailOtherSport => 'Other';
+
+  @override
+  String get clubDetailFilterTitle => 'Filter tournaments';
+
+  @override
+  String get clubDetailAllTournaments => 'All tournaments';
+
+  @override
+  String get clubDetailClubTournaments => 'Club-only';
+
+  @override
+  String get clubDetailOpenTournaments => 'Open';
+
+  @override
+  String get clubDetailAllStatuses => 'All statuses';
+
+  @override
+  String get clubDetailUpcoming => 'Upcoming';
+
+  @override
+  String get clubDetailOngoing => 'Ongoing';
+
+  @override
+  String get clubDetailCompleted => 'Completed';
+
+  @override
+  String get clubDetailAllSports => 'All sports';
+
+  @override
+  String get clubDetailManageTournaments => 'Manage tournaments';
+
+  @override
+  String get clubDetailClubTournamentBadge => 'Club-only';
+
+  @override
+  String get clubDetailOpenTournamentBadge => 'Open';
+
+  @override
+  String get clubDetailRankedBadge => 'ELO ranked';
+
+  @override
+  String get clubDetailCasualBadge => 'Casual';
+
+  @override
+  String get clubDetailSeriesBadge => 'Tournament series';
+
+  @override
+  String get clubDetailLiteBadge => 'Quick (Lite)';
+
+  @override
+  String get clubDetailSocialSettings => 'Club activities';
+
+  @override
+  String get clubDetailSocialSettingsSubtitle =>
+      'Configure the feed, comments, chat, and member tags';
+
+  @override
+  String get clubDetailQuickStatus => 'Quick status';
+
+  @override
+  String get clubDetailStatus => 'Status';
+
+  @override
+  String get clubDetailActiveStatus => 'Active';
+
+  @override
+  String get clubDetailVisibility => 'Visibility';
+
+  @override
+  String get clubDetailRestrictedVisibility => 'Restricted';
+
+  @override
+  String get clubDetailPrivateVisibility => 'Private';
+
+  @override
+  String get clubDetailInternalChat => 'Internal chat';
+
+  @override
+  String get clubDetailChatOpen => 'Open';
+
+  @override
+  String get clubDetailChatClosed => 'Closed';
+
+  @override
+  String get clubDetailDeleteNameHint =>
+      'Enter the exact club name to confirm:';
+
+  @override
+  String get clubDetailCurrentClubName => 'Current club name';
+
+  @override
+  String get clubDetailFeedTab => 'Feed';
+
+  @override
+  String get homeClubTab => 'Clubs';
+
+  @override
+  String get homeRankingsTab => 'Rankings';
+
+  @override
+  String get homeWelcomeTitle =>
+      'Welcome to Sport Tournament Discovery and Management';
+
+  @override
+  String get homeLoginForStats => 'Log in to view ELO & statistics';
+
+  @override
+  String get homeDefaultUser => 'User';
+
+  @override
+  String get homeEloStartHint =>
+      'Play 1 ranked match to start your ELO journey';
+
+  @override
+  String get homeBusyMessage => 'The system is busy. Please try again later';
+
+  @override
+  String get homeFindTournamentsSubtitle => 'Find and join sports tournaments';
+
+  @override
+  String get homeSearchMatchesHint => 'Search matches, teams, or players...';
+
+  @override
+  String get homeSearchTournamentsHint => 'Search tournaments...';
+
+  @override
+  String get homeSearchClubsHint => 'Search clubs...';
+
+  @override
+  String get homeSearchAthletesHint => 'Search athletes...';
+
+  @override
+  String get homeSearchGenericHint => 'Search...';
+
+  @override
+  String get homeCompletedMatches => 'Recently completed matches';
+
+  @override
+  String get homeNoCompletedMatches => 'No recently completed matches';
+
+  @override
+  String get homeExploreFilterTitle => 'Explore filters';
+
+  @override
+  String get homeLiveStatus => 'Live';
+
+  @override
+  String get homeCompletedStatus => 'Completed';
+
+  @override
+  String get homeRankingFilter => 'Ranking';
+
+  @override
+  String get homeRankedYes => 'ELO enabled';
+
+  @override
+  String get homeRankedNo => 'No ELO';
+
+  @override
+  String get homeTournamentFilterTitle => 'Tournament filters';
+
+  @override
+  String get homeCompetitionContent => 'Competition content';
+
+  @override
+  String get homeInProgressStatus => 'In progress';
+
+  @override
+  String get homeFormatDoubleElimination => 'Winners/losers bracket';
+
+  @override
+  String get homeFormatGroupStagePlayoff => 'Group stage + playoff';
+
+  @override
+  String get homeLocationProvince => 'Province/City';
+
+  @override
+  String get homeLocationWard => 'Ward/Commune';
+
+  @override
+  String get homeSelectProvinceFirst => 'Select a province/city first';
+
+  @override
+  String get homeFromDate => 'From date';
+
+  @override
+  String get homeToDate => 'To date';
+
+  @override
+  String get homeClubFilterTitle => 'Club filters';
+
+  @override
+  String get homeRankingFilterTitle => 'ELO ranking filters';
+
+  @override
+  String get homeNoTournaments => 'No tournaments found';
+
+  @override
+  String get homeNoTournamentsHint =>
+      'Try changing the filters or search keyword';
+
+  @override
+  String get homeNoMatchingTournaments => 'No matching tournaments found';
+
+  @override
+  String get homeNoClubs => 'No clubs found';
+
+  @override
+  String get homeNoClubsHint => 'Try changing the sport or search keyword';
+
+  @override
+  String get homeLoading => 'Loading...';
+
+  @override
+  String get homeClubsLoadError => 'Unable to load the club list';
+
+  @override
+  String get homeInviteOnly => 'Invite only';
+
+  @override
+  String get homeApproval => 'Approval required';
+
+  @override
+  String get homeOpenJoin => 'Open';
+
+  @override
+  String homeMembersCount(Object count) {
+    return '$count members';
+  }
+
+  @override
+  String get homeMatchesStat => 'Matches';
+
+  @override
+  String get homeWinRateStat => 'Win rate';
+
+  @override
+  String get homeSportFallback => 'SPORT';
+
+  @override
+  String get homeDataLoadError => 'Unable to load data';
+
+  @override
+  String get tournamentCardSingles => 'Singles';
+
+  @override
+  String get tournamentCardDoubles => 'Doubles';
+
+  @override
+  String tournamentCardContentCount(Object count) {
+    return '+$count formats';
+  }
+
+  @override
+  String tournamentCardMonthLabel(Object month) {
+    return 'Month $month';
+  }
+
+  @override
+  String get tournamentCardEloUnranked => 'UNRANKED';
+
+  @override
+  String get tournamentCardEloRanked => 'ELO RANKED';
+
+  @override
+  String get homeMatchesLoading => 'Loading match data...';
+
+  @override
+  String get homeMatchesLoadError =>
+      'Unable to load match data. Please try again.';
+
+  @override
+  String get register_teamTitle => 'Team registration';
+
+  @override
+  String get register_invitedBannerTitle =>
+      'You have been selected for this tournament roster';
+
+  @override
+  String get register_invitedBannerDescription =>
+      'Please confirm before the organizer locks the roster.';
+
+  @override
+  String get register_confirmRoster => 'Confirm';
+
+  @override
+  String get register_declineRoster => 'Decline';
+
+  @override
+  String get register_chooseExistingTeam => 'Choose an existing team';
+
+  @override
+  String get register_noMatchingTeams => 'No team matches this sport yet.';
+
+  @override
+  String get register_teamMember => 'Team member';
+
+  @override
+  String get register_canRegister => 'Can register';
+
+  @override
+  String get register_rosterTitle => 'Registration roster';
+
+  @override
+  String register_rosterInstructions(Object teamSize, Object maxReserve) {
+    return 'Select up to $teamSize starting players and $maxReserve reserves. You can add more after saving a draft.';
+  }
+
+  @override
+  String get register_mainPlayer => 'Starting player';
+
+  @override
+  String get register_reservePlayer => 'Reserve player';
+
+  @override
+  String get register_removeSelection => 'Remove selection';
+
+  @override
+  String get register_quickCreateTitle => 'Quick team creation';
+
+  @override
+  String get register_teamNameHint => 'Team name';
+
+  @override
+  String get register_createTeam => 'Create';
+
+  @override
+  String get register_rosterLocked =>
+      'The roster is locked. You can only view the lineup.';
+
+  @override
+  String get register_updateRoster => 'Update roster';
+
+  @override
+  String get register_saveDraft => 'Save registration draft';
+
+  @override
+  String get register_selectedTeam => 'Register selected team';
+
+  @override
+  String get register_teamCreated =>
+      'Team created. Invite all required members from the team page.';
+
+  @override
+  String get register_rosterDraftSaved => 'Roster draft saved.';
+
+  @override
+  String get register_rosterUpdated => 'Team roster updated.';
+
+  @override
+  String get register_draftRegistrationSaved =>
+      'Registration draft saved. Add the remaining players before the organizer locks the roster.';
+
+  @override
+  String get register_teamRegistered => 'Team registered successfully.';
+
+  @override
+  String get register_updateRosterError =>
+      'Unable to update the roster. Please try again.';
+
+  @override
+  String get register_createTeamError =>
+      'Unable to create the team. Please try again.';
+
+  @override
+  String get register_registrationError =>
+      'Unable to register the team. Please try again.';
+
+  @override
+  String get createClubTournament_title => 'Create tournament in club';
+
+  @override
+  String get createClubTournament_nameLabel => 'Tournament name *';
+
+  @override
+  String get createClubTournament_nameRequired =>
+      'Please enter a tournament name';
+
+  @override
+  String get createClubTournament_nameHint =>
+      'E.g. 2026 Open Badminton Tournament';
+
+  @override
+  String get createClubTournament_sportLabel => 'Sport';
+
+  @override
+  String get createClubTournament_formatLabel => 'Competition format';
+
+  @override
+  String get createClubTournament_bracketLabel => 'Tournament format';
+
+  @override
+  String get createClubTournament_startDateLabel => 'Start date (optional)';
+
+  @override
+  String get createClubTournament_startDateHint =>
+      'Choose tournament start date';
+
+  @override
+  String get createClubTournament_clearDate => 'Clear date';
+
+  @override
+  String get createClubTournament_notSelected => 'Not selected';
+
+  @override
+  String get createClubTournament_startDateNote =>
+      'You can add or change the schedule later from the management page.';
+
+  @override
+  String get createClubTournament_pickStartDate =>
+      'Choose tournament start date';
+
+  @override
+  String get createClubTournament_continue => 'Continue';
+
+  @override
+  String get createClubTournament_defaultTime => 'Default (08:00)';
+
+  @override
+  String get createClubTournament_done => 'Done';
+
+  @override
+  String get createClubTournament_pickStartTime =>
+      'Choose tournament start time';
+
+  @override
+  String get createClubTournament_recurringTitle =>
+      'Automatically create recurring tournaments';
+
+  @override
+  String get createClubTournament_recurringDescription =>
+      'Cron will create new tournaments and notify club members.';
+
+  @override
+  String get createClubTournament_frequency => 'Frequency';
+
+  @override
+  String get createClubTournament_daily => 'Every day';
+
+  @override
+  String get createClubTournament_weekly => 'Every week';
+
+  @override
+  String get createClubTournament_biweekly => 'Every 2 weeks';
+
+  @override
+  String get createClubTournament_monthly => 'Every month';
+
+  @override
+  String get createClubTournament_weekday => 'Day of the week';
+
+  @override
+  String get createClubTournament_monday => 'Monday';
+
+  @override
+  String get createClubTournament_tuesday => 'Tuesday';
+
+  @override
+  String get createClubTournament_wednesday => 'Wednesday';
+
+  @override
+  String get createClubTournament_thursday => 'Thursday';
+
+  @override
+  String get createClubTournament_friday => 'Friday';
+
+  @override
+  String get createClubTournament_saturday => 'Saturday';
+
+  @override
+  String get createClubTournament_sunday => 'Sunday';
+
+  @override
+  String get createClubTournament_autoCreateTime => 'Automatic creation time';
+
+  @override
+  String get createClubTournament_pickRecurringTime =>
+      'Choose automatic tournament creation time';
+
+  @override
+  String get createClubTournament_pickTime => 'Choose time';
+
+  @override
+  String get createClubTournament_advanceDays => 'Create before match day';
+
+  @override
+  String get createClubTournament_sameDay => 'On match day';
+
+  @override
+  String createClubTournament_beforeDays(Object days) {
+    return '$days days before';
+  }
+
+  @override
+  String get createClubTournament_maxTeams => 'Maximum teams';
+
+  @override
+  String get createClubTournament_maxTeamsHint => '16';
+
+  @override
+  String get createClubTournament_maxTeamsInvalid => 'Enter 2–128 teams';
+
+  @override
+  String get createClubTournament_descriptionLabel => 'Description (optional)';
+
+  @override
+  String get createClubTournament_descriptionHint =>
+      'Additional tournament information...';
+
+  @override
+  String get createClubTournament_ranked => 'ELO ranked';
+
+  @override
+  String get createClubTournament_unranked => 'Casual';
+
+  @override
+  String get createClubTournament_rankedDescription =>
+      'Results affect ELO points';
+
+  @override
+  String get createClubTournament_unrankedDescription =>
+      'Friendly tournament, not included in rankings';
+
+  @override
+  String get createClubTournament_creating => 'Creating...';
+
+  @override
+  String get createClubTournament_create => 'Create tournament';
+
+  @override
+  String get createClubTournament_submitError =>
+      'Something went wrong while creating the tournament.';
+
+  @override
+  String get createClubTournament_forbiddenError =>
+      'You do not have permission to create a tournament in this club, or your email is not verified.';
+
+  @override
+  String get createClubTournament_sportBadminton => 'Badminton';
+
+  @override
+  String get createClubTournament_sportTennis => 'Tennis';
+
+  @override
+  String get createClubTournament_sportPickleball => 'Pickleball';
+
+  @override
+  String get createClubTournament_sportTableTennis => 'Table tennis';
+
+  @override
+  String get createClubTournament_sportFootball => 'Football';
+
+  @override
+  String get quickCreateTitle => 'Quick tournament creation';
+
+  @override
+  String get quickCreateHeading => 'Public tournament';
+
+  @override
+  String get quickCreateDescription =>
+      'Create quickly in the app, then add advanced settings in the web management page.';
+
+  @override
+  String get quickCreateNameLabel => 'Tournament name *';
+
+  @override
+  String get quickCreateNameHint => 'E.g. Weekend Badminton Tournament';
+
+  @override
+  String get quickCreateSportLabel => 'Sport *';
+
+  @override
+  String get quickCreateFormatLabel => 'Competition content';
+
+  @override
+  String get quickCreateBracketLabel => 'Format';
+
+  @override
+  String get quickCreateMaxTeamsLabel => 'Maximum teams / players';
+
+  @override
+  String get quickCreateMaxTeamsHint => '16';
+
+  @override
+  String get quickCreateVisibilityLabel => 'Tournament visibility';
+
+  @override
+  String get quickCreateVisibilityPublic => 'Public';
+
+  @override
+  String get quickCreateVisibilityPrivate => 'Unlisted';
+
+  @override
+  String get quickCreateRegistrationNote =>
+      'Registration defaults to approval mode. You can change how registrations are accepted in the web management page after creation.';
+
+  @override
+  String get quickCreateClubNote =>
+      'The Public flow does not include a club selection. To create a club tournament, open the club page and choose Club Lite or create it on the web.';
+
+  @override
+  String get quickCreateSubmit => 'Create quick tournament';
+
+  @override
+  String get quickCreateSubmitting => 'Creating...';
+
+  @override
+  String get quickCreateCreated =>
+      'Tournament created. Opening the web management page.';
+
+  @override
+  String get quickCreateNameRequired => 'Please enter a tournament name.';
+
+  @override
+  String get quickCreateMaxTeamsInvalid =>
+      'The size must be between 2 and 32 teams/players.';
+
+  @override
+  String get quickCreateMissingId => 'The tournament ID was not returned.';
+
+  @override
+  String get quickCreateSubmitError => 'Unable to create the tournament.';
+
+  @override
+  String get quickCreateOpenWebError => 'Unable to open the management page.';
+
+  @override
+  String get quickCreateFormatSingles => 'Singles';
+
+  @override
+  String get quickCreateFormatDoubles => 'Doubles';
+
+  @override
+  String get quickCreateFormatMixedDoubles => 'Mixed doubles';
+
+  @override
+  String get quickCreateBracketSingle => 'Single elimination';
+
+  @override
+  String get quickCreateBracketDouble => 'Double elimination';
+
+  @override
+  String get quickCreateBracketRoundRobin => 'Round robin';
+
+  @override
+  String get quickCreateBracketGroup => 'Group stage + knockout';
+
+  @override
+  String get tournamentSettingsCategoryLabel => 'Category / content';
+
+  @override
+  String get tournamentSettingsDetails => 'Details';
+
+  @override
+  String get tournamentSettingsTeamsRoundRobinTitle =>
+      'Expected number of teams (3–16 teams)';
+
+  @override
+  String get tournamentSettingsTeamsStandardTitle =>
+      'Expected number of teams (2–32 teams)';
+
+  @override
+  String get tournamentSettingsTeamsRoundRobinHint => 'E.g. 5, 8, 10...';
+
+  @override
+  String get tournamentSettingsTeamsStandardHint =>
+      'Recommended bracket sizes: 4, 8, 16, 32';
+
+  @override
+  String get tournamentSettingsInvalidNumber => 'Please enter a valid number';
+
+  @override
+  String get tournamentSettingsRoundRobinMin =>
+      'Round robin requires at least 3 teams';
+
+  @override
+  String get tournamentSettingsRoundRobinMax =>
+      'Round robin supports up to 16 teams';
+
+  @override
+  String get tournamentSettingsTeamsMin => 'At least 2 teams are required';
+
+  @override
+  String get tournamentSettingsTeamsMax => 'A maximum of 32 teams is supported';
+
+  @override
+  String get tournamentSettingsRoundCountTitle =>
+      'Number of rounds (the number of rounds you want to play)';
+
+  @override
+  String get tournamentSettingsRoundCountHint =>
+      'E.g. enter the exact number of rounds you want to organize';
+
+  @override
+  String get tournamentSettingsRoundCountPositive =>
+      'The number of rounds must be greater than 0';
+
+  @override
+  String get tournamentSettingsRoundCountMax =>
+      'A maximum of 38 rounds is allowed to avoid overload';
+
+  @override
+  String get tournamentSettingsLoadingSports => 'Loading sports...';
+
+  @override
+  String get tournamentCategoryMenSingles => 'Men\'s singles';
+
+  @override
+  String get tournamentCategoryWomenSingles => 'Women\'s singles';
+
+  @override
+  String get tournamentCategoryMenDoubles => 'Men\'s doubles';
+
+  @override
+  String get tournamentCategoryWomenDoubles => 'Women\'s doubles';
+
+  @override
+  String get tournamentCategoryMixedDoubles => 'Mixed doubles';
+
+  @override
+  String get createClubTournament_formatSingles => 'Singles';
+
+  @override
+  String get createClubTournament_formatDoubles => 'Doubles';
+
+  @override
+  String get createClubTournament_bracketSingleElimination =>
+      'Single elimination';
+
+  @override
+  String get createClubTournament_bracketSingleEliminationDescription =>
+      'Eliminated immediately after a loss';
+
+  @override
+  String get createClubTournament_bracketDoubleElimination =>
+      'Double elimination';
+
+  @override
+  String get createClubTournament_bracketDoubleEliminationDescription =>
+      'Winners and losers brackets';
+
+  @override
+  String get createClubTournament_bracketRoundRobin => 'Round robin';
+
+  @override
+  String get createClubTournament_bracketRoundRobinDescription =>
+      'Everyone plays everyone';
+
+  @override
+  String get createClubTournament_bracketGroupStageKnockout =>
+      'Group stage + knockout';
+
+  @override
+  String get createClubTournament_bracketGroupStageKnockoutDescription =>
+      'Split into groups and advance selected teams';
+
+  @override
+  String get createClubTournament_successTitle =>
+      'Tournament created successfully!';
+
+  @override
+  String get createClubTournament_copyLink => 'Copy link';
+
+  @override
+  String get createClubTournament_linkCopied => 'Invite link copied!';
+
+  @override
+  String get createClubTournament_share => 'Share';
+
+  @override
+  String createClubTournament_shareText(Object name, Object link) {
+    return 'Join the tournament $name: $link';
+  }
+
+  @override
+  String get createClubTournament_manageQuickly => 'Open quick management';
+
+  @override
+  String get createClubTournament_close => 'Close';
+
+  @override
+  String get editClub_title => 'Edit club';
+
+  @override
+  String get editClub_save => 'Save';
+
+  @override
+  String get editClub_saving => 'Saving...';
+
+  @override
+  String get editClub_imagesSection => 'IMAGES & IDENTITY';
+
+  @override
+  String get editClub_imagesSubtitle =>
+      'The club logo and banner represent your club across the system';
+
+  @override
+  String get editClub_logoTitle => 'Club logo';
+
+  @override
+  String get editClub_logoHint => '1:1 ratio';
+
+  @override
+  String get editClub_bannerTitle => 'Banner';
+
+  @override
+  String get editClub_bannerHint => '3:1 ratio (1200×400)';
+
+  @override
+  String get editClub_captureNew => 'Take a new photo';
+
+  @override
+  String get editClub_chooseLibrary => 'Choose from library';
+
+  @override
+  String get editClub_changeImage => 'Change';
+
+  @override
+  String get editClub_logoUpdated =>
+      'Profile image updated (PNG, JPG 1:1 ratio)';
+
+  @override
+  String get editClub_bannerUpdated =>
+      'Banner updated (1200x400 px recommended)';
+
+  @override
+  String get editClub_imageUpdateError => 'Unable to update the club image';
+
+  @override
+  String get editClub_primarySportError =>
+      'The club must have exactly one primary sport.';
+
+  @override
+  String get editClub_provinceRequired => 'Please choose a province or city.';
+
+  @override
+  String get editClub_saved => 'Club settings updated successfully!';
+
+  @override
+  String editClub_saveError(Object error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get editClub_basicSection => 'BASIC INFORMATION';
+
+  @override
+  String get editClub_basicSubtitle =>
+      'Name, primary sport, and club introduction';
+
+  @override
+  String get editClub_clubName => 'Club name';
+
+  @override
+  String get editClub_clubNameHint => 'E.g. Trang Hung Pickleball Club';
+
+  @override
+  String get editClub_clubNameRequired => 'Please enter a club name.';
+
+  @override
+  String get editClub_clubNameMax => 'Name must be at most 255 characters.';
+
+  @override
+  String get editClub_primarySport => 'Primary sport';
+
+  @override
+  String get editClub_primarySportDescription =>
+      'Each club is associated with one primary sport.';
+
+  @override
+  String get editClub_descriptionLabel => 'Introduction & description';
+
+  @override
+  String get editClub_descriptionHint =>
+      'Purpose, activity schedule, criteria...';
+
+  @override
+  String get editClub_locationSection => 'LOCATION & ACTIVITY AREA';
+
+  @override
+  String get editClub_locationSubtitle =>
+      'Administrative area and venue address';
+
+  @override
+  String get editClub_administrativeArea => 'Administrative area';
+
+  @override
+  String get editClub_detailedAddress => 'Detailed venue address';
+
+  @override
+  String get editClub_detailedAddressHint =>
+      'House number, street, venue complex...';
+
+  @override
+  String get editClub_privacySection => 'PRIVACY & MEMBERS';
+
+  @override
+  String get editClub_privacySubtitle =>
+      'Approval rules, member limits, and club rules';
+
+  @override
+  String get editClub_visibility => 'Visibility';
+
+  @override
+  String get editClub_memberJoinMethod => 'Member join method';
+
+  @override
+  String get editClub_memberLimit => 'Member limit';
+
+  @override
+  String get editClub_memberLimitHint => 'Leave empty for no member limit';
+
+  @override
+  String get editClub_rules => 'Club rules';
+
+  @override
+  String get editClub_rulesHint =>
+      'Code of conduct, recurring fees, discipline...';
+
+  @override
+  String get editClub_approvalSection => 'JOIN-REQUEST QUESTIONS';
+
+  @override
+  String get editClub_approvalSubtitle =>
+      'Applicants must answer these questions for administrators to review';
+
+  @override
+  String get editClub_questionHint =>
+      'Enter a question (e.g. ELO/DUPR level)...';
+
+  @override
+  String get editClub_addQuestion => 'Add question';
+
+  @override
+  String get editClub_socialSection => 'SOCIAL MEDIA & CONTACT CHANNELS';
+
+  @override
+  String get editClub_socialSubtitle =>
+      'The club’s Facebook, Zalo, TikTok, and other links';
+
+  @override
+  String get editClub_saveAll => 'Save all changes';
+
+  @override
+  String get editClub_dangerTitle => 'DANGER ZONE';
+
+  @override
+  String get editClub_dangerDescription =>
+      'This action permanently deletes the club and all posts, rankings, and tournament history.';
+
+  @override
+  String get editClub_deleteClub => 'Permanently delete club';
+
+  @override
+  String get editClub_deleteTitle => 'Permanently delete club';
+
+  @override
+  String editClub_deleteDescription(Object name) {
+    return 'Are you sure you want to delete \"$name\"? All member data, posts, and activity will be permanently deleted and cannot be recovered.';
+  }
+
+  @override
+  String editClub_confirmName(Object name) {
+    return 'Enter the club name $name to confirm:';
+  }
+
+  @override
+  String get editClub_clubNameLabel => 'Club name';
+
+  @override
+  String get editClub_deleteForever => 'Delete permanently';
+
+  @override
+  String get editClub_deleted => 'Club deleted successfully.';
+
+  @override
+  String editClub_deleteError(Object error) {
+    return 'Error deleting the club: $error';
+  }
+
+  @override
+  String get editClub_loadingSports => 'Loading sports...';
+
+  @override
+  String get editClub_joinOpen => 'Open join';
+
+  @override
+  String get editClub_joinOpenDescription =>
+      'Members join the club immediately when they tap Join.';
+
+  @override
+  String get editClub_joinApproval => 'Approval required';
+
+  @override
+  String get editClub_joinApprovalDescription =>
+      'Applicants must answer questions and wait for administrator approval.';
+
+  @override
+  String get editClub_joinInviteOnly => 'Invite only';
+
+  @override
+  String get editClub_joinInviteOnlyDescription =>
+      'Only invited members can join.';
+
+  @override
+  String get editClub_loadError => 'Unable to load club information';
+
+  @override
+  String get editClub_retry => 'Retry';
+
+  @override
+  String get footballTeams_title => 'My football teams';
+
+  @override
+  String footballTeams_activeCount(Object count) {
+    return 'Active teams $count/3';
+  }
+
+  @override
+  String footballTeams_eloMembers(Object elo, Object memberCount) {
+    return 'ELO $elo · $memberCount members';
+  }
+
+  @override
+  String get footballTeams_newTeamName => 'New team name';
+
+  @override
+  String get footballTeams_create => 'Create';
+
+  @override
+  String get footballTeams_teamInfo => 'Team information';
+
+  @override
+  String get footballTeams_teamName => 'Team name';
+
+  @override
+  String get footballTeams_save => 'Save';
+
+  @override
+  String get footballTeams_inviteMembers => 'Invite members';
+
+  @override
+  String get footballTeams_nameOrEmail => 'Name or email';
+
+  @override
+  String get footballTeams_accountFallback => 'Account';
+
+  @override
+  String get footballTeams_invite => 'Invite';
+
+  @override
+  String get footballTeams_inviteSent => 'Invitation sent.';
+
+  @override
+  String get footballTeams_pendingInvite => 'Invitation pending confirmation';
+
+  @override
+  String get footballTeams_captain => 'Captain';
+
+  @override
+  String get footballTeams_manager => 'Manager';
+
+  @override
+  String get footballTeams_player => 'Player';
+
+  @override
+  String get footballTeams_cancelInvite => 'Cancel invitation';
+
+  @override
+  String get footballTeams_genericError => 'Something went wrong';
+
+  @override
+  String get club_acceptInvite => 'Accept invitation';
+
+  @override
+  String get club_notificationSettings => 'Notification settings';
+
+  @override
+  String get club_notificationsMuted => 'Notifications are off';
+
+  @override
+  String get club_notificationsMentionsOnly => 'Only when mentioned';
+
+  @override
+  String get club_notificationsAll => 'Receive all notifications';
+
+  @override
+  String get club_leaveClub => 'Leave club';
+
+  @override
+  String get club_leaveClubDescription => 'Cancel your membership in this club';
+
+  @override
+  String get clubChat_notificationAllEnabled =>
+      'All club notifications enabled';
+
+  @override
+  String get clubChat_notificationMentionsOnly =>
+      'Only receive notifications when mentioned';
+
+  @override
+  String get clubChat_notificationMuted =>
+      'Club notifications turned off (Muted)';
+
+  @override
+  String get clubChat_notificationUpdateError =>
+      'Unable to update notification settings.';
+
+  @override
+  String get clubChat_notificationTitle => 'Club notifications';
+
+  @override
+  String clubChat_notificationDescription(Object name) {
+    return 'Customize messages and notifications from $name';
+  }
+
+  @override
+  String get clubChat_allMessages => 'All messages';
+
+  @override
+  String get clubChat_allMessagesDescription =>
+      'Receive notifications for every new message (Default)';
+
+  @override
+  String get clubChat_mentionsOnly => 'Only when @tagged';
+
+  @override
+  String get clubChat_mentionsOnlyDescription =>
+      'Only notify when someone mentions you or @all';
+
+  @override
+  String get clubChat_muted => 'Turn off notifications (Muted)';
+
+  @override
+  String get clubChat_mutedDescription =>
+      'Do not receive push notifications from this club';
+
+  @override
+  String get clubChat_clearTitle => 'Delete chat history?';
+
+  @override
+  String get clubChat_clearDescription =>
+      'Old messages will be deleted from your account and cannot be recovered. Other club members will not be affected.';
+
+  @override
+  String get clubChat_clearAction => 'Delete chat history';
+
+  @override
+  String get clubChat_cleared => 'All chat history deleted.';
+
+  @override
+  String get clubChat_clearError => 'Unable to delete chat history right now.';
+
+  @override
+  String get clubChat_openError =>
+      'Unable to open the conversation. Try again later.';
+
+  @override
+  String get clubChat_connectionError =>
+      'Connection lost. Pull down to try again.';
+
+  @override
+  String get clubChat_uploadError => 'Unable to upload the image.';
+
+  @override
+  String get clubChat_revokeError => 'Unable to revoke the message.';
+
+  @override
+  String get clubChat_pinned => 'Message pinned.';
+
+  @override
+  String get clubChat_pinError => 'Unable to pin the message.';
+
+  @override
+  String get clubChat_owner => 'Club owner';
+
+  @override
+  String get clubChat_moderator => 'Moderator';
+
+  @override
+  String get clubChat_reply => 'Reply';
+
+  @override
+  String get clubChat_copy => 'Copy';
+
+  @override
+  String get clubChat_pin => 'Pin message';
+
+  @override
+  String get clubChat_revoke => 'Revoke';
+
+  @override
+  String get clubChat_roomPinnedNotice =>
+      'A message was just pinned in the chat.';
+
+  @override
+  String get clubChat_reactionError => 'Unable to react right now.';
+
+  @override
+  String get clubChat_menuNotification => 'Club notifications';
+
+  @override
+  String get clubChat_menuClear => 'Delete chat history';
+
+  @override
+  String get clubChat_typing => 'Typing…';
+
+  @override
+  String get clubChat_empty => 'No messages yet.';
+
+  @override
+  String get clubChat_revoked => 'Message revoked';
+
+  @override
+  String get clubChat_heartTooltip => 'Send heart';
+
+  @override
+  String clubChat_replyTo(Object name) {
+    return 'Reply to $name';
+  }
+
+  @override
+  String get clubChat_composerHint => 'Message the club';
+
+  @override
+  String get clubChat_sendError => 'Message failed to send.';
+
+  @override
+  String get standings_empty => 'No standings data yet';
+
+  @override
+  String standings_title(Object groupCount) {
+    return 'Round-robin standings ($groupCount groups)';
+  }
+
+  @override
+  String standings_groupTeams(Object teamCount) {
+    return '$teamCount teams';
+  }
+
+  @override
+  String get standings_rank => 'Rank';
+
+  @override
+  String get standings_team => 'Team';
+
+  @override
+  String get standings_teamAthletes => 'Team/Athletes';
+
+  @override
+  String get standings_matches => 'Matches';
+
+  @override
+  String get standings_playedShort => 'MP';
+
+  @override
+  String get standings_wonShort => 'W';
+
+  @override
+  String get standings_drawnShort => 'D';
+
+  @override
+  String get standings_lostShort => 'L';
+
+  @override
+  String get standings_pointsForShort => 'GF';
+
+  @override
+  String get standings_pointsAgainstShort => 'GA';
+
+  @override
+  String get standings_differenceShort => 'GD';
+
+  @override
+  String get standings_pointsShort => 'Pts';
+
+  @override
+  String get standings_winsShort => 'W';
+
+  @override
+  String get standings_lossesShort => 'L';
+
+  @override
+  String get standings_points => 'Points';
+
+  @override
+  String get standings_difference => 'Difference';
+
+  @override
+  String standings_error(Object error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get createClub_title => 'Create club';
+
+  @override
+  String get createClub_nameLabel => 'Club name *';
+
+  @override
+  String get createClub_nameRequired => 'Name must be at least 3 characters';
+
+  @override
+  String get createClub_nameHint => 'E.g. ABC Badminton Club';
+
+  @override
+  String get createClub_sportLabel => 'Sport';
+
+  @override
+  String get createClub_descriptionLabel => 'Description (optional)';
+
+  @override
+  String get createClub_descriptionHint => 'Introduce your club...';
+
+  @override
+  String get createClub_rulesLabel => 'Club rules (optional)';
+
+  @override
+  String get createClub_rulesHint => '1. Respect each other\\n2. Be on time...';
+
+  @override
+  String get createClub_locationLabel => 'Operating area';
+
+  @override
+  String get createClub_locationHint =>
+      'E.g. 3/9 Thanh Thai, Dien Hong Ward, Ho Chi Minh City';
+
+  @override
+  String createClub_autoDetected(Object location) {
+    return 'Auto-detected: $location';
+  }
+
+  @override
+  String get createClub_visibilityLabel => 'Club visibility';
+
+  @override
+  String get createClub_joinMethodLabel => 'Join method';
+
+  @override
+  String get createClub_submitting => 'Creating...';
+
+  @override
+  String get createClub_submit => 'Create club';
+
+  @override
+  String get createClub_success => 'Club created successfully!';
+
+  @override
+  String createClub_error(Object error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get createClub_primarySportError =>
+      'The selected sport could not be found. Please try again.';
+
+  @override
+  String get createClub_provinceRequired => 'Please select a province/city';
+
+  @override
+  String get createClub_provinceLabel => 'Province/city *';
+
+  @override
+  String get createClub_wardLabel => 'Ward/commune';
+
+  @override
+  String get createClub_provinceLoadError => 'Unable to load provinces/cities';
+
+  @override
+  String get createClub_wardLoadError => 'Unable to load wards/communes';
+
+  @override
+  String get createClub_coverImageTitle => 'Choose cover image';
+
+  @override
+  String get createClub_logoImageTitle => 'Choose logo / avatar';
+
+  @override
+  String get createClub_photoLibrary => 'Photo library';
+
+  @override
+  String get createClub_camera => 'Take photo';
+
+  @override
+  String get createClub_logoTitle => 'Logo / avatar';
+
+  @override
+  String get createClub_bannerTitle => 'Cover image';
+
+  @override
+  String get createClub_removeImage => 'Remove image';
+
+  @override
+  String createClub_imageTooLarge(Object type, Object maxMb) {
+    return '$type must not exceed $maxMb MB';
+  }
+
+  @override
+  String get createClub_questionsTitle => 'Join questions (up to 5)';
+
+  @override
+  String get createClub_questionHint => 'Example: What is your playing level?';
+
+  @override
+  String get createClub_visibilityPublic => 'Public';
+
+  @override
+  String get createClub_visibilityPublicDescription =>
+      'Anyone can find the club';
+
+  @override
+  String get createClub_visibilityPrivate => 'Private';
+
+  @override
+  String get createClub_visibilityPrivateDescription =>
+      'Only members can view the content';
+
+  @override
+  String get createClub_visibilityRestricted => 'Restricted';
+
+  @override
+  String get createClub_visibilityRestrictedDescription =>
+      'Shown in search; users must join to view';
+
+  @override
+  String get createClub_joinOpen => 'Open';
+
+  @override
+  String get createClub_joinOpenDescription => 'Anyone can join';
+
+  @override
+  String get createClub_joinApproval => 'Approval required';
+
+  @override
+  String get createClub_joinApprovalDescription =>
+      'Membership must be approved';
+
+  @override
+  String get createClub_joinInviteOnly => 'Invite only';
+
+  @override
+  String get createClub_joinInviteOnlyDescription =>
+      'Only invited members can join';
+
+  @override
+  String get registerRankingConsentTitle =>
+      'I agree to display results and ELO on the leaderboard';
+
+  @override
+  String get registerRankingConsentDescription =>
+      'Ranked tournaments will record ELO only after you agree.';
+
+  @override
+  String get registerPublicBracketElo =>
+      'Public bracket with automatic ELO updates after the tournament';
+
+  @override
+  String get registerAdditionalInfoTitle =>
+      'Additional registration information';
+
+  @override
+  String get registerAdditionalInfoDescription =>
+      'The organizer requires the information below for the content you selected.';
+
+  @override
+  String get registerDetailsContent => 'Content';
+
+  @override
+  String get registerDetailsFormat => 'Format';
+
+  @override
+  String get registerDetailsStatus => 'Registration status';
+
+  @override
+  String get registerDetailsPendingApproval => 'Pending organizer approval';
+
+  @override
+  String get registerDetailsWaitlisted => 'Waitlisted';
+
+  @override
+  String get registerDetailsApproved => 'Approved';
+
+  @override
+  String get registerDetailsRegistered => 'Registered';
+
+  @override
+  String get registerDetailsPayment => 'Payment';
+
+  @override
+  String get registerDetailsPaid => 'Paid';
+
+  @override
+  String get registerDetailsUnpaid => 'Unpaid';
+
+  @override
+  String get registerViewInviteCode => 'View invite code & pairing link';
+
+  @override
+  String registerPayNow(Object amount) {
+    return 'Pay $amountđ';
+  }
+
+  @override
+  String registerFeePending2(Object amount) {
+    return 'Entry fee $amountđ unpaid';
+  }
+
+  @override
+  String get registerApprovalSuccessTitle => 'Request sent successfully!';
+
+  @override
+  String registerLoadError(Object error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String registerCustomFieldRequired(Object label) {
+    return 'Please fill in “$label”.';
+  }
+
+  @override
+  String registerCustomFieldEmailInvalid(Object label) {
+    return '“$label” must be a valid email.';
+  }
+
+  @override
+  String registerCustomFieldNumberInvalid(Object label) {
+    return '“$label” must be a number.';
+  }
+
+  @override
+  String registerCustomFieldMin(Object label, Object min) {
+    return '“$label” must not be less than $min.';
+  }
+
+  @override
+  String registerCustomFieldMax(Object label, Object max) {
+    return '“$label” must not be greater than $max.';
+  }
+
+  @override
+  String registerCustomFieldSelectInvalid(Object label) {
+    return 'The selection for “$label” is invalid.';
+  }
+
+  @override
+  String registerCustomFieldCheckboxRequired(Object label) {
+    return 'You must confirm “$label”.';
+  }
+
+  @override
+  String get autoDraw_saved => 'Draw generated and saved successfully!';
+
+  @override
+  String autoDraw_error(Object error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get autoDraw_title => 'Draw & Seed Groups';
+
+  @override
+  String get autoDraw_tournamentError => 'Tournament error';
+
+  @override
+  String autoDraw_teamCount(Object count) {
+    return 'Total teams: $count';
+  }
+
+  @override
+  String autoDraw_format(Object format) {
+    return 'Format: $format';
+  }
+
+  @override
+  String get autoDraw_startedLocked =>
+      'The tournament is underway. Redrawing the bracket is locked.';
+
+  @override
+  String get autoDraw_redraw => 'Redraw bracket';
+
+  @override
+  String get autoDraw_auto => 'Auto draw';
+
+  @override
+  String get autoDraw_manual => 'Draw teams one by one';
+
+  @override
+  String autoDraw_remaining(Object count) {
+    return '$count teams remain to be drawn';
+  }
+
+  @override
+  String get autoDraw_oneTeam => 'Draw 1 team';
+
+  @override
+  String get autoDraw_revealAll => 'Reveal all';
+
+  @override
+  String get autoDraw_bye => 'ADVANCES TO THE NEXT ROUND';
+
+  @override
+  String get autoDraw_vs => 'VS';
+
+  @override
+  String get autoDraw_previewHint => 'Press Draw to preview the matchups';
+
+  @override
+  String get autoDraw_saveStart => 'Save & Start tournament';
+
+  @override
+  String autoDraw_matchLoadError(Object error) {
+    return 'Error loading matches: $error';
+  }
+
+  @override
+  String get teamList_invalidImport => 'No valid data found in the file';
+
+  @override
+  String teamList_importSuccess(Object count) {
+    return 'Successfully imported $count teams!';
+  }
+
+  @override
+  String teamList_importError(Object error) {
+    return 'Import error: $error';
+  }
+
+  @override
+  String get teamList_deleteAllTitle => 'Delete everything?';
+
+  @override
+  String get teamList_deleteAllContent =>
+      'Are you sure you want to delete ALL teams?\n\nThis will also delete the tournament bracket and match results.';
+
+  @override
+  String get teamList_deleteAllConfirm => 'Delete all';
+
+  @override
+  String get teamList_deleteAllDone => 'All teams deleted!';
+
+  @override
+  String teamList_error(Object error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get teamList_title => 'Manage teams / athletes';
+
+  @override
+  String get teamList_importTooltip => 'Import from Excel';
+
+  @override
+  String get teamList_deleteAll => 'Delete all teams';
+
+  @override
+  String get teamList_empty => 'No teams yet';
+
+  @override
+  String get teamList_addNew => 'Add new team';
+
+  @override
+  String get teamList_locked =>
+      'The tournament is underway. Teams cannot be added.';
+
+  @override
+  String get teamList_add => 'Add team';
+
+  @override
+  String get teamList_approved => '✓ Approved';
+
+  @override
+  String get teamList_deleteTitle => 'Delete team';
+
+  @override
+  String teamList_deleteContent(Object name) {
+    return 'Delete team $name?';
+  }
+
+  @override
+  String get teamList_deleteConfirm => 'Delete';
+
+  @override
+  String teamList_deleteError(Object error) {
+    return '$error';
+  }
+
+  @override
+  String transactionsAmount(Object amount) {
+    return '$amount VND';
+  }
+
+  @override
+  String get refereeInvitesTitle => 'Referee invitations';
+
+  @override
+  String get refereeInviteAccepted => 'Referee invitation accepted';
+
+  @override
+  String get refereeInviteDeclined => 'Referee invitation declined';
+
+  @override
+  String refereeInviteActionError(Object error) {
+    return 'Unable to process invitation: $error';
+  }
+
+  @override
+  String get refereeInvitesEmpty => 'No invitations';
+
+  @override
+  String get refereeInvitesEmptyDescription =>
+      'When an organizer invites you to be a referee, the invitation will appear here.';
+
+  @override
+  String get refereeInvitesLoadError => 'Unable to load referee invitations';
+
+  @override
+  String get refereeInvitesRetry => 'Try again';
+
+  @override
+  String get officialScore_overrideReasonHint =>
+      'Enter the required exception reason...';
+
+  @override
+  String get officialScore_completeTitle => 'Finalize match result';
+
+  @override
+  String get officialScore_saveTitle => 'Confirm result save';
+
+  @override
+  String get officialScore_completeContent =>
+      'The result is eligible. Finalize the match to publish the score and update the tournament?';
+
+  @override
+  String get officialScore_saveContent =>
+      'Save the current result under the referee exception? This action will be recorded in the match history.';
+
+  @override
+  String get officialScore_saving => 'Saving...';
+
+  @override
+  String get officialScore_penaltySelectionRequired =>
+      'Please select the penalized team before recording.';
+
+  @override
+  String get officialScore_penaltyReasonLabel => 'Reason / note';
+
+  @override
+  String get officialScore_penaltyReasonHint => 'Enter a reason if needed';
+
+  @override
+  String get officialScore_penaltyConfirmTitle => 'Confirm penalty recording';
+
+  @override
+  String officialScore_penaltyConfirmContent(Object penalty, Object team) {
+    return '$penalty for $team. Continue recording?';
+  }
+
+  @override
+  String get officialScore_matchInfoTitle => 'Match information & settings';
+
+  @override
+  String officialScore_sport(Object sport) {
+    return 'Sport: $sport';
+  }
+
+  @override
+  String officialScore_format(Object bestOf) {
+    return 'Format: BO$bestOf';
+  }
+
+  @override
+  String officialScore_setsToWin(Object count) {
+    return 'Sets to win: $count sets';
+  }
+
+  @override
+  String officialScore_pointsPerSet(Object points, Object unit) {
+    return 'Set target: $points $unit';
+  }
+
+  @override
+  String officialScore_maxPoints(Object points) {
+    return 'Point cap: $points';
+  }
+
+  @override
+  String officialScore_court(Object court) {
+    return 'Court: $court';
+  }
+
+  @override
+  String officialScore_round(Object round) {
+    return 'Round: $round';
+  }
+
+  @override
+  String officialScore_penaltyRulesDescription(Object bestOf, Object points) {
+    return 'Penalties follow the sport rules and tournament configuration. BO$bestOf · $points points/set';
+  }
+
+  @override
+  String get officialScore_penaltyOptionsTitle => 'Available penalties';
+
+  @override
+  String get officialScore_penalizedTeam => 'Penalized team';
+
+  @override
+  String get officialScore_scoringTennisSet => 'Game/Set';
+
+  @override
+  String get officialScore_scoringPickleballSideOut => 'Pickleball side-out';
+
+  @override
+  String get officialScore_scoringRallyPoint => 'Rally point';
+
+  @override
+  String get officialScore_gameSetUnit => 'game/set';
+
+  @override
+  String get officialScore_pointsSetUnit => 'points/set';
+
+  @override
+  String get officialScore_penaltyRulesTennis =>
+      'Tennis uses no separate color cards; warnings, conduct violations, point penalties, and game penalties are available.';
+
+  @override
+  String get officialScore_penaltyRulesPickleball =>
+      'Technical faults are recorded separately; points are not added automatically without an officiating decision.';
+
+  @override
+  String get officialScore_penaltyRulesTableTennis =>
+      'Warnings, technical faults, and cards are recorded according to the system\'s table-tennis preset.';
+
+  @override
+  String get officialScore_penaltyRulesBadminton =>
+      'Warnings, technical faults, and cards are recorded according to the referee or organizer\'s decision.';
+
+  @override
+  String get officialScore_penaltyRulesDefault =>
+      'Applied according to the specific tournament and organizer regulations.';
+
+  @override
+  String get officialScore_penaltyServiceFaultBadminton => 'Service fault';
+
+  @override
+  String get officialScore_penaltyServiceFault => 'Service fault';
+
+  @override
+  String get officialScore_penaltyMisconduct => 'Misconduct';
+
+  @override
+  String get officialScore_penaltyCodeViolation => 'Code violation';
+
+  @override
+  String get officialScore_penaltyTechnicalFault => 'Technical fault';
+
+  @override
+  String get officialScore_penaltyUnsportsmanlike => 'Unsportsmanlike conduct';
+
+  @override
+  String get officialScore_penaltyFoul => 'Foul / disqualification';
+
+  @override
+  String get officialScore_close => 'Close';
+
+  @override
+  String get bracketView_searchHint => 'Search by player or team name...';
+
+  @override
+  String get bracketView_statusTitle => 'STATUS:';
+
+  @override
+  String get bracketView_live => 'Live';
+
+  @override
+  String get bracketView_scheduled => 'Not started';
+
+  @override
+  String get bracketView_completed => 'Completed';
+
+  @override
+  String get bracketView_branchTitle => 'BRACKET BRANCH:';
+
+  @override
+  String get bracketView_winners => 'Winners bracket';
+
+  @override
+  String get bracketView_losers => 'Losers bracket';
+
+  @override
+  String get bracketView_stageTitle => 'STAGE:';
+
+  @override
+  String get bracketView_groupStage => 'Group stage';
+
+  @override
+  String get bracketView_knockoutStage => 'Knockout stage';
+
+  @override
+  String get bracketView_groupTitle => 'GROUP:';
+
+  @override
+  String get bracketView_roundTitle => 'ROUND:';
+
+  @override
+  String bracketView_round(Object round) {
+    return 'Round $round';
+  }
+
+  @override
+  String get bracketView_knockoutMap => 'Knockout bracket';
+
+  @override
+  String get bracketView_doubleEliminationMap => 'Double-elimination bracket';
+
+  @override
+  String get bracketView_roundRobinMap => 'Round-robin bracket';
+
+  @override
+  String get bracketView_noMatches => 'No matches yet';
+
+  @override
+  String get bracketView_noMatchingMatches => 'No matching matches found';
+
+  @override
+  String get bracketView_drawHint => 'Draw teams to create the bracket';
+
+  @override
+  String get bracketView_crossTable => 'Cross table';
+
+  @override
+  String get bracketView_standings => 'Standings';
+
+  @override
+  String get bracketView_schedule => 'Schedule';
+
+  @override
+  String get bracketView_rateLimited =>
+      'The system is rate-limiting requests. Please try again in a few seconds.';
+
+  @override
+  String get bracketView_loadError => 'Could not load bracket data.';
+
+  @override
+  String get bracketView_unknownParticipant => 'Unknown';
+
+  @override
+  String get bracketView_officialResults => 'Official results';
+
+  @override
+  String bracketView_sharedRank(Object rank) {
+    return 'Tied for $rank';
+  }
+
+  @override
+  String bracketView_rank(Object rank) {
+    return 'Rank $rank';
+  }
+
+  @override
+  String get bracketView_knockoutTitle => 'Knockout bracket';
+
+  @override
+  String get bracketView_knockoutDescription =>
+      'View the knockout bracket for teams advancing from the group stage';
+
+  @override
+  String get bracketView_doubleEliminationDescription =>
+      'View the winners and losers brackets (Double Elimination)';
+
+  @override
+  String get bracketView_roundRobinDescription =>
+      'View the round-robin match schedule';
+
+  @override
+  String get bracketView_singleEliminationDescription =>
+      'View the knockout bracket (Single Elimination)';
+
+  @override
+  String get communitySocial_deletePostTitle => 'Delete post?';
+
+  @override
+  String get communitySocial_deletePostContent =>
+      'The post will be removed from the feed. Are you sure?';
+
+  @override
+  String get communitySocial_delete => 'Delete';
+
+  @override
+  String get communitySocial_postDeleted => 'Post deleted.';
+
+  @override
+  String get communitySocial_postDeleteError => 'Unable to delete the post.';
+
+  @override
+  String get communitySocial_defaultUser => 'You';
+
+  @override
+  String get communitySocial_defaultMember => 'Member';
+
+  @override
+  String get communitySocial_postingDisabled =>
+      'The club has disabled posting.';
+
+  @override
+  String get communitySocial_joinToPost => 'Join the club to create a post.';
+
+  @override
+  String get communitySocial_openChat => 'Open club chat';
+
+  @override
+  String get communitySocial_recentMatches => 'Recent matches';
+
+  @override
+  String get communitySocial_eloBoard => 'ELO leaderboard';
+
+  @override
+  String get communitySocial_emptyFeed => 'No posts yet. Share the first one!';
+
+  @override
+  String get communitySocial_retry => 'Retry';
+
+  @override
+  String get withdraw_title => 'Withdraw';
+
+  @override
+  String get withdraw_refundProfileDescription =>
+      'The refund will be sent to the bank account in your profile.';
+
+  @override
+  String get withdraw_refundInputDescription =>
+      'You paid the entry fee. Enter bank details to receive your refund (they will be saved to your profile).';
+
+  @override
+  String get withdraw_freeDescription =>
+      'Are you sure you want to withdraw from this tournament?';
+
+  @override
+  String get withdraw_bankNameLabel => 'Bank name';
+
+  @override
+  String get withdraw_bankNameHint => 'E.g. Vietcombank, Techcombank';
+
+  @override
+  String get withdraw_bankNameRequired => 'Enter the bank name';
+
+  @override
+  String get withdraw_accountNumberLabel => 'Account number';
+
+  @override
+  String get withdraw_accountNumberHint => 'Enter the account number';
+
+  @override
+  String get withdraw_accountNumberInvalid => 'Invalid account number';
+
+  @override
+  String get withdraw_accountNameLabel => 'Account holder';
+
+  @override
+  String get withdraw_accountNameHint => 'UPPERCASE WITHOUT ACCENTS';
+
+  @override
+  String get withdraw_accountNameRequired => 'Enter the account holder name';
+
+  @override
+  String get withdraw_irreversibleWarning => 'This action cannot be undone.';
+
+  @override
+  String get withdraw_processing => 'Processing...';
+
+  @override
+  String get withdraw_confirm => 'Confirm withdrawal';
+
+  @override
+  String get withdraw_refundSuccess =>
+      'Withdrawn. The refund will be processed within 3–5 days.';
+
+  @override
+  String get withdraw_success => 'Withdrawn from the tournament';
+
+  @override
+  String get withdraw_error =>
+      'Unable to withdraw from the tournament. Please try again.';
+
+  @override
+  String get withdraw_bankInfoTitle => 'Refund bank account';
+
+  @override
+  String get withdraw_change => 'Change';
+
+  @override
+  String get withdraw_bankLabel => 'Bank';
+
+  @override
+  String get withdraw_accountNumberShort => 'Account no.';
+
+  @override
+  String get withdraw_accountNameShort => 'Account holder';
+
+  @override
+  String get communityPoll_registrationJoined =>
+      'Vote recorded and tournament registration completed.';
+
+  @override
+  String get communityPoll_registrationWithdrawn =>
+      'Vote recorded and tournament registration cancelled.';
+
+  @override
+  String get communityPoll_registrationJoinPending =>
+      'Vote recorded, but tournament registration could not be completed.';
+
+  @override
+  String get communityPoll_registrationWithdrawPending =>
+      'Vote recorded, but tournament registration could not be cancelled.';
+
+  @override
+  String get communityPoll_voteError => 'Unable to record the vote.';
+
+  @override
+  String get communityPoll_addOptionTitle => 'Add option';
+
+  @override
+  String get communityPoll_optionHint => 'Enter an option';
+
+  @override
+  String get communityPoll_add => 'Add';
+
+  @override
+  String get communityPoll_addOptionError => 'Unable to add the option.';
+
+  @override
+  String get communityPoll_closed => 'Closed';
+
+  @override
+  String get communityPoll_multipleHint =>
+      'You can select one or more options.';
+
+  @override
+  String get communityPoll_singleHint => 'You can select only one option.';
+
+  @override
+  String get communityPoll_tournamentHint =>
+      'Choose Yes to register; choose No to cancel registration.';
+
+  @override
+  String get communityPoll_addOption => 'Add option';
+
+  @override
+  String communityPoll_voteCount(Object count) {
+    return '$count votes';
+  }
+
+  @override
+  String get teamAdd_createTitle => 'Add team / player';
+
+  @override
+  String get teamAdd_editTitle => 'Edit team information';
+
+  @override
+  String get teamAdd_nameLabel => 'Team / player name *';
+
+  @override
+  String get teamAdd_nameHint => 'E.g. Thunder Team';
+
+  @override
+  String get teamAdd_nameRequired => 'Please enter a name';
+
+  @override
+  String get teamAdd_members => 'Members';
+
+  @override
+  String get teamAdd_add => 'Add';
+
+  @override
+  String teamAdd_memberHint(Object index) {
+    return 'Member name $index';
+  }
+
+  @override
+  String get teamAdd_contactEmail => 'Contact email (optional)';
+
+  @override
+  String get teamAdd_save => 'Save team';
+
+  @override
+  String get teamAdd_created => 'Team added successfully!';
+
+  @override
+  String get teamAdd_updated => 'Team updated successfully!';
+
+  @override
+  String get teamAdd_error =>
+      'Unable to save the team information. Please try again.';
+
+  @override
+  String get matchBottom_overrideHint =>
+      'Override reason (explain the exception)';
+
+  @override
+  String get matchBottom_team1Wins => 'Team 1 wins';
+
+  @override
+  String get matchBottom_team2Wins => 'Team 2 wins';
+
+  @override
+  String get matchBottom_overrideAction =>
+      'Override (finalize exceptional score)';
+
+  @override
+  String get matchBottom_cancelOverride => 'Cancel override';
+
+  @override
+  String get report_title => 'Report a violation';
+
+  @override
+  String get report_description =>
+      'Please select a reason for the report. Your information will remain confidential.';
+
+  @override
+  String get report_reasonSpam => 'Spam / Advertising';
+
+  @override
+  String get report_reasonInappropriate => 'Inappropriate content';
+
+  @override
+  String get report_reasonCheating => 'Cheating';
+
+  @override
+  String get report_reasonOther => 'Other';
+
+  @override
+  String get report_detailsLabel => 'Detailed description (optional)';
+
+  @override
+  String get report_detailsHint => 'Enter detailed reason...';
+
+  @override
+  String get report_evidenceLabel => 'Evidence (optional)';
+
+  @override
+  String get report_uploadFile => 'Upload file';
+
+  @override
+  String report_uploadedCount(Object count) {
+    return '$count/5 files uploaded';
+  }
+
+  @override
+  String get report_submit => 'Submit report';
+
+  @override
+  String get report_success =>
+      'Thank you for reporting this. We will review it.';
+
+  @override
+  String get report_error => 'Unable to submit the report. Please try again.';
+
+  @override
+  String get report_fileTooLarge => 'Files must be no larger than 15 MB.';
+
+  @override
+  String get report_uploadError => 'File upload failed. Please try again.';
+
+  @override
+  String get communityComment_title => 'Comments';
+
+  @override
+  String get communityComment_close => 'Close';
+
+  @override
+  String get communityComment_empty => 'No comments yet.';
+
+  @override
+  String get communityComment_emptyHint =>
+      'Be the first to share your opinion!';
+
+  @override
+  String get communityComment_loading => 'Loading...';
+
+  @override
+  String get communityComment_loadMore => 'Load older comments';
+
+  @override
+  String get communityComment_deleteTitle => 'Delete comment?';
+
+  @override
+  String get communityComment_deleteDescription =>
+      'This comment and its replies will be deleted.';
+
+  @override
+  String get communityComment_delete => 'Delete';
+
+  @override
+  String get communityComment_write => 'Write a comment…';
+
+  @override
+  String communityComment_replyHint(Object author) {
+    return 'Write a reply to $author…';
+  }
+
+  @override
+  String get communityComment_send => 'Send';
+
+  @override
+  String get communityComment_member => 'member';
+
+  @override
+  String communityComment_replyingTo(Object author) {
+    return 'Replying to $author';
+  }
+
+  @override
+  String get communityComment_like => 'Like';
+
+  @override
+  String get communityComment_reply => 'Reply';
+
+  @override
+  String get communityComment_owner => 'Club owner';
+
+  @override
+  String get communityComment_admin => 'Admin';
+
+  @override
+  String get communityComment_justNow => 'Just now';
+
+  @override
+  String communityComment_minutes(Object count) {
+    return '$count min';
+  }
+
+  @override
+  String communityComment_hours(Object count) {
+    return '$count hr';
+  }
+
+  @override
+  String communityComment_days(Object count) {
+    return '$count days';
+  }
+
+  @override
+  String get communityComment_loadMoreError => 'Unable to load more comments.';
+
+  @override
+  String get communityComment_submitError => 'Unable to send the comment.';
+
+  @override
+  String get communityComment_deleteError => 'Unable to delete the comment.';
+
+  @override
+  String communityComposer_mentionLimit(Object count) {
+    return 'You can mention at most $count members.';
+  }
+
+  @override
+  String get communityComposer_duplicateName =>
+      'This club has two members with the same name. Use a different name to avoid confusion.';
+
+  @override
+  String get communityComposer_hint =>
+      'Share something with the club… Type @ to mention someone';
+
+  @override
+  String get communityComposer_image => 'Photo';
+
+  @override
+  String communityComposer_images(Object count) {
+    return 'Photos $count';
+  }
+
+  @override
+  String get communityComposer_tag => 'Mention';
+
+  @override
+  String get communityComposer_post => 'Post';
+
+  @override
+  String get communityComposer_tagTooltip => 'Tap to assign a member tag';
+
+  @override
+  String get communityComposer_searchUnavailable => 'Unable to search members';
+
+  @override
+  String get communityComposer_noMembers => 'No members found';
+
+  @override
+  String get communityComposer_assignTagTooltip => 'Assign fun tag';
+
+  @override
+  String get communityPollBuilder_title => 'Create a poll';
+
+  @override
+  String get communityPollBuilder_cancel => 'Cancel poll';
+
+  @override
+  String get communityPollBuilder_questionLabel => 'Poll question *';
+
+  @override
+  String get communityPollBuilder_questionHint =>
+      'Enter a question or topic...';
+
+  @override
+  String communityPollBuilder_optionHint(Object number) {
+    return 'Option $number';
+  }
+
+  @override
+  String get communityPollBuilder_addOption => 'Add option';
+
+  @override
+  String get communityPollBuilder_allowMultiple => 'Allow multiple answers';
+
+  @override
+  String get communityPollBuilder_allowAddOptions =>
+      'Allow everyone to add new options';
+
+  @override
+  String get communityPollBuilder_expiry => 'Duration:';
+
+  @override
+  String get communityPollBuilder_noLimit => 'No limit';
+
+  @override
+  String communityPollBuilder_days(Object count) {
+    return '$count days';
+  }
+
+  @override
+  String get clubSocialLinks_valueRequired => 'Please enter a link value.';
+
+  @override
+  String get clubSocialLinks_labelRequired => 'Please enter a link label.';
+
+  @override
+  String get clubSocialLinks_added => 'New contact added!';
+
+  @override
+  String get clubSocialLinks_removed => 'Contact removed!';
+
+  @override
+  String get clubSocialLinks_other => 'Other...';
+
+  @override
+  String get clubSocialLinks_customLabel => 'Channel name (Telegram, Viber...)';
+
+  @override
+  String get clubSocialLinks_valueHint => 'Link URL or phone number...';
+
+  @override
+  String get clubSocialLinks_add => 'Add link';
+
+  @override
+  String get footballScore_status => 'Status';
+
+  @override
+  String get footballScore_events => 'Match events';
+
+  @override
+  String get footballScore_team1 => 'Team 1';
+
+  @override
+  String get footballScore_team2 => 'Team 2';
+
+  @override
+  String get footballScore_yellowCard => 'Yellow card';
+
+  @override
+  String get footballScore_redCard => 'Red card';
+
+  @override
+  String get footballScore_foul => 'Foul';
+
+  @override
+  String get footballScore_substitution => 'Substitution';
+
+  @override
+  String get footballScore_firstHalf => 'First half';
+
+  @override
+  String get footballScore_halftime => 'Half-time';
+
+  @override
+  String get footballScore_secondHalf => 'Second half';
+
+  @override
+  String get footballScore_stoppageTime => 'Stoppage time';
+
+  @override
+  String get footballScore_fullTime => 'Full time';
+
+  @override
+  String get footballScore_extraTimeFirstHalf => 'Extra-time first half';
+
+  @override
+  String get footballScore_extraTimeBreak => 'Extra-time break';
+
+  @override
+  String get footballScore_extraTimeSecondHalf => 'Extra-time second half';
+
+  @override
+  String get footballScore_penaltyShootout => 'Penalty shootout';
+
+  @override
+  String get footballScore_completed => 'Completed';
+
+  @override
+  String get footballScore_penaltyLabel => 'Penalty shootout';
+
+  @override
+  String get footballScore_minute => 'Minute';
+
+  @override
+  String get footballScore_addedMinute => 'Added time +';
+
+  @override
+  String lite_kickParticipantSuccess(Object teamName) {
+    return '$teamName was removed from the tournament.';
+  }
+
+  @override
+  String get lite_kickParticipantError =>
+      'Unable to remove the team from the tournament. Please try again.';
+
+  @override
+  String get lite_recreateBracketTitle => 'Recreate bracket?';
+
+  @override
+  String get lite_recreateBracketConfirm =>
+      'The existing bracket and matches that have not started will be completely replaced. This cannot be undone. Do you want to continue?';
+
+  @override
+  String get lite_recreateBracket => 'Recreate';
+
+  @override
+  String get lite_recreatedBracket => 'A new bracket was created.';
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Bottom sheet xác nhận rút lui khỏi giải đấu.
 /// - Giải miễn phí: xác nhận đơn giản, rút luôn.
@@ -106,6 +107,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
   bool get _needsBankInput => widget.hasPaid && !_usingProfileBank;
 
   Future<void> _handleWithdraw() async {
+    final l10n = AppLocalizations.of(context)!;
     // Validate form bank nếu user cần nhập thủ công
     if (_needsBankInput) {
       if (!_formKey.currentState!.validate()) return;
@@ -155,8 +157,8 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(widget.hasPaid
-                ? 'Đã rút lui. Tiền hoàn sẽ được xử lý trong 3–5 ngày.'
-                : 'Đã rút lui khỏi giải đấu'),
+                ? l10n.withdraw_refundSuccess
+                : l10n.withdraw_success),
             backgroundColor: Colors.green,
           ),
         );
@@ -164,7 +166,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+            .showSnackBar(SnackBar(content: Text(l10n.withdraw_error)));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -173,6 +175,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
@@ -207,7 +210,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Rút lui',
+                l10n.withdraw_title,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
@@ -226,9 +229,9 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
           Text(
             widget.hasPaid
                 ? (_usingProfileBank
-                    ? 'Tiền hoàn sẽ được chuyển vào tài khoản ngân hàng trong hồ sơ của bạn.'
-                    : 'Bạn đã đóng phí. Vui lòng nhập thông tin ngân hàng để nhận hoàn tiền (sẽ được lưu vào hồ sơ).')
-                : 'Bạn có chắc muốn rút lui khỏi giải đấu này?',
+                    ? l10n.withdraw_refundProfileDescription
+                    : l10n.withdraw_refundInputDescription)
+                : l10n.withdraw_freeDescription,
             style: TextStyle(
               fontSize: 13,
               color: colors.textSecondary,
@@ -268,8 +271,8 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                       controller: _bankNameCtrl,
                       style: TextStyle(color: colors.textPrimary),
                       decoration: InputDecoration(
-                        labelText: 'Tên ngân hàng',
-                        hintText: 'VD: Vietcombank, Techcombank',
+                        labelText: l10n.withdraw_bankNameLabel,
+                        hintText: l10n.withdraw_bankNameHint,
                         filled: true,
                         fillColor: colors.bgDark,
                         border: OutlineInputBorder(
@@ -277,7 +280,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                       ),
                       validator: (v) =>
                           (v == null || v.trim().isEmpty)
-                              ? 'Nhập tên ngân hàng'
+                              ? l10n.withdraw_bankNameRequired
                               : null,
                     ),
                     const SizedBox(height: 12),
@@ -286,8 +289,8 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                       style: TextStyle(color: colors.textPrimary),
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: 'Số tài khoản',
-                        hintText: 'Nhập số tài khoản',
+                        labelText: l10n.withdraw_accountNumberLabel,
+                        hintText: l10n.withdraw_accountNumberHint,
                         filled: true,
                         fillColor: colors.bgDark,
                         border: OutlineInputBorder(
@@ -295,7 +298,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                       ),
                       validator: (v) =>
                           (v == null || v.trim().length < 6)
-                              ? 'Số tài khoản không hợp lệ'
+                              ? l10n.withdraw_accountNumberInvalid
                               : null,
                     ),
                     const SizedBox(height: 12),
@@ -304,8 +307,8 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                       style: TextStyle(color: colors.textPrimary),
                       textCapitalization: TextCapitalization.characters,
                       decoration: InputDecoration(
-                        labelText: 'Chủ tài khoản',
-                        hintText: 'VIẾT HOA KHÔNG DẤU',
+                        labelText: l10n.withdraw_accountNameLabel,
+                        hintText: l10n.withdraw_accountNameHint,
                         filled: true,
                         fillColor: colors.bgDark,
                         border: OutlineInputBorder(
@@ -313,7 +316,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                       ),
                       validator: (v) =>
                           (v == null || v.trim().isEmpty)
-                              ? 'Nhập tên chủ tài khoản'
+                              ? l10n.withdraw_accountNameRequired
                               : null,
                     ),
                   ],
@@ -337,7 +340,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Hành động này không thể hoàn tác.',
+                    l10n.withdraw_irreversibleWarning,
                     style: TextStyle(fontSize: 13, color: colors.error),
                   ),
                 ),
@@ -361,7 +364,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                     )
                   : const Icon(Icons.exit_to_app_rounded),
               label:
-                  Text(_submitting ? 'Đang xử lý...' : 'Xác nhận rút lui'),
+                  Text(_submitting ? l10n.withdraw_processing : l10n.withdraw_confirm),
               style: FilledButton.styleFrom(
                 backgroundColor: colors.error,
                 shape: RoundedRectangleBorder(
@@ -393,6 +396,7 @@ class _BankInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -412,7 +416,7 @@ class _BankInfoCard extends StatelessWidget {
                     size: 16, color: colors.textSecondary),
                 const SizedBox(width: 6),
                 Text(
-                  'Ngân hàng hoàn tiền',
+                  l10n.withdraw_bankInfoTitle,
                   style: TextStyle(
                     fontSize: 12,
                     color: colors.textSecondary,
@@ -423,7 +427,7 @@ class _BankInfoCard extends StatelessWidget {
               GestureDetector(
                 onTap: onChangePressed,
                 child: Text(
-                  'Đổi',
+                  l10n.withdraw_change,
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.primary,
@@ -434,11 +438,11 @@ class _BankInfoCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          _BankRow(label: 'Ngân hàng', value: bankName, colors: colors),
+          _BankRow(label: l10n.withdraw_bankLabel, value: bankName, colors: colors),
           const SizedBox(height: 4),
-          _BankRow(label: 'Số TK', value: accountNumber, colors: colors),
+          _BankRow(label: l10n.withdraw_accountNumberShort, value: accountNumber, colors: colors),
           const SizedBox(height: 4),
-          _BankRow(label: 'Chủ TK', value: accountName, colors: colors),
+          _BankRow(label: l10n.withdraw_accountNameShort, value: accountName, colors: colors),
         ],
       ),
     );

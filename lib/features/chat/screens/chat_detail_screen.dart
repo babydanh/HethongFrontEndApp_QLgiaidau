@@ -724,6 +724,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (sheetCtx) {
+        final l10n = AppLocalizations.of(context);
         final colors = context.colors;
         return Container(
           decoration: BoxDecoration(
@@ -770,7 +771,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     Icons.favorite_outline_rounded,
                     color: Colors.pink,
                   ),
-                  title: const Text('Xem người bày tỏ cảm xúc'),
+                  title: Text(l10n?.chatViewReactions ?? 'View reactions'),
                   onTap: () {
                     Navigator.pop(sheetCtx);
                     ChatReactionDetailSheet.show(context, message);
@@ -778,7 +779,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                 ),
               ListTile(
                 leading: const Icon(Icons.reply_rounded),
-                title: const Text('Trả lời'),
+                title: Text(l10n?.chatReplyAction ?? 'Reply'),
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   setState(() => _replyingTo = message);
@@ -788,13 +789,13 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               if (message.content.isNotEmpty && !message.isRevoked)
                 ListTile(
                   leading: const Icon(Icons.copy_rounded),
-                  title: const Text('Sao chép văn bản'),
+                  title: Text(l10n?.chatCopyTextAction ?? 'Copy text'),
                   onTap: () {
                     Navigator.pop(sheetCtx);
                     Clipboard.setData(ClipboardData(text: message.content));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Đã sao chép vào bộ nhớ tạm.'),
+                      SnackBar(
+                        content: Text(l10n?.chatCopiedFeedback ?? 'Copied to clipboard.'),
                       ),
                     );
                   },
@@ -806,7 +807,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       : Icons.push_pin_rounded,
                 ),
                 title: Text(
-                  message.isPinned ? 'Bỏ ghim tin nhắn' : 'Ghim tin nhắn',
+                  message.isPinned
+                      ? (l10n?.chatUnpinMessageAction ?? 'Unpin message')
+                      : (l10n?.chatPinMessageAction ?? 'Pin message'),
                 ),
                 onTap: () {
                   Navigator.pop(sheetCtx);
@@ -820,7 +823,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     color: colors.error,
                   ),
                   title: Text(
-                    'Thu hồi tin nhắn',
+                    l10n?.chatRevokeMessageAction ?? 'Revoke message',
                     style: TextStyle(color: colors.error),
                   ),
                   onTap: () {
@@ -1014,12 +1017,12 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     ),
                     Text(
                       _typingUser != null
-                          ? '$_typingUser đang soạn tin...'
+                          ? (l10n?.chatDetailTyping(_typingUser!) ?? '${_typingUser!} is typing...')
                           : (widget.roomType == 'CLUB' ||
                                     widget.roomType == 'GROUP'
                                 ? (_onlineUserIds.isNotEmpty
-                                      ? '${_onlineUserIds.length} người đang online'
-                                      : 'Đang hoạt động')
+                                      ? (l10n?.chatDetailOnlineCount(_onlineUserIds.length) ?? '${_onlineUserIds.length} people online')
+                                      : (l10n?.chatDetailActive ?? 'Active now'))
                                 : (_participants.any(
                                         (p) =>
                                             p.id !=
@@ -1030,8 +1033,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                                     .id &&
                                             _onlineUserIds.contains(p.id),
                                       )
-                                      ? 'Đang hoạt động'
-                                      : 'Hoạt động gần đây')),
+                                      ? (l10n?.chatDetailActive ?? 'Active now')
+                                      : (l10n?.chatDetailRecentlyActive ?? 'Recently active'))),
                       style: TextStyle(
                         fontSize: 11.5,
                         color: _typingUser != null
@@ -1051,12 +1054,12 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.poll_outlined, size: 22),
-            tooltip: 'Tạo bình chọn',
+            tooltip: l10n?.chatDetailPollTooltip ?? 'Create poll',
             onPressed: _openCreatePollDialog,
           ),
           IconButton(
             icon: const Icon(Icons.info_outline_rounded, size: 22),
-            tooltip: 'Tùy chọn & Thông báo',
+            tooltip: l10n?.chatDetailRoomSettingsTooltip ?? 'Options & Notifications',
             onPressed: _openRoomSettings,
           ),
         ],
@@ -1107,8 +1110,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         children: [
                           Row(
                             children: [
-                              const Text(
-                                'Tin nhắn đã ghim',
+                              Text(
+                                l10n?.chatDetailPinnedLabel ?? 'Pinned message',
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w800,
@@ -1133,8 +1136,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                             _pinnedMessage!.content.trim().isNotEmpty
                                 ? _pinnedMessage!.content.trim()
                                 : (_pinnedMessage!.mediaUrls.isNotEmpty
-                                      ? '📷 [Hình ảnh đính kèm]'
-                                      : '📊 [Bình chọn]'),
+                                      ? (l10n?.chatDetailAttachedImage ?? '📷 [Attached image]')
+                                      : (l10n?.chatDetailPollPlaceholder ?? '📊 [Poll]')),
                             style: TextStyle(
                               fontSize: 12.5,
                               color: isDark
@@ -1155,7 +1158,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       size: 18,
                       color: Color(0xFFD97706),
                     ),
-                    tooltip: 'Xem tin nhắn',
+                    tooltip: l10n?.chatDetailViewMessage ?? 'View message',
                     onPressed: () => _jumpToMessage(_pinnedMessage!.id),
                   ),
                 ],
@@ -1180,7 +1183,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'Chưa có tin nhắn nào.',
+                              l10n?.chatDetailNoMessages ?? 'No messages yet.',
                               style: TextStyle(
                                 color: colors.textMuted,
                                 fontSize: 14,
@@ -1188,7 +1191,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Hãy gửi tin nhắn đầu tiên để bắt đầu trò chuyện!',
+                              l10n?.chatDetailStartConversation ?? 'Send the first message to start the conversation!',
                               style: TextStyle(
                                 color: colors.textMuted.withValues(alpha: 0.7),
                                 fontSize: 12,
@@ -1308,7 +1311,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                             left: 3,
                                           ),
                                           child: Tooltip(
-                                            message: 'Đã xem bởi ${p.fullName}',
+                                            message: l10n?.chatDetailSeenBy(p.fullName) ?? 'Seen by ${p.fullName}',
                                             child: CircleAvatar(
                                               radius: 7.5,
                                               backgroundColor:
@@ -1401,7 +1404,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               alignment: Alignment.centerLeft,
               child: Text(
-                '$_typingUser đang soạn tin...',
+                l10n?.chatDetailTyping(_typingUser!) ?? '${_typingUser!} is typing...',
                 style: TextStyle(
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
@@ -1431,7 +1434,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Trả lời ${_replyingTo!.senderName}',
+                          l10n?.chatDetailReplyTo(_replyingTo!.senderName) ?? 'Reply to ${_replyingTo!.senderName}',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -1440,7 +1443,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         ),
                         Text(
                           _replyingTo!.content.isEmpty
-                              ? '[Hình ảnh / Bình chọn]'
+                              ? (l10n?.chatDetailMediaPollPlaceholder ?? '[Image / Poll]')
                               : _replyingTo!.content,
                           style: TextStyle(
                             fontSize: 12,
@@ -1488,7 +1491,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       color: AppTheme.primary,
                       size: 22,
                     ),
-                    tooltip: 'Gửi ảnh',
+                    tooltip: l10n?.chatDetailSendImage ?? 'Send image',
                     onPressed: () => _pickImage(ImageSource.gallery),
                   ),
                   IconButton(
@@ -1498,7 +1501,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       color: AppTheme.primary,
                       size: 22,
                     ),
-                    tooltip: 'Chụp ảnh',
+                    tooltip: l10n?.chatDetailTakePhoto ?? 'Take photo',
                     onPressed: () => _pickImage(ImageSource.camera),
                   ),
 
@@ -1519,7 +1522,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         style: const TextStyle(fontSize: 14.5),
                         onChanged: (v) => setState(() {}),
                         decoration: InputDecoration(
-                          hintText: 'Nhắn tin...',
+                          hintText: l10n?.chatDetailMessageHint ?? 'Message...',
                           hintStyle: TextStyle(
                             color: colors.textMuted,
                             fontSize: 14.5,
@@ -1548,7 +1551,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         color: _isSending ? colors.textMuted : AppTheme.primary,
                         size: 22,
                       ),
-                      tooltip: 'Gửi',
+                      tooltip: l10n?.chatDetailSend ?? 'Send',
                       onPressed: _isSending ? null : () => _sendMessage(),
                     )
                   else
@@ -1559,7 +1562,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         color: AppTheme.primary,
                         size: 22,
                       ),
-                      tooltip: 'Thích',
+                      tooltip: l10n?.chatDetailLike ?? 'Like',
                       onPressed: _sendThumbsUp,
                     ),
                 ],

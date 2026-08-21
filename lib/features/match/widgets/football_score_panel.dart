@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
@@ -15,6 +16,7 @@ class FootballScorePanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(scorePanelNotifierProvider(params));
     final notifier = ref.read(scorePanelNotifierProvider(params).notifier);
+    final l10n = AppLocalizations.of(context)!;
     final score = state.football ?? const FootballLiveState();
     final phases = <String>['FIRST_HALF', 'HALFTIME', 'SECOND_HALF', 'STOPPAGE_TIME', 'FULL_TIME', 'EXTRA_TIME_FIRST_HALF', 'EXTRA_TIME_BREAK', 'EXTRA_TIME_SECOND_HALF', 'PENALTY_SHOOTOUT', 'COMPLETED'];
     return SingleChildScrollView(
@@ -35,7 +37,7 @@ class FootballScorePanel extends ConsumerWidget {
             onAddedMinuteSubmitted: notifier.footballSetAddedMinute,
           )),
           const SizedBox(width: 12),
-          Expanded(child: DropdownButtonFormField<String>(initialValue: score.phase, isExpanded: true, decoration: const InputDecoration(labelText: 'Trạng thái', isDense: true), items: phases.map((phase) => DropdownMenuItem(value: phase, child: Text(_label(phase), overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) { if (value != null) notifier.footballSetPhase(value); })),
+          Expanded(child: DropdownButtonFormField<String>(initialValue: score.phase, isExpanded: true, decoration: InputDecoration(labelText: l10n.footballScore_status, isDense: true), items: phases.map((phase) => DropdownMenuItem(value: phase, child: Text(_label(l10n, phase), overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) { if (value != null) notifier.footballSetPhase(value); })),
         ]))),
         if (score.team1Goals == score.team2Goals)
           _ShootoutFields(
@@ -49,28 +51,46 @@ class FootballScorePanel extends ConsumerWidget {
             ),
           ),
         Card(child: Padding(padding: const EdgeInsets.all(12), child: Wrap(spacing: 8, runSpacing: 8, children: [
-          for (final event in const [('YELLOW_CARD', 'Thẻ vàng'), ('RED_CARD', 'Thẻ đỏ'), ('FOUL', 'Phạm lỗi'), ('SUBSTITUTION', 'Thay người')])
-            OutlinedButton.icon(onPressed: () => _showTeamPicker(context, ref, params, event.$1, event.$2), icon: const Icon(Icons.flag_outlined, size: 16), label: Text(event.$2)),
+          for (final event in const ['YELLOW_CARD', 'RED_CARD', 'FOUL', 'SUBSTITUTION'])
+            OutlinedButton.icon(onPressed: () => _showTeamPicker(context, ref, params, event, _eventLabel(l10n, event)), icon: const Icon(Icons.flag_outlined, size: 16), label: Text(_eventLabel(l10n, event))),
         ]))),
         if (score.events.isNotEmpty) Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Diễn biến', style: TextStyle(fontWeight: FontWeight.w800)),
-          for (final event in score.events.reversed.take(8)) Padding(padding: const EdgeInsets.only(top: 6), child: Text("${event.minute}${event.addedMinute > 0 ? '+${event.addedMinute}' : ''}' · ${event.type} · ${event.isTeam1 ? team1Name : team2Name}")),
+          Text(l10n.footballScore_events, style: const TextStyle(fontWeight: FontWeight.w800)),
+          for (final event in score.events.reversed.take(8)) Padding(padding: const EdgeInsets.only(top: 6), child: Text("${event.minute}${event.addedMinute > 0 ? '+${event.addedMinute}' : ''}' · ${_eventLabel(l10n, event.type)} · ${event.isTeam1 ? team1Name : team2Name}")),
         ]))),
         if (state.errorMessage case final message?) Padding(padding: const EdgeInsets.only(top: 8), child: Text(message, style: TextStyle(color: Theme.of(context).colorScheme.error))),
       ]),
     );
   }
 
+  static String _eventLabel(AppLocalizations l10n, String type) => switch (type) {
+    'YELLOW_CARD' => l10n.footballScore_yellowCard,
+    'RED_CARD' => l10n.footballScore_redCard,
+    'FOUL' => l10n.footballScore_foul,
+    'SUBSTITUTION' => l10n.footballScore_substitution,
+    _ => type,
+  };
+
   static Future<void> _showTeamPicker(BuildContext context, WidgetRef ref, MatchControlParams params, String type, String label) async {
     final team = await showModalBottomSheet<bool>(context: context, builder: (sheetContext) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      ListTile(title: Text('$label · Đội 1'), onTap: () => Navigator.pop(sheetContext, true)),
-      ListTile(title: Text('$label · Đội 2'), onTap: () => Navigator.pop(sheetContext, false)),
+      ListTile(title: Text('$label · ${AppLocalizations.of(sheetContext)!.footballScore_team1}'), onTap: () => Navigator.pop(sheetContext, true)),
+      ListTile(title: Text('$label · ${AppLocalizations.of(sheetContext)!.footballScore_team2}'), onTap: () => Navigator.pop(sheetContext, false)),
     ])));
     if (team != null && context.mounted) ref.read(scorePanelNotifierProvider(params).notifier).footballAddEvent(type, team);
   }
 
-  static String _label(String phase) => switch (phase) {
-    'FIRST_HALF' => 'Hiệp 1', 'HALFTIME' => 'Giải lao', 'SECOND_HALF' => 'Hiệp 2', 'STOPPAGE_TIME' => 'Bù giờ', 'FULL_TIME' => 'Hết giờ', 'EXTRA_TIME_FIRST_HALF' => 'Hiệp phụ 1', 'EXTRA_TIME_BREAK' => 'Nghỉ hiệp phụ', 'EXTRA_TIME_SECOND_HALF' => 'Hiệp phụ 2', 'PENALTY_SHOOTOUT' => 'Luân lưu', 'COMPLETED' => 'Hoàn thành', _ => phase,
+  static String _label(AppLocalizations l10n, String phase) => switch (phase) {
+    'FIRST_HALF' => l10n.footballScore_firstHalf,
+    'HALFTIME' => l10n.footballScore_halftime,
+    'SECOND_HALF' => l10n.footballScore_secondHalf,
+    'STOPPAGE_TIME' => l10n.footballScore_stoppageTime,
+    'FULL_TIME' => l10n.footballScore_fullTime,
+    'EXTRA_TIME_FIRST_HALF' => l10n.footballScore_extraTimeFirstHalf,
+    'EXTRA_TIME_BREAK' => l10n.footballScore_extraTimeBreak,
+    'EXTRA_TIME_SECOND_HALF' => l10n.footballScore_extraTimeSecondHalf,
+    'PENALTY_SHOOTOUT' => l10n.footballScore_penaltyShootout,
+    'COMPLETED' => l10n.footballScore_completed,
+    _ => phase,
   };
 }
 
@@ -129,26 +149,29 @@ class _ShootoutFieldsState extends State<_ShootoutFields> {
   );
 
   @override
-  Widget build(BuildContext context) => Card(
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Card(
     child: Padding(
       padding: const EdgeInsets.all(12),
       child: Row(children: [
         Expanded(child: TextField(
           controller: _team1Controller,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: '${widget.team1Name} · Luân lưu', isDense: true),
+          decoration: InputDecoration(labelText: '${widget.team1Name} · ${l10n.footballScore_penaltyLabel}', isDense: true),
           onChanged: (_) => _emit(),
         )),
         const SizedBox(width: 12),
         Expanded(child: TextField(
           controller: _team2Controller,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: '${widget.team2Name} · Luân lưu', isDense: true),
+          decoration: InputDecoration(labelText: '${widget.team2Name} · ${l10n.footballScore_penaltyLabel}', isDense: true),
           onChanged: (_) => _emit(),
         )),
       ]),
     ),
   );
+  }
 }
 
 class _FootballTimeFields extends StatefulWidget {
@@ -198,19 +221,22 @@ class _FootballTimeFieldsState extends State<_FootballTimeFields> {
   }
 
   @override
-  Widget build(BuildContext context) => Row(children: [
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Row(children: [
     Expanded(child: TextField(
       controller: _minuteController,
       keyboardType: TextInputType.number,
-      decoration: const InputDecoration(labelText: 'Phút', isDense: true),
+      decoration: InputDecoration(labelText: l10n.footballScore_minute, isDense: true),
       onSubmitted: (value) => widget.onMinuteSubmitted(int.tryParse(value) ?? widget.minute),
     )),
     const SizedBox(width: 12),
     Expanded(child: TextField(
       controller: _addedMinuteController,
       keyboardType: TextInputType.number,
-      decoration: const InputDecoration(labelText: 'Bù giờ +', isDense: true),
+      decoration: InputDecoration(labelText: l10n.footballScore_addedMinute, isDense: true),
       onSubmitted: (value) => widget.onAddedMinuteSubmitted(int.tryParse(value) ?? widget.addedMinute),
     )),
   ]);
+  }
 }

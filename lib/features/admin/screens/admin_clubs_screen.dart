@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Admin quản lý câu lạc bộ — danh sách tất cả CLB, filter theo status, tìm kiếm.
 ///
@@ -46,6 +47,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = context.colors;
 
     return Scaffold(
@@ -57,23 +59,26 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
           icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Quản lý CLB', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
+        title: Text(
+          l10n?.adminClubsTitle ?? 'Club management',
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+        ),
         centerTitle: true,
       ),
       body: Column(
         children: [
           // Search bar
-          _buildSearchBar(colors),
+          _buildSearchBar(colors, l10n),
           // Status filter chips
-          _buildFilterChips(colors),
+          _buildFilterChips(colors, l10n),
           // Club list
-          Expanded(child: _buildClubList(colors)),
+          Expanded(child: _buildClubList(colors, l10n)),
         ],
       ),
     );
   }
 
-  Widget _buildSearchBar(AppColorsExtension colors) {
+  Widget _buildSearchBar(AppColorsExtension colors, AppLocalizations? l10n) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: TextField(
@@ -81,7 +86,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
         onChanged: (v) => setState(() => _searchQuery = v),
         style: TextStyle(color: colors.textPrimary, fontSize: 14),
         decoration: InputDecoration(
-          hintText: 'Tìm kiếm CLB...',
+          hintText: l10n?.adminClubsSearchHint ?? 'Search clubs...',
           hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
           prefixIcon: Icon(Icons.search_rounded, color: colors.textMuted, size: 20),
           filled: true,
@@ -96,13 +101,13 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
     );
   }
 
-  Widget _buildFilterChips(AppColorsExtension colors) {
+  Widget _buildFilterChips(AppColorsExtension colors, AppLocalizations? l10n) {
     final filters = [
-      ('all', 'Tất cả', colors.textPrimary),
-      ('ACTIVE', 'Hoạt động', const Color(0xFF10B981)),
-      ('PENDING', 'Chờ duyệt', const Color(0xFFF59E0B)),
-      ('INACTIVE', 'Đã khóa', const Color(0xFFEF4444)),
-      ('REJECTED', 'Từ chối', const Color(0xFFEF4444)),
+      ('all', l10n?.adminClubsFilterAll ?? 'All', colors.textPrimary),
+      ('ACTIVE', l10n?.adminClubsFilterActive ?? 'Active', const Color(0xFF10B981)),
+      ('PENDING', l10n?.adminClubsFilterPending ?? 'Pending', const Color(0xFFF59E0B)),
+      ('INACTIVE', l10n?.adminClubsFilterInactive ?? 'Disabled', const Color(0xFFEF4444)),
+      ('REJECTED', l10n?.adminClubsFilterRejected ?? 'Rejected', const Color(0xFFEF4444)),
     ];
     return SizedBox(
       height: 42,
@@ -138,7 +143,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
     );
   }
 
-  Widget _buildClubList(AppColorsExtension colors) {
+  Widget _buildClubList(AppColorsExtension colors, AppLocalizations? l10n) {
     // Dùng pendingCommunitiesProvider cho PENDING, getAll cho phần còn lại
     // Tạm thời dùng FutureProvider tự build
     final clubsAsync = ref.watch(_adminClubsProvider);
@@ -163,13 +168,13 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
         }).toList();
 
         if (filtered.isEmpty) {
-          return _buildEmpty(colors, _statusFilter);
+          return _buildEmpty(colors, _statusFilter, l10n);
         }
 
         // Stats header
         return Column(
           children: [
-            _buildStatsRow(colors, clubs),
+            _buildStatsRow(colors, clubs, l10n),
             const SizedBox(height: 8),
             Expanded(
               child: ListView.builder(
@@ -189,14 +194,14 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
           children: [
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
-            Text('Lỗi tải danh sách', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+            Text(l10n?.adminClubsLoadError ?? 'Unable to load the list', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatsRow(AppColorsExtension colors, List<Community> clubs) {
+  Widget _buildStatsRow(AppColorsExtension colors, List<Community> clubs, AppLocalizations? l10n) {
     final active = clubs.where((c) => c.status == 'ACTIVE').length;
     final pending = clubs.where((c) => c.status == 'PENDING').length;
     final rejected = clubs.where((c) => c.status == 'REJECTED').length;
@@ -205,13 +210,13 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          _statChip(colors, 'Tổng', '${clubs.length}', colors.textPrimary),
+          _statChip(colors, l10n?.adminClubsStatTotal ?? 'Total', '${clubs.length}', colors.textPrimary),
           const SizedBox(width: 8),
-          _statChip(colors, 'Hoạt động', '$active', const Color(0xFF10B981)),
+          _statChip(colors, l10n?.adminClubsStatActive ?? 'Active', '$active', const Color(0xFF10B981)),
           const SizedBox(width: 8),
-          _statChip(colors, 'Chờ', '$pending', const Color(0xFFF59E0B)),
+          _statChip(colors, l10n?.adminClubsStatPending ?? 'Pending', '$pending', const Color(0xFFF59E0B)),
           const SizedBox(width: 8),
-          _statChip(colors, 'Từ chối', '$rejected', const Color(0xFFEF4444)),
+          _statChip(colors, l10n?.adminClubsStatRejected ?? 'Rejected', '$rejected', const Color(0xFFEF4444)),
         ],
       ),
     );
@@ -237,17 +242,18 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
     );
   }
 
-  Widget _buildClubCard(BuildContext context, Community club, AppColorsExtension colors) {
+    Widget _buildClubCard(BuildContext context, Community club, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context);
     final statusColor = club.status == 'ACTIVE'
         ? const Color(0xFF10B981)
         : club.status == 'PENDING'
             ? const Color(0xFFF59E0B)
             : const Color(0xFFEF4444);
     final statusLabel = club.status == 'ACTIVE'
-        ? 'Hoạt động'
+        ? (l10n?.adminClubsStatusActive ?? 'Active')
         : club.status == 'PENDING'
-            ? 'Chờ duyệt'
-            : 'Từ chối';
+            ? (l10n?.adminClubsStatusPending ?? 'Pending')
+            : (l10n?.adminClubsStatusRejected ?? 'Rejected');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -304,7 +310,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
             children: [
               Icon(Icons.group_outlined, size: 14, color: colors.textMuted),
               const SizedBox(width: 4),
-              Text('${club.memberCount} TV', style: TextStyle(fontSize: 11, color: colors.textMuted)),
+              Text(l10n?.adminClubsMembers(club.memberCount) ?? '${club.memberCount} members', style: TextStyle(fontSize: 11, color: colors.textMuted)),
               const SizedBox(width: 16),
               if (club.locationAddress != null && club.locationAddress!.isNotEmpty) ...[
                 Icon(Icons.location_on_outlined, size: 14, color: colors.textMuted),
@@ -323,7 +329,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
               Expanded(
                 child: _actionBtn(
                   icon: Icons.visibility_rounded,
-                  label: 'Xem',
+                  label: l10n?.adminClubsView ?? 'View',
                   color: AppTheme.primary,
                   onTap: () => context.push('/club/${club.id}'),
                 ),
@@ -334,7 +340,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
                 Expanded(
                   child: _actionBtn(
                     icon: Icons.check_rounded,
-                    label: 'Duyệt',
+                    label: l10n?.adminClubsApprove ?? 'Approve',
                     color: const Color(0xFF10B981),
                     onTap: () => _handleAction(club.id, 'APPROVED', colors),
                   ),
@@ -345,7 +351,9 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
                 Expanded(
                   child: _actionBtn(
                     icon: Icons.block_rounded,
-                    label: club.status == 'PENDING' ? 'Từ chối' : 'Vô hiệu',
+                    label: club.status == 'PENDING'
+                        ? (l10n?.adminClubsReject ?? 'Reject')
+                        : (l10n?.adminClubsDisable ?? 'Disable'),
                     color: colors.textSecondary,
                     outlined: true,
                     onTap: () => _showRejectDialog(context, club, colors),
@@ -390,13 +398,16 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
   }
 
   Future<void> _handleAction(String clubId, String status, AppColorsExtension colors) async {
+    final l10n = AppLocalizations.of(context);
     try {
       await ref.read(communityRepositoryProvider).reviewCommunity(clubId, status);
       ref.invalidate(_adminClubsProvider);
       invalidateCommunityCollections(ref);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(status == 'APPROVED' ? 'Đã duyệt CLB' : 'Đã cập nhật CLB'),
+          content: Text(status == 'APPROVED'
+              ? (l10n?.adminClubsApprovedFeedback ?? 'Club approved')
+              : (l10n?.adminClubsUpdatedFeedback ?? 'Club updated')),
           backgroundColor: const Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
         ));
@@ -404,7 +415,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
+          content: Text(l10n?.adminClubsActionError ?? 'Unable to update the club. Please try again.'),
           backgroundColor: context.colors.error,
           behavior: SnackBarBehavior.floating,
         ));
@@ -414,6 +425,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
 
   void _showRejectDialog(BuildContext context, Community club, AppColorsExtension colors) {
     final controller = TextEditingController();
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -422,7 +434,9 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
           children: [
             const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
             const SizedBox(width: 8),
-            Text(club.status == 'PENDING' ? 'Từ chối CLB' : 'Vô hiệu hoá CLB',
+            Text(club.status == 'PENDING'
+                ? (l10n?.adminClubsRejectTitle ?? 'Reject club')
+                : (l10n?.adminClubsDisableTitle ?? 'Disable club'),
                 style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w700, fontSize: 18)),
           ],
         ),
@@ -432,7 +446,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
           maxLength: 200,
           style: TextStyle(color: colors.textPrimary, fontSize: 13),
           decoration: InputDecoration(
-            hintText: 'Lý do (bắt buộc)',
+            hintText: l10n?.adminClubsReasonHint ?? 'Reason (required)',
             hintStyle: TextStyle(color: colors.textMuted, fontSize: 12),
             filled: true,
             fillColor: colors.bgSurface,
@@ -440,7 +454,10 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n?.adminClubsCancel ?? 'Cancel'),
+          ),
           ElevatedButton(
             onPressed: () async {
               if (controller.text.trim().isEmpty) return;
@@ -456,7 +473,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Lỗi: $e'),
+                    content: Text(l10n?.adminClubsRejectError ?? 'Unable to process the club. Please try again.'),
                     backgroundColor: context.colors.error,
                     behavior: SnackBarBehavior.floating,
                   ));
@@ -464,23 +481,23 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Xác nhận', style: TextStyle(color: Colors.white)),
+            child: Text(l10n?.adminClubsConfirm ?? 'Confirm', style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEmpty(AppColorsExtension colors, String filter) {
+  Widget _buildEmpty(AppColorsExtension colors, String filter, AppLocalizations? l10n) {
     String message;
     if (filter == 'all') {
-      message = 'Chưa có câu lạc bộ nào';
+      message = l10n?.adminClubsEmptyAll ?? 'No clubs yet';
     } else if (filter == 'ACTIVE') {
-      message = 'Không có CLB đang hoạt động';
+      message = l10n?.adminClubsEmptyActive ?? 'No active clubs';
     } else if (filter == 'PENDING') {
-      message = 'Không có CLB chờ duyệt';
+      message = l10n?.adminClubsEmptyPending ?? 'No clubs pending approval';
     } else {
-      message = 'Không có CLB bị từ chối';
+      message = l10n?.adminClubsEmptyRejected ?? 'No rejected clubs';
     }
     return Center(
       child: Column(

@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.da
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -65,6 +66,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
   }
 
   Future<void> _loadMore() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_busy || !_hasMore) return;
     setState(() => _busy = true);
     try {
@@ -79,13 +81,14 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
         });
       }
     } catch (_) {
-      if (mounted) _showMessage('Không thể tải thêm bình luận.');
+      if (mounted) _showMessage(l10n.communityComment_loadMoreError);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     final body = _controller.text.trim();
     if (body.isEmpty || _busy) return;
     setState(() => _busy = true);
@@ -110,7 +113,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
         widget.onCommentUpdated?.call();
       }
     } catch (_) {
-      if (mounted) _showMessage('Không thể gửi bình luận.');
+      if (mounted) _showMessage(l10n.communityComment_submitError);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -142,20 +145,21 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
   }
 
   Future<void> _delete(CommunityCommentModel comment) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Xóa bình luận?'),
-        content: const Text('Bình luận này và các câu trả lời sẽ bị xóa.'),
+        title: Text(l10n.communityComment_deleteTitle),
+        content: Text(l10n.communityComment_deleteDescription),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Hủy'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-            child: const Text('Xóa'),
+            child: Text(l10n.communityComment_delete),
           ),
         ],
       ),
@@ -177,7 +181,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
       }
       widget.onCommentUpdated?.call();
     } catch (_) {
-      if (mounted) _showMessage('Không thể xóa bình luận.');
+      if (mounted) _showMessage(l10n.communityComment_deleteError);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -188,12 +192,13 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
   ).showSnackBar(SnackBar(content: Text(message)));
 
   String _relativeTime(DateTime? value) {
-    if (value == null) return 'Vừa xong';
+    final l10n = AppLocalizations.of(context)!;
+    if (value == null) return l10n.communityComment_justNow;
     final difference = DateTime.now().difference(value.toLocal());
-    if (difference.inMinutes < 1) return 'Vừa xong';
-    if (difference.inHours < 1) return '${difference.inMinutes} phút';
-    if (difference.inDays < 1) return '${difference.inHours} giờ';
-    if (difference.inDays < 7) return '${difference.inDays} ngày';
+    if (difference.inMinutes < 1) return l10n.communityComment_justNow;
+    if (difference.inHours < 1) return l10n.communityComment_minutes(difference.inMinutes);
+    if (difference.inDays < 1) return l10n.communityComment_hours(difference.inHours);
+    if (difference.inDays < 7) return l10n.communityComment_days(difference.inDays);
     return '${value.day}/${value.month}';
   }
 
@@ -246,6 +251,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bubbleColor = isDark ? const Color(0xFF3A3B3C) : const Color(0xFFF0F2F5);
@@ -305,7 +311,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                 child: Row(
                   children: [
                     Text(
-                      'Bình luận',
+                      l10n.communityComment_title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 16.5,
@@ -331,7 +337,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                     ],
                     const Spacer(),
                     IconButton(
-                      tooltip: 'Đóng',
+                      tooltip: l10n.communityComment_close,
                       visualDensity: VisualDensity.compact,
                       onPressed: () => Navigator.pop(context),
                       icon: Icon(Icons.close_rounded, size: 20, color: colors.textMuted),
@@ -362,7 +368,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                               ),
                               const SizedBox(height: 10),
                               Text(
-                                'Chưa có bình luận nào.',
+                                l10n.communityComment_empty,
                                 style: TextStyle(
                                   color: colors.textMuted,
                                   fontSize: 14,
@@ -371,7 +377,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Hãy là người đầu tiên chia sẻ ý kiến!',
+                                l10n.communityComment_emptyHint,
                                 style: TextStyle(
                                   color: colors.textMuted.withValues(alpha: 0.7),
                                   fontSize: 12.5,
@@ -398,7 +404,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                                       )
                                     : const Icon(Icons.expand_more_rounded, size: 16),
                                 label: Text(
-                                  _busy ? 'Đang tải...' : 'Xem thêm bình luận cũ hơn',
+                                  _busy ? l10n.communityComment_loading : l10n.communityComment_loadMore,
                                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                                 ),
                               ),
@@ -418,6 +424,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                                 memberDirectory: memberDirectory,
                                 presets: presets,
                                 colors: colors,
+                                l10n: l10n,
                               ),
                               // Render child replies indented
                               if (childReplies.isNotEmpty)
@@ -434,6 +441,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                                             memberDirectory: memberDirectory,
                                             presets: presets,
                                             colors: colors,
+                                            l10n: l10n,
                                           ),
                                         )
                                         .toList(),
@@ -457,7 +465,9 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'Đang trả lời ${_replyAuthorName ?? 'bình luận'}',
+                          l10n.communityComment_replyingTo(
+                            _replyAuthorName ?? l10n.communityComment_title.toLowerCase(),
+                          ),
                           style: const TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
@@ -536,8 +546,10 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                           style: const TextStyle(fontSize: 14),
                           decoration: InputDecoration(
                             hintText: _replyTo == null
-                                ? 'Viết bình luận…'
-                                : 'Viết câu trả lời cho ${_replyAuthorName ?? 'thành viên'}…',
+                                ? l10n.communityComment_write
+                                : l10n.communityComment_replyHint(
+                                    _replyAuthorName ?? l10n.communityComment_member,
+                                  ),
                             hintStyle: TextStyle(
                               color: colors.textMuted,
                               fontSize: 14,
@@ -555,7 +567,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 2),
                       child: IconButton(
-                        tooltip: 'Gửi',
+                        tooltip: l10n.communityComment_send,
                         visualDensity: VisualDensity.compact,
                         onPressed: (_canSend && !_busy) ? _submit : null,
                         icon: Icon(
@@ -582,6 +594,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
     required Map<String, dynamic>? memberDirectory,
     required List<CommunityTagPreset>? presets,
     required AppColorsExtension colors,
+    required AppLocalizations l10n,
   }) {
     final member = memberDirectory?[comment.authorId];
     final memberRole = member?.role?.toString().toUpperCase();
@@ -675,8 +688,8 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                                 color: AppTheme.primary.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: const Text(
-                                'Chủ CLB',
+                              child: Text(
+                                l10n.communityComment_owner,
                                 style: TextStyle(
                                   color: AppTheme.primaryDark,
                                   fontSize: 9.5,
@@ -692,7 +705,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                'BQT',
+                                l10n.communityComment_admin,
                                 style: TextStyle(
                                   color: colors.info,
                                   fontSize: 9.5,
@@ -735,7 +748,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                       GestureDetector(
                         onTap: () => _toggleLike(comment.id),
                         child: Text(
-                          'Thích',
+                          l10n.communityComment_like,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -747,7 +760,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                       GestureDetector(
                         onTap: () => _startReply(comment),
                         child: Text(
-                          'Trả lời',
+                          l10n.communityComment_reply,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -761,7 +774,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                         GestureDetector(
                           onTap: () => _delete(comment),
                           child: Text(
-                            'Xóa',
+                            l10n.communityComment_delete,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,

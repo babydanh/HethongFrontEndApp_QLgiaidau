@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/providers/team_notifier.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class AddTeamScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -69,7 +70,8 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
     }
   }
 
-  Future<void> _saveTeam() async {
+    Future<void> _saveTeam() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -96,7 +98,7 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('✅ Thêm đội thành công!'),
+              content: Text(l10n.teamAdd_created),
               backgroundColor: context.colors.success,
             ),
           );
@@ -114,7 +116,7 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('✅ Cập nhật đội thành công!'),
+              content: Text(l10n.teamAdd_updated),
               backgroundColor: context.colors.success,
             ),
           );
@@ -124,7 +126,7 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e'), backgroundColor: context.colors.error),
+          SnackBar(content: Text(l10n.teamAdd_error), backgroundColor: context.colors.error),
         );
       }
     } finally {
@@ -134,11 +136,12 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: context.colors.bgDark,
       appBar: AppBar(
         backgroundColor: context.colors.bgDark,
-        title: Text(widget.teamToEdit == null ? 'Thêm đội / VĐV' : 'Sửa thông tin đội'),
+        title: Text(widget.teamToEdit == null ? l10n.teamAdd_createTitle : l10n.teamAdd_editTitle),
       ),
       body: Form(
         key: _formKey,
@@ -146,28 +149,28 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
           padding: const EdgeInsets.all(20),
           children: [
             // Tên đội
-            Text('Tên đội / VĐV *',
+            Text(l10n.teamAdd_nameLabel,
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textSecondary)),
             const SizedBox(height: 8),
             AppTextFormField(
               controller: _nameController,
-              hint: 'VD: Đội Sấm sét',
+              hint: l10n.teamAdd_nameHint,
               prefixIcon: Icons.group,
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Vui lòng nhập tên' : null,
+                  (v == null || v.trim().isEmpty) ? l10n.teamAdd_nameRequired : null,
             ),
             const SizedBox(height: 24),
 
             // Thành viên
             Row(
               children: [
-                Text('Thành viên',
+                Text(l10n.teamAdd_members,
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textSecondary)),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: _addMemberField,
                   icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Thêm', style: TextStyle(fontSize: 12)),
+                  label: Text(l10n.teamAdd_add, style: const TextStyle(fontSize: 12)),
                 ),
               ],
             ),
@@ -180,7 +183,7 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
                     Expanded(
                       child: AppTextFormField(
                         controller: _memberControllers[index],
-                        hint: 'Tên thành viên ${index + 1}',
+                        hint: l10n.teamAdd_memberHint(index + 1),
                         prefixIcon: Icons.person_outline,
                       ),
                     ),
@@ -197,7 +200,7 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
             const SizedBox(height: 24),
 
             // Email
-            Text('Email liên hệ (tùy chọn)',
+            Text(l10n.teamAdd_contactEmail,
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textSecondary)),
             const SizedBox(height: 8),
             AppTextFormField(
@@ -218,7 +221,7 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
                         width: 24, height: 24,
                         child: CircularProgressIndicator(
                             strokeWidth: 2.5, color: Colors.white))
-                    : const Text('Lưu đội',
+                    : Text(l10n.teamAdd_save,
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               ),
             ),

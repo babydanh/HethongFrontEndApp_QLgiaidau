@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,6 +47,7 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
     required bool isPositive,
     required bool isDecline,
   }) async {
+    final l10n = AppLocalizations.of(context)!;
     final tournamentId = widget.tournamentId;
     final inviteCode = widget.tournamentInviteCode;
     if (tournamentId == null || tournamentId.trim().isEmpty) return;
@@ -62,7 +64,7 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
         await ref.read(tournamentRepositoryProvider).joinLite(inviteCode);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Đã bình chọn và đăng ký tham gia giải.')),
+            SnackBar(content: Text(l10n.communityPoll_registrationJoined)),
           );
         }
       } else {
@@ -71,7 +73,7 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
             );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Đã ghi nhận lựa chọn và hủy đăng ký giải.')),
+            SnackBar(content: Text(l10n.communityPoll_registrationWithdrawn)),
           );
         }
       }
@@ -81,8 +83,8 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
         SnackBar(
           content: Text(
             shouldJoin
-                ? 'Đã ghi nhận bình chọn nhưng chưa đăng ký được giải.'
-                : 'Đã ghi nhận bình chọn nhưng chưa hủy được đăng ký giải.',
+                ? l10n.communityPoll_registrationJoinPending
+                : l10n.communityPoll_registrationWithdrawPending,
           ),
         ),
       );
@@ -90,6 +92,7 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
   }
 
   Future<void> _vote(String optionId) async {
+    final l10n = AppLocalizations.of(context)!;
     if (_busy || _poll.isClosed) return;
     final previousSelected = _poll.options.where((option) => option.isVoted).toList();
     final wasPositive = previousSelected.any(
@@ -127,7 +130,7 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể ghi nhận bình chọn.')),
+          SnackBar(content: Text(l10n.communityPoll_voteError)),
         );
       }
     } finally {
@@ -136,11 +139,12 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
   }
 
   Future<void> _addOption() async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController();
     final value = await showDialog<String>(context: context, builder: (dialogContext) => AlertDialog(
-      title: const Text('Thêm lựa chọn'),
-      content: TextField(controller: controller, autofocus: true, maxLength: 100, decoration: const InputDecoration(hintText: 'Nhập lựa chọn')),
-      actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Hủy')), FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim()), child: const Text('Thêm'))],
+      title: Text(l10n.communityPoll_addOptionTitle),
+      content: TextField(controller: controller, autofocus: true, maxLength: 100, decoration: InputDecoration(hintText: l10n.communityPoll_optionHint)),
+      actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(l10n.commonCancel)), FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim()), child: Text(l10n.communityPoll_add))],
     ));
     controller.dispose();
     if (value == null || value.isEmpty || _busy) return;
@@ -148,12 +152,20 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
     try {
       final updated = await ref.read(communitySocialRepositoryProvider).addPollOption(widget.communityId, _poll.id, value);
       if (mounted) setState(() => _poll = updated);
-    } catch (_) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không thể thêm lựa chọn.'))); }
-    finally { if (mounted) setState(() => _busy = false); }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.communityPoll_addOptionError)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final total = _poll.options.fold<int>(0, (sum, option) => sum + option.voteCount);
     final sortedOptions = [..._poll.options]..sort((a, b) {
@@ -171,19 +183,19 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
       padding: const EdgeInsets.all(AppTheme.spacingMD),
       decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(AppTheme.radiusMedium), border: Border.all(color: colors.borderLight)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [Icon(Icons.poll_outlined, color: AppTheme.primary), const SizedBox(width: AppTheme.spacingSM), Expanded(child: Text(_poll.question, style: const TextStyle(fontWeight: FontWeight.w600))), if (_poll.isClosed) Text('Đã đóng', style: TextStyle(color: colors.textMuted, fontSize: 12))]),
+        Row(children: [Icon(Icons.poll_outlined, color: AppTheme.primary), const SizedBox(width: AppTheme.spacingSM), Expanded(child: Text(_poll.question, style: const TextStyle(fontWeight: FontWeight.w600))), if (_poll.isClosed) Text(l10n.communityPoll_closed, style: TextStyle(color: colors.textMuted, fontSize: 12))]),
         const SizedBox(height: AppTheme.spacingSM),
         Text(
           _poll.allowMultipleAnswers
-              ? 'Có thể chọn một hoặc nhiều lựa chọn.'
-              : 'Chỉ được chọn một lựa chọn.',
+              ? l10n.communityPoll_multipleHint
+              : l10n.communityPoll_singleHint,
           style: TextStyle(color: colors.textMuted, fontSize: 12),
         ),
         if (widget.tournamentId != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              'Chọn Có để đăng ký; chọn Không để hủy đăng ký.',
+              l10n.communityPoll_tournamentHint,
               style: TextStyle(color: colors.textMuted, fontSize: 12),
             ),
           ),
@@ -231,8 +243,8 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
             ),
           ])));
         }),
-        if (_poll.allowAddOptions && !_poll.isClosed) Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: _busy ? null : _addOption, icon: const Icon(Icons.add, size: 18), label: const Text('Thêm lựa chọn'))),
-        Text('$total lượt bình chọn', style: TextStyle(color: colors.textMuted, fontSize: 12)),
+        if (_poll.allowAddOptions && !_poll.isClosed) Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: _busy ? null : _addOption, icon: const Icon(Icons.add, size: 18), label: Text(l10n.communityPoll_addOption))),
+        Text(l10n.communityPoll_voteCount(total), style: TextStyle(color: colors.textMuted, fontSize: 12)),
       ]),
     );
   }

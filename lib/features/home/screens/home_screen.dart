@@ -368,10 +368,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 _currentIndex == 1
                                     ? l10n.navTournaments
                                     : _currentIndex == 3
-                                    ? 'Câu lạc bộ'
+                                    ? l10n.homeClubTab
                                     : _currentIndex == 4
-                                    ? 'Bảng xếp hạng'
-                                    : 'Sporto',
+                                    ? l10n.homeRankingsTab
+                                    : l10n.sporto,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w900,
@@ -604,7 +604,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     _TournamentSectionList(
                       tournaments: allTournaments,
-                      sectionTitle: 'Trận đấu vừa kết thúc',
+                      sectionTitle: l10n.homeCompletedMatches,
                       filterStatus: 'completed',
                       searchQuery: _searchQueries[0] ?? '',
                       contentFilter: _exploreContent,
@@ -613,7 +613,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       enabled:
                           _exploreStatus == 'all' ||
                           _exploreStatus == 'completed',
-                      emptyMessage: 'Chưa có trận đấu vừa kết thúc',
+                      emptyMessage: l10n.homeNoCompletedMatches,
                     ),
 
                     if (allTournaments.isEmpty)
@@ -757,11 +757,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildLoginPillHeader() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Chào mừng đến với Tìm và quản lý giải đấu thể thao",
+        Text(
+          l10n.homeWelcomeTitle,
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w800,
@@ -779,13 +780,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               borderRadius: BorderRadius.circular(20.0),
               border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.login_rounded, color: Colors.white, size: 14),
+                const Icon(Icons.login_rounded, color: Colors.white, size: 14),
                 SizedBox(width: 6),
                 Text(
-                  "Đăng nhập để xem ELO & thống kê",
+                  l10n.homeLoginForStats,
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -807,7 +808,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final provincesAsync = ref.watch(provincesProvider);
     return profileAsync.when(
       data: (profile) {
-        String fullName = profile.fullName ?? profile.email ?? "Người dùng";
+        String fullName =
+            profile.fullName ?? profile.email ?? l10n.homeDefaultUser;
         final provinces = provincesAsync.value ?? [];
         final province = provinces.firstWhere(
           (p) => p.code == profile.provinceCode,
@@ -854,7 +856,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 : 0.0;
             final progressLabel = hasPlayed
                 ? progressInfo.label
-                : 'Đánh 1 trận xếp hạng để bắt đầu tiến trình ELO';
+                : l10n.homeEloStartHint;
 
             final subtitleText = "$sportName • $city";
 
@@ -927,7 +929,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           const Spacer(),
                           _buildStatTableRow(
-                            "Trận",
+                            l10n.homeMatchesStat,
                             "$totalMatches",
                             Colors.white,
                           ),
@@ -939,7 +941,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           const SizedBox(width: 14),
                           _buildStatTableRow(
-                            "Rate",
+                            l10n.homeWinRateStat,
                             "$winRate%",
                             const Color(0xFF4ADE80),
                           ),
@@ -986,6 +988,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildHeaderErrorState(String error) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1002,8 +1005,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Text(
           error.contains("ThrottlerException") ||
                   error.contains("Too Many Requests")
-              ? "Hệ thống đang bận, vui lòng thử lại sau"
-              : "Tìm và tham gia các giải đấu thể thao",
+              ? l10n.homeBusyMessage
+              : l10n.homeFindTournamentsSubtitle,
           style: const TextStyle(
             color: Colors.white70,
             fontSize: 11.5,
@@ -1041,12 +1044,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   String _searchHintForTab() {
+    final l10n = AppLocalizations.of(context)!;
     return switch (_currentIndex) {
-      0 => 'Tìm trận đấu, đội hoặc người chơi...',
-      1 => 'Tìm kiếm giải đấu...',
-      3 => 'Tìm kiếm câu lạc bộ...',
-      4 => 'Tìm vận động viên...',
-      _ => 'Tìm kiếm...',
+      0 => l10n.homeSearchMatchesHint,
+      1 => l10n.homeSearchTournamentsHint,
+      3 => l10n.homeSearchClubsHint,
+      4 => l10n.homeSearchAthletesHint,
+      _ => l10n.homeSearchGenericHint,
     };
   }
 
@@ -1218,7 +1222,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Bộ lọc Khám phá',
+                    l10n.homeExploreFilterTitle,
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -1253,9 +1257,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _buildFilterChips(
                     items: [
                       ('all', l10n.filterAll),
-                      ('live', 'Trực tiếp'),
+                      ('live', l10n.homeLiveStatus),
                       ('scheduled', l10n.matchesFilterScheduled),
-                      ('completed', 'Đã kết thúc'),
+                      ('completed', l10n.homeCompletedStatus),
                     ],
                     selected: localStatus,
                     onSelected: (v) => setSheetState(() => localStatus = v),
@@ -1263,14 +1267,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 16),
                   _buildExploreFilterGroup(
                     context,
-                    title: 'Nội dung',
-                    items: const [
-                      ('all', 'Tất cả'),
-                      ('SINGLE_MALE', 'Đơn nam'),
-                      ('SINGLE_FEMALE', 'Đơn nữ'),
-                      ('DOUBLE_MALE', 'Đôi nam'),
-                      ('DOUBLE_FEMALE', 'Đôi nữ'),
-                      ('DOUBLE_MIXED', 'Đôi nam nữ'),
+                    title: l10n.filterContent,
+                    items: [
+                      ('all', l10n.filterAll),
+                      ('SINGLE_MALE', l10n.singlesMale),
+                      ('SINGLE_FEMALE', l10n.singlesFemale),
+                      ('DOUBLE_MALE', l10n.doublesMale),
+                      ('DOUBLE_FEMALE', l10n.doublesFemale),
+                      ('DOUBLE_MIXED', l10n.doublesMixed),
                     ],
                     selected: localContent,
                     onSelected: (v) => setSheetState(() => localContent = v),
@@ -1278,13 +1282,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 16),
                   _buildExploreFilterGroup(
                     context,
-                    title: 'Thể thức',
-                    items: const [
-                      ('all', 'Tất cả'),
-                      ('SINGLE_ELIMINATION', 'Loại trực tiếp'),
-                      ('DOUBLE_ELIMINATION', 'Nhánh thắng/thua'),
-                      ('ROUND_ROBIN', 'Vòng tròn'),
-                      ('GROUP_STAGE_KNOCKOUT', 'Vòng bảng + Playoff'),
+                    title: l10n.filterFormat,
+                    items: [
+                      ('all', l10n.filterAll),
+                      ('SINGLE_ELIMINATION', l10n.eliminationSingle),
+                      ('DOUBLE_ELIMINATION', l10n.eliminationDouble),
+                      ('ROUND_ROBIN', l10n.roundRobin),
+                      ('GROUP_STAGE_KNOCKOUT', l10n.groupStage),
                     ],
                     selected: localBracket,
                     onSelected: (v) => setSheetState(() => localBracket = v),
@@ -1292,11 +1296,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 16),
                   _buildExploreFilterGroup(
                     context,
-                    title: 'Xếp hạng',
-                    items: const [
-                      ('all', 'Tất cả'),
-                      ('ranked', 'Có tính ELO'),
-                      ('unranked', 'Không tính ELO'),
+                    title: l10n.homeRankingFilter,
+                    items: [
+                      ('all', l10n.filterAll),
+                      ('ranked', l10n.homeRankedYes),
+                      ('unranked', l10n.homeRankedNo),
                     ],
                     selected: localRanked,
                     onSelected: (v) => setSheetState(() => localRanked = v),
@@ -1435,7 +1439,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Bộ lọc Giải đấu',
+                    l10n.homeTournamentFilterTitle,
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -1472,7 +1476,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ('all', l10n.filterAll),
                       ('registration', l10n.matchesFilterRegistration),
                       ('upcoming', l10n.matchesFilterScheduled),
-                      ('in_progress', 'Thi đấu'),
+                      ('in_progress', l10n.homeInProgressStatus),
                       ('completed', l10n.matchesStatusCompleted),
                     ],
                     selected: localStatus,
@@ -1480,7 +1484,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Nội dung thi đấu',
+                    l10n.homeCompetitionContent,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -1514,9 +1518,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     items: [
                       ('all', l10n.filterAll),
                       ('single_elimination', l10n.eliminationSingle),
-                      ('double_elimination', 'Thắng/thua'),
+                      ('double_elimination', l10n.homeFormatDoubleElimination),
                       ('round_robin', l10n.roundRobin),
-                      ('group_stage_knockout', 'Vòng bảng + playoff'),
+                      (
+                        'group_stage_knockout',
+                        l10n.homeFormatGroupStagePlayoff,
+                      ),
                     ],
                     selected: localBracket,
                     onSelected: (v) => setSheetState(() => localBracket = v),
@@ -1551,7 +1558,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Tỉnh/Thành',
+                    l10n.homeLocationProvince,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -1573,7 +1580,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             : localProvinceCode,
                         isExpanded: true,
                         hint: Text(
-                          'Tất cả',
+                          l10n.filterAll,
                           style: TextStyle(
                             fontSize: 13,
                             color: context.colors.textSecondary,
@@ -1588,7 +1595,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           DropdownMenuItem<String>(
                             value: '',
                             child: Text(
-                              'Tất cả',
+                              l10n.filterAll,
                               style: TextStyle(
                                 color: context.colors.textSecondary,
                               ),
@@ -1622,7 +1629,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Phường/Xã',
+                    l10n.homeLocationWard,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -1647,8 +1654,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             isExpanded: true,
                             hint: Text(
                               localProvinceCode.isEmpty
-                                  ? 'Chọn Tỉnh/Thành trước'
-                                  : 'Tất cả',
+                                  ? l10n.homeSelectProvinceFirst
+                                  : l10n.filterAll,
                               style: TextStyle(
                                 fontSize: 13,
                                 color: context.colors.textSecondary,
@@ -1663,7 +1670,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               DropdownMenuItem<String>(
                                 value: '',
                                 child: Text(
-                                  'Tất cả',
+                                  l10n.filterAll,
                                   style: TextStyle(
                                     color: context.colors.textSecondary,
                                   ),
@@ -1719,7 +1726,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           label: Text(
                             localStartDate == null
-                                ? 'Từ ngày'
+                                ? l10n.homeFromDate
                                 : DateFormat(
                                     'dd/MM/yyyy',
                                   ).format(localStartDate!),
@@ -1749,7 +1756,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           label: Text(
                             localEndDate == null
-                                ? 'Đến ngày'
+                                ? l10n.homeToDate
                                 : DateFormat(
                                     'dd/MM/yyyy',
                                   ).format(localEndDate!),
@@ -1856,7 +1863,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Bộ lọc Câu lạc bộ',
+                  l10n.homeClubFilterTitle,
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
@@ -1880,7 +1887,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Tỉnh/Thành',
+                  l10n.homeLocationProvince,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -1900,7 +1907,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       value: localProvinceCode,
                       isExpanded: true,
                       hint: Text(
-                        'Tất cả',
+                        l10n.filterAll,
                         style: TextStyle(
                           fontSize: 13,
                           color: context.colors.textSecondary,
@@ -1915,7 +1922,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         DropdownMenuItem<String?>(
                           value: null,
                           child: Text(
-                            'Tất cả',
+                            l10n.filterAll,
                             style: TextStyle(
                               color: context.colors.textSecondary,
                             ),
@@ -2016,7 +2023,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Bộ lọc Xếp hạng ELO',
+                  l10n.homeRankingFilterTitle,
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
@@ -2276,6 +2283,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildEmpty() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -2294,8 +2302,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
-            "Không tìm thấy giải đấu",
+          Text(
+            l10n.homeNoTournaments,
             style: TextStyle(
               fontSize: 16.0,
               fontWeight: FontWeight.bold,
@@ -2303,8 +2311,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            "Thử thay đổi bộ lọc hoặc từ khoá",
+          Text(
+            l10n.homeNoTournamentsHint,
             style: TextStyle(fontSize: 13.0, color: Color(0xFF94A3B8)),
           ),
         ],
@@ -2460,9 +2468,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onChanged: (s) => setState(() => _tournamentStatus = s),
                 items: [
                   (key: "all", label: l10n.filterAll),
-                  (key: "registration", label: "Đăng ký"),
+                  (key: "registration", label: l10n.matchesFilterRegistration),
                   (key: "upcoming", label: l10n.matchesFilterScheduled),
-                  (key: "in_progress", label: "Thi đấu"),
+                  (key: "in_progress", label: l10n.homeInProgressStatus),
                   (key: "completed", label: l10n.matchesStatusCompleted),
                 ],
               ),
@@ -2482,7 +2490,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    "Không tìm thấy giải đấu phù hợp",
+                    l10n.homeNoMatchingTournaments,
                     style: TextStyle(
                       fontSize: 16.0,
                       color: context.colors.textSecondary,
@@ -2583,8 +2591,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        "Không tìm thấy câu lạc bộ",
+                      Text(
+                        l10n.homeNoClubs,
                         style: TextStyle(
                           fontSize: 16.0,
                           fontWeight: FontWeight.bold,
@@ -2592,8 +2600,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      const Text(
-                        "Thử thay đổi môn thể thao hoặc từ khoá tìm kiếm",
+                      Text(
+                        l10n.homeNoClubsHint,
                         style: TextStyle(
                           fontSize: 13.0,
                           color: Color(0xFF94A3B8),
@@ -2625,7 +2633,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     CircularProgressIndicator(color: AppTheme.primary),
                     const SizedBox(height: 12),
                     Text(
-                      'Đang tải...',
+                      l10n.homeLoading,
                       style: TextStyle(color: context.colors.textSecondary),
                     ),
                   ],
@@ -2647,7 +2655,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Không thể tải danh sách CLB',
+                      l10n.homeClubsLoadError,
                       style: TextStyle(color: context.colors.textSecondary),
                     ),
                     const SizedBox(height: 8),
@@ -2707,14 +2715,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return '🏆';
   }
 
-  String _getJoinModeLabel(String mode) {
+  String _getJoinModeLabel(String mode, AppLocalizations l10n) {
     switch (mode) {
       case 'INVITE_ONLY':
-        return 'Chỉ mời';
+        return l10n.homeInviteOnly;
       case 'APPROVAL':
-        return 'Xét duyệt';
+        return l10n.homeApproval;
       default:
-        return 'Tự do';
+        return l10n.homeOpenJoin;
     }
   }
 
@@ -2737,7 +2745,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final sportName = club.sports.isNotEmpty ? club.sports.first : "";
     final Color sportColor = _getSportColor(sportName);
     final String emoji = _getSportEmoji(sportName);
-    final String joinLabel = _getJoinModeLabel(club.joinMode);
+    final String joinLabel = _getJoinModeLabel(club.joinMode, l10n);
     final Color joinColor = _getJoinModeColor(club.joinMode);
     final bool hasBanner = club.bannerUrl != null && club.bannerUrl!.isNotEmpty;
 
@@ -2876,7 +2884,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              "${club.memberCount > 0 ? club.memberCount : 2} thành viên",
+                              l10n.homeMembersCount(
+                                club.memberCount > 0 ? club.memberCount : 2,
+                              ),
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
@@ -2931,7 +2941,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 }
                               }
                               if (sports.isEmpty) {
-                                sports.add('THỂ THAO');
+                                sports.add(l10n.homeSportFallback);
                               }
                               return sports.map((sName) {
                                 return Container(
@@ -3061,8 +3071,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               color: Color(0xFFB0BEC5),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Không thể tải dữ liệu',
+            Text(
+              l10n.homeDataLoadError,
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
@@ -3202,6 +3212,7 @@ class _TournamentSectionList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     if (!enabled) return const SliverToBoxAdapter(child: SizedBox.shrink());
     if (tournaments.isEmpty) {
       if (searchQuery.isNotEmpty) {
@@ -3286,9 +3297,9 @@ class _TournamentSectionList extends ConsumerWidget {
             child: Center(
               child: Text(
                 hasLoadingMatches
-                    ? 'Đang tải dữ liệu trận đấu...'
+                    ? l10n.homeMatchesLoading
                     : hasMatchError
-                    ? 'Không tải được dữ liệu trận đấu. Vui lòng thử lại.'
+                    ? l10n.homeMatchesLoadError
                     : emptyMessage,
                 style: const TextStyle(
                   fontSize: 13,

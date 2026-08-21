@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Admin — Danh sách khiếu nại (Disputes)
 ///
@@ -23,6 +24,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = context.colors;
 
     return Scaffold(
@@ -34,23 +36,26 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
           icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Khiếu nại', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
+        title: Text(
+          l10n?.adminDisputesTitle ?? 'Disputes',
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+        ),
         centerTitle: true,
       ),
       body: Column(
         children: [
-          _buildFilterChips(colors),
-          Expanded(child: _buildDisputeList(colors)),
+          _buildFilterChips(colors, l10n),
+          Expanded(child: _buildDisputeList(colors, l10n)),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChips(AppColorsExtension colors) {
+  Widget _buildFilterChips(AppColorsExtension colors, AppLocalizations? l10n) {
     final filters = [
-      ('all', 'Tất cả', AppTheme.primary),
-      ('open', 'Đang mở', const Color(0xFFF59E0B)),
-      ('resolved', 'Đã giải quyết', const Color(0xFF10B981)),
+      ('all', l10n?.adminDisputesFilterAll ?? 'All', AppTheme.primary),
+      ('open', l10n?.adminDisputesFilterOpen ?? 'Open', const Color(0xFFF59E0B)),
+      ('resolved', l10n?.adminDisputesFilterResolved ?? 'Resolved', const Color(0xFF10B981)),
     ];
 
     return Container(
@@ -90,7 +95,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
     );
   }
 
-  Widget _buildDisputeList(AppColorsExtension colors) {
+  Widget _buildDisputeList(AppColorsExtension colors, AppLocalizations? l10n) {
     final disputesAsync = ref.watch(_adminDisputesProvider);
 
     return disputesAsync.when(
@@ -107,7 +112,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
               children: [
                 Icon(Icons.gavel_rounded, size: 64, color: colors.textMuted.withValues(alpha: 0.4)),
                 const SizedBox(height: 16),
-                Text('Không có khiếu nại nào', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                Text(l10n?.adminDisputesEmpty ?? 'No disputes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
               ],
             ),
           );
@@ -127,24 +132,27 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
           children: [
             Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
-            Text('Lỗi tải dữ liệu', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+            Text(l10n?.adminDisputesLoadError ?? 'Unable to load data', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDisputeCard(BuildContext context, Map<String, dynamic> dispute, AppColorsExtension colors) {
+    Widget _buildDisputeCard(BuildContext context, Map<String, dynamic> dispute, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context);
     final status = dispute['status']?.toString() ?? 'OPEN';
     final reason = dispute['reason']?.toString() ?? '';
     final description = dispute['description']?.toString() ?? '';
     final tournamentName = dispute['tournament']?['name']?.toString() ?? dispute['tournamentName']?.toString() ?? '---';
-    final createdBy = dispute['createdBy']?['fullName']?.toString() ?? 'Người dùng';
+    final createdBy = dispute['createdBy']?['fullName']?.toString() ?? (l10n?.adminDisputesUserFallback ?? 'User');
     final createdAt = dispute['createdAt']?.toString() ?? '';
 
     final isOpen = status.toUpperCase() == 'OPEN';
     final statusColor = isOpen ? const Color(0xFFF59E0B) : const Color(0xFF10B981);
-    final statusLabel = isOpen ? 'Đang mở' : 'Đã giải quyết';
+    final statusLabel = isOpen
+        ? (l10n?.adminDisputesStatusOpen ?? 'Open')
+        : (l10n?.adminDisputesStatusResolved ?? 'Resolved');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -172,7 +180,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(reason.isNotEmpty ? reason : 'Khiếu nại', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                    Text(reason.isNotEmpty ? reason : (l10n?.adminDisputesReasonFallback ?? 'Dispute'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
                     const SizedBox(height: 2),
                     Text('$createdBy • $tournamentName', style: TextStyle(fontSize: 11, color: colors.textMuted)),
                   ],
@@ -201,7 +209,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
           ],
           if (createdAt.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text('Ngày tạo: ${createdAt.substring(0, 10)}', style: TextStyle(fontSize: 10, color: colors.textMuted)),
+            Text(l10n?.adminDisputesCreatedAt(createdAt.substring(0, 10)) ?? 'Created: ${createdAt.substring(0, 10)}', style: TextStyle(fontSize: 10, color: colors.textMuted)),
           ],
           if (isOpen) ...[
             const SizedBox(height: 12),
@@ -209,7 +217,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
               children: [
                 Expanded(
                   child: _actionBtn(
-                    'Đóng khiếu nại', Icons.check_rounded, const Color(0xFF10B981),
+                    l10n?.adminDisputesResolve ?? 'Close dispute', Icons.check_rounded, const Color(0xFF10B981),
                     () => _handleResolve(dispute['id'], colors),
                   ),
                 ),
@@ -244,13 +252,14 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
 
   Future<void> _handleResolve(String? id, AppColorsExtension colors) async {
     if (id == null) return;
+    final l10n = AppLocalizations.of(context);
     try {
       final dio = ref.read(dioProvider);
       await dio.patch('/admin/disputes/$id', data: {'status': 'RESOLVED'});
       ref.invalidate(_adminDisputesProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Đã đóng khiếu nại'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(l10n?.adminDisputesResolvedFeedback ?? 'Dispute closed'),
           backgroundColor: Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
         ));
@@ -258,7 +267,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Lỗi: $e'),
+          content: Text(l10n?.adminDisputesResolveError ?? 'Unable to close the dispute. Please try again.'),
           backgroundColor: colors.error,
           behavior: SnackBarBehavior.floating,
         ));
