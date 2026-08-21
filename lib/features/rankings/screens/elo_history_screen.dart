@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -12,6 +12,8 @@ class EloHistoryScreen extends ConsumerStatefulWidget {
   final String? avatarUrl;
   final int currentElo;
   final String? tierName;
+  final String? categoryId;
+  final String? categoryName;
 
   const EloHistoryScreen({
     super.key,
@@ -20,6 +22,8 @@ class EloHistoryScreen extends ConsumerStatefulWidget {
     this.avatarUrl,
     required this.currentElo,
     this.tierName,
+    this.categoryId,
+    this.categoryName,
   });
 
   @override
@@ -32,7 +36,7 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
 
   EloHistoryQuery get _query => (
     userId: widget.userId,
-    categoryId: null,
+    categoryId: widget.categoryId,
     scope: _selectedScope,
     communityId: null,
     limit: _limit,
@@ -55,7 +59,9 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Lịch sử ELO',
+          widget.categoryName != null && widget.categoryName!.isNotEmpty
+              ? 'Lịch sử ELO · ${widget.categoryName}'
+              : 'Lịch sử ELO',
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.w700,

@@ -869,6 +869,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   avatarUrl: profile.avatarUrl,
                   currentElo: rank.eloPoints,
                   tierName: rank.tierName,
+                  categoryId: rank.categoryId,
+                  categoryName: rank.categoryName,
                 ),
               ),
             );
