@@ -2,16 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
-import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
-import 'package:app_quanly_giaidau/domain/entities/elo_history_log.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
@@ -46,7 +42,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -149,7 +145,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   Tab(text: l10n.publicProfileTabOverview),
                   Tab(text: l10n.publicProfileTabMatches),
                   Tab(text: l10n.publicProfileTabAchievements),
-                  Tab(text: l10n.publicProfileTabElo),
                 ],
               ),
             ),
@@ -181,7 +176,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   _buildNoRank(colors)
                 else
                   ...profile.ranks.map(
-                    (rank) => _buildRankCard(context, rank, colors),
+                    (rank) => _buildRankCard(context, profile, rank, colors),
                   ),
                 const SizedBox(height: 24),
               ],
@@ -197,22 +192,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               children: [
                 // Thành tích Quán quân / Á quân / Hạng ba
                 _buildAchievementsSection(context, profile, colors),
-              ],
-            ),
-          ),
-          SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _sectionTitle(colors, l10n.publicProfileEloChart),
-                const SizedBox(height: 12),
-                _buildEloChart(context, profile, colors),
-                const SizedBox(height: 24),
-                _sectionTitle(colors, l10n.publicProfileDetailedStats),
-                const SizedBox(height: 12),
-                _buildDetailedStats(context, profile, colors),
               ],
             ),
           ),
@@ -553,244 +532,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     );
   }
 
-  // ─── ELO CHART ─────────────────────────────────────────────────────
-  Widget _buildEloChart(
-    BuildContext context,
-    UserPublicProfile profile,
-    AppColorsExtension colors,
-  ) {
-    final userId = profile.id;
-
-    if (userId.isEmpty) {
-      return _buildEmptyPlaceholder(
-        colors,
-        Icons.show_chart_outlined,
-        l10n.publicProfileNoUserData,
-      );
-    }
-
-    final query = (
-      userId: userId,
-      categoryId: null as String?,
-      scope: null as String?,
-      communityId: null as String?,
-      limit: 50,
-      cursor: null,
-    );
-    final historyAsync = ref.watch(eloHistoryProvider(query));
-    final history = historyAsync.asData?.value ?? [];
-    final currentElo = profile.ranks.isNotEmpty
-        ? profile.ranks.first.eloPoints
-        : 1000;
-    final tierName = profile.ranks.isNotEmpty
-        ? profile.ranks.first.tierName
-        : null;
-    final userName = profile.fullName.isNotEmpty
-        ? profile.fullName
-        : l10n.publicProfileUserFallback;
-
-    // Build chart data points from history
-    List<(String, int)> chartData;
-    if (history.isNotEmpty) {
-      final sorted = List<EloHistoryLog>.from(history)
-        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-      chartData = sorted.map((h) {
-        final date = DateTime.tryParse(h.createdAt) ?? DateTime.now();
-        return (DateFormat('dd/MM').format(date), h.newElo);
-      }).toList();
-    } else {
-      chartData = [];
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          EloProgressChart(
-            data: chartData,
-            currentElo: currentElo,
-            tierName: tierName,
-            height: 180,
-            onHistoryEmpty: const SizedBox.shrink(),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => EloHistoryScreen(
-                      userId: userId,
-                      userName: userName,
-                      avatarUrl: profile.avatarUrl,
-                      currentElo: currentElo,
-                      tierName: tierName,
-                    ),
-                  ),
-                );
-              },
-              icon: Icon(
-                Icons.history_rounded,
-                size: 16,
-                color: AppTheme.primary,
-              ),
-              label: Text(
-                l10n.publicProfileDetailedHistory,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.primary,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                side: BorderSide(
-                  color: AppTheme.primary.withValues(alpha: 0.3),
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─── DETAILED STATS ───────────────────────────────────────────────
-  Widget _buildDetailedStats(
-    BuildContext context,
-    UserPublicProfile profile,
-    AppColorsExtension colors,
-  ) {
-    final totalMatches = profile.ranks.fold<int>(
-      0,
-      (sum, r) => sum + r.matchesPlayed,
-    );
-    final totalWins = profile.ranks.fold<int>(
-      0,
-      (sum, r) => sum + r.matchesWon,
-    );
-    final totalLosses = totalMatches - totalWins;
-    final winRate = totalMatches > 0
-        ? (totalWins / totalMatches * 100).round()
-        : 0;
-    final totalElo = profile.ranks.fold<int>(0, (sum, r) => sum + r.eloPoints);
-    final avgElo = profile.ranks.isNotEmpty
-        ? (totalElo / profile.ranks.length).round()
-        : 0;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              _detailStatItem(
-                colors,
-                Icons.sports_rounded,
-                l10n.filterSport,
-                '${profile.ranks.length}',
-              ),
-              _detailStatItem(
-                colors,
-                Icons.emoji_events_rounded,
-                l10n.publicProfileTotalElo,
-                '$totalElo',
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _detailStatItem(
-                colors,
-                Icons.show_chart_rounded,
-                l10n.publicProfileAverageElo,
-                '$avgElo',
-              ),
-              _detailStatItem(
-                colors,
-                Icons.check_circle_outline,
-                l10n.infoWinRate,
-                '$winRate%',
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _detailStatItem(
-                colors,
-                Icons.sports_score_rounded,
-                l10n.publicProfileTotalMatches,
-                '$totalMatches',
-              ),
-              _detailStatItem(
-                colors,
-                Icons.thumb_up_alt_outlined,
-                l10n.infoWin,
-                '$totalWins',
-              ),
-              _detailStatItem(
-                colors,
-                Icons.thumb_down_alt_outlined,
-                l10n.infoLoss,
-                '$totalLosses',
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _detailStatItem(
-    AppColorsExtension colors,
-    IconData icon,
-    String label,
-    String value,
-  ) {
-    return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, size: 20, color: colors.textMuted),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: colors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: colors.textMuted,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // ─── INFO HEADER ────────────────────────────────────────────
 
   // ─── COVER ──────────────────────────────────────────────────
   Widget _buildCoverSection(
@@ -1089,6 +831,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   // ─── RANK CARD ──────────────────────────────────────────────
   Widget _buildRankCard(
     BuildContext context,
+    UserPublicProfile profile,
     UserPublicRank rank,
     AppColorsExtension colors,
   ) {
@@ -1097,9 +840,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         ? (rank.matchesWon / rank.matchesPlayed * 100).round()
         : 0;
 
+    final userName = profile.fullName.isNotEmpty
+        ? profile.fullName
+        : l10n.publicProfileUserFallback;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [colors.bgCard, colors.bgSurface],
@@ -1109,109 +855,139 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
         border: Border.all(color: colors.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.sports_tennis_rounded,
-                  size: 18,
-                  color: AppTheme.primary,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => EloHistoryScreen(
+                  userId: profile.id,
+                  userName: userName,
+                  avatarUrl: profile.avatarUrl,
+                  currentElo: rank.eloPoints,
+                  tierName: rank.tierName,
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  rank.categoryName,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: palette.soft,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: palette.color.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Text(
-                  rank.tierName ?? l10n.infoUnranked,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: palette.color,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            );
+          },
+          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      'ELO',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: colors.textMuted,
-                        fontWeight: FontWeight.w600,
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.sports_tennis_rounded,
+                        size: 18,
+                        color: AppTheme.primary,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${rank.eloPoints}',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: palette.color,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        rank.categoryName,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
                       ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: palette.soft,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: palette.color.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Text(
+                        rank.tierName ?? l10n.infoUnranked,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: palette.color,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: colors.textMuted,
                     ),
                   ],
                 ),
-              ),
-              _statBox(
-                l10n.publicProfileMatchesShort,
-                '${rank.matchesPlayed}',
-                colors,
-              ),
-              _statBox(l10n.infoWin, '${rank.matchesWon}', colors),
-              _statBox(l10n.publicProfileWinRateShort, '$wr%', colors),
-            ],
-          ),
-          if (rank.matchesPlayed > 0) ...[
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: (wr / 100).clamp(0.0, 1.0),
-                minHeight: 5,
-                backgroundColor: colors.border,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  wr >= 60 ? colors.success : palette.color,
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'ELO',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: colors.textMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${rank.eloPoints}',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: palette.color,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _statBox(
+                      l10n.publicProfileMatchesShort,
+                      '${rank.matchesPlayed}',
+                      colors,
+                    ),
+                    _statBox(l10n.infoWin, '${rank.matchesWon}', colors),
+                    _statBox(l10n.publicProfileWinRateShort, '$wr%', colors),
+                  ],
                 ),
-              ),
+                if (rank.matchesPlayed > 0) ...[
+                  const SizedBox(height: 10),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(3),
+                    child: LinearProgressIndicator(
+                      value: (wr / 100).clamp(0.0, 1.0),
+                      minHeight: 5,
+                      backgroundColor: colors.border,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        wr >= 60 ? colors.success : palette.color,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }
