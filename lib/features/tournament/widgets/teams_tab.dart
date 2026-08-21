@@ -211,9 +211,7 @@ class _TeamsTabState extends State<TeamsTab> {
                       team: team,
                       onMemberTap: (userId, memberName) {
                         if (userId != null && userId.isNotEmpty) {
-                          context.push('/profile/user/$userId');
-                        } else {
-                          context.push('/profile');
+                          context.push('/user/$userId');
                         }
                       },
                     ),

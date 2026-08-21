@@ -183,7 +183,9 @@ class ApiTeamRepository implements ITeamRepository {
         return list.map((json) {
           final String id = json['id']?.toString() ?? '';
           final String teamName = json['teamName']?.toString() ?? '';
-          final List<dynamic> rosters = json['rosters'] as List<dynamic>? ?? [];
+          final List<dynamic> rosters = (json['members'] as List<dynamic>?) ??
+              (json['rosters'] as List<dynamic>?) ??
+              [];
           final List<String> members = rosters
               .map((r) => (r['fullName'] ?? r['user']?['fullName'] ?? '').toString())
               .where((n) => n.isNotEmpty)
