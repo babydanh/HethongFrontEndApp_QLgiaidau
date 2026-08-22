@@ -1838,6 +1838,66 @@ abstract class AppLocalizations {
   /// **'Thư viện'**
   String get tabGallery;
 
+  /// No description provided for @tabSponsors.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài trợ'**
+  String get tabSponsors;
+
+  /// No description provided for @sponsorsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà tài trợ chính thức'**
+  String get sponsorsTitle;
+
+  /// No description provided for @sponsorsDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cảm ơn các đối tác đã đồng hành cùng giải đấu.'**
+  String get sponsorsDescription;
+
+  /// No description provided for @sponsorVisitWebsite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem website'**
+  String get sponsorVisitWebsite;
+
+  /// No description provided for @sponsorTierTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà tài trợ danh hiệu'**
+  String get sponsorTierTitle;
+
+  /// No description provided for @sponsorTierDiamond.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà tài trợ kim cương'**
+  String get sponsorTierDiamond;
+
+  /// No description provided for @sponsorTierGold.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà tài trợ vàng'**
+  String get sponsorTierGold;
+
+  /// No description provided for @sponsorTierSilver.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà tài trợ bạc'**
+  String get sponsorTierSilver;
+
+  /// No description provided for @sponsorTierBronze.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà tài trợ đồng'**
+  String get sponsorTierBronze;
+
+  /// No description provided for @sponsorTierInKind.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đối tác hỗ trợ hiện vật/dịch vụ'**
+  String get sponsorTierInKind;
+
   /// No description provided for @deleteTournamentTitle.
   ///
   /// In vi, this message translates to:
@@ -6031,6 +6091,54 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tiến độ giải Lite'**
   String get lite_progressTitle;
+
+  /// No description provided for @lite_formatSettingTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thể thức thi đấu'**
+  String get lite_formatSettingTitle;
+
+  /// No description provided for @lite_formatSettingDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có thể đổi Đơn, Đôi hoặc Đôi nam nữ trước khi có người đăng ký hoặc tạo bracket.'**
+  String get lite_formatSettingDescription;
+
+  /// No description provided for @lite_formatSettingLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thể thức đã khóa vì giải đã có người đăng ký, chốt danh sách hoặc tạo bracket.'**
+  String get lite_formatSettingLocked;
+
+  /// No description provided for @lite_formatSettingFootball.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải bóng đá dùng thể thức đội và không thể đổi tại đây.'**
+  String get lite_formatSettingFootball;
+
+  /// No description provided for @lite_formatSaveSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật thể thức thi đấu.'**
+  String get lite_formatSaveSuccess;
+
+  /// No description provided for @lite_formatSaveError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật thể thức. Vui lòng thử lại.'**
+  String get lite_formatSaveError;
+
+  /// No description provided for @lite_formatSaveConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi thể thức trước khi mở đăng ký?'**
+  String get lite_formatSaveConfirm;
+
+  /// No description provided for @lite_mixedDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi nam nữ'**
+  String get lite_mixedDoubles;
 
   /// No description provided for @lite_doubles.
   ///

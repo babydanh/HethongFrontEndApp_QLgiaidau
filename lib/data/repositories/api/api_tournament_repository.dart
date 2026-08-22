@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:dio/dio.dart';
 
 class ApiTournamentRepository implements ITournamentRepository {
@@ -199,6 +200,24 @@ class ApiTournamentRepository implements ITournamentRepository {
       if (response.statusCode == 200) {
         final data = response.data['data'];
         if (data != null) {
+          try {
+            final sponsors = await getPublicSponsors(id);
+            data['sponsors'] = sponsors
+                .map((sponsor) => {
+                  'id': sponsor.id,
+                  'displayName': sponsor.displayName,
+                  'tier': sponsor.tier,
+                  'logoUrl': sponsor.logoUrl,
+                  if (sponsor.websiteUrl != null) 'websiteUrl': sponsor.websiteUrl,
+                  if (sponsor.shortDescription != null)
+                    'shortDescription': sponsor.shortDescription,
+                  'displayOrder': sponsor.displayOrder,
+                })
+                .toList();
+          } catch (_) {
+            // Sponsors are optional and must not block tournament detail loading.
+          }
+
           if ((data['divisions'] == null ||
                   (data['divisions'] is List &&
                       (data['divisions'] as List).isEmpty)) &&
@@ -220,6 +239,25 @@ class ApiTournamentRepository implements ITournamentRepository {
       // Rate limits and transient network errors must not turn an existing
       // tournament into a false "not found" screen.
       return _tournamentCache[id];
+    }
+  }
+
+  @override
+  Future<List<TournamentSponsor>> getPublicSponsors(String tournamentId) async {
+    try {
+      final response = await _dioClient.dio.get('/tournaments/$tournamentId/sponsors');
+      final raw = response.data;
+      final data = raw is Map<String, dynamic>
+          ? (raw['data'] as List<dynamic>? ?? const [])
+          : (raw as List<dynamic>? ?? const []);
+      return data
+          .whereType<Map>()
+          .map((item) => TournamentSponsor.fromJson(Map<String, dynamic>.from(item)))
+          .where((sponsor) => sponsor.displayName.isNotEmpty && sponsor.logoUrl.isNotEmpty)
+          .toList();
+    } catch (e, stack) {
+      _log.error('Error fetching public sponsors: $tournamentId', e, stack);
+      return const [];
     }
   }
 

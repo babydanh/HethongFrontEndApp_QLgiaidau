@@ -30,6 +30,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   Timer? _loadWatchdog;
+  String? _formatDraft;
 
   @override
   void initState() {
@@ -283,6 +284,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               state.hasBracket ? l10n.lite_created : l10n.lite_notCreated,
             ),
           ]),
+          const SizedBox(height: 16),
+          _buildFormatSettingCard(colors, state, notifier),
           const SizedBox(height: 24),
 
           // ─── Invite Code ───
@@ -305,6 +308,198 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             const SizedBox(height: 10),
             _qrCodeCard(colors, state.inviteCode!),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormatSettingCard(
+    AppColorsExtension colors,
+    LiteManagementState state,
+    LiteManagementNotifier notifier,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final tournament = state.tournament;
+    final division = tournament?.divisions.isNotEmpty == true
+        ? tournament!.divisions.first
+        : null;
+    final rawMatchType = (division?.matchType ?? state.matchType ?? 'SINGLES')
+        .trim()
+        .toUpperCase();
+    final currentMatchType = rawMatchType == 'DOUBLES' &&
+            division?.genderRestriction?.trim().toUpperCase() == 'MIXED'
+        ? 'MIXED_DOUBLES'
+        : rawMatchType;
+    final isFootball = state.isFootball;
+    final status = tournament?.status.toUpperCase() ?? '';
+    final locked = state.hasBracket ||
+        state.rosterConfirmed ||
+        state.participants.isNotEmpty ||
+        (division?.participantCount ?? 0) > 0 ||
+        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}.contains(status);
+    final selected = isFootball
+        ? 'DOUBLES'
+        : (_formatDraft ?? currentMatchType);
+    final canSave = !isFootball &&
+        !locked &&
+        !state.formatSaving &&
+        division != null &&
+        selected != currentMatchType;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.lite_formatSettingTitle,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      l10n.lite_formatSettingDescription,
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.35,
+                        color: colors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (state.formatSaving)
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          DropdownButtonFormField<String>(
+            initialValue: selected,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: l10n.formatLabel,
+              filled: true,
+              fillColor: colors.bgDark,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.border),
+              ),
+            ),
+            items: [
+              if (!isFootball)
+                DropdownMenuItem(
+                  value: 'SINGLES',
+                  child: Text(l10n.lite_singles),
+                ),
+              DropdownMenuItem(
+                value: 'DOUBLES',
+                child: Text(l10n.lite_doubles),
+              ),
+              if (!isFootball)
+                DropdownMenuItem(
+                  value: 'MIXED_DOUBLES',
+                  child: Text(l10n.lite_mixedDoubles),
+                ),
+            ],
+            onChanged: locked || isFootball || state.formatSaving
+                ? null
+                : (value) {
+                    if (value == null) return;
+                    setState(() => _formatDraft = value);
+                  },
+          ),
+          if (locked)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                l10n.lite_formatSettingLocked,
+                style: TextStyle(
+                  color: colors.warning,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            )
+          else if (isFootball)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                l10n.lite_formatSettingFootball,
+                style: TextStyle(
+                  color: colors.textMuted,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+              onPressed: canSave
+                  ? () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
+                          title: Text(l10n.lite_formatSettingTitle),
+                          content: Text(l10n.lite_formatSaveConfirm),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(dialogContext, false),
+                              child: Text(l10n.matchCancel),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.pop(dialogContext, true),
+                              child: Text(l10n.lite_confirmButton),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed != true || !mounted) return;
+                      final ok = await notifier.updateMatchType(
+                        widget.tournamentId,
+                        selected,
+                      );
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            ok
+                                ? l10n.lite_formatSaveSuccess
+                                : l10n.lite_formatSaveError,
+                          ),
+                        ),
+                      );
+                      if (ok) setState(() => _formatDraft = selected);
+                    }
+                  : null,
+              icon: const Icon(Icons.save_outlined, size: 18),
+              label: Text(l10n.matchSaveChanges),
+            ),
+          ),
         ],
       ),
     );
@@ -456,6 +651,12 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     final status = tournament?.status ?? '';
     final statusLabel = StatusHelper.getTournamentStatusLabel(status);
     final statusColor = StatusHelper.getTournamentStatusColor(status, context);
+    final headerMatchType = state.matchType?.toUpperCase();
+    final matchTypeLabel = headerMatchType == 'MIXED_DOUBLES'
+        ? l10n.lite_mixedDoubles
+        : state.isDoubles
+        ? l10n.lite_doubles
+        : l10n.lite_singles;
 
     return Container(
       width: double.infinity,
@@ -519,7 +720,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               ),
               const SizedBox(width: 6),
               Text(
-                state.isDoubles ? l10n.lite_doubles : l10n.lite_singles,
+                                matchTypeLabel,
+
                 style: TextStyle(fontSize: 13, color: colors.textSecondary),
               ),
             ],

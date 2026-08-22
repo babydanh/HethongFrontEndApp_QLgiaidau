@@ -87,7 +87,9 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         'name': _nameCtrl.text.trim(),
         'communityId': widget.clubId,
         'sport': clubSport ?? _mapSportSlug(),
-        'format': _selectedFormat,
+        'format': _selectedSport == AppConstants.sportFootball
+            ? AppConstants.formatDoubles
+            : _selectedFormat,
         'bracketType': _selectedBracket,
         'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
         'description': _descCtrl.text.trim(),
@@ -531,7 +533,14 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
           child: Padding(
             padding: EdgeInsets.only(right: s != sports.last ? 8 : 0),
             child: GestureDetector(
-              onTap: lockedSport == null ? () => setState(() => _selectedSport = s.$1) : null,
+              onTap: lockedSport == null
+                  ? () => setState(() {
+                      _selectedSport = s.$1;
+                      if (s.$1 == AppConstants.sportFootball) {
+                        _selectedFormat = AppConstants.formatDoubles;
+                      }
+                    })
+                  : null,
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -556,10 +565,14 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
 
   Widget _buildFormatSelector() {
     final l10n = AppLocalizations.of(context)!;
-    final formats = [
-      (AppConstants.formatSingles, l10n.createClubTournament_formatSingles),
-      (AppConstants.formatDoubles, l10n.createClubTournament_formatDoubles),
-    ];
+    final isTeamSport = _selectedSport == AppConstants.sportFootball;
+    final formats = isTeamSport
+        ? [(AppConstants.formatDoubles, l10n.createClubTournament_formatDoubles)]
+        : [
+            (AppConstants.formatSingles, l10n.createClubTournament_formatSingles),
+            (AppConstants.formatDoubles, l10n.createClubTournament_formatDoubles),
+            (AppConstants.formatMixedDoubles, l10n.createClubTournament_formatMixedDoubles),
+          ];
     return Row(
       children: formats.map((f) {
         final selected = _selectedFormat == f.$1;

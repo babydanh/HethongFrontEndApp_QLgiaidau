@@ -918,6 +918,37 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tabGallery => 'Thư viện';
 
   @override
+  String get tabSponsors => 'Tài trợ';
+
+  @override
+  String get sponsorsTitle => 'Nhà tài trợ chính thức';
+
+  @override
+  String get sponsorsDescription =>
+      'Cảm ơn các đối tác đã đồng hành cùng giải đấu.';
+
+  @override
+  String get sponsorVisitWebsite => 'Xem website';
+
+  @override
+  String get sponsorTierTitle => 'Nhà tài trợ danh hiệu';
+
+  @override
+  String get sponsorTierDiamond => 'Nhà tài trợ kim cương';
+
+  @override
+  String get sponsorTierGold => 'Nhà tài trợ vàng';
+
+  @override
+  String get sponsorTierSilver => 'Nhà tài trợ bạc';
+
+  @override
+  String get sponsorTierBronze => 'Nhà tài trợ đồng';
+
+  @override
+  String get sponsorTierInKind => 'Đối tác hỗ trợ hiện vật/dịch vụ';
+
+  @override
   String get deleteTournamentTitle => 'Xóa giải đấu?';
 
   @override
@@ -3184,6 +3215,34 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lite_progressTitle => 'Tiến độ giải Lite';
+
+  @override
+  String get lite_formatSettingTitle => 'Thể thức thi đấu';
+
+  @override
+  String get lite_formatSettingDescription =>
+      'Có thể đổi Đơn, Đôi hoặc Đôi nam nữ trước khi có người đăng ký hoặc tạo bracket.';
+
+  @override
+  String get lite_formatSettingLocked =>
+      'Thể thức đã khóa vì giải đã có người đăng ký, chốt danh sách hoặc tạo bracket.';
+
+  @override
+  String get lite_formatSettingFootball =>
+      'Giải bóng đá dùng thể thức đội và không thể đổi tại đây.';
+
+  @override
+  String get lite_formatSaveSuccess => 'Đã cập nhật thể thức thi đấu.';
+
+  @override
+  String get lite_formatSaveError =>
+      'Không thể cập nhật thể thức. Vui lòng thử lại.';
+
+  @override
+  String get lite_formatSaveConfirm => 'Đổi thể thức trước khi mở đăng ký?';
+
+  @override
+  String get lite_mixedDoubles => 'Đôi nam nữ';
 
   @override
   String get lite_doubles => 'Đánh đôi';

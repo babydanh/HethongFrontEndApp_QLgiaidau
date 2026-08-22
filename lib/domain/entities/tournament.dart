@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 
@@ -54,6 +55,7 @@ class Tournament {
   final int? maxReserve;
   final List<Map<String, dynamic>> registrationFields;
   final List<String> registrationFormDivisionIds;
+  final List<TournamentSponsor> sponsors;
 
   const Tournament({
     required this.id,
@@ -103,6 +105,7 @@ class Tournament {
     this.maxReserve,
     this.registrationFields = const [],
     this.registrationFormDivisionIds = const [],
+    this.sponsors = const [],
   });
 
   /// Club Lite is the intentionally minimal club flow. Public Quick still
@@ -206,6 +209,53 @@ class Tournament {
               matchType: 'SINGLES',
             ),
           );
+        }
+      }
+    }
+
+    final isLiteConfig =
+        config['isLite'] == true ||
+        (config['mode']?.toString().toUpperCase() == 'LITE' &&
+            config['hideAdvancedSettings'] == true);
+    if (isLiteConfig && parsedDivisions.length == 1) {
+      final division = parsedDivisions.first;
+      final divisionMatchType = division.matchType.toLowerCase();
+      final divisionGender = division.genderRestriction?.toLowerCase() ?? '';
+      if (divisionMatchType == 'doubles' || divisionMatchType == 'double') {
+        if (divisionGender == 'female') {
+          formatVal = AppConstants.categoryWomenDoubles;
+        } else if (divisionGender == 'male') {
+          formatVal = AppConstants.categoryMenDoubles;
+        } else if (divisionGender == 'mixed' ||
+            divisionMatchType == 'mixed_doubles') {
+          formatVal = AppConstants.categoryMixedDoubles;
+        } else {
+          formatVal = AppConstants.formatDoubles;
+        }
+      } else if (divisionMatchType == 'singles' ||
+          divisionMatchType == 'single') {
+        if (divisionGender == 'female') {
+          formatVal = AppConstants.categoryWomenSingles;
+        } else if (divisionGender == 'male') {
+          formatVal = AppConstants.categoryMenSingles;
+        } else {
+          formatVal = AppConstants.formatSingles;
+        }
+      } else if (divisionMatchType == 'mixed_doubles') {
+        formatVal = AppConstants.categoryMixedDoubles;
+      }
+    }
+
+    final parsedSponsors = <TournamentSponsor>[];
+    if (json['sponsors'] is List) {
+      for (final sponsor in json['sponsors'] as List) {
+        if (sponsor is Map) {
+          final parsed = TournamentSponsor.fromJson(
+            Map<String, dynamic>.from(sponsor),
+          );
+          if (parsed.displayName.isNotEmpty && parsed.logoUrl.isNotEmpty) {
+            parsedSponsors.add(parsed);
+          }
         }
       }
     }
@@ -314,6 +364,7 @@ class Tournament {
       maxReserve: _toInt(config['maxReserve']),
       registrationFields: registrationFields,
       registrationFormDivisionIds: registrationFormDivisionIds,
+      sponsors: parsedSponsors,
     );
   }
 
@@ -375,6 +426,19 @@ class Tournament {
       if (prizeDescription != null) 'prizeDescription': prizeDescription,
       if (contactInfo != null) 'contactInfo': contactInfo,
       'divisions': divisions.map((e) => e.toJson()).toList(),
+      if (sponsors.isNotEmpty)
+        'sponsors': sponsors
+            .map((sponsor) => {
+              'id': sponsor.id,
+              'displayName': sponsor.displayName,
+              'tier': sponsor.tier,
+              'logoUrl': sponsor.logoUrl,
+              if (sponsor.websiteUrl != null) 'websiteUrl': sponsor.websiteUrl,
+              if (sponsor.shortDescription != null)
+                'shortDescription': sponsor.shortDescription,
+              'displayOrder': sponsor.displayOrder,
+            })
+            .toList(),
       'isRanked': isRanked,
       'isRegistrationLocked': isRegistrationLocked,
       if (registrationMode != null) 'registrationMode': registrationMode,
@@ -429,6 +493,7 @@ class Tournament {
     int? teamSize,
     int? minTeamSize,
     int? maxReserve,
+    List<TournamentSponsor>? sponsors,
   }) {
     return Tournament(
       id: id ?? this.id,
@@ -477,6 +542,7 @@ class Tournament {
       communityId: communityId ?? this.communityId,
       isLite: isLite ?? this.isLite,
       isRegistrationLocked: isRegistrationLocked ?? this.isRegistrationLocked,
+      sponsors: sponsors ?? this.sponsors,
     );
   }
 

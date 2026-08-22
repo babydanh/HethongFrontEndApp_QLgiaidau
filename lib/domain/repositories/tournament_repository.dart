@@ -1,12 +1,15 @@
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
 abstract class ITournamentRepository {
   Future<Tournament> create(Tournament tournament);
   Future<Tournament?> getById(String id, {String? inviteCode});
-  Future<Tournament?> getByInviteCode(String code);
+    Future<Tournament?> getByInviteCode(String code);
+  Future<List<TournamentSponsor>> getPublicSponsors(String tournamentId);
+
   Future<void> joinLite(String inviteCode);
   Future<TournamentWorkspace> getMyWorkspace();
   Future<void> respondToRefereeInvite({

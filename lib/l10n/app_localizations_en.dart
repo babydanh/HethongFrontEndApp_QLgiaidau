@@ -920,6 +920,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabGallery => 'Gallery';
 
   @override
+  String get tabSponsors => 'Sponsors';
+
+  @override
+  String get sponsorsTitle => 'Official sponsors';
+
+  @override
+  String get sponsorsDescription =>
+      'Thank you to the partners supporting this tournament.';
+
+  @override
+  String get sponsorVisitWebsite => 'Visit website';
+
+  @override
+  String get sponsorTierTitle => 'Title sponsor';
+
+  @override
+  String get sponsorTierDiamond => 'Diamond sponsor';
+
+  @override
+  String get sponsorTierGold => 'Gold sponsor';
+
+  @override
+  String get sponsorTierSilver => 'Silver sponsor';
+
+  @override
+  String get sponsorTierBronze => 'Bronze sponsor';
+
+  @override
+  String get sponsorTierInKind => 'In-kind partner';
+
+  @override
   String get deleteTournamentTitle => 'Delete tournament?';
 
   @override
@@ -3195,6 +3226,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lite_progressTitle => 'Lite Tournament Progress';
+
+  @override
+  String get lite_formatSettingTitle => 'Match format';
+
+  @override
+  String get lite_formatSettingDescription =>
+      'Change between Singles, Doubles, or Mixed Doubles before anyone registers or a bracket is created.';
+
+  @override
+  String get lite_formatSettingLocked =>
+      'The format is locked because the tournament has registrations, a confirmed roster, or a bracket.';
+
+  @override
+  String get lite_formatSettingFootball =>
+      'Football tournaments use team format and cannot be changed here.';
+
+  @override
+  String get lite_formatSaveSuccess => 'Match format updated.';
+
+  @override
+  String get lite_formatSaveError =>
+      'Could not update the format. Please try again.';
+
+  @override
+  String get lite_formatSaveConfirm =>
+      'Change the format before opening registration?';
+
+  @override
+  String get lite_mixedDoubles => 'Mixed Doubles';
 
   @override
   String get lite_doubles => 'Doubles';

@@ -100,6 +100,7 @@ class LiteManagementState {
   final String? generatingStrategy;
   final bool creatingBracket;
   final bool mockLoading;
+  final bool formatSaving;
   final String? matchType;
   final String? tournamentName;
   final String? inviteCode;
@@ -119,6 +120,7 @@ class LiteManagementState {
     this.generatingStrategy,
     this.creatingBracket = false,
     this.mockLoading = false,
+    this.formatSaving = false,
     this.matchType,
     this.tournamentName,
     this.inviteCode,
@@ -141,6 +143,7 @@ class LiteManagementState {
     String? generatingStrategy,
     bool? creatingBracket,
     bool? mockLoading,
+    bool? formatSaving,
     String? matchType,
     String? tournamentName,
     String? inviteCode,
@@ -163,6 +166,7 @@ class LiteManagementState {
       generatingStrategy: generatingStrategy ?? this.generatingStrategy,
       creatingBracket: creatingBracket ?? this.creatingBracket,
       mockLoading: mockLoading ?? this.mockLoading,
+      formatSaving: formatSaving ?? this.formatSaving,
       matchType: matchType ?? this.matchType,
       tournamentName: tournamentName ?? this.tournamentName,
       inviteCode: inviteCode ?? this.inviteCode,
@@ -182,9 +186,13 @@ class LiteManagementState {
   List<LiteParticipant> get completeParticipants =>
       participants.where((p) => p.isComplete).toList();
 
-  bool get isDoubles =>
-      matchType?.toUpperCase() == 'DOUBLES' ||
-      matchType?.toUpperCase() == 'DOUBLE';
+  bool get isDoubles {
+    final normalized = matchType?.toUpperCase();
+    return normalized == 'DOUBLES' ||
+        normalized == 'DOUBLE' ||
+        normalized == 'MIXED_DOUBLES' ||
+        normalized == 'MIXED-DOUBLES';
+  }
 
   bool get isFootball {
     final tournamentSport = tournament?.sport.toLowerCase() ?? '';
@@ -222,7 +230,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   AppLocalizations get _l10n =>
       lookupAppLocalizations(ref.read(localeProvider));
 
-  String _apiError(DioException error, String fallback) {
+    String _apiError(DioException error, String fallback) {
     final data = error.response?.data;
     if (data is Map && data['message'] != null) {
       return data['message'].toString();
@@ -241,6 +249,27 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
     return fallback;
   }
+
+  String _canonicalMatchType(Map<String, dynamic> payload) {
+    final divisions = payload['divisions'];
+    if (divisions is List && divisions.isNotEmpty && divisions.first is Map) {
+      final division = Map<String, dynamic>.from(divisions.first as Map);
+      final divisionMatchType =
+          division['matchType']?.toString().toUpperCase();
+      final divisionGender =
+          division['genderRestriction']?.toString().toUpperCase();
+      if (divisionMatchType == 'MIXED_DOUBLES' ||
+          (divisionMatchType == 'DOUBLES' && divisionGender == 'MIXED')) {
+        return 'MIXED_DOUBLES';
+      }
+      if (divisionMatchType != null && divisionMatchType.isNotEmpty) {
+        return divisionMatchType;
+      }
+    }
+    return payload['matchType']?.toString().toUpperCase() ?? 'SINGLES';
+  }
+
+
 
   // ─── Initialize with tournament ID (called from screen) ───
 
@@ -290,8 +319,10 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
           );
           return;
         }
-        final rawMatchType =
-            payload['matchType']?.toString().toUpperCase() ?? 'SINGLES';
+                final rawMatchType = _canonicalMatchType(
+          Map<String, dynamic>.from(payload),
+        );
+
         final rawName = payload['name']?.toString() ?? '';
         final rawInviteCode = payload['inviteCode']?.toString() ?? '';
 
@@ -413,8 +444,62 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
   }
 
-  Future<void> refreshMatches(String tournamentId) =>
+    Future<void> refreshMatches(String tournamentId) =>
       _fetchMatches(tournamentId);
+
+  Future<bool> updateMatchType(String tournamentId, String matchType) async {
+    final tournament = state.tournament;
+    final division = tournament?.divisions.isNotEmpty == true
+        ? tournament!.divisions.first
+        : null;
+    final normalized = matchType.trim().toUpperCase();
+    final isFootball = state.isFootball;
+    final lifecycleLocked = tournament == null ||
+        division == null ||
+        division.id.isEmpty ||
+        state.hasBracket ||
+        state.rosterConfirmed ||
+        state.participants.isNotEmpty ||
+        division.participantCount > 0 ||
+        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
+            .contains(tournament.status.toUpperCase());
+
+    if (lifecycleLocked ||
+        (isFootball && normalized != 'DOUBLES') ||
+        !{'SINGLES', 'DOUBLES', 'MIXED_DOUBLES'}.contains(normalized)) {
+      return false;
+    }
+    final currentMatchType = division.matchType.toUpperCase() == 'DOUBLES' &&
+            division.genderRestriction?.trim().toUpperCase() == 'MIXED'
+        ? 'MIXED_DOUBLES'
+        : division.matchType.toUpperCase();
+    if (normalized == currentMatchType) return true;
+
+    state = state.copyWith(formatSaving: true);
+    try {
+      final participantsResponse = await _dio
+          .get('/tournaments/lite/$tournamentId/participants')
+          .timeout(const Duration(seconds: 12));
+      final envelope = participantsResponse.data;
+      final payload = envelope is Map ? envelope['data'] : envelope;
+      if (payload is List && payload.isNotEmpty) return false;
+
+      await _dio.patch(
+        '/tournaments/$tournamentId/divisions/${division.id}/config',
+        data: {
+          'matchType': normalized,
+          'genderRestriction': normalized == 'MIXED_DOUBLES' ? 'MIXED' : null,
+        },
+      );
+      await _fetchTournament(tournamentId);
+      return true;
+    } catch (e, stack) {
+      _log.error('Lỗi cập nhật thể thức giải Lite', e, stack);
+      return false;
+    } finally {
+      state = state.copyWith(formatSaving: false);
+    }
+  }
 
   Future<void> startMatch(String tournamentId, String matchId) async {
     await ref.read(matchRepositoryProvider).startMatch(tournamentId, matchId);
