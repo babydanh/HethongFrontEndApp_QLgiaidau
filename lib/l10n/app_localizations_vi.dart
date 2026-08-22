@@ -11386,6 +11386,18 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mã QR này không phải mã ghép nối camera hợp lệ.';
 
   @override
+  String get devicePairingExpired =>
+      'Mã ghép nối đã hết hạn. Hãy nhờ ban tổ chức tạo mã mới.';
+
+  @override
+  String get devicePairingNotAllowed =>
+      'Bạn chưa được phân công cho thiết bị camera này.';
+
+  @override
+  String get devicePairingUnavailable =>
+      'Ghép nối thất bại. Hãy kiểm tra kết nối và thử lại.';
+
+  @override
   String get devicePairingFingerprintUnavailable =>
       'Không thể xác định thiết bị này.';
 

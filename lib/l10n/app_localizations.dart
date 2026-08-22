@@ -20740,6 +20740,24 @@ abstract class AppLocalizations {
   /// **'Mã QR này không phải mã ghép nối camera hợp lệ.'**
   String get devicePairingInvalidCode;
 
+  /// No description provided for @devicePairingExpired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã ghép nối đã hết hạn. Hãy nhờ ban tổ chức tạo mã mới.'**
+  String get devicePairingExpired;
+
+  /// No description provided for @devicePairingNotAllowed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa được phân công cho thiết bị camera này.'**
+  String get devicePairingNotAllowed;
+
+  /// No description provided for @devicePairingUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép nối thất bại. Hãy kiểm tra kết nối và thử lại.'**
+  String get devicePairingUnavailable;
+
   /// No description provided for @devicePairingFingerprintUnavailable.
   ///
   /// In vi, this message translates to:

@@ -35,6 +35,7 @@ class ApiLiveSessionRepository implements ILiveSessionRepository {
     final response = await _dioClient.dio.get<Object?>(
       '/livestream/devices',
       queryParameters: <String, Object?>{'communityId': communityId},
+      options: Options(extra: <String, Object?>{'noCache': true}),
     );
     await _ensureSuccess(response);
     final payload = _unwrap(response.data);
@@ -112,6 +113,7 @@ class ApiLiveSessionRepository implements ILiveSessionRepository {
   Future<LiveSessionModel> getSession(String sessionId) async {
     final response = await _dioClient.dio.get<Object?>(
       '/livestream/sessions/$sessionId',
+      options: Options(extra: <String, Object?>{'noCache': true}),
     );
     await _ensureSuccess(response);
     return LiveSessionModel.fromJson(_asMap(_unwrap(response.data)));

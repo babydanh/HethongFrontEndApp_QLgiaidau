@@ -11417,6 +11417,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'This QR code is not a valid camera pairing code.';
 
   @override
+  String get devicePairingExpired =>
+      'This pairing code has expired. Ask the organizer to generate a new one.';
+
+  @override
+  String get devicePairingNotAllowed =>
+      'You are not assigned to this camera device.';
+
+  @override
+  String get devicePairingUnavailable =>
+      'Pairing failed. Check your connection and try again.';
+
+  @override
   String get devicePairingFingerprintUnavailable =>
       'Could not identify this device.';
 

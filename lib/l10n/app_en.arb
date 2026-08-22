@@ -4758,6 +4758,9 @@
   "devicePairingScanAgain": "Scan again",
   "devicePairingSuccess": "Camera paired successfully",
   "devicePairingInvalidCode": "This QR code is not a valid camera pairing code.",
+  "devicePairingExpired": "This pairing code has expired. Ask the organizer to generate a new one.",
+  "devicePairingNotAllowed": "You are not assigned to this camera device.",
+  "devicePairingUnavailable": "Pairing failed. Check your connection and try again.",
   "devicePairingFingerprintUnavailable": "Could not identify this device.",
   "devicePairingCameraPermission": "Camera permission is required to scan the pairing code.",
   "devicePairingClose": "Close"

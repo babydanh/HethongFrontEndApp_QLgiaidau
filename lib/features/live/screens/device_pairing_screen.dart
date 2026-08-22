@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:app_quanly_giaidau/core/services/device_fingerprint_storage.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/live_session_provider.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -28,7 +29,21 @@ class _DevicePairingScreenState extends ConsumerState<DevicePairingScreen> {
   }
 
   Future<String> _getDeviceFingerprint() {
-    return DeviceFingerprintStorage().getOrCreate();
+    return deviceFingerprintStorage.getOrCreate();
+  }
+
+  String _pairingFailureMessage(Object error, AppLocalizations l10n) {
+    if (error is DioException) {
+      final statusCode = error.response?.statusCode;
+      final responseData = error.response?.data;
+      final code = responseData is Map
+          ? responseData['code']?.toString()
+          : null;
+      if (statusCode == 403) return l10n.devicePairingNotAllowed;
+      if (code == 'PUBLISH_CONFIG_EXPIRED') return l10n.devicePairingExpired;
+      if (code == 'CAMERA_NOT_READY') return l10n.devicePairingInvalidCode;
+    }
+    return l10n.devicePairingUnavailable;
   }
 
   Map<String, String>? _parsePairingPayload(String value) {
@@ -93,11 +108,18 @@ class _DevicePairingScreenState extends ConsumerState<DevicePairingScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.devicePairingSuccess)));
       Navigator.of(context).pop(true);
+    } on DioException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isPairing = false;
+        _errorMessage = _pairingFailureMessage(error, l10n);
+      });
+      await _scannerController.start();
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _isPairing = false;
-        _errorMessage = l10n.devicePairingInvalidCode;
+        _errorMessage = l10n.devicePairingUnavailable;
       });
       await _scannerController.start();
     }
